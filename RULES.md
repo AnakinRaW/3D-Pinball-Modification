@@ -109,6 +109,27 @@ Banned:
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
-## 11. Amending these rules
+## 11. Research and sourcing
+
+Teensy documentation is thin and scattered across the web. Treat every claim as unconfirmed until sourced.
+
+**Always search with the exact model number** — "Teensy 4.1", never "Teensy". Generations contradict each other on points that destroy hardware. PJRC writes of the [3.2](https://www.pjrc.com/store/teensy32.html): "Teensy 3.2 pins accept 0 to 5V signals. The pins are 5V tolerant." Of the [4.1](https://www.pjrc.com/store/teensy41.html): "The pins are not 5V tolerant." A result about the wrong board looks authoritative and will wreck the part. Critical for electrical and pin-level questions, less so for software APIs.
+
+Source ranking:
+
+1. **pjrc.com, excluding the forum** — primary authority. Correct unless several independent sources contradict it.
+2. **PJRC forum posts by Paul Stoffregen** — creator of the Teensy and operator of PJRC. Authoritative. Other regulars may be equally reliable; none are identified yet.
+3. **[TeensyUser wiki](https://github.com/TeensyUser/doc/wiki)** — community-maintained, upkeep unknown. Worth checking, unconfirmed until corroborated.
+4. Everything else — corroborate before use.
+
+Cross-checking:
+
+- Confirm a fact at more than one source wherever a second one exists.
+- Compare posting dates. Newer usually wins.
+- Record the source and its date next to the figure in `docs/research/`.
+
+Arduino and ESP32 material often transfers for software questions, and never for electrical or pin-level ones.
+
+## 12. Amending these rules
 
 New or changed rules are added here by the assistant when the maintainer states them, in the maintainer's intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
