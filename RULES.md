@@ -66,7 +66,7 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 
 Each document has a scope and stays inside it. Detail that belongs elsewhere gets moved, not duplicated:
 
-- **`docs/parts-list.md` identifies parts; it does not describe them.** A row is a reference designator, a short name, a quantity, a one-line description and a link — nothing more. Component specifications, datasheet figures and the rationale for a choice go in `docs/research/`.
+- **`docs/parts-list.md` identifies parts and points to their specifications; it does not reproduce them.** A row is a reference designator, a short name, a quantity, a one-line description, a **spec link** and a supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no such notes exist. The list is not a buyer's guide: a part must be findable from it, not merely orderable. Specifications, datasheet figures and the rationale for a choice go in the linked document.
 - **Sub-directory `README.md` files tell a repository visitor what is in the folder.** Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
 
 ## 8. Design artifacts require explicit instruction
