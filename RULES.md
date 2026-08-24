@@ -18,11 +18,11 @@ The maintainer is a **software developer, not an electrician or electrical engin
 
 **Therefore:**
 
-- Explain the *why*, not just the *what*. Name the failure mode a design choice prevents.
+- Name the failure mode a design choice prevents.
 - Never present a guess as a fact. State confidence, and separate "this is from the datasheet" from "this is my estimate."
 - Cite the source for electrical values (datasheet page, standard, measurement). The maintainer cannot catch a fabricated number, so it must not be produced in the first place.
 - Proactively flag anything that can destroy hardware or injure a person, even when not asked.
-- Expect many questions. Questions are not a sign the explanation failed; answer them fully rather than tersely.
+- Expect many questions. Answer them fully.
 
 ## 3. Quality bar
 
@@ -30,10 +30,10 @@ The goal is a modification that is **as professional as it reasonably can be** �
 
 Concretely, that means:
 
-- Designs are justified, not guessed. Component choices trace back to a requirement and a datasheet.
+- Component choices trace back to a requirement and a datasheet.
 - Schematics follow conventional practice: sensible reference designators, net names, power symbols, decoupling, readable sheet layout — a schematic another engineer could review without explanation.
 - Design decisions are written down, including the rejected alternatives and why they lost.
-- Margins are deliberate. Ratings, tolerances and worst cases are calculated, not hoped for.
+- Margins are calculated — ratings, tolerances and worst cases.
 - Reproducible: someone else could rebuild this from the repository alone.
 
 When a shortcut is taken deliberately, record it as a known limitation rather than leaving it silent.
@@ -64,10 +64,11 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 - **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
 - **New rules defined by the maintainer → add them to this file** and commit it.
 
-Each document has a scope and stays inside it. Detail that belongs elsewhere gets moved, not duplicated:
+Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 
-- **`docs/parts-list.md` identifies parts and points to their specifications; it does not reproduce them.** A row is a reference designator, a short name, a quantity, a one-line description, a **spec link** and a supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no such notes exist. The list is not a buyer's guide: a part must be findable from it, not merely orderable. Specifications, datasheet figures and the rationale for a choice go in the linked document.
-- **Sub-directory `README.md` files tell a repository visitor what is in the folder.** Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
+- **`docs/parts-list.md`** — one row per part: reference designator, short name, quantity, one-line description, spec link, supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no notes exist yet. Every part must be findable from the list. Specifications, datasheet figures and rationale go in the linked document.
+- **Sub-directory `README.md` files** — what a repository visitor finds in the folder. Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
+- **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
 
 ## 8. Design artifacts require explicit instruction
 
@@ -78,7 +79,7 @@ Documentation follows reality automatically (rule 7). **Design artifacts do not.
 - The bill of materials
 - Published Artifacts
 
-Proposing a change is always welcome. Making it is not, until asked.
+Propose changes freely. Implement only when asked.
 
 ## 9. Re-evaluation protocol
 
@@ -94,6 +95,20 @@ That means:
 
 Consistency with a previous answer is not evidence that the previous answer was correct.
 
-## 10. Amending these rules
+## 10. Writing style
+
+Applies to documentation, commit messages and conversation alike. Say a thing once and move on.
+
+Banned:
+
+- **Meta-commentary about a document.** No sentence explaining what a file is, what it is for, or what it deliberately leaves out. The structure already shows that. The sentence that prompted this rule: *"The list identifies parts; it does not describe them. Specifications and the reasoning behind a choice live in the linked documents."*
+- **Antithesis used as decoration** — "X; it does not Y", "not A, but B", "not merely P, but Q", "the two are not the same thing" — wherever the negated half carries no information. Permitted only where the negation corrects a mistake the reader is likely to make, such as *"10 mA is a rating, not an operating point."*
+- **A sentence that restates the heading above it.**
+- **Closing paragraphs that summarise what was just written.**
+- **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
+
+Prefer the table or the link over a paragraph introducing the table or the link.
+
+## 11. Amending these rules
 
 New or changed rules are added here by the assistant when the maintainer states them, in the maintainer's intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
