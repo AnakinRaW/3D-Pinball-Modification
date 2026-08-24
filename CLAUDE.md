@@ -6,10 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 [`RULES.md`](RULES.md) is the working agreement for this repository and takes precedence over anything below. Read it before acting. Its load-bearing points:
 
-- **Never push.** Commit only when explicitly told, or when updating `RULES.md` itself.
+- **Never push.** Commit only when explicitly told, or the conditions of `RULES.md` allow it.
 - **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
 - **The maintainer is a software developer, not an electrician.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
 - **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
+- **Rule 10 bans a specific writing tic**: meta-commentary about what a document is or is not, and antithesis used for rhythm. Check prose against it before writing a file.
+- **Search with the model number** — "Teensy 4.1", never "Teensy". Rule 11 gives the source ranking; pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
 
 @RULES.md
 
@@ -17,23 +19,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-The project is in its initial phase: no firmware or board designs are committed yet and no toolchains have been chosen.
+The project is in its initial phase: no firmware, board design or CAD model is committed yet.
+
+## Toolchain
+
+| Area | Tool | Status |
+|---|---|---|
+| Microcontroller | Teensy 4.1 (NXP i.MX RT1062) | Chosen |
+| Schematic + PCB | EasyEDA, working from local project files | Chosen — **Standard vs. Pro not yet recorded**, and they use different file formats |
+| 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
+| Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
+
+**The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
 ## Repository layout
 
-- `firmware/` — embedded software for the mod (toolchain TBD)
-- `hardware/pcb/` — EDA projects: schematics and board layouts; exported schematic PDFs and fabrication outputs live next to the sources
-- `hardware/cad/` — 3D CAD files: PCB 3D models, mounts, 3D-printable parts; keep a neutral export (STEP/STL) alongside native sources
+- `firmware/` — embedded software for the Teensy 4.1
+- `hardware/pcb/` — EasyEDA projects, one directory per board, each with a schematic PDF and a `fab/` directory of manufacturing outputs
+- `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
 - `docs/research/` — research notes, datasheets, measurements of the stock machine
-- `docs/parts-list.md` — bill of materials for the mod
+- `docs/parts-list.md` — bill of materials
 - `assets/` — photos, renders, and other media
+
+Sub-directory `README.md` files describe their contents **for a repository visitor**. Maintenance conventions belong here or in `RULES.md`, never in those files.
 
 ## Commands
 
-None yet — there is no build system, firmware project, or EDA toolchain in the repo. When one is added (e.g. PlatformIO / Arduino / ESP-IDF for firmware, KiCad for the PCB), record the build/flash/test commands here.
+None — no build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
 
 ## Conventions
 
-- Update `docs/parts-list.md` whenever a hardware design change adds or removes components.
-- Prefer text-based file formats when the tool offers them (e.g. KiCad's s-expression formats); for large opaque binaries (CAD, renders), consider Git LFS before they land in history.
+- Update `docs/parts-list.md` whenever a hardware design change adds or removes a component (subject to rule 8 — the BOM is a design artifact, so ask first). Keep it to identification plus a spec link; specs and rationale go in `docs/research/`, one file per component. Every BOM row must resolve to its specification — local notes where they exist, manufacturer datasheet otherwise.
+- Reference designators follow IEEE 315: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
+- EasyEDA project files live locally and are committed directly; there is no cloud round-trip. Which format applies depends on the variant: **Standard** uses EasyEDA Source JSON, **Pro**'s desktop client creates `.eprj` for offline projects, with `.epro`/`.epro2` as its exported project archives ([Pro client FAQ](https://prodocs.easyeda.com/en/faq/client/)).
+- EasyEDA Pro format generations:
+
+  | Format | Storage | Availability | Consequence |
+  |---|---|---|---|
+  | `.epro2` | ZIP archive: `project.json` plus `SHEET/`, `PCB/`, `SYMBOL/`, `FOOTPRINT/`, `INSTANCE/`, `BLOB/`, `POUR/`, entries named by UUID | Shipping since V3.2.149 (2026-06-15) — File → Save As → Save Project to Local | No git diff, but unzips with standard tools and parses |
+  | `.eprj` / `.eprj2` | Single SQLite3 database, used by offline projects | Current | No git diff; readable only via `sqlite3` |
+  | `.eprj3` | Directory of line-based JSON records | **Documented but not shipping** — absent from the changelog through V3.2.149 | Would diff in git. Switch to it when it appears |
+
+  Format specs: <https://github.com/easyeda/easyeda-pro-file-format-v2> (current), <https://github.com/easyeda/easyeda-pro-eprj3-format> (future). Re-check the [changelog](https://pro.easyeda.com/page/update-record) before assuming `.eprj3` is still unavailable.
+- **Commit the `.epro2` as the project of record, and export a netlist, BOM CSV and schematic PDF alongside it.** The archive holds the design but shows no diff; the exports are the reviewable and machine-checkable layer.
+- FreeCAD `.FCStd`, Fusion `.f3d`/`.f3z`, STL and 3MF are opaque binaries. STEP is text but very large. `.gitattributes` classifies these; Git LFS has **not** been enabled — raise it before a large volume of binaries lands in history, since removing them later means rewriting history.
+- Cite the source for electrical figures. PJRC's published Teensy 4.1 numbers live at <https://www.pjrc.com/store/teensy41.html> and <https://www.pjrc.com/teensy/techspecs.html>.

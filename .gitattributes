@@ -1,0 +1,83 @@
+# Normalize line endings: LF in the repository, native in the working tree.
+* text=auto
+
+# Text
+*.md      text
+*.txt     text
+*.json    text
+*.csv     text
+*.c       text
+*.h       text
+*.cpp     text
+*.hpp     text
+*.ino     text
+*.py      text
+*.yml     text
+*.yaml    text
+*.sh      text eol=lf
+*.bat     text eol=crlf
+*.ps1     text eol=crlf
+
+# EasyEDA Pro eprj3: a directory of line-based JSON records, documented at
+# https://github.com/easyeda/easyeda-pro-eprj3-format but not yet shipping as of
+# V3.2.149. Listed ahead of time so the files are handled correctly on arrival.
+# Bytes are preserved as EasyEDA wrote them (-text) because the parser's tolerance
+# of CRLF is unverified, while diffs stay textual so schematic changes are
+# reviewable.
+*.eprj3   -text diff
+*.esch2   -text diff
+*.epcb2   -text diff
+*.epan2   -text diff
+*.ecfg    -text diff
+*.evar    -text diff
+
+# EasyEDA Pro legacy project (eprj/eprj2) is a single SQLite3 database, and the
+# epro/epro2 exports are ZIP archives.
+*.eprj    binary
+*.eprj2   binary
+*.epro    binary
+*.epro2   binary
+
+# Fabrication outputs are sent to a manufacturer and must reach them byte-for-byte
+# as the EDA tool wrote them. Never rewrite their line endings.
+*.gbr     -text
+*.gbl     -text
+*.gtl     -text
+*.gbs     -text
+*.gts     -text
+*.gbo     -text
+*.gto     -text
+*.gbp     -text
+*.gtp     -text
+*.gm1     -text
+*.gko     -text
+*.drl     -text
+*.xln     -text
+
+# CAD. STEP is ASCII but far too large to diff usefully; the rest are binary
+# containers (FCStd and 3MF are ZIP archives).
+*.step    -text -diff
+*.stp     -text -diff
+*.stl     binary
+*.3mf     binary
+*.FCStd   binary
+*.FCStd1  binary
+*.f3d     binary
+*.f3z     binary
+*.sldprt  binary
+*.sldasm  binary
+*.ipt     binary
+*.iam     binary
+
+# Media and documents
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.mp4     binary
+*.pdf     binary
+*.zip     binary
+
+# Keep generated fabrication output out of diffs and language statistics.
+hardware/pcb/**/fab/** linguist-generated=true

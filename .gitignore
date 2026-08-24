@@ -1,0 +1,24 @@
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editors / IDEs
+.vscode/
+.idea/
+
+# FreeCAD backups
+*.FCStd1
+*.FCBak
+
+# Firmware build output
+build/
+.pio/
+.pioenvs/
+*.hex
+*.elf
+
+# Python helper scripts
+__pycache__/
+*.pyc
+.venv/
