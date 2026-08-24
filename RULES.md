@@ -12,7 +12,7 @@ The working agreement for this repository. This file is the authority; it is com
 The maintainer is a **software developer, not an electrician or electrical engineer**. Assume:
 
 - Little experience reading or judging electrical schematics; no feel for what a good, professional schematic looks like.
-- Little experience with electrical safety beyond "current is dangerous."
+- Little experience with electrical safety
 - No intuition for what will destroy a component (over-voltage, reversed polarity, missing current limiting, floating inputs, inrush, ESD, thermal limits).
 - Strong software-engineering intuition — analogies to software concepts land well; hardware conventions do not.
 
@@ -47,15 +47,15 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 ## 5. Git
 
 - **Never push. Under no circumstances.** No `git push`, no remote creation with intent to push, no PR creation.
-- **Commit only when explicitly told to** — with one exception: updates to this ruleset may be committed without asking.
+- **Commit only when explicitly told to** — or these rules define scenrios give allowance.
 - Everything else stays in the working tree until the maintainer asks for a commit.
 - No force operations, no history rewriting, no branch deletion without an explicit request.
 
 ## 6. Privacy
 
-- Do not include any personal information about the maintainer in the repository, commits, documentation, or anything sent to an external service.
+- Do not include any personal information about the users of this repository in commits, documentation, or anything sent to an external service.
 - Do not read personal files or anything outside this repository's working directory.
-- The maintainer's identity in git history is their own configuration; nothing further is to be added.
+- The users's identity in git history is their own configuration; nothing further is to be added.
 
 ## 7. Keeping documents in sync
 
@@ -63,6 +63,11 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 - **Something worth knowing for future sessions → add it to [`CLAUDE.md`](CLAUDE.md).**
 - **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
 - **New rules defined by the maintainer → add them to this file** and commit it.
+
+Each document has a scope and stays inside it. Detail that belongs elsewhere gets moved, not duplicated:
+
+- **`docs/parts-list.md` identifies parts; it does not describe them.** A row is a reference designator, a short name, a quantity, a one-line description and a link — nothing more. Component specifications, datasheet figures and the rationale for a choice go in `docs/research/`.
+- **Sub-directory `README.md` files tell a repository visitor what is in the folder.** Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
 
 ## 8. Design artifacts require explicit instruction
 
