@@ -2,7 +2,7 @@
 
 The stock ROKR EG01 senses the ball with three-wire boards such as the **P33**, carrying one reflective photointerrupter and one 1.585 kΩ resistor. Drive and evaluation sit on the mainboard.
 
-The photointerrupter is consistent with a **Sharp GP2S700HCP** ([datasheet](../IR-reflective-gp2s700hcp_e.pdf)). The identification rests on package visuals and geometry as well as on the pad functions matching the datasheet's internal connection diagram pin for pin; the part number is not readable on the package.
+The photointerrupter is consistent with a **Sharp GP2S700HCP** ([datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf)). The identification rests on package visuals and geometry as well as on the pad functions matching the datasheet's internal connection diagram pin for pin; the part number is not readable on the package.
 
 ## Sensor board
 
@@ -191,6 +191,6 @@ The rate follows from the same reasoning. A baseline is only worth subtracting i
 
 ## Sources
 
-- [Sharp GP2S700HCP datasheet](../IR-reflective-gp2s700hcp_e.pdf) — Sheet No. D3-A02201EN, 3 Oct 2005. Ratings, characteristics, internal connection diagram, design guide
+- [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — Sheet No. D3-A02201EN, 3 Oct 2005. Ratings, characteristics, internal connection diagram, design guide
 - Meter and oscilloscope readings on the stock machine, 2026-08-25
 - [alldatasheet marking index for J3Y](https://www.alldatasheet.net/view_marking.jsp?Searchword=J3Y) and [Changjiang S8050 datasheet via LCSC](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf) — J3Y as the SOT-23 marking for the S8050 NPN
