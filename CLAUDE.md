@@ -43,6 +43,7 @@ The project is in its initial phase: no firmware, board design or CAD model is c
 - `docs/research/` — research notes, datasheets, measurements of the stock machine
 - `docs/parts-list.md` — bill of materials
 - `assets/` — photos, renders, and other media
+- `.claude/skills/` — repository-local skills for schematic work (see below)
 
 Sub-directory `README.md` files describe their contents **for a repository visitor**. Maintenance conventions belong here or in `RULES.md`, never in those files.
 
@@ -68,3 +69,17 @@ None — no build system exists yet. Record build/flash/test commands here once 
 - **Commit the `.epro2` as the project of record, and export a netlist, BOM CSV and schematic PDF alongside it.** The archive holds the design but shows no diff; the exports are the reviewable and machine-checkable layer.
 - FreeCAD `.FCStd`, Fusion `.f3d`/`.f3z`, STL and 3MF are opaque binaries. STEP is text but very large. `.gitattributes` classifies these; Git LFS has **not** been enabled — raise it before a large volume of binaries lands in history, since removing them later means rewriting history.
 - Cite the source for electrical figures. PJRC's published Teensy 4.1 numbers live at <https://www.pjrc.com/store/teensy41.html> and <https://www.pjrc.com/teensy/techspecs.html>.
+
+## Skills
+
+Repository-local, in `.claude/skills/`, so they version with the project.
+
+| Skill | Fires when |
+|---|---|
+| `review-circuit` | A circuit is about to be built or committed. Loads constraints from `docs/research/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time rather than hardcoding them |
+| `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colours, module blocks, pin markers |
+| `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
+| `verify-easyeda` | An EasyEDA board changed. Diffs the Allegro `.tel` netlist against a baseline |
+| `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behaviour. Operationalises rule 3 |
+
+`review-circuit` asks whether the circuit survives, `design-review` whether it is good, `verify-easyeda` whether the board matches the intent. None substitutes for another.

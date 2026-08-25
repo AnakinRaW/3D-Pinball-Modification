@@ -14,13 +14,11 @@ This repository hosts everything for the project:
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
 
-Contributing conventions and the working agreement for this repository are in [`RULES.md`](RULES.md).
-
 ## Status
 
 Early stage — research and design in progress; nothing has been built yet.
 
-The modification is built around a **Teensy 4.1** controller. Boards are designed in **EasyEDA**; 3D models in FreeCAD or Fusion.
+The modification is built around a **Teensy 4.1** controller.
 
 ## Disclaimer
 
