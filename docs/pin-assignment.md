@@ -1,22 +1,35 @@
 # Teensy 4.1 pin assignment
 
-Nothing is allocated yet.
-
 ## Allocation
 
 | Pin | Signal | Peripheral | Subsystem | Settled in |
 |---|---|---|---|---|
-| — | | | | |
+| 2 | DIN to the DFR0954 | I²S2 TX_DATA | Audio | — |
+| 3 | LRC to the DFR0954 | I²S2 TX_SYNC | Audio | — |
+| 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | Audio | — |
+| 14 (A0) | S1 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 15 (A1) | S2 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 16 (A2) | S3 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 17 (A3) | S4 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 18 (A4) | S5 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
+| 38 (A14) | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 39 (A15) | S6 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 40 (A16) | S7 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 41 (A17) | S8 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
 
-## Pin groups
+### What this allocation costs
 
-| Group | Pins | Access |
-|---|---|---|
-| Edge headers | 0–41 | Solderable headers, 42 pins |
-| microSD socket | 42–47 | Committed to the onboard socket whenever the SD card is used |
-| Bottom SMT pads | 48–54 | Underside pads, require soldering to the board |
+| Lost | To |
+|---|---|
+| I²S2 | Audio, pins 2, 3, 4, 33 |
+| Serial3, S/PDIF | Sensors, pins 14 and 15 |
+| Serial4, Wire1 | Sensors, pins 16 and 17 |
+| Wire | Sensors, pin 18 — it needs 18 and 19 together, so taking one kills it. `Wire2` on 24/25 stays free |
+| 7 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 14, 15, 18 |
+| 9 of 18 analog inputs | Sensors, pins 14–18 and 38–41 |
 
-Ethernet (RX±, TX±, LED) and USB host (D+, D−, +5 V) sit on their own pads and take none of 0–41. The 3.3 V rail supplies 250 mA to external circuits.
+I²S1 is unused, so Serial2, Serial5 and CAN1 stay free.
 
 ## Signal names
 
@@ -57,6 +70,8 @@ A bus needs all of its pins at the same time. Using pin 19 as a plain output the
 | CAN1 | RX 23, TX 22 / 11 |
 | CAN2 | RX 0, TX 1 |
 | CAN3 | RX 30, TX 31 |
+| I²S1 | MCLK 23, BCLK 21, LRCLK 20, data out 7 / 32 / 9 / 6, data in 8 / 38 — the Teensy Audio library's pin set, plus `Wire` (18, 19) for the codec |
+| I²S2 | MCLK 33, BCLK 4, LRCLK 3, data out 2, data in 5 |
 
 ## Pins claimed by two peripherals
 

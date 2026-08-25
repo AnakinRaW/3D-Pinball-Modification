@@ -49,6 +49,27 @@ Three open points:
 
 The VUSB–VIN trace on the underside must be cut when an external supply is used — PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
 
+### I²S1 spends three analog-capable pins
+
+`config_i2s()` muxes pins 23, 20 and 21 for I²S1:
+
+```c
+if (!only_bclk)
+{
+  CORE_PIN23_CONFIG = 3;  //1:MCLK
+  CORE_PIN20_CONFIG = 3;  //1:RX_SYNC  (LRCLK)
+}
+CORE_PIN21_CONFIG = 3;  //1:RX_BCLK
+```
+
+The `only_bclk` path drops LRCLK together with MCLK, so it is no route to freeing pin 23 for an amplifier that needs LRCLK. Pin 23 is muxed to MCLK whether or not the amplifier uses it — a MAX98357A does not.
+
+Pins 20, 21 and 23 are A6, A7 and A9, so I²S1 costs three of the 18 analog inputs. I²S2 (MCLK 33, BCLK 4, LRCLK 3, data out 2) costs none. `AudioOutputI2S2` is compiled under `#if defined(__IMXRT1062__)`, the Teensy 4.x part, and its `config_i2s2()` muxes `CORE_PIN33` (SAI2_MCLK), `CORE_PIN4` (TX_BCLK), `CORE_PIN3` (TX_SYNC) and `CORE_PIN2` (TX_DATA). `AudioOutputI2S2slave` omits MCLK but needs an external clock master, which the MAX98357A is not.
+
+Pin 23 carries the only CAN1 RX, so I²S1 and CAN1 cannot coexist.
+
+Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp) — the library's own source, retrieved 2026-08-25.
+
 ## Sources
 
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) — specifications and the 5 V tolerance warnings
