@@ -65,6 +65,7 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 - **Something worth knowing for future sessions → add it to [`CLAUDE.md`](CLAUDE.md).**
 - **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
 - **A newly stated rule → add it to this file** and commit it.
+- **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". Where a decision is not yet made, it is made before it is written down. Rejected alternatives stay, per rule 3, but as rejected and with the reason they lost. A figure that is genuinely unverified is stated as unverified with the measurement that would settle it — that is a known limitation, not an open option.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 
