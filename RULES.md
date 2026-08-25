@@ -49,6 +49,7 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 - **Never push. Under no circumstances.** No `git push`, no remote creation with intent to push, no PR creation.
 - **Commit only when explicitly told to** — or these rules define scenrios give allowance.
 - Everything else stays in the working tree until the maintainer asks for a commit.
+- **Commit only the named files.** `git commit` writes the whole index, including anything the maintainer staged. Name the paths — `git commit -- <path>` — and run `git diff --cached` first to see what is actually there. The maintainer's staged work is theirs to commit.
 - No force operations, no history rewriting, no branch deletion without an explicit request.
 
 ## 6. Privacy
@@ -107,6 +108,8 @@ Banned:
 - **Closing paragraphs that summarise what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
 - **Teaching electronics to the reader.** A document assumes an audience that knows the fundamentals better than the maintainer does. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."*
+
+  Defining the notation and the signal names a document's own tables use is exempt — a table the maintainer cannot read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
