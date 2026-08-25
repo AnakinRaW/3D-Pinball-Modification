@@ -34,6 +34,7 @@ Concretely, that means:
 - Schematics follow conventional practice: sensible reference designators, net names, power symbols, decoupling, readable sheet layout — a schematic another engineer could review without explanation.
 - Design decisions are written down, including the rejected alternatives and why they lost.
 - Margins are calculated — ratings, tolerances and worst cases.
+- **No pin or part is loaded past its specified figure, transients included.** Where a published figure covers only sustained operation, it still governs: a brief peak above it is designed out rather than argued away. The worst case is computed from the external circuit alone — internal current limiting that no datasheet states does not enter the calculation, however real it is.
 - Reproducible: someone else could rebuild this from the repository alone.
 
 When a shortcut is taken deliberately, record it as a known limitation rather than leaving it silent.
