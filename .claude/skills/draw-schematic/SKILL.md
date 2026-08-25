@@ -66,6 +66,7 @@ Rule 1 makes English the repository language, and that includes every label insi
 - Decimal **point**: `3.3 V`, never `3,3 V`.
 - Space between number and unit: `220 Ohm`, `4.7 kOhm`, `9 mA`. Use the symbol where the font renders it.
 - File names kebab-case and English: `pulsed-schematic.svg`.
+- Escape XML in text content: `&lt;` for `<`, `&amp;` for `&`. A bare `<` inside a `<text>` element makes the file invalid and it will not render.
 
 
 ## Package variants
@@ -94,6 +95,35 @@ Rendering, placed clear of the circuit body:
 ```
 
 The reference designator in the table matches the one on the drawn symbol.
+
+Listing a variant asserts it has been through `review-circuit` and `design-review` on its own figures. An alternative that has not been checked is named in the circuit document as an option, and stays out of the diagram's variants table.
+
+## Placement constraints
+
+A wiring diagram carries connectivity. Where a group must also sit physically close, the diagram says so, with the distance and the reason - otherwise the constraint survives only in someone's head between the drawing and the perfboard.
+
+Enclose the group in a dashed rounded rectangle, in a colour that is never a net colour, and label it:
+
+```
+<rect rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
+<text font-size="11.5" font-weight="700" fill="#0a8a6a">keep together &#8212; &lt; 10 mm &#8212; LDO loop stability</text>
+```
+
+The `8 4` dash pattern distinguishes this from `5 4`, which marks an unpopulated option.
+
+**Always state a distance.** "Close" is not a constraint. Where no figure is available from the datasheet, write the figure being assumed and mark it as an assumption.
+
+Groups that usually carry one:
+
+| Group | Typical limit | Reason |
+|---|---|---|
+| Decoupling capacitor and its IC supply pin | as short as the layout allows | Loop inductance between the capacitor and the pin |
+| Regulator input and output capacitors and the regulator | per its datasheet | The output capacitor is part of the control loop |
+| Gate resistor and gate pull-down at a MOSFET gate | short | Gate loop pickup, and a defined gate during boot |
+| HF filter capacitor at a connector | at the entry point | It filters what arrives, so it belongs where it arrives |
+| Star ground point | single point | Return current from switching loads staying out of the analog reference |
+
+Where several groups exist, list them in a placement table beside the variants table: group, members, maximum distance, reason.
 
 ## Known limitation
 

@@ -17,6 +17,8 @@ Read these first. They hold the numbers this review is judged against. Do not re
 | `docs/pin-assignment.md` | Pins already spent, and the peripherals each one locks out |
 | `docs/parts-list.md` | Parts in play and their spec links |
 | `docs/research/*.md` | Component notes, measurements of the stock machine |
+| `docs/parts/*/README.md` | The circuit under review and the subsystems it connects to |
+| `docs/datasheets/*.pdf` | Manufacturer datasheets held locally |
 | Manufacturer datasheets | Absolute maximums for every part in the circuit under review |
 
 If a value the review needs is absent from all of them, that is a finding. Do not fill the gap with a plausible number.
@@ -70,7 +72,20 @@ For every net that reaches a Teensy pin, establish the highest voltage it can ca
 
 For each operating point, state the ratio to the absolute maximum. A design with no stated margin has not been reviewed.
 
-## 3. Report
+## 3. Package variants
+
+Where a circuit names a through-hole and an SMD build, the two share topology, values and netlist, and share nothing else. Run these **per variant**, and label every finding with the variant it applies to:
+
+| Figure | Why it differs |
+|---|---|
+| Resistor power rating | An axial part is commonly 0.25 W, a 0805 chip commonly 0.125 W |
+| Capacitor voltage rating and DC-bias loss | A smaller case loses more capacitance under the same working voltage |
+| Semiconductor current rating and R_DS(on) | Different die and different bond-out per package |
+| Thermal resistance | Between TO-220 and SOT-223 this differs by roughly an order of magnitude |
+
+A variant is not verified because the other one passed. An unchecked variant is reported as Unverifiable, naming the datasheet figure that would settle it.
+
+## 4. Report
 
 One table, most severe first.
 
@@ -83,7 +98,7 @@ One table, most severe first.
 
 Each finding carries: the net or component, the failure mode in one sentence, the arithmetic with units, and the source of every figure used.
 
-## 4. Rules for this review
+## 5. Rules for this review
 
 - **Re-derive from the sources.** An earlier conclusion in the same conversation is not evidence.
 - **Show the arithmetic** with units, so it can be checked without electrical intuition.

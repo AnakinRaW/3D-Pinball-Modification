@@ -26,7 +26,20 @@ Working inside the absolute maximum is correctness. Professional practice leaves
 
 ## 2. Thermal
 
-Every part that dissipates gets a calculation, not an assumption.
+At this project's scale - SELV, a few watts in total, most loads pulsed or in the milliamp range - heat is a second-order failure mechanism. Screening cheaply beats calculating everything, and a review full of "0.5 mW, fine" hides the one line that matters.
+
+**Screen every dissipating part in one line:** `P = ...` against its rating. Below 10 % of the rating, that line is the entire treatment.
+
+**Calculate properly only where a trigger fires:**
+
+| Trigger | Why it earns the calculation |
+|---|---|
+| Linear regulator dissipating over 100 mW | All of `(V_in - V_out) * I_out` becomes heat, whatever the package |
+| Any part above 10 % of its rated dissipation | The rating assumes 25 °C in free air, which a closed wooden machine is not |
+| Continuous load above 100 mA | LED strips are the usual case and dominate everything else here |
+| Anything pulsed that a fault could hold on | A coil energised by hung firmware is the one thermal path in this project that becomes dangerous rather than merely hot |
+
+Past a trigger:
 
 ```
 P            = worst-case dissipation, shown with its terms
@@ -34,9 +47,7 @@ delta_T      = P * Rth(j-a)              from the datasheet
 T_junction   = T_ambient + delta_T
 ```
 
-Report `T_junction` against the datasheet limit. Ambient inside a closed wooden machine is not room temperature - state the figure used.
-
-The usual offender is a linear regulator: `P = (V_in - V_out) * I_out`, all of it as heat, independent of package.
+State the ambient used, and treat a package power rating as the 25 °C figure it usually is. Ambient inside a closed wooden machine is not room temperature.
 
 ## 3. Schematic craft
 
@@ -46,7 +57,7 @@ What makes a schematic reviewable by someone who was not there.
 - **Net names** functional and readable: `3V3`, `GND`, `LED_BUS`, `S1_SIG`. Any auto-generated `NET…` name is a defect.
 - **Power symbols** rather than wires running off to nowhere.
 - **Signal flow** left to right, supply at the top, ground at the bottom.
-- **Decoupling drawn beside its IC**, not collected in a corner of the sheet.
+- **Decoupling drawn beside its IC**, not collected in a corner of the sheet, and any physical-placement constraint annotated with its distance.
 - **Every pin accounted for** - connected, or carrying an explicit no-connect marker.
 - **Values and ratings on every passive** where the rating is part of the design.
 - **Title block**: board name, revision, date.
@@ -89,6 +100,12 @@ Rule 3 requires that someone else could rebuild this from the repository alone.
 - Every part resolves from `docs/parts-list.md` to a specification.
 - A bring-up procedure exists: inspect, check for shorts between supply and ground, power through a current-limited supply, then verify rail by rail.
 - Known limitations written down rather than left silent.
+
+## 8. Package variants
+
+Derating and thermal targets are met per variant, never inherited from the other one. The same value in a different package carries a different power rating, a different thermal resistance and, for ceramics, a different DC-bias curve.
+
+Where meeting a target in one package would need a different **value**, the two have stopped being variants of one design. Report that rather than substituting quietly: it becomes a second design, documented separately, per rule 7.
 
 ## Report
 
