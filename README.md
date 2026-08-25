@@ -10,6 +10,8 @@ This repository hosts everything for the project:
 | PCB designs (schematics & layout) | [`hardware/pcb/`](hardware/pcb/) |
 | 3D CAD files | [`hardware/cad/`](hardware/cad/) |
 | Documentation | [`docs/`](docs/) |
+| Design, one directory per subsystem | [`docs/parts/`](docs/parts/) |
+| Datasheets | [`docs/datasheets/`](docs/datasheets/) |
 | Research | [`docs/research/`](docs/research/) |
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |

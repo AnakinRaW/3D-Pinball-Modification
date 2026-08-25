@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-The project is in its initial phase: no firmware, board design or CAD model is committed yet.
+No firmware, board design or CAD model exists yet. The first subsystem — IR ball sensing — is designed and documented in `docs/parts/ir-reflective/`.
 
 ## Toolchain
 
@@ -40,8 +40,11 @@ The project is in its initial phase: no firmware, board design or CAD model is c
 - `hardware/pcb/` — EasyEDA projects, one directory per board, each with a schematic PDF and a `fab/` directory of manufacturing outputs
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
-- `docs/research/` — research notes, datasheets, measurements of the stock machine
+- `docs/parts/` — the design itself, one directory per subsystem, each holding its circuit document and schematic SVGs
+- `docs/research/` — investigation of the stock machine and per-component notes
+- `docs/datasheets/` — manufacturer datasheets, referenced from the research and design documents
 - `docs/parts-list.md` — bill of materials
+- `docs/pin-assignment.md` — Teensy pins spent, and what each one locks out
 - `assets/` — photos, renders, and other media
 - `.claude/skills/` — repository-local skills for schematic work (see below)
 
@@ -76,7 +79,7 @@ Repository-local, in `.claude/skills/`, so they version with the project.
 
 | Skill | Fires when |
 |---|---|
-| `review-circuit` | A circuit is about to be built or committed. Loads constraints from `docs/research/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time rather than hardcoding them |
+| `review-circuit` | A circuit is about to be built or committed. Loads constraints from `docs/research/`, `docs/parts/`, `docs/datasheets/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time rather than hardcoding them |
 | `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colours, module blocks, pin markers |
 | `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
 | `verify-easyeda` | An EasyEDA board changed. Diffs the Allegro `.tel` netlist against a baseline |
