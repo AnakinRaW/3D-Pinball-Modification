@@ -73,6 +73,8 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 - **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
 - **Schematic SVGs in `docs/`** — where a part's type designation depends on its package, the diagram names both the through-hole and the SMD type in a variants table. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
+  Both variants describe **one** circuit: same topology, same values, same netlist. A build that would need a different value or a different topology is not a variant but a second design, and is documented separately. Package-dependent figures — power rating, thermal resistance, DC-bias capacitance loss, R_DS(on) — are verified for each named variant before it is listed.
+
 ## 8. Design artifacts require explicit instruction
 
 Documentation follows reality automatically (rule 7). **Design artifacts do not.** Do not create or modify without being told:
