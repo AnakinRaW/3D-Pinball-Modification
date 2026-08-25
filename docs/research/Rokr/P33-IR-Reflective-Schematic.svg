@@ -1,0 +1,54 @@
+<svg viewBox="0 0 672 515" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="672" height="515" fill="#ffffff"/>
+  <text x="30" y="38" font-size="18" font-weight="700" fill="#1a1a1a">Sensor board (P33)</text>
+
+  <!-- 5 V net (Pin 1) -->
+  <text x="20" y="94" font-size="14" font-weight="700" fill="#c0392b">Pin 1 · +5 V</text>
+  <circle cx="85" cy="110" r="6" fill="#c0392b"/>
+  <line x1="91" y1="110" x2="600" y2="110" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="400" cy="110" r="4" fill="#c0392b"/>
+
+  <!-- R1 -->
+  <line x1="400" y1="110" x2="400" y2="130" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="386" y="130" width="28" height="64" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="424" y="166" font-size="14" font-weight="700" fill="#1a1a1a">R1 = 1.585 kΩ</text>
+  <line x1="400" y1="194" x2="400" y2="252" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- Sensor package -->
+  <rect x="320" y="222" width="330" height="196" fill="none" stroke="#999" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="416" y="242" font-size="12" font-style="italic" fill="#777">IR reflective photointerrupter</text>
+
+  <!-- Phototransistor -->
+  <text x="410" y="266" font-size="13" font-weight="700" fill="#444">B</text>
+  <line x1="400" y1="252" x2="400" y2="278" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="400" y1="278" x2="384" y2="292" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="384" y1="284" x2="384" y2="338" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="384" y1="330" x2="400" y2="344" stroke="#1a1a1a" stroke-width="2.5"/>
+  <polygon points="400,344 390,341 395,334" fill="#1a1a1a"/>
+  <line x1="400" y1="344" x2="400" y2="392" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="410" y="362" font-size="13" font-weight="700" fill="#444">A</text>
+
+  <!-- IR reflection arrow -->
+  <line x1="566" y1="300" x2="436" y2="304" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="436,304 450,298 450,310" fill="#e67e22"/>
+  <text x="566" y="332" text-anchor="end" font-size="11" fill="#e67e22">reflected IR</text>
+
+  <!-- IR LED -->
+  <line x1="600" y1="110" x2="600" y2="262" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="622" y="266" font-size="13" font-weight="700" fill="#444">D</text>
+  <polygon points="584,262 616,262 600,292" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="584" y1="296" x2="616" y2="296" stroke="#1a1a1a" stroke-width="3.5"/>
+  <text x="622" y="302" font-size="13" font-weight="700" fill="#444">C</text>
+  <line x1="600" y1="296" x2="600" y2="475" stroke="#b7950b" stroke-width="2.5"/>
+
+  <!-- Pin 2 -->
+  <line x1="400" y1="392" x2="400" y2="435" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="400" y1="435" x2="91" y2="435" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="85" cy="435" r="6" fill="#2c3e50"/>
+  <text x="20" y="460" font-size="14" font-weight="700" fill="#2c3e50">Pin 2 · emitter out</text>
+
+  <!-- Pin 3 -->
+  <line x1="600" y1="475" x2="91" y2="475" stroke="#b7950b" stroke-width="2.5"/>
+  <circle cx="85" cy="475" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="20" y="500" font-size="14" font-weight="700" fill="#8a6d0b">Pin 3 · LED cathode</text>
+</svg>

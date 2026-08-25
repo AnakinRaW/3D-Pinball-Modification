@@ -7,5 +7,6 @@ Component specifications and the reasoning behind a part choice are recorded her
 | Document | Contents |
 |---|---|
 | [`teensy-4.1.md`](teensy-4.1.md) | Specifications of the selected controller and the electrical constraints it imposes |
+| [`Rokr/ir-reflective-sensor-p33.md`](Rokr/ir-reflective-sensor-p33.md) | The stock ball sensor — measurements, reconstructed schematics of the sensor board and of its mainboard channel, and why the stock circuit is built that way |
 
-The teardown of the stock machine has not been documented yet.
+`Rokr/` holds findings about the stock machine. 
