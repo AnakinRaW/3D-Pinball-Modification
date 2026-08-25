@@ -9,7 +9,7 @@ The working agreement for this repository. This file is the authority; it is com
 
 ## 2. Who this project is for
 
-The maintainer is a **software developer, not an electrician or electrical engineer**. Assume:
+Expect a **software developer's** background, not an electrician's or an electrical engineer's:
 
 - Little experience reading or judging electrical schematics; no feel for what a good, professional schematic looks like.
 - Little experience with electrical safety
@@ -20,7 +20,7 @@ The maintainer is a **software developer, not an electrician or electrical engin
 
 - Name the failure mode a design choice prevents.
 - Never present a guess as a fact. State confidence, and separate "this is from the datasheet" from "this is my estimate."
-- Cite the source for electrical values (datasheet page, standard, measurement). The maintainer cannot catch a fabricated number, so it must not be produced in the first place.
+- Cite the source for electrical values (datasheet page, standard, measurement). A fabricated number will not be caught here, so it must not be produced in the first place.
 - Proactively flag anything that can destroy hardware or injure a person, even when not asked.
 - Expect many questions. Answer them fully.
 
@@ -48,22 +48,22 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 
 - **Never push. Under no circumstances.** No `git push`, no remote creation with intent to push, no PR creation.
 - **Commit only when explicitly told to** — or these rules define scenrios give allowance.
-- Everything else stays in the working tree until the maintainer asks for a commit.
-- **Commit only the named files.** `git commit` writes the whole index, including anything the maintainer staged. Name the paths — `git commit -- <path>` — and run `git diff --cached` first to see what is actually there. The maintainer's staged work is theirs to commit.
+- Everything else stays in the working tree until a commit is explicitly requested.
+- **Commit only the named files.** `git commit` writes the whole index, including files staged from outside the session. Name the paths — `git commit -- <path>` — and run `git diff --cached` first to see what is actually there. Anything staged elsewhere stays uncommitted.
 - No force operations, no history rewriting, no branch deletion without an explicit request.
 
 ## 6. Privacy
 
-- Do not include any personal information about the users of this repository in commits, documentation, or anything sent to an external service.
+- No personal information goes into commits, documentation, or anything sent to an external service.
 - Do not read personal files or anything outside this repository's working directory.
-- The users's identity in git history is their own configuration; nothing further is to be added.
+- Identity in git history is whatever the local git configuration supplies; nothing further is to be added.
 
 ## 7. Keeping documents in sync
 
 - **Fundamental structural change to the repository → update [`README.md`](README.md).**
 - **Something worth knowing for future sessions → add it to [`CLAUDE.md`](CLAUDE.md).**
 - **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
-- **New rules defined by the maintainer → add them to this file** and commit it.
+- **A newly stated rule → add it to this file** and commit it.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 
@@ -107,9 +107,10 @@ Banned:
 - **A sentence that restates the heading above it.**
 - **Closing paragraphs that summarise what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
-- **Teaching electronics to the reader.** A document assumes an audience that knows the fundamentals better than the maintainer does. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."*
+- **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."*
 
-  Defining the notation and the signal names a document's own tables use is exempt — a table the maintainer cannot read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
+  Defining the notation and the signal names a document's own tables use is exempt — a table that cannot be read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
+- **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
@@ -138,4 +139,4 @@ Arduino and ESP32 material often transfers for software questions, and never for
 
 ## 12. Amending these rules
 
-New or changed rules are added here by the assistant when the maintainer states them, in the maintainer's intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
+New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
