@@ -75,6 +75,8 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 
   Both variants describe **one** circuit: same topology, same values, same netlist. A build that would need a different value or a different topology is not a variant but a second design, and is documented separately. Package-dependent figures — power rating, thermal resistance, DC-bias capacitance loss, R_DS(on) — are verified for each named variant before it is listed.
 
+  Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
+
 ## 8. Design artifacts require explicit instruction
 
 Documentation follows reality automatically (rule 7). **Design artifacts do not.** Do not create or modify without being told:
