@@ -65,6 +65,17 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 - **Something worth knowing for future sessions → add it to [`CLAUDE.md`](CLAUDE.md).**
 - **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
 - **A newly stated rule → add it to this file** and commit it.
+- **A design change touches every file that repeats the fact.** Editing the subsystem document is not the change; it is the first file of it. What moves together:
+
+  | Changed | Also update |
+  |---|---|
+  | Any value, part, count or connector in a subsystem | **every `.svg` in that subsystem's directory** |
+  | A Teensy pin | [`docs/pin-assignment.md`](docs/pin-assignment.md), allocation table and cost table both |
+  | A part or a quantity | [`docs/parts-list.md`](docs/parts-list.md) |
+  | A component's specification | its file in `docs/research/`, and its datasheet into `docs/datasheets/` |
+  | A channel count or a connector width | the connector tables, and the pin rows in the figures — geometry, not only text |
+
+  Finish by grepping the changed number and the old number across the subsystem directory. The figures are where a stale value survives longest, because a wrong number there still renders.
 - **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". Where a decision is not yet made, it is made before it is written down. Rejected alternatives stay, per rule 3, but as rejected and with the reason they lost. A figure that is genuinely unverified is stated as unverified with the measurement that would settle it — that is a known limitation, not an open option.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
