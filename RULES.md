@@ -106,8 +106,11 @@ Banned:
 - **A sentence that restates the heading above it.**
 - **Closing paragraphs that summarise what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
+- **Teaching electronics to the reader.** A document assumes an audience that knows the fundamentals better than the maintainer does. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."*
 
 Prefer the table or the link over a paragraph introducing the table or the link.
+
+The explanations rule 2 asks for — naming the failure mode, spelling out what destroys a part — belong in **conversation**, not in the repository's documents. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
 
 ## 11. Research and sourcing
 
