@@ -33,14 +33,17 @@ Overvoltage on a CMOS input forces current through the chip's internal protectio
 
 | Property | Value | Source |
 |---|---|---|
-| VIN input range | 3.6 – 5.5 V | PJRC pinout reference card 11b rev3 |
-| Digital output pin rating | 10 mA at 3.3 V | PJRC technical specifications table |
+| VIN input range | 3.6 – 5.5 V | PJRC pin assignment card 11a rev4 |
+| **Recommended maximum output current per pin** | **4 mA** | [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) |
+| Output pin figure in the comparison table | 10 mA at 3.3 V | [PJRC technical specifications table](https://www.pjrc.com/teensy/techspecs.html) |
+| 3.3 V rail available to external circuits | 250 mA | PJRC pin assignment card 11a rev4 |
 | Current draw @ 600 MHz | ≈ 100 mA | PJRC — **published for the Teensy 4.0, not the 4.1** |
 
-Two open points:
+Three open points:
 
 - The ≈ 100 mA figure belongs to the Teensy 4.0. PJRC gives no equivalent number for the 4.1 in the same place, and the 4.1 carries additional hardware. Measure the real draw before sizing a supply.
-- The 10 mA per-pin figure is a rating, not an operating point. The i.MX RT1062's output drivers are physically small on a dense die, so sustained current near the rating heats the pad locally. LEDs and any real load should be driven through a transistor or a driver IC, not straight from a pin.
+- **Two PJRC figures for the same property disagree.** The Teensy 4.1 product page states 4 mA as the recommended maximum output current; the technical specifications table, which spans every Teensy generation in one grid, lists 10 mA. Design against 4 mA: it is the board-specific figure and the conservative one. 10 mA is the value the older generations carry.
+- 4 mA is a recommended maximum, not an operating point. Drive LEDs and any real load through a transistor or a driver IC.
 
 ### Powering from something other than USB
 

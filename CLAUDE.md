@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Never push.** Commit only when explicitly told, or the conditions of `RULES.md` allow it.
 - **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
-- **The maintainer is a software developer, not an electrician.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
+- **Assume a software-engineering background, not an electrical one.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
 - **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
 - **Rule 10 bans a specific writing tic**: meta-commentary about what a document is or is not, and antithesis used for rhythm. Check prose against it before writing a file.
 - **Search with the model number** — "Teensy 4.1", never "Teensy". Rule 11 gives the source ranking; pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
@@ -32,6 +32,8 @@ The project is in its initial phase: no firmware, board design or CAD model is c
 
 **The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
+**Per-pin output current is 4 mA, not 10 mA.** PJRC's [4.1 product page](https://www.pjrc.com/store/teensy41.html) gives 4 mA as the recommended maximum; the [comparison table](https://www.pjrc.com/teensy/techspecs.html) says 10 mA because that grid spans every generation. Design against 4 mA — see [`docs/research/teensy-4.1.md`](docs/research/teensy-4.1.md).
+
 ## Repository layout
 
 - `firmware/` — embedded software for the Teensy 4.1
@@ -51,6 +53,7 @@ None — no build system exists yet. Record build/flash/test commands here once 
 ## Conventions
 
 - Update `docs/parts-list.md` whenever a hardware design change adds or removes a component (subject to rule 8 — the BOM is a design artifact, so ask first). Keep it to identification plus a spec link; specs and rationale go in `docs/research/`, one file per component. Every BOM row must resolve to its specification — local notes where they exist, manufacturer datasheet otherwise.
+- **Check [`docs/pin-assignment.md`](docs/pin-assignment.md) before committing any Teensy pin, and add a row there once a design settles on one.** It is the single record of which pins this build has spent, and the only way a conflict gets caught across sessions. Its shared-resource tables are what a candidate pin must be checked against — taking one pin of a bus or serial port commits the whole group. Record the peripheral and the document that settled it, so a later conflict can be traced to the decision it came from.
 - Reference designators follow IEEE 315: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
 - EasyEDA project files live locally and are committed directly; there is no cloud round-trip. Which format applies depends on the variant: **Standard** uses EasyEDA Source JSON, **Pro**'s desktop client creates `.eprj` for offline projects, with `.epro`/`.epro2` as its exported project archives ([Pro client FAQ](https://prodocs.easyeda.com/en/faq/client/)).
 - EasyEDA Pro format generations:
