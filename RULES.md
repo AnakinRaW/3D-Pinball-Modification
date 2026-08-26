@@ -32,7 +32,7 @@ Concretely, that means:
 
 - Component choices trace back to a requirement and a datasheet.
 - Schematics follow conventional practice: sensible reference designators, net names, power symbols, decoupling, readable sheet layout — a schematic another engineer could review without explanation.
-- Design decisions are written down, including the rejected alternatives and why they lost.
+- Design decisions are written down. A **rejected alternative is recorded only where its reason is not already derivable from the requirements** — an approach someone would otherwise propose again, or a trade that was judged rather than computed. A part that simply misses a stated figure is filtered by that figure and earns no entry.
 - Margins are calculated — ratings, tolerances and worst cases.
 - **Every derived bound names the input extreme it was computed from.** Which direction of a parameter is the worst case is part of the derivation, and picking the wrong one leaves no trace in the result — a minimum series resistor taken from V_F max rather than V_F min gives 40 Ω where the answer is 46 Ω.
 - **Write the intermediate quantity on its own line, with its extremes named.** A bound stated as a single division hides which values went into it, and a wrong extreme then reads as correct arithmetic. The voltage across a resistor is derived first, from a named supply extreme and a named device extreme, and only then divided by the current. Supply tolerance is one of those extremes: a bound taken at the nominal rail is not a bound.
