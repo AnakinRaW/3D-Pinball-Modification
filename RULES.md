@@ -34,6 +34,7 @@ Concretely, that means:
 - Schematics follow conventional practice: sensible reference designators, net names, power symbols, decoupling, readable sheet layout — a schematic another engineer could review without explanation.
 - Design decisions are written down, including the rejected alternatives and why they lost.
 - Margins are calculated — ratings, tolerances and worst cases.
+- **Every derived bound names the input extreme it was computed from.** Which direction of a parameter is the worst case is part of the derivation, and picking the wrong one leaves no trace in the result — a minimum series resistor taken from V_F max rather than V_F min gives 38 Ω where the answer is 44 Ω.
 - **No pin or part is loaded past its specified figure, transients included.** Where a published figure covers only sustained operation, it still governs: a brief peak above it is designed out rather than argued away. The worst case is computed from the external circuit alone — internal current limiting that no datasheet states does not enter the calculation, however real it is.
 - Reproducible: someone else could rebuild this from the repository alone.
 
