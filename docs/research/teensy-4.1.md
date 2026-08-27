@@ -45,6 +45,14 @@ Three open points:
 - **Two PJRC figures for the same property disagree.** The Teensy 4.1 product page states 4 mA as the recommended maximum output current; the technical specifications table, which spans every Teensy generation in one grid, lists 10 mA. Design against 4 mA: it is the board-specific figure and the conservative one. 10 mA is the value the older generations carry.
 - 4 mA is a recommended maximum, not an operating point. Drive LEDs and any real load through a transistor or a driver IC.
 
+### ADC source impedance
+
+**The maximum source resistance R_AS is 1 kΩ**, at 12 bit, f_ADCK = 40 MHz and the 150 ns sample window — [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 64. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
+
+The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36–38 on pages 67–68 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
+
+**PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section" (checked 2026-08-26). A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
+
 ### Powering from something other than USB
 
 The VUSB–VIN trace on the underside must be cut when an external supply is used — PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
