@@ -1,0 +1,105 @@
+<svg viewBox="0 0 900 575" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="575" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Chosen variant: pulsed LED with differential measurement</text>
+  <text x="30" y="56" font-size="13" fill="#666">One sensor channel drawn in full; the emitter bus is shared by all eight.</text>
+
+  <!-- Teensy -->
+  <rect x="50" y="100" width="180" height="380" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="90" y="130" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <circle cx="230" cy="160" r="6" fill="#c0392b"/>
+  <text x="150" y="164" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
+  <circle cx="230" cy="250" r="6" fill="#8a2be2"/>
+  <text x="215" y="240" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">CLOCK</text>
+  <text x="215" y="256" text-anchor="end" font-size="11.5" fill="#777">Pin 38</text>
+  <circle cx="230" cy="350" r="6" fill="#2c3e50"/>
+  <text x="215" y="340" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">S1</text>
+  <text x="215" y="356" text-anchor="end" font-size="11.5" fill="#777">Pin 14 · A0</text>
+  <circle cx="230" cy="450" r="6" fill="#1a1a1a"/>
+  <text x="150" y="454" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <!-- Sensor -->
+  <rect x="700" y="110" width="180" height="240" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="716" y="138" font-size="15" font-weight="700" fill="#5c4a00">Sensor board 1</text>
+  <circle cx="700" cy="170" r="6" fill="#c0392b"/>
+  <text x="716" y="174" font-size="13" font-weight="700" fill="#c0392b">Pin 1 (red)</text>
+  <circle cx="700" cy="250" r="6" fill="#2c3e50"/>
+  <text x="716" y="254" font-size="13" font-weight="700" fill="#2c3e50">Pin 2 (black)</text>
+  <circle cx="700" cy="320" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="716" y="324" font-size="13" font-weight="700" fill="#8a6d0b">Pin 3 (yellow)</text>
+
+  <!-- 3V3 -->
+  <line x1="236" y1="170" x2="694" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="400" y="162" font-size="12.5" font-weight="700" fill="#c0392b">+3.3 V (not 5 V)</text>
+  <circle cx="600" cy="170" r="4" fill="#c0392b"/>
+  <line x1="600" y1="170" x2="600" y2="196" stroke="#c0392b" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="596" y="210" text-anchor="end" font-size="11.5" fill="#c0392b">on to Pin 1 of boards 2–8</text>
+
+  <!-- Signal -->
+  <line x1="694" y1="250" x2="380" y2="250" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="380" y1="250" x2="380" y2="350" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="380" y1="350" x2="360" y2="350" stroke="#2c3e50" stroke-width="2.5"/>
+  <rect x="300" y="342" width="60" height="16" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="302" y="336" font-size="12" font-weight="700" fill="#1a1a1a">1 k&#937;</text>
+  <line x1="300" y1="350" x2="236" y2="350" stroke="#2c3e50" stroke-width="2.5"/>
+  <text x="400" y="242" font-size="12" fill="#2c3e50">Signal sensor 1: 0 … 2.54 V</text>
+  <circle cx="480" cy="250" r="4" fill="#2c3e50"/>
+  <line x1="480" y1="250" x2="480" y2="284" stroke="#1a1a1a" stroke-width="2.5"/>
+  <rect x="467" y="284" width="26" height="52" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="460" y="302" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">4.7 k&#937;</text>
+  <line x1="480" y1="336" x2="480" y2="520" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- LED path -->
+  <line x1="694" y1="320" x2="646" y2="320" stroke="#b7950b" stroke-width="2.5"/>
+  <rect x="576" y="310" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="646" y="302" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">220 Ω, one per board</text>
+  
+  <line x1="576" y1="320" x2="560" y2="320" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="560" y1="320" x2="560" y2="390" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="560" cy="380" r="4" fill="#1a1a1a"/>
+  <line x1="560" y1="380" x2="670" y2="380" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="678" y="384" font-size="11" fill="#555">…220 Ω of boards 2–8</text>
+
+  <!-- Transistor -->
+  <line x1="542" y1="398" x2="542" y2="452" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="550" y1="396" x2="550" y2="411" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="550" y1="415" x2="550" y2="429" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="550" y1="433" x2="550" y2="448" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="550" y1="403" x2="560" y2="403" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="560" y1="403" x2="560" y2="390" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="550" y1="441" x2="560" y2="441" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="560" y1="441" x2="560" y2="460" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="550" y1="422" x2="556" y2="422" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="556" y1="422" x2="556" y2="441" stroke="#1a1a1a" stroke-width="2.5"/>
+  <polygon points="550,422 557,418 557,426" fill="#1a1a1a"/>
+  <text x="578" y="420" font-size="12.5" font-weight="700" fill="#1a1a1a">Q1: IRL540N (TO-220), logic-level MOSFET</text>
+  <text x="578" y="436" font-size="11" fill="#666">≈83 mA pulsed</text>
+  <line x1="560" y1="460" x2="560" y2="520" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- base -->
+  <line x1="236" y1="250" x2="290" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="290" y1="250" x2="290" y2="425" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="290" y1="425" x2="340" y2="425" stroke="#8a2be2" stroke-width="2.5"/>
+  <rect x="340" y="417" width="60" height="16" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="344" y="411" font-size="12" font-weight="700" fill="#1a1a1a">1 kΩ</text>
+  <line x1="400" y1="425" x2="542" y2="425" stroke="#8a2be2" stroke-width="2.5"/>
+  <circle cx="430" cy="425" r="4" fill="#8a2be2"/>
+  <line x1="430" y1="425" x2="430" y2="452" stroke="#1a1a1a" stroke-width="2.5"/>
+  <rect x="417" y="452" width="26" height="44" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="411" y="478" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">100 k&#937;</text>
+  <line x1="430" y1="496" x2="430" y2="520" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="430" cy="520" r="4" fill="#1a1a1a"/>
+
+  <text x="294" y="285" font-size="12" fill="#8a2be2">300 µs per phase</text>
+
+  <!-- GND -->
+  <line x1="236" y1="450" x2="264" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="264" y1="450" x2="264" y2="520" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="264" y1="520" x2="560" y2="520" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="480" cy="520" r="4" fill="#1a1a1a"/>
+  <text x="300" y="540" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <!-- note box, boards 2-7 -->
+  <rect x="640" y="444" width="240" height="28" rx="6" fill="#fbfaf7" stroke="#8a6d0b" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="654" y="460" font-size="12" font-weight="700" fill="#5c4a00">Boards 2–8: identical</text>
+
+</svg>

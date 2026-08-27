@@ -7,16 +7,16 @@
 | 2 | DIN to the DFR0954 | I²S2 TX_DATA | Audio | — |
 | 3 | LRC to the DFR0954 | I²S2 TX_SYNC | Audio | — |
 | 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | Audio | — |
-| 14 (A0) | S1 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 15 (A1) | S2 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 16 (A2) | S3 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 17 (A3) | S4 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 18 (A4) | S5 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 14 (A0) | S1 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 15 (A1) | S2 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 16 (A2) | S3 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 17 (A3) | S4 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 18 (A4) | S5 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
-| 38 (A14) | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 39 (A15) | S6 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 40 (A16) | S7 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
-| 41 (A17) | S8 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/) |
+| 38 (A14) | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 39 (A15) | S6 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 40 (A16) | S7 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 41 (A17) | S8 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 
 ### What this allocation costs
 
