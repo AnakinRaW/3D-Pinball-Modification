@@ -129,12 +129,14 @@ Banned:
 - **A sentence that restates the heading above it.**
 - **Closing paragraphs that summarise what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
-- **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."*
+- **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."* What is banned is the added explanatory sentence. A short clause inside a sentence that names the consequence and keeps it readable stays, as in *"An open sense line has to be held at a defined level, or the bumper fires on noise."*
 
   Defining the notation and the signal names a document's own tables use is exempt — a table that cannot be read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
 - **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 
 Prefer the table or the link over a paragraph introducing the table or the link.
+
+**Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
 
 The explanations rule 2 asks for — naming the failure mode, spelling out what destroys a part — belong in **conversation**, not in the repository's documents. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
 
