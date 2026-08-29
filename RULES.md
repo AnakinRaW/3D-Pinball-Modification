@@ -132,7 +132,7 @@ Banned:
 - **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."* What is banned is the added explanatory sentence. A short clause inside a sentence that names the consequence and keeps it readable stays, as in *"An open sense line has to be held at a defined level, or the bumper fires on noise."*
 
   Defining the notation and the signal names a document's own tables use is exempt — a table that cannot be read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
-- **Dates of the project's own work.** When a measurement was taken, when a page was checked, when a decision was reached — none of it belongs in a document. A document states what is known, not when it became known. Publication and revision dates of an external source stay, because rule 11 ranks sources by them.
+- **Dates.** No date in a document — no year, no month, no day, no time. Not when a measurement was taken, not when a page was checked, not when a decision was reached, and not when a source was published. A document states what is known, not when it became known. A source is identified by its document or revision number instead.
 - **Revision narrative.** No account of what a passage said before, what was corrected, or why it changed. Git carries that. A document reads as though its current content had always stood there.
 - **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 
@@ -159,7 +159,7 @@ Cross-checking:
 
 - Confirm a fact at more than one source wherever a second one exists.
 - Compare posting dates. Newer usually wins.
-- Record the source and its publication or revision date next to the figure in `docs/research/`.
+- Record the source next to the figure in `docs/research/`, identified by its document or revision number where it has one.
 
 Arduino and ESP32 material often transfers for software questions, and never for electrical or pin-level ones.
 
