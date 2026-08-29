@@ -126,6 +126,9 @@ Banned:
 
 - **Meta-commentary about a document.** No sentence explaining what a file is, what it is for, or what it deliberately leaves out. The structure already shows that. The sentence that prompted this rule: *"The list identifies parts; it does not describe them. Specifications and the reasoning behind a choice live in the linked documents."*
 - **Antithesis used as decoration** — "X; it does not Y", "not A, but B", "not merely P, but Q", "the two are not the same thing" — wherever the negated half carries no information. Permitted only where the negation corrects a mistake the reader is likely to make, such as *"10 mA is a rating, not an operating point."*
+- **Argument by exclusion in an explanation.** What a part is for, and why a design is as it is, is stated forward — from what the part does and what the design achieves. A purpose is never established by ruling out a purpose the part does not serve. The sentence that prompted this rule: *"Coil current is not among their jobs: holding 2.04 A within 0.25 V costs 8 160 µF for every millisecond of pulse."* Written forward: *"Sustained current comes from the adapter: a 0.25 V hold at 2.04 A costs 8 160 µF for every millisecond."*
+
+  Negative reasoning belongs one level down, in the proof: a measurement that rules out one of several candidate parts, or a calculation that eliminates a value, stays.
 - **A sentence that restates the heading above it.**
 - **Closing paragraphs that summarise what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
