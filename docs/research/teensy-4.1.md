@@ -51,7 +51,7 @@ Three open points:
 
 The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36–38 on pages 67–68 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
 
-**PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section" (checked 2026-08-26). A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
+**PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
 
 ### Powering from something other than USB
 
@@ -76,7 +76,7 @@ Pins 20, 21 and 23 are A6, A7 and A9, so I²S1 costs three of the 18 analog inpu
 
 Pin 23 carries the only CAN1 RX, so I²S1 and CAN1 cannot coexist.
 
-Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp) — the library's own source, retrieved 2026-08-25.
+Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp) — the library's own source.
 
 ## Sources
 
