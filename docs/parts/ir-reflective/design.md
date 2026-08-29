@@ -354,5 +354,5 @@ The 100 nA gate leakage is the usual I_GSS specification for this class of MOSFE
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md) — the 3.3 V input limit and the 4 mA per-pin recommendation
 - [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — V_F, I_F and I_C maximums, t_r/t_f against load resistance, optimal sensing distance
 - [Changjiang S8050 datasheet via LCSC](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf) — minimum current gain
-- [UMW HT73xx-A datasheet](../../datasheets/HT73xx-A-UMW.pdf) — UTD Semiconductor, Jul 2025. Section 8.4 for the 3.3 V version, the pinning table for the TO-92 order, section 9 for the capacitors
+- [UMW HT73xx-A datasheet](../../datasheets/HT73xx-A-UMW.pdf) — UTD Semiconductor. Section 8.4 for the 3.3 V version, the pinning table for the TO-92 order, section 9 for the capacitors
 - [IRL540N datasheet](http://www.redrok.com/MOSFET_IRL540N_100V_36A_44mO_Vth2.0_TO-220.pdf) — gate threshold voltage and total gate charge

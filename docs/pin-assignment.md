@@ -96,7 +96,7 @@ Pins 14–27 and 38–41 are the analog-capable ones, so any digital use of thos
 
 ## Sources
 
-- [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) — rev 4, dated 2021-09-20. Every pin figure above
+- [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) — rev 4. Every pin figure above
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) — pin counts, microSD via SDIO, Ethernet PHY, USB host
 - [`research/teensy-4.1.md`](research/teensy-4.1.md) — electrical limits per pin
 

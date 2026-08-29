@@ -191,6 +191,6 @@ The rate follows from the same reasoning. A baseline is only worth subtracting i
 
 ## Sources
 
-- [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — Sheet No. D3-A02201EN, 3 Oct 2005. Ratings, characteristics, internal connection diagram, design guide
-- Meter and oscilloscope readings on the stock machine, 2026-08-25
+- [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — Sheet No. D3-A02201EN. Ratings, characteristics, internal connection diagram, design guide
+- Meter and oscilloscope readings on the stock machine
 - [alldatasheet marking index for J3Y](https://www.alldatasheet.net/view_marking.jsp?Searchword=J3Y) and [Changjiang S8050 datasheet via LCSC](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf) — J3Y as the SOT-23 marking for the S8050 NPN

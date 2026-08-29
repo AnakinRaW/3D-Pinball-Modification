@@ -64,7 +64,7 @@ None — no build system exists yet. Record build/flash/test commands here once 
 
   | Format | Storage | Availability | Consequence |
   |---|---|---|---|
-  | `.epro2` | ZIP archive: `project.json` plus `SHEET/`, `PCB/`, `SYMBOL/`, `FOOTPRINT/`, `INSTANCE/`, `BLOB/`, `POUR/`, entries named by UUID | Shipping since V3.2.149 (2026-06-15) — File → Save As → Save Project to Local | No git diff, but unzips with standard tools and parses |
+  | `.epro2` | ZIP archive: `project.json` plus `SHEET/`, `PCB/`, `SYMBOL/`, `FOOTPRINT/`, `INSTANCE/`, `BLOB/`, `POUR/`, entries named by UUID | Shipping since V3.2.149 — File → Save As → Save Project to Local | No git diff, but unzips with standard tools and parses |
   | `.eprj` / `.eprj2` | Single SQLite3 database, used by offline projects | Current | No git diff; readable only via `sqlite3` |
   | `.eprj3` | Directory of line-based JSON records | **Documented but not shipping** — absent from the changelog through V3.2.149 | Would diff in git. Switch to it when it appears |
 
