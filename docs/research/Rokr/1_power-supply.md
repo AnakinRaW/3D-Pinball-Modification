@@ -11,7 +11,7 @@ The stock machine requires the following loads:
 | Load | Qty | Per unit | Total | Note |
 |---|---|---|---|---|
 | Bumper solenoid | 3 | 0.68 A while energized | 2.04 A | Measured in [`3_bumper-control.md`](3_bumper-control.md) |
-| Single-colour LED position, warm white | ~111 | 10 mA estimated | 1.11 A | 83 strip positions plus 28 discrete, counted in [`4_lightning.md`](4_lightning.md) |
+| Single-colour LED position, warm white | ~111 | 10 mA estimated | 1.11 A | 83 strip positions plus 28 discrete, counted in [`4_lighting.md`](4_lighting.md) |
 | Multicolour LED, bumper centre | 1 | ≤ 60 mA at full white | 0.06 A | Probably a WS2812B |
 | IR reflective sensor channel | 3 | 10 mA average | 0.03 A | Measured in [`2_ir-reflective-sensor-p33.md`](2_ir-reflective-sensor-p33.md) |
 | IR break-beam | 1 | ≤ 25 mA estimated | 0.03 A | Convention for a through-beam emitter and receiver |
