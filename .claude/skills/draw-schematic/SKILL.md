@@ -7,7 +7,7 @@ description: Use when drawing, generating or updating a wiring diagram or schema
 
 Diagrams in this repository are hand-authored SVG showing modules as labelled blocks and nets as coloured wires between named pins. They exist to make a circuit followable by someone who cannot read a conventional symbol schematic. The EasyEDA project remains the design of record.
 
-Existing examples to match: `docs/parts/ir-reflective/pulsed-schematic.svg`, `docs/research/Rokr/IR-Reflective-Mainboard-Schematic.svg`.
+Existing examples to match: `docs/parts/ir-reflective/pulsed-schematic.svg`, `docs/research/Rokr/2_IR-Reflective-Mainboard-Schematic.svg`.
 
 ## Before drawing
 
