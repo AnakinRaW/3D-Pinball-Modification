@@ -141,6 +141,10 @@ Banned:
 - **Revision narrative.** No account of what a passage said before, what was corrected, or why it changed. Git carries that. A document reads as though its current content had always stood there.
 - **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 
+- **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula and the hyphen inside a compound word stay.
+
+**The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
+
 Prefer the table or the link over a paragraph introducing the table or the link.
 
 **Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
