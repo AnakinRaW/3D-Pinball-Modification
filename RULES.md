@@ -172,6 +172,17 @@ Cross-checking:
 
 Arduino and ESP32 material often transfers for software questions, and never for electrical or pin-level ones.
 
-## 12. Amending these rules
+## 12. Reversibility
+
+The stock machine's original functionality must remain restorable. An alteration is permitted where the part it touches can still do what it did before, and forbidden where it cannot.
+
+| Alteration | Verdict |
+|---|---|
+| Re-soldering a stock board | Forbidden |
+| Cutting or drilling a part so that its original purpose is destroyed | Forbidden |
+| Drilling a new hole in the playfield or in a track | Permitted, the original function survives it |
+| Cutting a cable | Permitted once a connector is soldered to each end |
+
+## 13. Amending these rules
 
 New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
