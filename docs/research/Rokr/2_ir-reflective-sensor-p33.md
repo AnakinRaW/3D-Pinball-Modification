@@ -163,7 +163,8 @@ Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT
 
 The three-digit scheme puts a decade exponent in the last character, so `01B` has no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board.
 
-**TODO: Read the fourth resistor**
+> [!WARNING]
+> **TODO: Read the fourth resistor**
 
 The reconstruction has Q1 switching the LED cathode to ground through the 180 Ω resistor and driven from the controller through the 1 kΩ, and Q2 taking Pin 2 straight onto its base, with the 16 kΩ as its collector pull-up and the output inverted to a 0–5 V level for the controller.
 
@@ -179,7 +180,8 @@ Three independent numbers follow from the reconstruction and match what was meas
 
 The flat ceiling on Pin 2 is the strongest of the three. A resistor to ground would give an output proportional to the photocurrent, rising to whatever R1 and that resistor divide the 5 V rail into — volts, not 0.6 V. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and the datasheet's Fig. 6 puts t<sub>f</sub> above t<sub>r</sub> across the whole plotted load range.
 
-**TODO: the ceiling argument rules out a divider without Q2, and not a resistor in parallel with the base-emitter junction, which clamps at 0.6 V just the same. The fourth, unread resistor is the candidate for that position. Reading its marking settles it.**
+> [!WARNING]
+> **TODO: the ceiling argument rules out a divider without Q2, and not a resistor in parallel with the base-emitter junction, which clamps at 0.6 V just the same. The fourth, unread resistor is the candidate for that position. Reading its marking settles it.**
 
 The LED current of 18–20 mA sits 2.5× inside the 50 mA absolute maximum, and the phototransistor's ≤ 2.65 mA well inside its 20 mA I<sub>C</sub> maximum.
 
