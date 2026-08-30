@@ -1,0 +1,159 @@
+<svg viewBox="0 0 940 690" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="940" height="690" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Ball count board P28 on the LED chain</text>
+  <text x="30" y="56" font-size="13" fill="#666">Two WS2811 supply the six drive channels. P28 is reused unchanged and costs no Teensy pin.</text>
+
+  <!-- Teensy -->
+  <rect x="40" y="90" width="150" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="56" y="115" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <circle cx="190" cy="130" r="6" fill="#8a2be2"/>
+  <text x="175" y="134" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">DATA</text>
+  <text x="175" y="150" text-anchor="end" font-size="11.5" fill="#777">one chain data line</text>
+  <circle cx="115" cy="170" r="6" fill="#1a1a1a"/>
+  <text x="115" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <!-- Level shifter -->
+  <rect x="250" y="90" width="180" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="266" y="115" font-size="16" font-weight="700" fill="#2c3e50">CD74HCT125E</text>
+  <text x="266" y="133" font-size="11.5" fill="#777">one of four channels</text>
+  <circle cx="250" cy="130" r="6" fill="#8a2be2"/>
+  <text x="262" y="155" font-size="13" font-weight="700" fill="#8a2be2">A</text>
+  <circle cx="430" cy="130" r="6" fill="#8a2be2"/>
+  <text x="418" y="155" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">Y</text>
+  <circle cx="340" cy="170" r="6" fill="#1a1a1a"/>
+  <text x="340" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <line x1="196" y1="130" x2="244" y2="130" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="436" y1="130" x2="500" y2="130" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="500" y1="130" x2="500" y2="205" stroke="#8a2be2" stroke-width="2.5"/>
+
+  <!-- Ground -->
+  <line x1="115" y1="176" x2="115" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="115" y1="250" x2="380" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="340" y1="176" x2="340" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="250" r="4" fill="#1a1a1a"/>
+  <line x1="380" y1="250" x2="380" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="380" y1="404" x2="414" y2="404" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="380" cy="404" r="4" fill="#1a1a1a"/>
+  <line x1="380" y1="564" x2="414" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- Series resistor -->
+  <rect x="487" y="205" width="26" height="60" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="475" y="230" text-anchor="end" font-size="11.5" fill="#777">R1</text>
+  <text x="525" y="230" font-size="13" font-weight="700" fill="#1a1a1a">100 &#937;</text>
+  <text x="525" y="248" font-size="11.5" fill="#777">47 to 220 &#937;</text>
+
+  <line x1="500" y1="265" x2="500" y2="284" stroke="#8a2be2" stroke-width="2.5"/>
+  <text x="525" y="285" font-size="11.5" fill="#777">upstream pixels on the chain</text>
+
+  <!-- WS2811 number one -->
+  <rect x="420" y="290" width="170" height="140" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="436" y="314" font-size="15" font-weight="700" fill="#5c4a00">WS2811</text>
+  <text x="436" y="330" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
+  <circle cx="500" cy="290" r="6" fill="#8a2be2"/>
+  <text x="512" y="308" font-size="11.5" font-weight="700" fill="#8a2be2">DIN</text>
+  <circle cx="500" cy="430" r="6" fill="#8a2be2"/>
+  <text x="512" y="422" font-size="11.5" font-weight="700" fill="#8a2be2">DOUT</text>
+  <circle cx="420" cy="404" r="6" fill="#1a1a1a"/>
+  <text x="432" y="408" font-size="11.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <circle cx="420" cy="360" r="6" fill="#ffffff" stroke="#777" stroke-width="2"/>
+  <text x="432" y="364" font-size="11.5" font-weight="700" fill="#444">SET</text>
+  <text x="432" y="378" font-size="11.5" fill="#777">left open, 800 kHz</text>
+  <circle cx="590" cy="320" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="316" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 1</text>
+  <circle cx="590" cy="360" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="356" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 2</text>
+  <circle cx="590" cy="400" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="396" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 3</text>
+
+  <line x1="500" y1="436" x2="500" y2="444" stroke="#8a2be2" stroke-width="2.5"/>
+
+  <!-- WS2811 number two -->
+  <rect x="420" y="450" width="170" height="140" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="436" y="474" font-size="15" font-weight="700" fill="#5c4a00">WS2811</text>
+  <text x="436" y="490" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
+  <circle cx="500" cy="450" r="6" fill="#8a2be2"/>
+  <text x="512" y="468" font-size="11.5" font-weight="700" fill="#8a2be2">DIN</text>
+  <circle cx="500" cy="590" r="6" fill="#8a2be2"/>
+  <text x="512" y="582" font-size="11.5" font-weight="700" fill="#8a2be2">DOUT</text>
+  <circle cx="420" cy="564" r="6" fill="#1a1a1a"/>
+  <text x="432" y="568" font-size="11.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <circle cx="420" cy="520" r="6" fill="#ffffff" stroke="#777" stroke-width="2"/>
+  <text x="432" y="524" font-size="11.5" font-weight="700" fill="#444">SET</text>
+  <text x="432" y="538" font-size="11.5" fill="#777">left open, 800 kHz</text>
+  <circle cx="590" cy="480" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="476" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 4</text>
+  <circle cx="590" cy="520" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="516" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 5</text>
+  <circle cx="590" cy="560" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="578" y="556" text-anchor="end" font-size="11.5" font-weight="700" fill="#8a6d0b">OUT 6</text>
+
+  <line x1="500" y1="596" x2="500" y2="618" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="500" y1="618" x2="300" y2="618" stroke="#8a2be2" stroke-width="2.5"/>
+  <text x="290" y="622" text-anchor="end" font-size="11.5" fill="#777">on to the rest of the chain</text>
+
+  <!-- 5 V for the common -->
+  <text x="632" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">+5 V</text>
+  <line x1="632" y1="240" x2="632" y2="265" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="632" y1="265" x2="674" y2="265" stroke="#c0392b" stroke-width="2.5"/>
+
+  <!-- Connector -->
+  <rect x="668" y="250" width="24" height="335" rx="4" fill="#ffffff" stroke="#777" stroke-width="1.5"/>
+  <circle cx="680" cy="265" r="6" fill="#c0392b"/>
+  <circle cx="680" cy="320" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="680" cy="360" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="680" cy="400" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="680" cy="480" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="680" cy="520" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="680" cy="560" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="680" y="606" text-anchor="middle" font-size="12" font-weight="700" fill="#444">7-way connector</text>
+  <text x="680" y="622" text-anchor="middle" font-size="11.5" fill="#777">pin numbering and channel assignment not yet established</text>
+
+  <!-- Drive lines -->
+  <line x1="596" y1="320" x2="674" y2="320" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="596" y1="360" x2="674" y2="360" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="596" y1="400" x2="674" y2="400" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="596" y1="480" x2="674" y2="480" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="596" y1="520" x2="674" y2="520" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="596" y1="560" x2="674" y2="560" stroke="#b7950b" stroke-width="2.5"/>
+
+  <!-- P28 -->
+  <rect x="740" y="195" width="180" height="400" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="756" y="222" font-size="15" font-weight="700" fill="#5c4a00">P28</text>
+  <text x="756" y="240" font-size="11.5" fill="#777">six amber LEDs</text>
+
+  <line x1="686" y1="265" x2="880" y2="265" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="880" y1="265" x2="880" y2="560" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="880" cy="320" r="4" fill="#c0392b"/>
+  <circle cx="880" cy="360" r="4" fill="#c0392b"/>
+  <circle cx="880" cy="400" r="4" fill="#c0392b"/>
+  <circle cx="880" cy="480" r="4" fill="#c0392b"/>
+  <circle cx="880" cy="520" r="4" fill="#c0392b"/>
+  <line x1="880" y1="320" x2="836" y2="320" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,310 836,330 814,320" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="310" x2="814" y2="330" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="320" x2="686" y2="320" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="880" y1="360" x2="836" y2="360" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,350 836,370 814,360" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="350" x2="814" y2="370" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="360" x2="686" y2="360" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="880" y1="400" x2="836" y2="400" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,390 836,410 814,400" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="390" x2="814" y2="410" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="400" x2="686" y2="400" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="880" y1="480" x2="836" y2="480" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,470 836,490 814,480" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="470" x2="814" y2="490" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="480" x2="686" y2="480" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="880" y1="520" x2="836" y2="520" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,510 836,530 814,520" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="510" x2="814" y2="530" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="520" x2="686" y2="520" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="880" y1="560" x2="836" y2="560" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="836,550 836,570 814,560" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <line x1="814" y1="550" x2="814" y2="570" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="814" y1="560" x2="686" y2="560" stroke="#b7950b" stroke-width="2.5"/>
+
+  <text x="30" y="656" font-size="12" fill="#666">Common anode is assumed and not yet confirmed. A diode test from the common pin to one LED pad settles it; a common cathode instead</text>
+  <text x="30" y="672" font-size="12" fill="#666">requires cutting the common trace on P28 and joining the six anodes.</text>
+</svg>
