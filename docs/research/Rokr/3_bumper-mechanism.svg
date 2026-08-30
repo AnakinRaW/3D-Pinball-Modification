@@ -1,6 +1,6 @@
 <svg viewBox="0 0 1240 760" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="1240" height="760" fill="#ffffff"/>
-  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Stock bumper — trigger and drive</text>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Stock bumper trigger and wiring</text>
 
   <!-- ===== Playfield and foil ===== -->
   <rect x="70" y="276" width="250" height="24" fill="#efe4cf" stroke="#a08850" stroke-width="1.5"/>
@@ -32,10 +32,9 @@
   <text x="470" y="231" font-size="12" fill="#666">(varies with probe point)</text>
 
   <!-- ===== Foil wire to mainboard ===== -->
-  <circle cx="660" cy="273" r="4.5" fill="#c0392b"/>
-  <line x1="660" y1="273" x2="720" y2="273" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="720" y1="273" x2="720" y2="210" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="720" y1="210" x2="800" y2="210" stroke="#c0392b" stroke-width="2.5"/>
+  <polyline points="660,273 720,273 720,210 800,210" fill="none" stroke="#8a8a8a" stroke-width="5"/>
+  <polyline points="660,273 720,273 720,210 800,210" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <circle cx="660" cy="273" r="4.5" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.5"/>
   <text x="714" y="170" font-size="11.5" fill="#666" text-anchor="end">eyelet terminal, screwed to the foil</text>
 
   <!-- ===== Solenoid ===== -->
@@ -64,14 +63,14 @@
   <text x="451" y="423" font-size="12" font-weight="700" fill="#c0392b">coil A</text>
   <line x1="436" y1="460" x2="800" y2="460" stroke="#1a1a1a" stroke-width="2.5"/>
   <text x="451" y="453" font-size="12" font-weight="700" fill="#1a1a1a">coil B</text>
-  <text x="451" y="482" font-size="11.5" fill="#777">2-pin connector · colours are convention;</text>
-  <text x="451" y="498" font-size="11.5" fill="#777">which pin is which, not traced</text>
+  <text x="451" y="482" font-size="11.5" fill="#777">2-pin connector · one pin on the MOSFET drain,</text>
+  <text x="451" y="498" font-size="11.5" fill="#777">the other at ground; which is which, not traced</text>
 
   <!-- ===== Mainboard ===== -->
   <rect x="800" y="130" width="410" height="430" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="1005" y="162" font-size="16" font-weight="700" fill="#2c3e50" text-anchor="middle">MAINBOARD</text>
 
-  <circle cx="800" cy="210" r="6" fill="#c0392b"/>
+  <circle cx="800" cy="210" r="6" fill="#ffffff" stroke="#8a8a8a" stroke-width="2"/>
   <text x="816" y="206" font-size="13" font-weight="700" fill="#c0392b">FOIL · +5 V</text>
   <circle cx="800" cy="250" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <text x="816" y="246" font-size="13" font-weight="700" fill="#8a6d0b">SHELL 1</text>
@@ -87,21 +86,15 @@
   <text x="816" y="534" font-size="12" fill="#666">cut-off in hardware or firmware — not identified</text>
   <text x="816" y="552" font-size="12" fill="#666">SHELL 2/3 and COIL 2/3 wired alike, not drawn</text>
 
-  <!-- ===== Parts read off the mainboard ===== -->
-  <rect x="800" y="586" width="410" height="148" rx="8" fill="#fdfaee" stroke="#d4b106" stroke-width="1.5"/>
-  <text x="816" y="612" font-size="12.5" font-weight="700" fill="#7a5c00">OBSERVED — roles not traced</text>
-  <text x="816" y="640" font-size="12" fill="#444">At the coil connectors: 3 × 8-pin package, then</text>
-  <text x="816" y="656" font-size="12" fill="#444">3 × SOT-23 'J3Y' (S8050 NPN) behind them, and</text>
-  <text x="816" y="672" font-size="12" fill="#444">per channel 1 diode + 2 resistors (D3, R9, R6)</text>
-  <text x="816" y="698" font-size="12" fill="#444">At the four eyelet wires, elsewhere: C10 alone,</text>
-  <text x="816" y="714" font-size="12" fill="#444">no resistor sits close to that group</text>
-
   <!-- ===== Legend ===== -->
   <text x="70" y="612" font-size="13" font-weight="700" fill="#1a1a1a">Wire colours</text>
-  <line x1="70" y1="634" x2="100" y2="634" stroke="#c0392b" stroke-width="2.5"/>
-  <text x="112" y="638" font-size="12" fill="#444">+5 V — playfield foil, and the coil pin drawn as supply</text>
-  <line x1="70" y1="660" x2="100" y2="660" stroke="#1a1a1a" stroke-width="2.5"/>
-  <text x="112" y="664" font-size="12" fill="#444">coil pin drawn as return — assignment not traced</text>
-  <line x1="70" y1="686" x2="100" y2="686" stroke="#b7950b" stroke-width="2.5"/>
-  <text x="112" y="690" font-size="12" fill="#444">shell sense — one line per bumper</text>
+  <line x1="70" y1="634" x2="100" y2="634" stroke="#8a8a8a" stroke-width="5"/>
+  <line x1="70" y1="634" x2="100" y2="634" stroke="#ffffff" stroke-width="2.5"/>
+  <text x="112" y="638" font-size="12" fill="#444">white — +5 V to the playfield foil</text>
+  <line x1="70" y1="660" x2="100" y2="660" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="112" y="664" font-size="12" fill="#444">red — coil, one conductor of the 2-pin cable</text>
+  <line x1="70" y1="686" x2="100" y2="686" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="112" y="690" font-size="12" fill="#444">black — coil, the other conductor</text>
+  <line x1="70" y1="712" x2="100" y2="712" stroke="#b7950b" stroke-width="2.5"/>
+  <text x="112" y="716" font-size="12" fill="#444">shell sense — one line per bumper, conductor colour not recorded</text>
 </svg>
