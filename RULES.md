@@ -40,6 +40,7 @@ Concretely, that means:
 - **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part means re-deriving every bound, margin, current and time constant that took it as an input, not only the figure that prompted the change. The re-derivation follows rule 9 — back to the sources, never to the earlier result. Finish by grepping the old number across the subsystem, as rule 7 requires for the documents.
 - **No pin or part is loaded past its specified figure, transients included.** Where a published figure covers only sustained operation, it still governs: a brief peak above it is designed out rather than argued away. The worst case is computed from the external circuit alone — internal current limiting that no datasheet states does not enter the calculation, however real it is.
 - Reproducible: someone else could rebuild this from the repository alone.
+- **An open measurement blocks only what actually depends on it.** A design decision and the build detail that follows from it are separate things, and an unresolved figure usually sits in the second. Settle the decision, name the detail it defers, and carry on. Presenting a pending measurement as a fork in the design stalls work that was never waiting on it.
 
 When a shortcut is taken deliberately, record it as a known limitation rather than leaving it silent.
 
