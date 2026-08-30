@@ -16,6 +16,10 @@ This repository hosts everything for the project:
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
 
+## Reversibility
+
+The modification is planned to be reversible: the stock machine can be returned to its original functionality.
+
 ## Status
 
 Early stage. Research and design in progress; nothing has been built yet.

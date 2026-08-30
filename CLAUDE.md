@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 [`RULES.md`](RULES.md) is the working agreement for this repository and takes precedence over anything below. Read it before acting. Its load-bearing points:
 
 - **Never push.** Commit only when explicitly told, or the conditions of `RULES.md` allow it.
+- **The modification is reversible** (rule 12). No stock board is re-soldered and no part is cut or drilled past its original purpose. Electrical access to a stock board is therefore limited to its connectors, or the board is swapped out whole and kept intact.
 - **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
 - **Assume a software-engineering background, not an electrical one.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
 - **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
