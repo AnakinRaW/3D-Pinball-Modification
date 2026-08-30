@@ -2,7 +2,7 @@
 
 Reflective IR channels detect the ball. Three sensor boards come out of the stock machine; It is planned to use 5 additional sensors in this modification. To simplify logic and programming those remaining five sensors boards are rebuilt as 1:1 copies of the original sensors boards. The Teensy 4.1 takes over the role the stock mainboard played — pulsing the emitters and evaluating the returns.
 
-The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/ir-reflective-sensor-p33.md`](../../research/Rokr/ir-reflective-sensor-p33.md). Everything below builds on the interface established there: 
+The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md). Everything below builds on the interface established there: 
 
 - Pin 1 supply, 
 - Pin 2 phototransistor emitter output, 
@@ -28,7 +28,7 @@ It was built and it works electrically. It is unusable anyway, because the photo
 |---|---|
 | Ambient movement swamps the signal | In the test build, small movements near the sensor shifted the level by several times what the 9 mm ball produces. A fixed threshold no longer separates ball from disturbance |
 | Not calibratable | The baseline moves with time of day, room lighting and playfield surroundings. A threshold calibrated at build time is wrong an hour later, and direct sunlight can saturate the phototransistor outright |
-| The stock machine does not do it either | It pulses at 333 Hz and subtracts, [as measured](../../research/Rokr/ir-reflective-sensor-p33.md) |
+| The stock machine does not do it either | It pulses at 333 Hz and subtracts, [as measured](../../research/Rokr/2_ir-reflective-sensor-p33.md) |
 
 ## Chosen circuit
 
@@ -58,6 +58,36 @@ Every figure here is derived in [the appendix](#appendix-derivations).
 | Signal voltage at the ADC pins | 0 … **2.54 V** at V_OUT max | the 3.3 V pin limit | **0.76 V** |
 | Phototransistor settling after one 300 µs phase | 75 % worst case, 99.9 % typical | — | accepted, see the appendix |
 | Switching transistor Q1 | IRL540N, logic-level MOSFET, TO-220 | 36 A part switching 83 mA | chosen because it is on hand |
+
+> [!WARNING]
+> ### TODO: measure what a ball returns
+>
+>The one input the table above does not compute is how much extra photocurrent the phototransistor delivers with a ball in front of it. The appendix assumes 50 µA, and the 4.7 kΩ, the 235 mV across it and the 73 ADC steps of resolution all follow from that.
+>
+>The datasheet characterises the sensor against a flat aluminium mirror at 4 mm. What a 9 mm ball returns depends on its curvature, its surface and its distance, and the datasheet has no curve for that.
+>
+>**Measure it before the mainboard is laid out.** One sensor board, two resistors and a multimeter answer the question. The 4.7 kΩ is then chosen from a measurement, and a channel that turns out short of signal costs one resistor instead of eight.
+>
+>**Setup.** A wire to ground does what Q1 does, so no switching transistor is needed. Q1 drops 8 mV in the built circuit, which moves the LED current by 0.04 mA.
+>
+>```
+>3.3 V   to Pin 1
+>Pin 2   to one end of a 4.7 kΩ, its other end to GND
+>Pin 3   through a 220 Ω to a loose wire: on GND the emitter is lit, >lifted it is dark
+>
+>meter   DC volts, red probe where Pin 2 meets the 4.7 kΩ, black probe >on GND
+>```
+>
+>**Procedure.** Mount the sensor at the distance it will have over the track. Check the wiring first by holding a hand in front of it with the wire on GND, which must move the reading. Then take four readings:
+>
+>| | clear track | ball over the sensor |
+>|---|---|---|
+>| wire on GND | | |
+>| wire lifted | | |
+>
+>Subtract lifted from on-GND in each column, then subtract the two results from each other. That figure is what one channel detects, and 235 mV is what 50 µA predicts.
+>
+>Far below that, the threshold cannot separate a ball from noise and the emitter goes brighter. At the 2.54 V ceiling the channel has no headroom left and the pull-down goes smaller. Both changes are in the table below.
 
 ### Adjustment knobs
 
@@ -187,7 +217,7 @@ Five of the eight sensors are rebuilt as copies of the stock board. The photoint
 
 | Qty | Part | Through-hole | SMD | Use |
 |---|---|---|---|---|
-| 5 | Reflective photointerrupter | — | GP2S700HCP | Emitter and detector. The stock part is presumed to be this type, see [`research/Rokr/ir-reflective-sensor-p33.md`](../../research/Rokr/ir-reflective-sensor-p33.md) |
+| 5 | Reflective photointerrupter | — | GP2S700HCP | Emitter and detector. The stock part is presumed to be this type, see [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md) |
 | 5 | Resistor 1.6 kΩ | | | **R1**, collector load. The stock boards measure 1.585 kΩ, which is not a stock value; 1.6 kΩ moves the channel ceiling by 6 mV |
 
 ## Appendix: derivations
@@ -271,6 +301,8 @@ Settling          t_r/t_f max 100 µs at R_L = 1 kΩ         → ≈ 470 µs at 
                   typical part: 20 µs → 94 µs, τ = 43 µs   → 99.9 % settled
 ```
 
+**Where the 50 µA comes from.** The datasheet characterises I_C at 60 µA minimum and 410 µA maximum, at I_F = 4 mA, V_CE = 2 V and d = 4 mm against an aluminium-evaporated mirror on glass. Two factors separate that condition from this design and pull in opposite directions: the emitters run at 10.0 mA, 2.5× the characterising current, and the 9 mm ball returns less than a mirror. The datasheet gives no curve of I_C against forward current, so neither factor can be computed. The 50 µA sits below the datasheet minimum at a quarter of the drive current. The measurement that settles it is in [TODO: measure what a ball returns](#todo-measure-what-a-ball-returns).
+
 A smaller value is faster and more tolerant of ambient light, and less sensitive. Signal strength is the scarce quantity with the 9 mm ball, so 4.7 kΩ is the starting point.
 
 **The 75 % is accepted, not fixed by a longer phase.** Settling and sample count pull against each other, and the amplitude loss is the cheaper one to pay: the startup calibration absorbs a constant factor, whereas a missed pass cannot be recovered.
@@ -350,9 +382,9 @@ The 100 nA gate leakage is the usual I_GSS specification for this class of MOSFE
 
 ## Sources
 
-- [`research/Rokr/ir-reflective-sensor-p33.md`](../../research/Rokr/ir-reflective-sensor-p33.md) — the stock board's circuit, the measured 1.585 kΩ, the 333 Hz pulsing and the ambient-light reasoning behind it
+- [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md) — the stock board's circuit, the measured 1.585 kΩ, the 333 Hz pulsing and the ambient-light reasoning behind it
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md) — the 3.3 V input limit and the 4 mA per-pin recommendation
-- [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — V_F, I_F and I_C maximums, t_r/t_f against load resistance, optimal sensing distance
+- [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — V_F, I_F and I_C maximums, the I_C transfer characteristic at I_F = 4 mA, t_r/t_f against load resistance, optimal sensing distance
 - [Changjiang S8050 datasheet via LCSC](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf) — minimum current gain
 - [UMW HT73xx-A datasheet](../../datasheets/HT73xx-A-UMW.pdf) — UTD Semiconductor. Section 8.4 for the 3.3 V version, the pinning table for the TO-92 order, section 9 for the capacitors
 - [IRL540N datasheet](http://www.redrok.com/MOSFET_IRL540N_100V_36A_44mO_Vth2.0_TO-220.pdf) — gate threshold voltage and total gate charge
