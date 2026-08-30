@@ -8,7 +8,7 @@ Three bumpers sit on the EG01 playfield. Each is an open-frame push/pull solenoi
 
 A conductive foil glued onto the playfield sits at 5 V whenever the machine runs (measured). Shell, plunger and frame form one conductive node; diode test and resistance from each coil pin to the frame read open, so this node is isolated from the coil.
 
-A ball on the foil touching a shell connects that bumper's frame to 5 V. The conductive path reads 7–30 Ω, measured along the foil and across a closed contact, at various points. Each frame has its own wire to the mainboard, which is how the board tells the three bumpers apart.
+A ball on the foil touching a shell connects that bumper's frame to 5 V. The conductive path reads 7-30 Ω, measured along the foil and across a closed contact, at various points. Each frame has its own wire to the mainboard, which is how the board tells the three bumpers apart.
 
 ## Trigger behaviour
 
@@ -24,7 +24,7 @@ At power-on all three coils pull in once, together, and light and sound follow a
 | Supply | 5 V, measured in operation |
 | Winding resistance | ≈ 7.35 Ω, measured |
 | Coil current | ≈ 0.68 A, measured in series at the coil while running; 5.0 V ÷ 7.35 Ω gives the same, so the stock trigger path drops nothing measurable |
-| Power while energized | ≈ 3.4 W — 5.0 V × 0.68 A |
+| Power while energized | ≈ 3.4 W, 5.0 V × 0.68 A |
 | Stroke | ≈ 6 mm, measured installed with the shell mounted |
 
 The manufacturer is unknown, probably some custom designed component.
@@ -51,8 +51,8 @@ The coil connectors and the four eyelet wires land in two separate areas of the 
 |---|---|---|
 | 3 × SO-8 marked `9435` | at the 2-pin coil connectors, closer to them than the J3Y | P-channel -30 V MOSFET |
 | 3 × SOT-23 marked `J3Y` | same area, behind the 8-pin packages | maps to an S8050 NPN SOT-23 |
-| 1 diode + 2 resistors per channel — `D3`, `R9`, `R6` on one channel | same area, at the coil pins | `D3` SOD-323 marked `S4` — a 1N5819WS, 40 V 1 A Schottky. `R9` marked `472` — 4.7 kΩ, `R6` marked `01B` — 1.00 kΩ |
-| `C10` | at the four eyelet wires — foil and the three shells | type and value not read |
+| 1 diode + 2 resistors per channel: `D3`, `R9`, `R6` on one channel | same area, at the coil pins | `D3` SOD-323 marked `S4`, a 1N5819WS, 40 V 1 A Schottky. `R9` marked `472`, 4.7 kΩ. `R6` marked `01B`, 1.00 kΩ |
+| `C10` | at the four eyelet wires: foil and the three shells | type and value not read |
 | 1 × controller marked `EG01 491E3F` | position not recorded | `EG01` is the kit's model number, so the package carries a house marking and the type is not identifiable from it |
 
 ### Trigger circuit
@@ -78,9 +78,9 @@ No resistor sits close to the eyelet wires. While no ball touches a bumper shell
 
 ## Sources
 
-- Meter and in-operation measurements on the stock machine — winding resistance, coil-to-frame isolation, closed-contact resistance, foil potential, supply voltage, stroke
-- Observation on the stock machine — all three coils pull in once, together, ahead of light and sound, both when the supply is connected and on a restart that keeps it connected
-- [BL Galaxy Electrical S8050 datasheet](../../datasheets/S8050.PDF) — document BL/SSSTC079 Rev. A: J3Y marking (ordering information), maximum ratings
-- [Vishay Siliconix Si9435BDY, P-Channel 30-V (D-S) MOSFET](https://www.vishay.com/docs/72245/si9435bd.pdf) — document number 72245 Rev. D: channel type and drain-source voltage
-- [1N5819WS SOD-323 Schottky barrier rectifier](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/6778/5399_1N5819WS%20SOD-323.PDF) — reverse voltage, average rectified forward current, forward voltage; corroborated against [QEC 1N5817WS–1N5819WS](https://www.qec.com.tw/upload/tempupload/DataSheet_file/1N5817WS-1N5819WS(SOD-323)QEC.pdf)
-- [EIA-96 resistor code table](https://www.hobby-hour.com/electronics/eia96-smd-resistors.php) — `01B` resolves as index 01 (100) × 10
+- Meter and in-operation measurements on the stock machine: winding resistance, coil-to-frame isolation, closed-contact resistance, foil potential, supply voltage, stroke
+- Observation on the stock machine: all three coils pull in once, together, ahead of light and sound, both when the supply is connected and on a restart that keeps it connected
+- [BL Galaxy Electrical S8050 datasheet](../../datasheets/S8050.PDF), document BL/SSSTC079 Rev. A: J3Y marking (ordering information), maximum ratings
+- [Vishay Siliconix Si9435BDY, P-Channel 30-V (D-S) MOSFET](https://www.vishay.com/docs/72245/si9435bd.pdf), document number 72245 Rev. D: channel type and drain-source voltage
+- [1N5819WS SOD-323 Schottky barrier rectifier](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/6778/5399_1N5819WS%20SOD-323.PDF): reverse voltage, average rectified forward current, forward voltage; corroborated against [QEC 1N5817WS to 1N5819WS](https://www.qec.com.tw/upload/tempupload/DataSheet_file/1N5817WS-1N5819WS(SOD-323)QEC.pdf)
+- [EIA-96 resistor code table](https://www.hobby-hour.com/electronics/eia96-smd-resistors.php): `01B` resolves as index 01 (100) × 10

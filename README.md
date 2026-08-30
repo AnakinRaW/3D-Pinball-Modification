@@ -18,7 +18,7 @@ This repository hosts everything for the project:
 
 ## Status
 
-Early stage — research and design in progress; nothing has been built yet.
+Early stage. Research and design in progress; nothing has been built yet.
 
 The modification is built around a **Teensy 4.1** controller.
 
@@ -28,4 +28,4 @@ This modification is developed with AI and in the context that electricity is in
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).

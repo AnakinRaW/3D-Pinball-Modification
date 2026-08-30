@@ -8,7 +8,7 @@ Figures are quoted from PJRC's [product page](https://www.pjrc.com/store/teensy4
 
 | Property | Value |
 |---|---|
-| Processor | NXP i.MX RT1062 — ARM Cortex-M7 @ 600 MHz, FPU for 32- and 64-bit |
+| Processor | NXP i.MX RT1062, ARM Cortex-M7 @ 600 MHz, FPU for 32- and 64-bit |
 | Flash | 7936 KB |
 | RAM | 1024 KB, of which 512 KB tightly coupled |
 | EEPROM | 4 KB (emulated) |
@@ -25,7 +25,7 @@ Figures are quoted from PJRC's [product page](https://www.pjrc.com/store/teensy4
 
 PJRC states it directly on the product page: the pins are not 5 V tolerant, and no digital pin may be driven above 3.3 V. The warning is repeated separately for the analog pins.
 
-This is the most likely way to destroy the board. Every signal arriving from outside — a sensor, a switch pulled up to 5 V, the output of another board — must be confirmed to sit at or below 3.3 V, or pass through a level shifter first.
+This is the most likely way to destroy the board. Every signal arriving from outside (a sensor, a switch pulled up to 5 V, the output of another board) must be confirmed to sit at or below 3.3 V, or pass through a level shifter first.
 
 Overvoltage on a CMOS input forces current through the chip's internal protection diodes. That degrades the input over time instead of killing it outright, so a circuit that appears to work is not evidence that it is within limits. Intermittent faults weeks later are the usual symptom.
 
@@ -33,11 +33,11 @@ Overvoltage on a CMOS input forces current through the chip's internal protectio
 
 | Property | Value | Source |
 |---|---|---|
-| VIN input range | 3.6 – 5.5 V | PJRC pin assignment card 11a rev4 |
+| VIN input range | 3.6 to 5.5 V | PJRC pin assignment card 11a rev4 |
 | **Recommended maximum output current per pin** | **4 mA** | [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) |
 | Output pin figure in the comparison table | 10 mA at 3.3 V | [PJRC technical specifications table](https://www.pjrc.com/teensy/techspecs.html) |
 | 3.3 V rail available to external circuits | 250 mA | PJRC pin assignment card 11a rev4 |
-| Current draw @ 600 MHz | ≈ 100 mA | PJRC — **published for the Teensy 4.0, not the 4.1** |
+| Current draw @ 600 MHz | ≈ 100 mA | PJRC. **Published for the Teensy 4.0, not the 4.1** |
 
 Three open points:
 
@@ -47,15 +47,15 @@ Three open points:
 
 ### ADC source impedance
 
-**The maximum source resistance R_AS is 1 kΩ**, at 12 bit, f_ADCK = 40 MHz and the 150 ns sample window — [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 64. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
+**The maximum source resistance R_AS is 1 kΩ**, at 12 bit, f_ADCK = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 64. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
 
-The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36–38 on pages 67–68 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
+The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36-38 on pages 67-68 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
 
 **PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
 
 ### Powering from something other than USB
 
-The VUSB–VIN trace on the underside must be cut when an external supply is used — PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
+The VUSB-VIN trace on the underside must be cut when an external supply is used. PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
 
 ### I²S1 spends three analog-capable pins
 
@@ -70,15 +70,15 @@ if (!only_bclk)
 CORE_PIN21_CONFIG = 3;  //1:RX_BCLK
 ```
 
-The `only_bclk` path drops LRCLK together with MCLK, so it is no route to freeing pin 23 for an amplifier that needs LRCLK. Pin 23 is muxed to MCLK whether or not the amplifier uses it — a MAX98357A does not.
+The `only_bclk` path drops LRCLK together with MCLK, so it is no route to freeing pin 23 for an amplifier that needs LRCLK. Pin 23 is muxed to MCLK whether or not the amplifier uses it, and a MAX98357A does not.
 
 Pins 20, 21 and 23 are A6, A7 and A9, so I²S1 costs three of the 18 analog inputs. I²S2 (MCLK 33, BCLK 4, LRCLK 3, data out 2) costs none. `AudioOutputI2S2` is compiled under `#if defined(__IMXRT1062__)`, the Teensy 4.x part, and its `config_i2s2()` muxes `CORE_PIN33` (SAI2_MCLK), `CORE_PIN4` (TX_BCLK), `CORE_PIN3` (TX_SYNC) and `CORE_PIN2` (TX_DATA). `AudioOutputI2S2slave` omits MCLK but needs an external clock master, which the MAX98357A is not.
 
 Pin 23 carries the only CAN1 RX, so I²S1 and CAN1 cannot coexist.
 
-Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp) — the library's own source.
+Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp), the library's own source.
 
 ## Sources
 
-- [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) — specifications and the 5 V tolerance warnings
-- [Teensy technical specifications comparison table](https://www.pjrc.com/teensy/techspecs.html) — per-pin output rating
+- [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html): specifications and the 5 V tolerance warnings
+- [Teensy technical specifications comparison table](https://www.pjrc.com/teensy/techspecs.html): per-pin output rating

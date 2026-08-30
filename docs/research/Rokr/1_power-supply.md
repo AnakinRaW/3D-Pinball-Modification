@@ -27,9 +27,9 @@ A two-pin connector carries the jack onto the mainboard. The following parts sit
 
 | Seen | Assumed Reading |
 |---|---|
-| `C5`, `C8` — two radial electrolytics marked `100 10V VT`, mounted with opposite polarity orientation to one another | 100 µF / 10 V each, in parallel across the input — 200 µF total |
-| `ASMD1812-200` — 1812 SMD PPTC | Resettable overcurrent protection in the input feed |
-| `D4` — SMA package marked `MDD` `SS34` | MDD SS34 Schottky rectifier, shunt across the input |
+| `C5`, `C8`, two radial electrolytics marked `100 10V VT`, mounted with opposite polarity orientation to one another | 100 µF / 10 V each, in parallel across the input, 200 µF total |
+| `ASMD1812-200`, an 1812 SMD PPTC | Resettable overcurrent protection in the input feed |
+| `D4`, an SMA package marked `MDD` `SS34` | MDD SS34 Schottky rectifier, shunt across the input |
 
 ### Power rails capacitors
 
@@ -47,7 +47,7 @@ The board contains a resettable overcurrent fuse, `ASMD1812-200`, which is desig
 
 ## Sources
 
-- [EG01 ROKR Pinball Machine assembly instruction, Robotime Community](https://community.robotime.com/t/eg01-rokr-pinball-machine-assembly-instruction/346) — the 5 V / 2 A requirement and the symptoms listed for an underpowered supply
-- [MDD SS34 Schottky barrier rectifier datasheet](https://www.lcsc.com/datasheet/C8678.pdf) — Rev. 2024A5: reverse voltage, average rectified forward current, forward voltage
-- [JDT Fuse ASMD1812 series datasheet](../../datasheets/ASMD1812-JDT.pdf) — performance specification table, T<sub>mao</sub> vs. I<sub>hold</sub> table, parameter definitions
-- [Class D Audio Amplifier Output Filter Optimization, Analog Devices](https://www.analog.com/en/resources/technical-articles/class-d-audio-amplifier-output-filter-optimization.html) — inductor values for a bridge-tied 4–8 Ω output filter, and one inductor per leg in a balanced two-pole filter
+- [EG01 ROKR Pinball Machine assembly instruction, Robotime Community](https://community.robotime.com/t/eg01-rokr-pinball-machine-assembly-instruction/346): the 5 V / 2 A requirement and the symptoms listed for an underpowered supply
+- [MDD SS34 Schottky barrier rectifier datasheet](https://www.lcsc.com/datasheet/C8678.pdf), Rev. 2024A5: reverse voltage, average rectified forward current, forward voltage
+- [JDT Fuse ASMD1812 series datasheet](../../datasheets/ASMD1812-JDT.pdf): performance specification table, T<sub>mao</sub> vs. I<sub>hold</sub> table, parameter definitions
+- [Class D Audio Amplifier Output Filter Optimization, Analog Devices](https://www.analog.com/en/resources/technical-articles/class-d-audio-amplifier-output-filter-optimization.html): inductor values for a bridge-tied 4 to 8 Ω output filter, and one inductor per leg in a balanced two-pole filter

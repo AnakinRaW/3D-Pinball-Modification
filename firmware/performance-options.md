@@ -4,7 +4,7 @@ Reserves for the case where the main loop runs out of time. None is implemented,
 
 ## Where the time goes
 
-Eight blocking `analogRead` calls cost about 160 µs of each 300 µs phase, so roughly 53 % of the cycle. Almost all of it is wait — the conversion runs in the ADC hardware while the core sits on it. The datasheet puts one conversion at 1.25 µs at the slowest sample setting, so four averages come to about 5 µs of converter time; the rest is per-call overhead.
+Eight blocking `analogRead` calls cost about 160 µs of each 300 µs phase, so roughly 53 % of the cycle. Almost all of it is wait, because the conversion runs in the ADC hardware while the core sits on it. The datasheet puts one conversion at 1.25 µs at the slowest sample setting, so four averages come to about 5 µs of converter time; the rest is per-call overhead.
 
 That is throughput, not latency. A single call stalls the loop for 20 µs, far under the ≈ 3 ms that loses a ball.
 
@@ -28,13 +28,13 @@ volatile bool isComplete();                                       // per module:
 int           readSingle(int8_t adc_num = -1);
 ```
 
-The RT1062 carries two converters, so a pair of channels can run at the same time — four rounds instead of eight:
+The RT1062 carries two converters, so a pair of channels can run at the same time, four rounds instead of eight:
 
 ```cpp
 bool        startSynchronizedSingleRead(uint8_t pin0, uint8_t pin1);
 Sync_result readSynchronizedSingle();
 ```
 
-The two pins of a pair must sit on different converters. Whether S1–S8 split into four such pairs is unchecked; the core's analog pin table settles it.
+The two pins of a pair must sit on different converters. Whether S1 to S8 split into four such pairs is unchecked; the core's analog pin table settles it.
 
-`enableInterrupts(isr)` and `enableDMA()` exist as well. The interrupt buys little against a 300 µs phase, and the DMA call only raises the request — sequencing eight channels means building that with ADC_ETC.
+`enableInterrupts(isr)` and `enableDMA()` exist as well. The interrupt buys little against a 300 µs phase, and the DMA call only raises the request, and sequencing eight channels means building that with ADC_ETC.
