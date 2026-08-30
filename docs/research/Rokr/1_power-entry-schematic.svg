@@ -1,0 +1,84 @@
+<svg viewBox="0 0 940 540" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="940" height="540" fill="#ffffff"/>
+
+  <text x="30" y="36" font-size="20" font-weight="700" fill="#1a1a1a">Stock mainboard power entry</text>
+
+  <rect x="30" y="52" width="470" height="30" fill="#fdf3d1" stroke="#d4b106"/>
+  <text x="40" y="72" font-size="13" font-weight="700" fill="#7a5c00">ASSUMPTION — parts read visually at the power entry</text>
+
+  <!-- DC adapter and jack -->
+  <text x="40" y="150" font-size="14" font-weight="700" fill="#1a1a1a">5 V DC adapter</text>
+  <rect x="40" y="160" width="130" height="320" fill="#f4f4f4" stroke="#888" stroke-width="1.5"/>
+  <text x="52" y="186" font-size="12" fill="#555">5.5 / 2.2 mm jack</text>
+  <circle cx="170" cy="210" r="6" fill="#c0392b"/>
+  <text x="52" y="215" font-size="13" font-weight="700" fill="#c0392b">centre</text>
+  <circle cx="170" cy="450" r="6" fill="#1a1a1a"/>
+  <text x="52" y="455" font-size="13" font-weight="700" fill="#1a1a1a">sleeve</text>
+  <text x="40" y="502" font-size="11.5" fill="#777">2 A to 4 A per the manual</text>
+
+  <!-- 2-pin connector -->
+  <text x="250" y="150" font-size="12" fill="#555">2-pin connector</text>
+  <rect x="250" y="175" width="60" height="300" fill="#f4f4f4" stroke="#888" stroke-width="1.5"/>
+  <circle cx="250" cy="210" r="6" fill="#c0392b"/>
+  <circle cx="310" cy="210" r="6" fill="#c0392b"/>
+  <circle cx="250" cy="450" r="6" fill="#1a1a1a"/>
+  <circle cx="310" cy="450" r="6" fill="#1a1a1a"/>
+
+  <!-- rails -->
+  <line x1="176" y1="210" x2="250" y2="210" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="176" y1="450" x2="250" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="310" y1="210" x2="380" y2="210" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="310" y1="450" x2="850" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="450" y1="210" x2="850" y2="210" stroke="#c0392b" stroke-width="2.5"/>
+
+  <text x="332" y="200" font-size="14" font-weight="700" fill="#c0392b">+5 V</text>
+  <text x="332" y="478" font-size="14" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <!-- PPTC in the feed -->
+  <rect x="380" y="200" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="378" y="176" font-size="13" font-weight="700" fill="#1a1a1a">ASMD1812-200</text>
+  <text x="352" y="248" font-size="11.5" fill="#777">PPTC, 1812</text>
+  <text x="352" y="264" font-size="11.5" fill="#777">2 A hold / 4 A trip</text>
+
+  <!-- D4, Schottky shunt, cathode to plus -->
+  <circle cx="530" cy="210" r="4" fill="#c0392b"/>
+  <line x1="530" y1="210" x2="530" y2="298" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="510" y1="300" x2="550" y2="300" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="510" y1="300" x2="510" y2="309" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="550" y1="300" x2="550" y2="291" stroke="#1a1a1a" stroke-width="3"/>
+  <polygon points="512,340 548,340 530,303" fill="#1a1a1a"/>
+  <line x1="530" y1="340" x2="530" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="530" cy="450" r="4" fill="#1a1a1a"/>
+  <text x="566" y="306" font-size="13" font-weight="700" fill="#1a1a1a">D4 · SS34</text>
+  <text x="566" y="324" font-size="11.5" fill="#777">Schottky</text>
+
+  <!-- C5 -->
+  <circle cx="700" cy="210" r="4" fill="#c0392b"/>
+  <line x1="700" y1="210" x2="700" y2="300" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="682" y1="300" x2="718" y2="300" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 682 318 Q 700 332 718 318" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="700" y1="325" x2="700" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="700" cy="450" r="4" fill="#1a1a1a"/>
+  <text x="682" y="292" font-size="12" font-weight="700" fill="#1a1a1a">+</text>
+  <text x="654" y="306" font-size="13" font-weight="700" fill="#1a1a1a">C5</text>
+
+  <!-- C8 -->
+  <circle cx="790" cy="210" r="4" fill="#c0392b"/>
+  <line x1="790" y1="210" x2="790" y2="300" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="772" y1="300" x2="808" y2="300" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 772 318 Q 790 332 808 318" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="790" y1="325" x2="790" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="790" cy="450" r="4" fill="#1a1a1a"/>
+  <text x="772" y="292" font-size="12" font-weight="700" fill="#1a1a1a">+</text>
+  <text x="744" y="306" font-size="13" font-weight="700" fill="#1a1a1a">C8</text>
+
+  <text x="600" y="502" font-size="11.5" fill="#777">C5, C8 — 100 µF / 10 V each, 200 µF total</text>
+
+  <!-- star points -->
+  <circle cx="850" cy="210" r="6" fill="#c0392b"/>
+  <circle cx="850" cy="210" r="11" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="824" y="184" font-size="13" font-weight="700" fill="#c0392b">+5 V star</text>
+  <circle cx="850" cy="450" r="6" fill="#1a1a1a"/>
+  <circle cx="850" cy="450" r="11" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="826" y="478" font-size="13" font-weight="700" fill="#1a1a1a">GND star</text>
+</svg>
