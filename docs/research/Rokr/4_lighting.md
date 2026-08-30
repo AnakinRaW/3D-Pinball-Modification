@@ -33,7 +33,7 @@ Three flexible strips ship with the stock machine, 2.5 mm wide and 0.9 mm high, 
 
 The short strip is mounted in the ceiling of the diorama with double-sided tape.
 
-The two long strips run left and right around the playfield, threaded into a trench in clear plastic housings so that the LEDs face the playfield. The trench follows the playfield's framing and measures 3.3 mm deep by 1.7 mm wide. LED strips are directed under the playfield to connect the plasic housings.
+The two long strips run left and right around the playfield, threaded into a trench in clear plastic housings so that the LEDs face the playfield. The trench follows the playfield's framing and measures 3.15 mm deep by 1.7 mm wide. LED strips are directed under the playfield to connect the plasic housings.
 
 ## Circuit
 
