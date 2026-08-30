@@ -6,7 +6,7 @@ Rules the firmware has to keep, derived from the hardware design. Rough notes, n
 
 The IR sensing is planned to run as a non-blocking state machine, 300 µs per phase, 600 µs per full cycle over all eight channels, see [`docs/parts/ir-reflective/design.md`](../docs/parts/ir-reflective/design.md). That only holds if **every other participant in the loop is also non-blocking**. A ball dwells in a sensor's detection window for around 3 ms, so anything that stalls the loop for longer than that loses a hit outright, and it does so intermittently.
 
-**WS2812 output is the likely offender.** The protocol needs 1.25 µs per bit, 24 bits per LED:
+**RGB LEDs are the likely offender.** The protocol needs 1.25 µs per bit, 24 bits per LED:
 
 | Strip | Blocked for |
 |---|---|
@@ -20,8 +20,10 @@ Which library decides whether that time is blocked or not:
 |---|---|
 | [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html) | DMA, near-zero CPU, interrupts stay enabled. **Use this** |
 | [WS2812Serial](https://www.pjrc.com/non-blocking-ws2812-led-library/) | Also non-blocking, PJRC's own |
-| FastLED | Software-timed, disruptable by other interrupts |
+| FastLED | Software-timed on its own clockless output, disruptable by other interrupts. Over `USE_OCTOWS2811` it hands the transfer to OctoWS2811 instead |
 | Adafruit NeoPixel | Disables all interrupts for the whole frame. **Do not use** |
+
+**FastLED is the frontend, OctoWS2811 the output engine.** FastLED holds the pixel array, the effects and the power limit, and OctoWS2811 does the DMA transfer.
 
 The same rule applies to anything else that arrives later: displays, SD card writes, audio buffer refills. If it can stall for milliseconds, it needs DMA or chunking.
 
