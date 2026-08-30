@@ -13,6 +13,7 @@ This repository hosts everything for the project:
 | Design, one directory per subsystem | [`docs/parts/`](docs/parts/) |
 | Datasheets | [`docs/datasheets/`](docs/datasheets/) |
 | Research | [`docs/research/`](docs/research/) |
+| Ideas, not part of the design | [`docs/ideas/`](docs/ideas/) |
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
 
