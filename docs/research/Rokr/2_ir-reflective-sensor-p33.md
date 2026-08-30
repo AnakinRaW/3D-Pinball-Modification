@@ -6,7 +6,7 @@ The photointerrupter is consistent with a **Sharp GP2S700HCP** ([datasheet](../.
 
 ## Sensor board
 
-![Reconstructed schematic of the P33 sensor board](P33-IR-Reflective-Schematic.svg)
+![Reconstructed schematic of the P33 sensor board](2_P33-IR-Reflective-Schematic.svg)
 
 | Pin | Function | Same node as |
 |---|---|---|
@@ -132,8 +132,10 @@ Taken on the fully assembled machine while it was running normally. The harness 
 |---|---|
 | 1 | 5 V, smooth. 10 mA — a current reading rather than a scope trace, and consistent with the average of the pulsed LED current rather than its peak |
 | 2 | Near 0 V up to 0.6 V, roughly rectangular, corners rounded at top left and bottom right (bottom right more so). 1.5 ms per level. A closer object raises the amplitude, never above 0.6 V |
-| 3 | Flat plateaus, no curve, between 3.5 V and 4 V, 1.5 ms each |
+| 3 | Flat plateaus, no curve, between 3.5 V and 4 V, 1.5 ms each. No transition visible between the two levels |
 | 2 and 3 | Exactly inverted — Pin 2 HIGH coincides with Pin 3 LOW |
+
+![Sketch: IR-Reflective sensor in operation](2_pin-waveforms.svg)
 
 ## Discrepancies in the record
 
@@ -149,11 +151,21 @@ Three internal contradictions, each resolvable. None of them changes the topolog
 
 Nothing on the mainboard was probed with a meter. The circuit below is a reconstruction from the part markings and the oscilloscope traces.
 
-![Reconstructed mainboard schematic, one sensor channel](IR-Reflective-Mainboard-Schematic.svg)
+![Reconstructed mainboard schematic, one sensor channel](2_IR-Reflective-Mainboard-Schematic.svg)
 
-Read from the packages: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([marking index](https://www.alldatasheet.net/view_marking.jsp?Searchword=J3Y), [S8050 datasheet](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf)), and two resistors marked `163` and `181`. Read as three-digit EIA codes those are 16 × 10³ = 16 kΩ and 18 × 10¹ = 180 Ω. Also present: three unidentified capacitors, MLCC in appearance, and one unidentified diode. No role is assigned to them.
+Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([datasheet](../../datasheets/S8050.PDF)), and four resistors. Three carry a legible marking:
 
-The reconstruction has Q1 switching the LED cathode to ground through the 180 Ω resistor, and Q2 taking Pin 2 straight onto its base, with the 16 kΩ as its collector pull-up and the output inverted to a 0–5 V level for the controller.
+| Marking | Code | Value |
+|---|---|---|
+| `163` | three-digit EIA, 16 × 10³ | 16 kΩ |
+| `181` | three-digit EIA, 18 × 10¹ | 180 Ω |
+| `01B` | EIA-96, index 01 = 100, multiplier B = × 10 | 1.00 kΩ, 1 % |
+
+The three-digit scheme puts a decade exponent in the last character, so `01B` has no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board.
+
+**TODO: Read the fourth resistor**
+
+The reconstruction has Q1 switching the LED cathode to ground through the 180 Ω resistor and driven from the controller through the 1 kΩ, and Q2 taking Pin 2 straight onto its base, with the 16 kΩ as its collector pull-up and the output inverted to a 0–5 V level for the controller.
 
 ### What the waveforms confirm
 
@@ -167,7 +179,15 @@ Three independent numbers follow from the reconstruction and match what was meas
 
 The flat ceiling on Pin 2 is the strongest of the three. A resistor to ground would give an output proportional to the photocurrent, rising to whatever R1 and that resistor divide the 5 V rail into — volts, not 0.6 V. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and the datasheet's Fig. 6 puts t<sub>f</sub> above t<sub>r</sub> across the whole plotted load range.
 
+**TODO: the ceiling argument rules out a divider without Q2, and not a resistor in parallel with the base-emitter junction, which clamps at 0.6 V just the same. The fourth, unread resistor is the candidate for that position. Reading its marking settles it.**
+
 The LED current of 18–20 mA sits 2.5× inside the 50 mA absolute maximum, and the phototransistor's ≤ 2.65 mA well inside its 20 mA I<sub>C</sub> maximum.
+
+### Q1's base drive
+
+The controller drives Q1's base through the 1 kΩ. This ensures the pin only has to deliver what the resistor lets through, instead of the much larger current a bare base would draw from it. 1 kΩ satisfies both sides of that: small enough to switch Q1 fully on, large enough to keep the pin's current low.
+
+The datasheet measures V<sub>CE(sat)</sub> at I<sub>C</sub> = 500 mA with I<sub>B</sub> = 50 mA, a collector-to-base ratio of 10. Q1 switches 18.3 mA with 3.8 mA into its base, a ratio of 5. The more base current a transistor gets, the less voltage it drops while it is on. Q1 gets twice as much as the datasheet's test point, so the 0.2 V used for that drop above is safe.
 
 ### Timing
 
@@ -193,4 +213,6 @@ The rate follows from the same reasoning. A baseline is only worth subtracting i
 
 - [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf) — Sheet No. D3-A02201EN. Ratings, characteristics, internal connection diagram, design guide
 - Meter and oscilloscope readings on the stock machine
-- [alldatasheet marking index for J3Y](https://www.alldatasheet.net/view_marking.jsp?Searchword=J3Y) and [Changjiang S8050 datasheet via LCSC](https://datasheet.lcsc.com/lcsc/Changjiang-Electronics-Tech-CJ-S8050_C2146.pdf) — J3Y as the SOT-23 marking for the S8050 NPN
+- [BL Galaxy Electrical S8050 datasheet](../../datasheets/S8050.PDF) — document BL/SSSTC079 Rev. A: J3Y in the ordering information, V<sub>BE(sat)</sub>, V<sub>CE(sat)</sub>
+- [alldatasheet marking index for J3Y](https://www.alldatasheet.net/view_marking.jsp?Searchword=J3Y) — independent corroboration that J3Y is the SOT-23 marking of the S8050
+- [EIA-96 resistor code table](https://www.hobby-hour.com/electronics/eia96-smd-resistors.php) — `01B` resolves as index 01 (100) × 10

@@ -58,6 +58,7 @@
 
   <line x1="400" y1="481" x2="638" y2="481" stroke="#1a1a1a" stroke-width="2.5"/>
   <rect x="470" y="473" width="60" height="16" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="466" y="466" font-size="13" fill="#1a1a1a">1 kΩ ("01B")</text>
   <text x="200" y="486" font-size="12.5" fill="#1a1a1a">from controller · 1.5 ms on / off</text>
 
   <line x1="656" y1="516" x2="656" y2="546" stroke="#1a1a1a" stroke-width="2.5"/>

@@ -1,0 +1,102 @@
+<svg viewBox="0 0 900 580" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="580" fill="#ffffff"/>
+  <text x="30" y="40" font-size="20" font-weight="700" fill="#1a1a1a">Sketch: IR-Reflective sensor in operation</text>
+
+  <!-- LED-on shading -->
+  <rect x="140" y="105" width="158" height="325" fill="#fdf6e0"/>
+  <rect x="455" y="105" width="158" height="325" fill="#fdf6e0"/>
+  <text x="219" y="98" font-size="12" font-weight="700" fill="#8a6d0b" text-anchor="middle">LED on</text>
+  <text x="534" y="98" font-size="12" font-weight="700" fill="#8a6d0b" text-anchor="middle">LED on</text>
+  <text x="376" y="98" font-size="12" font-weight="700" fill="#999" text-anchor="middle">LED off</text>
+  <text x="691" y="98" font-size="12" font-weight="700" fill="#999" text-anchor="middle">LED off</text>
+
+  <!-- phase boundaries -->
+  <line x1="298" y1="105" x2="298" y2="430" stroke="#ddd" stroke-width="1"/>
+  <line x1="455" y1="105" x2="455" y2="430" stroke="#ddd" stroke-width="1"/>
+  <line x1="613" y1="105" x2="613" y2="430" stroke="#ddd" stroke-width="1"/>
+
+  <!-- ===== left axis, Pin 1 and Pin 3, 0 to 5 V ===== -->
+  <text x="52" y="80" font-size="14" font-weight="700" fill="#1a1a1a">Pin 1 and 3, V</text>
+  <line x1="140" y1="105" x2="140" y2="430" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="110" x2="140" y2="110" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="174" x2="140" y2="174" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="238" x2="140" y2="238" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="302" x2="140" y2="302" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="366" x2="140" y2="366" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="134" y1="430" x2="140" y2="430" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="127" y="114" font-size="12" fill="#1a1a1a" text-anchor="end">5</text>
+  <text x="127" y="178" font-size="12" fill="#1a1a1a" text-anchor="end">4</text>
+  <text x="127" y="242" font-size="12" fill="#1a1a1a" text-anchor="end">3</text>
+  <text x="127" y="306" font-size="12" fill="#1a1a1a" text-anchor="end">2</text>
+  <text x="127" y="370" font-size="12" fill="#1a1a1a" text-anchor="end">1</text>
+  <text x="127" y="434" font-size="12" fill="#1a1a1a" text-anchor="end">0</text>
+
+  <!-- ===== right axis, Pin 2, 0 to 1.6 V ===== -->
+  <text x="778" y="80" font-size="14" font-weight="700" fill="#2c3e50">Pin 2, V</text>
+  <line x1="770" y1="105" x2="770" y2="430" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="110" x2="776" y2="110" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="150" x2="776" y2="150" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="190" x2="776" y2="190" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="230" x2="776" y2="230" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="270" x2="776" y2="270" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="310" x2="776" y2="310" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="350" x2="776" y2="350" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="390" x2="776" y2="390" stroke="#2c3e50" stroke-width="1.5"/>
+  <line x1="770" y1="430" x2="776" y2="430" stroke="#2c3e50" stroke-width="1.5"/>
+  <text x="783" y="114" font-size="12" fill="#2c3e50">1.6</text>
+  <text x="783" y="154" font-size="12" fill="#2c3e50">1.4</text>
+  <text x="783" y="194" font-size="12" fill="#2c3e50">1.2</text>
+  <text x="783" y="234" font-size="12" fill="#2c3e50">1.0</text>
+  <text x="783" y="274" font-size="12" fill="#2c3e50">0.8</text>
+  <text x="783" y="314" font-size="12" fill="#2c3e50">0.6</text>
+  <text x="783" y="354" font-size="12" fill="#2c3e50">0.4</text>
+  <text x="783" y="394" font-size="12" fill="#2c3e50">0.2</text>
+  <text x="783" y="434" font-size="12" fill="#2c3e50">0</text>
+  <text x="814" y="314" font-size="11" fill="#c0392b">ceiling</text>
+
+  <!-- 0.6 V ceiling on Pin 2 -->
+  <line x1="140" y1="310" x2="770" y2="310" stroke="#c0392b" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <!-- Pin 1, steady at the rail -->
+  <line x1="140" y1="110" x2="770" y2="110" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="163" y="128" font-size="11.5" font-weight="700" fill="#c0392b">Pin 1, 5 V</text>
+
+  <!-- Pin 3, plateaus only -->
+  <path d="M 140,206 L 298,206 M 298,174 L 455,174 M 455,206 L 613,206 M 613,174 L 770,174"
+        fill="none" stroke="#b7950b" stroke-width="2.5"/>
+  <text x="163" y="200" font-size="11.5" fill="#8a6d0b">3.5 V</text>
+  <text x="320" y="168" font-size="11.5" fill="#8a6d0b">4 V</text>
+
+  <!-- Pin 2, no ball -->
+  <path d="M 140,360 L 298,360 C 306,360 311,430 323,430 L 455,430 C 460,430 464,360 473,360 L 613,360 C 621,360 626,430 638,430 L 770,430"
+        fill="none" stroke="#2c3e50" stroke-width="2.5"/>
+
+  <!-- Pin 2, ball over the sensor -->
+  <path d="M 140,310 L 298,310 C 306,310 311,430 325,430 L 455,430 C 460,430 464,310 474,310 L 613,310 C 621,310 626,430 640,430 L 770,430"
+        fill="none" stroke="#2c3e50" stroke-width="2.5" stroke-dasharray="9 5"/>
+
+  <!-- time axis -->
+  <line x1="140" y1="430" x2="770" y2="430" stroke="#888" stroke-width="1.5"/>
+  <text x="140" y="450" font-size="12" fill="#777" text-anchor="middle">0</text>
+  <text x="298" y="450" font-size="12" fill="#777" text-anchor="middle">1.5</text>
+  <text x="455" y="450" font-size="12" fill="#777" text-anchor="middle">3.0</text>
+  <text x="613" y="450" font-size="12" fill="#777" text-anchor="middle">4.5</text>
+  <text x="770" y="450" font-size="12" fill="#777" text-anchor="middle">6.0</text>
+  <text x="455" y="470" font-size="12" fill="#666" text-anchor="middle">time, ms</text>
+
+  <line x1="140" y1="492" x2="298" y2="492" stroke="#666" stroke-width="1"/>
+  <line x1="140" y1="488" x2="140" y2="496" stroke="#666" stroke-width="1"/>
+  <line x1="298" y1="488" x2="298" y2="496" stroke="#666" stroke-width="1"/>
+  <text x="219" y="508" font-size="11.5" fill="#666" text-anchor="middle">1.5 ms</text>
+
+  <!-- legend -->
+  <line x1="470" y1="488" x2="510" y2="488" stroke="#2c3e50" stroke-width="2.5"/>
+  <text x="518" y="492" font-size="11.5" fill="#444">Pin 2, no ball</text>
+  <line x1="470" y1="506" x2="510" y2="506" stroke="#2c3e50" stroke-width="2.5" stroke-dasharray="9 5"/>
+  <text x="518" y="510" font-size="11.5" fill="#444">Pin 2, ball over the sensor</text>
+
+  <!-- notes -->
+  <line x1="30" y1="526" x2="870" y2="526" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="546" font-size="11.5" fill="#666">Recorded: 1.5 ms per level. Pin 1 steady at 5 V. Pin 3 flat between 3.5 V and 4 V, with no transition seen between the plateaus.</text>
+  <text x="30" y="562" font-size="11.5" fill="#666">Pin 2 rectangular, capped at 0.6 V, inverted against Pin 3, rounded at top left and bottom right.</text>
+</svg>
