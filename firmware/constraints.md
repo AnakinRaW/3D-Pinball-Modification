@@ -1,18 +1,12 @@
 # Firmware constraints
 
-Rules the firmware has to keep, derived from the hardware design. Rough notes, not a specification.
+Rules the firmware has to keep. The figures they are checked against live in the design documents and are read from there: [`docs/parts/`](../docs/parts/), one directory per subsystem.
 
 ## Nothing in the main loop may block
 
-The IR sensing is planned to run as a non-blocking state machine, 300 µs per phase, 600 µs per full cycle over all eight channels, see [`docs/parts/ir-reflective/design.md`](../docs/parts/ir-reflective/design.md). That only holds if **every other participant in the loop is also non-blocking**. A ball dwells in a sensor's detection window for around 3 ms, so anything that stalls the loop for longer than that loses a hit outright, and it does so intermittently.
+The IR sensing runs as a non-blocking state machine, see [`docs/parts/ir-reflective/design.md`](../docs/parts/ir-reflective/design.md) for its phase and cycle times. That only holds if **every other participant in the loop is also non-blocking**. A ball dwells in a sensor's detection window for the time that document derives, and anything stalling the loop for longer loses a hit outright, intermittently.
 
-**RGB LEDs are the likely offender.** The protocol needs 1.25 µs per bit, 24 bits per LED:
-
-| Strip | Blocked for |
-|---|---|
-| 60 LEDs | 1.8 ms |
-| 160 LEDs | 4.8 ms |
-| 320 LEDs | **9.6 ms**, longer than three ball passes |
+**RGB LEDs are the likely offender.** A clockless strip's frame time grows with the number of LEDs, and past some strip length it exceeds the dwell. Compute it from the LED count in the lighting design and hold it against the dwell before a strip is chosen.
 
 Which library decides whether that time is blocked or not:
 
@@ -29,29 +23,22 @@ The same rule applies to anything else that arrives later: displays, SD card wri
 
 ## ADC budget
 
-Eight channels are read in each phase, and the reads have to finish inside it.
+Every pulsed channel is read in both phases, and those reads have to finish inside the phase. The sum is the channel count times the per-read cost, which follows from the averaging setting; both, and the phase length they have to fit into, come from the design document.
 
-| Averaging | Per channel | Eight channels | Of a 300 µs phase |
-|---|---|---|---|
-| four, the Teensy 4 default | ≈ 20 µs | 160 µs | 53 % |
-| `analogReadAveraging(1)` | ≈ 5.7 µs | 46 µs | 15 % |
+The default averaging is what the design assumes, because it buys noise margin that the 9 mm ball's weak signal needs. `analogReadAveraging(1)` is the reserve to spend if the reads stop fitting.
 
-The default is what this design uses. It fits, and the averaging buys noise margin that the 9 mm ball's weak signal needs.
-
-What eats the budget: another channel costs a further 20 µs, and each doubling of the averaging costs the whole read again. At 53 % neither is free.
-
-The 53 % is time spent waiting, not computing: a blocking `analogRead` holds the core while the ADC converts. It costs throughput rather than latency, since one call stalls the loop for 20 µs against the ≈ 3 ms that loses a ball. Should the loop ever run short of time, [`performance-options.md`](performance-options.md) lists what can be traded for it.
+A blocking `analogRead` holds the core while the ADC converts, so this budget is time spent waiting. It costs throughput rather than latency: one call stalls the loop for a fraction of what a missed ball costs. Should the loop run short of time, [`performance-options.md`](performance-options.md) lists what can be traded for it.
 
 ## Sampling instant
 
-Sample at the **end** of each phase, not the start. The phototransistor is still settling, so the reading depends on when in the phase it is taken. One phase leaves it 75 % settled in the worst case, and reading early costs more than that.
+Sample at the **end** of each phase. The phototransistor is still settling after the emitters switch, so a reading taken earlier is smaller than the design assumes.
 
 ## Sample window
 
-An IR channel is a 5.7 kΩ source ([design.md](../docs/parts/ir-reflective/design.md)). NXP allows 1 kΩ at the fast sample setting ([IMXRT1060CEC](../docs/datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 63), so use the long one:
+A channel's source impedance is well above what the ADC's fast sample setting tolerates ([IMXRT1060CEC](../docs/datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 63), so use the long one:
 
 ```cpp
 adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_LOW_SPEED);
 ```
 
-Without it the readings come out too low, by an amount that depends on which channel was read before, so detection would quietly vary with where the balls are. The setting costs 600 ns per reading against a 300 µs phase.
+Without it the readings come out too low, by an amount that depends on which channel was read before, so detection would quietly vary with where the balls are.
