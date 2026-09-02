@@ -147,6 +147,8 @@ Banned:
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
+**Reading flow is not meta-commentary.** A sentence that leads from the text into a table, or that carries the reader from one section to the next, stays. What the rule above bans is the sentence about the document itself: what a file is, what it is for, what it leaves out. A paragraph of build-up before a table is still one sentence too many, and a document that reads as a list of disconnected assertions has overshot the rule.
+
 **Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
 
 The explanations rule 2 asks for — naming the failure mode, spelling out what destroys a part — belong in **conversation**, not in the repository's documents. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
