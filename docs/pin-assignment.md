@@ -7,29 +7,25 @@
 | 2 | DIN to the DFR0954 | I²S2 TX_DATA | Audio | — |
 | 3 | LRC to the DFR0954 | I²S2 TX_SYNC | Audio | — |
 | 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | Audio | — |
-| 14 (A0) | S1 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 15 (A1) | S2 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 16 (A2) | S3 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 17 (A3) | S4 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 18 (A4) | S5 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 29 | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 30 | SEL0, multiplexer address | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 31 | SEL1, multiplexer address | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 32 | SEL2, multiplexer address | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
-| 38 (A14) | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 39 (A15) | S6 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 40 (A16) | S7 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 41 (A17) | S8 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 38 (A14) | MUX-A, channels 1 to 8 | ADC, reachable only through ADC2 | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 41 (A17) | MUX-B, channels 9 to 16 | ADC | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 
 ### What this allocation costs
 
 | Lost | To |
 |---|---|
 | I²S2 | Audio, pins 2, 3, 4, 33 |
-| Serial3, S/PDIF | Sensors, pins 14 and 15 |
-| Serial4, Wire1 | Sensors, pins 16 and 17 |
-| Wire | Sensors, pin 18 — it needs 18 and 19 together, so taking one kills it. `Wire2` on 24/25 stays free |
-| 7 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 14, 15, 18 |
-| 9 of 18 analog inputs | Sensors, pins 14–18 and 38–41 |
+| CAN3 | Sensors, pins 30 and 31 |
+| Serial7 | Sensors, pin 29. It needs 28 and 29 together, so taking one kills it, and 28 stays free as a plain pin |
+| 5 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 29 |
+| 2 of 18 analog inputs | Sensors, pins 38 and 41 |
 
-I²S1 is unused, so Serial2, Serial5 and CAN1 stay free.
+**The two multiplexer outputs sit on different ADC converters by construction.** Four pins are reachable only through ADC2: 26, 27, 38 and 39. Putting one output on 38 and the other on 41 therefore splits the pair whatever the library prefers, which is what the synchronised read the timing assumes needs. The four are marked in [the Teensy core's pin table](https://github.com/PaulStoffregen/cores/blob/master/teensy4/analog.c); pjrc.com does not document the split.
 
 ## Signal names
 
