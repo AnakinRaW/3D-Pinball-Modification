@@ -47,7 +47,7 @@ One colour per net class, used for the wire, the pin circle and the label. Never
 | Junction | `<circle r="4"/>` in the net colour - **required** wherever wires join |
 | Crossing | no dot, and where ambiguity remains, route around |
 | Resistor | `<rect fill="#fff" stroke="#1a1a1a" stroke-width="2"/>` - `26x60` vertical, `70x20` horizontal |
-| Value label | `font-size="13" font-weight="700" fill="#1a1a1a"` beside the body |
+| Value label | `font-weight="700" fill="#1a1a1a"`, **inside the body** with `text-anchor="middle"` and the size dropped until it fits. Beside the body only where the text cannot fit inside, such as a 26-wide vertical one |
 | Annotation | `font-size="11.5"` to `12.5"`, `fill="#666"` or `#777` |
 | Optional / not populated | `stroke-dasharray="5 4"` |
 
