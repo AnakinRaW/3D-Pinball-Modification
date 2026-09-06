@@ -29,6 +29,25 @@ This is the most likely way to destroy the board. Every signal arriving from out
 
 Overvoltage on a CMOS input forces current through the chip's internal protection diodes. That degrades the input over time instead of killing it outright, so a circuit that appears to work is not evidence that it is within limits. Intermittent faults weeks later are the usual symptom.
 
+### Driving a pin while the board is unpowered
+
+PJRC's answer is no. Paul Stoffregen, asked whether 3.3 V may be applied to a Teensy 4 I/O pin while the Teensy is off: "No, you should not do this." The chip is not to be driven while its power is off, "either that GPIO section or the whole chip", and unlike parts designed to be high impedance when unpowered, "the Teensy 4.0 pins are not." Current entering an unpowered pin passes through its ESD diode into the 3.3 V rail, and powering up with voltage already present on a pin risks CMOS latch-up. Two Teensy 4.1 boards left connected over RX/TX to a powered router while unpowered came back with 3V3 shorted to GND; PJRC could not attribute that failure from the report alone.
+
+NXP says the same in [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4. Section 4.2.1.3 on page 31 forbids driving an I/O pin externally while that pin's supply NVCC_xxx is off, and names internal latch-up and malfunction from reverse current flows as the mechanism. Section 4.2.1.1 lists irreversible damage to the processor as the worst case of a sequencing violation.
+
+**The only quantified limit at a pin is a voltage.** Table 7 on page 24 gives `Vin/Vout` from −0.5 V to `OVDD + 0.31 V`, with OVDD the I/O supply voltage, so the ceiling falls to 0.31 V once that supply sits at zero. An injection-current rating, the per-pin milliamp allowance many microcontrollers publish, appears nowhere in the document.
+
+Remedies, in the order PJRC ranks them:
+
+| Remedy | Standing |
+|---|---|
+| A buffer specified as high impedance while unpowered, such as the 74LCX125, between the external signal and the pin | The proper solution for digital lines. A logic buffer cannot carry an analog signal, so an analog input needs the source removed or clamped instead |
+| A series resistor, 1 kΩ as the starting point | "At least limits the current"; under 1 mA is "very unlikely to cause harm", which PJRC states does not follow NXP's guidance |
+
+A series resistor bounds the current. Fixing the potential takes a resistor from the net to a rail, because a pin that draws nothing puts no drop across a series element and follows whatever its net does.
+
+Sources: [Can 3.3 V be safely applied to a Teensy 4 I/O pin while the Teensy 4 power is off?](https://forum.pjrc.com/threads/60528-Can-3-3-V-be-safely-applied-to-a-Teensy-4-I-O-pin-while-the-Teensy-4-power-is-off), posts by Paul Stoffregen; [2x Teensy 4.1 3v3 is shorted to GND](https://forum.pjrc.com/index.php?threads/2x-teensy-4-1-3v3-is-shorted-to-gnd.71511/), post by Paul Stoffregen.
+
 ### Power
 
 | Property | Value | Source |
@@ -47,9 +66,9 @@ Three open points:
 
 ### ADC source impedance
 
-**The maximum source resistance R_AS is 1 kΩ**, at 12 bit, f_ADCK = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 1, Table 54, page 64. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
+**The maximum source resistance R<sub>AS</sub> is 1 kΩ**, at 12 bit, f<sub>ADCK</sub> = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4, Table 54, page 65. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
 
-The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36-38 on pages 67-68 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
+The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36 to 38 on pages 68 and 69 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
 
 **PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
 
