@@ -1,45 +1,64 @@
 # IR ball sensing
-
-Reflective IR channels detect the ball. Three sensor boards come out of the stock machine; It is planned to use 5 additional sensors in this modification. To simplify logic and programming those remaining five sensors boards are rebuilt as 1:1 copies of the original sensors boards. The Teensy 4.1 takes over the role the stock mainboard played: pulsing the emitters and evaluating the returns.
-
 ## Requirements
 
-The IR channels are how the game knows where the ball is. The following requirements exist for those IR sensors:
+The IR channels are how the game knows where the ball is.
 
 | | |
 |---|---|
 | **Moving ball** | Report a ball crossing a point on the track, fast enough that a plunger launch is not missed |
 | **Resting ball** | Report a ball at rest in a position, a lock or the drain trough, for as long as it stays there |
 | **Robustness** | Hold both while environmental light changes during a game |
-| **Sensor count** | Up to sixteen on one board, eight populated in this build |
+| **Sensor count** | Up to sixteen positions on one board. Sixteen is the case every figure is derived at, and a smaller count only relaxes it |
+| **Isolation** | No conductor drives current into a Teensy pin while the Teensy is unpowered, in any state and in any switching order. |
 
 ## TL;DR from the stock machine
 
-The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md). Everything below builds on the interface established there: 
+The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md). Everything below builds on the interface established there:
 
-- Pin 1 supply, 
-- Pin 2 phototransistor emitter output, 
+- Pin 1 supply,
+- Pin 2 phototransistor emitter output,
 - Pin 3 IR LED cathode
 
-There is no ground pin, and no current limit for the LED on the sensor aboard.
+There is no ground pin, and no current limit for the LED on the sensor board.
 
-The stock machine uses a pulsing mechanism to eleminate the effetcs of ambient light for better ball detection.
+The stock machine pulses the emitters to keep ambient light out of the reading.
 
-## Supply voltage: 3.3 V, not 5 V
+## Design
 
-The sensor boards run at 3.3 V. Pin 2 is an emitter fed from Pin 1 through the board's collector resistor, so its ceiling is the supply rail. The stock boards measure 1.585 kΩ there and the rebuilt ones carry 1.6 kΩ; every figure below is quoted at 1.585 kΩ and is unchanged by the difference at the precision given. At 3.3 V the output cannot reach a level the Teensy's non-5-V-tolerant inputs object to, and no divider or level shifter is needed. At 5 V it can, and every signal line would need one.
+IR sensors are the main driver of this modification to detect if a ball has passed a point on the playfield or sits stationary at some point.  
 
-The 9 mm ball of this kit is more strongly curved than a standard pinball and throws less IR back to the sensor. Mounting distance and the pull-down value below account for that.
+### Sensor boards
+
+Three sensor boards come out of the stock machine. This modification wans to keep these boards, as they are already shaped for their install locations. To avoid designing multiple IR-sensing strategies it is planned that each new sensor board is build as a 1:1 copy of the stock boards.
+
+### Mainboard
+
+It is planned to have a central IR-sensing mainboard which provides the whole electrical infrastructure to interconnect sensor boards to the Teensy microcontroller. The mainboard therefore shall be provide a bench of connectors to the sensor boards. It shall also be responsible for IR board power supply and management.   
+
+### Power Supply Design: 5 V vs 3.3 V
+
+Either supply design can carry IR-reflective-based ball sensing. The stock machine supplies these boards from 5 V, and nothing on them technically asks for more than 3.3 V.
+
+This modification chooses a **3.3 V supply design**. Teensy pins are not 5 V tolerant, so a 3.3 V board keeps the whole low-voltage side in one domain. This comes at the cost of having a voltage regulator assembly at some place to convert 5 V DC input to 3.3 V.
+
+A 5 V board was evaluated and rejected. It would drop the need for a regulator assembly, but there are two things that count against it:
+
+| |  |
+|---|---|
+| What one failure can reach | a 3.3 V board carries 5 V on two pins of one connector, so nothing on it reaches a Teensy pin above its own rail, its regulator shorting through included. A 5 V board carries it on every net, and a 5 V input no longer recognises a 3.3 V high. The Teensy's survival then rests on a translating device behaving correctly. |
+| Measurement | the reading is measured against the supply, so when the supply moves the reading moves with it. A 5 V board takes its supply straight from the machine. [Lighting](../lighting/design.md) or solenoids would then directly affect the reading. A regulator holds the rail steady |
+
+A reverse-polarity guard is planned for safety reasons, mostly to protect the Teensy from assembly blunders and short circuits.
 
 ## Design A: Continuously lit LED, rejected
 
 In this design the emitter burns continuously and the level itself is the measurement: a ball is a rise above what the empty track returns. Nothing cancels ambient light out of that reading, so the location has to be dark.
 
-Pin 3 sits permanently at GND through 220 Ω, Pin 2 reaches an analog input through 1 kΩ in series with a 10 kΩ pull-down to GND at the sensor-side node.
+Pin 3 sits permanently at GND through 220 Ω, and Pin 2 reaches the input across a 10 kΩ pull-down to GND. The emitter runs at 10.0 mA nominal and 10.7 mA at V<sub>OUT</sub> max with V<sub>F</sub> min, and the node ceiling is 2.98 V.
 
 ![Design A: continuously lit LED, rejected](continuous-schematic.svg)
 
-The phototransistor cannot tell where the IR came from, so the analog input carries the sum of the board's own reflection and all ambient IR: daylight, lamps, light bounced off nearby objects.
+The phototransistor cannot tell where the IR came from, so the input carries the sum of the board's own reflection and all ambient IR: daylight, lamps, light bounced off nearby objects.
 
 | Objection | Evidence |
 |---|---|
@@ -47,45 +66,31 @@ The phototransistor cannot tell where the IR came from, so the analog input carr
 | Not calibratable | The baseline moves with time of day, room lighting and playfield surroundings. A threshold calibrated at build time is wrong an hour later, and direct sunlight can saturate the phototransistor outright |
 | The stock machine does not do it either | It pulses at 333 Hz and subtracts, [as measured](../../research/Rokr/2_ir-reflective-sensor-p33.md) |
 
-In permanent darkness (tunnel or under playfield) the design works and it delivers 4.5× the signal of a pulsed channel. A pulsed channel with 10 kΩ and a 150 Ω emitter reaches about a third of that. 
-
-This minimal benefit of this design, cannot make up the complexity added, implementing two different desings simultaniously.
+In permanent darkness (tunnel or under playfield) the design works and it delivers 4.5× the signal of a pulsed channel. A pulsed channel with 10 kΩ and a 150 Ω emitter reaches about a third of that. That gain does not pay for carrying two designs at once, so every channel uses Design B.
 
 ## Design B: Pulsing IR measurement
 
-This is the design that follows the principle idea of the stock machine. The emitter is pulsed and every channel is read twice, once lit and once dark. The difference is what the emitter's own light did, so ambient light cancels out of the reading whatever it happens to be doing, and every channel exposed to it uses this design.
+This follows the principle of the stock machine. The emitter is pulsed and every channel is read twice, once lit and once dark. The difference is what the emitter's own light did, so ambient light cancels out of the reading whatever it happens to be doing.
 
-This design contains a single transistor that switches all emitters together, so a single Teensy pin controls the whole bus. Each phototransistor works into its own pull-down, and can be read independently for each channel in both phases.
+One transistor switches all emitters together, so a single Teensy pin controls the whole bus. Each phototransistor works into its own pull-down and is read independently in both phases.
 
 ![Chosen variant: pulsed LED with differential measurement](pulsed-schematic.svg)
 
 | Net | Wiring |
 |---|---|
-| Supply | Pin 1 of every sensor board to 3.3 V |
+| Supply | Pin 1 of every sensor board to the board's 3.3 V |
 | Signal, per channel | Pin 2 of each board to an analog input, with a 4.7 kΩ pull-down to GND at the sensor-side node. The pull-down converts the photocurrent into a voltage; without it the output carries no measurable signal |
-| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the collector/drain of one switching transistor, emitter/source to GND, base/gate driven through a 1 kΩ from the clock pin, with a 100 kΩ pull-down to GND at the gate |
+| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 1 kΩ from the clock pin, with a 100 kΩ pull-down to GND at the gate |
 | Ground | No ground line runs to the sensor boards. The returns are Pin 2 through its pull-down and Pin 3 through its 220 Ω and the transistor |
 
-### Computed results
+Every value here is derived in [the appendix](#appendix-derivations).
 
-Every figure here is derived in [the appendix](#appendix-derivations).
-
-| Quantity | Value | Checked against | Margin |
-|---|---|---|---|
-| LED current per channel | 9.9 mA nominal, **10.6 mA** at V_OUT max and V_F min | I_F absolute maximum 50 mA | **4.7×** |
-| Phototransistor current | **0.55 mA** at V_OUT max | I_C absolute maximum 20 mA | **36×** |
-| Dissipation in each 220 Ω | **25 mW** at 10.6 mA | ¼ W | **10×** |
-| Gate drive out of the CLOCK pin | 3.3 mA peak for 39 µs | 4 mA per pin | **1.2×** |
-| Signal voltage at the ADC pins | 0 … **2.58 V** at V_OUT max | the 3.3 V pin limit | **0.72 V** |
-| Differential swing at the first channel read | **48 %** worst case, 99 % typical | inverts below 101 µs into the phase | **2.4×** |
-| Switching transistor Q1 | IRL540N, logic-level MOSFET, TO-220 | 36 A part switching the whole bus | |
-
-Everything here is per channel and holds at any channel count. What the bus and the supply add up to depends on how many channels are populated, and is in [supply](#supply).
+Everything here is per channel and holds at any channel count. What the bus and the supply add up to depends on how many channels are populated, and is in [supply](#supply-and-input-protection).
 
 > [!WARNING]
 > ### TODO: measure what a ball returns
 >
->The one input the table above does not compute is how much extra photocurrent the phototransistor delivers with a ball in front of it. The appendix assumes 50 µA, and the 4.7 kΩ, the 235 mV across it and the 73 ADC steps of resolution all follow from that.
+>Nothing in this design computes how much extra photocurrent a ball returns. The appendix assumes 50 µA, and three figures rest on that: the 4.7 kΩ, the 235 mV across it and the 70 steps of the ten-bit reading.
 >
 >The datasheet characterises the sensor against a flat aluminium mirror at 4 mm. What a 9 mm ball returns depends on its curvature, its surface and its distance, and the datasheet has no curve for that.
 >
@@ -96,9 +101,9 @@ Everything here is per channel and holds at any channel count. What the bus and 
 >```
 >3.3 V   to Pin 1
 >Pin 2   to one end of a 4.7 kΩ, its other end to GND
->Pin 3   through a 220 Ω to a loose wire: on GND the emitter is lit, >lifted it is dark
+>Pin 3   through a 220 Ω to a loose wire: on GND the emitter is lit, lifted it is dark
 >
->meter   DC volts, red probe where Pin 2 meets the 4.7 kΩ, black probe >on GND
+>meter   DC volts, red probe where Pin 2 meets the 4.7 kΩ, black probe on GND
 >```
 >
 >**Procedure.** Mount the sensor at the distance it will have over the track. Check the wiring first by holding a hand in front of it with the wire on GND, which must move the reading. Then take four readings:
@@ -110,14 +115,11 @@ Everything here is per channel and holds at any channel count. What the bus and 
 >
 >Subtract lifted from on-GND in each column, then subtract the two results from each other. That figure is what one channel detects, and 235 mV is what 50 µA predicts.
 >
->Far below that, the threshold cannot separate a ball from noise and the emitter goes brighter. At the 2.58 V ceiling the channel has no headroom left and the pull-down goes smaller. Both changes are in the table below.
+>Far below 235 mV the threshold cannot separate a ball from noise and the emitter goes brighter. At the 2.58 V ceiling the channel has no headroom left and the pull-down goes smaller. Both changes are in the table below.
 
 ## Adjustment knobs
 
-What a channel delivers is one number: the LED-on reading minus the LED-off reading. Without a ball it is small, a ball passing makes it jump, and the firmware compares that jump against a threshold calibrated per channel at startup. Channels may therefore carry different resistor values, and a swap on one moves only that channel's reading.
-
-The following table describes the most expected issues and the means to counter them by switching resistors on a single channel.
-
+What a channel delivers is one number: the LED-on reading minus the LED-off reading. Without a ball it is small, a ball passing makes it jump up, and the firmware compares that jump against a threshold calibrated per channel. Channels may therefore carry different resistor values, and a swap on one moves only that channel's reading.
 
 | Issue | Reason | Change |
 |---|---|---|
@@ -132,74 +134,87 @@ A swap has to pass two checks.
 
 | Resistor | Range | Set by |
 |---|---|---|
-| Emitter | <u>47 Ω</u> … 434 Ω | Below: the LED's 50 mA I_F absolute maximum, at V_OUT max and V_F min. Above: the detector leaves the range the datasheet characterises at I_F = 4 mA |
-| Pull-down | 1 kΩ … <u>35.1 kΩ</u> | Below: a 50  µA increment falls to 16 steps of a 10-bit read and noise eats into it. Above: the node passes the Teensy's 3.3 V pin limit at V_OUT max |
+| Emitter | <u>47 Ω</u> … 434 Ω | **Below:** the emitter burns out, past its 50 mA I<sub>F</sub> absolute maximum at V<sub>OUT</sub> max and V<sub>F</sub> min. **Above:** the emitter drops below the 4 mA the detector is characterised at, and the datasheet stops saying what comes back |
+| Pull-down | 1 kΩ … 7 kΩ | **Below:** the gap between a ball and a clear track shrinks into the noise, 50 µA giving about 15 steps of a ten-bit read at 1 kΩ. **Above:** a reading picks up part of the channel read before it, and room light alone fills the channel's range |
 
-*An <u>underlined</u> bound destroys hardware when crossed; the others stop the channel from working and damage nothing.*
+*The <u>underlined</u> bound destroys hardware when crossed; the others stop the channel from working and damage nothing.*
 
 **2. For the whole board**:
 ```
-Σ (2332 mV / R_emitter)  +  Σ (3449 mV / (1585 Ω + R_pull-down))  +  0.18 mA  MUST BE ≤  250 mA
+Σ (2332 mV / R_emitter)  +  Σ (3449 mV / (1585 Ω + R_pull-down))  +  1.9 mA  MUST BE ≤  250 mA
 ```
 
 ## Pin allocation
 
 Which pins this subsystem takes, and what each one locks out, is in [`pin-assignment.md`](../../pin-assignment.md). What constrained the choice:
 
-- **The two multiplexer outputs must be ADC-capable and land on different converters**, so the pair can be read simultaneously.
-- **SEL0, SEL1, SEL2 and CLOCK need no special function.** Four plain digital outputs.
+- **SPI is a bus.** SCK, MOSI and MISO are shared with whatever else arrives later, and each device adds only its own chip select.
+- **Two chip selects and one clock line need no special function.** Three plain digital outputs, and none of them analog-capable, so the analog inputs stay free.
+- **Every SPI conductor passes a buffer**, MISO through A1 on the Teensy's rail and SCK, MOSI and the two chip selects through A2 on the board's. CLOCK reaches Q1's gate directly.
 
 ## Software
 
 ### Design
 
-The IR sensing is delivered as a library that owns everything below the event: the phase clock, the channel stepping, the sampling instant, the differential evaluation, the startup calibration, and the debouncing that turns a pass lasting several cycles into one report.
+The IR sensing is delivered as a library. The library exposes a public-facing API for initialization and reporting. The library also acts a the driver and owns things such as IR pulsing, timing constraints, and calibration and evaluation logic.
 
-**The game logic subscribes and calls nothing.**
+The library publishes events. Two event kinds, one level query and initialisation are the whole interface.
 
 | | |
 |---|---|
-| `onBlocked(handler)` | a ball has arrived over a channel |
-| `onReleased(handler)` | it has gone again |
-| `isBlocked(channel)` | the current level, for logic that asks rather than reacts |
+| `Blocked` | a ball has arrived over a channel |
+| `Released` | it has gone again |
+| `bool isBlocked(channel, out heldMs)` | the current level, and how long the channel has held it, for logic that asks rather than reacts |
 
-Those three plus initialisation are the whole interface. The callbacks arrive in normal context, so a handler may do what the rest of the game does, and a handler that takes its time delays the next callback rather than the measurement behind it.
-
-Channel numbers belong to the library and their meaning to the game: the library counts 0 to 15, the game names them.
+Both events carry the channel and the moment of detection, and go into the message bus that [`input-handling.md`](../../../firmware/input-handling.md) describes.
 
 ### Driver
 
-The stock machine bounds the sample rate. It samples once every 3 ms and detects the ball, so the ball dwells in the window at least that long. At 600 µs per cycle this design samples five times in the same span, two of which the debouncing spends on confirming a hit. Losing a ball would take a dwell 2.5× shorter than the stock machine's, and ball speed alone should not reach that: free rolling is slow and a plunger launch is a few m/s, a factor of about three across the table.
+The driver measures, compares and reports. It reads every channel in two phases, once with the emitters lit and once with them dark, two phases to a cycle. The difference between lit and dark is the value to compare against the channel's threshold.
 
-**The driver is a state machine**, ticked from a timer at one phase every 300 µs: one LED state per phase, two phases to a cycle. That tick is what keeps the measurement independent of the main loop, and it is the only thing in the subsystem that has to happen on time.
+While this simple dark and lit comparison can be used to neutralize ambient light it can not neutralize flickering caused from e.g. LEDs lights used in this build or from the users room. The solution is to include the dark reading of the next cycle to the comparison. This way the effect of light flickering in between cycles can be reduced. The driver starts on a dark phase. Thus the sensor reading is completed after 3 phases and always in the next cycle of the read lit phase.
 
-Per phase it toggles the clock pin and steps the select lines through eight rounds, each round taking both multiplexer outputs at once with `startSynchronizedSingleRead(MUX_B, MUX_A)` and `readSynchronizedSingle()` from the [ADC library](https://github.com/pedvide/ADC). MUX-B is the first argument because the library reads its first argument with ADC1, and pin 38 is reachable only through ADC2; the other order returns `false` with `WRONG_PIN` and takes no sample. Per cycle it takes the difference, LED-on minus LED-off, which leaves only the board's own reflection, and compares it against that channel's threshold, above a zero the startup calibration reads from a clear track.
+```
+dark        mean(dark_now, dark_next)
+correction  1.0125                      a rail correction factor
+value       lit − correction × dark
+```
 
-**Reading all sensors ends at the end of the phase**, to give them as much time to settle as possible. Where it starts follows from how long the reads take, which [`firmware/constraints.md`](../../../firmware/constraints.md) puts to a measurement. Shorter reads move the start later, and a read too long to fit is answered by dropping the averaging, not by reading earlier.
+*NB: The value needs a `correction` factor because the rail drifts down while the LED bus is on. This would influence the value's precision and ambient could not be cancelled exactly. Thus, the remainder is subtracted. The value `1.0125` is the midpoint of the 1.0 % typical and 1.5 % worst case from the voltage regulator.*
 
-In both phases the sensors must be read in the same order.
+The threshold is one number per channel because no two sensors return the same value due to their different positions in the machine. The value sits halfway between what that channel reads over a clear track and what it reads with a ball on it. A ball over a sensor raises the read value. 
 
-**Each channel is configured by the game at initialisation.** Whether it is guaranteed clear at power-up decides where its zero comes from, the startup calibration or the build-time table, and the default is the table.
+```
+clear      value over a clear track,     measured at build time, per channel
+ball       value with a ball on it,      measured at build time, per channel
+scale      how much of that the channel still returns, read at each start
+threshold  scale × (clear + ball) / 2
+```
+`clear` and `ball` get hardcoded per channel. `scale` is measured at initialisation: the ratio between what a channel returns now and what it returned when those two were taken. It takes out what has changed since, dust on the sensor or its ageing. Since a channel may hold a ball at the time of initialization, the driver simply calibrates against whichever of `clear` and `ball` the reading at that moment sits nearer to.
 
-**A drifting ambient is not cancelled, only a constant one.** Should artificial room light trip channels, the remedy is in the driver rather than the hardware: each lit reading compared against the mean of the dark readings either side of it.
+A ball is reported once two readings in a row rise above the threshold. The second reading is an additional choice against false positives. The same applies to reporting a ball has left the channel, where two readings in a row have to fall below it.
 
-**Release after three cycles**, so a second ball close behind the first is not swallowed. A longer lockout is a game rule and belongs above the driver. The driver counts how many cycles in a row a channel stayed above its threshold. Five or more is margin, one or two is marginal. The remedy is a shorter phase, or that sensor closer to the track.
+The driver is a state machine, ticked from a timer. That tick is what keeps the measurement independent of the main loop, and has to happen on time.
+
+Every channel is read as late in the phase as it can be. The sensor is still settling after the LED switches, so a later reading carries more signal. The driver knows how many channels are fitted, and it places the read block to end with the phase at initialisation. Reading must be completed at the phase's end and must not extend into the next phase. Additionally, the read block must not start before `τ · ln 2` into the phase, where τ is the settling time constant of the sensor, because until then a channel still carries more of the previous phase than of this one.
+
+The stock machine bounds the phase from above. Its emitter pulses with a measured 3 ms period, and it needs both windows of that period to tell a ball from ambient light, so a ball it catches stays over the sensor for at least one full period. The driver is responsible to set an appropriate phase period depending on the installed hardware (that is channels and their resistors) and weighting sensor settlement and noise elimination.
+
+Sensors differ, either by their collector current or their assembly of the playfield. Thus, one channel can be stronger or weaker than the others. The driver sorts channel reading from strongest first to weakest channel last.
+
+[`IR-Firmware.md`](../../../firmware/constraints.md) documents the driver initialization model and startup calibration, as well as other constraints in detail. [`channel-model`](channel-model/index.html) is an interactive, static webpage that computes the phase, the pull-down and the detection margin that follows from them.
 
 ## IR sensor mainboard
 
-For easier orchestraction and management of all the IR-reflective sensors across this modification it is planned to have a central circuit, the sensor mainboard, which hosts all of the required components, such as resistors, capacitors, IC and transistors. This mainboard then connects to the Teensy, the power supply and all the IR sensor boards. It is planned to support  **up to sixteen channels**, each using  the circuit from Design B.
+One board carries everything the channels need. It sits between the Teensy, the power distribution and the sensor boards, and it holds **up to sixteen channel positions**, each the circuit from Design B.
 
 ![IR sensor mainboard schematic](ir-sensor-mainboard.svg)
 
-> **In variant A, never have one board live while the other is not.** See [the warning under Supply](#in-variant-a-the-two-boards-power-up-separately).
+### The converters sit on the mainboard
 
-### Multiplexers
+Sixteen channels read by the Teensy directly would need sixteen of its eighteen analog pins, and those same pins carry every I²C bus and most of the serial ports. Two converters on the mainboard bring the pin cost down to a shared SPI bus and two chip selects.
 
-Sixteen sensors read directly would need sixteen of the Teensy's eighteen analog pins, and those same pins carry every I²C bus and most of the serial ports. The multiplexers trade that for time: the channels are read one after another through two pins instead of all at once through sixteen.
-
-**The 74HC4051** ([datasheet](../../datasheets/74HC4051-Nexperia.pdf)) is an 8:1 analog multiplexer. Two of them carry sixteen channels in total, and the pair costs five pins: two analog inputs, and three select lines shared between both devices.
-
-The firmware reads the two outputs as a synchronised pair, which is what fits sixteen channels into the planned 300 µs phase.
+**The MCP3008** ([datasheet](../../datasheets/MCP3004-3008-Microchip.pdf)) is an eight-channel ten-bit converter with an SPI interface, an internal channel multiplexer and its own sample-and-hold. Two of them cover sixteen positions.
 
 | Multiplexer signal | Wiring |
 |---|---|

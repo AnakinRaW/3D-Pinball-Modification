@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IR Channel Model</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!--
+     Accent-coloured figures are the ones that leave this page as firmware constants.
+
+     swing(t) = 1 - 2*e^(-t/tau) / (1 + e^(-T/tau)), sign inversion at tau*ln(2/(1+x)), flicker residue
+     amp*(1-cos(w*Ts)) from the gap between the lit sample and the mean of the two darks, noise combined
+     in quadrature. Figure 6 of the GP2S700HCP datasheet is interpolated from readings taken off the plot
+     at 1, 1.5, 2, 3, 4, 4.7, 5, 6, 8 and 10 kOhm.
+-->
+<div class="wrap">
+<header>
+  <h1>IR Channel Model</h1>
+  <div class="hdrbtn">
+    <button class="apply" id="dl" type="button">Download JSON</button>
+    <button class="ghost" id="copy" type="button">Copy</button>
+    <button class="reset" id="reset" type="button">Reset</button>
+  </div>
+  <div id="exp" hidden></div>
+</header>
+
+<div class="railwrap">
+<div class="rail">
+  <div class="group">
+    <h2>Channels</h2>
+    <div class="ctl"><label for="N">Channels read<b class="tag pick">CHOICE</b></label><output id="N_o"></output>
+      <input type="range" id="N" min="1" max="16" step="1" value="16"></div>
+    <div class="ctl"><label for="tovh">Firmware cost per channel<b class="tag meas">MEASURED</b></label><output id="tovh_o"></output>
+      <input type="range" id="tovh" min="0.37" max="12" step="0.01" value="2"></div>
+    <div class="ctl"><label for="jit">Worst-case start jitter<b class="tag meas">MEASURED</b></label><output id="jit_o"></output>
+      <input type="range" id="jit" min="0" max="60" step="10" value="10"></div>
+    <div class="fig"><span>Room left per channel</span><b id="ovhNote"></b></div>
+  </div>
+
+  <div class="group">
+    <h2>Phase</h2>
+    <div class="ctl"><label for="T">Phase length<b class="tag pick">CHOICE</b></label><output id="T_o" class="ships"></output>
+      <input type="range" id="T" min="100" max="1500" step="10" value="600"></div>
+  </div>
+
+  <div class="group">
+    <h2>What it has to meet</h2>
+    <div class="ctl"><label for="D">Dwell over the sensor<b class="tag meas">MEASURED</b></label><output id="D_o"></output>
+      <input type="range" id="D" min="0.5" max="8" step="0.1" value="3"></div>
+    <div class="ctl"><label for="k">Readings a hit must survive<b class="tag pick">CHOICE</b></label><output id="k_o" class="ships"></output>
+      <input type="range" id="k" min="1" max="4" step="1" value="2"></div>
+  </div>
+
+  <div class="group">
+    <h2>Sensor and front end</h2>
+    <div class="ctl"><label>Values</label>
+      <div class="seg" id="modeseg">
+        <button type="button" data-v="all" aria-pressed="true">One set for all</button>
+        <button type="button" data-v="each" aria-pressed="false">One per sensor</button>
+      </div></div>
+    <div id="uniform">
+      <div class="ctl"><label>Pull-down<b class="tag pick">CHOICE</b></label>
+        <div class="seg" id="Rseg">
+          <button type="button" data-v="1.5">1.5 kΩ</button>
+          <button type="button" data-v="2.2">2.2 kΩ</button>
+          <button type="button" data-v="4.7" aria-pressed="true">4.7 kΩ</button>
+        </div></div>
+      <input type="hidden" id="R" value="4.7">
+      <div class="ctl"><label for="iph">Photocurrent a ball returns<b class="tag meas">MEASURED</b></label><output id="iph_o"></output>
+        <input type="range" id="iph" min="10" max="200" step="1" value="50"></div>
+      <div class="ctl"><label for="iclr">Photocurrent a clear track returns<b class="tag meas">MEASURED</b></label><output id="iclr_o"></output>
+        <input type="range" id="iclr" min="0" max="150" step="1" value="10"></div>
+      <div class="ctl"><label for="taumodel">Settling model</label>
+        <select id="taumodel">
+          <option value="linear">Linear with R, from the 100 µs maximum</option>
+          <option value="fig6max">Figure 6 shape, on the 100 µs maximum</option>
+          <option value="fig6typ">Figure 6 as drawn, typical at 5 V</option>
+          <option value="fixed">Measured, fixed value below</option>
+        </select></div>
+      <div class="ctl"><label for="taufix">τ at this pull-down<b class="tag meas">MEASURED</b></label><output id="taufix_o"></output>
+        <input type="range" id="taufix" min="10" max="400" step="1" value="62"></div>
+    </div>
+    <div class="tbl" id="chtbl"></div>
+  </div>
+
+  <div class="group">
+    <h2>The room</h2>
+    <!--
+         What the detector sees is near infrared, not brightness. The package carries a visible light cut resin,
+         so the daylight coming through a window reaches it and the white LED overhead barely does, whatever the
+         room looks like to an eye. The levels below are estimates.
+    -->
+    <div class="ctl"><label for="scene">Light in the room</label>
+      <select id="scene">
+        <option value="dark">Dark room</option>
+        <option value="led" selected>Lit room, LED lamps</option>
+        <option value="bulb">Lit room, incandescent</option>
+        <option value="day">Daylight through a window</option>
+        <option value="sun">Sun onto the playfield</option>
+      </select></div>
+    <div class="fig"><span>Reading on a dark channel</span><b id="amb_o"></b></div>
+    <div class="fig"><span>Of that, the machine's own LEDs</span><b id="ambself_o"></b></div>
+    <div class="fig"><span>Flicker</span><b id="mod_o"></b></div>
+    <!--
+         The machine's own lighting never goes out, so a channel never reads zero. Its LEDs are visible ones and
+         the resin takes most of that, which is why the floor is small. Dimming them by PWM would put their
+         switching into the same term as the lamps overhead, at a rate the design picks rather than the grid.
+    -->
+    <!--
+         The difference always takes the mean of the two dark readings either side of the lit one. Both
+         dark phases are read in any case and both are in hand when the cycle ends, so the pair costs one
+         stored reading per channel and cancels the room light's drift over the phase. There is nothing
+         to choose here any more, so the residue below is what a sine leaves behind between the two.
+    -->
+  </div>
+  <div class="group fixed">
+    <h2>Noise floor</h2>
+    <div class="fig"><span>Converter</span><b id="n1_o"></b></div>
+    <div class="fig"><span>Reference residue</span><b id="refNote"></b></div>
+    <div class="fig"><span>Room light flicker</span><b id="n3_o"></b></div>
+    <div class="fig"><span>Together</span><b id="n4_o"></b></div>
+    <p class="note"><b>The flicker is an upper bound, not a figure.</b> Converter and reference
+       residue come from the MCP3008 and MCP1700 datasheets. The modulation depth behind the
+       flicker is assumed, and the stock board argues it down: a 3 ms period gives no trouble in
+       ordinary rooms, which this depth would not allow. Reading a dark channel on the built board
+       replaces it.</p>
+    <!--
+         The three are independent, so they add in quadrature: the largest one decides almost alone.
+         A contributor at half the size of the leader moves the total by a tenth. Which is why the
+         flicker matters: at 600 us it stands eight times over the other two together.
+    -->
+  </div>
+
+  <div class="group fixed">
+    <h2>Set by the parts</h2>
+    <div class="fig"><span>SPI clock</span><b id="fspi_o"></b></div>
+    <div class="fig"><span>Clocks per channel</span><b id="clk_o"></b></div>
+    <div class="fig"><span>Converter reference</span><b id="vref_o"></b></div>
+    <div class="fig"><span>Noise on one reading</span><b id="nconv_o"></b></div>
+    <div class="ctl"><label for="railmv">Rail step between the phases<b class="tag meas">MEASURED</b></label><output id="railmv_o"></output>
+      <input type="range" id="railmv" min="0" max="100" step="1" value="41"></div>
+    <div class="fig"><span>What the datasheet predicts</span><b id="railpred_o"></b></div>
+    <div class="fig"><span>Could be off by</span><b id="railerr_o"></b></div>
+    <!--
+         The step is a voltage, so it is entered as one. The prediction beside it is the MCP1700's load
+         regulation at this channel count's bus current, 1.0 % typical against 1.5 % worst case, and it
+         is there so a changed channel count shows up as the two rows disagreeing.
+
+         The error is not asked for, because nobody could answer it. Taking the midpoint of the
+         datasheet band leaves a fifth of the value unaccounted, and that is where the 20 % comes from.
+         A voltmeter on the built board would leave 2 mV instead, and that number belongs in the design
+         once the measurement exists, not in a mode switch here.
+    -->
+    <div class="fig"><span>Correction the driver ships with</span><b id="corr_o" class="ships"></b></div>
+    <!--
+         1.35 MHz is where the MCP3008 tops out in its 2.7 V row, the row that governs at 3.3 V. The protocol
+         takes 17 clocks and the port sends whole bytes, so a channel costs three of them. The reference is the
+         rail itself, taken at its high tolerance corner, which makes every step as coarse as it gets.
+    -->
+    <!--
+         The noise figure is the 61 dB SINAD of DS21295D, with the 0.29 steps of quantisation that ten bits cost
+         already inside it. The datasheet gives it as a typical with no bound at all, and at 5 V rather than 3.3
+         V. What a hand-built board adds on top of the part shows up in the measurement, not here.
+    -->
+    <input type="hidden" id="fspi" value="1.35">
+    <input type="hidden" id="clk" value="24">
+    <input type="hidden" id="vref" value="3.449">
+    <input type="hidden" id="nconv" value="0.32">
+    <input type="hidden" id="amb" value="60">
+    <input type="hidden" id="ambself" value="20">
+    <input type="hidden" id="mod" value="60">
+    <input type="hidden" id="mains" value="100">
+  </div>
+</div>
+</div>
+
+<div class="work">
+  <div class="checks" id="checks"></div>
+  <section class="panel">
+    <h2>This configuration</h2>
+    <p class="sub">The first channel in the block is the worst case: it is sampled earliest and has settled least. Every channel behind it reads later and stands better.</p>
+    <dl class="metrics" id="metrics"></dl>
+    <div class="opt">
+      <button class="apply" id="propose" type="button">Set the best configuration</button>
+      <p id="optText">Derives the phase from the dwell and the readings asked for, then takes the pull-down that reaches one false report a year.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Inside one phase <span class="wch" id="w1"></span></h2>
+    <p class="sub">How much of the sensor's full swing the worst channel gets, and when the block starts reading. The bar is the read performance, lit minus dark as a share of the full swing, and every other figure in the tool scales with it. Both curves start where the last phase left them, so a phase too short for the pull-down keeps them near the middle, and left of the red line the lit curve runs below the dark one, where a reading reports backwards. The shaded band is the read block, and the further left it starts, the longer that block is.</p>
+    <figure><svg id="trace" viewBox="0 0 760 320" role="img" aria-label="Lit and dark traces over one phase"></svg></figure>
+    <div class="legend">
+      <span><i style="background:var(--lit)"></i>emitters lit</span>
+      <span><i style="background:var(--node)"></i>emitters dark</span>
+      <span><i class="area" style="background:var(--fail);opacity:.28"></i>a reading here reports backwards</span>
+      <span><i class="area" style="background:var(--shade)"></i>read block</span>
+      <span><i class="area" style="background:var(--warn);opacity:.32"></i>jitter, how far a late start moves the end of the block</span>
+      <span><i style="background:var(--accent)"></i>read performance</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Channel by channel</h2>
+    <p class="sub">What every channel would read with a ball on it, and what it reads over a clear track, in the order they are read. The distance between the two lines is all the decision has. Green where that distance is wide enough for at most one false report a year, amber down to one a day, red below.</p>
+    <figure><svg id="chan" viewBox="0 0 760 322" role="img" aria-label="Reading with a ball and over a clear track, in converter steps, for each sensor"></svg></figure>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>reading with a ball on it</span>
+      <span><i style="background:var(--muted)"></i>reading over a clear track</span>
+      <span><i style="background:var(--pass);opacity:.45;height:10px"></i>a false report a year at worst</span>
+      <span><i style="background:var(--warn);opacity:.45;height:10px"></i>works, but not if the noise was guessed low</span>
+      <span><i style="background:var(--fail);opacity:.45;height:10px"></i>not enough</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Phase sweep <span class="wch" id="w3"></span></h2>
+    <p class="sub">How long the worst channel goes between false reports, as the phase grows, with the readings a pass still delivers. Longer phases settle further and flicker more; shorter ones sample the ball more often, which gives the noise more chances at it.</p>
+    <figure><svg id="sweep" viewBox="0 0 760 300" role="img" aria-label="Mean wait to a false report on a logarithmic time axis, and readings per pass, against phase length"></svg></figure>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>mean wait to a false report</span>
+      <span><i style="background:var(--node)"></i>readings per pass</span>
+      <span><i style="background:var(--fail)"></i>outside the constraints</span>
+      <span><i style="background:var(--pass)"></i>best, the phase the button sets</span>
+    </div>
+    <!--
+         A threshold sitting halfway between the clear track and the ball leaves half the gap as the decision
+         distance, so the margin in sigma is half the ratio plotted. Two readings in a row have to fall the wrong
+         side before anything is reported, and at sixteen channels that is some thirteen thousand readings a
+         second. 8 × works out at roughly one false report a day, 6 × at one a minute, 4 × at seven a second. The
+         axis is logarithmic because those steps are.
+    -->
+  </section>
+</div>
+</div>
+<script src="model.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
