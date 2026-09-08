@@ -22,7 +22,7 @@
 | I²S2 | Audio, pins 2, 3, 4, 33 |
 | CAN1 TX on pin 11 | Sensors. CAN1 TX has 22 as its alternative, so CAN1 survives |
 | Serial7 | Sensors, pin 29. It needs 28 and 29 together, so taking one kills it, and 28 stays free as a plain pin |
-| The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's buffer drives MISO whenever that board is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
+| The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
 | SPI1, by consequence | Sensors. With SPI reserved, the next SPI device lands on SPI1, which the display reservation below now holds |
 | 10 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 11, 12, 13, 29, 36, 37. Every pin in the allocation is PWM-capable |
 
