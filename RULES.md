@@ -188,3 +188,45 @@ The stock machine's original functionality must remain restorable. An alteration
 ## 13. Amending these rules
 
 New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
+
+## 14. Risk levels
+
+Every finding is reported at one of four levels. The level follows from the consequence and from the scenario the finding occurs in.
+
+| Level | Case | Action |
+|---|---|---|
+| **Critical** | Normal operation, inside the system boundaries and inside the datasheet specification, destroys hardware or endangers a function of the machine. Normal operation includes power-up, boot, shutdown and any moment during a game. | Report at once and prominently. Explain the problem in plain words before the numbers, and propose an alternative in the same message. |
+| **Critical** | Operation leaves the datasheet specification and no permissible, safe operation can be derived for it. | As above. |
+| **Critical** | A person can be injured. This holds on the bench as much as in operation. | As above. |
+| **Important** | The Critical cases, occurring while the build is on the bench, or in an abnormal or purely theoretical scenario. | As above, plus an honest assessment of how likely the case is. |
+| **Important** | A part already planned changes, is added, or is dropped. Where the design provides for a choice between exactly those parts, the case is Medium instead. | Explain the change and its consequence in plain words. |
+| **Medium** | A change markedly reduces the performance of a function or of another function, or markedly improves it. | Warn and name a measure. An improvement is reported the same way. |
+| **Medium** | A calculation error runs through several derived figures, or moves one of them significantly. | Warn and correct. Rule 9 governs the re-derivation, rule 7 the sweep across the repository. |
+| **Medium** | A different part from a documented option list becomes the preferred one. | Report prominently. |
+| **Medium** | An alteration would leave a stock part unable to do what it did before (rule 12). | Warn and propose an alternative. |
+| **Medium** | A statement in a main document is objectively wrong while the calculation and the schematic are right. | Warn and propose the correction. |
+| **Low** | A calculation error changes the system or a function not at all or negligibly. | Correct it and report it collected. |
+| **Low** | Wording in a main document is imprecise without being wrong. | Report it and propose the wording. |
+| **Low** | Wording in an appendix is imprecise or wrong. | Correct it and report it collected. |
+
+**A Critical finding is raised once the derivation is finished.** The calculation is carried to its end first, because the result can still change. Where the finding stands at the end, work stops there and waits for a decision.
+
+**A review task is completed before anything is reported.** Findings of every level are collected and delivered with the review.
+
+**Counterproposals are written in chat.** Rule 8 still governs the files: design artifacts change when asked. Documentation follows rule 7, and a cosmetic fix in a file already open is made in passing.
+
+**What counts as significant.** A figure that breaks a rating, an absolute maximum or a stated requirement is Critical or Important. A figure that changes a number another document repeats, or changes a part choice, is Medium. A figure that changes nothing built and nothing written down is Low.
+
+**An unverifiable figure inherits the level of whatever depends on it**, and blocks only that (rule 3).
+
+The severity tables of the review skills map onto these levels:
+
+| Skill severity | Level |
+|---|---|
+| Destroys hardware, Malfunctions (`review-circuit`) | Critical in normal operation, Important on the bench or in a theoretical fault |
+| No margin (`review-circuit`), Thin margin (`design-review`) | Important where a rating is at stake, Medium otherwise |
+| Unverifiable (`review-circuit`) | The level of what depends on it |
+| Below bar, Missing (`design-review`) | Medium |
+| Craft (`design-review`) | Low |
+| Wrong (`review-schematic-svg`) | Medium |
+| Ambiguous, Convention (`review-schematic-svg`) | Low |

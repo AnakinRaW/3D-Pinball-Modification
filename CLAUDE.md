@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
 - **Assume a software-engineering background, not an electrical one.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
 - **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
+- **Rule 14 grades every finding.** Critical and Important are reported at once, in plain words first, with an alternative in the same message. Medium warns, Low is corrected and reported collected. The derivation is finished before a Critical finding is raised, and a review task is always completed first.
 - **Rule 10 bans a specific writing tic**: meta-commentary about what a document is or is not, and antithesis used for rhythm. Check prose against it before writing a file.
 - **Search with the model number** — "Teensy 4.1", never "Teensy". Rule 11 gives the source ranking; pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
 
