@@ -55,8 +55,10 @@ Sources: [Can 3.3 V be safely applied to a Teensy 4 I/O pin while the Teensy 4 p
 | VIN input range | 3.6 to 5.5 V | PJRC pin assignment card 11a rev4 |
 | **Recommended maximum output current per pin** | **4 mA** | [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) |
 | Output pin figure in the comparison table | 10 mA at 3.3 V | [PJRC technical specifications table](https://www.pjrc.com/teensy/techspecs.html) |
-| 3.3 V rail available to external circuits | 250 mA | PJRC pin assignment card 11a rev4 |
+| 3.3 V rail available to external circuits | 250 mA, the total across both 3V3 header pins | PJRC pin assignment card 11a rev4, and the [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png) for the single regulator |
 | Current draw @ 600 MHz | ≈ 100 mA | PJRC. **Published for the Teensy 4.0, not the 4.1** |
+
+**The two 3V3 header pins are one net.** The board carries a single 3.3 V regulator, the TLV75733P, and both pins hang off its output. A second pin buys shorter wiring and a second contact, not a second budget: 250 mA is the sum.
 
 Three open points:
 
