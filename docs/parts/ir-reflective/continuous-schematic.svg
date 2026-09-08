@@ -46,7 +46,7 @@
   <line x1="516" y1="310" x2="544" y2="310" stroke="#1a1a1a" stroke-width="3"/>
   <line x1="521" y1="316" x2="539" y2="316" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="526" y1="322" x2="534" y2="322" stroke="#1a1a1a" stroke-width="2"/>
-  <text x="560" y="322" font-size="11" fill="#666">permanently lit: 10.0 mA nominal,</text>
-  <text x="560" y="337" font-size="11" fill="#666">10.7 mA at V_OUT max, V_F min</text>
+  <text x="560" y="322" font-size="11" fill="#666">permanently lit: 9.4 mA nominal,</text>
+  <text x="560" y="337" font-size="11" fill="#666">10.3 mA at V_OUT max, V_F min</text>
 
 </svg>
