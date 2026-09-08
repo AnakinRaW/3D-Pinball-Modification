@@ -131,13 +131,16 @@ const IRTM = (function () {
     // passed a millisecond: at 600 us it runs 1 % high, at 1200 us 5 %, and at the stock board's 3 ms
     // 36 %, where it reports 64 steps against the exact 47. Unbounded growth pushed the optimiser to
     // short phases for a reason that was arithmetic rather than physical.
-    const bus = p.N * 10.6;                      // mA, N emitters at worst case
-    // Derived, the constant is the midpoint of the datasheet's typical and worst case and the residue is the
-    // half-spread around it, a fifth of the value. Measured on the board, what is left is the meter: 1 mV of
-    // resolution on each of two readings of a 3300 mV rail, so 0.06 % of the dark reading.
+    const bus = p.N * 10.3;                      // mA, N emitters at worst case
+    // The step is measured, because the module publishes no load regulation and the cable's drop belongs to
+    // the installation. What can be predicted is the cable: the bus current against the 0.1 ohm the design
+    // bounds it at. The correction is a ratio, so what it leaves is a fraction of the dark reading rather
+    // than a share of the step. Two 1 mV readings of a 3300 mV rail put that ratio 0.06 % out, and the
+    // design holds itself usable while the whole residual, the meter and whatever fails to repeat, stays
+    // under one step of 1024 of rail difference. That bound is what enters the noise floor.
     const railRel = p.railmv / 3300;            // the step as entered, against the 3.3 V rail
-    const railPred = 0.0125 * p.N / 16 * 3300;  // what the datasheet gives at this bus current
-    const residFrac = railRel * 0.20;           // the midpoint of the datasheet band leaves a fifth open
+    const railPred = bus * 0.1;                 // mV the supply cable alone drops at this bus current
+    const residFrac = 3.2 / 3300;               // one step of 1024 of rail difference, the design's bound
     const railStep = railRel * 3300;            // mV between lit and dark
     const refRes = residFrac * ambTot;
     const noise = Math.hypot(p.nconv, refRes, flick);
@@ -168,7 +171,10 @@ const IRTM = (function () {
     const tau = Math.max(...chans.map(c => c.tau), 0) || blank.tau;   // the slowest sensor sets the bounds
     const Rmax = Math.max(...chans.map(c => c.R), 0) || p.R;
     const x = worst.x, sw = worst.sw, tzero = worst.tz;
-    const cycle = 2 * T, reads = Math.floor(p.D * 1000 / cycle);
+    // A value spans three phases, dark, lit and the dark of the cycle after, and two consecutive
+    // values share the middle one, so m values span 2m + 1 phases. Counting D / cycle treats a value
+    // as one cycle and overcounts: at a 750 us phase it reports two where the dwell carries one.
+    const cycle = 2 * T, reads = Math.max(0, Math.floor((p.D * 1000 / T - 1) / 2));
     const duty = tbud / T;                      // share of the core the read block holds
     // p is the Gaussian tail beyond half the gap, the threshold sitting midway between the clear
     // track and the ball. Nothing has measured that the noise really is Gaussian out at 4 sigma, and
@@ -176,6 +182,11 @@ const IRTM = (function () {
     // the mean of a Poisson process, so it has no minimum, and it moves by decades on small changes
     // in the noise: at sixteen channels a 10 % worse noise floor takes 21 hours down to 50 minutes.
     const goodMargin = marginFor(GOOD_S, p.N, T, p.k), thinMargin = marginFor(THIN_S, p.N, T, p.k);
+    // Release sits m_r sigma under the report threshold, m_r from the year the same way as the report
+    // margin, which is a full gap of goodMargin sigma with the threshold halfway, so m_r = goodMargin / 2.
+    // It has to keep 2 sigma above the clear track, or a ball that leaves is never released.
+    const dHyst = goodMargin / 2 * noise;
+    chans.forEach(c => { c.relS = c.thr - dHyst; c.relOK = c.relS - c.clrS >= 2 * noise; });
     const tail = qtail(Math.max(0, snrOf(steps, noise)) / 2);
     const rate = p.N * (1e6 / (2 * T)) * Math.pow(tail, p.k);
     const falseEvery = rate > 0 ? 1 / rate : Infinity;
@@ -185,14 +196,16 @@ const IRTM = (function () {
       flick, noise, refRes, residFrac, ovhCeil, bus, railRel, railStep, railPred, ambTot,
       snr: snrOf(steps, noise), falseEvery, goodMargin, thinMargin, cycle, reads,
       signOK: chans.every(c => c.t > c.tz), fitOK: tfirst > 0, readOK: reads >= p.k,
-      perfOK: worst.f >= PERF_MIN,
-      acqWin: 1.5 / p.fspi, acqNeed: (Rmax + 1) * 0.02 * 6.9, guard, duty,
+      perfOK: worst.f >= PERF_MIN, dHyst, relOK: chans.every(c => c.relOK),
+      // C_PIN 7 pF sits at the pad and C_SAMPLE 20 pF behind the switch, so the source charges
+      // both: Rmax x 27 pF plus the switch's 1 kOhm x 20 pF, and ten bits need ln(1024) of that.
+      acqWin: 1.5 / p.fspi, acqNeed: (Rmax * 0.027 + 0.02) * 6.9, guard, duty,
       swFirst: worst.f, swLast: chans.length ? chans[chans.length - 1].f : 0, mV: worst.steps * lsb
     };
   }
 
   // A configuration is usable when every one of these holds. Anything that fails one is not ranked.
-  const usable = m => m.fitOK && m.signOK && m.readOK && m.perfOK;
+  const usable = m => m.fitOK && m.signOK && m.readOK && m.perfOK && m.relOK;
 
   // The firmware picks four things. Two of them are searched here. The read order is fixed at strongest
   // first, and where the threshold sits between the two readings is fixed at the midpoint: a shift buys
@@ -224,7 +237,7 @@ const IRTM = (function () {
   // Two requirements bracket the phase, and both are inequalities that solve directly.
   //
   //   floor   N (t_conv + t_ovh) + jitter        the block and its guard have to fit inside one phase
-  //   ceiling D / (2 (k + 1))                    a value costs two phases, so this many still fit the dwell
+  //   ceiling D / (2 (k + 1) + 1)                k + 1 values span that many phases, so this many fit the dwell
   //
   // Inside the bracket every phase length delivers the same number of readings, so the readings step of
   // the ranking cannot separate two of them. What is left is the CPU load, N (t_conv + t_ovh) / T, and it
@@ -233,7 +246,7 @@ const IRTM = (function () {
   function phaseWindow(p, bounds) {
     const step = bounds.step || 1, tconv = p.clk / p.fspi;
     const fit = Math.ceil((Math.ceil(p.N * (tconv + p.tovh) + p.jit) + START) / step) * step;
-    const cap = Math.floor(p.D * 1000 / (2 * (p.k + 1)) / step) * step;
+    const cap = Math.floor(p.D * 1000 / (2 * (p.k + 1) + 1) / step) * step;
     return { step, lo: Math.max(fit, bounds.min), hi: Math.min(cap, bounds.max) };
   }
 
@@ -336,7 +349,7 @@ const IRTM = (function () {
         dwellMillis: p.D, readingsPerPass: m.reads,
         coreHeldByBlock: r2(m.duty),
         phaseCeilingMicros: 1500,
-        phaseCeilingReason: 'the stock machine pulses its emitter with a measured 3 ms period, and a cycle is two phases, so a phase above 1.5 ms would sample the ball more slowly than the machine being replaced'
+        phaseCeilingReason: 'a value spans three phases and two consecutive values share the middle one, so m values span 2m + 1 phases. The dwell has to carry the confirmations, which puts the ceiling at D / (2 (k + 1) + 1)'
       },
       driver: {
         confirmationsRequired: p.k,
@@ -345,9 +358,9 @@ const IRTM = (function () {
         readOrder: m.chans.map(c => c.name),
         correction: Math.round((1 + m.railRel) * 1e4) / 1e4,
         correctionApplyAs: 'value = lit - correction * dark, per reading, per channel',
-        correctionFrom: 'the 1 subtracts the ambient, the rest is the rail step between the lit and the dark phase, from the MCP1700 load regulation at the LED bus current of this channel count, midpoint of typical and worst case',
+        correctionFrom: 'the 1 subtracts the ambient, the rest is the measured rail step between the lit and the dark phase; of that step the supply cable accounts for the bus current of this channel count against the 0.1 ohm bound, and the module for the remainder',
         railStepMillivolts: p.railmv,
-        railStepCouldBeOffByMillivolts: Math.round(m.residFrac * 3300)
+        railResidualBoundMillivolts: Math.round(m.residFrac * 3300 * 10) / 10
       },
       channels: m.chans.map(c => ({
         readSlot: c.i, name: c.name,
@@ -380,6 +393,7 @@ const IRTM = (function () {
         everyReadPastSignInversion: m.signOK,
         passDeliversEnoughReadings: m.readOK,
         readPerformanceClearsTauFloor: m.perfOK,
+        releaseThresholdClearsClearTrack: m.relOK,
         readPerformanceFloorPercent: PERF_MIN * 100,
         readPerformanceFloorFrom: 'below half the swing the read sits on the steep part of the settling curve and multiplies an error in tau instead of following it. tau is not measured, and its two candidates stand a factor of 3.5 apart. The floor comes out once tau is measured on the built board',
         converterAcquiresInWindow: m.acqNeed <= m.acqWin,

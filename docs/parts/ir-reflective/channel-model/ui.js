@@ -40,6 +40,7 @@ function metrics(p, m) {
     ['Gap, worst channel', f1(m.steps) + ' <small>steps</small>'],
     ['Gap for one a year', f0(m.goodMargin * m.noise) + ' <small>steps</small>'],
     ['Threshold, worst channel', f1(m.thr) + ' <small>steps</small>'],
+    ['Release threshold, worst channel', f1(m.worst.relS) + ' <small>steps</small>'],
     ['Current for one step', f2(m.worst.perStep) + ' <small>µA</small>'],
     ['Gap over noise', f1(m.snr) + '&thinsp;<small>×</small>', true],
     ['τ, slowest sensor', f0(m.tau) + ' <small>µs</small>'],
@@ -62,6 +63,7 @@ function metrics(p, m) {
     chip(m.readOK, 'Pass delivers enough readings', m.reads + ' of ' + p.k),
     chip(m.perfOK, 'Read performance carries a wrong τ', f0(m.swFirst * 100) + ' of ' + f0(IRTM.PERF_MIN * 100) + ' %'),
     chip(m.acqNeed <= m.acqWin, 'Converter acquires in its window', f1(m.acqNeed) + ' of ' + f1(m.acqWin) + ' µs'),
+    chip(m.relOK, 'Release threshold clears the clear track', f1(m.chans.length ? Math.min(...m.chans.map(c => c.relS - c.clrS)) : 0) + ' of ' + f1(2 * m.noise) + ' steps'),
     // the lit reading sits on top of the ambient one, so bright rooms run the channel into its ceiling
     chip(m.ambTot + m.peak < 1024, 'Channel stays inside the range', f0(m.ambTot + m.peak) + ' of 1024 steps'),
     chip(m.falseEvery >= IRTM.GOOD_S ? true : m.falseEvery >= IRTM.THIN_S ? null : false, 'False reports', IRTM.every(m.falseEvery) + ' apart, gap ' + f1(m.snr) + '× the noise')
@@ -134,7 +136,9 @@ function chanChart(p, m) {
   };
   // The bar is the gap the decision lives on. What it has to reach is the clear-track reading plus
   // the margin the day target asks for, so the requirement is a level in steps rather than a count
-  // is not drawn: it is the midpoint of the bar by construction and carries nothing.
+  // is the midpoint of the bar and is not drawn, it carries nothing. The release threshold sits m.dHyst
+  // under it and has to clear the clear-track reading by 2 sigma, or a ball that leaves is never
+  // released; that is the one mark drawn, and it turns red where it fails.
   const need = c => c.clrS + m.goodMargin * m.noise, thin = c => c.clrS + m.thinMargin * m.noise;
   const yMax = nice(Math.max(...ch.map(c => Math.max(c.ballS, need(c))), 1));
   const X = i => L + (N > 1 ? (i / (N - 1)) * pw : pw / 2), Y = st => Tp + (1 - Math.min(st, yMax) / yMax) * ph;
@@ -152,13 +156,16 @@ function chanChart(p, m) {
     `<path d="M${pts(xs, yThin).join(' L')} L${(L + pw).toFixed(1)} ${bot} L${L} ${bot} Z" fill="var(--fail)" opacity="0.13"/>`
     + `<path d="M${pts(xs, yNeed).join(' L')} L${pts(xs, yThin).reverse().join(' L')} Z" fill="var(--warn)" opacity="0.15"/>`
     + `<path d="M${pts(xs, yNeed).join(' L')} L${(L + pw).toFixed(1)} ${top} L${L} ${top} Z" fill="var(--pass)" opacity="0.11"/>`;
-  let ballL = '', clrL = '', needL = '', thinL = '', dots = '';
+  let ballL = '', clrL = '', needL = '', thinL = '', marks = '', dots = '';
+  const hw = N > 12 ? 5 : 7;                     // half width of the release marks
   ch.forEach((c, i) => {
     const x = X(c.i).toFixed(1);
     ballL += (i ? 'L' : 'M') + x + ' ' + Y(c.ballS).toFixed(1);
     clrL += (i ? 'L' : 'M') + x + ' ' + Y(c.clrS).toFixed(1);
     needL += (i ? 'L' : 'M') + x + ' ' + Y(need(c)).toFixed(1);
     thinL += (i ? 'L' : 'M') + x + ' ' + Y(thin(c)).toFixed(1);
+    const xn = X(c.i), yR = Y(Math.max(0, c.relS)).toFixed(1);
+    marks += `<line x1="${(xn - hw).toFixed(1)}" y1="${yR}" x2="${(xn + hw).toFixed(1)}" y2="${yR}" stroke="${c.relOK ? 'var(--node)' : 'var(--fail)'}" stroke-width="3"/>`;
     const col = c.mg >= m.goodMargin ? 'var(--pass)' : c.mg >= m.thinMargin ? 'var(--warn)' : 'var(--fail)';
     dots += `<circle cx="${x}" cy="${Y(c.ballS).toFixed(1)}" r="${N > 12 ? 3 : 4}" fill="${col}"/>`;
   });
@@ -174,6 +181,7 @@ function chanChart(p, m) {
     <path d="${thinL}" fill="none" stroke="var(--warn)" stroke-width="1" stroke-dasharray="3 4"/>
     <path d="${needL}" fill="none" stroke="var(--pass)" stroke-width="1.5"/>
     <path d="${clrL}" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+    ${marks}
     <path d="${ballL}" fill="none" stroke="var(--accent)" stroke-width="2"/>
     ${dots}${ticks}
     <text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle" fill="var(--muted)" font-family="var(--sans)" font-size="11.5">the sensors, in the order they are read</text>
@@ -319,7 +327,7 @@ function render() {
   const m = IRTM.model(p, p.T);
   $('railmv_o').textContent = p.railmv + ' mV';
   $('railpred_o').textContent = m.railPred.toFixed(0) + ' mV';
-  $('railerr_o').textContent = '± ' + (m.residFrac * 3300).toFixed(0) + ' mV';
+  $('railerr_o').textContent = (m.residFrac * 3300).toFixed(1) + ' mV';
   $('corr_o').textContent = (1 + m.railRel).toFixed(4);
   $('n1_o').textContent = p.nconv.toFixed(2) + ' steps';
   $('refNote').textContent = m.refRes.toFixed(2) + ' steps';

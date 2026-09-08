@@ -123,8 +123,9 @@
     <div class="fig"><span>Reference residue</span><b id="refNote"></b></div>
     <div class="fig"><span>Room light flicker</span><b id="n3_o"></b></div>
     <div class="fig"><span>Together</span><b id="n4_o"></b></div>
-    <p class="note"><b>The flicker is an upper bound, not a figure.</b> Converter and reference
-       residue come from the MCP3008 and MCP1700 datasheets. The modulation depth behind the
+    <p class="note"><b>The flicker is an upper bound, not a figure.</b> The converter figure comes from
+       the MCP3008 datasheet, the reference residue from the rail difference the design allows itself
+       to leave after the correction. The modulation depth behind the
        flicker is assumed, and the stock board argues it down: a 3 ms period gives no trouble in
        ordinary rooms, which this depth would not allow. Reading a dark channel on the built board
        replaces it.</p>
@@ -143,17 +144,20 @@
     <div class="fig"><span>Noise on one reading</span><b id="nconv_o"></b></div>
     <div class="ctl"><label for="railmv">Rail step between the phases<b class="tag meas">MEASURED</b></label><output id="railmv_o"></output>
       <input type="range" id="railmv" min="0" max="100" step="1" value="41"></div>
-    <div class="fig"><span>What the datasheet predicts</span><b id="railpred_o"></b></div>
-    <div class="fig"><span>Could be off by</span><b id="railerr_o"></b></div>
+    <div class="fig"><span>What the cable alone gives</span><b id="railpred_o"></b></div>
+    <div class="fig"><span>What the correction leaves</span><b id="railerr_o"></b></div>
     <!--
-         The step is a voltage, so it is entered as one. The prediction beside it is the MCP1700's load
-         regulation at this channel count's bus current, 1.0 % typical against 1.5 % worst case, and it
-         is there so a changed channel count shows up as the two rows disagreeing.
+         The step is a voltage, so it is entered as one. The figure beside it is the supply cable's own
+         drop at this channel count's bus current, 165 mA against the 0.1 ohm the design bounds the cable
+         at, and it is there so a changed channel count shows up as the two rows disagreeing. The module
+         adds its load regulation on top, which Pololu does not publish, which is why the step is measured
+         rather than derived.
 
-         The error is not asked for, because nobody could answer it. Taking the midpoint of the
-         datasheet band leaves a fifth of the value unaccounted, and that is where the 20 % comes from.
-         A voltmeter on the built board would leave 2 mV instead, and that number belongs in the design
-         once the measurement exists, not in a mode switch here.
+         What the correction leaves is not asked for, because nobody could answer it before the board is
+         built. The correction is a ratio, so the residue is a fraction of the dark reading and not a share
+         of the step: two 1 mV readings of a 3300 mV rail put the ratio 0.06 % out. On top of that sits
+         whatever fails to repeat, which no source bounds, so the model takes the design's own limit,
+         one step of 1024 of rail difference.
     -->
     <div class="fig"><span>Correction the driver ships with</span><b id="corr_o" class="ships"></b></div>
     <!--
@@ -206,14 +210,15 @@
 
   <section class="panel">
     <h2>Channel by channel</h2>
-    <p class="sub">What every channel would read with a ball on it, and what it reads over a clear track, in the order they are read. The distance between the two lines is all the decision has. Green where that distance is wide enough for at most one false report a year, amber down to one a day, red below.</p>
+    <p class="sub">What every channel would read with a ball on it, and what it reads over a clear track, in the order they are read. The distance between the two lines is all the decision has. Green where that distance is wide enough for at most one false report a year, amber down to one a day, red below. The mark under each ball reading is the release threshold; it turns red where it comes within 2 σ of the clear track, because a ball that leaves would then never be released.</p>
     <figure><svg id="chan" viewBox="0 0 760 322" role="img" aria-label="Reading with a ball and over a clear track, in converter steps, for each sensor"></svg></figure>
     <div class="legend">
       <span><i style="background:var(--accent)"></i>reading with a ball on it</span>
       <span><i style="background:var(--muted)"></i>reading over a clear track</span>
       <span><i style="background:var(--pass);opacity:.45;height:10px"></i>a false report a year at worst</span>
       <span><i style="background:var(--warn);opacity:.45;height:10px"></i>works, but not if the noise was guessed low</span>
-      <span><i style="background:var(--fail);opacity:.45;height:10px"></i>not enough</span>
+      <span><i style="background:var(--fail);opacity:.45;height:10px"></i>gap too small for the noise, more than a false report a day</span>
+      <span><i style="background:var(--node);height:3px;width:14px"></i>release threshold, the year's margin under it, red within 2 σ of the clear track</span>
     </div>
   </section>
 
