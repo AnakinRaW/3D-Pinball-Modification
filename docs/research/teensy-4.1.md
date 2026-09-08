@@ -70,7 +70,7 @@ Three open points:
 
 **The maximum source resistance R<sub>AS</sub> is 1 kΩ**, at 12 bit, f<sub>ADCK</sub> = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4, Table 54, page 65. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
 
-The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36 to 38 on pages 68 and 69 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/constraints.md`](../../firmware/constraints.md).
+The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36 to 38 on pages 68 and 69 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`firmware/ir-sensing.md`](../../firmware/ir-sensing.md).
 
 **PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
 

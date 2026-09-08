@@ -10,7 +10,7 @@
 | 11 | MOSI, shared SPI bus | SPI MOSI | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 12 | MISO, shared SPI bus | SPI MISO | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 13 | SCK, shared SPI bus | SPI SCK | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 29 | CLOCK, common LED pulse | plain digital output | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 29 | CLOCK, common LED pulse | FlexPWM3.1 channel A | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
 | 36 | CS-A, converter for channels 1 to 8 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 37 | CS-B, converter for channels 9 to 16 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
@@ -25,6 +25,7 @@
 | The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
 | SPI1, by consequence | Sensors. With SPI reserved, the next SPI device lands on SPI1, which the display reservation below now holds |
 | 10 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 11, 12, 13, 29, 36, 37. Every pin in the allocation is PWM-capable |
+| FlexPWM3 submodule 1, as a free-running timer | Sensors, pin 29, which generates the LED pulse in hardware at the phase frequency the driver sets. Pin 28 sits on the same submodule and shares that frequency, so it can still serve as a plain pin but not as a PWM output at a rate of its own |
 
 ## Reserved
 
@@ -147,6 +148,7 @@ Pins 14–27 and 38–41 are the analog-capable ones, so any digital use of thos
 - [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) — rev 4. Every pin figure above
 - [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png) — the LED and its series resistor on the pin 13 net, and that no buffer stands between them and the pin
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) — pin counts, microSD via SDIO, Ethernet PHY, USB host
+- [PWM and tone on Teensy](https://www.pjrc.com/teensy/td_pulse.html) — the PWM pin to timer table, that pins on one timer share a frequency, and that a lower frequency buys resolution
 - [`research/teensy-4.1.md`](research/teensy-4.1.md) — electrical limits per pin
 
 Cross-check against PJRC's headline counts: 42 header pins + 6 microSD + 7 bottom pads = 55 total I/O, and 27 PWM on the headers + 8 on the underside = 35 PWM. Both match the product page. The [technical specifications table](https://www.pjrc.com/teensy/techspecs.html) lists 2 SPI ports where the product page says 3; SPI2 falls entirely on pins 42–54, which accounts for the difference.

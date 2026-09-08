@@ -9,7 +9,7 @@ const f1 = n => n.toFixed(1), f2 = n => n.toFixed(2), f0 = n => Math.round(n);
 
 const IN = ['N', 'tovh', 'jit', 'T', 'D', 'k', 'R', 'iph', 'iclr', 'taumodel', 'taufix', 'scene', 'railmv'];
 const DEF = {
-  N: 16, tovh: 2, jit: 10, T: 600, D: 3, k: 2, R: 4.7, iph: 50, iclr: 10, vref: 3.449,
+  N: 16, tovh: 2, jit: 10, T: 600, D: 3, k: 2, R: 4.7, iph: 50, iclr: 10, vref: 3.383,
   taumodel: 'linear', taufix: 62, nconv: 0.32, railmv: 41, scene: 'led', amb: 60, ambself: 20,
   mod: 60, mains: 100
 };

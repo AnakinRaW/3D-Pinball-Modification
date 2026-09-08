@@ -120,7 +120,7 @@ Both have to pass.
 Which pins this subsystem takes, and what each one locks out, is in [`pin-assignment.md`](../../pin-assignment.md). What constrained the choice:
 
 - **SPI is a bus.** SCK, MOSI and MISO are shared with whatever else arrives later, and each device adds only its own chip select.
-- **Two chip selects and one clock line need no special function.** Three plain digital outputs, and none of them analog-capable, so the analog inputs stay free.
+- **Two chip selects need no special function, the clock line takes a PWM channel** so the emitter pulse leaves the timer's compare logic rather than an interrupt. None of the three is analog-capable, so the analog inputs stay free.
 
 ## Software
 
@@ -175,7 +175,7 @@ The driver is responsible to set an appropriate phase period depending on the in
 
 Sensors differ, either by their collector current or their assembly of the playfield. Thus, one channel can be stronger or weaker than the others. The driver sorts channel reading from strongest first to weakest channel last.
 
-[`constraints.md`](../../../firmware/constraints.md) documents the driver initialization model and startup calibration, as well as other constraints in detail. [`channel-model`](channel-model/index.html) is an interactive, static webpage that computes the phase, the pull-down and the detection margin that follows from them.
+[`ir-sensing.md`](../../../firmware/ir-sensing.md) documents the driver initialization model and startup calibration, as well as other constraints in detail. [`channel-model`](channel-model/index.html) is an interactive, static webpage that computes the phase, the pull-down and the detection margin that follows from them.
 
 ## IR sensor mainboard
 
@@ -202,7 +202,7 @@ Using N channels read by the Teensy directly would also need N of its eighteen a
 | DOUT | through R37 or R38 to U3, one device at a time under its own chip select |
 | CS | from U3, one output each |
 
-A channel resolves to ten bits, one step of 3.4 mV.
+A channel resolves to ten bits, one step of 3.3 mV at V<sub>REF</sub> max.
 
 ### Supply and input filter
 
@@ -321,7 +321,7 @@ The sensors beyond the three that come out of the stock machine are rebuilt as c
 At a sensor, one setup for all four:
 
 - Measure what a ball returns: the node at the sensor's working distance, emitter lit and dark, over a clear track and with a ball on it. Every threshold and the 4.7 kΩ rest on the 50 µA assumed here.
-- Measure the sensor's settling time, a reading taken settled against one taken 280 µs into the phase. The phase length and the read instant follow from it, and the two datasheet readings stand a factor of 3.5 apart.
+- Measure the sensor's settling time, a reading taken settled against one taken 270 µs into the phase. The phase length and the read instant follow from it, and the two datasheet readings stand a factor of 3.5 apart.
 - Measure how far a ball shifts a channel's emitter-dark reading; that decides whether two values need the ball present for five phases or for the two lit ones.
 - Read the flicker amplitude off a dark channel with a scope, under the room lighting the machine will stand in; it carries the noise floor and no datasheet gives it.
 
@@ -455,7 +455,7 @@ Droop         ΔI / (2π · f_c · C), C5 fitted, 21 µF:
               module alone, at 10 kHz                   =  262 mV
 ```
 
-Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 165 mA that is 31 to 53 mV, the order of the 62 mV above. The rail's minimum with the bus on is 3.150 V, so the converters' 2.7 V floor stands 390 mV below the droop with C5 fitted, and 190 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 62 mV against the 2269 mV across the 220 Ω, 2.7 % of the current, over the first tens of µs of the lit phase, and the first channel is read 280 µs into it.
+Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 165 mA that is 31 to 53 mV, the order of the 62 mV above. The rail's minimum with the bus on is 3.150 V, so the converters' 2.7 V floor stands 390 mV below the droop with C5 fitted, and 190 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 62 mV against the 2269 mV across the 220 Ω, 2.7 % of the current, over the first tens of µs of the lit phase, and the first channel is read 270 µs into it.
 
 **What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 62 mV droop; an aluminium electrolytic at 2 Ω would put 330 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
 
@@ -547,10 +547,10 @@ per conversion  24 clocks / 1.35 MHz                     = 17.78 µs
 block           N × 17.78 µs, at N = 16                  =  284 µs
                                 at N = 8                 =  142 µs
 budget          plus 2 µs per conversion for the firmware's own
-                overhead, which firmware/constraints.md puts
+                overhead, which firmware/ir-sensing.md puts
                 to a measurement                         =  320 µs at N = 16
 phase           600 µs, from the dwell, below
-first read      phase − budget                           =  280 µs at N = 16
+first read      phase − budget − 10 µs of start jitter   =  270 µs at N = 16
                 τ · ln 2 = 148 µs is the ceiling on the sign
                 inversion, so the phase a board needs is
                 t_budget + 148 µs, which holds to N = 22 at this phase
@@ -567,41 +567,41 @@ t      ≈ Q_g / (I_peak / 2), AO3400A at  7 nC       ≈  8.5 µs
   with 100 Ω instead: 3.3 V / 100 Ω                 =   33 mA → 16× the 2 mA figure
 ```
 
-Q<sub>g</sub> is 7 nC max at V<sub>GS</sub> = 4.5 V and I<sub>D</sub> = 5.7 A for the AO3400A, and 74 nC max at V<sub>GS</sub> = 5.0 V and I<sub>D</sub> = 18 A for the IRL540N. The slower of the two costs nothing: the earliest channel is sampled 280 µs into its phase, by which time the LED has been at full current for 190 µs.
+Q<sub>g</sub> is 7 nC max at V<sub>GS</sub> = 4.5 V and I<sub>D</sub> = 5.7 A for the AO3400A, and 74 nC max at V<sub>GS</sub> = 5.0 V and I<sub>D</sub> = 18 A for the IRL540N. The slower of the two costs nothing: the earliest channel is sampled 270 µs into its phase, by which time the LED has been at full current for 180 µs.
 
 **4.7 kΩ, signal pull-down.** The phototransistor delivers a current; the pull-down turns it into the measured voltage, `U = I_photo · R`. Four requirements set the value, against the board's internal 1.585 kΩ:
 
 ```
 Headroom          U_max = 3.449 V × 4.7 / (1.585 + 4.7)    ≈ 2.58 V  at V_OUT max
-Resolution        50 µA × 4.7 kΩ = 0.235 V                 ≈ 73 steps of 1024 at 3.3 V
-                                                              70 steps at V_OUT max
-                  × 49 % swing at the first read            ≈ 34 steps, worst case
+Resolution        50 µA × 4.7 kΩ = 0.235 V                 ≈ 74 steps of 1024 at V_REF nominal
+                                                              71 steps at V_REF max
+                  × 47 % swing at the first read            ≈ 33 steps, worst case
 Ambient headroom  saturates at 3.150 V / 6.285 kΩ          ≈ 501 µA  at V_OUT min
                   at 10 kΩ instead                         ≈ 272 µA  → 4.7 kΩ has 1.8× the margin
 Settling          t_r/t_f max 100 µs at R_L = 1 kΩ         → ≈ 470 µs at 4.7 kΩ (10 to 90 %)
                   τ = 470 µs / 2.2                         = 214 µs  scaled from the maximum
                   the same scaling on the 20 µs typical     =  43 µs
                   Figure 6 read at 4.7 kΩ instead of scaled ≈  62 µs
-                  swing at the first read, 280 µs into a
+                  swing at the first read, 270 µs into a
                   600 µs phase, sixteen channels:
-                                                              49 % at τ = 214 µs
-                                                              98 % at τ =  62 µs
+                                                              47 % at τ = 214 µs
+                                                              97 % at τ =  62 µs
                                                              100 % at τ =  43 µs
-                  sign inverts below τ · ln(2 / (1 + x))   = 136 µs at τ = 214 µs → 2.1×
+                  sign inverts below τ · ln(2 / (1 + x))   = 136 µs at τ = 214 µs → 2.0×
                   that instant rises with τ towards T/2, so a
                   read past the phase midpoint holds its sign
                   for any part
 ```
 
-**Figure 6 of the sensor datasheet does not support that linear scaling.** It plots response time against load resistance on log axes, and between 1 kΩ and 10 kΩ the curve rises from 52 µs to 94 µs, a factor of 1.8, where the scaling above takes a factor of ten. At 4.7 kΩ the curve reads 71 µs, so 1.37 of its value at 1 kΩ. Applying that shape to the 100 µs maximum puts τ at 4.7 kΩ at 62 µs rather than 214 µs, and the swing at the first read is then 98 % rather than 49 %. Every figure derived from τ is quoted at both, and the design is built to the pessimistic one. A node reading taken settled against one taken 280 µs into the phase settles it, since the two differ by exactly that swing.
+**Figure 6 of the sensor datasheet does not support that linear scaling.** It plots response time against load resistance on log axes, and between 1 kΩ and 10 kΩ the curve rises from 52 µs to 94 µs, a factor of 1.8, where the scaling above takes a factor of ten. At 4.7 kΩ the curve reads 71 µs, so 1.37 of its value at 1 kΩ. Applying that shape to the 100 µs maximum puts τ at 4.7 kΩ at 62 µs rather than 214 µs, and the swing at the first read is then 97 % rather than 47 %. Every figure derived from τ is quoted at both, and the design is built to the pessimistic one. A node reading taken settled against one taken 270 µs into the phase settles it, since the two differ by exactly that swing.
 
 **The swing is the periodic one, not a single step.** At 50 % duty neither phase reaches its endpoint, so the phase-to-phase difference stays under what one step from rest would give. With `x = e^(−T/τ)` the two endpoints settle at `A / (1 + x)` and `A · x / (1 + x)`, and the difference at time `t` into either phase is
 
 ```
 swing(t) = A · [ 1 − 2 · e^(−t/τ) / (1 + x) ]
 
-at T = 600 µs, τ = 214 µs, t = 280 µs:  x = 0.061
-  swing = A · [ 1 − 2 · 0.270 / 1.061 ]   = 0.49 A
+at T = 600 µs, τ = 214 µs, t = 270 µs:  x = 0.061
+  swing = A · [ 1 − 2 · 0.283 / 1.061 ]   = 0.47 A
 zero at e^(−t/τ) = (1 + x) / 2, so t     = τ · ln(2 / (1 + x))
 ```
 
@@ -609,15 +609,15 @@ Below that instant the decaying dark trace still sits above the rising lit trace
 
 **Where the 50 µA comes from.** The datasheet characterises I<sub>C</sub> at 60 µA minimum and 410 µA maximum, at I<sub>F</sub> = 4 mA, V<sub>CE</sub> = 2 V and d = 4 mm against an aluminium-evaporated mirror on glass. Two factors separate that condition from this design and pull in opposite directions: the emitters run at 9.3 mA, 2.3× the characterising current, and the 9 mm ball returns less than a mirror. The datasheet gives no curve of I<sub>C</sub> against forward current, so neither factor can be computed. Scaled linearly back to the 4 mA the datasheet characterises at, the 50 µA is 22 µA, a third of the 60 µA minimum. It holds at 25 °C; Figure 4 puts the collector current at 92 % of that at the 40 °C the sensors are bounded at, and the LED's falling V<sub>F</sub> gives 1 to 2 % of it back. What settles it is the node read at the sensor's working distance, emitter lit and dark, over a clear track and with a ball on it.
 
-A smaller value is faster and more tolerant of ambient light, and less sensitive. At the 280 µs read instant 4.7 kΩ carries the most signal under either τ reading: 115 mV against 97 mV at 2.2 kΩ under the linear scaling, and 230 mV against 109 mV read off Figure 6.
+A smaller value is faster and more tolerant of ambient light, and less sensitive. At the 270 µs read instant 4.7 kΩ carries the most signal under either τ reading: 110 mV against 95 mV at 2.2 kΩ under the linear scaling, and 229 mV against 109 mV read off Figure 6.
 
-**The 49 % is accepted, not fixed by a longer phase.** Settling and cycle rate pull against each other, and the amplitude loss is the cheaper one to pay: 115 mV is 34 steps of a ten-bit read, whereas a missed pass cannot be recovered. The figure belongs to the linear τ scaling; read off Figure 6 the same instant carries 98 %, and the τ measurement decides which holds.
+**The 47 % is accepted, not fixed by a longer phase.** Settling and cycle rate pull against each other, and the amplitude loss is the cheaper one to pay: 110 mV is 33 steps of a ten-bit read, whereas a missed pass cannot be recovered. The figure belongs to the linear τ scaling; read off Figure 6 the same instant carries 97 %, and the τ measurement decides which holds.
 
 | Channels | Budget | First read | Swing, worst case | Effective signal |
 |---|---|---|---|---|
-| 3, the stock sensors | 60 µs | 540 µs | 85 % | 200 mV, 59 steps |
-| 8 | 160 µs | 440 µs | 76 % | 178 mV, 53 steps |
-| **16, the design case** | 320 µs | 280 µs | 49 % | 115 mV, 34 steps |
+| 3, the stock sensors | 60 µs | 530 µs | 84 % | 198 mV, 60 steps |
+| 8 | 160 µs | 430 µs | 75 % | 176 mV, 53 steps |
+| **16, the design case** | 320 µs | 270 µs | 47 % | 110 mV, 33 steps |
 
 The swing column is where this design is thinnest, and the settling-time entry under [TODOs](#todos) says what would settle it.
 
@@ -651,7 +651,7 @@ The board's internal 1.585 kΩ already limits the phototransistor branch. Only t
                              R = 1.733 V / 4 mA                    =  433 Ω
 
 4.7 kΩ lower                 resolution at a 50 µA delta:
-                             1 kΩ → 50 mV → 14.8 steps of 3.37 mV, at V_REF max
+                             1 kΩ → 50 mV → 15.1 steps of 3.30 mV, at V_REF max
         upper                the acquisition window reaches the 6.9 τ floor
                              ten bits need at (R × 27 pF + 20 ns) × 6.9 = 1.11 µs
                              → R                                     = 5.2 kΩ
@@ -700,7 +700,7 @@ One standard value inside each of those walls:
 ```
 100 Ω    above the 41 Ω single-channel bound  → 22 mA on that one channel, 47 mW in an 0805
 390 Ω    below the 433 Ω characterising point → 4.4 mA at the weakest corner
-2.2 kΩ   twice the 1 kΩ resolution floor      → 97 mV, 29 steps per 50 µA
+2.2 kΩ   twice the 1 kΩ resolution floor      → 95 mV, 29 steps per 50 µA
 4.7 kΩ   under the 5.2 kΩ acquisition wall    → 7.6 τ of window, 501 µA of headroom
 ```
 
@@ -708,10 +708,10 @@ One standard value inside each of those walls:
 
 | R | τ | swing at the first read | effective signal at 50 µA | ambient light that maxes the channel out | acquisition window |
 |---|---|---|---|---|---|
-| 1 kΩ | 46 µs | 100 % | 50 mV | 1219 µA | 23.6 τ |
-| 2.2 kΩ | 100 µs | 88 % | 97 mV | 832 µA | 14.0 τ |
-| **4.7 kΩ** | 214 µs | 49 % | 115 mV | 501 µA | 7.6 τ |
-| 10 kΩ | 455 µs | 15 % | 74 mV | 272 µA | 3.8 τ, under the 6.9 τ ten bits need |
+| 1 kΩ | 46 µs | 99 % | 50 mV | 1219 µA | 23.6 τ |
+| 2.2 kΩ | 100 µs | 87 % | 95 mV | 832 µA | 14.0 τ |
+| **4.7 kΩ** | 214 µs | 47 % | 110 mV | 501 µA | 7.6 τ |
+| 10 kΩ | 455 µs | 13 % | 64 mV | 272 µA | 3.8 τ, under the 6.9 τ ten bits need |
 
 ## Sources
 
