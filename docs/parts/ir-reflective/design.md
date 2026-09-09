@@ -136,7 +136,7 @@ The library publishes events. Two event kinds, one level query and initialisatio
 | `Released` | it has gone again |
 | `bool isBlocked(channel, out heldMs)` | the current level, and how long the channel has held it, for logic that asks rather than reacts |
 
-Both events carry the channel and the moment of detection, and go into the message bus that [`input-handling.md`](../../../firmware/input-handling.md) describes.
+Both events carry the channel and the moment of detection, and go into the event queue that [`input-handling.md`](../../../firmware/input-handling.md) describes.
 
 ### Driver
 
