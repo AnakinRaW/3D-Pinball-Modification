@@ -75,6 +75,7 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
   | Changed | Also update |
   |---|---|
   | Any value, part, count or connector in a subsystem | **every `.svg` in that subsystem's directory** |
+  | A figure a subsystem derives, or an input to one | **that subsystem's figure model**, and the check of rule 15 has to pass |
   | A Teensy pin | [`docs/pin-assignment.md`](docs/pin-assignment.md), allocation table and cost table both |
   | A part or a quantity | [`docs/parts-list.md`](docs/parts-list.md) |
   | A component's specification | its file in `docs/research/`, and its datasheet into `docs/datasheets/` |
@@ -230,3 +231,38 @@ The severity tables of the review skills map onto these levels:
 | Craft (`design-review`) | Low |
 | Wrong (`review-schematic-svg`) | Medium |
 | Ambiguous, Convention (`review-schematic-svg`) | Low |
+
+## 15. Figures are checked against a model
+
+**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, beside the document it governs, and [`tools/figcheck.py`](tools/figcheck.py) checks that document and its drawings against it. IR sensing is the first consumer, in [`docs/parts/ir-reflective/figures.py`](docs/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
+
+**A calculation is finished when it stands in the model.** A figure worked out in conversation, or typed straight into a document, has nothing checking it. Until it is declared with its inputs, its unit and its source, it counts as unverified under rule 3, and an answer that reports it says so.
+
+What a request touches:
+
+| Request | Where the change goes |
+|---|---|
+| A value, a part, a supply, a count | the input in the model. `--write` then puts every figure that moved into the documents and the drawings, and rule 7's repo-wide sweep follows |
+| A new derivation | a declaration in the model, with the directions it moves in and, where it states a bound, the side it prints on |
+| Wording, structure, an explanation | the document. A figure is addressed by its value, so rewording costs nothing, and the check has to pass afterwards |
+| A figure that looks wrong | a re-derivation in the model under rule 9. What the check reports is the answer |
+
+**No figure is edited by hand in a document or in a drawing.** `--write` is what puts it there, which is what keeps it typed in one place. A hand edit is what the check then reports.
+
+- **Every number in the document is a declared quantity.** The check reads the whole file, main body as much as appendix: a value in a fenced block or a table has to be a figure the model computes or a quantity it declares, and one that is neither fails the run as an orphan. A figure stated in prose is located by the section that holds it.
+- **A formula holds no constant of its own.** Only 0, 1 and 2 may stand in one, as algebra. Every other number is a declared input with a source, checked when the model loads. A factor written into a derivation, such as the ln(9) between a 10-to-90 % rise time and a time constant, appears in no provenance list and in no document.
+- **Every input names its kind and its source.** `datasheet` and `graph` cite the sheet and where in it the reading sits, `measured` names the bench procedure, `assumed` and `decision` say what was assumed or what was decided. An input with no source does not enter a model.
+- **A derived figure declares which way it moves.** `rises_with` and `falls_with` name the direction for each input, and the checker perturbs that input to confirm the sign. Rule 3's named extreme is recorded there, so choosing the wrong one fails a run instead of reading as correct arithmetic.
+- **A reading off a plotted curve is declared with its curve.** The sheet never prints such a value, so no text search reaches it. Grouping the points of one curve gives the check instead: the shape has to hold, a reading has to sit between the points around it, and where the sheet's table covers the same condition it has to sit inside that. This is internal consistency, and the report says so.
+- **A requirement is written as an invariant**, in terms of the quantities and not of the formulas: the emitter current stays under its absolute maximum, a DOUT bit is home inside the half period. An invariant holds whatever the formulas are, which is what catches a slip the arithmetic accepts.
+- **A bound declares the side it is printed on.** A ceiling is rounded down and a floor is rounded up, so a reader who respects the printed figure respects the real one. Rounding a 23.571 kΩ ceiling to the nearest digit states a limit of 24 kΩ that the design does not meet, and where the digit grid is too coarse to floor without losing accuracy the figure is printed to one more digit.
+
+**A green run means the documents agree with the model, not that the model is right.** Three passes narrow that gap:
+
+| | |
+|---|---|
+| `--sheets` | Looks every datasheet reading up in the PDF it cites. A reading the extractor misses is re-read by hand, and a sheet it cannot read at all is reported as unread rather than counted as passing. A found figure is weak evidence, since a subset font can map a code to the wrong glyph. |
+| `--mutate` | Moves each figure's value and requires the run to report it. A figure that survives its own mutation is one the checker would not have caught, and fails the self-test. |
+| `--blind` | Prints every quantity, its unit and its inputs, with no formula and no value. A later session derives them from the schematic and the datasheets without reading the model, and the two derivations are diffed. |
+
+**`--blind` is for larger reviews**: a design review, a subsystem whose supply or part choice changed, a run of figures that moved together. A single changed value is re-derived under rule 9 instead.

@@ -331,9 +331,11 @@ At the regulator:
 
 On the finished system:
 
-- Time the firmware's per-conversion overhead; the phase allows 10.4 µs per channel at sixteen channels.
+- Time the firmware's per-conversion overhead; the phase allows 10.3 µs per channel at sixteen channels.
 
 ## Appendix: derivations
+
+Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
 
 **Base quantities.** Everything below is built from these.
 
@@ -359,7 +361,7 @@ V_F       LED forward voltage, Figure 3 of the sensor datasheet,
           the 25 °C curve at the meter's 0.86 mA
 V_DS      drop across Q1, a full bus of sixteen channels:
           AO3400A, 48 mΩ max at V_GS = 2.5 V  =  7.9 mV
-          the same at T_J 125 °C              = 11.3 mV
+          the same at T_J 125 °C              = 11.4 mV
           IRL540N, 0.1 Ω estimated            =   17 mV
           each case below names the one it takes
 
@@ -387,7 +389,7 @@ I_ISO     the 3.3 V DC maximums with every input
 I_BUS     N × I_LED worst case                 =  165 mA at sixteen channels
 I_TOT     I_BUS + N × I_C + I_ADC per converter
           fitted + I_ISO side 2                =  182 mA at sixteen channels
-                                               =   94 mA at eight, U2 unfitted
+                                               =   95 mA at eight, U2 unfitted
           both sides from the Teensy on the bench =  192 mA at sixteen channels
 ```
 
@@ -411,7 +413,7 @@ Q1        (165 mA)² × 68.8 mΩ at T_J 125 °C        =  1.9 mW → 0.13 % of 1
 220 Ω     (10.3 mA)² × 220 Ω                       = 23.4 mW → 19 % of an 0805
 4.7 kΩ    (2.579 V)² / 4.7 kΩ, node at its ceiling =  1.4 mW → 1.1 %
 R36       (0.31 mA)² × 10 kΩ, a DOUT held low      =  1.0 mW → 0.8 %
-R35       (3.381 V)² / 100 kΩ, gate at V_OUT max   =  114 µW
+R35       (3.382 V)² / 100 kΩ, gate at V_OUT max   =  114 µW
 R37, R38  (0.31 mA)² × 1 kΩ, the same current      =   98 µW
 R39       (1.4 mA)² × 47 Ω                         =   92 µW
 R33       (33 µA)² × 2 kΩ, the gate's own draw     =  2.2 µW
@@ -423,20 +425,20 @@ Only the 220 Ω passes 10 % of a rating, and its lower knob bound is derived bel
 **220 Ω, LED series resistor.**
 
 ```
-P     = I_LED worst² × 220 Ω                  ≈ 23 mW  → 125 mW in an 0805 is 5.4× that
+P     = I_LED worst² × 220 Ω                  ≈ 23 mW  → 125 mW in an 0805 is 5.3× that
         at the lower knob bound, 44 mA through 47 Ω ≈ 91 mW  → 73 % of an 0805
         half of that 125 mW is reached at            73 Ω, so 82 Ω is the
                                                      E12 value an 0805 carries
-        the lower bound of 41 Ω is derived under the knob bounds below
+        the lower bound of 42 Ω is derived under the knob bounds below
 ```
 
 V<sub>F</sub> rises with the current. Figure 3 gives 1.25 V at 10 mA and 1.46 V at 50 mA on the 25 °C curve, 1.18 and 1.38 V on the 75 °C curve, against the table's 1.2 V typical and 1.4 V maximum at 20 mA. The stock board's diode-range reading of 1.082 V sits on the 25 °C curve at the meter's 0.86 mA. I<sub>F</sub> absolute maximum is 50 mA, so the worst-case 10.3 mA sits 4.9× inside it.
 
-R<sub>min</sub> pairs the **lowest** published V<sub>F</sub> with the **highest** regulator output: both push the current up, and the LED is what must survive it. At 47 Ω the current settles at 44 mA on the 75 °C curve; the wall, 50 mA, sits at 41 Ω.
+R<sub>min</sub> pairs the **lowest** published V<sub>F</sub> with the **highest** regulator output: both push the current up, and the LED is what must survive it. At 47 Ω the current settles at 44 mA on the 75 °C curve; the wall, 50 mA, sits at 42 Ω.
 
-**Q1 is an AO3400A**, a 5.7 A part switching 165 mA. AOS gives R<sub>DS(on)</sub> as 48 mΩ maximum at V<sub>GS</sub> = 2.5 V and I<sub>D</sub> = 3 A, so the gate, `V_rail × 100 kΩ / 102 kΩ` across R33 and R35 and therefore 3.088 V at V_OUT min, is covered by a specified maximum, and 165 mA through it drops 7.9 mV. The 10 V row rises from 26.5 to 38 mΩ at T<sub>J</sub> = 125 °C, a factor of 1.43, which puts the same drop at 11.3 mV there. V<sub>GS(th)</sub> is 0.65 V min and 1.45 V max, so those 3.088 V clear the worst-case threshold by 1.64 V, against a V<sub>GS</sub> rating of ±12 V.
+**Q1 is an AO3400A**, a 5.7 A part switching 165 mA. AOS gives R<sub>DS(on)</sub> as 48 mΩ maximum at V<sub>GS</sub> = 2.5 V and I<sub>D</sub> = 3 A, so the gate, `V_rail × 100 kΩ / 102 kΩ` across R33 and R35 and therefore 3.088 V at V_OUT min, is covered by a specified maximum, and 165 mA through it drops 7.9 mV. The 10 V row rises from 26.5 to 38 mΩ at T<sub>J</sub> = 125 °C, a factor of 1.43, which puts the same drop at 11.4 mV there. V<sub>GS(th)</sub> is 0.65 V min and 1.45 V max, so those 3.088 V clear the worst-case threshold by 1.64 V, against a V<sub>GS</sub> rating of ±12 V.
 
-**The IRL540N is the through-hole variant**, a 36 A part. It specifies R<sub>DS(on)</sub> at three gate voltages, all as maxima at I<sub>D</sub> = 15 to 18 A: 0.044 Ω at 10 V, 0.053 Ω at 5.0 V, 0.063 Ω at 4.0 V. Nothing is given at 3.3 V, and the curve steepens as V<sub>GS</sub> falls, so the last volt costs as much as the previous five. **0.1 Ω is an estimate above the 4.0 V figure, not a reading**, and the derivations are quoted at the 17 mV it gives because that bounds both parts. At 1 Ω instead, the drop would be 170 mV, 7 % of U<sub>R</sub>, which the per-channel calibration absorbs. V<sub>GS(th)</sub> is 1.0 V min and 2.0 V max, so 3.3 V turns the part on with 1.3 V over the worst-case threshold.
+**The IRL540N is the through-hole variant**, a 36 A part. It specifies R<sub>DS(on)</sub> at three gate voltages, all as maxima at I<sub>D</sub> = 15 to 18 A: 0.044 Ω at 10 V, 0.053 Ω at 5.0 V, 0.063 Ω at 4.0 V. Nothing is given at 3.3 V, and the curve steepens as V<sub>GS</sub> falls, so the last volt costs as much as the previous five. **0.1 Ω is an estimate above the 4.0 V figure, not a reading**, and the derivations are quoted at the 17 mV it gives because that bounds both parts. At 1 Ω instead, the drop would be 165 mV, 7 % of U<sub>R</sub>, which the per-channel calibration absorbs. V<sub>GS(th)</sub> is 1.0 V min and 2.0 V max, so 3.3 V turns the part on with 1.3 V over the worst-case threshold.
 
 **Phase-start droop.**
 
@@ -450,20 +452,20 @@ C_module      two 10 µF on VOUT per the Pololu schematic,
 C5            22 µF, derated the same way               =   11 µF
 Droop         ΔI / (2π · f_c · C), C5 fitted, 21 µF:
               at 75 kHz                                 =   17 mV
-              at 20 kHz                                 =   62 mV
+              at 20 kHz                                 =   63 mV
               module alone, 10 µF, at 20 kHz            =  131 mV
-              module alone, at 10 kHz                   =  262 mV
+              module alone, at 10 kHz                   =  263 mV
 ```
 
-Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 165 mA that is 31 to 53 mV, the order of the 62 mV above. The rail's minimum with the bus on is 3.150 V, so the converters' 2.7 V floor stands 390 mV below the droop with C5 fitted, and 190 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 62 mV against the 2269 mV across the 220 Ω, 2.7 % of the current, over the first tens of µs of the lit phase, and the first channel is read 270 µs into it.
+Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 165 mA that is 31 to 53 mV, the order of the 63 mV above. The rail's minimum with the bus on is 3.150 V, so the converters' 2.7 V floor stands 390 mV below the droop with C5 fitted, and 190 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 63 mV against the 2269 mV across the 220 Ω, 2.7 % of the current, over the first tens of µs of the lit phase, and the first channel is read 270 µs into it.
 
-**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 62 mV droop; an aluminium electrolytic at 2 Ω would put 330 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
+**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 63 mV droop; an aluminium electrolytic at 2 Ω would put 330 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
 
 **Load release overshoots by the same order**, and the reference overshoots with it, so the reading is unaffected and the channel node cannot leave the converter's input range. U3 sees the excursion on VCC2: 3.432 V plus at most about 70 mV is 3.50 V, inside the 5.5 V at which its recommended operating conditions end.
 
 **The 5 V the module runs from sags while the bumper solenoids fire.** Its input works down to 3.4 V, which matters because the machine's 5 V sags while the bumper solenoids fire. Two coils leave that 5 V near 4.4 V by calculation and three near 3.75 V with a poor supply cable; the coils are 7.35 Ω, so the sag limits itself, and the worst case keeps 0.35 V above the module's minimum.
 
-**How close the module has to sit to J-PWR.** Every figure in this document is derived at a rail between V_OUT min 3.150 V and V_OUT max 3.449 V, and the module's own 4 % window, 3.168 to 3.432 V, sits inside that. What the cable takes off the bottom is the only way out of that window, and the bound is 0.1 Ω, at which the board's 182 mA drops 18 mV and the rail lands at the 3.150 V the figures assume.
+**How close the module has to sit to J-PWR.** Every figure in this document is derived at a rail between V_OUT min 3.150 V and V_OUT max 3.449 V, and the module's own 4 % window, 3.168 to 3.432 V, sits inside that. What the cable takes off the bottom is the only way out of that window. The rail minimum leaves 18 mV for the cable, which the board's 182 mA reaches at 98.9 mΩ; 0.1 Ω is the round build figure and costs 0.2 mV more, inside the millivolt the rail is printed at.
 
 At that length the contacts dominate, not the wire: four crimped 2.54 mm contacts at 20 mΩ each come to 80 mΩ, and 5 cm of 28 AWG adds 20 mΩ. Crossing the bound is not a cliff, since 17 mV of further drop costs 1 % of the weakest-case LED current.
 
@@ -486,7 +488,7 @@ bound      the reading stays usable while the residual
 
 The 165 mA step also has to land the rail on the same side of the module's PWM to power-save boundary each time, or the difference does not repeat and no constant covers it. The boundary follows from the inductor going into discontinuous conduction, `ΔI_L = (V_IN − V_OUT) · V_OUT / (V_IN · L · f)`, at half of which the mode changes. With the 22 µH and 500 kHz of the D24V5F3 that is 51 mA, so the dark phase at 17 mA and the lit phase at 182 mA sit a factor of three and three and a half away from it.
 
-The signal follows the rail 1.6 times over, because the LED current is the rail less a forward voltage that stays put, `3.30 / 2.05`, while the reference follows it once; the reading therefore moves by 0.6 of the rail's relative movement, ±2.4 % over the module's 4 % window, under one step of the 34. The rail stands the same in every lit phase, so that factor sits inside the per-channel calibration and moves nothing between one cycle and the next.
+The signal follows the rail 1.6 times over, because the LED current is the rail less a forward voltage that stays put, `3.30 / 2.05`, while the reference follows it once; the reading therefore moves by 0.6 of the rail's relative movement, ±2.4 % over the module's 4 % window, under one step of the 33. The rail stands the same in every lit phase, so that factor sits inside the per-channel calibration and moves nothing between one cycle and the next.
 
 **The converter, what the part has to do.** Figures from DS21295D.
 
@@ -527,10 +529,10 @@ Reading DOUT crosses the barrier twice.
 ```
 18.5 ns   U3, the Teensy's clock edge to the converter's CLK
  200 ns   converter t_DO at VDD = 2.7 V
-  20 ns   R37 into the ADC-DOUT net, 1 kΩ against 15 pF assumed
+  15 ns   R37 into the ADC-DOUT net, 1 kΩ against 15 pF assumed
 18.5 ns   U3, INF to OUTF
-  48 ns   R34 into the conductor and the pin, 2 kΩ against 20 pF assumed
- 305 ns   of the 370 ns half period at 1.35 MHz
+  40 ns   R34 into the conductor and the pin, 2 kΩ against 20 pF assumed
+ 292 ns   of the 370 ns half period at 1.35 MHz
 ```
 
 `t_pd` is 18.5 ns max at 3.3 V ± 10 % over the full temperature range, and channel-to-channel skew is 4.4 ns max, which leaves the converter's 50 ns setup and hold untouched.
@@ -601,7 +603,7 @@ Settling          t_r/t_f max 100 µs at R_L = 1 kΩ         → ≈ 470 µs at 
 swing(t) = A · [ 1 − 2 · e^(−t/τ) / (1 + x) ]
 
 at T = 600 µs, τ = 214 µs, t = 270 µs:  x = 0.061
-  swing = A · [ 1 − 2 · 0.283 / 1.061 ]   = 0.47 A
+  swing = A · [ 1 − 2 · 0.283 / 1.061 ]   = 0.47 · A
 zero at e^(−t/τ) = (1 + x) / 2, so t     = τ · ln(2 / (1 + x))
 ```
 
@@ -635,14 +637,14 @@ The board's internal 1.585 kΩ already limits the phototransistor branch. Only t
 220 Ω  lower bounds take V_OUT max and the 75 °C curve of
         Figure 3 for V_F, read at the current each case lands on:
                              U_R at 50 mA = 3.449 − 1.38           = 2.069 V
-        lower, one channel   R = 2.069 V / 50 mA (I_F max)         =   41 Ω
+        lower, one channel   R = 2.069 V / 50 mA (I_F max)         =   42 Ω
                              47 Ω is the E12 value above it
         lower, every channel N × I(R) + N × I_C + I_ADC + I_ISO ≤ I_supply,
                              I(R) solved with V_F from the curve.
                              The bench case governs, so the bound is the
                              Teensy's 3V3 pin with both isolator sides on it:
-                             at N = 8, I_supply 250 mA             =   75 Ω
-                             at N = 16, I_supply 250 mA            =  160 Ω
+                             at N = 8, I_supply 250 mA             =   76 Ω
+                             at N = 16, I_supply 250 mA            =  161 Ω
                              the module alone would reach 71 Ω at N = 16,
                              which the bench case does not allow
         the upper bound takes the smallest U_R, V_OUT min and V_F max:
@@ -654,7 +656,7 @@ The board's internal 1.585 kΩ already limits the phototransistor branch. Only t
                              1 kΩ → 50 mV → 15.1 steps of 3.30 mV, at V_REF max
         upper                the acquisition window reaches the 6.9 τ floor
                              ten bits need at (R × 27 pF + 20 ns) × 6.9 = 1.11 µs
-                             → R                                     = 5.2 kΩ
+                             → R                                    = 5.19 kΩ
                              the ambient headroom there is 464 µA against
                              501 µA at 4.7 kΩ
         supply              at the 1 kΩ bound, 1.33 mA per channel, and
@@ -677,10 +679,10 @@ gate    upper                t = Q_g × 2R / 3.3 V ≤ 100 µs
 
 600 µs lower                 the block has to end with the phase and start
 phase                        past the sign inversion, which τ · ln 2 caps:
-                             t_budget + 148 µs at N = 16                  = 468 µs
+                             t_budget + 148 µs at N = 16                  = 469 µs
                              t_budget rounds up to the next 10 µs, so the
                              firmware holds while 16 · (17.78 + t_ovh) ≤ 450 µs:
-                             t_ovh                                        ≤ 10.4 µs
+                             t_ovh                                        ≤ 10.3 µs
         upper                a value spans three phases, the dark before
                              the lit and the dark of the cycle after, and
                              two consecutive values share the middle one,
@@ -698,17 +700,17 @@ Both parts give I<sub>GSS</sub> as 100 nA maximum, the IRL540N at V<sub>GS</sub>
 One standard value inside each of those walls:
 
 ```
-100 Ω    above the 41 Ω single-channel bound  → 22 mA on that one channel, 47 mW in an 0805
+100 Ω    above the 42 Ω single-channel bound  → 22 mA on that one channel, 47 mW in an 0805
 390 Ω    below the 433 Ω characterising point → 4.4 mA at the weakest corner
 2.2 kΩ   twice the 1 kΩ resolution floor      → 95 mV, 29 steps per 50 µA
-4.7 kΩ   under the 5.2 kΩ acquisition wall    → 7.6 τ of window, 501 µA of headroom
+4.7 kΩ   under the 5.19 kΩ acquisition wall   → 7.6 τ of window, 501 µA of headroom
 ```
 
 **The pull-down's upper bound.** The effective signal is `I × R × swing(R)`, and τ grows with R, so from 4.7 kΩ upwards the rising resistance and the falling swing cancel and the signal flattens while two other margins keep shrinking:
 
 | R | τ | swing at the first read | effective signal at 50 µA | ambient light that maxes the channel out | acquisition window |
 |---|---|---|---|---|---|
-| 1 kΩ | 46 µs | 99 % | 50 mV | 1219 µA | 23.6 τ |
+| 1 kΩ | 46 µs | 99 % | 50 mV | 1218 µA | 23.6 τ |
 | 2.2 kΩ | 100 µs | 87 % | 95 mV | 832 µA | 14.0 τ |
 | **4.7 kΩ** | 214 µs | 47 % | 110 mV | 501 µA | 7.6 τ |
 | 10 kΩ | 455 µs | 13 % | 64 mV | 272 µA | 3.8 τ, under the 6.9 τ ten bits need |
