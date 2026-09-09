@@ -1,6 +1,6 @@
 # General design
 
-Rules that hold across the whole firmware. The figures they are checked against live in the design documents and are read from there: [`docs/parts/`](../docs/parts/), one directory per subsystem.
+The rules here hold across the whole firmware. The figures they are checked against live in the design documents and are read from there: [`docs/parts/`](../docs/parts/), one directory per subsystem.
 
 What one driver alone has to keep sits with that driver:
 
