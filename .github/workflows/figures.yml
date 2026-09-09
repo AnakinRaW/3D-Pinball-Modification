@@ -14,7 +14,8 @@ on:
       - "tools/**"
 
 jobs:
-  derive:
+  figures:
+    name: Do the documents still state what the design computes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,41 +28,38 @@ jobs:
 
       # Every subsystem that derives figures declares them in its own
       # docs/parts/<subsystem>/figures.py, and each one is checked here.
-      - name: Find the figure models
+      - name: Look for subsystems that derive figures
         id: models
         run: |
           models=$(ls docs/parts/*/figures.py 2>/dev/null || true)
           if [ -z "$models" ]; then
-            echo "no figure model under docs/parts/*/figures.py"
+            echo "No figure model found. Expected docs/parts/<subsystem>/figures.py."
             exit 1
           fi
-          echo "$models"
+          for m in $models; do echo "Found $m"; done
           echo "list=$(echo $models)" >> "$GITHUB_OUTPUT"
 
-      # Anchored figures, orphaned tokens, the drawings, the declared directions,
-      # the invariants, the datasheet readings and checksums, and the numbers a
-      # diff removed that still stand elsewhere.
-      - name: Recompute the figures and check the documents against them
+      - name: Recompute every figure and check the documents against it
         env:
           BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}
         run: |
           for m in ${{ steps.models.outputs.list }}; do
-            echo "== $m =="
             python tools/figcheck.py "$m" --sheets --base "$BASE"
+            echo
           done
 
-      - name: Self-test the checker by moving every figure it claims to check
+      - name: Prove the check would catch a wrong figure
         run: |
           for m in ${{ steps.models.outputs.list }}; do
-            echo "== $m =="
             python tools/figcheck.py "$m" --mutate --no-stale
+            echo
           done
 
-      # The provenance list is the record of where each input came from, and is
-      # readable in the run log without a checkout.
-      - name: List the provenance of every input
+      # Where every input value came from, readable in the log without a
+      # checkout of the repository.
+      - name: Record where every input value came from
         run: |
           for m in ${{ steps.models.outputs.list }}; do
-            echo "== $m =="
             python tools/figcheck.py "$m" --provenance --no-stale
+            echo
           done

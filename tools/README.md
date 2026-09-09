@@ -19,20 +19,22 @@ Quantities carry a unit and a dimension, as exponents over volt, ampere, second,
 
 A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries.
 
-Each pass can fail the run:
+Each check reports on its own line, and any of them can fail the run:
 
-| Pass | What it checks |
+| The run prints | What it checks |
 |---|---|
-| anchored | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
-| orphans | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input. Prose is scanned too, and carries the figures the model marks as stated in prose rather than on a line |
-| drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated |
-| direction | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
-| curves | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
-| invariants | The relations the design requires hold, stated over the quantities and independent of the formulas |
-| sums | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
-| stale | A number a diff removed from a document is reported wherever it still stands elsewhere in `docs/` or `firmware/` |
-| datasheets | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
-| mutation | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
+| figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
+| figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
+| every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
+| figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated |
+| which way a figure moves | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
+| readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
+| what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
+| readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
+| datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
+| the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
+
+A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/` or `firmware/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 
 Flags:
 

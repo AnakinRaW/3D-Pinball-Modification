@@ -651,9 +651,19 @@ class Report:
     def __init__(self):
         self.errors: list[str] = []
         self.notes: list[str] = []
+        # (kind, key) beside each error, so a caller counts or looks one up
+        # without matching on the message text
+        self.tags: list[tuple[str, str]] = []
 
-    def error(self, msg):
+    def error(self, msg, kind="", key=""):
         self.errors.append(msg)
+        self.tags.append((kind, key))
+
+    def count(self, kind):
+        return sum(1 for k, _ in self.tags if k == kind)
+
+    def has(self, kind, key):
+        return (kind, key) in self.tags
 
     def note(self, msg):
         self.notes.append(msg)
@@ -739,9 +749,16 @@ def pass_anchored(model: Model, tokens: list[Token], rep: Report, override=None)
                    if t.group == f.group and t.unit == f.unit
                    and (f.section is None or f.section in (t.section or ""))]
         free = [t for t in carried if t.claimed_by is None] or carried
-        where = ", ".join(f"L{t.line} {t.text}" for t in free[:5]) or "nothing"
-        rep.error(f"NO MATCH    {f.key:<34} computes {f.value.show(f.unit)}; group "
-                  f"{f.group!r} carries {where}")
+        if len(free) == 1:
+            t = free[0]
+            rep.error(f"{_rel(model.document)}:{t.line} reads {t.text} where "
+                      f"{f.key} computes {f.value.show(f.unit, t.decimals)}",
+                      kind="unplaced", key=f.key)
+        else:
+            where = ", ".join(f"{t.text} on line {t.line}" for t in free[:5]) or "nothing"
+            rep.error(f"{f.key} computes {f.value.show(f.unit)} and the "
+                      f"{f.group!r} block has no line for it. It holds {where}.",
+                      kind="unplaced", key=f.key)
 
     if override is None:
         claimed = {t.claimed_by: t for t in tokens if t.claimed_by}
@@ -768,8 +785,8 @@ def pass_anchored(model: Model, tokens: list[Token], rep: Report, override=None)
             for t in near:
                 t.claimed_by = t.claimed_by or f.key
         else:
-            rep.error(f"UNSTATED    {f.key:<34} section {f.group!r}: model computes "
-                      f"{f.value.show(f.unit)}, the section carries no such value")
+            rep.error(f"{f.key} computes {f.value.show(f.unit)} and the section "
+                      f"{f.group!r} states no such value")
     return hits, loose_hits
 
 
@@ -785,8 +802,9 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
         if near:
             refs += 1
             continue
-        rep.error(f"ORPHAN      {model.document.name}:{t.line:<5} {t.text:<12} "
-                  f"group {t.group!r}: no declared quantity carries this value")
+        rep.error(f"{_rel(model.document)}:{t.line} carries {t.text} and no "
+                  f"declared quantity has that value: a stale number, or a figure "
+                  f"the model is missing", kind="orphan")
     return refs
 
 
@@ -805,7 +823,7 @@ def pass_drawings(model: Model, rep: Report):
     anchored = unanchored = 0
     for path in model.drawings:
         if not path.exists():
-            rep.error(f"DRAWING     {path} is named by the model and does not exist")
+            rep.error(f"{_rel(path)} is named by the model and does not exist")
             continue
         body = _norm(path.read_text(encoding="utf-8"))
         line_of = {}
@@ -828,23 +846,23 @@ def pass_drawings(model: Model, rep: Report):
             taken = []
             for key in m.group(3).split():
                 if key not in model.figs:
-                    rep.error(f"DRAWING     {path.name}:{ln} anchors {key!r}, which the "
-                              f"model does not declare")
+                    rep.error(f"{path.name}:{ln} anchors {key!r}, which the model "
+                              f"does not declare")
                     continue
                 f = model.figs[key]
                 same = sorted((t for t in toks
                                if t.unit == f.unit and id(t) not in taken),
                               key=lambda t: abs(t.value - f.value).v)
                 if not same:
-                    rep.error(f"DRAWING     {path.name}:{ln} anchors {key} but carries "
-                              f"no free figure in {f.unit or 'a bare number'}: "
+                    rep.error(f"{path.name}:{ln} anchors {key} and carries no free "
+                              f"figure in {f.unit or 'a bare number'}: "
                               f"{text.strip()!r}")
                     continue
                 t = same[0]
                 taken.append(id(t))
                 if not within(f, t, t.value):
-                    rep.error(f"DRAWING     {path.name}:{ln} states {t.text} for {key}, "
-                              f"model computes {f.value.show(f.unit, t.decimals)}")
+                    rep.error(f"{path.name}:{ln} draws {t.text} where {key} computes "
+                              f"{f.value.show(f.unit, t.decimals)}")
                 else:
                     anchored += 1
         for m in re.finditer(r"<text\b[^>]*>([^<]*)</text>", body):
@@ -864,7 +882,8 @@ def pass_direction(model: Model, rep: Report):
         for key, want in [(k, +1) for k in f.rises_with] + \
                          [(k, -1) for k in f.falls_with]:
             if key not in model.figs:
-                rep.error(f"DIRECTION   {f.key} names {key!r}, which is not declared")
+                rep.error(f"{f.key} claims a direction against {key!r}, which is "
+                          f"not declared")
                 continue
             base = model.figs[key].value
             moved = None
@@ -872,7 +891,7 @@ def pass_direction(model: Model, rep: Report):
                 try:
                     got = model.recompute({key: base * factor})[f.key]
                 except Exception as e:
-                    rep.error(f"DIRECTION   {f.key} against {key}: recomputing raised "
+                    rep.error(f"{f.key} against {key}: recomputing raised "
                               f"{type(e).__name__}: {e}")
                     moved = "raised"
                     break
@@ -884,14 +903,13 @@ def pass_direction(model: Model, rep: Report):
                 continue
             if moved is None:
                 flat += 1
-                rep.error(f"DIRECTION   {f.key} claims to move with {key} and does not "
-                          f"move at all, even at three times its value")
+                rep.error(f"{f.key} claims to move with {key} and does not move at "
+                          f"all, even at three times its value")
                 continue
             sign = 1 if moved > 0 else -1
             if sign != want:
-                rep.error(f"DIRECTION   {f.key} claims to "
-                          f"{'rise' if want > 0 else 'fall'} with {key} and "
-                          f"{'rises' if sign > 0 else 'falls'} instead")
+                rep.error(f"{f.key} claims to {'rise' if want > 0 else 'fall'} with "
+                          f"{key} and {'rises' if sign > 0 else 'falls'} instead")
             else:
                 checked += 1
     return checked
@@ -905,12 +923,13 @@ def pass_invariants(model: Model, rep: Report):
         try:
             ok = fn(values)
         except Exception as e:
-            rep.error(f"INVARIANT   {description}: raised {type(e).__name__}: {e}")
+            rep.error(f"a requirement could not be evaluated, {description}: "
+                      f"{type(e).__name__}: {e}")
             continue
         if ok:
             held += 1
         else:
-            rep.error(f"INVARIANT   does not hold: {description}")
+            rep.error(f"a requirement of the design does not hold: {description}")
     return held
 
 
@@ -931,7 +950,7 @@ def pass_curves(model: Model, rep: Report):
     def val(key):
         f = model.figs.get(key)
         if f is None:
-            rep.error(f"CURVE       no quantity {key!r}")
+            rep.error(f"no quantity {key!r}")
             return None
         return f.value
 
@@ -949,11 +968,11 @@ def pass_curves(model: Model, rep: Report):
         points_seen += len(points)
         for i in range(1, len(xs)):
             if not xs[i - 1][1] < xs[i][1]:
-                rep.error(f"CURVE       {name}: {xs[i][0]} is not past "
+                rep.error(f"{name}: {xs[i][0]} is not past "
                           f"{xs[i - 1][0]} along the axis")
             up = ys[i - 1][1] < ys[i][1]
             if up != rises:
-                rep.error(f"CURVE       {name}: {ys[i - 1][0]} to {ys[i][0]} moves "
+                rep.error(f"{name}: {ys[i - 1][0]} to {ys[i][0]} moves "
                           f"the wrong way for a curve declared "
                           f"{'rising' if rises else 'falling'}")
         for xk, yk in on:
@@ -966,12 +985,12 @@ def pass_curves(model: Model, rep: Report):
                     lo, hi = sorted((ys[i - 1][1], ys[i][1]))
                     break
             if lo is None:
-                rep.error(f"CURVE       {name}: {yk} sits at {x.show(model.figs[xk].unit)}, "
+                rep.error(f"{name}: {yk} sits at {x.show(model.figs[xk].unit)}, "
                           f"which no pair of read points brackets")
                 continue
             if not lo <= y <= hi:
                 u = model.figs[yk].unit
-                rep.error(f"CURVE       {name}: {yk} is {y.show(u)} at "
+                rep.error(f"{name}: {yk} is {y.show(u)} at "
                           f"{x.show(model.figs[xk].unit)}, outside the "
                           f"{lo.show(u)} to {hi.show(u)} its neighbours read")
                 continue
@@ -982,7 +1001,7 @@ def pass_curves(model: Model, rep: Report):
                 continue
             if not lo <= y <= hi:
                 u = model.figs[yk].unit
-                rep.error(f"CURVE       {name}: {yk} reads {y.show(u)}, outside the "
+                rep.error(f"{name}: {yk} reads {y.show(u)}, outside the "
                           f"{lo.show(u)} to {hi.show(u)} the sheet's table gives")
                 continue
             checked += 1
@@ -1008,7 +1027,7 @@ def pass_datasheets(model: Model, rep: Report):
     for sheet, figs in sorted(by_sheet.items()):
         path = DATASHEETS / sheet
         if not path.exists():
-            rep.error(f"SHEET       {sheet} is cited and not present")
+            rep.error(f"{sheet} is cited and not present")
             continue
         try:
             text = pdftext.extract(path)
@@ -1029,16 +1048,20 @@ def pass_datasheets(model: Model, rep: Report):
                 absent.append(f)
         for f in absent:
             missing += 1
-            rep.error(f"NOT IN PDF  {f.key:<30} {f.value.show(f.unit):>10} is not in "
+            rep.error(f"{f.key:<30} {f.value.show(f.unit):>10} is not in "
                       f"{sheet}: {f.src}")
     if off_plot:
         on_curve = {k for _n, pts, _r, _o, _b in model.curves
                     for pair in list(pts) + list(_o) for k in pair}
         loose = sorted(f.key for f in off_plot if f.key not in on_curve)
-        rep.note(f"{len(off_plot)} readings are taken off a plotted curve, so no text "
-                 f"search reaches them; {len(off_plot) - len(loose)} sit on a declared "
-                 f"curve and are checked against it"
-                 + (f". Not on any curve: " + ", ".join(loose) if loose else ""))
+        if loose:
+            rep.note(f"{len(loose)} of {len(off_plot)} curve readings sit on no "
+                     f"declared curve, so nothing checks them: "
+                     + ", ".join(loose))
+        else:
+            rep.note(f"All {len(off_plot)} curve readings are checked against their "
+                     f"own curve. A sheet never prints such a value, so that is "
+                     f"consistency rather than proof.")
     return looked, missing
 
 
@@ -1081,7 +1104,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
         for t, have, want in sorted(items, key=lambda i: (-i[0].line, -i[0].col)):
             fixed, kept = _renumber(lines[t.line - 1], t.col, have, want)
             if fixed is None:
-                rep.error(f"WRITE       {path.name}:{t.line} could not find {have!r} "
+                rep.error(f"{path.name}:{t.line} could not find {have!r} "
                           f"at column {t.col}")
                 continue
             lines[t.line - 1] = fixed
@@ -1114,7 +1137,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
             start = m.start(4)
             elem = body[start:start + len(text)]
             if have not in elem:
-                rep.error(f"WRITE       {path.name} anchors {key} and its text "
+                rep.error(f"{path.name} anchors {key} and its text "
                           f"{elem.strip()!r} does not carry {have!r}")
                 continue
             out = out.replace(elem, elem.replace(have, want, 1), 1)
@@ -1143,7 +1166,7 @@ def pass_sums(model: Model, rep: Report, write: bool):
         rep.note(f"wrote {SUMS.relative_to(ROOT).as_posix()}, {len(lines)} files")
         return
     if not SUMS.exists():
-        rep.error(f"SUMS        {SUMS.relative_to(ROOT).as_posix()} missing; "
+        rep.error(f"{SUMS.relative_to(ROOT).as_posix()} missing; "
                   f"run with --write-sums once")
         return
     recorded = {}
@@ -1154,14 +1177,14 @@ def pass_sums(model: Model, rep: Report, write: bool):
     for name in named:
         p = DATASHEETS / name
         if not p.exists():
-            rep.error(f"SHEET       {name} named by the model is not in docs/datasheets/")
+            rep.error(f"{name} named by the model is not in docs/datasheets/")
             continue
         if name not in recorded:
-            rep.error(f"SHEET       {name} has no recorded checksum")
+            rep.error(f"{name} has no recorded checksum")
             continue
         got = hashlib.sha256(p.read_bytes()).hexdigest()
         if got != recorded[name]:
-            rep.error(f"SHEET       {name} does not match its recorded checksum")
+            rep.error(f"{name} does not match its recorded checksum")
     return len(named)
 
 
@@ -1190,7 +1213,8 @@ def pass_stale(base: str, rep: Report):
         tok = f"{num} {unit}"
         where = sorted(p.relative_to(ROOT).as_posix() for p, t in files.items() if tok in t)
         if where:
-            rep.note(f"still present  {tok:<12} {', '.join(where)}")
+            rep.note(f"{tok} left the model in this diff and still stands in "
+                     + ", ".join(_rel(w) for w in where))
 
 
 def pass_mutate(model: Model, tokens: list[Token], rep: Report):
@@ -1216,17 +1240,17 @@ def pass_mutate(model: Model, tokens: list[Token], rep: Report):
             t.claimed_by = None
         probe = Report()
         pass_anchored(model, tokens, probe, override=moved)
-        if not any(e.startswith("NO MATCH") and f"{f.key} " in e
-                   for e in probe.errors):
+        if not probe.has("unplaced", f.key):
             survived.append((f, moved))
     for t, claim in saved:
         t.claimed_by = claim
     for f, moved in survived:
-        rep.error(f"NOT GATED   {f.key:<34} computes {f.value.show(f.unit)}; moving "
+        rep.error(f"{f.key:<34} computes {f.value.show(f.unit)}; moving "
                   f"all {len(moved)} token(s) it could land on raises nothing")
     if loose:
-        rep.note(f"{loose} tokens are claimed by a prose figure, which a lookup by "
-                 f"value inside a section cannot gate")
+        rep.note(f"{loose} numbers are stated in prose and found by value inside "
+                 f"their section, which cannot tell two equal values apart. The "
+                 f"rest are pinned to the line that states them.")
     return len(stated) - len(survived), len(stated)
 
 
@@ -1242,6 +1266,18 @@ def load_model(path: pathlib.Path) -> Model:
     sys.modules["figmodel"] = mod
     spec.loader.exec_module(mod)
     return mod.MODEL
+
+
+def _rel(path) -> str:
+    """A path as it reads from the repository root."""
+    try:
+        return pathlib.Path(path).resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _status(ok: bool, label: str, detail: str):
+    print(f"  {'ok ' if ok else 'FAIL'}  {label:<30} {detail}")
 
 
 def main(argv=None):
@@ -1298,13 +1334,13 @@ def main(argv=None):
         return 0
 
     if args.blind:
-        print("# Brief for an independent derivation")
+        print(f"# Deriving {model.name} a second time, independently")
         print()
-        print("Each quantity below is to be derived from the schematic and the")
-        print("datasheets alone. The inputs are given because they are readings, not")
-        print("results. No derived value appears here: the point of the exercise is")
-        print("that a second derivation is written without seeing the first, and the")
-        print("two are then diffed.")
+        print("Every quantity below is to be derived from the schematic and the")
+        print("datasheets alone, without reading the model. The inputs are given")
+        print("because they are readings rather than results, and no computed value")
+        print("appears at all. The two derivations are diffed afterwards, which only")
+        print("means something if the second one was written blind.")
         print()
         print("## Given")
         print()
@@ -1325,15 +1361,23 @@ def main(argv=None):
         for f in model.figs.values():
             if f.kind != "derived":
                 by_kind[f.kind].append(f)
+        headings = {"datasheet": "read from a datasheet table",
+                    "graph": "read off a plotted curve",
+                    "measured": "measured on the bench",
+                    "assumed": "assumed, with the reason given",
+                    "decision": "chosen"}
+        print(f"Where every input of {model.name} came from")
+        print()
         for kind in ("datasheet", "graph", "measured", "assumed", "decision"):
             group = by_kind.get(kind, [])
-            print(f"== {kind}: {len(group)} ==")
+            print(f"{len(group)} {headings[kind]}")
             for f in sorted(group, key=lambda x: x.key):
                 print(f"  {f.key:<30} {f.value.show(f.unit):>14}   {f.src or ''}"
                       + (f"  [{f.sheet}]" if f.sheet else ""))
             print()
         derived = [f for f in model.figs.values() if f.kind == "derived"]
-        print(f"== derived: {len(derived)} ==")
+        print(f"{len(derived)} figures are computed from those, and carry no source "
+              f"of their own.")
         return 0
 
     tokens = parse_document(model.document, model.section, model.until)
@@ -1356,13 +1400,22 @@ def main(argv=None):
         return 0
 
     rep = Report()
+    inputs = sum(1 for f in model.figs.values() if f.kind != "derived")
+    print(f"Checking {model.name}")
+    print(f"  document   {_rel(model.document)}")
+    if model.drawings:
+        print(f"  drawings   " + ", ".join(d.name for d in model.drawings))
+    print(f"  model      {inputs} declared inputs, "
+          f"{len(model.figs) - inputs} derived figures")
+    print()
 
     hits, loose = pass_anchored(model, tokens, rep)
 
     if args.write:
         written = pass_write(model, tokens, rep)
-        print(f"== written: {written} figures put into the document and the drawings; "
-              f"re-run without --write to check ==")
+        print(f"{written} figure{'' if written == 1 else 's'} written into the "
+              f"document and the drawings."
+              + ("" if written else " Everything already agreed."))
         for n in rep.notes:
             print("  " + n)
         for e in rep.errors:
@@ -1372,35 +1425,39 @@ def main(argv=None):
     anchorable = sum(1 for f in model.figs.values() if f.stated is True)
     loosely = sum(1 for f in model.figs.values() if f.stated == "loose")
     strict = sum(1 for t in tokens if t.strict)
-    print(f"== anchored: {hits} of {anchorable} quantities agree with the line that "
-          f"states them; {loose} of {loosely} prose figures found in their section ==")
+    _status(hits == anchorable, "figures in the document",
+            f"{hits} of {anchorable} match the line that states them")
+    _status(loose == loosely, "figures named in prose",
+            f"{loose} of {loosely} appear in the section that mentions them")
 
     refs = pass_orphans(model, tokens, rep)
-    print(f"== tokens: {strict} inside blocks and tables, {hits} anchored, "
-          f"{refs} references to a declared value, "
-          f"{sum(1 for e in rep.errors if e.startswith('ORPHAN'))} orphaned ==")
+    orphans = rep.count("orphan")
+    _status(orphans == 0, "every number accounted for",
+            f"{strict} in blocks and tables, {orphans} from nowhere")
 
     if model.drawings:
         keyed, loose_svg = pass_drawings(model, rep)
-        print(f"== drawings: {keyed} anchored figures verified across "
-              f"{len(model.drawings)} files, {loose_svg} text elements carry a figure "
-              f"with no data-fig ==")
+        _status(loose_svg == 0, "figures in the drawings",
+                f"{keyed} checked across {len(model.drawings)} files, "
+                f"{loose_svg} left with no anchor")
 
     if any(f.rises_with or f.falls_with for f in model.figs.values()):
         directed = pass_direction(model, rep)
         claimed = sum(len(f.rises_with) + len(f.falls_with)
                       for f in model.figs.values())
-        print(f"== direction: {directed} of {claimed} declared dependencies move the "
-              f"way the figure claims ==")
+        _status(directed == claimed, "which way a figure moves",
+                f"{directed} of {claimed} inputs move the result the way it claims")
 
     if model.curves:
         pts, checked = pass_curves(model, rep)
-        print(f"== curves: {len(model.curves)} plotted curves, {pts} points read off "
-              f"them, {checked} readings bracketed by a curve or a table ==")
+        _status(True, "readings off a plotted curve",
+                f"{len(model.curves)} curves, {pts} points, {checked} readings "
+                f"bracketed")
 
     if model.invariants:
         held = pass_invariants(model, rep)
-        print(f"== invariants: {held} of {len(model.invariants)} hold ==")
+        _status(held == len(model.invariants), "what the design requires",
+                f"{held} of {len(model.invariants)} requirements hold")
 
     if model.unlinted:
         rep.note(f"{len(model.unlinted)} formulas are built by exec and escape the "
@@ -1409,30 +1466,45 @@ def main(argv=None):
 
     if args.sheets:
         looked, missing = pass_datasheets(model, rep)
-        print(f"== datasheet readings: {looked - missing} of {looked} found in the "
-              f"sheet they cite ==")
+        _status(missing == 0, "readings found in their sheet",
+                f"{looked - missing} of {looked} located in the PDF they cite")
 
     sheets = pass_sums(model, rep, args.write_sums)
     if not args.write_sums:
-        print(f"== datasheets: {sheets} named by the model, checksums verified ==")
+        _status(True, "datasheet files",
+                f"{sheets} named by the model, every checksum matches")
 
     if args.mutate:
         caught, total = pass_mutate(model, tokens, rep)
-        print(f"== mutation: {caught} of {total} stated figures are reported when the "
-              f"document moves them past their tolerance ==")
+        _status(caught == total, "the check would catch a slip",
+                f"{caught} of {total} figures are reported when the document "
+                f"moves them")
 
     if not args.no_stale:
         pass_stale(args.base, rep)
 
-    for e in rep.errors:
-        print("  " + e)
     if rep.notes:
         print()
+        print("Worth knowing")
         for n in rep.notes:
             print("  " + n)
+
+    if rep.errors:
+        print()
+        print("To fix")
+        for e in rep.errors:
+            print("  " + e)
+        print()
+        n = len(rep.errors)
+        print(f"{n} problem{'' if n == 1 else 's'}. Nothing was changed: correct the "
+              f"model where the design moved, or the document where it did not, "
+              f"then run again.")
+        return 1
+
     print()
-    print(f"{len(rep.errors)} errors")
-    return 1 if rep.errors else 0
+    print("Nothing to fix. Every figure in the documents is the one the model "
+          "computes.")
+    return 0
 
 
 if __name__ == "__main__":

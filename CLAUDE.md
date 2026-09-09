@@ -57,7 +57,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 
 | | |
 |---|---|
-| `python tools/figcheck.py docs/parts/<subsystem>/figures.py --sheets` | Recomputes every figure a subsystem derives and checks its document and its SVGs against them. `ir-reflective` is the only model so far. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the ten passes and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs the full set over every `docs/parts/*/figures.py` on each push touching `docs/`, `firmware/` or `tools/` |
+| `python tools/figcheck.py docs/parts/<subsystem>/figures.py --sheets` | Recomputes every figure a subsystem derives and checks its document and its SVGs against them. `ir-reflective` is the only model so far. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the ten checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs the full set over every `docs/parts/*/figures.py` on each push touching `docs/`, `firmware/` or `tools/` |
 | `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a declaration's `group` and `section` are written; guessing them wastes a run |
 | `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |
 | `… --provenance` | Every input by kind, each with its source. `graph` is a reading off a plotted curve, which no text search can confirm |
