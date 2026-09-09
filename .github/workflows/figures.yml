@@ -1,0 +1,67 @@
+name: figures
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "firmware/**"
+      - "tools/**"
+      - ".github/workflows/figures.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "firmware/**"
+      - "tools/**"
+
+jobs:
+  derive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Every subsystem that derives figures declares them in its own
+      # docs/parts/<subsystem>/figures.py, and each one is checked here.
+      - name: Find the figure models
+        id: models
+        run: |
+          models=$(ls docs/parts/*/figures.py 2>/dev/null || true)
+          if [ -z "$models" ]; then
+            echo "no figure model under docs/parts/*/figures.py"
+            exit 1
+          fi
+          echo "$models"
+          echo "list=$(echo $models)" >> "$GITHUB_OUTPUT"
+
+      # Anchored figures, orphaned tokens, the drawings, the declared directions,
+      # the invariants, the datasheet readings and checksums, and the numbers a
+      # diff removed that still stand elsewhere.
+      - name: Recompute the figures and check the documents against them
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            echo "== $m =="
+            python tools/figcheck.py "$m" --sheets --base "$BASE"
+          done
+
+      - name: Self-test the checker by moving every figure it claims to check
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            echo "== $m =="
+            python tools/figcheck.py "$m" --mutate --no-stale
+          done
+
+      # The provenance list is the record of where each input came from, and is
+      # readable in the run log without a checkout.
+      - name: List the provenance of every input
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            echo "== $m =="
+            python tools/figcheck.py "$m" --provenance --no-stale
+          done
