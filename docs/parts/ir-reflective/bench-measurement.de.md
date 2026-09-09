@@ -199,7 +199,7 @@ Vier Werte aufnehmen:
 | unter 3,2 mV, einem Wandlerschritt | Die Dunkelphasen vor und nach der hellen bleiben gültig, auch wenn die Kugel dazwischen kommt oder geht. Ein Wertepaar braucht die Kugel nur über den beiden hellen Phasen |
 | darüber | Die Dunkelbasis gilt nur mit Kugel. Ein bestätigtes Wertepaar braucht sie über allen fünf Phasen |
 
-**Das ist der eingeschwungene Wert.** Die Firmware liest 280 µs nach dem Phasenwechsel, und was sie dort sieht, ist dieser Wert mal dem Hub, den τ zulässt: 98 % bei τ = 62 µs, 49 % bei τ = 214 µs. Messung C liefert den Faktor, erst beide zusammen ergeben das Signal am Leseinstant.
+**Das ist der eingeschwungene Wert.** Die Firmware liest 270 µs nach dem Phasenwechsel, und was sie dort sieht, ist dieser Wert mal dem Hub, den τ zulässt: 97 % bei τ = 62 µs, 47 % bei τ = 214 µs. Messung C liefert den Faktor, erst beide zusammen ergeben das Signal am Leseinstant.
 
 | Ergebnis | Bedeutung |
 |---|---|
@@ -364,7 +364,7 @@ Steckbrett, kein Sensor beteiligt. Nur der D24V5F3, zwei Widerstände und das Mu
 | 180 Ω | dunkle Phase, 17,1 mA nach der Auslegung | 18 mA |
 | 18 Ω, als zwei 36 Ω parallel | helle Phase bei sechzehn Kanälen, 182,1 mA | 183 mA |
 
-Fünfmal zwischen beiden wechseln und jedes Mal beide Spannungen notieren, **die Eingangsspannung mit**. Bricht die 5-V-Quelle bei 183 mA selbst ein, trägt die Linienregelung des Moduls einen Teil davon in den Quotienten, und k gilt dann für die Quelle statt für die Last. Vor dem Ablesen eine Sekunde warten: der Einschwingvorgang der Laststufe ist in [`design.md`](design.md#appendix-derivations) gesondert gerechnet und nach 200 µs abgeklungen, während die Firmware erst 280 µs nach dem Phasenwechsel liest.
+Fünfmal zwischen beiden wechseln und jedes Mal beide Spannungen notieren, **die Eingangsspannung mit**. Bricht die 5-V-Quelle bei 183 mA selbst ein, trägt die Linienregelung des Moduls einen Teil davon in den Quotienten, und k gilt dann für die Quelle statt für die Last. Vor dem Ablesen eine Sekunde warten: der Einschwingvorgang der Laststufe ist in [`design.md`](design.md#appendix-derivations) gesondert gerechnet und nach 200 µs abgeklungen, während die Firmware erst 270 µs nach dem Phasenwechsel liest.
 
 **Die Differenz direkt ablesen, nicht zwei Absolutwerte.** Meter am 180-Ω-Zweig mit der Relativfunktion nullen, dann auf 18 Ω umstecken und die Differenz ablesen. Zwei Absolutwerte zu je ±1 mV geben eine Differenz von etwa 30 mV nur auf ±2 mV, und das sind 6 % des Wertes, auf den es ankommt.
 
