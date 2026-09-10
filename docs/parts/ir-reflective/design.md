@@ -132,11 +132,11 @@ The library publishes events. Two event kinds, one level query and initialisatio
 
 | | |
 |---|---|
-| `Blocked` | a ball has arrived over a channel |
-| `Released` | it has gone again |
-| `bool isBlocked(channel, out heldMs)` | the current level, and how long the channel has held it, for logic that asks rather than reacts |
+| `Detected` | a ball has arrived over a channel |
+| `Released` | the ball has gone again |
+| `State getState(channel, out ms)` | the current state, and how long the channel has held it, for logic that asks rather than reacts |
 
-Both events carry the channel and the moment of detection, and go into the event queue that [`input-handling.md`](../../../firmware/input-handling.md) describes.
+Both events carry the channel and the moment of detection, and go into the event queue that [`input-handling.md`](../../../firmware/input-handling.md) describes. `Released` carries the dwell in milliseconds with it.
 
 ### Driver
 

@@ -9,7 +9,7 @@ Python 3, standard library only, no build step.
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the document and the drawings that model governs. IR sensing is the only one so far. The checker imports the model, evaluates every figure, and compares the results against those files:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing is the only one so far. The checker imports the model, evaluates every figure, and compares the results against those files:
 
 ```
 python tools/figcheck.py docs/parts/ir-reflective/figures.py --sheets
@@ -51,7 +51,7 @@ Flags:
 
 A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
-A model governs one markdown document plus its drawings. A figure that another document repeats, a firmware note for instance, is covered only by the stale pass, which reports it once the figure moves.
+A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`firmware/ir-sensing.md`](../firmware/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
 

@@ -234,7 +234,7 @@ The severity tables of the review skills map onto these levels:
 
 ## 15. Figures are checked against a model
 
-**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, beside the document it governs, and [`tools/figcheck.py`](tools/figcheck.py) checks that document and its drawings against it. IR sensing is the first consumer, in [`docs/parts/ir-reflective/figures.py`](docs/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
+**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, beside the document it governs, and [`tools/figcheck.py`](tools/figcheck.py) checks that document, any further document the model names and its drawings against it. IR sensing is the first consumer, in [`docs/parts/ir-reflective/figures.py`](docs/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
 
 **A calculation is finished when it stands in the model.** A figure worked out in conversation, or typed straight into a document, has nothing checking it. Until it is declared with its inputs, its unit and its source, it counts as unverified under rule 3, and an answer that reports it says so.
 

@@ -47,6 +47,8 @@ function metrics(p, m) {
     ['Read block', f0(m.tbud) + ' <small>µs</small>'],
     ['Cycle', f1(m.cycle / 1000) + ' <small>ms</small>'],
     ['Readings per pass', String(m.reads)],
+    ['Fastest ball still confirmed', f1(m.vHit) + ' <small>m/s</small>', true],
+    ['Fastest ball with a reading spare', f1(m.vSpare) + ' <small>m/s</small>'],
     ['Last channel settles', f0(m.swLast * 100) + ' <small>%</small>'],
     ['Sign inverts at', f0(m.tzero) + ' <small>µs</small>'],
     ['Firmware ceiling', (m.ovhCeil > 0 ? f1(m.ovhCeil) : '0') + ' <small>µs/ch</small>'],
@@ -62,6 +64,7 @@ function metrics(p, m) {
     chip(m.signOK, 'Every read is past its sign inversion', f0(m.worst.t) + ' vs ' + f0(m.worst.tz) + ' µs'),
     chip(m.readOK, 'Pass delivers enough readings', m.reads + ' of ' + p.k),
     chip(m.perfOK, 'Read performance carries a wrong τ', f0(m.swFirst * 100) + ' of ' + f0(IRTM.PERF_MIN * 100) + ' %'),
+    chip(m.swFirst >= IRTM.AIM_F ? true : null, 'Settling reaches the target', f0(m.swFirst * 100) + ' of ' + f0(IRTM.AIM_F * 100) + ' %'),
     chip(m.acqNeed <= m.acqWin, 'Converter acquires in its window', f1(m.acqNeed) + ' of ' + f1(m.acqWin) + ' µs'),
     chip(m.relOK, 'Release threshold clears the clear track', f1(m.chans.length ? Math.min(...m.chans.map(c => c.relS - c.clrS)) : 0) + ' of ' + f1(2 * m.noise) + ' steps'),
     // the lit reading sits on top of the ambient one, so bright rooms run the channel into its ceiling
@@ -309,7 +312,6 @@ function render() {
   $('nconv_o').textContent = p.nconv.toFixed(2) + ' steps';
   $('tovh_o').textContent = p.tovh.toFixed(2) + ' µs';
   $('jit_o').textContent = p.jit + ' µs';
-  $('T_o').textContent = p.T + ' µs';
   $('D_o').textContent = p.D.toFixed(1) + ' ms · ' + (IRTM.BALL_MM / p.D).toFixed(1) + ' m/s';
   $('k_o').textContent = p.k;
   $('iph_o').textContent = p.iph + ' µA';
@@ -325,6 +327,7 @@ function render() {
   $('ovhNote').textContent = ceil <= 0 ? 'none' : '0.37 to ' + ceil.toFixed(1) + ' µs';
   $('ovhNote').style.color = over ? 'var(--fail)' : '';
   const m = IRTM.model(p, p.T);
+  $('T_o').textContent = p.T + ' µs · ' + f1(m.vHit) + ' m/s';
   $('railmv_o').textContent = p.railmv + ' mV';
   $('railpred_o').textContent = m.railPred.toFixed(0) + ' mV';
   $('railerr_o').textContent = (m.residFrac * 3300).toFixed(1) + ' mV';
@@ -388,9 +391,13 @@ $('propose').addEventListener('click', () => {
     `Worst channel is ${esc(q.worst)} at <b>${q.steps.toFixed(1)}</b> steps of gap, ` +
     `a false report every <b>${IRTM.every(q.fe)}</b>, ${q.reads} readings per pass, ` +
     `<b>${Math.round(q.duty * 100)} %</b> of the core. ` +
+    `It confirms a ball up to <b>${q.vHit.toFixed(1)} m/s</b>, ` +
+    `<b>${q.vSpare.toFixed(1)} m/s</b> with a reading to spare. ` +
     (q.fe < IRTM.GOOD_S
       ? `Nothing in range reaches one a year, so this is the quietest there is and the worst channel stays amber.`
-      : `The difference always takes the mean of the two dark readings either side of the lit one.`);
+      : q.sw < IRTM.AIM_F
+        ? `The worst channel settles ${Math.round(q.sw * 100)} %, under the ${Math.round(IRTM.AIM_F * 100)} % target, so this is the most settled the range holds. Fewer channels or a smaller pull-down is what buys the rest.`
+        : `The difference always takes the mean of the two dark readings either side of the lit one.`);
 });
 
 $('copy').addEventListener('click', async () => {

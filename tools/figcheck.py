@@ -328,8 +328,9 @@ def _formula_text(src: str) -> str | None:
 
 class Model:
     def __init__(self, name: str, document: pathlib.Path, section: str, until: str,
-                 drawings=()):
+                 drawings=(), documents=()):
         self.name, self.document = name, document
+        self.documents = [pathlib.Path(d) for d in documents]
         self.section, self.until = section, until
         self.drawings = [pathlib.Path(d) for d in drawings]
         self.figs: dict[str, Fig] = {}
@@ -529,6 +530,7 @@ class Token:
     strict: bool
     rhs: bool
     claimed_by: str | None = None
+    doc: pathlib.Path | None = None
 
 
 def _precision(num: str) -> float:
@@ -600,6 +602,9 @@ def scan_tokens(text: str, section: str | None, group: str | None,
             for pos, num, unit, is_strict in sorted(found)]
 
 
+NEVER = chr(0x0a)   # no line starts with a newline, so an extra document is read whole
+
+
 def parse_document(path: pathlib.Path, section_head: str | None,
                    until: str) -> list[Token]:
     """Every figure token in the document, with the group and section holding it.
@@ -641,6 +646,8 @@ def parse_document(path: pathlib.Path, section_head: str | None,
                                       strict=True, offset=col)
         else:
             tokens += scan_tokens(raw, section, None, i + 1, strict=False)
+    for t in tokens:
+        t.doc = path
     return tokens
 
 
@@ -751,7 +758,7 @@ def pass_anchored(model: Model, tokens: list[Token], rep: Report, override=None)
         free = [t for t in carried if t.claimed_by is None] or carried
         if len(free) == 1:
             t = free[0]
-            rep.error(f"{_rel(model.document)}:{t.line} reads {t.text} where "
+            rep.error(f"{_rel(t.doc)}:{t.line} reads {t.text} where "
                       f"{f.key} computes {f.value.show(f.unit, t.decimals)}",
                       kind="unplaced", key=f.key)
         else:
@@ -802,7 +809,7 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
         if near:
             refs += 1
             continue
-        rep.error(f"{_rel(model.document)}:{t.line} carries {t.text} and no "
+        rep.error(f"{_rel(t.doc)}:{t.line} carries {t.text} and no "
                   f"declared quantity has that value: a stale number, or a figure "
                   f"the model is missing", kind="orphan")
     return refs
@@ -1097,7 +1104,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
         have = t.text.split(" ")[0] if " " in t.text else t.text
         if want == have:
             continue
-        edits[model.document].append((t, have, want))
+        edits[t.doc].append((t, have, want))
 
     for path, items in edits.items():
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -1381,6 +1388,8 @@ def main(argv=None):
         return 0
 
     tokens = parse_document(model.document, model.section, model.until)
+    for extra in model.documents:
+        tokens += parse_document(extra, None, NEVER)
 
     if args.groups:
         cur = object()
@@ -1403,6 +1412,8 @@ def main(argv=None):
     inputs = sum(1 for f in model.figs.values() if f.kind != "derived")
     print(f"Checking {model.name}")
     print(f"  document   {_rel(model.document)}")
+    for extra in model.documents:
+        print(f"             {_rel(extra)}")
     if model.drawings:
         print(f"  drawings   " + ", ".join(d.name for d in model.drawings))
     print(f"  model      {inputs} declared inputs, "

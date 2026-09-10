@@ -73,6 +73,11 @@ const IRTM = (function () {
   // tau is not measured here, and the two candidates for it stand a factor of 3.5 apart, so the floor
   // is a requirement rather than a preference. It comes out once tau is measured on the built board.
   const PERF_MIN = 0.50;
+  // The floor keeps a wrong tau from swallowing the signal. The target is where a wrong tau starts
+  // giving back less than it takes: at 70 % of swing a 30 % error in tau costs 13 % of the signal,
+  // against 30 % at half. Above the target the curve is flat enough that more phase buys little, and
+  // phase is what the ball speed is paid in, so the target is a threshold and not a preference.
+  const AIM_F = 0.70;
 
   // Three values, because a swap is a swap: 4.7 kΩ is what the board carries, 2.2 kΩ is the step
   // down a channel takes when ambient light already fills its range, and 1.5 kΩ is one more of the
@@ -175,6 +180,10 @@ const IRTM = (function () {
     // values share the middle one, so m values span 2m + 1 phases. Counting D / cycle treats a value
     // as one cycle and overcounts: at a 750 us phase it reports two where the dwell carries one.
     const cycle = 2 * T, reads = Math.max(0, Math.floor((p.D * 1000 / T - 1) / 2));
+    // The same relation read the other way round: how fast a ball may cross a sensor and still be
+    // read often enough. It travels its own diameter over the detection window, and n values span
+    // 2n + 1 phases, so the window is (2k + 1) T for the confirmations and (2k + 3) T with one in hand.
+    const vHit = BALL_MM / ((2 * p.k + 1) * T) * 1000, vSpare = BALL_MM / ((2 * p.k + 3) * T) * 1000;
     const duty = tbud / T;                      // share of the core the read block holds
     // p is the Gaussian tail beyond half the gap, the threshold sitting midway between the clear
     // track and the ball. Nothing has measured that the noise really is Gaussian out at 4 sigma, and
@@ -194,7 +203,7 @@ const IRTM = (function () {
     return {
       T, tconv, tbud, tfirst, tlast, tau, x, sw, tzero, A, lsb, steps, thr, chans, worst, peak,
       flick, noise, refRes, residFrac, ovhCeil, bus, railRel, railStep, railPred, ambTot,
-      snr: snrOf(steps, noise), falseEvery, goodMargin, thinMargin, cycle, reads,
+      snr: snrOf(steps, noise), falseEvery, goodMargin, thinMargin, cycle, reads, vHit, vSpare,
       signOK: chans.every(c => c.t > c.tz), fitOK: tfirst > 0, readOK: reads >= p.k,
       perfOK: worst.f >= PERF_MIN, dHyst, relOK: chans.every(c => c.relOK),
       // C_PIN 7 pF sits at the pad and C_SAMPLE 20 pF behind the switch, so the source charges
@@ -225,10 +234,19 @@ const IRTM = (function () {
     const ag = a.fe >= GOOD_S, bg = b.fe >= GOOD_S;
     if (ag !== bg) return ag;
     if (!ag) return a.fe > b.fe;
+    // Then the settling target. It outranks the spare reading because the spare guards against a read
+    // the firmware misses, which it counts and can report, while a tau read too early is wrong in
+    // silence and every figure below rests on it.
+    const af = a.sw >= AIM_F, bf = b.sw >= AIM_F;
+    if (af !== bf) return af;
+    if (!af && Math.abs(a.sw - b.sw) > 1e-9) return a.sw > b.sw;
     const need = k + 1;                         // the confirmations, plus one in hand
     const ae = a.reads >= need, be = b.reads >= need;
     if (ae !== be) return ae;                   // then catching the ball, which cannot be recovered
     if (!ae && a.reads !== b.reads) return a.reads > b.reads;
+    // Then the fastest ball the phase still confirms. Settling rises with the phase and ball speed
+    // falls with it, so once the target is met the shortest phase that meets it is the best one.
+    if (Math.abs(a.vHit - b.vHit) > 1e-9) return a.vHit > b.vHit;
     if (Math.abs(a.duty - b.duty) > 1e-6) return a.duty < b.duty;   // then the cheaper phase
     if (a.kept !== b.kept) return a.kept;       // then the resistor already fitted, over a new one
     return a.fe > b.fe;
@@ -240,9 +258,8 @@ const IRTM = (function () {
   //   ceiling D / (2 (k + 1) + 1)                k + 1 values span that many phases, so this many fit the dwell
   //
   // Inside the bracket every phase length delivers the same number of readings, so the readings step of
-  // the ranking cannot separate two of them. What is left is the CPU load, N (t_conv + t_ovh) / T, and it
-  // falls as the phase grows. The ceiling is therefore the answer whenever a resistor reaches the year
-  // there, and no phase length below it can win.
+  // the ranking cannot separate two of them. The bracket is where a reading in hand is still free, and
+  // the ranking leaves it where the settling target lies above the ceiling.
   function phaseWindow(p, bounds) {
     const step = bounds.step || 1, tconv = p.clk / p.fspi;
     const fit = Math.ceil((Math.ceil(p.N * (tconv + p.tovh) + p.jit) + START) / step) * step;
@@ -263,7 +280,8 @@ const IRTM = (function () {
       if (m.ambTot + m.peak >= 1024) continue;
       const cand = {
         T, R, kept: R === keepR, fe: Math.min(3.15e9, m.falseEvery), snr: m.snr,
-        reads: m.reads, duty: m.duty, steps: m.steps, sw: m.worst.f, worst: m.worst.name
+        reads: m.reads, duty: m.duty, steps: m.steps, sw: m.worst.f, worst: m.worst.name,
+        vHit: m.vHit, vSpare: m.vSpare
       };
       if (betterThan(cand, best, p.k)) best = cand;
     }
@@ -273,18 +291,11 @@ const IRTM = (function () {
   function propose(p, bounds) {
     const keepR = p.R, rs = p.perMode === 'each' ? [keepR] : PULLDOWNS, w = phaseWindow(p, bounds);
     let best = null;
-    // Walking down from the ceiling only happens where the ceiling itself falls short. The floor is not
-    // taken as given either: the sign inversion moves with the pull-down, so the shortest phase that
-    // still reads the right way round differs from one resistor to the next.
-    for (let T = w.hi; T >= w.lo; T -= w.step) {
-      const c = bestPullDown(p, T, rs, keepR);
-      if (c && c.fe >= GOOD_S) return c;
-      if (c && betterThan(c, best, p.k)) best = c;
-    }
-    // The year outranks the readings, so where the bracket holds nothing that reaches it the phase is
-    // allowed past its ceiling and buys the year at the cost of a reading. Margin against phase length
-    // has no closed form once the sign inversion is inside it, so this part enumerates.
-    for (let T = Math.max(w.hi + w.step, w.lo); T <= bounds.max; T += w.step) {
+    // The ceiling of the bracket no longer wins by construction. It is the longest phase that still
+    // carries a reading in hand, and the settling target sits above it at most channel counts, so the
+    // whole range the control offers is ranked and betterThan decides where the two collide. The floor
+    // is where the read block stops fitting, and nothing below it is a configuration at all.
+    for (let T = Math.max(w.lo, bounds.min); T <= bounds.max; T += w.step) {
       const c = bestPullDown(p, T, rs, keepR);
       if (c && betterThan(c, best, p.k)) best = c;
     }
@@ -412,7 +423,7 @@ const IRTM = (function () {
   }
 
   return {
-    GOOD_S, THIN_S, SELF, SCENES, START, BALL_MM, PERF_MIN, PULLDOWNS,
+    GOOD_S, THIN_S, SELF, SCENES, START, BALL_MM, PERF_MIN, AIM_F, PULLDOWNS,
     fig6, qtail, marginFor, every, snrOf,
     tauOf, newChannels, chOrder, model, usable, betterThan,
     phaseWindow, bestPullDown, propose, sweep, usableRange, exportDoc

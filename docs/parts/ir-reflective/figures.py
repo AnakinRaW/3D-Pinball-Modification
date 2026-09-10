@@ -19,7 +19,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("ir-reflective", HERE / "design.md",
               section=None, until="## Sources",
               drawings=[HERE / "ir-sensor-mainboard.svg",
-                        HERE / "pulsed-schematic.svg"])
+                        HERE / "pulsed-schematic.svg"],
+              documents=[HERE.parents[2] / "firmware" / "ir-sensing.md"])
 
 def _to_printed(q, unit, decimals):
     """A quantity as the appendix prints it, so a chain of stated figures adds
