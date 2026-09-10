@@ -7,20 +7,27 @@ const v = id => parseFloat($(id).value);
 const esc = t => String(t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const f1 = n => n.toFixed(1), f2 = n => n.toFixed(2), f0 = n => Math.round(n);
 
-const IN = ['N', 'tovh', 'jit', 'T', 'D', 'k', 'R', 'iph', 'iclr', 'taumodel', 'taufix', 'scene', 'railmv'];
+const IN = ['N', 'tovh', 'jit', 'T', 'D', 'k', 'sensor', 'rcol', 'R', 'iph', 'iclr',
+  'taumodel', 'taufix', 'scene', 'railmv'];
 const DEF = {
   N: 16, tovh: 2, jit: 10, T: 600, D: 3, k: 2, R: 4.7, iph: 50, iclr: 10, vref: 3.383,
+  sensor: 'gp2s700', rcol: 1.58, vmin: 3.150, vmax: 3.449,
   taumodel: 'linear', taufix: 62, nconv: 0.32, railmv: 41, scene: 'led', amb: 60, ambself: 20,
   mod: 60, mains: 100
 };
-const COLS = [['ball', 'ball µA', 0.1, 1], ['clear', 'clear µA', 0.1, 1], ['R', 'R kΩ', 0.1, 0], ['tau', 'τ µs', 1, 0]];
+const COLS = [['ball', 'ball µA', 0.1, 1], ['clear', 'clear µA', 0.1, 1],
+  ['R', 'R kΩ', 0.1, 0], ['rcol', 'Rc kΩ', 0.01, 0], ['tau', 'τ µs', 1, 0]];
+// Short enough for a column 40 px wide. The full names and their sheets are in the model.
+const SENS_SHORT = { gp2s700: 'GP2S', cny70: 'CNY70' };
 
 let CH = [], perMode = 'all', lastOpt = null;
 
 // Everything the model needs, read off the controls in one place.
 const params = () => ({
   N: v('N'), R: v('R'), clk: v('clk'), fspi: v('fspi'), tovh: v('tovh'), jit: v('jit'),
-  vref: v('vref'), amb: v('amb'), ambself: v('ambself'), mains: v('mains'), mod: v('mod'),
+  sensor: $('sensor').value, rcol: v('rcol'),
+  vref: v('vref'), vmin: v('vmin'), vmax: v('vmax'),
+  amb: v('amb'), ambself: v('ambself'), mains: v('mains'), mod: v('mod'),
   railmv: v('railmv'), nconv: v('nconv'), D: v('D'), k: v('k'), T: v('T'),
   iph: v('iph'), iclr: v('iclr'), taumodel: $('taumodel').value, taufix: v('taufix'),
   CH, perMode
@@ -28,8 +35,20 @@ const params = () => ({
 const bounds = () => ({ step: +$('T').step || 1, min: +$('T').min, max: +$('T').max });
 
 function fillCH(keepNames) { CH = IRTM.newChannels(params(), keepNames ? CH : null); }
+const syncSeg = (seg, id) =>
+  [...$(seg).children].forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.v === +$(id).value)));
 function syncR() {
-  [...$('Rseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === $('R').value)));
+  syncSeg('Rseg', 'R'); syncSeg('rcolseg', 'rcol');
+  [...$('sensorseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === $('sensor').value)));
+}
+
+// A settling model is on offer only where the part's sheet supports it. The GP2S700HCP has a curve of
+// response time against load resistance, so a pull-down it was never characterised at still has a
+// figure. The CNY70 has no switching specification at all, so its models all rest on a bench value.
+function syncModels() {
+  const ok = (IRTM.SENSORS[$('sensor').value] || IRTM.SENSORS.gp2s700).models;
+  [...$('taumodel').options].forEach(o => { o.hidden = !ok.includes(o.value); });
+  if (!ok.includes($('taumodel').value)) $('taumodel').value = ok[0];
 }
 
 function metrics(p, m) {
@@ -42,6 +61,7 @@ function metrics(p, m) {
     ['Threshold, worst channel', f1(m.thr) + ' <small>steps</small>'],
     ['Release threshold, worst channel', f1(m.worst.relS) + ' <small>steps</small>'],
     ['Current for one step', f2(m.worst.perStep) + ' <small>µA</small>'],
+    ['Headroom to the ceiling', f0(m.head) + ' <small>steps at ' + esc(m.tight.name || '?') + '</small>'],
     ['Gap over noise', f1(m.snr) + '&thinsp;<small>×</small>', true],
     ['τ, slowest sensor', f0(m.tau) + ' <small>µs</small>'],
     ['Read block', f0(m.tbud) + ' <small>µs</small>'],
@@ -68,7 +88,8 @@ function metrics(p, m) {
     chip(m.acqNeed <= m.acqWin, 'Converter acquires in its window', f1(m.acqNeed) + ' of ' + f1(m.acqWin) + ' µs'),
     chip(m.relOK, 'Release threshold clears the clear track', f1(m.chans.length ? Math.min(...m.chans.map(c => c.relS - c.clrS)) : 0) + ' of ' + f1(2 * m.noise) + ' steps'),
     // the lit reading sits on top of the ambient one, so bright rooms run the channel into its ceiling
-    chip(m.ambTot + m.peak < 1024, 'Channel stays inside the range', f0(m.ambTot + m.peak) + ' of 1024 steps'),
+    chip(m.rangeOK, 'Channel stays inside the range', f0(m.atCeil) + ' of ' + f0(m.ceilS) + ' steps at ' + esc(m.tight.name || '?')),
+    chip(m.icOK, 'Collector current inside its maximum', f2(m.icSat) + ' of ' + m.icMax + ' mA at ' + esc(m.icWorst.name || '?')),
     chip(m.falseEvery >= IRTM.GOOD_S ? true : m.falseEvery >= IRTM.THIN_S ? null : false, 'False reports', IRTM.every(m.falseEvery) + ' apart, gap ' + f1(m.snr) + '× the noise')
   ].join('');
 }
@@ -143,7 +164,13 @@ function chanChart(p, m) {
   // under it and has to clear the clear-track reading by 2 sigma, or a ball that leaves is never
   // released; that is the one mark drawn, and it turns red where it fails.
   const need = c => c.clrS + m.goodMargin * m.noise, thin = c => c.clrS + m.thinMargin * m.noise;
-  const yMax = nice(Math.max(...ch.map(c => Math.max(c.ballS, need(c))), 1));
+  // The collector load moves nothing on this chart until a channel reaches its ceiling, because the
+  // node in the active region is the photocurrent through the pull-down alone. So the ceiling is
+  // drawn where it is close enough to matter, and named in the corner where it is not.
+  const reads = Math.max(...ch.map(c => Math.max(c.ballS, need(c))), 1);
+  const ceilLo = Math.min(...ch.map(c => c.ceilS));
+  const drawCeil = ceilLo <= reads * 1.6;
+  const yMax = nice(drawCeil ? Math.max(reads, ceilLo * 1.05) : reads);
   const X = i => L + (N > 1 ? (i / (N - 1)) * pw : pw / 2), Y = st => Tp + (1 - Math.min(st, yMax) / yMax) * ph;
   let g = '';
   [0, .2, .4, .6, .8, 1].forEach(f => {
@@ -159,6 +186,11 @@ function chanChart(p, m) {
     `<path d="M${pts(xs, yThin).join(' L')} L${(L + pw).toFixed(1)} ${bot} L${L} ${bot} Z" fill="var(--fail)" opacity="0.13"/>`
     + `<path d="M${pts(xs, yNeed).join(' L')} L${pts(xs, yThin).reverse().join(' L')} Z" fill="var(--warn)" opacity="0.15"/>`
     + `<path d="M${pts(xs, yNeed).join(' L')} L${(L + pw).toFixed(1)} ${top} L${L} ${top} Z" fill="var(--pass)" opacity="0.11"/>`;
+  const ceilL = drawCeil
+    ? `<path d="${ch.map((c, i) => (i ? 'L' : 'M') + X(c.i).toFixed(1) + ' ' + Y(c.ceilS).toFixed(1)).join('')}"`
+      + ` fill="none" stroke="var(--fail)" stroke-width="1.5" stroke-dasharray="6 3"/>`
+      + `<text x="${L + 5}" y="${(Y(ceilLo) - 5).toFixed(1)}" fill="var(--fail)" font-family="var(--mono)" font-size="11">ceiling</text>`
+    : `<text x="${L + pw - 4}" y="${Tp + 13}" text-anchor="end" fill="var(--muted)" font-family="var(--mono)" font-size="11">ceiling ${Math.round(ceilLo)}, off the top</text>`;
   let ballL = '', clrL = '', needL = '', thinL = '', marks = '', dots = '';
   const hw = N > 12 ? 5 : 7;                     // half width of the release marks
   ch.forEach((c, i) => {
@@ -186,6 +218,7 @@ function chanChart(p, m) {
     <path d="${clrL}" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
     ${marks}
     <path d="${ballL}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    ${ceilL}
     ${dots}${ticks}
     <text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle" fill="var(--muted)" font-family="var(--sans)" font-size="11.5">the sensors, in the order they are read</text>
     <text x="13" y="${Tp + ph / 2}" text-anchor="middle" transform="rotate(-90 13 ${Tp + ph / 2})" fill="var(--ink-2)" font-family="var(--sans)" font-size="11.5">converter steps</text>`;
@@ -279,19 +312,33 @@ function exportBlock(p, m) {
   $('exp').textContent = JSON.stringify(IRTM.exportDoc(p, m, scene), null, 2);
 }
 
+const tally = (xs) => {
+  const n = new Map();
+  xs.forEach(x => n.set(x, (n.get(x) || 0) + 1));
+  return [...n].sort((a, b) => b[1] - a[1]).map(([k, c]) => c + ' x ' + k).join(', ');
+};
+
 function tableRows(p, m) {
   const each = perMode === 'each', t = $('chtbl');
   $('uniform').hidden = each;
-  t.classList.toggle('hide', !each);
-  if (!each) { t.dataset.n = ''; return; }
-  t.style.gridTemplateColumns = 'minmax(46px,.85fr) repeat(4,minmax(0,1fr))';
+  $('perch').hidden = !each;
+  if (!each) { t.dataset.n = ''; if ($('chdlg').open) $('chdlg').close(); return; }
+  const use = CH.slice(0, p.N);
+  $('mix_o').textContent = tally(use.map(c => (IRTM.SENSORS[c.sensor] || IRTM.SENSORS.gp2s700).name));
+  $('mixrc_o').textContent = tally(use.map(c => (+c.rcol ? c.rcol + ' kΩ' : 'none')));
+  t.style.gridTemplateColumns = 'minmax(90px,1.4fr) minmax(78px,1fr) repeat(5,minmax(66px,1fr))';
   const N = p.N, worstSrc = m.worst ? m.worst.src : -1;
-  let h = '<b>name</b>' + COLS.map(c => `<b>${c[1]}</b>`).join('');
+  let h = '<b>name</b><b>part</b>' + COLS.map(c => `<b>${c[1]}</b>`).join('');
   for (let i = 0; i < N; i++) {
     const c = CH[i], bad = i === worstSrc;
     h += `<input type="text" data-i="${i}" data-f="name" value="${esc(c.name)}" maxlength="12"${bad ? ' class="weak"' : ''}>`
+      + `<select data-i="${i}" data-f="sensor"${bad ? ' class="weak"' : ''}>`
+      + Object.keys(IRTM.SENSORS).map(k =>
+        `<option value="${k}"${k === c.sensor ? ' selected' : ''}>${SENS_SHORT[k] || k}</option>`).join('')
+      + '</select>'
+      // the collector load may be 0, which is a board with the collector at the rail
       + COLS.map(col => `<input type="number" data-i="${i}" data-f="${col[0]}" value="${c[col[0]]}"`
-        + ` min="0.1" max="4000" step="${col[2]}" class="${bad ? 'weak' : ''}${col[3] ? ' ships' : ''}">`).join('');
+        + ` min="${col[0] === 'rcol' ? 0 : 0.1}" max="4000" step="${col[2]}" class="${bad ? 'weak' : ''}${col[3] ? ' ships' : ''}">`).join('');
   }
   if (t.dataset.n !== String(N) || !t.contains(document.activeElement)) { t.innerHTML = h; t.dataset.n = String(N); }
 }
@@ -336,6 +383,9 @@ function render() {
   $('refNote').textContent = m.refRes.toFixed(2) + ' steps';
   $('n3_o').textContent = m.flick.toFixed(2) + ' steps';
   $('n4_o').textContent = m.noise.toFixed(2) + ' steps';
+  $('ceil_o').textContent = f0(m.ceilS) + ' of 1024 steps';
+  $('icsat_o').textContent = m.icSat.toFixed(2) + ' of ' + m.icMax + ' mA';
+  $('head_o').textContent = f0(m.head) + ' steps free';
   $('w1').textContent = m.worst ? '· the worst channel, ' + m.worst.name : '';
   $('w3').textContent = $('w1').textContent;
   metrics(p, m); traceChart(m); chanChart(p, m); tableRows(p, m); exportBlock(p, m);
@@ -347,10 +397,12 @@ function render() {
 }
 
 $('chtbl').addEventListener('input', e => {
-  const t = e.target; if (t.tagName !== 'INPUT') return;
-  if (t.dataset.f === 'name') { CH[+t.dataset.i].name = t.value; render(); return; }
-  const val = parseFloat(t.value); if (!isFinite(val) || val <= 0) return;
-  CH[+t.dataset.i][t.dataset.f] = val; render();
+  const t = e.target, f = t.dataset.f; if (t.tagName !== 'INPUT' && t.tagName !== 'SELECT') return;
+  if (f === 'name') { CH[+t.dataset.i].name = t.value; render(); return; }
+  if (f === 'sensor') { CH[+t.dataset.i].sensor = t.value; render(); return; }
+  const val = parseFloat(t.value);
+  if (!isFinite(val) || val < 0 || (val === 0 && f !== 'rcol')) return;
+  CH[+t.dataset.i][f] = val; render();
 });
 
 // Published on claude.ai the viewer's frame cannot start a download itself; the downloads
@@ -417,7 +469,12 @@ $('modeseg').addEventListener('click', e => {
   [...$('modeseg').children].forEach(c => c.setAttribute('aria-pressed', String(c === b)));
   if (perMode === 'each') fillCH(true);
   $('chtbl').dataset.n = ''; render();
+  if (perMode === 'each') $('chdlg').showModal();
 });
+
+$('opench').addEventListener('click', () => $('chdlg').showModal());
+// closing it leaves the values as they were edited, so the page only has to catch up
+$('chdlg').addEventListener('close', render);
 
 ['iph', 'iclr', 'taumodel', 'taufix'].forEach(id => $(id).addEventListener('input', () => {
   if (perMode === 'all') { fillCH(true); $('chtbl').dataset.n = ''; }
@@ -430,10 +487,29 @@ $('Rseg').addEventListener('click', e => {
   render();
 });
 
+$('rcolseg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('rcol').value = b.dataset.v;
+  render();
+});
+
+// The collector load follows the sensor, because it is a property of the board the part sits on: the
+// rebuilt boards copy the stock one and carry it, and a CNY70 has no board yet. It stays a control,
+// so a trial that solders one anyway can be modelled.
+$('sensorseg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('sensor').value = b.dataset.v;
+  $('rcol').value = (IRTM.SENSORS[b.dataset.v] || IRTM.SENSORS.gp2s700).rcol;
+  syncModels();
+  if (perMode === 'all') { fillCH(true); $('chtbl').dataset.n = ''; }
+  render();
+});
+
 IN.forEach(id => $(id).addEventListener('input', render));
 
 $('reset').addEventListener('click', () => {
   Object.entries(DEF).forEach(([k, val]) => { $(k).value = val; });
+  syncModels();
   fillCH(); $('chtbl').dataset.n = '';
   perMode = 'all';
   [...$('modeseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === 'all')));
@@ -445,7 +521,8 @@ try {
   const s = JSON.parse(localStorage.getItem('irtm') || 'null');
   if (s) {
     IN.forEach(k => { if (s[k] !== undefined) $(k).value = s[k]; });
-    if (Array.isArray(s.ch) && s.ch.length === 16 && s.ch.every(r => r && typeof r.ball === 'number')) CH = s.ch;
+    if (Array.isArray(s.ch) && s.ch.length === 16 && s.ch.every(r => r && typeof r.ball === 'number'))
+      CH = s.ch.map(r => ({ rcol: +$('rcol').value, sensor: $('sensor').value, ...r }));
     if (s.mode === 'each' || s.mode === 'all') {
       perMode = s.mode;
       [...$('modeseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === perMode)));
@@ -453,5 +530,6 @@ try {
   }
 } catch (e) { }
 
+syncModels();
 if (!CH.length) fillCH();
 render();

@@ -15,7 +15,8 @@
      swing(t) = 1 - 2*e^(-t/tau) / (1 + e^(-T/tau)), sign inversion at tau*ln(2/(1+x)), flicker residue
      amp*(1-cos(w*Ts)) from the gap between the lit sample and the mean of the two darks, noise combined
      in quadrature. Figure 6 of the GP2S700HCP datasheet is interpolated from readings taken off the plot
-     at 1, 1.5, 2, 3, 4, 4.7, 5, 6, 8 and 10 kOhm.
+     at 1, 1.5, 2, 3, 4, 4.7, 5, 6, 8 and 10 kOhm. Vishay 83751 publishes no switching figure for the
+     CNY70, so that part offers only the models a bench value can carry.
 -->
 <div class="wrap">
 <header>
@@ -57,6 +58,35 @@
 
   <div class="group">
     <h2>Sensor and front end</h2>
+    <div class="ctl"><label>Sensor<b class="tag pick">CHOICE</b></label>
+      <div class="seg" id="sensorseg">
+        <button type="button" data-v="gp2s700" aria-pressed="true">GP2S700HCP</button>
+        <button type="button" data-v="cny70" aria-pressed="false">CNY70</button>
+      </div></div>
+    <input type="hidden" id="sensor" value="gp2s700">
+    <!--
+         The photocurrents below stay where they are when the sensor changes. Sharp characterises I_C at
+         4 mA into an aluminium mirror 4 mm away, Vishay at 20 mA against a white card 0.3 mm away, and
+         no scaling carries one condition to the other, so the sheets do not rank the two parts for this
+         job. What the choice does change is the settling models on offer and the collector load.
+    -->
+    <div class="ctl"><label>Collector load on the sensor board<b class="tag pick">CHOICE</b></label>
+      <div class="seg" id="rcolseg">
+        <button type="button" data-v="0">none</button>
+        <button type="button" data-v="1.58">1.58 kΩ</button>
+      </div></div>
+    <input type="hidden" id="rcol" value="1.58">
+    <!--
+         The collector load sits between the rail and the collector, the pull-down between the node and
+         ground, and the photocurrent runs through both. Only the pull-down's share reaches the
+         converter, so the load costs range in proportion: 1.58 kΩ against 4.7 kΩ leaves 75 % of full
+         scale. The rebuilt boards carry it because they are copies of the stock board, which is the
+         only argument for it. It bounds the collector current as well, but so does the pull-down on its
+         own, three orders under either part's maximum.
+    -->
+    <div class="fig"><span>Node ceiling</span><b id="ceil_o"></b></div>
+    <div class="fig"><span>Headroom under it</span><b id="head_o"></b></div>
+    <div class="fig"><span>Collector current there</span><b id="icsat_o"></b></div>
     <div class="ctl"><label>Values</label>
       <div class="seg" id="modeseg">
         <button type="button" data-v="all" aria-pressed="true">One set for all</button>
@@ -80,11 +110,17 @@
           <option value="fig6max">Figure 6 shape, on the 100 µs maximum</option>
           <option value="fig6typ">Figure 6 as drawn, typical at 5 V</option>
           <option value="fixed">Measured, fixed value below</option>
+          <option value="measlin">Measured, carried to other pull-downs by R</option>
+          <option value="measflat">Measured, held flat across pull-downs</option>
         </select></div>
       <div class="ctl"><label for="taufix">τ at this pull-down<b class="tag meas">MEASURED</b></label><output id="taufix_o"></output>
         <input type="range" id="taufix" min="10" max="400" step="1" value="62"></div>
     </div>
-    <div class="tbl" id="chtbl"></div>
+    <div id="perch" hidden>
+      <div class="fig"><span>Parts on the board</span><b id="mix_o"></b></div>
+      <div class="fig"><span>Collector loads</span><b id="mixrc_o"></b></div>
+      <button class="apply" id="opench" type="button">Set the sixteen channels</button>
+    </div>
   </div>
 
   <div class="group">
@@ -173,6 +209,14 @@
     <input type="hidden" id="fspi" value="1.35">
     <input type="hidden" id="clk" value="24">
     <input type="hidden" id="vref" value="3.383">
+    <!--
+         The rail's two extremes, from the base quantities of the circuit document: 3.150 V with the
+         emitter bus on at sixteen channels, 3.449 V with the module at its high corner. The node
+         ceiling is taken at the minimum, where V_CE(sat) is the largest share of the rail, and the
+         collector current at the maximum.
+    -->
+    <input type="hidden" id="vmin" value="3.150">
+    <input type="hidden" id="vmax" value="3.449">
     <input type="hidden" id="nconv" value="0.32">
     <input type="hidden" id="amb" value="60">
     <input type="hidden" id="ambself" value="20">
@@ -242,6 +286,13 @@
   </section>
 </div>
 </div>
+<dialog id="chdlg">
+  <form method="dialog" class="dlghead">
+    <h2>One set of values per sensor</h2>
+    <button class="ghost" value="close" type="submit">Close</button>
+  </form>
+  <div class="tbl" id="chtbl"></div>
+</dialog>
 <script src="model.js"></script>
 <script src="ui.js"></script>
 </body>

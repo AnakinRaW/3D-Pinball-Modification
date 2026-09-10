@@ -7,6 +7,7 @@ Component specifications and the reasoning behind a part choice are recorded her
 | Document | Contents |
 |---|---|
 | [`teensy-4.1.md`](teensy-4.1.md) | Specifications of the selected controller and the electrical constraints it imposes |
+| [`cny70.md`](cny70.md) | The reflective sensor held for a bench trial: its ratings, what its datasheet leaves unspecified, and how it compares to the part in the stock boards |
 | [`Rokr/1_power-supply.md`](Rokr/1_power-supply.md) | The stock 5 V input: adapter rating, the protection and filtering parts at the power entry, the inventory of loads on the rail, and why an undersized supply resets the machine |
 | [`Rokr/2_ir-reflective-sensor-p33.md`](Rokr/2_ir-reflective-sensor-p33.md) | The stock ball sensor: measurements, reconstructed schematics of the sensor board and of its mainboard channel, and why the stock circuit is built that way |
 | [`Rokr/3_bumper-control.md`](Rokr/3_bumper-control.md) | The stock bumpers: solenoid figures, the foil-and-shell trigger contact, wiring to the mainboard, and the parts seen on the board |
