@@ -147,24 +147,22 @@ Two internal contradictions, each resolvable. None of them changes the topology.
 
 ## Mainboard
 
-Nothing on the mainboard was probed with a meter. The circuit below is a reconstruction from the part markings and the oscilloscope traces.
+The four resistors were read and measured against the connector pins. The transistor wiring below is a reconstruction from the part markings and the oscilloscope traces.
 
 ![Reconstructed mainboard schematic, one sensor channel](2_IR-Reflective-Mainboard-Schematic.svg)
 
-Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([datasheet](../../datasheets/S8050.PDF)), and four resistors. Three carry a legible marking:
+Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([datasheet](../../datasheets/S8050.PDF)), and four resistors.
 
-| Marking | Code | Value |
-|---|---|---|
-| `163` | three-digit EIA, 16 × 10³ | 16 kΩ |
-| `181` | three-digit EIA, 18 × 10¹ | 180 Ω |
-| `01B` | EIA-96, index 01 = 100, multiplier B = × 10 | 1.00 kΩ, 1 % |
+| | Marking | Code | Value | In circuit |
+|---|---|---|---|---|
+| R7 | `163` | three-digit EIA, 16 × 10³ | 16 kΩ | 14.5 kΩ to Pin 2 |
+| R9 | `12B` | EIA-96, index 12 = 130, multiplier B = × 10 | 1.30 kΩ, 1 % | 1.294 kΩ to Pin 1 |
+| R22 | `181` | three-digit EIA, 18 × 10¹ | 180 Ω | 181 Ω to Pin 3 |
+| R24 | `01B` | EIA-96, index 01 = 100, multiplier B = × 10 | 1.00 kΩ, 1 % | 0.995 kΩ, reaches no connector pin |
 
-The three-digit scheme puts a decade exponent in the last character, so `01B` has no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board.
+The three-digit scheme puts a decade exponent in the last character, so `01B` and `12B` have no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board. R7 reads below its marking because the rest of the channel sits in parallel with it, about 155 kΩ worth. The designators belong to the channel that was probed, and the other two channels repeat the same parts under different numbers.
 
-> [!WARNING]
-> **TODO: Read the fourth resistor**
-
-The reconstruction has Q1 switching the LED cathode to ground through the 180 Ω resistor and driven from the controller through the 1 kΩ, and Q2 taking Pin 2 straight onto its base, with the 16 kΩ as its collector pull-up and the output inverted to a 0–5 V level for the controller.
+The reconstruction has Q1 switching the LED cathode to ground through R22 and driven from the controller through R24. Q2 takes Pin 2 straight onto its base, with R7 from Pin 2 to ground across that junction, R9 as its collector pull-up, and the output inverted to a 0–5 V level for the controller.
 
 ### What the waveforms confirm
 
@@ -176,10 +174,7 @@ Three independent numbers follow from the reconstruction and match what was meas
 | Pin 3's LOW plateau is 5 V − V<sub>F</sub> | V<sub>F</sub> = 1.2 V typ → 3.8 V; the observed 3.5 V implies V<sub>F</sub> ≈ 1.5 V and I = (5 − 1.5 − 0.2) V ÷ 180 Ω = 18.3 mA | 3.5 V |
 | Pin 1 draws roughly 10 mA average | LED at 50 % duty: 18.3…20 mA ÷ 2 = 9.2…10 mA. Phototransistor branch, saturated upper bound (5 − 0.6 − 0.2) V ÷ 1585 Ω = 2.65 mA, at 50 % duty ≤ 1.3 mA. Total 9.2…11.3 mA | 10 mA |
 
-The flat ceiling on Pin 2 is the strongest of the three. A resistor to ground would give an output proportional to the photocurrent, rising to whatever R1 and that resistor divide the 5 V rail into — volts, not 0.6 V. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and the datasheet's Fig. 6 puts t<sub>f</sub> above t<sub>r</sub> across the whole plotted load range.
-
-> [!WARNING]
-> **TODO: the ceiling argument rules out a divider without Q2, and not a resistor in parallel with the base-emitter junction, which clamps at 0.6 V just the same. The fourth, unread resistor is the candidate for that position. Reading its marking settles it.**
+The flat ceiling on Pin 2 is the strongest of the three. R7 and R1 divide the 5 V rail to 5 V × 16 / (1.585 + 16) = 4.55 V, so photocurrent alone would carry the node into the volts. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. Below the ceiling the node is R7 times the photocurrent, which puts the 0.6 V clamp at 0.6 V ÷ 16 kΩ = 37.5 µA. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and the datasheet's Fig. 6 puts t<sub>f</sub> above t<sub>r</sub> across the whole plotted load range.
 
 The LED current of 18–20 mA sits 2.5× inside the 50 mA absolute maximum, and the phototransistor's ≤ 2.65 mA well inside its 20 mA I<sub>C</sub> maximum.
 

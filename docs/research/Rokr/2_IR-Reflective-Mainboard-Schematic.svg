@@ -1,8 +1,8 @@
 <svg viewBox="0 0 815 580" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="815" height="580" fill="#ffffff"/>
   <text x="30" y="36" font-size="18" font-weight="700" fill="#1a1a1a">Mainboard, per sensor channel</text>
-  <rect x="30" y="48" width="330" height="30" fill="#fdf3d1" stroke="#d4b106"/>
-  <text x="40" y="68" font-size="13" font-weight="700" fill="#7a5c00">ASSUMPTION — reconstructed, not measured</text>
+  <rect x="30" y="48" width="350" height="30" fill="#fdf3d1" stroke="#d4b106"/>
+  <text x="40" y="68" font-size="13" font-weight="700" fill="#7a5c00">RECONSTRUCTED · transistor wiring inferred</text>
 
   <!-- Connector -->
   <rect x="40" y="120" width="120" height="310" fill="#f4f4f4" stroke="#888" stroke-width="1.5"/>
@@ -23,6 +23,15 @@
 
   <!-- Q2: signal evaluation -->
   <line x1="166" y1="300" x2="380" y2="300" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="220" cy="300" r="4" fill="#2c3e50"/>
+  <line x1="220" y1="300" x2="220" y2="322" stroke="#2c3e50" stroke-width="2.5"/>
+  <rect x="208" y="322" width="24" height="44" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="242" y="348" font-size="13" fill="#1a1a1a">16 kΩ ("163")</text>
+  <line x1="220" y1="366" x2="220" y2="382" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="204" y1="382" x2="236" y2="382" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="210" y1="389" x2="230" y2="389" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="216" y1="396" x2="224" y2="396" stroke="#1a1a1a" stroke-width="2"/>
+
   <line x1="380" y1="272" x2="380" y2="328" stroke="#1a1a1a" stroke-width="4"/>
   <line x1="380" y1="282" x2="398" y2="264" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="380" y1="318" x2="398" y2="336" stroke="#1a1a1a" stroke-width="2.5"/>
@@ -34,7 +43,7 @@
   <rect x="386" y="140" width="24" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <line x1="398" y1="108" x2="398" y2="140" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="398" y1="200" x2="398" y2="228" stroke="#1a1a1a" stroke-width="2.5"/>
-  <text x="420" y="176" font-size="13" fill="#1a1a1a">16 kΩ ("163")</text>
+  <text x="420" y="176" font-size="13" fill="#1a1a1a">1.30 kΩ ("12B")</text>
   <line x1="398" y1="228" x2="600" y2="228" stroke="#1a1a1a" stroke-width="2.5"/>
   <polygon points="600,228 586,222 586,234" fill="#1a1a1a"/>
   <text x="608" y="232" font-size="13" fill="#1a1a1a">to controller</text>
@@ -59,7 +68,7 @@
   <line x1="400" y1="481" x2="638" y2="481" stroke="#1a1a1a" stroke-width="2.5"/>
   <rect x="470" y="473" width="60" height="16" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="466" y="466" font-size="13" fill="#1a1a1a">1 kΩ ("01B")</text>
-  <text x="200" y="486" font-size="12.5" fill="#1a1a1a">from controller · 1.5 ms on / off</text>
+  <text x="200" y="470" font-size="12.5" fill="#1a1a1a">from controller · 1.5 ms on / off</text>
 
   <line x1="656" y1="516" x2="656" y2="546" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="640" y1="546" x2="672" y2="546" stroke="#1a1a1a" stroke-width="3"/>
