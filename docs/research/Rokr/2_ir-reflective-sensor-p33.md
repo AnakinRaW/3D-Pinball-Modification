@@ -40,10 +40,10 @@ Four near-zero readings group the points into nets:
 
 | Net | Points on it | Evidence |
 |---|---|---|
-| Pin 1 | Pad D, R1's near terminal | `1 → D` and `1 → R1L` = 0.10 Ω |
+| Pin 1 | Pad D, R1's near terminal | `1 → D` and `1 → R1R` = 0.10 Ω |
 | Pin 2 | Pad A | `2 → A` = 0.10 Ω |
 | Pin 3 | Pad C | `3 → C` = 0.0 Ω |
-| Collector | Pad B, R1's far terminal | `1 → B` and `1 → R1R` both = 1.585 kΩ |
+| Collector | Pad B, R1's far terminal | `1 → B` and `1 → R1L` both = 1.585 kΩ |
 
 That leaves three things to identify.
 
@@ -89,8 +89,8 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 | D → A | 3.3 … 1.5 … OL |
 | D → B | 1.365 V |
 | D → C | 1.077 V |
-| D → R1R | 1.365 V |
-| D → R1L | 0.0 V |
+| D → R1R | 0.0 V |
+| D → R1L | 1.365 V |
 
 ### Diode range, pin to pad
 
@@ -98,7 +98,7 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 |---|---|
 | 1 → A | 1.5 … 3.3 … OL |
 | 1 → B | 1.365 V |
-| 1 → R1R | 1.365 V |
+| 1 → R1L | 1.365 V |
 | 1 → C | 1.078 V |
 | 1 → D | 0.0 V |
 | 2 → A | 0.0 V |
@@ -110,10 +110,10 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 |---|---|
 | 1 → A | 2.4 k … 55 k … undefined |
 | 1 → B | 1.585 kΩ |
-| 1 → R1R | 1.585 kΩ |
+| 1 → R1L | 1.585 kΩ |
 | 1 → C | 18 M … 12 MΩ |
 | 1 → D | 0.10 Ω |
-| 1 → R1L | 0.10 Ω |
+| 1 → R1R | 0.10 Ω |
 | 2 → A | 0.10 Ω |
 | 2 → B | 0.7 M … 60 M … OL |
 | 2 → R1L and R1R | 0.7 M … 60 M … OL |
@@ -139,9 +139,7 @@ Taken on the fully assembled machine while it was running normally. The harness 
 
 ## Discrepancies in the record
 
-Three internal contradictions, each resolvable. None of them changes the topology.
-
-**R1's left and right terminal are swapped in one block.** In the pad-to-pad diode readings, the `B → R1L/R1R` and `D → R1L/R1R` rows are identical (0.0 V / 1.365 V). Both cannot hold: B and D sit at opposite ends of R1, so exactly one of them must read 0.0 V to R1L and the other 0.0 V to R1R. The pin-to-pad resistance block is self-consistent (`1 → R1L` = 0.10 Ω, `1 → R1R` = `1 → B` = 1.585 kΩ) and puts R1L on the Pin 1 / Pad D side. Under that labelling the `D` rows are right and the `B` rows have left and right swapped, which the raw record already flags as possible.
+Two internal contradictions, each resolvable. None of them changes the topology.
 
 **The illumination order is reversed in one row.** `D → A` is recorded as 3.3 … 1.5 … OL and `1 → A` as 1.5 … 3.3 … OL. Pin 1 and Pad D are the same net, so these are the same measurement. More light lowers the phototransistor's collector-emitter resistance and therefore the diode range's displayed voltage, so the monotone order is 1.5 V lit → 3.3 V partly shaded → OL dark: the `1 → A` row is the correct one.
 
