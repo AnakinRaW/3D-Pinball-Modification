@@ -115,19 +115,37 @@ dialog::backdrop{background:rgba(27,30,34,.45)}
 .dlghead h2{font-family:var(--cond);font-size:13px;font-weight:700;margin:0;
   letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
 .dlghead button{margin-left:auto}
-.tbl{overflow:auto;display:grid;gap:3px 4px;align-items:center;font-size:12px;
-  padding:14px 18px 18px;min-height:0}
+.tbl{overflow:auto;display:grid;gap:0;align-items:stretch;font-size:12px;
+  padding:0 18px 18px;min-height:0}
+/* Every cell is one grid item, so a row is eight of them side by side. The rule and the tint go on
+   the cell rather than on a row element, which is what makes both run the full width unbroken. */
+.tbl .c{display:flex;align-items:center;padding:4px 4px;border-bottom:1px solid var(--line);
+  min-width:0}
+.tbl .c.alt{background:var(--rail)}
+.tbl .c.head{position:sticky;top:0;z-index:2;background:var(--panel);
+  border-bottom:1px solid var(--ink-2);padding-top:14px}
+.tbl .c.top{background:var(--shade);border-bottom:2px solid var(--accent)}
+.tbl .c.num{justify-content:flex-end}
+.tbl .c.mid{justify-content:center}
 .tbl b{font-family:var(--cond);font-size:11px;font-weight:700;color:var(--muted);
-  letter-spacing:.03em;position:sticky;top:0;background:var(--panel);padding-bottom:4px}
-.tbl span{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
+  letter-spacing:.03em}
+.tbl em{font-family:var(--cond);font-size:11px;font-style:normal;font-weight:700;
+  color:var(--accent);letter-spacing:.03em}
+.tbl span{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.tbl span.mg{font-weight:600}
+.tbl span.pass{color:var(--pass)}
+.tbl span.warn{color:var(--warn)}
+.tbl span.fail{color:var(--fail)}
+.tbl .all{border-color:var(--accent);color:var(--accent)}
+.dlgfoot{padding:10px 18px;border-top:1px solid var(--line);font-family:var(--mono);
+  font-size:11.5px;color:var(--muted)}
 .tbl input{font-family:var(--mono);font-size:11px;width:100%;padding:2px 3px;
   background:var(--panel);color:var(--ink);border:1px solid var(--line);
   font-variant-numeric:tabular-nums}
 .tbl input.weak{border-color:var(--fail);color:var(--fail)}
 .tbl input[type=text]{text-align:left}
-.tbl select{font-family:var(--mono);font-size:10.5px;width:100%;padding:2px 1px;
-  background:var(--panel);color:var(--ink);border:1px solid var(--line);appearance:none;
-  text-align:center}
+.tbl select{font-family:var(--mono);font-size:10.5px;width:auto;max-width:100%;padding:2px 3px;
+  background:var(--panel);color:var(--ink);border:1px solid var(--line)}
 .tbl select.weak{border-color:var(--fail);color:var(--fail)}
 .ships,select.ships{color:var(--accent);font-weight:700}
 .tbl input.ships{color:var(--accent);font-weight:600}

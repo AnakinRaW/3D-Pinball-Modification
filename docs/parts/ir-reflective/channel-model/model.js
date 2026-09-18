@@ -3,55 +3,55 @@
 // for a phase length or a pull-down the user has not selected.
 //
 // p = {N, R, rcol, sensor, clk, fspi, tovh, jit, vref, vmin, vmax, amb, ambself, mains, mod,
-//      railmv, nconv, D, k, iph, iclr, taumodel, taufix, CH, perMode}
+//      railmv, nconv, D, k, iph, iclr, CH, perMode}
 // bounds = {step, min, max} for the phase length, as the control offers it.
 
 const IRTM = (function () {
 
-  // The two reflective sensors this build has in hand. What separates them here is what their sheets
-  // publish about speed. Sharp plots response time against load resistance, so a pull-down the part
-  // was never characterised at still has a settling figure. Vishay gives the CNY70 no switching
-  // figure of any kind, not a rise time and not a curve, so every tau for it comes off the bench and
-  // the models on offer differ accordingly.
+  // The two reflective sensors this build has in hand. Picking one picks everything that follows from
+  // the part: how fast it settles, what its channel's emitter resistor is, and what that resistor
+  // draws. Nothing about speed is extrapolated from a datasheet any more; tau is a bench reading.
   //
-  //   curve   t_r/t_f against the load resistance in kOhm, microseconds, or null where none is published
+  //   ball    what a ball returns, microamps, measured
+  //   clear   what a clear track returns, microamps, measured
+  //   spread  how far the sheet lets one specimen sit under another, as a ratio
+  //   tau     settling time constant at tauAt, microseconds, measured
+  //   tauAt   the pull-down tau was read at, kOhm
+  //   rled    the channel's emitter resistor, ohms
+  //   iled    what that resistor draws at the worst-case rail, mA
   //   icmax   absolute maximum collector current, mA
   //   vcesat  collector-emitter saturation voltage, V; it comes off the top of the node's range
   //   rcol    the collector load the sensor board carries between the rail and the collector
-  //   models  the settling models the sheet supports, in the order the control offers them
   const SENSORS = {
     gp2s700: {
       name: 'GP2S700HCP', sheet: 'Sharp D3-A02201EN',
-      // read off Figure 6, V_CE = 5 V, at 1, 1.5, 2, 3, 4, 4.7, 5, 6, 8 and 10 kOhm
-      curve: [[1, 51.6], [1.5, 52.1], [2, 56.0], [3, 61.7], [4, 68.5], [4.7, 70.9],
-              [5, 72.1], [6, 77.0], [8, 85.6], [10, 93.7]],
+      // P33 at its installed position over the track, 100 Ohm emitter, 4.7 kOhm pull-down:
+      // 215 mV with a ball and 46.9 mV on a clear track, each less its own dark reading
+      ball: 45.8, clear: 9.2,
+      spread: 6.8,           // I_C 60 to 410 uA at I_F = 4 mA
+      tau: 70, tauAt: 4.7,   // 53 us read on the falling edge, rounded up to the next ten
+      rled: 100, iled: 22.7, // the three stock channels run brighter than the rest
       icmax: 20,
       vcesat: 0,          // the sheet specifies none, so nothing is taken off the ceiling
-      rcol: 1.58,         // the E96 value the rebuilt board carries beside the stock 1.585 kOhm
-      models: ['linear', 'fig6max', 'fig6typ', 'fixed']
+      rcol: 0             // the rebuilt boards take the collector to the rail; the three stock
+                          // boards carry 1.585 kOhm and are set per channel
     },
     cny70: {
       name: 'CNY70', sheet: 'Vishay 83751 Rev. 1.8',
-      curve: null,
+      // sighted through a 5 mm hole, same emitter resistor and pull-down: 860 mV with a ball
+      // and 140 mV on a clear track, each less its own dark reading
+      ball: 182.9, clear: 29.1,
+      spread: 3.3,           // I_C 0.3 mA minimum against the 1.0 mA typical at I_F = 20 mA
+      tau: 70, tauAt: 4.7,   // 20 us read at 91 uA, which is four times a channel's working point,
+                             // so the Sharp's figure is taken until it is read at the right current
+      rled: 220, iled: 10.3,
       icmax: 50,
       vcesat: 0.3,        // max at I_F = 20 mA, I_C = 0.1 mA, d = 0.3 mm
-      rcol: 0,            // nothing on a CNY70 dictates one; the collector goes to the rail
-      models: ['measlin', 'measflat']
+      rcol: 0             // nothing on a CNY70 dictates one; the collector goes to the rail
     }
   };
   const sensorOf = p => SENSORS[p.sensor] || SENSORS.gp2s700;
 
-  // Log-log interpolation along a published curve, held flat outside the points that were read.
-  function curveAt(cv, R) {
-    const lr = Math.log10(Math.max(0.3, R));
-    let a = cv[0], b = cv[cv.length - 1];
-    for (let i = 0; i < cv.length - 1; i++) { if (R >= cv[i][0] && R <= cv[i + 1][0]) { a = cv[i]; b = cv[i + 1]; break; } }
-    if (R < cv[0][0]) { a = cv[0]; b = cv[1]; } if (R > b[0]) { a = cv[cv.length - 2]; b = cv[cv.length - 1]; }
-    const la = Math.log10(a[0]), lb = Math.log10(b[0]);
-    const f = (lr - la) / (lb - la);
-    return Math.exp(Math.log(a[1]) + f * (Math.log(b[1]) - Math.log(a[1])));
-  }
-  const fig6 = R => curveAt(SENSORS.gp2s700.curve, R);
 
   function qtail(z) { // upper tail of the normal, Zelen & Severo
     if (z < 0) return 1 - qtail(-z);
@@ -91,8 +91,7 @@ const IRTM = (function () {
     dark: { room: 0, mod: 0 },
     led: { room: 60, mod: 60 },
     bulb: { room: 250, mod: 10 },
-    day: { room: 500, mod: 0 },
-    sun: { room: 900, mod: 0 }
+    day: { room: 500, mod: 0 }
   };
 
   const START = 10;                              // microseconds the read block's start is quantised to
@@ -116,19 +115,12 @@ const IRTM = (function () {
   // same. Every other E12 value between them would be a resistor nobody stocks for this build.
   const PULLDOWNS = [1.5, 2.2, 4.7];
 
-  // taufix is tau at the pull-down currently selected, so every model that rests on it carries the
-  // measurement to another pull-down by a shape. Which shapes are honest depends on the part. With a
-  // published curve the curve is the shape. Without one there are two, and they bracket the answer:
-  // tau proportional to the load, which is the first-order relation a load resistance against a fixed
-  // capacitance gives, and tau flat, which is what the measurement alone says. The proportional one is
-  // the pessimistic side at a larger pull-down and the optimistic side at a smaller.
+  // Each part brings its own measured tau, read at one pull-down. Carrying it to another goes by the
+  // first-order relation a load against a fixed capacitance gives, tau proportional to R, which is what
+  // figures.py uses for the same sweep.
   function tauOf(p, R) {
-    const m = p.taumodel, s = sensorOf(p);
-    if (!s.curve) return m === 'measflat' ? p.taufix : p.taufix * R / p.R;
-    if (m === 'linear') return 100 * R / 2.2;
-    if (m === 'fig6max') return 100 * (curveAt(s.curve, R) / curveAt(s.curve, 1)) / 2.2;
-    if (m === 'fig6typ') return curveAt(s.curve, R) / 2.2;
-    return p.taufix * (curveAt(s.curve, R) / curveAt(s.curve, p.R));
+    const s = sensorOf(p);
+    return s.tau * R / s.tauAt;
   }
 
   // One pair of currents per sensor, as wired. The block reads them strongest first, which is the only
@@ -178,7 +170,10 @@ const IRTM = (function () {
     // passed a millisecond: at 600 us it runs 1 % high, at 1200 us 5 %, and at the stock board's 3 ms
     // 36 %, where it reports 64 steps against the exact 47. Unbounded growth pushed the optimiser to
     // short phases for a reason that was arithmetic rather than physical.
-    const bus = p.N * 10.3;                      // mA, N emitters at worst case
+    // Each channel's emitter resistor follows its part, so the bus is a sum and not N times one value.
+    const bus = (p.CH && p.CH.length ? p.CH : Array.from({ length: p.N }, () => ({ sensor: p.sensor })))
+      .slice(0, p.N)
+      .reduce((a, c) => a + (SENSORS[c.sensor] || sensorOf(p)).iled, 0);
     // The step is measured, because the module publishes no load regulation and the cable's drop belongs to
     // the installation. What can be predicted is the cable: the bus current against the 0.1 ohm the design
     // bounds it at. The correction is a ratio, so what it leaves is a fraction of the dark reading rather
@@ -219,6 +214,7 @@ const IRTM = (function () {
         steps: st, thr: Amid * f / lsb, full: c.ball * c.R / lsb, mg: noise > 0 ? st / noise : 0,
         ballS: c.ball * c.R * f / lsb, clrS: clr * c.R * f / lsb, perStep: lsb / c.R,
         ceilS: ceilOf(c), icSat: icSatOf(c), icMax: senCh(c).icmax, rcol: rcCh(c), sensor: senCh(c).name,
+        spread: senCh(c).spread || 1,
         sw: tt => 1 - 2 * Math.exp(-tt / c.tau) / (1 + xi)
       };
     });
@@ -271,6 +267,9 @@ const IRTM = (function () {
       flick, noise, refRes, residFrac, ovhCeil, bus, railRel, railStep, railPred, ambTot,
       sens, rcol, head, tight, icWorst, icSat: icWorst.icSat, icMax: icWorst.icMax,
       ceilS: tight.ceilS, atCeil: ambTot + tight.full,
+      // The measurement is one specimen. What the sheet allows under it is what a channel has to
+      // survive, so the ranking is done on that and not on the reading in hand.
+      mgWeak: worst.mg / (worst.spread || 1),
       snr: snrOf(steps, noise), falseEvery, goodMargin, thinMargin, cycle, reads, vHit, vSpare,
       signOK: chans.every(c => c.t > c.tz), fitOK: tfirst > 0, readOK: reads >= p.k,
       perfOK: worst.f >= PERF_MIN, dHyst, relOK: chans.every(c => c.relOK),
@@ -309,6 +308,12 @@ const IRTM = (function () {
     const af = a.sw >= AIM_F, bf = b.sw >= AIM_F;
     if (af !== bf) return af;
     if (!af && Math.abs(a.sw - b.sw) > 1e-9) return a.sw > b.sw;
+    // Then the weakest specimen the detector's sheet allows. It outranks the spare reading because a
+    // missed read is counted and reported while a channel that never clears the noise is silent, and
+    // because the signal is the one thing no amount of firmware gets back.
+    const aw = a.mgWeak >= a.thin, bw = b.mgWeak >= b.thin;
+    if (aw !== bw) return aw;
+    if (!aw && Math.abs(a.mgWeak - b.mgWeak) > 1e-9) return a.mgWeak > b.mgWeak;
     const need = k + 1;                         // the confirmations, plus one in hand
     const ae = a.reads >= need, be = b.reads >= need;
     if (ae !== be) return ae;                   // then catching the ball, which cannot be recovered
@@ -350,7 +355,8 @@ const IRTM = (function () {
       const cand = {
         T, R, kept: R === keepR, fe: Math.min(3.15e9, m.falseEvery), snr: m.snr,
         reads: m.reads, duty: m.duty, steps: m.steps, sw: m.worst.f, worst: m.worst.name,
-        vHit: m.vHit, vSpare: m.vSpare
+        mgWeak: m.mgWeak,
+        vHit: m.vHit, vSpare: m.vSpare, thin: m.thinMargin
       };
       if (betterThan(cand, best, p.k)) best = cand;
     }
@@ -506,7 +512,7 @@ const IRTM = (function () {
 
   return {
     GOOD_S, THIN_S, SELF, SCENES, START, BALL_MM, PERF_MIN, AIM_F, PULLDOWNS, SENSORS,
-    fig6, curveAt, sensorOf, qtail, marginFor, every, snrOf,
+    sensorOf, qtail, marginFor, every, snrOf,
     tauOf, newChannels, chOrder, model, usable, betterThan,
     phaseWindow, bestPullDown, propose, sweep, usableRange, exportDoc
   };

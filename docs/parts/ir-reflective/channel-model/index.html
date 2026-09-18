@@ -68,21 +68,21 @@
          The photocurrents below stay where they are when the sensor changes. Sharp characterises I_C at
          4 mA into an aluminium mirror 4 mm away, Vishay at 20 mA against a white card 0.3 mm away, and
          no scaling carries one condition to the other, so the sheets do not rank the two parts for this
-         job. What the choice does change is the settling models on offer and the collector load.
+         job. What the choice does change is τ, the channel's emitter resistor and what that resistor draws.
     -->
     <div class="ctl"><label>Collector load on the sensor board<b class="tag pick">CHOICE</b></label>
       <div class="seg" id="rcolseg">
         <button type="button" data-v="0">none</button>
         <button type="button" data-v="1.58">1.58 kΩ</button>
       </div></div>
-    <input type="hidden" id="rcol" value="1.58">
+    <input type="hidden" id="rcol" value="0">
     <!--
          The collector load sits between the rail and the collector, the pull-down between the node and
          ground, and the photocurrent runs through both. Only the pull-down's share reaches the
          converter, so the load costs range in proportion: 1.58 kΩ against 4.7 kΩ leaves 75 % of full
-         scale. The rebuilt boards carry it because they are copies of the stock board, which is the
-         only argument for it. It bounds the collector current as well, but so does the pull-down on its
-         own, three orders under either part's maximum.
+         scale. The rebuilt boards therefore carry none, and the setting is here for the three stock
+         boards, which cannot be changed. It bounds the collector current as well, but so does the
+         pull-down on its own, three orders under either part's maximum.
     -->
     <div class="fig"><span>Node ceiling</span><b id="ceil_o"></b></div>
     <div class="fig"><span>Headroom under it</span><b id="head_o"></b></div>
@@ -101,20 +101,9 @@
         </div></div>
       <input type="hidden" id="R" value="4.7">
       <div class="ctl"><label for="iph">Photocurrent a ball returns<b class="tag meas">MEASURED</b></label><output id="iph_o"></output>
-        <input type="range" id="iph" min="10" max="200" step="1" value="50"></div>
+        <input type="range" id="iph" min="5" max="200" step="0.1" value="45.8"></div>
       <div class="ctl"><label for="iclr">Photocurrent a clear track returns<b class="tag meas">MEASURED</b></label><output id="iclr_o"></output>
-        <input type="range" id="iclr" min="0" max="150" step="1" value="10"></div>
-      <div class="ctl"><label for="taumodel">Settling model</label>
-        <select id="taumodel">
-          <option value="linear">Linear with R, from the 100 µs maximum</option>
-          <option value="fig6max">Figure 6 shape, on the 100 µs maximum</option>
-          <option value="fig6typ">Figure 6 as drawn, typical at 5 V</option>
-          <option value="fixed">Measured, fixed value below</option>
-          <option value="measlin">Measured, carried to other pull-downs by R</option>
-          <option value="measflat">Measured, held flat across pull-downs</option>
-        </select></div>
-      <div class="ctl"><label for="taufix">τ at this pull-down<b class="tag meas">MEASURED</b></label><output id="taufix_o"></output>
-        <input type="range" id="taufix" min="10" max="400" step="1" value="62"></div>
+        <input type="range" id="iclr" min="0" max="150" step="0.1" value="9.2"></div>
     </div>
     <div id="perch" hidden>
       <div class="fig"><span>Parts on the board</span><b id="mix_o"></b></div>
@@ -136,7 +125,6 @@
         <option value="led" selected>Lit room, LED lamps</option>
         <option value="bulb">Lit room, incandescent</option>
         <option value="day">Daylight through a window</option>
-        <option value="sun">Sun onto the playfield</option>
       </select></div>
     <div class="fig"><span>Reading on a dark channel</span><b id="amb_o"></b></div>
     <div class="fig"><span>Of that, the machine's own LEDs</span><b id="ambself_o"></b></div>
@@ -184,7 +172,7 @@
     <div class="fig"><span>What the correction leaves</span><b id="railerr_o"></b></div>
     <!--
          The step is a voltage, so it is entered as one. The figure beside it is the supply cable's own
-         drop at this channel count's bus current, 165 mA against the 0.1 ohm the design bounds the cable
+         drop at this channel count's bus current, 202 mA against the 0.1 ohm the design bounds the cable
          at, and it is there so a changed channel count shows up as the two rows disagreeing. The module
          adds its load regulation on top, which Pololu does not publish, which is why the step is measured
          rather than derived.
@@ -210,12 +198,12 @@
     <input type="hidden" id="clk" value="24">
     <input type="hidden" id="vref" value="3.383">
     <!--
-         The rail's two extremes, from the base quantities of the circuit document: 3.150 V with the
+         The rail's two extremes, from the base quantities of the circuit document: 3.146 V with the
          emitter bus on at sixteen channels, 3.449 V with the module at its high corner. The node
          ceiling is taken at the minimum, where V_CE(sat) is the largest share of the rail, and the
          collector current at the maximum.
     -->
-    <input type="hidden" id="vmin" value="3.150">
+    <input type="hidden" id="vmin" value="3.146">
     <input type="hidden" id="vmax" value="3.449">
     <input type="hidden" id="nconv" value="0.32">
     <input type="hidden" id="amb" value="60">
@@ -288,10 +276,11 @@
 </div>
 <dialog id="chdlg">
   <form method="dialog" class="dlghead">
-    <h2>One set of values per sensor</h2>
+    <h2>The sixteen channels</h2>
     <button class="ghost" value="close" type="submit">Close</button>
   </form>
   <div class="tbl" id="chtbl"></div>
+  <div class="dlgfoot" id="chfoot"></div>
 </dialog>
 <script src="model.js"></script>
 <script src="ui.js"></script>

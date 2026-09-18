@@ -8,17 +8,35 @@ const esc = t => String(t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;'
 const f1 = n => n.toFixed(1), f2 = n => n.toFixed(2), f0 = n => Math.round(n);
 
 const IN = ['N', 'tovh', 'jit', 'T', 'D', 'k', 'sensor', 'rcol', 'R', 'iph', 'iclr',
-  'taumodel', 'taufix', 'scene', 'railmv'];
+  'scene', 'railmv'];
 const DEF = {
-  N: 16, tovh: 2, jit: 10, T: 600, D: 3, k: 2, R: 4.7, iph: 50, iclr: 10, vref: 3.383,
-  sensor: 'gp2s700', rcol: 1.58, vmin: 3.150, vmax: 3.449,
-  taumodel: 'linear', taufix: 62, nconv: 0.32, railmv: 41, scene: 'led', amb: 60, ambself: 20,
+  N: 16, tovh: 2, jit: 10, T: 600, D: 3, k: 2, R: 4.7, iph: 45.8, iclr: 9.2, vref: 3.383,
+  sensor: 'gp2s700', rcol: 0, vmin: 3.146, vmax: 3.449,
+  nconv: 0.32, railmv: 41, scene: 'led', amb: 60, ambself: 20,
   mod: 60, mains: 100
 };
-const COLS = [['ball', 'ball µA', 0.1, 1], ['clear', 'clear µA', 0.1, 1],
-  ['R', 'R kΩ', 0.1, 0], ['rcol', 'Rc kΩ', 0.01, 0], ['tau', 'τ µs', 1, 0]];
-// Short enough for a column 40 px wide. The full names and their sheets are in the model.
-const SENS_SHORT = { gp2s700: 'GP2S', cny70: 'CNY70' };
+// The bench reads millivolts at the node, so that is what the table takes. The photocurrent is
+// what the model works in, and the pull-down of that row converts between the two, which also means
+// a changed pull-down moves the millivolts and leaves the current where it is.
+const COLS = [['ball', 'ball mV', 1, 1, 1], ['clear', 'clear mV', 1, 1, 1],
+  ['R', 'R kΩ', 0.1, 0, 0]];
+const shown = (c, col) => col[4] ? +(c[col[0]] * c.R).toFixed(1) : c[col[0]];
+// τ follows the part and the pull-down, so it is shown and never typed.
+const syncTau = c => {
+  const s = IRTM.SENSORS[c.sensor] || IRTM.SENSORS.gp2s700;
+  c.tau = +(s.tau * c.R / s.tauAt).toFixed(1);
+};
+// What a channel is built as. The collector load belongs to the board and not to the part: the
+// three boards out of the stock machine carry 1.585 kOhm and may not be changed, and a rebuilt
+// board takes the collector to the rail whichever detector sits on it.
+// The leaded part the new boards will carry is not chosen yet, so the two characterised parts
+// stand in for it and the board is what the column names.
+const BOARDS = [
+  { key: 'stock', label: 'stock board', sensor: 'gp2s700', rcol: 1.58 },
+  { key: 'new', label: 'new, GP2S', sensor: 'gp2s700', rcol: 0 },
+  { key: 'cny', label: 'new, CNY70', sensor: 'cny70', rcol: 0 },
+];
+const boardOf = c => (BOARDS.find(b => b.sensor === c.sensor && +c.rcol === b.rcol) || BOARDS[1]).key;
 
 let CH = [], perMode = 'all', lastOpt = null;
 
@@ -29,7 +47,7 @@ const params = () => ({
   vref: v('vref'), vmin: v('vmin'), vmax: v('vmax'),
   amb: v('amb'), ambself: v('ambself'), mains: v('mains'), mod: v('mod'),
   railmv: v('railmv'), nconv: v('nconv'), D: v('D'), k: v('k'), T: v('T'),
-  iph: v('iph'), iclr: v('iclr'), taumodel: $('taumodel').value, taufix: v('taufix'),
+  iph: v('iph'), iclr: v('iclr'),
   CH, perMode
 });
 const bounds = () => ({ step: +$('T').step || 1, min: +$('T').min, max: +$('T').max });
@@ -42,14 +60,6 @@ function syncR() {
   [...$('sensorseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === $('sensor').value)));
 }
 
-// A settling model is on offer only where the part's sheet supports it. The GP2S700HCP has a curve of
-// response time against load resistance, so a pull-down it was never characterised at still has a
-// figure. The CNY70 has no switching specification at all, so its models all rest on a bench value.
-function syncModels() {
-  const ok = (IRTM.SENSORS[$('sensor').value] || IRTM.SENSORS.gp2s700).models;
-  [...$('taumodel').options].forEach(o => { o.hidden = !ok.includes(o.value); });
-  if (!ok.includes($('taumodel').value)) $('taumodel').value = ok[0];
-}
 
 function metrics(p, m) {
   const rows = [
@@ -169,7 +179,12 @@ function chanChart(p, m) {
   // drawn where it is close enough to matter, and named in the corner where it is not.
   const reads = Math.max(...ch.map(c => Math.max(c.ballS, need(c))), 1);
   const ceilLo = Math.min(...ch.map(c => c.ceilS));
-  const drawCeil = ceilLo <= reads * 1.6;
+  // The lines below are differences between a lit and a dark reading, so ambient light is not in
+  // them by construction. Where it fills the node instead, the difference stops existing and the
+  // lines are fiction, which the chart has to say rather than leave to the chip above it.
+  const nodeHi = Math.max(...ch.map(c => m.ambTot + c.full));
+  const over = !m.rangeOK;
+  const drawCeil = over || ceilLo <= reads * 1.6;
   const yMax = nice(drawCeil ? Math.max(reads, ceilLo * 1.05) : reads);
   const X = i => L + (N > 1 ? (i / (N - 1)) * pw : pw / 2), Y = st => Tp + (1 - Math.min(st, yMax) / yMax) * ph;
   let g = '';
@@ -204,6 +219,13 @@ function chanChart(p, m) {
     const col = c.mg >= m.goodMargin ? 'var(--pass)' : c.mg >= m.thinMargin ? 'var(--warn)' : 'var(--fail)';
     dots += `<circle cx="${x}" cy="${Y(c.ballS).toFixed(1)}" r="${N > 12 ? 3 : 4}" fill="${col}"/>`;
   });
+  const overL = over
+    ? `<rect x="${L}" y="${Tp}" width="${pw}" height="${Math.max(0, Y(ceilLo) - Tp).toFixed(1)}"`
+      + ` fill="var(--fail)" opacity="0.12"/>`
+      + `<text x="${(L + pw / 2).toFixed(1)}" y="${Tp + 15}" text-anchor="middle" fill="var(--fail)"`
+      + ` font-family="var(--mono)" font-size="11">ambient puts the node at ${Math.round(nodeHi)} steps,`
+      + ` past the ${Math.round(ceilLo)} ceiling: nothing below is reachable</text>`
+    : '';
   let ticks = '';
   ch.forEach(c => {
     const tx = X(c.i).toFixed(1), ty = H - B + 18;
@@ -218,7 +240,7 @@ function chanChart(p, m) {
     <path d="${clrL}" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
     ${marks}
     <path d="${ballL}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-    ${ceilL}
+    ${ceilL}${overL}
     ${dots}${ticks}
     <text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle" fill="var(--muted)" font-family="var(--sans)" font-size="11.5">the sensors, in the order they are read</text>
     <text x="13" y="${Tp + ph / 2}" text-anchor="middle" transform="rotate(-90 13 ${Tp + ph / 2})" fill="var(--ink-2)" font-family="var(--sans)" font-size="11.5">converter steps</text>`;
@@ -322,24 +344,55 @@ function tableRows(p, m) {
   const each = perMode === 'each', t = $('chtbl');
   $('uniform').hidden = each;
   $('perch').hidden = !each;
-  if (!each) { t.dataset.n = ''; if ($('chdlg').open) $('chdlg').close(); return; }
+  if (!each) { t.dataset.n = ''; $('chfoot').textContent = ''; if ($('chdlg').open) $('chdlg').close(); return; }
   const use = CH.slice(0, p.N);
   $('mix_o').textContent = tally(use.map(c => (IRTM.SENSORS[c.sensor] || IRTM.SENSORS.gp2s700).name));
   $('mixrc_o').textContent = tally(use.map(c => (+c.rcol ? c.rcol + ' kΩ' : 'none')));
-  t.style.gridTemplateColumns = 'minmax(90px,1.4fr) minmax(78px,1fr) repeat(5,minmax(66px,1fr))';
+  t.style.gridTemplateColumns = 'minmax(84px,1.2fr) max-content repeat(3,minmax(62px,1fr))'
+    + ' minmax(54px,.7fr) minmax(54px,.7fr) minmax(74px,.9fr)';
   const N = p.N, worstSrc = m.worst ? m.worst.src : -1;
-  let h = '<b>name</b><b>part</b>' + COLS.map(c => `<b>${c[1]}</b>`).join('');
+  // The model reads the channels in its own order and points each one back at the row it came from,
+  // so the margin belongs beside the values that produced it rather than in a chip above the table.
+  const byRow = new Map(m.chans.map(c => [c.src, c]));
+  // A cell is what carries the rule and the tint, so every control sits in one.
+  const cell = (inner, cls) => `<div class="c ${cls || ''}">${inner}</div>`;
+  const part = (i, c, cls) => `<select data-i="${i}" data-f="board" class="${cls || ''}">`
+    + BOARDS.map(b =>
+      `<option value="${b.key}"${b.key === boardOf(c) ? ' selected' : ''}>${b.label}</option>`).join('')
+    + '</select>';
+  let h = cell('<b>name</b>', 'head') + cell('<b>board</b>', 'head')
+    + COLS.map(c => cell(`<b>${c[1]}</b>`, 'head num')).join('')
+    + cell('<b>Rc kΩ</b>', 'head num')
+    + cell('<b>τ µs</b>', 'head num') + cell('<b>margin</b>', 'head mid');
+  // The row on top is the table's own edit: what goes in it goes into every channel below. It is
+  // the shape of a data row, so nothing has to be explained and no button has to be pressed.
+  const a = CH[0] || {};
+  h += cell('<em>all sixteen</em>', 'top') + cell(part('all', a, 'all'), 'top')
+    + COLS.map(col => cell(`<input type="number" data-i="all" data-f="${col[0]}" value="${CH[0] ? shown(a, col) : ''}"`
+      + ` min="0.1" max="4000" step="${col[2]}" class="all">`, 'top')).join('')
+    + cell('', 'top') + cell('', 'top') + cell('', 'top');
+  let weak = 0;
   for (let i = 0; i < N; i++) {
-    const c = CH[i], bad = i === worstSrc;
-    h += `<input type="text" data-i="${i}" data-f="name" value="${esc(c.name)}" maxlength="12"${bad ? ' class="weak"' : ''}>`
-      + `<select data-i="${i}" data-f="sensor"${bad ? ' class="weak"' : ''}>`
-      + Object.keys(IRTM.SENSORS).map(k =>
-        `<option value="${k}"${k === c.sensor ? ' selected' : ''}>${SENS_SHORT[k] || k}</option>`).join('')
-      + '</select>'
-      // the collector load may be 0, which is a board with the collector at the rail
-      + COLS.map(col => `<input type="number" data-i="${i}" data-f="${col[0]}" value="${c[col[0]]}"`
-        + ` min="${col[0] === 'rcol' ? 0 : 0.1}" max="4000" step="${col[2]}" class="${bad ? 'weak' : ''}${col[3] ? ' ships' : ''}">`).join('');
+    const c = CH[i], bad = i === worstSrc, alt = i % 2 ? 'alt' : '';
+    h += cell(`<input type="text" data-i="${i}" data-f="name" value="${esc(c.name)}" maxlength="12"`
+      + `${bad ? ' class="weak"' : ''}>`, alt)
+      + cell(part(i, c, bad ? 'weak' : ''), alt)
+      + COLS.map(col => cell(`<input type="number" data-i="${i}" data-f="${col[0]}" value="${shown(c, col)}"`
+        + ` min="0.1" max="4000" step="${col[2]}"`
+        + ` class="${bad ? 'weak' : ''}${col[3] ? ' ships' : ''}">`, alt)).join('')
+      // the collector load follows the board, so it is shown and never typed
+      + cell(`<span>${+c.rcol ? c.rcol : '–'}</span>`, alt + ' num');
+    const r = byRow.get(i), mg = r ? r.mg : null;
+    const cls = mg === null ? '' : mg >= m.goodMargin ? 'pass' : mg >= m.thinMargin ? 'warn' : 'fail';
+    if (cls === 'warn' || cls === 'fail') weak++;
+    h += cell(`<span>${c.tau}</span>`, alt + ' num')
+      + cell(`<span class="mg ${cls}">${mg === null ? '–' : f1(mg) + ' σ'}</span>`, alt + ' mid');
   }
+  $('chfoot').textContent = weak
+    ? weak + ' of ' + N + ' channels sit under the ' + f1(m.goodMargin) + ' σ target, the weakest '
+      + (m.worst ? m.worst.name + ' at ' + f1(m.worst.mg) + ' σ' : '')
+    : 'every channel clears the ' + f1(m.goodMargin) + ' σ target, the weakest '
+      + (m.worst ? m.worst.name + ' at ' + f1(m.worst.mg) + ' σ' : '');
   if (t.dataset.n !== String(N) || !t.contains(document.activeElement)) { t.innerHTML = h; t.dataset.n = String(N); }
 }
 
@@ -361,9 +414,9 @@ function render() {
   $('jit_o').textContent = p.jit + ' µs';
   $('D_o').textContent = p.D.toFixed(1) + ' ms · ' + (IRTM.BALL_MM / p.D).toFixed(1) + ' m/s';
   $('k_o').textContent = p.k;
-  $('iph_o').textContent = p.iph + ' µA';
-  $('iclr_o').textContent = p.iclr + ' µA';
-  $('taufix_o').textContent = p.taufix + ' µs';
+  // The slider is the photocurrent, the reading beside it is what a meter sees at this pull-down.
+  $('iph_o').textContent = f1(p.iph * p.R) + ' mV at ' + p.R + ' kΩ · ' + p.iph + ' µA';
+  $('iclr_o').textContent = f1(p.iclr * p.R) + ' mV at ' + p.R + ' kΩ · ' + p.iclr + ' µA';
   const tconvNow = p.clk / p.fspi;
   const ceil = (p.T - p.jit - IRTM.tauOf(p, p.R) * Math.LN2) / p.N - tconvNow;
   const over = p.tovh > ceil;
@@ -398,12 +451,39 @@ function render() {
 
 $('chtbl').addEventListener('input', e => {
   const t = e.target, f = t.dataset.f; if (t.tagName !== 'INPUT' && t.tagName !== 'SELECT') return;
-  if (f === 'name') { CH[+t.dataset.i].name = t.value; render(); return; }
-  if (f === 'sensor') { CH[+t.dataset.i].sensor = t.value; render(); return; }
-  const val = parseFloat(t.value);
-  if (!isFinite(val) || val < 0 || (val === 0 && f !== 'rcol')) return;
-  CH[+t.dataset.i][f] = val; render();
+  const all = t.dataset.i === 'all', rows = all ? CH : [CH[+t.dataset.i]];
+  if (f === 'name') { rows[0].name = t.value; render(); return; }
+  if (f === 'board') {
+    // The part's own bench readings come with it, and stay editable: they are the starting point
+    // for a channel, not a property of it.
+    const b = BOARDS.find(x => x.key === t.value) || BOARDS[1];
+    const sen = IRTM.SENSORS[b.sensor] || IRTM.SENSORS.gp2s700;
+    rows.forEach(c => {
+      c.sensor = b.sensor; c.rcol = b.rcol;
+      c.ball = sen.ball; c.clear = sen.clear;
+      syncTau(c);
+    });
+    $('chtbl').dataset.n = '';
+  }
+  else {
+    const val = parseFloat(t.value);
+    if (!isFinite(val) || val < 0 || (val === 0 && f !== 'rcol')) return;
+    const asMv = f === 'ball' || f === 'clear';
+    rows.forEach(c => { c[f] = asMv ? val / c.R : val; if (f === 'R') syncTau(c); });
+    // The pull-down converts the two readings, so moving it moves what they are shown as.
+    if (f === 'R') rows.forEach((c, k) => ['ball', 'clear'].forEach(g => {
+      const el = $('chtbl').querySelector(`[data-f="${g}"][data-i="${all ? k : t.dataset.i}"]`);
+      if (el) el.value = +(c[g] * c.R).toFixed(1);
+    }));
+  }
+  // Rebuilding the table here would take the focus out of the field being typed in, so the rows
+  // below are written straight into the DOM and the next render finds them already right.
+  if (all) $('chtbl').querySelectorAll(`[data-f="${f}"]`).forEach(el => {
+    if (el !== t) el.value = t.value;
+  });
+  render();
 });
+
 
 // Published on claude.ai the viewer's frame cannot start a download itself; the downloads
 // capability mediates it. Opened as a local file there is no window.claude, and the blob link works.
@@ -459,10 +539,6 @@ $('copy').addEventListener('click', async () => {
   setTimeout(() => { b.textContent = 'Copy'; }, 2500);
 });
 
-$('taufix').addEventListener('input', () => {
-  if ($('taumodel').value !== 'fixed') $('taumodel').value = 'fixed';
-});
-
 $('modeseg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   perMode = b.dataset.v;
@@ -476,7 +552,7 @@ $('opench').addEventListener('click', () => $('chdlg').showModal());
 // closing it leaves the values as they were edited, so the page only has to catch up
 $('chdlg').addEventListener('close', render);
 
-['iph', 'iclr', 'taumodel', 'taufix'].forEach(id => $(id).addEventListener('input', () => {
+['iph', 'iclr'].forEach(id => $(id).addEventListener('input', () => {
   if (perMode === 'all') { fillCH(true); $('chtbl').dataset.n = ''; }
 }));
 
@@ -499,8 +575,11 @@ $('rcolseg').addEventListener('click', e => {
 $('sensorseg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   $('sensor').value = b.dataset.v;
-  $('rcol').value = (IRTM.SENSORS[b.dataset.v] || IRTM.SENSORS.gp2s700).rcol;
-  syncModels();
+  const sen = IRTM.SENSORS[b.dataset.v] || IRTM.SENSORS.gp2s700;
+  $('rcol').value = sen.rcol;
+  // the sliders start on what that part returned on the bench, and move from there
+  $('iph').value = sen.ball;
+  $('iclr').value = sen.clear;
   if (perMode === 'all') { fillCH(true); $('chtbl').dataset.n = ''; }
   render();
 });
@@ -509,7 +588,6 @@ IN.forEach(id => $(id).addEventListener('input', render));
 
 $('reset').addEventListener('click', () => {
   Object.entries(DEF).forEach(([k, val]) => { $(k).value = val; });
-  syncModels();
   fillCH(); $('chtbl').dataset.n = '';
   perMode = 'all';
   [...$('modeseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === 'all')));
@@ -523,6 +601,8 @@ try {
     IN.forEach(k => { if (s[k] !== undefined) $(k).value = s[k]; });
     if (Array.isArray(s.ch) && s.ch.length === 16 && s.ch.every(r => r && typeof r.ball === 'number'))
       CH = s.ch.map(r => ({ rcol: +$('rcol').value, sensor: $('sensor').value, ...r }));
+    // a stored row may carry a τ from before its part or its pull-down was last changed
+    CH.forEach(syncTau);
     if (s.mode === 'each' || s.mode === 'all') {
       perMode = s.mode;
       [...$('modeseg').children].forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === perMode)));
@@ -530,6 +610,5 @@ try {
   }
 } catch (e) { }
 
-syncModels();
 if (!CH.length) fillCH();
 render();
