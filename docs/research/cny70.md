@@ -87,7 +87,7 @@ detector dissipation, worst case at half the rail, at V_OUT max
 What the resistor costs is range. The reading is ratiometric, so the divider's share of full scale is the node ceiling in converter steps whatever the rail does, and the rail enters only through V_CEsat, which is the largest share of it at V_OUT min:
 
 ```
-ceiling = 1024 · R_pd / (R_col + R_pd) · (1 − V_CEsat / V_OUT min), V_OUT min = 3.150 V
+ceiling = 1024 · R_pd / (R_col + R_pd) · (1 − V_CEsat / V_OUT min), V_OUT min = 3.146 V
   R_pd 4.7 kΩ, R_col 1.58 kΩ                           = 693 steps
   R_pd 2.2 kΩ, R_col 1.58 kΩ                           = 539 steps
   R_pd 1.5 kΩ, R_col 1.58 kΩ                           = 451 steps
@@ -106,9 +106,41 @@ Taken off the plotted curves in document 83751, which prints no table for either
 | Figure 5, collector current against forward current | the line is close to proportional over the plotted range, so half the 20 mA test current returns roughly half the 1.0 mA typical, about 0.45 mA at 10 mA |
 | Figure 6, collector current against collector-emitter voltage | flat above about 1 V of V_CE at every forward current plotted, with the knee under 0.5 V |
 
-**A full board of CNY70 emitters costs about 9 mA more on the bus.** At 220 Ω from the rail maximum, V_F 1.08 V read at 10 mA gives (3.449 − 1.05) V / 220 Ω = 10.9 mA per channel against the 10.3 mA the design derives for the GP2S700HCP, taking 2 mV/°C off V_F for the 40 °C the sensors are bounded at. Sixteen of them spend 174 mA of the 222.6 mA the emitters are allowed.
+## V_F, measured
+
+2.19 V across a 220 Ω from Pin 3 to ground at a supply read as 3.37 V, LED lit continuously, collector taken straight to Pin 1 without the stock board's 1.585 kΩ. That is 9.95 mA and **V_F = 1.18 V at 10 mA**.
+
+Figure 3 reads 1.08 V there, so the part sits 0.10 V above its own curve. Half of that is the reading error the figure carries on a logarithmic axis, the rest is ordinary spread between samples. A GP2S700HCP measured on the same bench at the same current gave 1.17 V, within 10 mV of the CNY70.
+
+**A full board of CNY70 emitters costs about 2 mA more on the bus.** At 220 Ω from the rail maximum, the measured V_F of 1.18 V gives (3.449 − 1.15) V / 220 Ω = 10.4 mA per channel against the 10.3 mA the design derives for the GP2S700HCP, taking 2 mV/°C off V_F for the 40 °C the sensors are bounded at. Sixteen of them spend 167 mA of the 222.6 mA the emitters are allowed.
 
 **V_CE stays in the flat part of Figure 6.** At 50 µA through 1.58 kΩ and 4.7 kΩ the device keeps 3.3 − 0.31 = 2.99 V, and Figure 6 is flat from about 1 V upward.
+
+## Settling, measured
+
+Free on the bench facing the ceiling, supply **3.37 V**, 220 Ω in the emitter line, **4.7 kΩ** pull-down, collector straight to the rail, falling edge. The supply and the pull-down are this design's, not a datasheet condition.
+
+| | |
+|---|---|
+| Amplitude | 428 mV down to 128 mV |
+| τ | about 20 µs |
+
+![Falling edge on the bench, collector at the rail. Rigol DS1202Z-E, 10 µs/div, 100 mV/div, cursors at 428.0 and 128.0 mV, 68.40 µs apart. A single clean edge, no bounce.](cny70_swing_measure.jpg)
+
+## Ball signal, measured
+
+Sighted through a bore **5 mm across and 3.9 mm deep**, the playfield's own thickness, with the ball sitting on the hole. **100 Ω** in the emitter line, **4.7 kΩ** pull-down, collector at the rail, otherwise the arrangement measurement B uses.
+
+| | clear track | ball |
+|---|---|---|
+| LED on | 140 mV | 860 mV |
+| LED off | 3 mV | 0.3 mV |
+
+The signal is **722.7 mV**, 153.8 µA through the 4.7 kΩ. A GP2S700HCP at the same emitter resistor and pull-down returned 171.9 mV, so through that hole the CNY70 gives **4.2× the signal**. Its 860 mV sits well inside the rail its collector hangs on, where a GP2S700HCP meets the 2.47 V ceiling of its 1.585 kΩ collector load.
+
+The 20 µs were taken at 91 µA of collector current, the 428 mV across the 4.7 kΩ. An installed GP2S700HCP returns 23 µA, and behind a bore the CNY70 would sit at some tens of microamps as well. A phototransistor gets faster the more current it carries, so installed it settles more slowly than 20 µs, and by how much nobody has measured. Its 128 mV dark reading comes from the same brightness and does not compare with the 2.1 mV of the stock board.
+
+The ball signal above is unaffected, that one went through a real bore.
 
 ## What the bench has to settle
 
