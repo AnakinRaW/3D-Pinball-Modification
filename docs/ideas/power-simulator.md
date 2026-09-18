@@ -6,9 +6,9 @@ Figures from the [lighting design](../parts/lighting/design.md) and [`research/R
 
 | Fixed | |
 |---|---|
-| Teensy and logic | 0.15 A |
+| Teensy and logic | 0.30 A |
 | Audio at full output | 0.45 A |
-| Supply | 5 V, 6 A |
+| Supply | 5 V, 3 A |
 
 | Varied | |
 |---|---|
