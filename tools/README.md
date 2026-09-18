@@ -3,9 +3,32 @@
 | File | Contents |
 |---|---|
 | [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them |
+| [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
 
 Python 3, standard library only, no build step.
+
+## svgcheck
+
+figcheck compares the values in a drawing. Whether the drawing can be read is a different question, and a label that runs off the board still renders, still diffs cleanly and still carries the right number.
+
+```
+python tools/svgcheck.py                       every SVG under docs/
+python tools/svgcheck.py path/to/one.svg ...   only those
+python tools/svgcheck.py --slack 4             a wider tolerance
+```
+
+What it reports:
+
+| | |
+|---|---|
+| `clipped` | the label leaves the viewBox, so part of it is cut off |
+| `overruns` | the label starts inside a rectangle and ends outside it, which is what a board outline or a module block does to a caption |
+| `overlap` | two labels sit on the same spot |
+| `on a <shape>` | the label sits on a wire, a symbol or a pad instead of beside it |
+| `clips` | two boxes cross and neither holds the other, with one of them an outline. A filled box over a filled box passes, since a mechanical sketch stacks parts on purpose |
+
+Widths are estimated from character classes for a sans-serif face, not measured from a font, so the boxes are approximate and the tolerance is two units by default. A report is a place to look, not a verdict, and that is why this one stays out of CI where figcheck runs. Rotated labels are skipped, because an upright rectangle does not describe them.
 
 ## figcheck
 
@@ -16,6 +39,14 @@ python tools/figcheck.py docs/parts/ir-reflective/figures.py --sheets
 ```
 
 Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and metre. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
+
+Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing anchoring it, so when the model moves under it nothing notices, which is how a bench current stayed at 192 mA after it had become 233 mA. What a document states and the model does not compute is declared as an aside, with the reason:
+
+```python
+MODEL.aside("2.54 mm", "the connector pitch")
+```
+
+An aside is a quoted datasheet row, a package, a pitch, a plain count, or a figure the model already holds at another unit. Where the reason reads "derived in prose", the entry is a debt: rule 15 wants that figure in the model, and the list is where it is visible until it gets there.
 
 A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries.
 

@@ -337,6 +337,17 @@ class Model:
         self.invariants: list = []
         self.curves: list = []
         self.unlinted: list = []
+        self.asides: list = []
+
+    def aside(self, text: str, why: str):
+        """A number the prose states that the model does not compute.
+
+        A quoted datasheet row, a package pitch, a bare count. Every other
+        number in the prose has to be a declared quantity, which is what keeps
+        a figure from going stale where no block or table holds it: the value
+        stops matching, and nothing else would have said so.
+        """
+        self.asides.append((text.strip(), why))
 
     # -- declaration -----------------------------------------------------
     def _add(self, f: Fig):
@@ -812,7 +823,24 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
         rep.error(f"{_rel(t.doc)}:{t.line} carries {t.text} and no "
                   f"declared quantity has that value: a stale number, or a figure "
                   f"the model is missing", kind="orphan")
-    return refs
+
+    # The same question for prose. A figure outside a block or a table has
+    # nothing anchoring it, so when the model moves under it nothing notices,
+    # which is how a bench current stayed at 192 mA after it became 233 mA.
+    allowed = {a for a, _ in model.asides}
+    loose_refs = 0
+    for t in tokens:
+        if t.strict or t.claimed_by or t.text.strip() in allowed:
+            continue
+        same = [(k, v) for k, v in values if v.d == t.value.d]
+        if any(abs(v - t.value) <= Q.of(t.precision, t.unit) for _, v in same):
+            loose_refs += 1
+            continue
+        rep.error(f"{_rel(t.doc)}:{t.line} states {t.text} in prose and no "
+                  f"declared quantity has that value: a stale number, a figure "
+                  f"the model is missing, or an aside the model has to name",
+                  kind="prose")
+    return refs, loose_refs
 
 
 DATA_FIG_RE = re.compile(r'<(\w+)\b([^>]*\bdata-fig="([^"]+)"[^>]*)>([^<]*)<')
@@ -1441,10 +1469,14 @@ def main(argv=None):
     _status(loose == loosely, "figures named in prose",
             f"{loose} of {loosely} appear in the section that mentions them")
 
-    refs = pass_orphans(model, tokens, rep)
+    refs, loose_refs = pass_orphans(model, tokens, rep)
     orphans = rep.count("orphan")
     _status(orphans == 0, "every number accounted for",
             f"{strict} in blocks and tables, {orphans} from nowhere")
+    stray = rep.count("prose")
+    _status(stray == 0, "every number in prose too",
+            f"{loose_refs} carry a quantity, {len(model.asides)} are named asides, "
+            f"{stray} match nothing")
 
     if model.drawings:
         keyed, loose_svg = pass_drawings(model, rep)

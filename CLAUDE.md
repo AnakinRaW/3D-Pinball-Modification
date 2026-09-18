@@ -58,6 +58,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | | |
 |---|---|
 | `python tools/figcheck.py docs/parts/<subsystem>/figures.py --sheets` | Recomputes every figure a subsystem derives and checks its documents and its SVGs against them. `ir-reflective` is the only model so far. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the ten checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs the full set over every `docs/parts/*/figures.py` on each push touching `docs/`, `firmware/` or `tools/` |
+| `… ` prose pass | Every number in the prose, not only the ones in blocks and tables, is matched against every declared quantity with its unit converted. What the model does not compute is declared in it as `MODEL.aside(text, why)`, which is what stops a figure going stale where nothing anchors it |
 | `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a declaration's `group` and `section` are written; guessing them wastes a run |
 | `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |
 | `… --provenance` | Every input by kind, each with its source. `graph` is a reading off a plotted curve, which no text search can confirm |
@@ -66,6 +67,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --base <ref>` | The ref the stale-number report diffs against. CI passes the pull request's base |
 | `… --write` | Writes the model's figures into the document and the SVGs, so a figure is typed in the model only. A bound goes in on the side that keeps it true, and a figure the writer cannot place is reported rather than guessed |
 | `… --write-sums` | Records the datasheet checksums after a datasheet is added |
+| `python tools/svgcheck.py` | Measures every label in every drawing under `docs/` and reports the ones that leave the viewBox, leave the box they sit in, or land on another label, and it reports two boxes that cross where one of them is an outline. figcheck checks what a drawing says, this checks whether it can be read. **Run it after moving or adding any text or any box in an SVG.** It stays out of CI: widths are estimated from character classes rather than measured from a font, so a report is a place to look and not a verdict |
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
 
 No build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
