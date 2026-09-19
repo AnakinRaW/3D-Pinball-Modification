@@ -84,6 +84,7 @@ dec("c_ref", 22, "µF", src="C6, printed value")
 dec("c_entry", 22, "µF", src="C5, printed value")
 dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin")
 dec("t_phase", 600, "µs", src="the phase, sitting on the dwell bound derived below")
+dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initialisations, the stock machine's own half period")
 dec("v_mod_nom", 3.3, "V", group="V_OUT", section=BASE,
     stated=True, src="the D24V5F3 variant chosen for the 3.3 V rail")
 dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
@@ -1610,6 +1611,20 @@ def _(k_confirm):
     return 2 * k_confirm.raw + 1
 
 
+@fig("v_hit", "m/s", stated=False,
+     falls_with=["t_phase", "k_confirm"],
+     rises_with=["ball_diameter"])
+def _(ball_diameter, phases_per_two_values, t_phase):
+    return ball_diameter / (phases_per_two_values * t_phase)
+
+
+@fig("v_hit_fallback", "m/s", stated=False,
+     falls_with=["t_phase_fallback", "k_confirm"],
+     rises_with=["ball_diameter"])
+def _(ball_diameter, phases_per_two_values, t_phase_fallback):
+    return ball_diameter / (phases_per_two_values * t_phase_fallback)
+
+
 @fig("knob_firmware_bound", "µs", group="phase", section=KNOB,
      prints="down")
 def _(t_phase, tau_ln2, budget_grain):
@@ -1870,8 +1885,6 @@ for _text, _why in [
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
     ("270 ns", "t_CSH of DS21295D, the chip-select high time"),
     ("150 MHz", "the RT1062 peripheral clock the SPI divides from"),
-    ("22 kΩ", "the RT1062's internal pull-up, from the reference manual"),
-    ("3.25 V", "what that pull-up lands an isolator input at"),
 
     # a package, a pitch, a count: not a measured quantity at all
     ("0805", "the resistor package, a name rather than a value"),
@@ -1895,8 +1908,6 @@ for _text, _why in [
     ("7.35 Ω", "derived in prose: the source resistance behind the machine's 5 V"),
     ("2.98 V", "derived in prose: the node ceiling of the rejected Design A"),
     ("19.78 µs", "derived in prose: a conversion and its overhead, in the firmware note"),
-    ("11.4 steps", "derived in prose: the distance from a ball to the threshold"),
     ("2.6 ms", "derived in prose: five time constants of the reference filter"),
-    ("517 µs", "derived in prose: one time constant of it"),
 ]:
     MODEL.aside(_text, _why)

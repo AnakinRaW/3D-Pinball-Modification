@@ -25,7 +25,7 @@
 | The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
 | SPI1, by consequence | Sensors. With SPI reserved, the next SPI device lands on SPI1, which the display reservation below now holds |
 | 10 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 11, 12, 13, 29, 36, 37. Every pin in the allocation is PWM-capable |
-| FlexPWM3 submodule 1, as a free-running timer | Sensors, pin 29, which generates the LED pulse in hardware at the phase frequency the driver sets. Pin 28 sits on the same submodule and shares that frequency, so it can still serve as a plain pin but not as a PWM output at a rate of its own |
+| FlexPWM3.1, as a free-running timer | Sensors, pin 29, which generates the LED pulse in hardware at the phase frequency the driver sets. Pin 28 sits on the same submodule and shares that frequency, so it can still serve as a plain pin but not as a PWM output at a rate of its own |
 
 ## Reserved
 
