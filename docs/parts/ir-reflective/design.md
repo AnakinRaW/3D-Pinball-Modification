@@ -166,9 +166,9 @@ The driver is a state machine, ticked from a timer. That tick is what keeps the 
 
 Every channel is read as late in the phase as it can be. The sensor is still settling after the LED switches, so a later reading carries more signal. The driver knows how many channels are fitted, and it places the read block to end with the phase at initialisation. Reading must be completed at the phase's end and must not extend into the next phase. Additionally, the read block must not start before `τ · ln 2` into the phase, where τ is the settling time constant of the sensor, because until then a channel still carries more of the previous phase than of this one.
 
-The stock machine bounds the phase from above. Its emitter pulses with a measured 3 ms period, and it needs both windows of that period to tell a ball from ambient light, so a ball it catches stays over the sensor for at least one full period.
+The stock machine limits how long a phase may be. Its emitter pulses with a measured 3 ms period, and it needs both windows of that period to tell a ball from ambient light, so a ball it catches stays over the sensor for at least one full period.
 
-The driver is responsible to set an appropriate phase period depending on the installed hardware (that is channels and their resistors) and weighting sensor settlement and noise elimination.
+The driver is responsible to set an appropriate phase length depending on the installed hardware (that is channels and their resistors) and weighting sensor settlement and noise elimination.
 
 Sensors differ, either by their collector current or their assembly of the playfield. Thus, one channel can be stronger or weaker than the others. The driver sorts channel reading from strongest first to weakest channel last.
 

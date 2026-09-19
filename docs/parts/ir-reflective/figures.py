@@ -70,7 +70,7 @@ dec("n_eight", 8, "", src="eight positions, one converter fitted")
 dec("budget_grain", 10, "µs", src="the step the firmware rounds the read block up to, so a phase holds whole tens")
 dec("n_contacts", 4, "", src="two connectors on the J-PWR cable, each with a contact on both conductors")
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the acquisition window is tested against")
-dec("phases_per_two_values", 5, "", src="two values span five phases: a value spans three and consecutive values share the middle one")
+dec("k_confirm", 2, "", src="readings in a row a hit has to survive before a ball is reported")
 dec("r_led", 220, "Ω", src="E12 value inside the knob bounds derived below")
 dec("r_led_sharp", 100, "Ω", src="the three stock channels, set from the measured ball signal of 27 converter steps at 220 Ω, research/Rokr/2_ir-reflective-sensor-p33.md")
 dec("r_pd", 4.7, "kΩ", src="E12 value inside the knob bounds derived below")
@@ -122,7 +122,7 @@ asm("f_c_pess", 20, "kHz", src="pessimistic reading of the module's crossover, a
     "the 75 kHz of the FN8373.2 worked example")
 asm("f_c_worst", 10, "kHz", src="the crossover the module's own capacitance is quoted at")
 asm("t_ovh", 2, "µs", src="reserved per conversion for the firmware's own overhead")
-asm("t_jitter", 10, "µs", src="reserved for the timer's start jitter")
+asm("t_jitter", 10, "µs", src="reserve kept at the end of the phase, sized by the worst case for a trigger that fires late")
 asm("stray_dout", 15, "pF", src="stray at the ADC-DOUT net")
 asm("stray_miso", 20, "pF", src="stray at the MISO conductor and the Teensy pin")
 asm("derate", 50, "%", src="ceramic capacitance kept under DC bias, as FN8373.2 itself "
@@ -152,8 +152,8 @@ msr("r_col", 1.585, "kΩ", src="the collector load on the stock P33 sensor board
     "with a meter, research/Rokr/2_ir-reflective-sensor-p33.md")
 msr("dark_reading", 3.8, "mV", src="bench, measurement B at the installed position with the emitter dark and the track clear, research/Rokr/2_ir-reflective-sensor-p33.md")
 msr("tau_sensor", 70, "µs", src="bench, falling edge at the 4.7 kΩ pull-down with a ball on the track: 53 µs read, rounded up to the next ten because a larger τ is the safe side")
-msr("dwell", 3, "ms", src="the stock machine's emitter period; it needs both windows of "
-    "that period, so a ball it catches dwells at least one full period")
+asm("dwell", 3, "ms", src="estimated from the stock machine's measured emitter period: it "
+    "needs both windows of that period, so a ball it catches dwells at least one full period")
 msr("sag_three_coils", 3.75, "V", src="the machine's 5 V with three bumper coils firing "
     "and a poor supply cable, research/Rokr/3_bumper-control.md")
 msr("vf_diode_range", 1.082, "V", src="the stock board read in a meter's diode range, "
@@ -1164,10 +1164,10 @@ def _(tau_sensor):
 
 
 @fig("channels_the_phase_holds", "", stated=False)
-def _(t_phase, t_conversion, t_ovh, tau_ln2, budget_grain):
+def _(t_phase, t_conversion, t_ovh, tau_ln2, t_jitter, budget_grain):
     grain, n = budget_grain.to("µs"), 1
     while ceil_to((n + 1) * (t_conversion + t_ovh), "µs", grain) \
-            + tau_ln2 <= t_phase:
+            + tau_ln2 + t_jitter <= t_phase:
         n += 1
     return Q(n)
 
@@ -1604,6 +1604,12 @@ def _(budget_16, tau_ln2):
     return budget_16 + tau_ln2
 
 
+@fig("phases_per_two_values", "", stated=False,
+     rises_with=["k_confirm"])
+def _(k_confirm):
+    return 2 * k_confirm.raw + 1
+
+
 @fig("knob_firmware_bound", "µs", group="phase", section=KNOB,
      prints="down")
 def _(t_phase, tau_ln2, budget_grain):
@@ -1620,7 +1626,7 @@ def _(knob_firmware_bound, n_channels, t_conversion):
 
 @fig("knob_five_at_750", "ms", group="phase", section=KNOB)
 def _(phase_alt, phases_per_two_values):
-    return phases_per_two_values.raw * phase_alt
+    return phases_per_two_values * phase_alt
 
 
 # one standard value inside each of those walls
