@@ -99,6 +99,12 @@ Pin 23 carries the only CAN1 RX, so I²S1 and CAN1 cannot coexist.
 
 Source: [PaulStoffregen/Audio, `output_i2s.cpp`](https://github.com/PaulStoffregen/Audio/blob/master/output_i2s.cpp), the library's own source.
 
+### PWM pins share a timer
+
+PJRC names the timer behind each PWM pin as `FlexPWM<n>.<m>`, where `<m>` is the submodule inside FlexPWM`<n>`, and the mapping is fixed in the chip: pins 28 and 29 are `FlexPWM3.1`. "PWM pins common to each timer always have the same frequency", so one pin's frequency is every pin's frequency on that submodule.
+
+Source: [PJRC, Pulse Width and Tone](https://www.pjrc.com/teensy/td_pulse.html).
+
 ## Sources
 
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html): specifications and the 5 V tolerance warnings
