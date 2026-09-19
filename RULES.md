@@ -89,7 +89,7 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 - **`docs/parts-list.md`** — one row per part: reference designator, short name, quantity, one-line description, spec link, supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no notes exist yet. Every part must be findable from the list. Specifications, datasheet figures and rationale go in the linked document.
 - **Sub-directory `README.md` files** — what a repository visitor finds in the folder. Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
 - **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
-- **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file.
+- **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives, the pin number stands in this file alone, so a re-allocation costs no edit there either.
 - **Schematic SVGs in `docs/`** — where a part's type designation depends on its package, the diagram names both the through-hole and the SMD type in a variants table. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
   Both variants describe **one** circuit: same topology, same values, same netlist. A build that would need a different value or a different topology is not a variant but a second design, and is documented separately. Package-dependent figures — power rating, thermal resistance, DC-bias capacitance loss, R_DS(on) — are verified for each named variant before it is listed.
@@ -123,7 +123,14 @@ Consistency with a previous answer is not evidence that the previous answer was 
 
 ## 10. Writing style
 
-Applies to documentation, commit messages and conversation alike. Say a thing once and move on.
+Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a licence to write a fact in fewer words than it needs.
+
+**A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
+
+- **Full sentences.** A bold lead, a paragraph opener and the line that carries into a table have a subject and a verb. "From above, the dwell." is a label.
+- **One claim to a sentence.** A sentence holding a claim, the mechanism behind it and what follows from it is split into three.
+- **A term is explained where it first appears**, in ordinary words, and named after the explanation. A definition that arrives a section later has already lost the reader.
+- **A name out of a datasheet or a peripheral is translated.** What the thing does is written in plain words, and the vendor's name stands beside it where the firmware needs to address it.
 
 Banned:
 
@@ -152,7 +159,7 @@ Prefer the table or the link over a paragraph introducing the table or the link.
 
 **Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
 
-The explanations rule 2 asks for — naming the failure mode, spelling out what destroys a part — belong in **conversation**, not in the repository's documents. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
+The explanations rule 2 asks for, naming the failure mode, spelling out what destroys a part, belong in **conversation**, not in the repository's documents. A document's own terms and the mechanism it describes are not such an explanation and are written out where they first appear. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
 
 ## 11. Research and sourcing
 
