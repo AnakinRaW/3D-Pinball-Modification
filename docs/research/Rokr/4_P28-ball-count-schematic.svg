@@ -1,0 +1,71 @@
+<svg viewBox="0 0 830 500" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="830" height="500" fill="#ffffff"/>
+  <text x="30" y="36" font-size="18" font-weight="700" fill="#1a1a1a">P28, ball count board</text>
+  <text x="30" y="58" font-size="13" fill="#666">Six amber LEDs on one common cathode, and no other part on the board</text>
+  <circle cx="230" cy="140" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="145" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 1 · anode</text>
+  <line x1="236" y1="140" x2="420" y2="140" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,128 420,152 446,140" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="128" x2="450" y2="152" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="140" x2="560" y2="140" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="140" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="124" x2="442" y2="112" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,112 433,114 437,119" fill="#e67e22"/>
+  <circle cx="230" cy="180" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="185" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 2 · anode</text>
+  <line x1="236" y1="180" x2="420" y2="180" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,168 420,192 446,180" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="168" x2="450" y2="192" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="180" x2="560" y2="180" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="180" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="164" x2="442" y2="152" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,152 433,154 437,159" fill="#e67e22"/>
+  <circle cx="230" cy="220" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="225" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 3 · anode</text>
+  <line x1="236" y1="220" x2="420" y2="220" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,208 420,232 446,220" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="208" x2="450" y2="232" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="220" x2="560" y2="220" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="220" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="204" x2="442" y2="192" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,192 433,194 437,199" fill="#e67e22"/>
+  <circle cx="230" cy="260" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="265" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 4 · anode</text>
+  <line x1="236" y1="260" x2="420" y2="260" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,248 420,272 446,260" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="248" x2="450" y2="272" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="260" x2="560" y2="260" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="260" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="244" x2="442" y2="232" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,232 433,234 437,239" fill="#e67e22"/>
+  <circle cx="230" cy="300" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="305" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 5 · anode</text>
+  <line x1="236" y1="300" x2="420" y2="300" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,288 420,312 446,300" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="288" x2="450" y2="312" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="300" x2="560" y2="300" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="300" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="284" x2="442" y2="272" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,272 433,274 437,279" fill="#e67e22"/>
+  <circle cx="230" cy="340" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="214" y="345" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">Pin 6 · anode</text>
+  <line x1="236" y1="340" x2="420" y2="340" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="420,328 420,352 446,340" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="450" y1="328" x2="450" y2="352" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="450" y1="340" x2="560" y2="340" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="560" cy="340" r="4" fill="#2c3e50"/>
+  <line x1="428" y1="324" x2="442" y2="312" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="442,312 433,314 437,319" fill="#e67e22"/>
+  <line x1="560" y1="140" x2="560" y2="410" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="560" y1="410" x2="236" y2="410" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="230" cy="410" r="6" fill="#2c3e50"/>
+  <text x="214" y="415" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">Pin 7 · common cathode</text>
+  <text x="600" y="232" font-size="12.5" fill="#666">1.831 V across each LED in the</text>
+  <text x="600" y="250" font-size="12.5" fill="#666">diode range, at a test current of</text>
+  <text x="600" y="268" font-size="12.5" fill="#666">about 0.86 mA.</text>
+  <text x="600" y="300" font-size="12.5" fill="#666">Every other pin pair reads open,</text>
+  <text x="600" y="318" font-size="12.5" fill="#666">in the diode range as well as in</text>
+  <text x="600" y="336" font-size="12.5" fill="#666">the resistance range.</text>
+  <text x="30" y="462" font-size="12.5" fill="#666">No series resistor sits on the board. Whatever drives the anodes carries the current limiting.</text>
+  <text x="30" y="482" font-size="12.5" fill="#666">Pin 7 returns all six currents at once.</text>
+</svg>
