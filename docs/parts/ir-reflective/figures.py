@@ -19,7 +19,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("ir-reflective", HERE / "design.md",
               section=None, until="## Sources",
               drawings=[HERE / "ir-sensor-mainboard.svg",
-                        HERE / "pulsed-schematic.svg"],
+                        HERE / "pulsed-schematic.svg",
+                        HERE / "mainboard-placement.svg"],
               documents=[HERE.parents[2] / "firmware" / "ir-sensing.md"])
 
 def _to_printed(q, unit, decimals):
@@ -48,13 +49,13 @@ IFIXED = "I_fixed, the board's draw beside the emitters and the channel nodes"
 DISS = "Dissipation, one line per part"
 R220 = "220 Ω, LED series resistor"
 DROOP = "Phase-start droop"
-CONST = "The constant is measured, not derived"
+CONST = "Nothing scales the dark reading"
 CONV = "The converter, what the part has to do"
 ACQ = "Acquisition, and why no capacitor sits at a converter input"
 READ = "The read block and the phase"
 GATE = "2 kΩ, gate resistor"
 PD = "4.7 kΩ, signal pull-down"
-PCT47 = "The 47 % is accepted, not fixed by a longer phase"
+PCT96 = "The first read carries 96 % of the swing"
 PIN1 = "Why Pin 1 needs no external resistor"
 KNOB = "Bounds on the adjustment knobs"
 SWEEP = "The pull-down's upper bound"
@@ -71,6 +72,7 @@ dec("n_contacts", 4, "", src="two connectors on the J-PWR cable, each with a con
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the acquisition window is tested against")
 dec("phases_per_two_values", 5, "", src="two values span five phases: a value spans three and consecutive values share the middle one")
 dec("r_led", 220, "Ω", src="E12 value inside the knob bounds derived below")
+dec("r_led_sharp", 100, "Ω", src="the three stock channels, set from the measured ball signal of 27 converter steps at 220 Ω, research/Rokr/2_ir-reflective-sensor-p33.md")
 dec("r_pd", 4.7, "kΩ", src="E12 value inside the knob bounds derived below")
 dec("r_gate", 2, "kΩ", src="R33, E12 value inside the gate bounds")
 dec("r_gate_pd", 100, "kΩ", src="R35, E12 value inside the gate bounds")
@@ -90,7 +92,6 @@ dec("bits", 10, "", src="the MCP3008's resolution")
 dec("i_teensy_3v3", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V rail "
     "available to external circuits")
 dec("r_led_e12_below", 47, "Ω", src="the E12 value above the single-channel bound")
-dec("r_led_alt_low", 100, "Ω", src="one standard value above the single-channel bound")
 dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterising point")
 dec("r_pd_alt", 2.2, "kΩ", src="one standard value, twice the resolution floor")
 dec("r_pd_alt_high", 10, "kΩ", src="the pull-down one decade up, weighed in the "
@@ -107,12 +108,13 @@ dec("r_led_e12_0805", 82, "Ω", src="the E12 value an 0805 carries at half its r
 # ===========================================================================
 asm("t_a", 40, "°C", group="T_A", section=BASE, stated=True,
     src="an open frame with no heat source nearby, on a hot day")
-asm("i_photo", 50, "µA", src="the ball signal; measurement B replaces it")
+msr("i_photo", 36.6, "µA", src="bench, measurement B at the installed position with 100 Ω in the emitter line: 171.9 mV across the 4.7 kΩ, from 215 mV with a ball against 46.9 mV on a clear track, each minus its own dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
 asm("rds_irl_est", 0.1, "Ω", src="an estimate above the 4.0 V figure, since the "
     "IRL540N specifies nothing at 3.3 V")
 asm("cable_r", 0.1, "Ω", src="the round build figure for the J-PWR cable; it costs "
     "0.2 mV more than the allowance, inside the millivolt the rail is printed at")
-dec("cable_drop_bound", 18, "mV", group="V_OUT", section=BASE, stated=True,
+dec("cable_drop_bound", 22, "mV", group="V_OUT", section=BASE, stated=True,
+    label="bounded at",
     src="the drop the rail minimum leaves for the cable, from which the 0.1 Ω follows")
 asm("contact_r", 20, "mΩ", src="one crimped 2.54 mm contact")
 asm("awg28_per_m", 0.20, "Ω", src="round figure for 28 AWG per metre, one conductor")
@@ -143,8 +145,13 @@ asm("esr_electrolytic", 2, "Ω", src="the ESR an aluminium electrolytic would br
 # ===========================================================================
 # measured on the stock machine
 # ===========================================================================
+dec("r_col_new", 0, "kΩ", src="the new boards take the collector straight to the rail. The stock "
+    "board's 1.585 kΩ limits the collector to 549 µA where the part allows 20 mA, so it limits "
+    "nothing any candidate needs limited, and it costs a third of the node's range")
 msr("r_col", 1.585, "kΩ", src="the collector load on the stock P33 sensor board, read "
     "with a meter, research/Rokr/2_ir-reflective-sensor-p33.md")
+msr("dark_reading", 3.8, "mV", src="bench, measurement B at the installed position with the emitter dark and the track clear, research/Rokr/2_ir-reflective-sensor-p33.md")
+msr("tau_sensor", 70, "µs", src="bench, falling edge at the 4.7 kΩ pull-down with a ball on the track: 53 µs read, rounded up to the next ten because a larger τ is the safe side")
 msr("dwell", 3, "ms", src="the stock machine's emitter period; it needs both windows of "
     "that period, so a ball it catches dwells at least one full period")
 msr("sag_three_coils", 3.75, "V", src="the machine's 5 V with three bumper coils firing "
@@ -213,6 +220,14 @@ ds("vf_table_typ", 1.2, "V", src="GP2S700HCP D3-A02201EN, V_F typical at I_F = 2
    sheet=SENSOR)
 ds("i_f_max", 50, "mA", src="GP2S700HCP D3-A02201EN, absolute maximum forward current",
    sheet=SENSOR)
+
+# Figure 1 holds 50 mA flat to 25 °C and falls straight to 10 mA at 85 °C, so the
+# rating the ratings table prints is the one that applies below the knee only.
+_F1 = "GP2S700HCP D3-A02201EN Figure 1, I_F against ambient temperature"
+gr("i_f_knee", 50, "mA", src=_F1 + ", where the flat part ends", sheet=SENSOR)
+gr("i_f_knee_at", 25, "°C", src=_F1 + ", the temperature axis", sheet=SENSOR)
+gr("i_f_end", 10, "mA", src=_F1 + ", where the falling line ends", sheet=SENSOR)
+gr("i_f_end_at", 85, "°C", src=_F1 + ", the temperature axis", sheet=SENSOR)
 ds("i_c_abs_max", 20, "mA", src="GP2S700HCP D3-A02201EN, absolute maximum collector "
    "current", sheet=SENSOR)
 ds("i_f_char", 4, "mA", src="GP2S700HCP D3-A02201EN, the forward current I_C is "
@@ -280,6 +295,8 @@ ds("f_clk_5v", 3.6, "MHz", src="DS21295D, the clock at VDD = 5 V", sheet=ADC)
 ds("clocks_protocol", 17, "clocks", src="DS21295D section 5.0", sheet=ADC)
 ds("clocks_frame", 24, "clocks", src="DS21295D section 6.1, three whole bytes", sheet=ADC)
 ds("acq_clocks", 1.5, "clocks", src="DS21295D, the acquisition window", sheet=ADC)
+ds("v_in_over_vdd", 0.6, "V", src="DS21295D Absolute Maximum Ratings, all inputs and "
+   "outputs with respect to VSS, −0.6 V to VDD + 0.6 V", sheet=ADC)
 ds("c_pin", 7, "pF", src="DS21295D Figure 4-1, the pad capacitance", sheet=ADC)
 ds("c_sample", 20, "pF", src="DS21295D Figure 4-1, the sample capacitor", sheet=ADC)
 ds("r_switch", 1, "kΩ", src="DS21295D Figure 4-1, the switch resistance, typical",
@@ -423,6 +440,13 @@ def _(u_r_most, r_led):
     return u_r_most / r_led
 
 
+@fig("i_led_worst_sharp", "mA", group="I_LED", section=BASE,
+     rises_with=["v_out_max"],
+     falls_with=["vf75_10ma", "r_led_sharp"])
+def _(u_r_most, r_led_sharp):
+    return u_r_most / r_led_sharp
+
+
 @fig("i_led_least", "mA", group="I_LED", section=BASE,
      rises_with=["v_out_min"],
      falls_with=["vf_table_max", "r_led"])
@@ -430,11 +454,14 @@ def _(u_r_least, r_led):
     return u_r_least / r_led
 
 
+# Taken on a new board, where nothing sits between the collector and the rail. The three stock
+# channels draw less through their own 1.585 kΩ, so counting every channel at this figure is the
+# safe side of the budget.
 @fig("i_c", "mA", group="I_C", section=BASE,
      rises_with=["v_out_max"],
-     falls_with=["r_col", "r_pd"])
-def _(v_out_max, r_col, r_pd):
-    return v_out_max / (r_col + r_pd)
+     falls_with=["r_pd"])
+def _(v_out_max, r_col_new, r_pd):
+    return v_out_max / (r_col_new + r_pd)
 
 
 @fig("i_adc_one", "mA", group="I_ADC", section=BASE)
@@ -448,15 +475,15 @@ def _(i_adc_one):
 
 
 @fig("i_bus", "mA", group="I_BUS", section=BASE,
-     rises_with=["n_channels", "v_out_max"],
-     falls_with=["r_led"])
-def _(n_channels, i_led_worst):
-    return n_channels.raw * i_led_worst
+     rises_with=["n_channels", "v_out_max", "n_stock"],
+     falls_with=["r_led", "r_led_sharp"])
+def _(n_channels, n_stock, i_led_worst, i_led_worst_sharp):
+    return (n_channels.raw - n_stock.raw) * i_led_worst + n_stock.raw * i_led_worst_sharp
 
 
 @fig("i_tot", "mA", group="I_TOT", section=BASE,
      rises_with=["i_led_worst", "n_channels", "i_adc_idd"],
-     falls_with=["r_led"])
+     falls_with=["r_led", "r_led_sharp"])
 def _(i_bus, n_channels, i_c, i_adc_both, i_iso_s2):
     return i_bus + n_channels.raw * i_c + i_adc_both + i_iso_s2
 
@@ -531,11 +558,23 @@ def _(p_r_led, p_0805):
     return p_r_led / p_0805
 
 
+@fig("p_r_led_sharp", "mW", group="100 Ω", section=DISS,
+     rises_with=["v_out_max"],
+     falls_with=["r_led_sharp"])
+def _(i_led_worst_sharp, r_led_sharp):
+    return i_led_worst_sharp ** 2 * r_led_sharp
+
+
+@fig("p_r_led_sharp_pct", "%", group="100 Ω", section=DISS)
+def _(p_r_led_sharp, p_0805):
+    return p_r_led_sharp / p_0805
+
+
+# A new board's node reaches the rail, a stock board's only the divider's share of it.
 @fig("u_node_max", "V", group="4.7 kΩ", section=DISS,
-     rises_with=["v_out_max", "r_pd"],
-     falls_with=["r_col"])
-def _(v_out_max, r_pd, r_col):
-    return v_out_max * r_pd / (r_col + r_pd)
+     rises_with=["v_out_max"])
+def _(v_out_max, r_pd, r_col_new):
+    return v_out_max * r_pd / (r_col_new + r_pd)
 
 
 @fig("p_r_pd", "mW", group="4.7 kΩ", section=DISS)
@@ -657,9 +696,22 @@ def _(v_out_max, vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, p_0805,
     return _bisect_r(p_0805 / 2, v_out_max, curve, r_min_single, r_led_alt_high)
 
 
+@fig("i_f_max_at_t_a", "mA", group=R220, stated="loose", prints="down",
+     falls_with=["t_a"], rises_with=["i_f_knee"])
+def _(i_f_knee, i_f_end, i_f_knee_at, i_f_end_at, t_a):
+    span = (t_a - i_f_knee_at) / (i_f_end_at - i_f_knee_at)
+    return i_f_knee - (i_f_knee - i_f_end) * span.raw
+
+
 @fig("i_f_max_over_worst", "×", group=R220, stated="loose")
-def _(i_f_max, i_led_worst):
-    return i_f_max / i_led_worst
+def _(i_f_max_at_t_a, i_led_worst):
+    return i_f_max_at_t_a / i_led_worst
+
+
+@fig("i_f_max_over_sharp", "×", group=R220, stated="loose",
+     falls_with=["t_a"])
+def _(i_f_max_at_t_a, i_led_worst_sharp):
+    return i_f_max_at_t_a / i_led_worst_sharp
 
 
 # ===========================================================================
@@ -905,6 +957,21 @@ def _(burst_freq_low, l_bead_alt):
 # ===========================================================================
 # the reference correction
 # ===========================================================================
+@fig("dark_steps", "steps", group=CONST, section=CONST, stated="loose",
+     rises_with=["dark_reading"], falls_with=["v_ref_max"])
+def _(dark_reading, step_max):
+    return dark_reading / step_max
+
+
+# What the correction can move is (k - 1) times the dark reading. Inverting it
+# gives the k - 1 at which it would move one converter step, which needs no
+# figure for the module's unpublished load regulation.
+@fig("correction_worth_at", "%", group=CONST, section=CONST, stated="loose",
+     falls_with=["dark_reading"], rises_with=["v_ref_max"])
+def _(dark_steps):
+    return Q(1) / dark_steps
+
+
 @fig("one_step_of_rail", "mV", group="bound", section=CONST)
 def _(v_mod_nom, bits):
     return v_mod_nom / Q(2 ** bits.raw)
@@ -1090,16 +1157,10 @@ def _(t_phase, budget_16, t_jitter):
     return t_phase - budget_16 - t_jitter
 
 
-@fig("tau_pessimistic", "µs", stated=False,
-     rises_with=["t_rf_max_1k", "r_pd"])
-def _(t_rf_max_1k, r_pd, r_switch, rise_to_tau):
-    return t_rf_max_1k * (r_pd / r_switch).raw / rise_to_tau.raw
-
-
 @fig("tau_ln2", "µs", group="first read", section=READ,
-     rises_with=["t_rf_max_1k", "r_pd"])
-def _(tau_pessimistic):
-    return tau_pessimistic * ln(Q(2)).raw
+     rises_with=["tau_sensor"])
+def _(tau_sensor):
+    return tau_sensor * ln(Q(2)).raw
 
 
 @fig("channels_the_phase_holds", "", stated=False)
@@ -1139,8 +1200,8 @@ def _(gate_time_irl, t_phase):
 
 
 @fig("gate_peak_at_100r", "mA", group="t", section=GATE)
-def _(v_mod_nom, r_led_alt_low):
-    return v_mod_nom / r_led_alt_low
+def _(v_mod_nom, r_led_sharp):
+    return v_mod_nom / r_led_sharp
 
 
 @fig("gate_peak_over_iso", "×", group="t", section=GATE)
@@ -1159,6 +1220,15 @@ def _(first_read_16, gate_time_irl):
 @fig("headroom", "V", group="Headroom", section=PD)
 def _(u_node_max):
     return u_node_max
+
+
+# A new board's node reaches the rail, which is above VREF but far inside what the part tolerates:
+# a reading there clips at full scale, and a clipped channel is the flooded one the design rejects
+# anyway. What has to hold is the absolute maximum, and that is a different figure.
+@fig("v_in_abs_max", "V", group="Headroom", section=PD, prints="down",
+     rises_with=["v_out_max", "v_in_over_vdd"])
+def _(v_out_max, v_in_over_vdd):
+    return v_out_max + v_in_over_vdd
 
 
 @fig("signal_settled", "V", group="Resolution", section=PD,
@@ -1184,17 +1254,26 @@ def _(signal_settled, step_max):
     return signal_settled / step_max
 
 
-@fig("swing_pessimistic", "%", group="Settling", section=PD,
+@fig("swing_sensor", "%", group="Settling", section=PD,
      rises_with=["t_phase"],
-     falls_with=["r_pd", "t_rf_max_1k", "n_channels"])
-def _(first_read_16, tau_pessimistic, t_phase):
-    x = exp(-(t_phase / tau_pessimistic))
-    return Q(1) - 2 * exp(-(first_read_16 / tau_pessimistic)) / (1 + x)
+     falls_with=["tau_sensor", "n_channels"])
+def _(first_read_16, tau_sensor, t_phase):
+    x = exp(-(t_phase / tau_sensor))
+    return Q(1) - 2 * exp(-(first_read_16 / tau_sensor)) / (1 + x)
 
 
 @fig("signal_steps_first_read", "steps", group="Resolution", section=PD)
-def _(signal_steps_max, swing_pessimistic):
-    return signal_steps_max * swing_pessimistic.raw
+def _(signal_steps_max, swing_sensor):
+    return signal_steps_max * swing_sensor.raw
+
+
+# The load costs headroom rather than buying it, so the three stock channels are the worst case
+# for every ambient figure below and the new boards have more room than these say.
+# What the three stock boards do differently, kept so the rebuilt board's reason is checkable.
+@fig("stock_node_loss", "%", group="The new sensor boards get no collector resistor", stated="loose",
+     rises_with=["r_col"], falls_with=["r_pd"])
+def _(r_pd, r_col):
+    return Q(1) - r_pd / (r_col + r_pd)
 
 
 @fig("r_node_total", "kΩ", group="Ambient headroom", section=PD)
@@ -1224,9 +1303,10 @@ def _(t_rf_max_1k, r_pd, r_switch):
     return t_rf_max_1k * (r_pd / r_switch).raw
 
 
-@fig("tau_from_max", "µs", group="Settling", section=PD)
-def _(tau_pessimistic):
-    return tau_pessimistic
+@fig("tau_from_max", "µs", group="Settling", section=PD,
+     rises_with=["t_rf_max_1k", "r_pd"])
+def _(t_rf_max_1k, r_pd, r_switch, rise_to_tau):
+    return t_rf_max_1k * (r_pd / r_switch).raw / rise_to_tau.raw
 
 
 @fig("tau_from_typ", "µs", group="Settling", section=PD)
@@ -1244,6 +1324,11 @@ def _swing(t, tau, T):
     return Q(1) - 2 * exp(-(t / tau)) / (1 + x)
 
 
+@fig("swing_from_max", "%", group="Settling", section=PD)
+def _(first_read_16, tau_from_max, t_phase):
+    return _swing(first_read_16, tau_from_max, t_phase)
+
+
 @fig("swing_fig6", "%", group="Settling", section=PD)
 def _(first_read_16, tau_fig6, t_phase):
     return _swing(first_read_16, tau_fig6, t_phase)
@@ -1255,9 +1340,9 @@ def _(first_read_16, tau_from_typ, t_phase):
 
 
 @fig("sign_inversion", "µs", group="Settling", section=PD)
-def _(tau_pessimistic, t_phase):
-    x = exp(-(t_phase / tau_pessimistic))
-    return tau_pessimistic * -ln((1 + x) / Q(2)).raw
+def _(tau_sensor, t_phase):
+    x = exp(-(t_phase / tau_sensor))
+    return tau_sensor * -ln((1 + x) / Q(2)).raw
 
 
 @fig("first_read_over_inversion", "×", group="Settling", section=PD)
@@ -1266,11 +1351,11 @@ def _(first_read_16, sign_inversion):
 
 
 # ===========================================================================
-# Figure 6, the swing, and where the 50 µA comes from
+# Figure 6, the swing, and where the ball signal comes from
 # ===========================================================================
 _FIG6 = "Figure 6 of the sensor datasheet does not support that linear scaling"
 _SWING = "The swing is the periodic one, not a single step"
-_50UA = "Where the 50 µA comes from"
+_50UA = "Where the ball signal comes from"
 _SMALLER = _50UA
 
 
@@ -1287,13 +1372,13 @@ def _(fig6_4k7, fig6_1k):
 # the swing block writes its intermediate steps without units, and a bare
 # number is addressable even though an expression full of them is not required
 @fig("swing_x", "", group="at T", section=_SWING)
-def _(t_phase, tau_pessimistic):
-    return exp(-(t_phase / tau_pessimistic))
+def _(t_phase, tau_sensor):
+    return exp(-(t_phase / tau_sensor))
 
 
 @fig("swing_exp_term", "", group="at T", section=_SWING)
-def _(first_read_16, tau_pessimistic):
-    return exp(-(first_read_16 / tau_pessimistic))
+def _(first_read_16, tau_sensor):
+    return exp(-(first_read_16 / tau_sensor))
 
 
 @fig("swing_denominator", "", group="at T", section=_SWING)
@@ -1302,39 +1387,34 @@ def _(swing_x):
 
 
 @fig("swing_result", "", group="at T", section=_SWING)
-def _(swing_pessimistic):
-    return Q(swing_pessimistic.raw)
+def _(swing_sensor):
+    return Q(swing_sensor.raw)
 
 
 @fig("gate_edge_in_tau", "τ", group="The swing is the periodic one, not a single step", stated="loose")
-def _(gate_time_irl, tau_pessimistic):
-    return gate_time_irl / tau_pessimistic
+def _(gate_time_irl, tau_sensor):
+    return gate_time_irl / tau_sensor
+
+
+@fig("i_led_nominal_sharp", "mA", group=_50UA, stated="loose",
+     rises_with=["v_mod_nom"], falls_with=["vf_nominal_read", "r_led_sharp"])
+def _(u_r_nominal, r_led_sharp):
+    return u_r_nominal / r_led_sharp
 
 
 @fig("i_photo_scaled_to_char", "µA", group=_50UA, stated="loose")
-def _(i_photo, i_f_char, i_led_nominal):
-    return i_photo * (i_f_char / i_led_nominal)
+def _(i_photo, i_f_char, i_led_nominal_sharp):
+    return i_photo * (i_f_char / i_led_nominal_sharp)
 
 
 @fig("emitter_over_char", "×", group=_50UA, stated="loose")
-def _(i_led_nominal, i_f_char):
-    return i_led_nominal / i_f_char
+def _(i_led_nominal_sharp, i_f_char):
+    return i_led_nominal_sharp / i_f_char
 
 
 @fig("signal_at_first_read", "mV", group=_SMALLER, stated="loose")
-def _(signal_settled, swing_pessimistic):
-    return signal_settled * swing_pessimistic.raw
-
-
-@fig("signal_at_2k2", "mV", group=_SMALLER, stated="loose")
-def _(i_photo, first_read_16, t_rf_max_1k, r_switch, t_phase, r_pd_alt, rise_to_tau):
-    tau = t_rf_max_1k * (r_pd_alt / r_switch).raw / rise_to_tau.raw
-    return i_photo * r_pd_alt * _swing(first_read_16, tau, t_phase).raw
-
-
-@fig("signal_fig6", "mV", group=_SMALLER, stated="loose")
-def _(signal_settled, first_read_16, tau_fig6, t_phase):
-    return signal_settled * _swing(first_read_16, tau_fig6, t_phase).raw
+def _(signal_settled, swing_sensor):
+    return signal_settled * swing_sensor.raw
 
 
 # ===========================================================================
@@ -1344,29 +1424,29 @@ def _(signal_settled, first_read_16, tau_fig6, t_phase):
 # serves every row and the formula stays readable to the linter.
 for _n, _count, _label in ((3, "n_stock", "3, the stock sensors"),
                            (8, "n_eight", "8")):
-    @fig(f"budget_{_n}", "µs", group=_label, section=PCT47)
+    @fig(f"budget_{_n}", "µs", group=_label, section=PCT96)
     def _(t_conversion, t_ovh, budget_grain, n=_count):
         return ceil_to(n.raw * (t_conversion + t_ovh), "µs", budget_grain.to("µs"))
 
 for _n, _label in ((3, "3, the stock sensors"), (8, "8"), (16, "16, the design case")):
-    @fig(f"row{_n}_first_read", "µs", group=_label, section=PCT47)
+    @fig(f"row{_n}_first_read", "µs", group=_label, section=PCT96)
     def _(t_phase, t_jitter, budget=f"budget_{_n}"):
         return t_phase - budget - t_jitter
 
-    @fig(f"row{_n}_swing", "%", group=_label, section=PCT47)
-    def _(tau_pessimistic, t_phase, first=f"row{_n}_first_read"):
-        return _swing(first, tau_pessimistic, t_phase)
+    @fig(f"row{_n}_swing", "%", group=_label, section=PCT96)
+    def _(tau_sensor, t_phase, first=f"row{_n}_first_read"):
+        return _swing(first, tau_sensor, t_phase)
 
-    @fig(f"row{_n}_signal", "mV", group=_label, section=PCT47)
+    @fig(f"row{_n}_signal", "mV", group=_label, section=PCT96)
     def _(signal_settled, swing=f"row{_n}_swing"):
         return signal_settled * swing.raw
 
-    @fig(f"row{_n}_steps", "steps", group=_label, section=PCT47)
+    @fig(f"row{_n}_steps", "steps", group=_label, section=PCT96)
     def _(step_max, signal=f"row{_n}_signal"):
         return signal / step_max
 
 
-@fig("budget_16_row", "µs", group="16, the design case", section=PCT47)
+@fig("budget_16_row", "µs", group="16, the design case", section=PCT96)
 def _(budget_16):
     return budget_16
 
@@ -1374,9 +1454,11 @@ def _(budget_16):
 # ===========================================================================
 # why Pin 1 needs no external resistor
 # ===========================================================================
-@fig("i_c_max_pin1", "mA", group="I_C,max", section=PIN1)
-def _(v_out_max, r_node_total):
-    return v_out_max / r_node_total
+# Pin 1 of a rebuilt board, where nothing sits between the collector and the rail.
+@fig("i_c_max_pin1", "mA", group="I_C,max", section=PIN1,
+     rises_with=["v_out_max"], falls_with=["r_pd"])
+def _(v_out_max, r_col_new, r_pd):
+    return v_out_max / (r_col_new + r_pd)
 
 
 # ===========================================================================
@@ -1412,7 +1494,7 @@ def _(i_teensy_3v3, i_fixed_teensy, i_c, v_out_max, vf75_10ma, vf75_10ma_at,
 
 
 @fig("knob_r_lower_16_teensy", "Ω", group=KNOB, section=KNOB,
-     prints="up")
+     prints="up", label="at N = 16, I_supply 250 mA")
 def _(i_teensy_3v3, i_fixed_teensy, n_channels, i_c, v_out_max, vf75_10ma,
       vf75_10ma_at, vf75_50ma, vf75_50ma_at):
     return _r_for_supply(i_teensy_3v3, i_fixed_teensy, n_channels.raw, i_c, v_out_max,
@@ -1420,7 +1502,7 @@ def _(i_teensy_3v3, i_fixed_teensy, n_channels, i_c, v_out_max, vf75_10ma,
 
 
 @fig("knob_r_lower_16_module", "Ω", group=KNOB, section=KNOB,
-     prints="up")
+     prints="up", label="the module alone would reach")
 def _(i_module, i_fixed_module, n_channels, i_c, v_out_max, vf75_10ma,
       vf75_10ma_at, vf75_50ma, vf75_50ma_at):
     return _r_for_supply(i_module, i_fixed_module, n_channels.raw, i_c, v_out_max,
@@ -1514,8 +1596,8 @@ def _(i_gss, r_leak_test):
     return i_gss * r_leak_test
 
 
-@fig("knob_phase_lower", "µs", group="phase", section=KNOB,
-     rises_with=["n_channels", "t_ovh", "r_pd"],
+@fig("knob_phase_lower", "µs", group="phase", section=KNOB, label="t_budget plus",
+     rises_with=["n_channels", "t_ovh", "tau_sensor"],
      falls_with=["f_clk"],
      prints="up")
 def _(budget_16, tau_ln2):
@@ -1530,7 +1612,7 @@ def _(t_phase, tau_ln2, budget_grain):
 
 @fig("knob_t_ovh_ceiling", "µs", group="phase", section=KNOB, label="t_ovh",
      rises_with=["t_phase", "f_clk"],
-     falls_with=["n_channels", "r_pd"],
+     falls_with=["n_channels", "tau_sensor"],
      prints="down")
 def _(knob_firmware_bound, n_channels, t_conversion):
     return knob_firmware_bound / n_channels.raw - t_conversion
@@ -1544,14 +1626,14 @@ def _(phase_alt, phases_per_two_values):
 # one standard value inside each of those walls
 @fig("i_at_100r", "mA", group="100 Ω", section=KNOB)
 def _(v_out_max, vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at,
-      r_led_alt_low):
-    return _i_led_at(r_led_alt_low, v_out_max,
+      r_led_sharp):
+    return _i_led_at(r_led_sharp, v_out_max,
                      [(vf75_10ma_at, vf75_10ma), (vf75_50ma_at, vf75_50ma)])
 
 
 @fig("p_at_100r", "mW", group="100 Ω", section=KNOB)
-def _(i_at_100r, r_led_alt_low):
-    return i_at_100r ** 2 * r_led_alt_low
+def _(i_at_100r, r_led_sharp):
+    return i_at_100r ** 2 * r_led_sharp
 
 
 @fig("i_at_390r", "mA", group="390 Ω", section=KNOB)
@@ -1560,13 +1642,13 @@ def _(u_r_least, r_led_alt_high):
 
 
 @fig("signal_at_2k2_std", "mV", group="2.2 kΩ", section=KNOB)
-def _(signal_at_2k2):
-    return signal_at_2k2
+def _(sweep_r_pd_alt_signal):
+    return sweep_r_pd_alt_signal
 
 
 @fig("steps_at_2k2", "steps", group="2.2 kΩ", section=KNOB)
-def _(signal_at_2k2, step_max):
-    return signal_at_2k2 / step_max
+def _(sweep_r_pd_alt_signal, step_max):
+    return sweep_r_pd_alt_signal / step_max
 
 
 @fig("window_at_4k7", "τ", group="4.7 kΩ", section=KNOB)
@@ -1594,8 +1676,8 @@ def _(rise_low, rise_high):
 for _key, _row in (("r_switch", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
                    ("r_pd", "4.7 kΩ"), ("r_pd_alt_high", "10 kΩ")):
     @fig(f"sweep_{_key}_tau", "µs", group=_row, section=SWEEP)
-    def _(t_rf_max_1k, r_switch, rise_to_tau, r=_key):
-        return t_rf_max_1k * (r / r_switch).raw / rise_to_tau.raw
+    def _(tau_sensor, r_pd, r=_key):
+        return tau_sensor * (r / r_pd).raw
 
     @fig(f"sweep_{_key}_swing", "%", group=_row, section=SWEEP)
     def _(first_read_16, t_phase, tau=f"sweep_{_key}_tau"):
@@ -1620,6 +1702,13 @@ for _key, _row in (("r_switch", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
 # These sit outside the appendix: the objections table, the troubleshooting
 # table and the connector tables. They are stated in prose, so each is located
 # by the section that holds it.
+_PLACE = "Placement distances"
+asm("place_decoupling", 3, "mm", group=_PLACE, stated="loose",
+    src="how close a 100 nF sits to the pin it decouples; no datasheet states one")
+asm("place_local", 10, "mm", group=_PLACE, stated="loose",
+    src="how close a part sits to the node it serves, J-PWR and Q1's gate alike; no datasheet states one")
+asm("place_channel", 25, "mm", group=_PLACE, stated="loose",
+    src="how far a channel's pull-down may sit from its converter input, so the stub adds little to the source resistance")
 asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm; "
     "no measurement of it is recorded")
 msr("stock_pulse_rate", 333, "Hz", src="the stock mainboard's emitter drive, 1.5 ms on and "
@@ -1627,8 +1716,6 @@ msr("stock_pulse_rate", 333, "Hz", src="the stock mainboard's emitter drive, 1.5
 dec("r_led_brighter", 150, "Ω", src="the E12 value below 220 Ω, for a channel that "
     "returns too little light")
 dec("c_bulk_rating", 10, "V", src="the voltage rating asked of C5 and C6, three times the rail")
-dec("r_col_e96", 1.58, "kΩ", src="the E96 value beside the stock board's 1.585 kΩ")
-dec("r_col_e24", 1.6, "kΩ", src="the E24 value beside the stock board's 1.585 kΩ")
 
 # A resistor change moves the operating point, so V_F has to be taken at the
 # new current. These two are the forward voltages the stated currents imply.
@@ -1653,18 +1740,6 @@ def _(v_out_max, vf75_at_150, r_led_brighter):
 
 # The channel ceiling is the divider at V_OUT max, so a different collector load
 # moves it. Both alternatives to the stock 1.585 kΩ are quoted by that shift.
-@fig("ceiling_shift_e96", "mV", group="Rebuilt sensor boards", stated="loose")
-def _(v_out_max, r_pd, r_col, r_col_e96):
-    return abs(v_out_max * r_pd / (r_col_e96 + r_pd)
-               - v_out_max * r_pd / (r_col + r_pd))
-
-
-@fig("ceiling_shift_e24", "mV", group="Rebuilt sensor boards", stated="loose")
-def _(v_out_max, r_pd, r_col, r_col_e24):
-    return abs(v_out_max * r_pd / (r_col_e24 + r_pd)
-               - v_out_max * r_pd / (r_col + r_pd))
-
-
 # ===========================================================================
 # the plotted curves, as the points read off them
 # ===========================================================================
@@ -1692,6 +1767,12 @@ MODEL.curve("Figure 6, response time against load resistance",
             rises=True,
             bounded=[("fig6_1k", "t_rf_typ_1k", "t_rf_max_1k")])
 
+MODEL.curve("Figure 1, forward current against ambient temperature",
+            [("i_f_knee_at", "i_f_knee"), ("i_f_end_at", "i_f_end")],
+            rises=False,
+            on=[("t_a", "i_f_max_at_t_a")],
+            bounded=[("i_f_knee", "i_f_max", "i_f_max")])
+
 MODEL.curve("Figure 4, collector current against ambient temperature",
             [("t_curve_25", "i_c_at_25c"), ("t_a", "i_c_at_40c")],
             rises=False)
@@ -1713,14 +1794,17 @@ _I("the board fits the module",
    lambda v: v.i_tot < v.i_module)
 _I("the bench case fits the Teensy's 3V3 pin",
    lambda v: v.i_tot_bench < v.i_teensy_3v3)
-_I("the emitter survives its absolute maximum",
-   lambda v: v.i_led_worst < v.i_f_max)
+_I("both emitter groups survive the maximum their ambient allows",
+   lambda v: v.i_led_worst < v.i_f_max_at_t_a
+   and v.i_led_worst_sharp < v.i_f_max_at_t_a)
 _I("the phototransistor survives its absolute maximum",
    lambda v: v.i_c < v.i_c_abs_max)
-_I("the channel node stays inside the converter's input range",
-   lambda v: v.u_node_max < v.v_ref_max)
+_I("the channel node stays inside what the converter tolerates",
+   lambda v: v.u_node_max < v.v_in_abs_max)
+_I("signal and measured ambient together stay inside what the node can hold",
+   lambda v: v.i_photo + v.dark_reading / v.r_pd < v.ambient_at_4k7)
 _I("the swing is a fraction of the settled signal",
-   lambda v: 0 < v.swing_pessimistic.raw < 1)
+   lambda v: 0 < v.swing_sensor.raw < 1)
 _I("the acquisition window covers what ten bits need",
    lambda v: v.window_in_tau > v.tau_needed)
 _I("the first read sits past the sign inversion",
@@ -1729,12 +1813,12 @@ _I("the phase clears its own lower bound",
    lambda v: v.knob_phase_lower <= v.t_phase)
 _I("a DOUT bit is home inside the half period",
    lambda v: v.dout_round_trip < v.half_period)
-_I("the emitter resistor is above the single-channel bound",
-   lambda v: v.r_min_single < v.r_led)
-_I("the emitter resistor is below the characterising point",
-   lambda v: v.r_led < v.knob_r_upper)
-_I("the emitter resistor stays inside an 0805",
-   lambda v: v.p_r_led < v.p_0805)
+_I("both emitter resistors are above the single-channel bound",
+   lambda v: v.r_min_single < v.r_led_sharp and v.r_min_single < v.r_led)
+_I("both emitter resistors are below the characterising point",
+   lambda v: v.r_led < v.knob_r_upper and v.r_led_sharp < v.knob_r_upper)
+_I("both emitter resistors stay inside an 0805",
+   lambda v: v.p_r_led < v.p_0805 and v.p_r_led_sharp < v.p_0805)
 _I("Q1 stays inside its dissipation rating",
    lambda v: v.p_q1 < v.p_q1_rating)
 _I("the gate draws no more than the isolator output gives",
@@ -1756,3 +1840,57 @@ _I("the hot forward-voltage curve sits under the cold one at 10 mA",
    lambda v: v.vf75_10ma < v.vf25_10ma)
 _I("and at 50 mA",
    lambda v: v.vf75_50ma < v.vf25_50ma)
+
+
+# ===========================================================================
+# what the prose says that the model does not compute
+# ===========================================================================
+# Every other number in the documents has to be a declared quantity. These are
+# named so the rest can be checked, and each one says why it is not a figure.
+# The ones marked "derived in prose" are a debt against rule 15: they belong in
+# the model, and until they are there nothing recomputes them.
+
+for _text, _why in [
+    # quoted from a datasheet, at a condition this design does not run
+    ("5.7 A", "AO3400A continuous drain current, AOS sheet"),
+    ("3 A", "the drain current AOS specifies R_DS(on) at"),
+    ("102 kΩ", "R33 and R35 in series, the gate divider's total"),
+    ("36 A", "IRL540N continuous drain current"),
+    ("18 A", "the IRL540N row at 25 °C"),
+    ("15 A", "the IRL540N row at 100 °C"),
+    ("0.044 Ω", "IRL540N R_DS(on) typical at V_GS = 10 V"),
+    ("0.053 Ω", "IRL540N R_DS(on) maximum at V_GS = 10 V"),
+    ("0.063 Ω", "IRL540N R_DS(on) at V_GS = 5 V"),
+    ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
+    ("270 ns", "t_CSH of DS21295D, the chip-select high time"),
+    ("150 MHz", "the RT1062 peripheral clock the SPI divides from"),
+    ("22 kΩ", "the RT1062's internal pull-up, from the reference manual"),
+    ("3.25 V", "what that pull-up lands an isolator input at"),
+
+    # a package, a pitch, a count: not a measured quantity at all
+    ("0805", "the resistor package, a name rather than a value"),
+    ("2.54 mm", "the connector pitch"),
+    ("5 %", "the share of a phase the startup discards, a plain fraction"),
+
+    # a figure the model holds at another unit or another rounding
+    ("3.146", "V_OUT min, restated without its unit"),
+    ("3.449", "V_OUT max, restated without its unit"),
+    ("1.38", "V_F at 50 mA on the 75 °C curve, restated without its unit"),
+    ("53 µs", "the τ reading before it was rounded up to the 70 µs the design runs"),
+
+    # derived in prose, which rule 15 says they should not be
+    ("222.6 mA", "derived in prose: what the Teensy case leaves for the emitters"),
+    ("482.9 mA", "derived in prose: what the module case leaves for them"),
+    ("99.0 mΩ", "derived in prose: the cable resistance the 22 mV allowance reaches"),
+    ("0.2 mV", "derived in prose: what 0.1 Ω costs beyond that allowance"),
+    ("54 µs", "derived in prose: the excursion C5 leaves R39 and C6 to settle"),
+    ("17 mA", "derived in prose: the dark-phase load the reference filter sees"),
+    ("111 µs", "derived in prose: the reference filter's time constant"),
+    ("7.35 Ω", "derived in prose: the source resistance behind the machine's 5 V"),
+    ("2.98 V", "derived in prose: the node ceiling of the rejected Design A"),
+    ("19.78 µs", "derived in prose: a conversion and its overhead, in the firmware note"),
+    ("11.4 steps", "derived in prose: the distance from a ball to the threshold"),
+    ("2.6 ms", "derived in prose: five time constants of the reference filter"),
+    ("517 µs", "derived in prose: one time constant of it"),
+]:
+    MODEL.aside(_text, _why)

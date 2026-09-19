@@ -28,7 +28,7 @@
   <text x="250" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#2c3e50">CHn</text>
   <text x="200" y="228" font-size="10.5" fill="#666">to its digitising input</text>
   <text x="200" y="242" font-size="10.5" fill="#666">on the mainboard</text>
-  <text data-fig="u_node_max" x="450" y="192" font-size="11.5" fill="#2c3e50">0 &#8230; 2.58 V</text>
+  <text data-fig="u_node_max" x="450" y="192" font-size="11.5" fill="#2c3e50">0 &#8230; 3.45 V</text>
   <circle cx="350" cy="200" r="4" fill="#2c3e50"/>
   <line x1="350" y1="200" x2="350" y2="220" stroke="#1a1a1a" stroke-width="2.5"/>
   <rect x="337" y="220" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
@@ -44,7 +44,9 @@
   <rect x="550" y="245" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text data-fig="r_led" x="585" y="259" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a">220 &#937;</text>
   <text x="552" y="240" font-size="10" fill="#777">Rn</text>
-  <text x="552" y="281" font-size="10.5" fill="#777">one per channel</text>
+  <text x="552" y="281" font-size="10.5" fill="#444">one per channel</text>
+  <text data-fig="r_led_sharp" x="552" y="295" font-size="10.5" font-weight="700" fill="#444">100 &#937; on the three boards</text>
+  <text x="552" y="307" font-size="10.5" font-weight="700" fill="#444">from the stock machine</text>
   <line x1="550" y1="255" x2="410" y2="255" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="410" y1="255" x2="410" y2="351" stroke="#b7950b" stroke-width="2.5"/>
   <text x="420" y="308" font-size="11" font-weight="700" fill="#5c4a00">LED BUS</text>
@@ -85,7 +87,7 @@
   <text x="324" y="364" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">G</text>
   <text x="366" y="347" font-size="11.5" font-weight="700" fill="#1a1a1a">D</text>
   <text x="366" y="404" font-size="11.5" font-weight="700" fill="#1a1a1a">S</text>
-  <text x="510" y="355" font-size="12" font-weight="700" fill="#1a1a1a">Q1: AO3400A, N-channel, SOT-23</text>
-  <text x="510" y="371" font-size="11" fill="#666">IRL540N in TO-220 for a through-hole build</text>
+  <text x="510" y="355" font-size="12" font-weight="700" fill="#1a1a1a">Q1: IRL540N, N-channel, TO-220</text>
+  <text x="510" y="371" font-size="11" fill="#666">AO3400A in SOT-23 for an SMD build</text>
   <text x="510" y="391" font-size="11" fill="#666">one switch for all sixteen emitters</text>
 </svg>
