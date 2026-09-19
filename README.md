@@ -16,6 +16,7 @@ This repository hosts everything for the project:
 | Ideas, not part of the design | [`docs/ideas/`](docs/ideas/) |
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
+| Checking tools | [`tools/`](tools/) |
 
 ## Reversibility
 

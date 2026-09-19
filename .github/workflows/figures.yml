@@ -1,0 +1,65 @@
+name: figures
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "firmware/**"
+      - "tools/**"
+      - ".github/workflows/figures.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "firmware/**"
+      - "tools/**"
+
+jobs:
+  figures:
+    name: Do the documents still state what the design computes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Every subsystem that derives figures declares them in its own
+      # docs/parts/<subsystem>/figures.py, and each one is checked here.
+      - name: Look for subsystems that derive figures
+        id: models
+        run: |
+          models=$(ls docs/parts/*/figures.py 2>/dev/null || true)
+          if [ -z "$models" ]; then
+            echo "No figure model found. Expected docs/parts/<subsystem>/figures.py."
+            exit 1
+          fi
+          for m in $models; do echo "Found $m"; done
+          echo "list=$(echo $models)" >> "$GITHUB_OUTPUT"
+
+      - name: Recompute every figure and check the documents against it
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            python tools/figcheck.py "$m" --sheets --base "$BASE"
+            echo
+          done
+
+      - name: Prove the check would catch a wrong figure
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            python tools/figcheck.py "$m" --mutate --no-stale
+            echo
+          done
+
+      # Where every input value came from, readable in the log without a
+      # checkout of the repository.
+      - name: Record where every input value came from
+        run: |
+          for m in ${{ steps.models.outputs.list }}; do
+            python tools/figcheck.py "$m" --provenance --no-stale
+            echo
+          done

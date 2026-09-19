@@ -37,10 +37,10 @@ Concretely, that means:
 - Margins are calculated — ratings, tolerances and worst cases.
 - **Every derived bound names the input extreme it was computed from.** Which direction of a parameter is the worst case is part of the derivation, and picking the wrong one leaves no trace in the result — a minimum series resistor taken from V_F max rather than V_F min gives 40 Ω where the answer is 46 Ω.
 - **Write the intermediate quantity on its own line, with its extremes named.** A bound stated as a single division hides which values went into it, and a wrong extreme then reads as correct arithmetic. The voltage across a resistor is derived first, from a named supply extreme and a named device extreme, and only then divided by the current. Supply tolerance is one of those extremes: a bound taken at the nominal rail is not a bound.
-- **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part means re-deriving every bound, margin, current and time constant that took it as an input, not only the figure that prompted the change. The re-derivation follows rule 9 — back to the sources, never to the earlier result. Finish by grepping the old number across the subsystem, as rule 7 requires for the documents.
+- **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part means re-deriving every bound, margin, current and time constant that took it as an input, not only the figure that prompted the change. The re-derivation follows rule 9 — back to the sources, never to the earlier result. Finish by grepping the old number across the repository, as rule 7 requires for the documents.
 - **No pin or part is loaded past its specified figure, transients included.** Where a published figure covers only sustained operation, it still governs: a brief peak above it is designed out rather than argued away. The worst case is computed from the external circuit alone — internal current limiting that no datasheet states does not enter the calculation, however real it is.
 - Reproducible: someone else could rebuild this from the repository alone.
-- **An open measurement blocks only what actually depends on it.** A design decision and the build detail that follows from it are separate things, and an unresolved figure usually sits in the second. Settle the decision, name the detail it defers, and carry on. Presenting a pending measurement as a fork in the design stalls work that was never waiting on it.
+- **An open measurement blocks only what actually depends on it.** A design decision and the build detail that follows from it are separate things, and an unresolved figure usually sits in the second. Settle the decision, name the detail it defers, and carry on. Presenting a pending measurement as a fork in the design stalls work that was never waiting on it. Where nothing depends on it, it gets no entry at all: a worst case bounded by a datasheet that the design survives is settled by that bound, and the measurement that would only refine it is left unwritten.
 
 When a shortcut is taken deliberately, record it as a known limitation rather than leaving it silent.
 
@@ -75,12 +75,13 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
   | Changed | Also update |
   |---|---|
   | Any value, part, count or connector in a subsystem | **every `.svg` in that subsystem's directory** |
+  | A figure a subsystem derives, or an input to one | **that subsystem's figure model**, and the check of rule 15 has to pass |
   | A Teensy pin | [`docs/pin-assignment.md`](docs/pin-assignment.md), allocation table and cost table both |
   | A part or a quantity | [`docs/parts-list.md`](docs/parts-list.md) |
   | A component's specification | its file in `docs/research/`, and its datasheet into `docs/datasheets/` |
   | A channel count or a connector width | the connector tables, and the pin rows in the figures — geometry, not only text |
 
-  Finish by grepping the changed number and the old number across the subsystem directory. The figures are where a stale value survives longest, because a wrong number there still renders.
+  Finish by grepping the changed number and the old number across the whole repository, not only the subsystem directory: a value derived in one subsystem is repeated in the budgets of another. The figures are where a stale value survives longest, because a wrong number there still renders.
 - **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". Where a decision is not yet made, it is made before it is written down. Rejected alternatives stay, per rule 3, but as rejected and with the reason they lost. A figure that is genuinely unverified is stated as unverified with the measurement that would settle it — that is a known limitation, not an open option.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
@@ -88,7 +89,7 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 - **`docs/parts-list.md`** — one row per part: reference designator, short name, quantity, one-line description, spec link, supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no notes exist yet. Every part must be findable from the list. Specifications, datasheet figures and rationale go in the linked document.
 - **Sub-directory `README.md` files** — what a repository visitor finds in the folder. Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
 - **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
-- **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document.
+- **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives, the pin number stands in this file alone, so a re-allocation costs no edit there either.
 - **Schematic SVGs in `docs/`** — where a part's type designation depends on its package, the diagram names both the through-hole and the SMD type in a variants table. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
   Both variants describe **one** circuit: same topology, same values, same netlist. A build that would need a different value or a different topology is not a variant but a second design, and is documented separately. Package-dependent figures — power rating, thermal resistance, DC-bias capacitance loss, R_DS(on) — are verified for each named variant before it is listed.
@@ -122,7 +123,14 @@ Consistency with a previous answer is not evidence that the previous answer was 
 
 ## 10. Writing style
 
-Applies to documentation, commit messages and conversation alike. Say a thing once and move on.
+Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a licence to write a fact in fewer words than it needs.
+
+**A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
+
+- **Full sentences.** A bold lead, a paragraph opener and the line that carries into a table have a subject and a verb. "From above, the dwell." is a label.
+- **One claim to a sentence.** A sentence holding a claim, the mechanism behind it and what follows from it is split into three.
+- **A term is explained where it first appears**, in ordinary words, and named after the explanation. A definition that arrives a section later has already lost the reader.
+- **A name out of a datasheet or a peripheral is translated.** What the thing does is written in plain words, and the vendor's name stands beside it where the firmware needs to address it.
 
 Banned:
 
@@ -147,9 +155,11 @@ Banned:
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
+**Reading flow is not meta-commentary.** A sentence that leads from the text into a table, or that carries the reader from one section to the next, stays. What the rule above bans is the sentence about the document itself: what a file is, what it is for, what it leaves out. A paragraph of build-up before a table is still one sentence too many, and a document that reads as a list of disconnected assertions has overshot the rule.
+
 **Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
 
-The explanations rule 2 asks for — naming the failure mode, spelling out what destroys a part — belong in **conversation**, not in the repository's documents. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
+The explanations rule 2 asks for, naming the failure mode, spelling out what destroys a part, belong in **conversation**, not in the repository's documents. A document's own terms and the mechanism it describes are not such an explanation and are written out where they first appear. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
 
 ## 11. Research and sourcing
 
@@ -186,3 +196,80 @@ The stock machine's original functionality must remain restorable. An alteration
 ## 13. Amending these rules
 
 New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
+
+## 14. Risk levels
+
+Every finding is reported at one of four levels. The level follows from the consequence and from the scenario the finding occurs in.
+
+| Level | Case | Action |
+|---|---|---|
+| **Critical** | Normal operation, inside the system boundaries and inside the datasheet specification, destroys hardware or endangers a function of the machine. Normal operation includes power-up, boot, shutdown and any moment during a game. | Report at once and prominently. Explain the problem in plain words before the numbers, and propose an alternative in the same message. |
+| **Critical** | Operation leaves the datasheet specification and no permissible, safe operation can be derived for it. | As above. |
+| **Critical** | A person can be injured. This holds on the bench as much as in operation. | As above. |
+| **Important** | The Critical cases, occurring while the build is on the bench, or in an abnormal or purely theoretical scenario. | As above, plus an honest assessment of how likely the case is. |
+| **Important** | A part already planned changes, is added, or is dropped. Where the design provides for a choice between exactly those parts, the case is Medium instead. | Explain the change and its consequence in plain words. |
+| **Medium** | A change markedly reduces the performance of a function or of another function, or markedly improves it. | Warn and name a measure. An improvement is reported the same way. |
+| **Medium** | A calculation error runs through several derived figures, or moves one of them significantly. | Warn and correct. Rule 9 governs the re-derivation, rule 7 the sweep across the repository. |
+| **Medium** | A different part from a documented option list becomes the preferred one. | Report prominently. |
+| **Medium** | An alteration would leave a stock part unable to do what it did before (rule 12). | Warn and propose an alternative. |
+| **Medium** | A statement in a main document is objectively wrong while the calculation and the schematic are right. | Warn and propose the correction. |
+| **Low** | A calculation error changes the system or a function not at all or negligibly. | Correct it and report it collected. |
+| **Low** | Wording in a main document is imprecise without being wrong. | Report it and propose the wording. |
+| **Low** | Wording in an appendix is imprecise or wrong. | Correct it and report it collected. |
+
+**A Critical finding is raised once the derivation is finished.** The calculation is carried to its end first, because the result can still change. Where the finding stands at the end, work stops there and waits for a decision.
+
+**A review task is completed before anything is reported.** Findings of every level are collected and delivered with the review.
+
+**Counterproposals are written in chat.** Rule 8 still governs the files: design artifacts change when asked. Documentation follows rule 7, and a cosmetic fix in a file already open is made in passing.
+
+**What counts as significant.** A figure that breaks a rating, an absolute maximum or a stated requirement is Critical or Important. A figure that changes a number another document repeats, or changes a part choice, is Medium. A figure that changes nothing built and nothing written down is Low.
+
+**An unverifiable figure inherits the level of whatever depends on it**, and blocks only that (rule 3).
+
+The severity tables of the review skills map onto these levels:
+
+| Skill severity | Level |
+|---|---|
+| Destroys hardware, Malfunctions (`review-circuit`) | Critical in normal operation, Important on the bench or in a theoretical fault |
+| No margin (`review-circuit`), Thin margin (`design-review`) | Important where a rating is at stake, Medium otherwise |
+| Unverifiable (`review-circuit`) | The level of what depends on it |
+| Below bar, Missing (`design-review`) | Medium |
+| Craft (`design-review`) | Low |
+| Wrong (`review-schematic-svg`) | Medium |
+| Ambiguous, Convention (`review-schematic-svg`) | Low |
+
+## 15. Figures are checked against a model
+
+**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, beside the document it governs, and [`tools/figcheck.py`](tools/figcheck.py) checks that document, any further document the model names and its drawings against it. IR sensing is the first consumer, in [`docs/parts/ir-reflective/figures.py`](docs/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
+
+**A calculation is finished when it stands in the model.** A figure worked out in conversation, or typed straight into a document, has nothing checking it. Until it is declared with its inputs, its unit and its source, it counts as unverified under rule 3, and an answer that reports it says so.
+
+What a request touches:
+
+| Request | Where the change goes |
+|---|---|
+| A value, a part, a supply, a count | the input in the model. `--write` then puts every figure that moved into the documents and the drawings, and rule 7's repo-wide sweep follows |
+| A new derivation | a declaration in the model, with the directions it moves in and, where it states a bound, the side it prints on |
+| Wording, structure, an explanation | the document. A figure is addressed by its value, so rewording costs nothing, and the check has to pass afterwards |
+| A figure that looks wrong | a re-derivation in the model under rule 9. What the check reports is the answer |
+
+**No figure is edited by hand in a document or in a drawing.** `--write` is what puts it there, which is what keeps it typed in one place. A hand edit is what the check then reports.
+
+- **Every number in the document is a declared quantity.** The check reads the whole file, main body as much as appendix: a value in a fenced block or a table has to be a figure the model computes or a quantity it declares, and one that is neither fails the run as an orphan. A figure stated in prose is located by the section that holds it.
+- **A formula holds no constant of its own.** Only 0, 1 and 2 may stand in one, as algebra. Every other number is a declared input with a source, checked when the model loads. A factor written into a derivation, such as the ln(9) between a 10-to-90 % rise time and a time constant, appears in no provenance list and in no document.
+- **Every input names its kind and its source.** `datasheet` and `graph` cite the sheet and where in it the reading sits, `measured` names the bench procedure, `assumed` and `decision` say what was assumed or what was decided. An input with no source does not enter a model.
+- **A derived figure declares which way it moves.** `rises_with` and `falls_with` name the direction for each input, and the checker perturbs that input to confirm the sign. Rule 3's named extreme is recorded there, so choosing the wrong one fails a run instead of reading as correct arithmetic.
+- **A reading off a plotted curve is declared with its curve.** The sheet never prints such a value, so no text search reaches it. Grouping the points of one curve gives the check instead: the shape has to hold, a reading has to sit between the points around it, and where the sheet's table covers the same condition it has to sit inside that. This is internal consistency, and the report says so.
+- **A requirement is written as an invariant**, in terms of the quantities and not of the formulas: the emitter current stays under its absolute maximum, a DOUT bit is home inside the half period. An invariant holds whatever the formulas are, which is what catches a slip the arithmetic accepts.
+- **A bound declares the side it is printed on.** A ceiling is rounded down and a floor is rounded up, so a reader who respects the printed figure respects the real one. Rounding a 23.571 kΩ ceiling to the nearest digit states a limit of 24 kΩ that the design does not meet, and where the digit grid is too coarse to floor without losing accuracy the figure is printed to one more digit.
+
+**A green run means the documents agree with the model, not that the model is right.** Three passes narrow that gap:
+
+| | |
+|---|---|
+| `--sheets` | Looks every datasheet reading up in the PDF it cites. A reading the extractor misses is re-read by hand, and a sheet it cannot read at all is reported as unread rather than counted as passing. A found figure is weak evidence, since a subset font can map a code to the wrong glyph. |
+| `--mutate` | Moves each figure's value and requires the run to report it. A figure that survives its own mutation is one the checker would not have caught, and fails the self-test. |
+| `--blind` | Prints every quantity, its unit and its inputs, with no formula and no value. A later session derives them from the schematic and the datasheets without reading the model, and the two derivations are diffed. |
+
+**`--blind` is for larger reviews**: a design review, a subsystem whose supply or part choice changed, a run of figures that moved together. A single changed value is re-derived under rule 9 instead.

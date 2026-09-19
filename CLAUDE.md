@@ -11,6 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
 - **Assume a software-engineering background, not an electrical one.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
 - **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
+- **Rule 14 grades every finding.** Critical and Important are reported at once, in plain words first, with an alternative in the same message. Medium warns, Low is corrected and reported collected. The derivation is finished before a Critical finding is raised, and a review task is always completed first.
+- **A derived figure is computed in a model and written into the documents from there** (rule 15). Every subsystem that derives figures has its own `docs/parts/<subsystem>/figures.py`, and `tools/figcheck.py` fails the run when a document, an appendix block or an SVG disagrees with it. Change the input in the model, let `--write` put the result in the files, and never type a figure into a document by hand. A green run means consistent, so the direction declarations, the invariants and the datasheet lookup carry what makes it correct.
 - **Rule 10 bans a specific writing tic**: meta-commentary about what a document is or is not, and antithesis used for rhythm. Check prose against it before writing a file.
 - **Search with the model number** — "Teensy 4.1", never "Teensy". Rule 11 gives the source ranking; pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
 
@@ -53,7 +55,22 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 
 ## Commands
 
-None — no build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
+| | |
+|---|---|
+| `python tools/figcheck.py docs/parts/<subsystem>/figures.py --sheets` | Recomputes every figure a subsystem derives and checks its documents and its SVGs against them. `ir-reflective` is the only model so far. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the ten checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs the full set over every `docs/parts/*/figures.py` on each push touching `docs/`, `firmware/` or `tools/` |
+| `… ` prose pass | Every number in the prose, not only the ones in blocks and tables, is matched against every declared quantity with its unit converted. What the model does not compute is declared in it as `MODEL.aside(text, why)`, which is what stops a figure going stale where nothing anchors it |
+| `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a declaration's `group` and `section` are written; guessing them wastes a run |
+| `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |
+| `… --provenance` | Every input by kind, each with its source. `graph` is a reading off a plotted curve, which no text search can confirm |
+| `… --sheets` | Looks every `datasheet` reading up in the PDF it cites, decrypting the empty-password sheets the way a viewer does. A sheet this reader cannot decode is reported unread rather than passed. A `graph` reading is exempt and checked against its declared curve instead |
+| `… --mutate` | Self-test: moves every token a figure could land on and requires the run to report that figure. A twice-printed value that only moves once lands on its other occurrence and hides the break |
+| `… --base <ref>` | The ref the stale-number report diffs against. CI passes the pull request's base |
+| `… --write` | Writes the model's figures into the document and the SVGs, so a figure is typed in the model only. A bound goes in on the side that keeps it true, and a figure the writer cannot place is reported rather than guessed |
+| `… --write-sums` | Records the datasheet checksums after a datasheet is added |
+| `python tools/svgcheck.py` | Measures every label in every drawing under `docs/` and reports the ones that leave the viewBox, leave the box they sit in, or land on another label, and it reports two boxes that cross where one of them is an outline. figcheck checks what a drawing says, this checks whether it can be read. **Run it after moving or adding any text or any box in an SVG.** It stays out of CI: widths are estimated from character classes rather than measured from a font, so a report is a place to look and not a verdict |
+| `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
+
+No build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
 
 ## Conventions
 
@@ -84,6 +101,7 @@ Repository-local, in `.claude/skills/`, so they version with the project.
 | `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colours, module blocks, pin markers |
 | `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
 | `verify-easyeda` | An EasyEDA board changed. Diffs the Allegro `.tel` netlist against a baseline |
+| `revise-document` | A document has to be shortened or made readable. Structure first, then paragraphs, then sentences, deletions accounted for against the diff |
 | `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behaviour. Operationalises rule 3 |
 
 `review-circuit` asks whether the circuit survives, `design-review` whether it is good, `verify-easyeda` whether the board matches the intent. None substitutes for another.

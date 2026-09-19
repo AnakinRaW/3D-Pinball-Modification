@@ -40,10 +40,10 @@ Four near-zero readings group the points into nets:
 
 | Net | Points on it | Evidence |
 |---|---|---|
-| Pin 1 | Pad D, R1's near terminal | `1 → D` and `1 → R1L` = 0.10 Ω |
+| Pin 1 | Pad D, R1's near terminal | `1 → D` and `1 → R1R` = 0.10 Ω |
 | Pin 2 | Pad A | `2 → A` = 0.10 Ω |
 | Pin 3 | Pad C | `3 → C` = 0.0 Ω |
-| Collector | Pad B, R1's far terminal | `1 → B` and `1 → R1R` both = 1.585 kΩ |
+| Collector | Pad B, R1's far terminal | `1 → B` and `1 → R1L` both = 1.585 kΩ |
 
 That leaves three things to identify.
 
@@ -89,8 +89,8 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 | D → A | 3.3 … 1.5 … OL |
 | D → B | 1.365 V |
 | D → C | 1.077 V |
-| D → R1R | 1.365 V |
-| D → R1L | 0.0 V |
+| D → R1R | 0.0 V |
+| D → R1L | 1.365 V |
 
 ### Diode range, pin to pad
 
@@ -98,7 +98,7 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 |---|---|
 | 1 → A | 1.5 … 3.3 … OL |
 | 1 → B | 1.365 V |
-| 1 → R1R | 1.365 V |
+| 1 → R1L | 1.365 V |
 | 1 → C | 1.078 V |
 | 1 → D | 0.0 V |
 | 2 → A | 0.0 V |
@@ -110,10 +110,10 @@ Two further readings follow from that layout. `B → C` = 2.066 V is R1 and the 
 |---|---|
 | 1 → A | 2.4 k … 55 k … undefined |
 | 1 → B | 1.585 kΩ |
-| 1 → R1R | 1.585 kΩ |
+| 1 → R1L | 1.585 kΩ |
 | 1 → C | 18 M … 12 MΩ |
 | 1 → D | 0.10 Ω |
-| 1 → R1L | 0.10 Ω |
+| 1 → R1R | 0.10 Ω |
 | 2 → A | 0.10 Ω |
 | 2 → B | 0.7 M … 60 M … OL |
 | 2 → R1L and R1R | 0.7 M … 60 M … OL |
@@ -139,9 +139,7 @@ Taken on the fully assembled machine while it was running normally. The harness 
 
 ## Discrepancies in the record
 
-Three internal contradictions, each resolvable. None of them changes the topology.
-
-**R1's left and right terminal are swapped in one block.** In the pad-to-pad diode readings, the `B → R1L/R1R` and `D → R1L/R1R` rows are identical (0.0 V / 1.365 V). Both cannot hold: B and D sit at opposite ends of R1, so exactly one of them must read 0.0 V to R1L and the other 0.0 V to R1R. The pin-to-pad resistance block is self-consistent (`1 → R1L` = 0.10 Ω, `1 → R1R` = `1 → B` = 1.585 kΩ) and puts R1L on the Pin 1 / Pad D side. Under that labelling the `D` rows are right and the `B` rows have left and right swapped, which the raw record already flags as possible.
+Two internal contradictions, each resolvable. None of them changes the topology.
 
 **The illumination order is reversed in one row.** `D → A` is recorded as 3.3 … 1.5 … OL and `1 → A` as 1.5 … 3.3 … OL. Pin 1 and Pad D are the same net, so these are the same measurement. More light lowers the phototransistor's collector-emitter resistance and therefore the diode range's displayed voltage, so the monotone order is 1.5 V lit → 3.3 V partly shaded → OL dark: the `1 → A` row is the correct one.
 
@@ -149,24 +147,22 @@ Three internal contradictions, each resolvable. None of them changes the topolog
 
 ## Mainboard
 
-Nothing on the mainboard was probed with a meter. The circuit below is a reconstruction from the part markings and the oscilloscope traces.
+The four resistors were read and measured against the connector pins. The transistor wiring below is a reconstruction from the part markings and the oscilloscope traces.
 
 ![Reconstructed mainboard schematic, one sensor channel](2_IR-Reflective-Mainboard-Schematic.svg)
 
-Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([datasheet](../../datasheets/S8050.PDF)), and four resistors. Three carry a legible marking:
+Read from the packages, per channel: two NPN transistors marked **J3Y**, the SOT-23 marking for the S8050 ([datasheet](../../datasheets/S8050.PDF)), and four resistors.
 
-| Marking | Code | Value |
-|---|---|---|
-| `163` | three-digit EIA, 16 × 10³ | 16 kΩ |
-| `181` | three-digit EIA, 18 × 10¹ | 180 Ω |
-| `01B` | EIA-96, index 01 = 100, multiplier B = × 10 | 1.00 kΩ, 1 % |
+| | Marking | Code | Value | In circuit |
+|---|---|---|---|---|
+| R7 | `163` | three-digit EIA, 16 × 10³ | 16 kΩ | 14.5 kΩ to Pin 2 |
+| R9 | `12B` | EIA-96, index 12 = 130, multiplier B = × 10 | 1.30 kΩ, 1 % | 1.294 kΩ to Pin 1 |
+| R22 | `181` | three-digit EIA, 18 × 10¹ | 180 Ω | 181 Ω to Pin 3 |
+| R24 | `01B` | EIA-96, index 01 = 100, multiplier B = × 10 | 1.00 kΩ, 1 % | 0.995 kΩ, reaches no connector pin |
 
-The three-digit scheme puts a decade exponent in the last character, so `01B` has no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board.
+The three-digit scheme puts a decade exponent in the last character, so `01B` and `12B` have no reading there. EIA-96 carries the 1 % values three digits cannot express, and both schemes appear on this board. R7 reads below its marking because the rest of the channel sits in parallel with it, about 155 kΩ worth. The designators belong to the channel that was probed, and the other two channels repeat the same parts under different numbers.
 
-> [!WARNING]
-> **TODO: Read the fourth resistor**
-
-The reconstruction has Q1 switching the LED cathode to ground through the 180 Ω resistor and driven from the controller through the 1 kΩ, and Q2 taking Pin 2 straight onto its base, with the 16 kΩ as its collector pull-up and the output inverted to a 0–5 V level for the controller.
+The reconstruction has Q1 switching the LED cathode to ground through R22 and driven from the controller through R24. Q2 takes Pin 2 straight onto its base, with R7 from Pin 2 to ground across that junction, R9 as its collector pull-up, and the output inverted to a 0–5 V level for the controller.
 
 ### What the waveforms confirm
 
@@ -175,21 +171,54 @@ Three independent numbers follow from the reconstruction and match what was meas
 | Prediction | Arithmetic | Measured |
 |---|---|---|
 | Pin 2 has a hard ceiling near 0.6 V | Pin 2 sits on Q2's base-emitter junction, which clamps at one V<sub>BE</sub> | ≤ 0.6 V, flat, at every distance |
-| Pin 3's LOW plateau is 5 V − V<sub>F</sub> | V<sub>F</sub> = 1.2 V typ → 3.8 V; the observed 3.5 V implies V<sub>F</sub> ≈ 1.5 V and I = (5 − 1.5 − 0.2) V ÷ 180 Ω = 18.3 mA | 3.5 V |
-| Pin 1 draws roughly 10 mA average | LED at 50 % duty: 18.3…20 mA ÷ 2 = 9.2…10 mA. Phototransistor branch, saturated upper bound (5 − 0.6 − 0.2) V ÷ 1585 Ω = 2.65 mA, at 50 % duty ≤ 1.3 mA. Total 9.2…11.3 mA | 10 mA |
+| Pin 3's LOW plateau is 5 V − V<sub>F</sub> | V<sub>F</sub> = 1.23 V measured, and the LED current at (5 − 1.25 − 0.2) V ÷ 180 Ω = 19.7 mA | 3.5 V, and 3.62 V on a later capture. Both read the plateau against a rail that sags while the emitters are lit |
+| Pin 1 draws roughly 10 mA average | LED at 50 % duty: 19.7 mA ÷ 2 = 9.9 mA. Phototransistor branch, saturated upper bound (5 − 0.6 − 0.2) V ÷ 1585 Ω = 2.65 mA, at 50 % duty ≤ 1.3 mA. Total 9.9…11.2 mA | 10 mA |
 
-The flat ceiling on Pin 2 is the strongest of the three. A resistor to ground would give an output proportional to the photocurrent, rising to whatever R1 and that resistor divide the 5 V rail into — volts, not 0.6 V. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and the datasheet's Fig. 6 puts t<sub>f</sub> above t<sub>r</sub> across the whole plotted load range.
+The flat ceiling on Pin 2 is the strongest of the three. R7 and R1 divide the 5 V rail to 5 V × 16 / (1.585 + 16) = 4.55 V, so photocurrent alone would carry the node into the volts. A closer object raising the amplitude while never pushing past 0.6 V is what a forward-biased junction does, and it also means Q2's base is connected to Pin 2 with no series resistor. Below the ceiling the node is R7 times the photocurrent, which puts the 0.6 V clamp at 0.6 V ÷ 16 kΩ = 37.5 µA. The rounded corners fit the same picture: the falling edge is the more rounded of the two, and Fig. 6 separates t<sub>f</sub> from t<sub>r</sub> at the bottom of its load axis with t<sub>f</sub> the slower, which is where the board's 1.585 kΩ sits.
 
-> [!WARNING]
-> **TODO: the ceiling argument rules out a divider without Q2, and not a resistor in parallel with the base-emitter junction, which clamps at 0.6 V just the same. The fourth, unread resistor is the candidate for that position. Reading its marking settles it.**
+The LED current of 19.7 mA sits 2.5× inside the 50 mA absolute maximum, and the phototransistor's ≤ 2.65 mA well inside its 20 mA I<sub>C</sub> maximum.
 
-The LED current of 18–20 mA sits 2.5× inside the 50 mA absolute maximum, and the phototransistor's ≤ 2.65 mA well inside its 20 mA I<sub>C</sub> maximum.
+### V<sub>F</sub> and the LED current, measured
+
+Two paths at the connector, both against a rail measured at 5.14 V.
+
+| Path | Wiring | Reading | Result |
+|---|---|---|---|
+| Current | 49.5 Ω in the Pin 3 line, board still driven by the mainboard | 399 mV, a meter's average over both half-periods | 16.1 mA in the lit half with the shunt in circuit |
+| V<sub>F</sub> | Pin 3 off the mainboard, a 220 Ω from Pin 3 to ground, LED lit continuously | 3.91 V across it, and it measures 223 Ω | 17.5 mA, V<sub>F</sub> = 1.23 V |
+
+V<sub>F</sub> from the second path predicts 16.2 mA for the first against the 16.1 mA read, so the reconstruction holds: the first path solves to 181 Ω against the mainboard resistor's 180 Ω marking, and the fourth resistor is not in the LED branch. 1.23 V at 17.5 mA sits on Figure 3's 75 °C curve, which gives 1.25 V there.
+
+Without the shunt the machine drives 19.7 mA at a 5.00 V rail and 20.4 mA at the 5.14 V measured. Pin 3's lit plateau reads 3.62 V on the scope against 3.91 V on the meter, the rail sagging about 0.29 V during the lit half, which is 5 Ω of source resistance at the 57 mA three emitters draw together.
+
+### Ball signal and settling, measured
+
+Sensor at its installed position over the track, supply **3.37 V**, **4.7 kΩ** from Pin 2 to ground, room lit. Both are this design's, not the machine's. Taken twice, once at each emitter resistor the design considered; the 100 Ω row is the one the three stock channels run.
+
+| R<sub>E</sub> | | clear track | ball | signal |
+|---|---|---|---|---|
+| 220 Ω | LED on | 20.0 mV | 106 mV | **88.1 mV** |
+| | LED off | 2.1 mV | 0.0 to 0.1 mV | |
+| 100 Ω | LED on | 46.9 mV | 215 mV | **171.9 mV** |
+| | LED off | 3.8 mV | 0.0 mV | |
+
+Subtracting each dark reading from its lit one, and the two results from each other, gives the signal column. Through the 4.7 kΩ that is **36.6 µA** at 100 Ω and 18.7 µA at 220 Ω.
+
+**The signal grew by 1.95 where the emitter current grew by 2.14**, so it rises a little more slowly than the current driving it. 2.20 V across the 220 Ω is 10.0 mA at V<sub>F</sub> = 1.17 V, which puts 100 Ω near 21.4 mA. Neither figure can be scaled to a third current, because Sharp publishes I<sub>C</sub> at I<sub>F</sub> = 4 mA only, 60 to 410 µA, and no curve against forward current.
+
+**The difference cancels ambient light.** Brighter room light at 220 Ω took the dark reading from 2.1 to 13 mV, a factor of six, while what the emitter returns held at 17.9 against 20.0 mV.
+
+**A ball lowers the dark reading instead of raising it**, because it covers the slot. The shift at 100 Ω is 3.8 mV against a 171.9 mV signal.
+
+**τ is 53 µs**, taken at the same node with a ball on the track, on the falling edge, where the curve passes 108 mV × e⁻¹ = 39.7 mV. It comes off a screen photograph and carries about ±20 %. Only the falling edge was needed: from about 2 kΩ upward Figure 6 draws t<sub>r</sub> and t<sub>f</sub> as one curve. The 53 µs sit between the 32 µs Figure 6 reads there and the 62 µs its shape applied to the 100 µs maximum gives, and rule out the 214 µs that scaling that maximum linearly with the load would give.
+
+![Falling edge at the 4.7 kΩ node with a ball on the track. Rigol DS1202Z-E, 50 µs/div, 50 mV/div, cursors at 108.0 mV and 0 V. The wire bounced on lifting, so the trace falls, returns to 108 mV and falls again; the second edge is the one read.](2_ir_swing_measurement.jpg)
 
 ### Q1's base drive
 
 The controller drives Q1's base through the 1 kΩ. This ensures the pin only has to deliver what the resistor lets through, instead of the much larger current a bare base would draw from it. 1 kΩ satisfies both sides of that: small enough to switch Q1 fully on, large enough to keep the pin's current low.
 
-The datasheet measures V<sub>CE(sat)</sub> at I<sub>C</sub> = 500 mA with I<sub>B</sub> = 50 mA, a collector-to-base ratio of 10. Q1 switches 18.3 mA with 3.8 mA into its base, a ratio of 5. The more base current a transistor gets, the less voltage it drops while it is on. Q1 gets twice as much as the datasheet's test point, so the 0.2 V used for that drop above is safe.
+The datasheet measures V<sub>CE(sat)</sub> at I<sub>C</sub> = 500 mA with I<sub>B</sub> = 50 mA, a collector-to-base ratio of 10. Q1 switches 19.7 mA with 3.8 mA into its base, a ratio of 5. The more base current a transistor gets, the less voltage it drops while it is on. Q1 gets twice as much as the datasheet's test point, so the 0.2 V used for that drop above is safe.
 
 ### Timing
 
