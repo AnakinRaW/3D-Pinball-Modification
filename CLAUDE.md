@@ -101,6 +101,7 @@ Repository-local, in `.claude/skills/`, so they version with the project.
 | `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colours, module blocks, pin markers |
 | `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
 | `verify-easyeda` | An EasyEDA board changed. Diffs the Allegro `.tel` netlist against a baseline |
+| `revise-document` | A document has to be shortened or made readable. Structure first, then paragraphs, then sentences, deletions accounted for against the diff |
 | `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behaviour. Operationalises rule 3 |
 
 `review-circuit` asks whether the circuit survives, `design-review` whether it is good, `verify-easyeda` whether the board matches the intent. None substitutes for another.
