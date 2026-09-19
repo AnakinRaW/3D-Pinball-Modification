@@ -47,7 +47,6 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | 19 | SCL to the rotary sensors | Wire SCL | Hall | — |
 | 20 | Target sense 1 | plain digital input | Targets | — |
 | 21 | Target sense 2 | plain digital input | Targets | — |
-| 22 | Foil drive, 3.3 V | plain digital output | Bumpers | — |
 | 23 | Target sense 3 | plain digital input | Targets | — |
 | 24 | Servo signal | PWM | Servo | — |
 | 26 | MOSI to the display | SPI1 MOSI | Display | — |
@@ -71,14 +70,14 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | Serial1 and CAN2 | Bumpers, pins 0 and 1 |
 | Serial8 | Bumpers, pins 34 and 35 |
 | Serial3 and S/PDIF | Bumpers, pins 14 and 15 |
-| CAN1 | Targets, pin 23, the only CAN1 RX; and the foil, pin 22, which is CAN1 TX's last alternative once pin 11 carries MOSI |
+| CAN1 | Targets, pin 23, the only CAN1 RX. TX still has pin 22 once pin 11 carries MOSI, so the port dies on its receive side alone |
 | Wire2 and Serial6 | Servo, pin 24. Both need the pair 24 and 25 |
-| I²S1 | Targets and the foil, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
-| 13 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A8 foil; A10 servo; A12, A13, A15 display. Free: A2, A3 on pins 16 and 17, A11 on 25, A16, A17 on 40 and 41 |
+| I²S1 | Targets, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
+| 12 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25, A16, A17 on 40 and 41 |
 
 **One AS5600, on `Wire`.** Its address is fixed at 0x36 with no address pins, so a second one on the same two wires collides with the first. A second sensor takes `Wire1` on pins 16 and 17, or a TCA9548A multiplexer on pins 18 and 19, which carries up to eight and costs no further pin.
 
-**Where the next pins come from.** Five edge pins remain: 16, 17, 25, 40 and 41, all analog-capable, and pin 25 is the last one that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
+**Where the next pins come from.** Six edge pins remain: 16, 17, 22, 25, 40 and 41, all analog-capable. Of those, 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
 
 ## Signal names
 
