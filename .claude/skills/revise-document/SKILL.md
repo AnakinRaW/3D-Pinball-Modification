@@ -21,7 +21,35 @@ One pass through the file, marking three things. This pass belongs here, not to 
 - Every sentence carrying more than one claim, and every bold lead that is a label rather than a sentence.
 - Every pronoun or stand-in without a referent in reach: "the result", "that value", "the two".
 
-### 2. Structure
+### 2. Build the inventory
+
+Nothing else in this skill works without knowing what already stands where. The inventory is built at the start of a run and carried through it, and it is derived rather than stored: it is rebuilt each time, so it cannot go stale.
+
+One row per claim the document makes, keyed by the anchors that can be found again mechanically:
+
+| Column | Content |
+|---|---|
+| Anchor | The symbol, figure, part or peripheral the claim is about: `t_ovh`, 17.78 µs, MCP3008, FlexPWM3.1 |
+| Claim | What is asserted about it, in a handful of words |
+| Where | File and section, and the line |
+
+The anchors come out of the file itself. `grep -n` over the symbols in the formula blocks, over every figure the model declares, and over the part and peripheral names finds every place a claim can hide, including tables, legends and note boxes.
+
+**The inventory spans the repository, not the file.** The same fact stands in the subsystem document, the pin table, the parts list and the model, and rule 7 gives each of those a different scope. Before a passage is kept, its anchor is grepped across `docs/` and `firmware/`, not only in the file being revised.
+
+**Then, for every passage, look its anchor up.** Where the claim is already in the inventory:
+
+| Case | What happens |
+|---|---|
+| The second place adds a figure, a consequence or a condition the first does not | Both stay. The second says only what is new and points at the first |
+| The second place is a legend, a table cell or a note box that has to stand alone | Both stay. A table that cannot be read without scrolling back has failed |
+| The two places belong to documents of different scope under rule 7 | Both stay, one carrying the fact and the other the rationale, with a link between them |
+| The two say the same thing in the same scope | One goes. The one that stays is the one whose section the reader reaches first, or the one rule 7 names as the owner |
+| The two are each half of the claim | They merge, and the merge decides where the whole claim lives |
+
+A passage that survives this is worth its sentences. A passage that repeats a claim without adding to it is deleted rather than rewritten, however well it reads.
+
+### 3. Structure
 
 Merge two sections where one of these holds:
 
@@ -35,25 +63,40 @@ Move a section where it answers a question that arises earlier in the file. A se
 
 Drop a section where its content is derivable from what already stands, and where nothing points at it.
 
-### 3. Paragraphs
+### 4. Paragraphs
 
-For each paragraph, ask what it gives a reader who has to rebuild this. Delete rather than rewrite where the answer is:
+**Every paragraph, without exception, is put to one question: what is this supposed to tell a person reading it?** The answer decides what happens to it, and the default is deletion, not rewriting.
 
-- It repeats the table, the list or the section above it.
+**The answers are written out before anything is edited**, one line per paragraph, numbered, in a scratch file. A question answered in the head is skipped in the head: the paragraph that prompted this rule survived a pass that claimed to apply the test. The written answer also exposes the duplication inside a paragraph, which the repository-wide inventory of step 2 cannot see, because three sentences about one anchor in one paragraph are the same fault one level down.
+
+| Answer | What happens |
+|---|---|
+| Nothing | The whole paragraph goes |
+| One thing, and one sentence carries it | That sentence stays, everything else in the paragraph goes |
+| One thing, said in three formulations | One formulation stays |
+| Every sentence carries a claim of its own | The paragraph survives whole |
+
+The chip-select paragraph that prompted this rule said "the select is framed per conversion", then "the transfer list is split per conversion, with the select toggled between them", then "`SPI.transfer` leaves the select to the caller around each transfer". Three sentences, one instruction. What it owed the reader was the instruction, the failure it prevents and the reason the library allows it.
+
+The answer is "nothing" where:
+
+- It repeats the table, the list or the section above it, or anything the inventory already holds.
 - It answers a question that was asked in conversation. A figure that settled a chat question stays in chat.
 - It states what a rejected approach would do, where the requirements already rule that approach out.
 - It copies a datasheet line that the model already carries as a source.
 - It draws no conclusion: a formula with no figure and no consequence gives the reader homework.
 
-### 4. Sentences
+### 5. Sentences
 
 Rewrite for structure, not for polish:
 
 - The claim first, the mechanism after it.
 - One claim to a sentence. A semicolon or a colon joining two claims is two sentences.
+- A sentence carrying "not" or "rather than" is checked against the file's own history. Where the negated half is what an earlier draft said, or what the conversation just corrected, it is revision narrative and it goes. Rule 10 allows the negation only for a mistake the reader would make unprompted, which is not the same as the mistake the writer made a minute ago.
 - No cleft openings: "What a ball changes is the difference" is "A ball changes the difference".
 - No dangling participle, no apposition that attaches to the wrong noun.
 - A term is explained where it first appears, in ordinary words, and named after the explanation.
+- A hardware constraint is stated as the shape it forces on the code, not as the mechanism behind it. "Every conversion runs as its own transfer" lands where "the chip select is toggled per conversion" does not, and the mechanism follows in the same sentence as the reason.
 
 ## After the edit
 
