@@ -1,0 +1,108 @@
+<svg viewBox="0 0 880 630" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="880" height="630" fill="#ffffff"/>
+  <text x="30" y="36" font-size="18" font-weight="700" fill="#1a1a1a">Stock IR break-beam channel</text>
+  <text x="30" y="58" font-size="13" fill="#666">Emitter and receiver, each soldered to the mainboard by its two leads</text>
+  <rect x="30" y="72" width="510" height="30" fill="#fdf3d1" stroke="#d4b106"/>
+  <text x="40" y="92" font-size="13" font-weight="700" fill="#7a5c00">RECONSTRUCTED · Q6 and R12 inferred, R25, R26 and R11 measured in place</text>
+
+  <!-- 5 V rail -->
+  <text x="240" y="117" font-size="14" font-weight="700" fill="#c0392b">+5 V</text>
+  <text x="292" y="117" font-size="11.5" fill="#777">measured 5.212 V</text>
+  <line x1="240" y1="125" x2="578" y2="125" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="430" cy="125" r="4" fill="#c0392b"/>
+  <circle cx="470" cy="125" r="4" fill="#c0392b"/>
+
+  <!-- Emitter -->
+  <rect x="40" y="170" width="170" height="120" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="56" y="196" font-size="16" font-weight="700" fill="#5c4a00">Emitter</text>
+  <line x1="150" y1="205" x2="150" y2="218" stroke="#b7950b" stroke-width="2.5"/>
+  <polygon points="138,218 162,218 150,242" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="136" y1="246" x2="164" y2="246" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="150" y1="246" x2="150" y2="265" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="150" y1="205" x2="210" y2="205" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="150" y1="265" x2="210" y2="265" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="172" y1="228" x2="190" y2="218" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="190,218 181,219 184,224" fill="#e67e22"/>
+  <line x1="172" y1="242" x2="190" y2="232" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="190,232 181,233 184,238" fill="#e67e22"/>
+  <circle cx="210" cy="205" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <circle cx="210" cy="265" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
+  <text x="220" y="198" font-size="12" font-weight="700" fill="#8a6d0b">Anode</text>
+  <text x="220" y="256" font-size="12" font-weight="700" fill="#8a6d0b">Cathode</text>
+
+  <!-- Emitter wiring -->
+  <line x1="216" y1="205" x2="300" y2="205" stroke="#b7950b" stroke-width="2.5"/>
+  <rect x="300" y="195" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="335" y="209" font-size="12" font-weight="700" fill="#1a1a1a" text-anchor="middle">81.6 Ω</text>
+  <text x="300" y="187" font-size="12.5" fill="#1a1a1a">R25 · "82R0"</text>
+  <line x1="370" y1="205" x2="430" y2="205" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="430" y1="125" x2="430" y2="205" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="216" y1="265" x2="260" y2="265" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="260" y1="265" x2="260" y2="292" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="244" y1="292" x2="276" y2="292" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="250" y1="299" x2="270" y2="299" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="256" y1="306" x2="264" y2="306" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="56" y="308" font-size="12.5" fill="#666">48.3 mA, continuous</text>
+  <text x="56" y="326" font-size="12.5" fill="#666">forward voltage 1.246 V</text>
+
+  <!-- Receiver -->
+  <rect x="40" y="345" width="170" height="150" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="56" y="371" font-size="16" font-weight="700" fill="#5c4a00">Receiver</text>
+  <line x1="150" y1="395" x2="150" y2="455" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="150" y1="405" x2="168" y2="387" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="168" y1="387" x2="210" y2="387" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="150" y1="445" x2="168" y2="463" stroke="#1a1a1a" stroke-width="2.5"/>
+  <polygon points="168,463 158,460 163,453" fill="#1a1a1a"/>
+  <line x1="168" y1="463" x2="210" y2="463" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="100" y1="412" x2="132" y2="412" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="132,412 123,408 123,416" fill="#e67e22"/>
+  <line x1="100" y1="428" x2="132" y2="428" stroke="#e67e22" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="132,428 123,424 123,432" fill="#e67e22"/>
+  <text x="56" y="402" font-size="11" font-weight="700" fill="#e67e22">IR beam</text>
+  <text x="56" y="485" font-size="11.5" fill="#777">phototransistor only</text>
+  <circle cx="210" cy="387" r="6" fill="#2c3e50"/>
+  <circle cx="210" cy="463" r="6" fill="#2c3e50"/>
+  <text x="220" y="380" font-size="12" font-weight="700" fill="#2c3e50">Collector</text>
+  <text x="220" y="480" font-size="12" font-weight="700" fill="#2c3e50">Emitter</text>
+  <text x="220" y="440" font-size="12" fill="#666">38.1 µA at this node trips the output</text>
+
+  <!-- Collector load -->
+  <line x1="216" y1="387" x2="470" y2="387" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="470" y1="340" x2="470" y2="387" stroke="#2c3e50" stroke-width="2.5"/>
+  <rect x="457" y="280" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="470" y1="125" x2="470" y2="280" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="447" y="300" font-size="12.5" fill="#1a1a1a" text-anchor="end">R26 · 1.589 kΩ ("162")</text>
+  <text x="447" y="318" font-size="11.5" fill="#666" text-anchor="end">2.78 mA with the beam clear</text>
+
+  <!-- Sense node and R11 -->
+  <line x1="216" y1="463" x2="560" y2="463" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="340" cy="463" r="4" fill="#2c3e50"/>
+  <line x1="340" y1="463" x2="340" y2="500" stroke="#2c3e50" stroke-width="2.5"/>
+  <rect x="327" y="500" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="340" y1="560" x2="340" y2="580" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="324" y1="580" x2="356" y2="580" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="330" y1="587" x2="350" y2="587" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="336" y1="594" x2="344" y2="594" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="367" y="534" font-size="12.5" fill="#1a1a1a">R11 · 15.76 kΩ ("163")</text>
+
+  <!-- Q6 -->
+  <line x1="560" y1="433" x2="560" y2="493" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="560" y1="443" x2="578" y2="425" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="560" y1="483" x2="578" y2="501" stroke="#1a1a1a" stroke-width="2.5"/>
+  <polygon points="578,501 568,498 573,491" fill="#1a1a1a"/>
+  <text x="598" y="470" font-size="13" font-weight="700" fill="#1a1a1a">Q6 · S8050 ("J3Y")</text>
+  <line x1="578" y1="300" x2="578" y2="425" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="578" cy="300" r="4" fill="#1a1a1a"/>
+  <rect x="565" y="220" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="578" y1="280" x2="578" y2="300" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="578" y1="125" x2="578" y2="220" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="601" y="254" font-size="12.5" fill="#1a1a1a">R12 · 6.6 kΩ ("682")</text>
+  <line x1="578" y1="300" x2="760" y2="300" stroke="#1a1a1a" stroke-width="2.5"/>
+  <polygon points="760,300 746,294 746,306" fill="#1a1a1a"/>
+  <text x="768" y="304" font-size="13" fill="#1a1a1a">to controller</text>
+  <line x1="578" y1="501" x2="578" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="562" y1="540" x2="594" y2="540" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="568" y1="547" x2="588" y2="547" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="574" y1="554" x2="582" y2="554" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="40" y="614" font-size="11.5" fill="#777">Lead orientation follows the rail readings; the diode range disagrees.</text>
+</svg>

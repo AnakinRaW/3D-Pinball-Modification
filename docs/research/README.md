@@ -13,5 +13,6 @@ Component specifications and the reasoning behind a part choice are recorded her
 | [`Rokr/3_bumper-control.md`](Rokr/3_bumper-control.md) | The stock bumpers: solenoid figures, the foil-and-shell trigger contact, wiring to the mainboard, and the parts seen on the board |
 | [`Rokr/4_lighting.md`](Rokr/4_lighting.md) | The stock lighting: the LED inventory by board and colour, the strips and their housings, the driver stage read from the mainboard, and the TM1617 display driver |
 | [`Rokr/5_sound.md`](Rokr/5_sound.md) | The stock sound: the speaker's impedance and connection, the sounds heard in play and what triggers them, and the single-voice playback |
+| [`Rokr/6_ir-break-beam.md`](Rokr/6_ir-break-beam.md) | The stock through-beam sensor: the emitter and receiver on their solder points, the parts of its mainboard channel, and the continuously lit emitter |
 
 `Rokr/` holds findings about the stock machine. Manufacturer datasheets live in [`../datasheets/`](../datasheets/).
