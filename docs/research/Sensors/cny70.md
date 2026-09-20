@@ -1,8 +1,8 @@
 # CNY70
 
-Notes on the reflective optical sensor held for a bench trial against the [GP2S700HCP](Rokr/2_ir-reflective-sensor-p33.md) the stock sensor boards carry.
+Notes on the reflective optical sensor held for a bench trial against the [GP2S700HCP](../Rokr/2_ir-reflective-sensor-p33.md) the stock sensor boards carry.
 
-Figures are quoted from Vishay's [datasheet](../datasheets/CNY70-Vishay.pdf), document 83751, Rev. 1.8.
+Figures are quoted from Vishay's [datasheet](../../datasheets/CNY70-Vishay.pdf), document 83751, Rev. 1.8.
 
 ## Specifications
 
@@ -61,7 +61,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 
 **The two collector-current figures do not compare.** Forward current, collector voltage, reflector material and distance all differ between the conditions, and the CNY70 sheet publishes no curve that carries a reading from one condition to the other. Which part returns more from a 9 mm steel ball at the working distance the playfield imposes comes off the bench.
 
-**Vishay publishes no switching figure of any kind for the CNY70.** No rise time, no fall time, no curve against load resistance. The settling models in the [channel model](../parts/ir-reflective/channel-model/) that rest on Sharp's Figure 6 therefore have no counterpart here, and every τ for this part starts from a measurement. Two shapes carry that measurement to other pull-downs and bracket the answer: τ proportional to the load, which is the first-order relation a load resistance against a fixed capacitance gives, and τ flat, which is what the measurement alone states.
+**Vishay publishes no switching figure of any kind for the CNY70.** No rise time, no fall time, no curve against load resistance. The settling models in the [channel model](../../parts/ir-reflective/channel-model/) that rest on Sharp's Figure 6 therefore have no counterpart here, and every τ for this part starts from a measurement. Two shapes carry that measurement to other pull-downs and bracket the answer: τ proportional to the load, which is the first-order relation a load resistance against a fixed capacitance gives, and τ flat, which is what the measurement alone states.
 
 ## The collector load
 
@@ -69,7 +69,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 
 **What it does bound is the current the device can pass.** A phototransistor under strong infrared saturates, and Sharp publishes no V_CE(sat) for the GP2S700HCP, so nothing in the sheet bounds the branch once that happens. R1 bounds it at (5 − 0.6) V / 1585 Ω = 2.8 mA against the 20 mA I_C maximum, taking the 0.6 V that Pin 2 was measured to clamp at. Whatever is wired to Pin 2 is inside that bound as well.
 
-The 0.6 V clamp is a scope reading, flat at every distance, so a base-emitter junction on the mainboard holds Pin 2 there. The mainboard itself was never probed: its circuit is [a reconstruction](Rokr/2_ir-reflective-sensor-p33.md) from part markings and scope traces, one of its four resistors is unread, and whether a resistor sits at Pin 2 beside that junction is open. The clamp holds either way, so the bound above does not rest on it.
+The 0.6 V clamp is a scope reading, flat at every distance, so a base-emitter junction on the mainboard holds Pin 2 there. The mainboard itself was never probed: its circuit is [a reconstruction](../Rokr/2_ir-reflective-sensor-p33.md) from part markings and scope traces, one of its four resistors is unread, and whether a resistor sits at Pin 2 beside that junction is open. The clamp holds either way, so the bound above does not rest on it.
 
 **This modification puts a pull-down at that node**, which bounds the current at 3.449 V / 4.7 kΩ = 734 µA on its own. The rebuilt boards carry R1 because they are 1:1 copies of the stock board. Nothing in the CNY70's ratings asks for it either.
 

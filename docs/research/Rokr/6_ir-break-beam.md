@@ -1,6 +1,6 @@
 # Stock IR break-beam sensor
 
-The stock machine carries one through-beam pair, each part soldered to the mainboard by its two leads, with drive and evaluation next to them.
+The stock machine carries one through-beam pair at the ball drain, each part soldered to the mainboard by its two leads, with drive and evaluation next to them.
 
 ![Reconstructed schematic of the stock break-beam channel](6_ir-break-beam-schematic.svg)
 
