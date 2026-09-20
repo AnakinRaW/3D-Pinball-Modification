@@ -14,6 +14,7 @@
 | 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
 | 36 | CS-A, converter for channels 1 to 8 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
 | 37 | CS-B, converter for channels 9 to 16 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
+| 40 | Receiver output of the ball drain gate | plain digital input | Break beam | [break-beam](parts/break-beam/design.md) |
 
 ### What this allocation costs
 
@@ -25,6 +26,7 @@
 | The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
 | SPI1, by consequence | Sensors. With SPI reserved, the next SPI device lands on SPI1, which the display reservation below now holds |
 | 10 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 11, 12, 13, 29, 36, 37. Every pin in the allocation is PWM-capable |
+| A16 | Break beam, pin 40 |
 | FlexPWM3.1, as a free-running timer | Sensors, pin 29, which generates the LED pulse in hardware at the phase frequency the driver sets. Pin 28 sits on the same submodule and shares that frequency, so it can still serve as a plain pin but not as a PWM output at a rate of its own |
 
 ## Reserved
@@ -73,11 +75,11 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | CAN1 | Targets, pin 23, the only CAN1 RX. TX still has pin 22 once pin 11 carries MOSI, so the port dies on its receive side alone |
 | Wire2 and Serial6 | Servo, pin 24. Both need the pair 24 and 25 |
 | I²S1 | Targets, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
-| 12 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25, A16, A17 on 40 and 41 |
+| 12 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25, A17 on 41 |
 
 **One AS5600, on `Wire`.** Its address is fixed at 0x36 with no address pins, so a second one on the same two wires collides with the first. A second sensor takes `Wire1` on pins 16 and 17, or a TCA9548A multiplexer on pins 18 and 19, which carries up to eight and costs no further pin.
 
-**Where the next pins come from.** Six edge pins remain: 16, 17, 22, 25, 40 and 41, all analog-capable. Of those, 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
+**Where the next pins come from.** Five edge pins remain: 16, 17, 22, 25 and 41, all analog-capable. Of those, 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
 
 ## Signal names
 

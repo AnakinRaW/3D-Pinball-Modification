@@ -1,6 +1,6 @@
-# HD-DS25CM-3MM IR break-beam pair
+# Adafruit 2167 IR break-beam pair
 
-The through-beam sensor [Adafruit 2167](https://www.adafruit.com/product/2167) is used for ball drain detection. 
+The through-beam sensor [Adafruit 2167](https://www.adafruit.com/product/2167) is used for ball drain detection. The actual sensor name is HD-DS25CM-3MM.
 
 Emitter and receiver are separate bodies with 3 mm LEDs, each on flying leads, and they face each other across the ball path at a gap of 2 cm.
 
