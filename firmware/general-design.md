@@ -7,6 +7,7 @@ What one driver alone has to keep sits with that driver:
 | Subsystem | File |
 |---|---|
 | IR ball sensing | [`ir-sensing.md`](ir-sensing.md) |
+| Break beam | [`break-beam.md`](break-beam.md) |
 | Lighting | [`lighting.md`](lighting.md) |
 
 ## Nothing in the main loop may block

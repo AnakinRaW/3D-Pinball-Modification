@@ -6,7 +6,7 @@ Emitter and receiver are separate bodies with 3 mm LEDs, each on flying leads, a
 
 ## Output polarity
 
-Read on the bench at a 3.3 V supply, with 10 kΩ from the white lead to the supply: **3.3 V with the beam clear, 10 to 11 mV with the beam blocked.** The output transistor conducts while the beam is blocked, so a controller input reads LOW for a ball in the gate.
+Read on the bench at a 3.3 V supply, with 10 kΩ from the white lead to the supply: **3.3 V with the beam clear, 10 to 11 mV with the beam blocked.** The output transistor pulls the line to ground while the beam is blocked, so a controller input reads LOW for a ball in the gate.
 
 A broken lead, a dead receiver and an unpowered emitter all leave the pull-up holding the input high, which reads as a clear beam.
 

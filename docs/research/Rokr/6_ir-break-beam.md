@@ -4,6 +4,10 @@ The stock machine carries one through-beam pair at the ball drain, each part sol
 
 ![Reconstructed schematic of the stock break-beam channel](6_ir-break-beam-schematic.svg)
 
+## When the ball counts as lost
+
+The machine registers the lost ball at the moment the beam is interrupted.
+
 ## Beam pair
 
 The emitter is one IR LED between its two solder points, reading 1.054 V in the diode range. In operation 1.246 V was measured.
