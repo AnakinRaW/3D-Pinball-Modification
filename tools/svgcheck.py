@@ -23,6 +23,7 @@ wolf on labels that merely touch.
     python tools/svgcheck.py                       every SVG under docs/
     python tools/svgcheck.py path/to/one.svg ...   only those
     python tools/svgcheck.py --slack 4             a wider tolerance
+    python tools/svgcheck.py --margin 8            clearance a label is owed from a shape
 """
 
 import re
@@ -193,7 +194,7 @@ def viewbox(src):
     return a, b, a + c, b + d
 
 
-def check(path, slack):
+def check(path, slack, margin=0.0):
     src, labels = boxes(path)
     vb = viewbox(src)
     bad = []
@@ -240,20 +241,41 @@ def check(path, slack):
     page = 0.0
     if vb:
         page = (vb[2] - vb[0]) * (vb[3] - vb[1])
+    drawn = shapes(src)
     for t in labels:
         if t["rot"]:
             continue
-        for kind, sx0, sy0, sx1, sy1, sline, hollow in shapes(src):
+        # A filled shape painted after a wire hides it, so a label inside that
+        # shape reads cleanly however the wire runs beneath. A resistor value
+        # inside its own body, with its net passing through, is the case.
+        covers = [ln for _k, x0, y0, x1, y1, ln, hollow in drawn
+                  if not hollow and x0 <= t["x0"] and t["x1"] <= x1
+                  and y0 <= t["y0"] and t["y1"] <= y1]
+        for kind, sx0, sy0, sx1, sy1, sline, hollow in drawn:
+            if any(c > sline for c in covers):
+                continue
             if (sx1 - sx0) * (sy1 - sy0) > 0.25 * page:
                 continue                          # a frame, not a symbol
             if sx0 - slack <= t["x0"] and t["x1"] <= sx1 + slack \
                and sy0 - slack <= t["y0"] and t["y1"] <= sy1 + slack:
                 continue                          # the label sits inside it
-            ox = min(t["x1"], sx1) - max(t["x0"], sx0)
-            oy = min(t["y1"], sy1) - max(t["y0"], sy0)
+            # The margin is clearance the label is owed, so the box is grown
+            # by it before the overlap is measured. A label that merely comes
+            # close to a wire or a symbol is then reported the same way one
+            # sitting on it is.
+            ox = min(t["x1"] + margin, sx1) - max(t["x0"] - margin, sx0)
+            oy = min(t["y1"] + margin, sy1) - max(t["y0"] - margin, sy0)
             # A label placed beside a wire touches it by a pixel or two as a
-            # matter of course, so this one wants more room than the edges do.
-            if ox <= max(slack, 4) or oy <= max(slack, 4):
+            # matter of course, so without a margin this wants more room than
+            # the edges do. With one, any intersection of the grown box counts:
+            # a wire is thinner than the margin, so the overlap with it can
+            # never reach that floor however much clearance the label is owed.
+            # A label beside a wire touches it by a pixel or two as a matter of
+            # course, and the tolerance covers that. It may not be raised above
+            # the tolerance: a wire is thinner than that, so the overlap with
+            # one can never reach a higher floor however squarely the label
+            # sits on it, which is how a label centred on a wire went unseen.
+            if ox <= slack or oy <= slack:
                 continue
             # Nothing is painted inside an outline, so only its border band can
             # be crossed. A label that merely reaches into an open box is fine.
@@ -263,8 +285,11 @@ def check(path, slack):
                 if inner[0] <= t["x0"] and t["x1"] <= inner[2] \
                    and inner[1] <= t["y0"] and t["y1"] <= inner[3]:
                     continue
+            gap = min(ox, oy) - margin
+            how = (f"{ox:.0f} x {oy:.0f} over" if gap > 0
+                   else f"{-gap:.0f} short of the {margin:.0f} it is owed from")
             bad.append((t["line"], "on a " + kind, t["txt"],
-                        f"{ox:.0f} x {oy:.0f} over the {kind} on line {sline}"))
+                        f"{how} the {kind} on line {sline}"))
 
     for i, a in enumerate(labels):
         if a["rot"]:
@@ -304,15 +329,30 @@ def check(path, slack):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    slack = 2.0
-    if "--slack" in sys.argv:
-        slack = float(sys.argv[sys.argv.index("--slack") + 1])
+    # A flag's value is not a file name, so the two are separated here rather
+    # than by dropping everything that starts with a dash.
+    argv, args = sys.argv[1:], []
+    slack, margin, i = 2.0, 0.0, 0
+    while i < len(argv):
+        a = argv[i]
+        if a in ("--slack", "--margin"):
+            if i + 1 >= len(argv):
+                print(f"{a} needs a number")
+                return 2
+            if a == "--slack":
+                slack = float(argv[i + 1])
+            else:
+                margin = float(argv[i + 1])
+            i += 2
+            continue
+        if not a.startswith("--"):
+            args.append(a)
+        i += 1
     files = [Path(a) for a in args] or sorted((ROOT / "docs").rglob("*.svg"))
 
     total = 0
     for f in files:
-        found = check(f, slack)
+        found = check(f, slack, margin)
         total += len(found)
         try:
             rel = f.resolve().relative_to(ROOT)

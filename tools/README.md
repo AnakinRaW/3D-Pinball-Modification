@@ -16,7 +16,15 @@ figcheck compares the values in a drawing. Whether the drawing can be read is a 
 python tools/svgcheck.py                       every SVG under docs/
 python tools/svgcheck.py path/to/one.svg ...   only those
 python tools/svgcheck.py --slack 4             a wider tolerance
+python tools/svgcheck.py --margin 8            clearance a label is owed from a shape
+python tools/svgcheck.py --margin 0            report only what actually touches
 ```
+
+The margin is clearance rather than tolerance. A label is grown by it before the
+overlap with a wire or a symbol is measured, so one that merely comes close is
+reported the same way one sitting on it is. It defaults to 4 and applies to the
+label-against-shape check alone: two lines of one caption sit close on purpose,
+so `overlap` keeps the tolerance and gets no margin.
 
 What it reports:
 
