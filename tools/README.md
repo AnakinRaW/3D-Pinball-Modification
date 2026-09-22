@@ -88,6 +88,14 @@ Flags:
 | `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing |
 | `--sheets`, `--mutate`, `--no-stale` | Switch the named pass on, or off |
 
+A sheet comes back unusable in two ways, and both are reported as unread rather
+than blamed on the readings in it. Fonts the extractor cannot map give noise,
+which the share of plausible characters catches. A scan of printed pages gives
+clean text that is not the sheet, a few navigation labels repeated, which scores
+full marks on plausibility and carries almost no vocabulary; the count of
+distinct words catches that one. `IRL540N.PDF` is the scan in this repository,
+and its readings are taken from the rendered page by eye.
+
 A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
 A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`firmware/ir-sensing.md`](../firmware/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.

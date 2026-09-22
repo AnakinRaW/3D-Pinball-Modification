@@ -118,6 +118,11 @@ DIM_NAMES = {DIMLESS: "1", _V: "V", _A: "A", _S: "s", _K: "°C", _OHM: "Ω",
              _M: "m", _MPS: "m/s"}
 
 
+# Distinct words below which an extracted sheet is a scan rather than a sheet.
+# The lowest real datasheet in docs/datasheets yields 83, an image scan yields 8.
+SHEET_WORDS = 40
+
+
 def _dimstr(d):
     return DIM_NAMES.get(d) or "·".join(
         f"{n}^{e}" for n, e in zip("V A s K m".split(), d) if e)
@@ -1072,9 +1077,19 @@ def pass_datasheets(model: Model, rep: Report):
             rep.note(f"unreadable  {sheet}: {type(e).__name__}: {e}")
             continue
         quality = pdftext.readable(text)
-        if quality < 0.6:
-            rep.note(f"unreadable  {sheet}: this reader gets {quality:.0%} plausible "
-                     f"text out of it, so its {len(figs)} readings stay unchecked")
+        # Two ways a sheet comes back unusable. Fonts this reader cannot map
+        # give noise, which the plausible-character share catches. A scan of
+        # printed pages gives clean text that is not the sheet: a handful of
+        # navigation labels repeated, which scores full marks on plausibility
+        # and carries almost no vocabulary.
+        words = len(set(text.split()))
+        if quality < 0.6 or words < SHEET_WORDS:
+            why = (f"this reader gets {quality:.0%} plausible text out of it"
+                   if quality < 0.6 else
+                   f"only {words} distinct words come out of it, so it is a scan "
+                   f"whose text layer holds no sheet content")
+            rep.note(f"unreadable  {sheet}: {why}, so its {len(figs)} readings "
+                     f"stay unchecked and want reading by eye")
             continue
         flat = pdftext.squeeze(text)
         absent = []
