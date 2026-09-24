@@ -49,7 +49,7 @@
   <!-- WS2811 number one -->
   <rect x="420" y="290" width="170" height="140" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
   <text x="436" y="314" font-size="15" font-weight="700" fill="#5c4a00">WS2811</text>
-  <text x="436" y="330" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
+  <text x="424" y="330" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
   <circle cx="500" cy="290" r="6" fill="#8a2be2"/>
   <text x="512" y="308" font-size="11.5" font-weight="700" fill="#8a2be2">DIN</text>
   <circle cx="500" cy="430" r="6" fill="#8a2be2"/>
@@ -71,7 +71,7 @@
   <!-- WS2811 number two -->
   <rect x="420" y="450" width="170" height="140" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
   <text x="436" y="474" font-size="15" font-weight="700" fill="#5c4a00">WS2811</text>
-  <text x="436" y="490" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
+  <text x="424" y="490" font-size="11.5" fill="#777">three channels, 18.5 mA each</text>
   <circle cx="500" cy="450" r="6" fill="#8a2be2"/>
   <text x="512" y="468" font-size="11.5" font-weight="700" fill="#8a2be2">DIN</text>
   <circle cx="500" cy="590" r="6" fill="#8a2be2"/>
