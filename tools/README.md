@@ -40,7 +40,7 @@ Widths are estimated from character classes for a sans-serif face, not measured 
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing is the only one so far. The checker imports the model, evaluates every figure, and compares the results against those files:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing, the break beam and the bumpers have one so far. The checker imports the model, evaluates every figure, and compares the results against those files:
 
 ```
 python tools/figcheck.py docs/parts/ir-reflective/figures.py --sheets

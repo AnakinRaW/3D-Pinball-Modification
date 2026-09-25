@@ -71,7 +71,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 
 The 0.6 V clamp is a scope reading, flat at every distance, so a base-emitter junction on the mainboard holds Pin 2 there. The mainboard itself was never probed: its circuit is [a reconstruction](../Rokr/2_ir-reflective-sensor-p33.md) from part markings and scope traces, one of its four resistors is unread, and whether a resistor sits at Pin 2 beside that junction is open. The clamp holds either way, so the bound above does not rest on it.
 
-**This modification puts a pull-down at that node**, which bounds the current at 3.449 V / 4.7 kΩ = 734 µA on its own. The rebuilt boards carry R1 because they are 1:1 copies of the stock board. Nothing in the CNY70's ratings asks for it either.
+**This modification puts a pull-down at that node**, which bounds the current at 3.449 V / 4.7 kΩ = 734 µA on its own. The rebuilt boards therefore carry no R1, and nothing in the CNY70's ratings asks for one.
 
 ```
 saturation current, the whole external limit, at V_OUT max
