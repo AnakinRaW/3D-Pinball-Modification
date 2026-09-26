@@ -631,15 +631,6 @@ for _text, _why in [
     ("7", "the lower end of the measured contact resistance range"),
     ("6 mm", "the plunger stroke, measured installed"),
 
-    # Teensy pin numbers
-    ("0", "the Teensy pin carrying trigger 4"),
-    ("1", "the Teensy pin carrying sense 1"),
-    ("14", "the Teensy pin carrying sense 2"),
-    ("15", "the Teensy pin carrying sense 3"),
-    ("32", "the Teensy pin carrying trigger 1"),
-    ("34", "the Teensy pin carrying trigger 2"),
-    ("35", "the Teensy pin carrying trigger 3"),
-
     # connector pin numbers and counts
     ("2", "a coil connector's pin count, and the second pin of one"),
     ("5", "a connector pin number"),

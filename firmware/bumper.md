@@ -101,8 +101,8 @@ public:
 private:
     static constexpr uint8_t  kCoils    = 4;
     static constexpr uint8_t  kSenses   = 3;
-    static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};
-    static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};
+    static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Bumper trigger 1 to 4
+    static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};      // pin-assignment.md: Bumper sense 1 to 3
     static constexpr uint32_t kOnUs     = 50000;  // the pull-in, docs/parts/bumper
     static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
     static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue

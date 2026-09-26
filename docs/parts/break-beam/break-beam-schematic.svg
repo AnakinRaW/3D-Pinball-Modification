@@ -11,7 +11,7 @@
   <text x="230" y="184" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
 
   <circle cx="240" cy="240" r="6" fill="#2c3e50"/>
-  <text x="230" y="244" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">PIN 40</text>
+  <text x="230" y="244" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50" data-pin="Receiver output of the ball drain gate">PIN 40</text>
 
   <circle cx="240" cy="300" r="6" fill="#1a1a1a"/>
   <text x="230" y="304" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>

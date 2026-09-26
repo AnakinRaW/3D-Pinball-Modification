@@ -13,22 +13,22 @@
   <text x="54" y="186" font-size="9.5" fill="#777">pins per pin-assignment.md</text>
   <circle cx="200" cy="220" r="6" fill="#8a2be2"/>
   <text x="188" y="224" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a2be2">1: SCK</text>
-  <text x="54" y="224" font-size="10.5" fill="#777">Pin 13</text>
+  <text x="54" y="224" font-size="10.5" fill="#777" data-pin="SCK">Pin 13</text>
   <circle cx="200" cy="250" r="6" fill="#2e7d32"/>
   <text x="188" y="254" text-anchor="end" font-size="12.5" font-weight="700" fill="#2e7d32">2: MOSI</text>
-  <text x="54" y="254" font-size="10.5" fill="#777">Pin 11</text>
+  <text x="54" y="254" font-size="10.5" fill="#777" data-pin="MOSI">Pin 11</text>
   <circle cx="200" cy="280" r="6" fill="#8a2be2"/>
   <text x="188" y="284" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a2be2">3: CS-A</text>
-  <text x="54" y="284" font-size="10.5" fill="#777">Pin 36</text>
+  <text x="54" y="284" font-size="10.5" fill="#777" data-pin="CS-A">Pin 36</text>
   <circle cx="200" cy="310" r="6" fill="#8a2be2"/>
   <text x="188" y="314" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a2be2">4: CS-B</text>
-  <text x="54" y="314" font-size="10.5" fill="#777">Pin 37</text>
+  <text x="54" y="314" font-size="10.5" fill="#777" data-pin="CS-B">Pin 37</text>
   <circle cx="200" cy="340" r="6" fill="#8a2be2"/>
   <text x="188" y="344" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a2be2">5: CLOCK</text>
-  <text x="54" y="344" font-size="10.5" fill="#777">Pin 29</text>
+  <text x="54" y="344" font-size="10.5" fill="#777" data-pin="CLOCK">Pin 29</text>
   <circle cx="200" cy="370" r="6" fill="#0e7c86"/>
   <text x="188" y="374" text-anchor="end" font-size="12.5" font-weight="700" fill="#0e7c86">6: MISO</text>
-  <text x="54" y="374" font-size="10.5" fill="#777">Pin 12</text>
+  <text x="54" y="374" font-size="10.5" fill="#777" data-pin="MISO">Pin 12</text>
   <circle cx="200" cy="400" r="6" fill="#c0392b"/>
   <text x="188" y="404" text-anchor="end" font-size="12.5" font-weight="700" fill="#c0392b">7: 3V3</text>
   <text x="54" y="404" font-size="10.5" fill="#777">Teensy 3V3</text>
