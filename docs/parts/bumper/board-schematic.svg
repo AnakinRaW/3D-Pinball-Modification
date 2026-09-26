@@ -7,7 +7,7 @@
   <!-- ===== Teensy ===== -->
   <rect x="40" y="200" width="200" height="560" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="56" y="232" font-size="16" font-weight="700" fill="#2c3e50">TEENSY 4.1</text>
-  <text x="56" y="252" font-size="11.5" fill="#777" data-fig="v_3v3 v_5v">3.3 V logic, not 5 V tolerant</text>
+  <text x="56" y="252" font-size="11.5" fill="#777" data-fig="v_3v3 v_not_tolerant">3.3 V logic, not 5 V tolerant</text>
 
   <circle cx="240" cy="295" r="6" fill="#8a2be2"/>
   <text x="225" y="291" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">TRIGGER 1</text>

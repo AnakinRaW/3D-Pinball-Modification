@@ -13,7 +13,8 @@ from figcheck import Model, Q
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("bumper", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "bumper.md"])
+              documents=[HERE.parents[2] / "firmware" / "bumper.md",
+                         HERE.parents[2] / "firmware" / "general-design.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -56,6 +57,8 @@ msr("r_contact", 30, "Ω", src="the ball's path from foil to shell, measured at 
 # ===========================================================================
 dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, PJRC pin assignment card 11a rev4",
     group="V_GATE", section=DRIVE, stated=True)
+dec("v_not_tolerant", 5, "V", stated=False, src="the level the Teensy 4.1 product page "
+    "names in 'The pins are not 5V tolerant', drawn beside the Teensy block")
 dec("i_pin_max", 4, "mA", src="the recommended maximum output current per pin, "
     "Teensy 4.1 product page; the comparison table's 10 mA spans older generations",
     group="I_PIN", section=DRIVE, stated=True)
@@ -102,19 +105,21 @@ dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
     "decided above the stock machine's visibly short pull and far below the "
     "seconds at which a mini solenoid overheats; a scope reading of the stock "
     "pulse replaces it", group="DUTY", section=COIL, stated=True)
-dec("t_tick", 1, "ms", src="the period of the driver's own timer, which is what ends "
-    "a pull-in; chosen far under the pull-in and far over the interrupt it costs",
+dec("t_late", 1, "ms", src="how far past its pull-in a coil may still be on before the "
+    "main loop counts it overdue and stops feeding the watchdog; the coil's own timer "
+    "ends a pull-in within the latency of one interrupt, far inside this",
     group="DUTY", section=COIL, stated=True)
 dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the coil "
     "may not fire again, and how long a top bumper's contact has to stay open before "
     "that channel is armed; decided above the time the plunger takes to stroke and "
     "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)
-dec("t_wdt", 1, "s", src="the watchdog timeout, decided well inside the five seconds "
-    "the board allows, so a coil the tick no longer releases is released by the "
-    "restart", group="HOLD", section=COIL, stated=True)
-dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, the board's "
-    "requirement, set because the solenoids' vendor and specifications are unknown",
+dec("t_wdt", 1, "s", src="the watchdog timeout, firmware/general-design.md; decided "
+    "well inside the five-second limit of the requirements, so a coil whose timer never "
+    "fires is released by the restart", group="HOLD", section=COIL, stated=True)
+dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the "
+    "requirements in design.md, set because the solenoids' vendor and specifications "
+    "are unknown",
     group="HOLD", section=COIL, stated=True)
 
 asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, 30 cm of loose "
@@ -438,33 +443,33 @@ def _(v_5v, i_coil):
 
 
 @fig("t_on_actual", "ms", group="DUTY", section=COIL,
-     rises_with=["t_on_max", "t_tick"])
-def _(t_on_max, t_tick):
-    return t_on_max + t_tick
+     rises_with=["t_on_max", "t_late"])
+def _(t_on_max, t_late):
+    return t_on_max + t_late
 
 
 @fig("t_cycle_min", "ms", group="DUTY", section=COIL,
-     rises_with=["t_on_max", "t_tick", "t_rearm"])
+     rises_with=["t_on_max", "t_late", "t_rearm"])
 def _(t_on_actual, t_rearm):
     return t_on_actual + t_rearm
 
 
 @fig("duty_max", "%", group="DUTY", section=COIL,
-     rises_with=["t_on_max", "t_tick"], falls_with=["t_rearm"])
+     rises_with=["t_on_max", "t_late"], falls_with=["t_rearm"])
 def _(t_on_actual, t_cycle_min):
     return t_on_actual / t_cycle_min
 
 
 @fig("p_coil_avg", "W", group="DUTY", section=COIL,
-     rises_with=["v_5v", "i_coil", "t_on_max", "t_tick"], falls_with=["t_rearm"])
+     rises_with=["v_5v", "i_coil", "t_on_max", "t_late"], falls_with=["t_rearm"])
 def _(p_coil, duty_max):
     return p_coil * duty_max
 
 
-# The worst case is a tick that stops just before it would have ended a pull-in:
-# the loop's last feed falls at that moment, and the restart comes one timeout later.
+# The worst case is a coil whose timer never fires: the loop feeds the watchdog
+# until the coil turns overdue, and the restart comes one timeout later.
 @fig("t_hold_fault", "s", group="HOLD", section=COIL, prints="up",
-     rises_with=["t_wdt", "t_on_max", "t_tick"])
+     rises_with=["t_wdt", "t_on_max", "t_late"])
 def _(t_wdt, t_on_actual):
     return t_wdt + t_on_actual
 
@@ -604,10 +609,10 @@ _I("the sense filter settles well inside how long a ball rests on a shell",
    lambda v: v.t_open < v.t_contact and v.t_close < v.t_open)
 _I("the window a contact has to stay open outlasts the contact one hit makes",
    lambda v: v.t_rearm > v.t_contact)
-_I("the driver's timer ticks far inside the pull-in it has to end",
-   lambda v: v.t_tick < v.t_on_max)
-_I("a coil the tick no longer releases is released by the restart inside what the "
-   "board allows",
+_I("the overdue margin sits far inside the pull-in it is added to",
+   lambda v: v.t_late < v.t_on_max)
+_I("a coil whose timer never fires is released by the restart inside the limit "
+   "the requirements set",
    lambda v: v.t_hold_fault < v.t_hold_max)
 _I("the gate settles far inside the shortest pull-in the driver can command",
    lambda v: v.t_gate < v.t_on_max)
@@ -647,8 +652,16 @@ for _text, _why in [
 
     # constants as the driver writes them, without a unit
     ("50000", "the commanded pull-in in microseconds"),
-    ("1000", "the driver's timer period in microseconds"),
+    ("1000", "the overdue margin in microseconds"),
+    ("96", "the NVIC priority of the release timer and the pin interrupts, "
+           "firmware/general-design.md"),
+    ("64", "the NVIC priority of the IR driver's interrupts, in the table of "
+           "firmware/general-design.md"),
+    ("128", "the NVIC priority the Teensy starts every interrupt at, "
+            "firmware/general-design.md"),
     ("10000", "the cool-down after a release, in microseconds"),
+    ("100000000", "the period the release timer is parked on between pulls, in "
+                  "microseconds, so it keeps its hardware channel"),
     ("250000", "the enforced pause in microseconds"),
     ("0805", "the resistor package, a name rather than a value"),
 ]:
