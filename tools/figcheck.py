@@ -917,6 +917,232 @@ def pass_drawings(model: Model, rep: Report):
     return anchored, unanchored
 
 
+# ---------------------------------------------------------------------------
+# Teensy pins
+# ---------------------------------------------------------------------------
+PIN_TABLE = ROOT / "docs" / "pin-assignment.md"
+# Markdown marks a pin as a link to the table, titled with the signal:
+#   [34](../../pin-assignment.md "Bumper trigger 2")
+PIN_LINK_RE = re.compile(r'\[(\d+)\]\(([^)\s]*pin-assignment\.md)(?:#[^)\s]*)?\s+"([^"]+)"\)')
+# A fenced line names, in its comment, the signals of the numbers right of its `=`:
+#   kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Bumper trigger 1 to 4
+PIN_NOTE_RE = re.compile(r"//\s*[\w./-]*pin-assignment\.md:\s*(.+?)\s*$")
+# A drawing puts them on the text element: <text data-pin="Bumper sense 1">pin 1</text>
+DATA_PIN_RE = re.compile(r'<(\w+)\b[^>]*\bdata-pin="([^"]+)"[^>]*>([^<]*)<')
+PIN_NUM_RE = re.compile(r"(?<![\w.])\d+(?![\w.])")
+PIN_RANGE_RE = re.compile(r"^(.*?)(\d+) to (\d+)$")
+
+
+@dataclasses.dataclass
+class PinRef:
+    doc: pathlib.Path
+    line: int
+    pos: int        # where the number sits in the normalised file
+    number: str
+    signal: str
+
+
+def pin_table(rep: Report) -> dict[str, int]:
+    """Signal to pin, from every table in docs/pin-assignment.md headed Pin, Signal.
+
+    A signal is named by its Signal cell up to the first comma, so `CS-A` names
+    "CS-A, converter for channels 1 to 8". A name or a pin listed twice is a
+    double booking and fails the run.
+    """
+    table, first, holder = {}, {}, {}
+    inside = False
+    for i, raw in enumerate(PIN_TABLE.read_text(encoding="utf-8").split("\n"), 1):
+        if not raw.startswith("|"):
+            inside = False
+            continue
+        cells = [c.strip() for c in raw.strip().strip("|").split("|")]
+        if cells[:2] == ["Pin", "Signal"]:
+            inside = True
+            continue
+        if not inside or len(cells) < 2 or not cells[0].isdigit():
+            continue
+        pin = int(cells[0])
+        name = re.sub(r"[*`]", "", cells[1]).split(",")[0].strip()
+        if name in table:
+            rep.error(f"{_rel(PIN_TABLE)}:{i} lists {name!r} again, first on line "
+                      f"{first[name]}", kind="pin")
+            continue
+        if pin in holder:
+            rep.error(f"{_rel(PIN_TABLE)}:{i} gives pin {pin} to {name!r}, and line "
+                      f"{first[holder[pin]]} gives it to {holder[pin]!r}", kind="pin")
+        table[name], first[name], holder[pin] = pin, i, name
+    return table
+
+
+def _signals(text: str, table: dict[str, int]) -> list[str]:
+    """The signals a note or a data-pin names, `Bumper trigger 1 to 4` spelled out."""
+    out = []
+    for item in (s.strip() for s in re.split(r"[,;]", text)):
+        m = PIN_RANGE_RE.match(item)
+        if item not in table and m:
+            out += [f"{m.group(1)}{n}" for n in range(int(m.group(2)), int(m.group(3)) + 1)]
+        elif item:
+            out.append(item)
+    return out
+
+
+def pin_refs(path: pathlib.Path, table: dict[str, int], rep: Report):
+    """Every marked pin in one file, and the spans of each line it occupies.
+
+    The spans cover the number and, in a fenced block, the note naming it, whose
+    signal names carry digits of their own. The figure passes skip them, so a
+    pin needs no aside in the model.
+    """
+    body = _norm(path.read_text(encoding="utf-8"))
+    lines = body.split("\n")
+    starts, off = [], 0
+    for line in lines:
+        starts.append(off)
+        off += len(line) + 1
+
+    def line_at(pos):
+        import bisect
+        return bisect.bisect_right(starts, pos)
+
+    refs, spans = [], []
+    if path.suffix == ".svg":
+        for m in DATA_PIN_RE.finditer(body):
+            names = _signals(m.group(2), table)
+            nums = list(PIN_NUM_RE.finditer(m.group(3)))
+            if len(nums) != len(names):
+                rep.error(f"{_rel(path)}:{line_at(m.start())} names {len(names)} "
+                          f"signal(s) in data-pin and shows {len(nums)} number(s)",
+                          kind="pin")
+                continue
+            for n, name in zip(nums, names):
+                pos = m.start(3) + n.start()
+                refs.append(PinRef(path, line_at(pos), pos, n.group(), name))
+        return refs, spans
+
+    infence = False
+    for i, raw in enumerate(lines):
+        if raw.strip().startswith("```"):
+            infence = not infence
+            continue
+        if infence:
+            note = PIN_NOTE_RE.search(raw)
+            if not note:
+                continue
+            eq = raw.find("=")
+            nums = (list(PIN_NUM_RE.finditer(raw, eq + 1, note.start()))
+                    if 0 <= eq < note.start() else [])
+            names = _signals(note.group(1), table)
+            if len(nums) != len(names):
+                rep.error(f"{_rel(path)}:{i + 1} names {len(names)} signal(s) for "
+                          f"{len(nums)} number(s) right of its '='", kind="pin")
+                continue
+            for n, name in zip(nums, names):
+                refs.append(PinRef(path, i + 1, starts[i] + n.start(), n.group(), name))
+                spans.append((i + 1, n.start(), n.end()))
+            spans.append((i + 1, note.start(), len(raw)))
+            continue
+        for m in PIN_LINK_RE.finditer(raw):
+            if (path.parent / m.group(2)).resolve() != PIN_TABLE.resolve():
+                rep.error(f"{_rel(path)}:{i + 1} links {m.group(2)}, which does not "
+                          f"lead to {_rel(PIN_TABLE)}", kind="pin")
+                continue
+            refs.append(PinRef(path, i + 1, starts[i] + m.start(1), m.group(1), m.group(3)))
+            spans.append((i + 1, m.start(), m.end()))
+    return refs, spans
+
+
+def pass_pins(files, rep: Report):
+    """Check every marked pin in the files against docs/pin-assignment.md.
+
+    A Teensy pin is typed once, in that table. Everywhere else it is marked with
+    the signal it carries, so a pin that moves in the table and stays behind in a
+    driver, a design document or a drawing is reported with both numbers.
+    """
+    table = pin_table(rep)
+    refs, spans = [], defaultdict(list)
+    for path in files:
+        found, taken = pin_refs(path, table, rep)
+        refs += found
+        for ln, a, b in taken:
+            spans[(path.resolve(), ln)].append((a, b))
+    good = 0
+    for r in refs:
+        if r.signal not in table:
+            rep.error(f"{_rel(r.doc)}:{r.line} names {r.signal!r}, which "
+                      f"{_rel(PIN_TABLE)} does not list", kind="pin")
+        elif int(r.number) != table[r.signal]:
+            rep.error(f"{_rel(r.doc)}:{r.line} gives {r.signal} pin {r.number}, and "
+                      f"{_rel(PIN_TABLE)} gives it {table[r.signal]}", kind="pin")
+        else:
+            good += 1
+    return table, refs, spans, good
+
+
+def write_pins(files, rep: Report) -> int:
+    """Put the table's pin into every marked place that carries another one."""
+    table = pin_table(rep)
+    written = 0
+    for path in files:
+        refs, _ = pin_refs(path, table, Report())
+        wrong = [r for r in refs if r.signal in table and int(r.number) != table[r.signal]]
+        if not wrong:
+            continue
+        raw = path.read_text(encoding="utf-8")
+        _, where = _norm_map(raw)
+        for r in sorted(wrong, key=lambda r: -r.pos):
+            a, b = where[r.pos], where[r.pos + len(r.number)]
+            want = str(table[r.signal])
+            if raw[a:b] != r.number:
+                rep.error(f"{_rel(path)}:{r.line} could not find pin {r.number} "
+                          f"where the marker puts it", kind="pin")
+                continue
+            raw = raw[:a] + want + raw[b:]
+            written += 1
+            rep.note(f"wrote       {_rel(path)}:{r.line} pin {r.number} -> {want} "
+                     f"({r.signal})")
+        path.write_text(raw, encoding="utf-8", newline="\n")
+    return written
+
+
+def pin_files() -> list[pathlib.Path]:
+    return sorted(p for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
+                  if p.suffix in {".md", ".svg"} and p.is_file())
+
+
+def main_pins(write: bool) -> int:
+    files = pin_files()
+    rep = Report()
+    if write:
+        n = write_pins(files, rep)
+        print(f"{n} pin{'' if n == 1 else 's'} written from {_rel(PIN_TABLE)}."
+              + (" Everything already agreed." if not n and not rep.errors else ""))
+        for m in rep.notes + rep.errors:
+            print("  " + m)
+        return 1 if rep.errors else 0
+    table, refs, _, good = pass_pins(files, rep)
+    marked = len({r.doc for r in refs})
+    print("Checking Teensy pins")
+    print(f"  table      {_rel(PIN_TABLE)}, {len(table)} signals")
+    print(f"  files      {len(files)} under docs/ and firmware/, {marked} of them "
+          f"marking a pin")
+    print()
+    _status(not rep.errors, "Teensy pins",
+            f"{good} of {len(refs)} marked pins match the table")
+    if rep.errors:
+        print()
+        print("To fix")
+        for e in rep.errors:
+            print("  " + e)
+        print()
+        n = len(rep.errors)
+        print(f"{n} problem{'' if n == 1 else 's'}. Nothing was changed: move the pin "
+              f"in the table, or run --write to carry the table's pin into the files.")
+        return 1
+    print()
+    print("Nothing to fix. Every marked pin is the one the table gives its signal.")
+    return 0
+
+
 def pass_direction(model: Model, rep: Report):
     """Perturb each declared input and check the figure moves the way it claims."""
     checked = flat = 0
@@ -1382,41 +1608,20 @@ def _status(ok: bool, label: str, detail: str):
     print(f"  {'ok ' if ok else 'FAIL'}  {label:<30} {detail}")
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description="check a document against its recomputed figures")
-    ap.add_argument("model", type=pathlib.Path)
-    ap.add_argument("--base", default="HEAD", help="git ref the stale pass diffs against")
-    ap.add_argument("--mutate", action="store_true", help="run the mutation self-test")
-    ap.add_argument("--provenance", action="store_true", help="list the inputs and their sources")
-    ap.add_argument("--graph", metavar="KEY", help="what a quantity feeds, and what feeds it")
-    ap.add_argument("--write-sums", action="store_true", help="record the datasheet checksums")
-    ap.add_argument("--no-stale", action="store_true")
-    ap.add_argument("--write", action="store_true",
-                    help="write the model's figures into the document and the "
-                         "drawings, so a figure is typed in one place only")
-    ap.add_argument("--sheets", action="store_true",
-                    help="look every datasheet reading up in the sheet it cites")
-    ap.add_argument("--groups", action="store_true",
-                    help="dump the groups and tokens the parser found")
-    ap.add_argument("--blind", action="store_true",
-                    help="the brief for an independent re-derivation: every quantity, "
-                         "its unit and its inputs, with no formula and no value")
-    args = ap.parse_args(argv)
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-
-    model = load_model(args.model)
-    model.evaluate()
-
-    if args.graph:
-        if args.graph not in model.figs:
-            print(f"unknown key {args.graph!r}")
-            near = [k for k in model.figs if args.graph in k]
-            if near:
-                print("did you mean: " + ", ".join(sorted(near)[:12]))
-            return 2
-        f = model.figs[args.graph]
-        print(f"{f.key} = {f.value.show(f.unit)}   [{f.kind}]")
+def show_graph(paths, key: str) -> int:
+    """One quantity in full, from whichever of the models declares it."""
+    found, near = False, []
+    for path in paths:
+        model = load_model(path)
+        model.evaluate()
+        if key not in model.figs:
+            near += [f"{k} ({model.name})" for k in model.figs if key in k]
+            continue
+        if found:
+            print()
+        found = True
+        f = model.figs[key]
+        print(f"{f.key} = {f.value.show(f.unit)}   [{f.kind}]   in {model.name}")
         if f.src:
             print(f"  source     {f.src}")
         if f.deps:
@@ -1428,12 +1633,27 @@ def main(argv=None):
             g = model.figs.get(d)
             if g is not None:
                 print(f"    {d:<26} {g.value.show(g.unit):>14}  [{g.kind}]")
-        anc = model.ancestors(args.graph)
+        anc = model.ancestors(key)
         if anc:
             print(f"  rests on   {len(anc)}: {', '.join(anc)}")
-        dep = model.dependents(args.graph)
+        dep = model.dependents(key)
         print(f"  feeds      {len(dep)}: {', '.join(dep) if dep else 'nothing'}")
-        return 0
+    if not found:
+        print(f"unknown key {key!r}")
+        if near:
+            print("did you mean: " + ", ".join(sorted(near)[:12]))
+        return 2
+    return 0
+
+
+def run_model(path: pathlib.Path, args, whole: bool) -> int:
+    """One model: its figures, its documents and drawings, and the pins they mark.
+
+    Inside a run over the whole tree the pins are reported once, in the tree's
+    own block, and the stale pass runs once at its end.
+    """
+    model = load_model(path)
+    model.evaluate()
 
     if args.blind:
         print(f"# Deriving {model.name} a second time, independently")
@@ -1515,14 +1735,27 @@ def main(argv=None):
           f"{len(model.figs) - inputs} derived figures")
     print()
 
+    # A marked pin is checked against the pin table, so the figure passes leave
+    # its number alone. Under --write a wrong pin is not an error but a job.
+    own = [p for p in (model.document, *model.documents, *model.drawings) if p.exists()]
+    _, pins, pin_spans, pins_good = pass_pins(own, Report() if args.write or whole
+                                              else rep)
+    tokens = [t for t in tokens
+              if not any(a <= t.col < b
+                         for a, b in pin_spans.get((t.doc.resolve(), t.line), ()))]
+
     hits, loose = pass_anchored(model, tokens, rep)
 
     if args.write:
         written = pass_write(model, tokens, rep)
+        pins_written = 0 if whole else write_pins(own, rep)
         print(f"{written} figure{'' if written == 1 else 's'} written into the "
-              f"document and the drawings."
-              + (" Everything already agreed." if not written and not rep.errors
-                 else ""))
+              f"document and the drawings"
+              + (f", {pins_written} pin{'' if pins_written == 1 else 's'} from "
+                 f"{_rel(PIN_TABLE)}" if pins_written else "")
+              + "."
+              + (" Everything already agreed."
+                 if not written and not pins_written and not rep.errors else ""))
         for n in rep.notes:
             print("  " + n)
         for e in rep.errors:
@@ -1551,6 +1784,10 @@ def main(argv=None):
         _status(loose_svg == 0, "figures in the drawings",
                 f"{keyed} checked across {len(model.drawings)} files, "
                 f"{loose_svg} left with no anchor")
+
+    if not whole:
+        _status(rep.count("pin") == 0, "Teensy pins",
+                f"{pins_good} of {len(pins)} marked pins match {_rel(PIN_TABLE)}")
 
     if any(f.rises_with or f.falls_with for f in model.figs.values()):
         directed = pass_direction(model, rep)
@@ -1591,7 +1828,7 @@ def main(argv=None):
                 f"{caught} of {total} figures are reported when the document "
                 f"moves them")
 
-    if not args.no_stale:
+    if not args.no_stale and not whole:
         pass_stale(args.base, rep)
 
     if rep.notes:
@@ -1615,6 +1852,73 @@ def main(argv=None):
     print()
     print("Nothing to fix. Every figure in the documents is the one the model "
           "computes.")
+    return 0
+
+
+def find_models() -> list[pathlib.Path]:
+    return sorted((ROOT / "docs" / "parts").glob("*/figures.py"))
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        description="check the documents against their recomputed figures, and every "
+                    "marked Teensy pin against docs/pin-assignment.md")
+    ap.add_argument("models", type=pathlib.Path, nargs="*",
+                    help="the models to run; every docs/parts/*/figures.py, and the "
+                         "pins of the whole tree, when none is named")
+    ap.add_argument("--base", default="HEAD", help="git ref the stale pass diffs against")
+    ap.add_argument("--mutate", action="store_true", help="run the mutation self-test")
+    ap.add_argument("--provenance", action="store_true", help="list the inputs and their sources")
+    ap.add_argument("--graph", metavar="KEY", help="what a quantity feeds, and what feeds it")
+    ap.add_argument("--write-sums", action="store_true", help="record the datasheet checksums")
+    ap.add_argument("--no-stale", action="store_true")
+    ap.add_argument("--write", action="store_true",
+                    help="write the model's figures into the document and the "
+                         "drawings, so a figure is typed in one place only")
+    ap.add_argument("--sheets", action="store_true",
+                    help="look every datasheet reading up in the sheet it cites")
+    ap.add_argument("--groups", action="store_true",
+                    help="dump the groups and tokens the parser found")
+    ap.add_argument("--blind", action="store_true",
+                    help="the brief for an independent re-derivation: every quantity, "
+                         "its unit and its inputs, with no formula and no value")
+    args = ap.parse_args(argv)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+    whole = not args.models
+    paths = args.models or find_models()
+    if not paths:
+        print("No figure model found. Expected docs/parts/<subsystem>/figures.py.")
+        return 1
+    if args.graph:
+        return show_graph(paths, args.graph)
+
+    failed = []
+    for i, path in enumerate(paths):
+        if i:
+            print()
+        if run_model(path, args, whole):
+            failed.append(path.parent.name)
+    if not whole or args.blind or args.provenance or args.groups:
+        return 1 if failed else 0
+
+    print()
+    if main_pins(args.write):
+        failed.append("the pins")
+    if not args.no_stale and not args.write:
+        rep = Report()
+        pass_stale(args.base, rep)
+        if rep.notes:
+            print()
+            print("Worth knowing")
+            for n in rep.notes:
+                print("  " + n)
+    print()
+    if failed:
+        print("Something to fix in " + ", ".join(failed) + ".")
+        return 1
+    print(f"Nothing to fix in {len(paths)} models and the pin table.")
     return 0
 
 
