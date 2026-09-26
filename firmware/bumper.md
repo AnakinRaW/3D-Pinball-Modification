@@ -12,6 +12,8 @@ All solenoids can also be fired by the game logic manually.
 
 The game logic can only request a pull with `fire()`, which returns false while the coil is still on or cooling down. It cannot hold a coil on or release it directly.
 
+At start-up `begin()` pulls every coil once, as the stock machine does at power-on. It pulls them one after another, so the supply carries a single coil at a time.
+
 ## The event
 
 | Field | Content |
@@ -56,6 +58,13 @@ public:
         timer_.priority(kPriority);
         if (!timer_.begin(expire0, kIdleUs)) return false;
         ready_ = true;
+
+        // every coil pulls once, one after another, before any contact is armed
+        for (uint8_t c = 0; c < kCoils; ++c) {
+            fire(c);
+            delayMicroseconds(kOnUs + kCoolUs);
+        }
+
         NVIC_SET_PRIORITY(IRQ_GPIO6789, kPriority);
         for (uint8_t c = 0; c < kSenses; ++c) {
             pinMode(kSense[c], INPUT);
@@ -64,16 +73,13 @@ public:
         return true;
     }
 
-    // the game logic's own path, and the only one the fourth coil has; BASEPRI
-    // holds off every interrupt at kPriority and below while the pull starts, and
-    // the IR driver's higher ones keep running. cpsid and cpsie around the write
-    // are ARM's workaround for erratum 837070 of the Cortex-M7 r0p1
+    // the game logic's own path, and the only one the fourth coil has. The
+    // release timer and the pin interrupts change what pull() changes, so every
+    // interrupt, the IR driver's included, waits the few instructions it takes
     bool fire(uint8_t coil) {
-        uint32_t saved;
-        asm volatile("mrs %0, basepri" : "=r"(saved));
-        asm volatile("cpsid i\n msr basepri, %0\n cpsie i" :: "r"((uint32_t)kPriority) : "memory");
+        noInterrupts();
         const bool started = pull(coil, micros());
-        asm volatile("msr basepri, %0" :: "r"(saved) : "memory");
+        interrupts();
         return started;
     }
 
