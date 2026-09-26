@@ -7,7 +7,7 @@
   <!-- ===== Teensy ===== -->
   <rect x="40" y="200" width="200" height="560" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="56" y="232" font-size="16" font-weight="700" fill="#2c3e50">TEENSY 4.1</text>
-  <text x="56" y="252" font-size="11.5" fill="#777">3.3 V logic, not 5 V tolerant</text>
+  <text x="56" y="252" font-size="11.5" fill="#777" data-fig="v_3v3 v_5v">3.3 V logic, not 5 V tolerant</text>
 
   <circle cx="240" cy="295" r="6" fill="#8a2be2"/>
   <text x="225" y="291" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">TRIGGER 1</text>
@@ -66,7 +66,7 @@
   <line x1="620" y1="295" x2="620" y2="340" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="607" y="340" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="601" y="364" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">R21</text>
-  <text x="601" y="382" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gate_pd">100 k&#937;</text>
+  <text x="601" y="382" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gate_pd">10 k&#937;</text>
   <line x1="620" y1="400" x2="620" y2="420" stroke="#1a1a1a" stroke-width="2.5"/>
 
   <!-- Q1, N-channel, low side -->
@@ -111,7 +111,7 @@
   <circle cx="1290" cy="420" r="4" fill="#1a1a1a"/>
 
   <rect x="415" y="262" width="235" height="150" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text x="415" y="232" font-size="11.5" font-weight="700" fill="#0a8a6a">keep together, under 10 mm assumed:</text>
+  <text x="415" y="232" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_gate">keep together, under 10 mm assumed:</text>
   <text x="415" y="248" font-size="11.5" font-weight="700" fill="#0a8a6a">gate loop, and a defined gate at boot</text>
 
   <!-- ===================== SENSE CHANNEL 1 ===================== -->
@@ -171,7 +171,7 @@
   <line x1="246" y1="620" x2="450" y2="620" stroke="#2c3e50" stroke-width="2.5"/>
 
   <rect x="730" y="762" width="215" height="152" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text x="730" y="736" font-size="11.5" font-weight="700" fill="#0a8a6a">keep together, under 15 mm assumed:</text>
+  <text x="730" y="736" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_filter">keep together, under 15 mm assumed:</text>
   <text x="730" y="752" font-size="11.5" font-weight="700" fill="#0a8a6a">the filter sits where the wire lands</text>
 
   <!-- ===== Ground ===== -->
@@ -213,13 +213,13 @@
   <text x="1130" y="1094" font-size="12" font-weight="700" fill="#1a1a1a">Reason</text>
   <line x1="820" y1="1102" x2="1330" y2="1102" stroke="#ccc" stroke-width="1"/>
   <text x="820" y="1122" font-size="11.5" fill="#444">R11, R21 at the gate</text>
-  <text x="1010" y="1122" font-size="11.5" fill="#444">under 10 mm</text>
+  <text x="1010" y="1122" font-size="11.5" fill="#444" data-fig="place_gate">under 10 mm</text>
   <text x="1130" y="1122" font-size="11.5" fill="#444">gate loop pickup</text>
   <text x="820" y="1144" font-size="11.5" fill="#444">R31, C1 at J-M</text>
-  <text x="1010" y="1144" font-size="11.5" fill="#444">under 15 mm</text>
+  <text x="1010" y="1144" font-size="11.5" fill="#444" data-fig="place_filter">under 15 mm</text>
   <text x="1130" y="1144" font-size="11.5" fill="#444">filters where the wire lands</text>
   <text x="820" y="1166" font-size="11.5" fill="#444">D1 to D4 at their connector</text>
-  <text x="1010" y="1166" font-size="11.5" fill="#444">under 20 mm</text>
+  <text x="1010" y="1166" font-size="11.5" fill="#444" data-fig="place_flyback">under 20 mm</text>
   <text x="1130" y="1166" font-size="11.5" fill="#444">the flyback loop</text>
   <text x="820" y="1192" font-size="11.5" fill="#666">All three distances are assumptions, not datasheet figures.</text>
 </svg>

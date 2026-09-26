@@ -18,7 +18,7 @@ A single board drives all four. Below the schematic of the solenoid board. The l
 
 ## Drive
 
-Each channel switches its coil on the low side with an N-channel MOSFET. The gate hangs on a Teensy pin through a series resistor that bounds what the pin drives at the switching moment. A pull-down holds the gate at ground while nothing drives it. That is while the Teensy is unpowered or its pin is still high impedance during boot. A Schottky diode across the coil takes the winding current at switch-off, which holds the drain of the MOSFET a diode drop above the rail. For each solenoid the drive channels are built identical.
+Each channel switches its coil on the low side with an N-channel MOSFET. The gate hangs on a Teensy pin through a series resistor that bounds what the pin drives at the switching moment. A pull-down resistor pulls the gate to ground whenever the Teensy does not drive the pin, and the coil is then off. This holds while the Teensy is unpowered and after a reset. After a reset, a weak circuit inside the Teensy pin, its keeper, still tries to hold the pin at its last level. The pull-down is strong enough to win against it, so a coil that was on at the reset turns off. A Schottky diode across the coil takes the winding current at switch-off, which holds the drain of the MOSFET a diode drop above the rail. For each solenoid the drive channels are built identical.
 
 ## Sense
 
@@ -85,11 +85,11 @@ Which pins carry them, and what each one costs elsewhere in the build, is in [`p
 
 ## Firmware
 
-[`firmware/bumper.md`](../../../firmware/bumper.md) describes the driver, which senses and fires in an interrupt and reports afterwards, following [`general-design.md`](../../../firmware/general-design.md). This board rests on two of its properties.
+The driver is responsible for sensing and firing solenoids. It also ensures that solenoids can not be permamently pulled and thus protected from overheat and damage. 
 
-**A reset is what releases a coil when firmware hangs.** It puts every Teensy pin back to high impedance and R21 to R24 pull the gates to ground. The watchdog drives no gate and switches nothing. Its whole part is to cause that reset, and it has to be fed from the main loop, because the driver itself runs in an interrupt.
+Controlling the hardware is handled by interrupt handlers. The top bumpers are triggered automatically upon sense. The scoop solenoid is controlled by the game logic.
 
-**The power budget is written against one coil at a time.** The playfield holds it there, and the firmware does not enforce it.
+[`firmware/bumper.md`](../../../firmware/bumper.md) describes the driver.
 
 ## Component list
 
@@ -97,8 +97,7 @@ Which pins carry them, and what each one costs elsewhere in the build, is in [`p
 |---|---|---|---|---|
 | 4 | Logic-level MOSFET, N-channel | IRL540N, TO-220 | AO3400A, SOT-23 | **Q1** to **Q4**, coil switches |
 | 4 | Schottky diode | 1N5819, DO-41 | 1N5819WS, SOD-323 | **D1** to **D4**, across each coil |
-| 6 | 10 kΩ resistor | | | **R31** to **R33** sense pull-down, **R41** to **R43** sense series |
-| 4 | 100 kΩ resistor | | | **R21** to **R24**, gate pull-down |
+| 10 | 10 kΩ resistor | | | **R21** to **R24** gate pull-down, **R31** to **R33** sense pull-down, **R41** to **R43** sense series |
 | 4 | 2.2 kΩ resistor | | | **R11** to **R14**, gate |
 | 3 | 10 nF capacitor | | | **C1** to **C3**, sense filter |
 | 1 | 330 Ω resistor | | | **R91**, foil feed |
@@ -108,17 +107,6 @@ Which pins carry them, and what each one costs elsewhere in the build, is in [`p
 | 1 | 2-pin connector that cannot be plugged in reversed | | | **J-PWR** |
 | 1 | 9-pin connector that cannot be plugged in reversed | | | **J-T** |
 
-## Open points
-
-| Point | What settles it |
-|---|---|
-| The stock pull-in duration | A scope across a coil connector while the stock board fires it. It replaces the 50 ms the driver enforces |
-| Connector types, pitch and keying | The stock coil connector measured with a caliper, and a mating part sourced against it |
-
-## Known limitations
-
-**No branch protection saves Q1 from a shorted coil cable.** The die carries far more than its package is rated for and fails in milliseconds, while a resettable fuse takes tenths of a second. The protection keeps the rest of the machine and the wiring.
-
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
@@ -127,19 +115,25 @@ Every figure below is recomputed by [`figures.py`](figures.py) from the inputs i
 
 ```
 V_GATE    the Teensy's rail                       3.3 V
-          R_gate to ground                        100 kΩ
+          R_gate to ground                        10 kΩ
           the rail across R_gate and that one,
-          which is the gate while it is on      = 3.23 V
+          which is the gate while it is on      = 2.70 V
           the gate threshold, worst case          1.45 V
           the gate voltage R_DS(on) is specified
           at, which the gate has to clear          2.5 V
           what the gate clears it by, the thinnest
-          margin in this design                 = 729 mV
+          margin in this design                 = 205 mV
           the gate-source rating                  12 V
+          after a reset the pin's keeper holds the
+          level the pin last drove, at its
+          strongest through                       105 kΩ
+          the gate while it holds a high        = 0.29 V
+          the pin then                          = 0.35 V
+          the input's low level, 0.3 × the rail = 0.99 V
 I_PIN     R_gate                                  2.2 kΩ
           the rail across it, at the switching
           moment                                = 1.5 mA
-          the rail across both resistors, held  = 32.3 µA
+          the rail across both resistors, held  = 270 µA
           what PJRC allows on one pin             4 mA
           R_gate × 630 pF, the gate settling    = 1.39 µs
 V_KICK    a step on the drain lifts the gate through
@@ -158,7 +152,7 @@ V_KICK    a step on the drain lifts the gate through
           its gate threshold, lowest              1.00 V
           R_gate to ground × 630 pF, over which a
           drain step has to be short for that
-          figure to hold                        = 63.0 µs
+          figure to hold                        = 6.30 µs
           which is the case at switch-off and not
           when the rail comes up behind C91
 V_DRAIN   the machine's rail, measured            5 V
@@ -260,18 +254,24 @@ GND       the ground path over J-PWR, estimated   50 mΩ
           what the sense level holds over V_IH  = 685 mV
 ```
 
-**The coil.** What one pull-in costs and what the enforced duty leaves.
+**The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when its timer never fires.
 
 ```
 DUTY      5 V × 0.68 A, while energised         = 3.4 W
           the pull-in the driver commands          50 ms
-          the driver's timer that ends it          1 ms
-          what a pull-in therefore lasts        = 51 ms
-          the open contact a channel needs before
-          it may fire again                        10 ms
+          how far past that a coil may run
+          before the loop counts it overdue        1 ms
+          the longest a pull-in therefore lasts = 51 ms
+          the cool-down after a release, before
+          the coil may fire again                  10 ms
           that and the pull-in together         = 61 ms
           the first over the second             = 83.6 %
           3.4 W over the same fraction          = 2.84 W
+HOLD      the watchdog timeout, after which the
+          restart releases a coil still on         1 s
+          that and the longest pull-in, how long
+          a coil whose timer never fires stays on = 1.051 s
+          the limit from the requirements          5 s
 ```
 
 ## Sources

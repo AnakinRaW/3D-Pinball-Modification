@@ -12,6 +12,7 @@ from figcheck import Model, Q
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("bumper", HERE / "design.md", section=None, until="## Sources",
+              drawings=[HERE / "board-schematic.svg"],
               documents=[HERE.parents[2] / "firmware" / "bumper.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
@@ -69,12 +70,13 @@ dec("n_drive", 4, "", stated=False,
     src="three bumper coils plus one spare solenoid channel without sense")
 dec("n_sense", 3, "", stated=False, src="one sense line per bumper shell")
 dec("r_gate", 2.2, "kΩ", src="chosen so the Teensy pin keeps a wide margin under its "
-    "4 mA at the switching moment, which costs only gate settling time; it is also "
-    "the value R41 to R43 carry, so the board holds one resistor value fewer",
+    "4 mA at the switching moment, which costs only gate settling time",
     group="I_PIN", section=DRIVE, stated=True)
-dec("r_gate_pd", 100, "kΩ", src="chosen well above R_gate so the divider costs the "
-    "gate little, and bounded above only by the gate leakage it has to beat, which "
-    "is a hundred nanoamperes", group="V_GATE", section=DRIVE, stated=True)
+dec("r_gate_pd", 10, "kΩ", src="chosen to hold the gate under the lowest turn-on "
+    "threshold against the pin's keeper after a reset, while the divider it forms with "
+    "R_gate still leaves the gate above the voltage R_DS(on) is specified at; it is "
+    "the value R31 to R33 and R41 to R43 carry, so the board holds one resistor value "
+    "fewer", group="V_GATE", section=DRIVE, stated=True)
 dec("r_pulldown", 10, "kΩ", src="chosen to hold the sense node at ground with no "
     "ball on the bumper, at a fraction of a milliamp when one is",
     group="V_SENSE", section=SENSE, stated=True)
@@ -103,10 +105,17 @@ dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
 dec("t_tick", 1, "ms", src="the period of the driver's own timer, which is what ends "
     "a pull-in; chosen far under the pull-in and far over the interrupt it costs",
     group="DUTY", section=COIL, stated=True)
-dec("t_rearm", 10, "ms", src="how long a channel's contact has to stay open before "
-    "that channel may fire again; decided above the time the plunger takes to stroke "
-    "and return, which no mass or spring figure lets us compute",
+dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the coil "
+    "may not fire again, and how long a top bumper's contact has to stay open before "
+    "that channel is armed; decided above the time the plunger takes to stroke and "
+    "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)
+dec("t_wdt", 1, "s", src="the watchdog timeout, decided well inside the five seconds "
+    "the board allows, so a coil the tick no longer releases is released by the "
+    "restart", group="HOLD", section=COIL, stated=True)
+dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, the board's "
+    "requirement, set because the solenoids' vendor and specifications are unknown",
+    group="HOLD", section=COIL, stated=True)
 
 asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, 30 cm of loose "
     "pair at roughly 1 µH per metre, estimated from the conductor and not measured",
@@ -121,6 +130,13 @@ asm("r_wire_short", 0.2, "Ω", src="a coil pair shorted against itself in the pl
 dec("derate_contact", 80, "%", src="the share of a connector's per-contact rating "
     "practice leaves unused, from the derating targets of the design-review skill",
     group="FAULT", section=SUPPLY, stated=True)
+
+asm("place_gate", 10, "mm", stated=False, src="how close R11 to R14 and R21 to R24 "
+    "sit to their gate, against gate loop pickup; no datasheet states one")
+asm("place_filter", 15, "mm", stated=False, src="how close R31 to R33 and C1 to C3 "
+    "sit to J-M, so the wire is filtered where it lands; no datasheet states one")
+asm("place_flyback", 20, "mm", stated=False, src="how close D1 to D4 sit to their "
+    "coil connector, which keeps the flyback loop short; no datasheet states one")
 
 asm("r_gnd_power", 50, "mΩ", src="the ground path over J-PWR and the distribution, "
     "estimated from a short thick conductor and not measured",
@@ -200,8 +216,18 @@ ds("v_clamp_over", 0.31, "V", sheet=RT1062, src="Table 7, Vin/Vout maximum given
    "as OVDD + 0.31 V, which is where the pin's protection diode takes over",
    group="R_S", section=SENSE, stated=True)
 ds("vih_frac", 0.7, "", sheet=RT1062, stated=False,
-   src="Table 10 GPIO DC parameters, high-level input voltage V_IH minimum, "
-   "given as 0.7 x NVCC_XXXX")
+   src="Table 22 single voltage GPIO DC parameters, high-level input voltage V_IH "
+   "minimum, given as 0.7 x NVCC_XXXX")
+ds("vil_frac", 0.3, "", sheet=RT1062, stated=False,
+   src="Table 22 single voltage GPIO DC parameters, low-level input voltage V_IL "
+   "maximum, given as 0.3 x NVCC_XXXX")
+# Table 86 gives GPIO_AD_B0_03, GPIO_B1_13 and GPIO_B1_12, which PJRC's core_pins.h
+# maps to Teensy pins 0, 34 and 35, a keeper both on reset and as their default.
+# The keeper then holds the level the pin last drove, and the minimum is the
+# strongest it can be.
+ds("r_keeper_min", 105, "kΩ", sheet=RT1062, src="Table 22 single voltage GPIO DC "
+   "parameters, keeper circuit resistance minimum, at V_I = 0.3 and 0.7 x "
+   "NVCC_XXXX", group="V_GATE", section=DRIVE, stated=True)
 
 # ===========================================================================
 # what else hangs on the machine's 5 V rail
@@ -237,6 +263,26 @@ def _(v_3v3, r_gate_pd, r_gate):
      rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "v_gs_rdson"])
 def _(v_gate, v_gs_rdson):
     return v_gate - v_gs_rdson
+
+
+# A reset during a pull-in leaves the keeper holding the pin high against the
+# two resistors to ground.
+@fig("v_pin_keeper", "V", group="V_GATE", section=DRIVE, prints="up",
+     rises_with=["v_3v3", "r_gate", "r_gate_pd"], falls_with=["r_keeper_min"])
+def _(v_3v3, r_gate, r_gate_pd, r_keeper_min):
+    return v_3v3 * (r_gate + r_gate_pd) / (r_keeper_min + r_gate + r_gate_pd)
+
+
+@fig("v_gate_keeper", "V", group="V_GATE", section=DRIVE, prints="up",
+     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_keeper_min", "r_gate"])
+def _(v_3v3, r_gate, r_gate_pd, r_keeper_min):
+    return v_3v3 * r_gate_pd / (r_keeper_min + r_gate + r_gate_pd)
+
+
+@fig("v_il", "V", group="V_GATE", section=DRIVE,
+     rises_with=["v_3v3", "vil_frac"])
+def _(v_3v3, vil_frac):
+    return v_3v3 * vil_frac
 
 
 @fig("i_pin_peak", "mA", group="I_PIN", section=DRIVE,
@@ -415,6 +461,14 @@ def _(p_coil, duty_max):
     return p_coil * duty_max
 
 
+# The worst case is a tick that stops just before it would have ended a pull-in:
+# the loop's last feed falls at that moment, and the restart comes one timeout later.
+@fig("t_hold_fault", "s", group="HOLD", section=COIL, prints="up",
+     rises_with=["t_wdt", "t_on_max", "t_tick"])
+def _(t_wdt, t_on_actual):
+    return t_wdt + t_on_actual
+
+
 # ===========================================================================
 # derived: the supply
 # ===========================================================================
@@ -517,6 +571,13 @@ _I("switch-off is far inside the diode's surge rating",
    lambda v: v.i_coil_scoop < v.i_fsm)
 _I("the MOSFET stays inside its dissipation rating",
    lambda v: v.p_mosfet < v.p_d_mosfet)
+_I("after a reset during a pull-in the keeper, at its strongest, holds the gate under "
+   "the lowest turn-on threshold",
+   lambda v: v.v_gate_keeper < v.vgsth_min)
+_I("and under the through-hole variant's",
+   lambda v: v.v_gate_keeper < v.vgsth_min_th)
+_I("and the pin then reads as a low",
+   lambda v: v.v_pin_keeper < v.v_il)
 _I("a closed contact clears the input's high level, one at a time",
    lambda v: v.v_sense_high > v.v_ih)
 _I("and with all three closed at once, which shares the foil resistor",
@@ -545,6 +606,9 @@ _I("the window a contact has to stay open outlasts the contact one hit makes",
    lambda v: v.t_rearm > v.t_contact)
 _I("the driver's timer ticks far inside the pull-in it has to end",
    lambda v: v.t_tick < v.t_on_max)
+_I("a coil the tick no longer releases is released by the restart inside what the "
+   "board allows",
+   lambda v: v.t_hold_fault < v.t_hold_max)
 _I("the gate settles far inside the shortest pull-in the driver can command",
    lambda v: v.t_gate < v.t_on_max)
 
@@ -584,7 +648,7 @@ for _text, _why in [
     # constants as the driver writes them, without a unit
     ("50000", "the commanded pull-in in microseconds"),
     ("1000", "the driver's timer period in microseconds"),
-    ("10000", "the open window a channel needs before it fires again, in microseconds"),
+    ("10000", "the cool-down after a release, in microseconds"),
     ("250000", "the enforced pause in microseconds"),
     ("0805", "the resistor package, a name rather than a value"),
 ]:

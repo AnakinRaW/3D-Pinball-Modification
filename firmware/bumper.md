@@ -1,43 +1,16 @@
 # Bumper driver
 
-The driver watches the three bumper contacts, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel drives a solenoid that has no contact of its own and is asked for by the game logic. The board these pins reach is described in [`docs/parts/bumper/design.md`](../docs/parts/bumper/design.md).
+The driver watches the three top bumper contacts, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel, used for a scoop, drives a solenoid that has no contact of its own and is asked for by the game logic.
 
 ## Sensing and firing
 
-The conductive foil sits at 3.3 V, so a ball bridging foil and shell pulls that channel's sense line high. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
+The machine knows which top bumper to pull, when the ball closed circuit between the conductive foil and the specific shell. This pull the channel's input to HIGH. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
 
-Firing belongs in the handler because a bumper has to answer the ball, not the loop. Publishing follows the rule in [`general-design.md`](general-design.md): what cannot wait stays in the subsystem, and the game logic hears about it through the queue.
+Firing the top bumpers belongs in the handler because a bumper has to answer the ball quickly and cannot wait for game logic to pick up the event. The event gets published to the event queue on pulling the solenoid.
 
-## What bounds a pull-in
+All solenoids can also be fired by the game logic manually.
 
-| Rule | Value |
-|---|---|
-| Pull-in the driver commands | 50 ms |
-| How long the contact has to stay open before that channel fires again | 10 ms |
-
-**A channel fires once per closed contact, however long it stays closed.** The rising edge fires the coil and disarms that channel. Only a contact that opens again, and stays open for 10 ms, arms it for another pull-in. A shell held against the foil therefore pulls in once and then does nothing, which is the one thing the driver has to guarantee.
-
-**The pull-in ends in the driver's own interrupt.** An `IntervalTimer` started in `begin()` ticks every millisecond, drops the trigger pin of a coil that has run its time, and arms a channel whose contact has been open long enough. Nothing in the main loop is called for any of it, and a loop that stops running leaves no coil energised.
-
-A pull-in therefore lasts the commanded 50 ms plus at most one tick, so 51 ms. A solenoid needs nothing better than that.
-
-**A one-shot armed at each pull-in was rejected.** It would end the pull-in to the microsecond, but arming it means calling `IntervalTimer::begin()` from the sense interrupt, which allocates a hardware channel and is not documented as safe there. A tick that runs whatever happens costs one interrupt per millisecond and needs nothing undocumented.
-
-**Nothing arbitrates between channels.** One or two balls on a playfield decide by themselves how many bumpers can be struck at once, so a lock in firmware would add a rule the machine already keeps, and it would cost a hit its score whenever two coils happened to coincide.
-
-**The event goes out as the coil pulls.** The handler raises the trigger pin first and publishes immediately after, in that order because the kick is what the ball is waiting for and the queue is not.
-
-## The fourth channel
-
-The fourth trigger drives a solenoid with no sense line. The game logic calls `fire()` for it, which gives that coil the same single pull-in. Nothing arms or disarms it: a call while it is still energised is refused, and once it has released the next call fires it again.
-
-## What the hardware depends on
-
-**The watchdog is fed from the main loop and never from an interrupt.** A reset puts every Teensy pin back to high impedance and the gate pull-downs on the board drop every coil. A watchdog fed from an interrupt survives a dead loop and would never fire.
-
-With the pull-in ending in an interrupt, a stopped loop no longer strands a coil on its own. What the watchdog covers is a fault that takes the interrupts down with it, and the restart a hung game needs either way.
-
-**The lighting budget is lowered while any coil is energised.** The machine's supply does not carry the lighting ceiling and a coil at the same time, which [`docs/parts/lighting/design.md`](../docs/parts/lighting/design.md) sets out.
+The game logic can only request a pull with `fire()`, which returns false while the coil is still on or cooling down. It cannot hold a coil on or release it directly.
 
 ## The event
 
@@ -48,31 +21,71 @@ With the pull-in ending in an interrupt, a stopped loop no longer strands a coil
 | Timestamp | `micros()` in the handler, the moment the contact closed |
 | Payload | None |
 
-## Limitations
+## Solenoid protection
 
-**The 50 ms rests on no coil datasheet.** The manufacturer of the solenoid is unknown, and the figure comes from what the stock machine does.
+Every pull ends on its own, even when a top bumper's contact stays closed. A released coil can fire again only after the cool-down, and a top bumper's contact has to have been open for that long as well.
+
+| Rule | Value |
+|---|---|
+| Duration of a solenoid pull | 50 ms |
+| Duration of the cool-down phase after a solenoid pull | 10 ms |
+
+One `IntervalTimer`, the release timer, ends every pull. It waits for the oldest running pull, switches off each coil that has had its 50 ms and then waits for the next, so no pull is ever cut short. `begin()` takes the timer once and never gives it back. Between pulls the timer is parked on a long period. If no `IntervalTimer` is free at start-up, `begin()` returns false.
+
+If also the firmware fails an additional [watchdog](general-design.md#the-watchdog) steps in. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
+
+At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the board switch every coil off.
 
 ## The driver
 
 ```cpp
 class BumperDriver {
 public:
-    void begin(EventQueue::Producer& out) {
+    // takes the release timer and keeps it; false when no IntervalTimer is
+    // free, and the driver then never energises a coil
+    bool begin(EventQueue::Producer& out) {
         out_  = &out;
         self_ = this;
         for (uint8_t c = 0; c < kCoils; ++c) {
             pinMode(kTrigger[c], OUTPUT);
             digitalWriteFast(kTrigger[c], LOW);
         }
+
+        // the release timer and every pin interrupt share one level, so none of
+        // them can interrupt another
+        timer_.priority(kPriority);
+        if (!timer_.begin(expire0, kIdleUs)) return false;
+        ready_ = true;
+        NVIC_SET_PRIORITY(IRQ_GPIO6789, kPriority);
         for (uint8_t c = 0; c < kSenses; ++c) {
             pinMode(kSense[c], INPUT);
             attachInterrupt(digitalPinToInterrupt(kSense[c]), kEdge[c], CHANGE);
         }
-        timer_.begin(tick, kTickUs);              // the driver's own time base
+        return true;
     }
 
-    // the game logic's own path, and the only one the fourth coil has
-    bool fire(uint8_t coil) { return pull(coil, micros()); }
+    // the game logic's own path, and the only one the fourth coil has; BASEPRI
+    // holds off every interrupt at kPriority and below while the pull starts, and
+    // the IR driver's higher ones keep running. cpsid and cpsie around the write
+    // are ARM's workaround for erratum 837070 of the Cortex-M7 r0p1
+    bool fire(uint8_t coil) {
+        uint32_t saved;
+        asm volatile("mrs %0, basepri" : "=r"(saved));
+        asm volatile("cpsid i\n msr basepri, %0\n cpsie i" :: "r"((uint32_t)kPriority) : "memory");
+        const bool started = pull(coil, micros());
+        asm volatile("msr basepri, %0" :: "r"(saved) : "memory");
+        return started;
+    }
+
+    // true once a coil has run more than kLateUs past its pull-in; the main loop
+    // feeds the watchdog only while this is false
+    bool overdue() const {
+        const uint32_t now = micros();
+        for (uint8_t c = 0; c < kCoils; ++c) {
+            if (live_[c] && now - since_[c] > kOnUs + kLateUs) return true;
+        }
+        return false;
+    }
 
     // the state the game logic may query between events
     bool ballOn(uint8_t bumper) const {
@@ -80,69 +93,79 @@ public:
     }
 
 private:
-    static constexpr uint8_t  kCoils  = 4;
-    static constexpr uint8_t  kSenses = 3;
+    static constexpr uint8_t  kCoils    = 4;
+    static constexpr uint8_t  kSenses   = 3;
     static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};
     static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};
-    static constexpr uint32_t kOnUs   = 50000;    // the pull-in, docs/parts/bumper
-    static constexpr uint32_t kOpenUs = 10000;    // the contact has to stay open
-    static constexpr uint32_t kTickUs = 1000;     // what ends a pull-in
+    static constexpr uint32_t kOnUs     = 50000;  // the pull-in, docs/parts/bumper
+    static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
+    static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue
+    static constexpr uint32_t kIdleUs   = 100000000;  // parks the release timer between pulls
+    static constexpr uint8_t  kPriority = 96;     // general-design.md
 
     // attachInterrupt and IntervalTimer take a plain function pointer, so a
-    // static one per channel hands the edge to the instance
+    // static one per source hands the call to the instance
     static void edge0() { self_->edge(0); }
     static void edge1() { self_->edge(1); }
     static void edge2() { self_->edge(2); }
     static constexpr void (*kEdge[kSenses])() = {edge0, edge1, edge2};
-    static void tick() { self_->sweep(); }
+    static void expire0() { self_->expire(); }
 
-    // both edges of a sense line arrive here
+    // both edges of a sense line arrive here; a closing edge fires only once the
+    // contact has been open for the cool-down, so neither bounce nor a contact
+    // held closed fires again
     void edge(uint8_t bumper) {
         const uint32_t now = micros();
         if (digitalReadFast(kSense[bumper]) == LOW) {
             opened_[bumper] = now;                // the contact just let go
             return;
         }
-        if (!armed_[bumper]) return;              // still the contact that fired
-        armed_[bumper] = false;
-        pull(bumper, now);
+        if (now - opened_[bumper] < kCoolUs || !pull(bumper, now)) return;
         out_->publish(PinballEvent{now, EventType::BumperHit, bumper, 0});
     }
 
-    // the driver's own interrupt: end a pull-in that has run, and arm a channel
-    // whose contact has been open long enough
-    void sweep() {
-        const uint32_t now = micros();
-        for (uint8_t c = 0; c < kCoils; ++c) {
-            if (live_[c] && now - since_[c] >= kOnUs) {
-                digitalWriteFast(kTrigger[c], LOW);
-                live_[c] = false;
-            }
-        }
-        for (uint8_t c = 0; c < kSenses; ++c) {
-            if (!armed_[c] && digitalReadFast(kSense[c]) == LOW
-                          && now - opened_[c] >= kOpenUs) {
-                armed_[c] = true;
-            }
-        }
-    }
-
+    // starts the pull-in; the release timer is set to it only when no other coil
+    // is on, because a coil that started earlier is always due first
     bool pull(uint8_t coil, uint32_t now) {
-        if (live_[coil]) return false;
+        if (!ready_ || live_[coil] || now - released_[coil] < kCoolUs) return false;
+        if (!timing_) {
+            timer_.begin(expire0, kOnUs);         // restarts on the channel it holds
+            timing_ = true;
+        }
         live_[coil]  = true;
         since_[coil] = now;
         digitalWriteFast(kTrigger[coil], HIGH);
         return true;
     }
 
+    // the release timer: switch off every coil that has been on for kOnUs, then
+    // wait for the next coil that is due, or park until the next pull
+    void expire() {
+        const uint32_t now = micros();
+        uint32_t next = 0;                        // what the oldest coil still on has left
+        for (uint8_t c = 0; c < kCoils; ++c) {
+            if (!live_[c]) continue;
+            const uint32_t on = now - since_[c];
+            if (on >= kOnUs) {
+                digitalWriteFast(kTrigger[c], LOW);
+                released_[c] = now;
+                live_[c]     = false;
+            } else if (next == 0 || kOnUs - on < next) {
+                next = kOnUs - on;
+            }
+        }
+        timing_ = next != 0;
+        timer_.begin(expire0, timing_ ? next : kIdleUs);  // restarts on the channel it holds
+    }
+
     IntervalTimer         timer_;
     static BumperDriver*  self_;
     EventQueue::Producer* out_ = nullptr;
-    volatile bool         live_[kCoils]    = {};
-    volatile uint32_t     since_[kCoils]   = {};
-    volatile bool         armed_[kSenses]  = {true, true, true};
-    volatile uint32_t     opened_[kSenses] = {};
+    volatile bool         ready_  = false;
+    volatile bool         timing_ = false;
+    volatile bool         live_[kCoils]     = {};
+    volatile uint32_t     since_[kCoils]    = {};
+    volatile uint32_t     released_[kCoils] = {};
+    volatile uint32_t     opened_[kSenses]  = {};
 };
 ```
-
-Each channel owns its own state, so the sense interrupts never contend with one another and nothing here runs with interrupts disabled. `fire()` is the one path the main loop uses, and calling it on a channel that a sense edge fires at the same moment leaves that coil energised for a fraction of a millisecond longer than commanded.
