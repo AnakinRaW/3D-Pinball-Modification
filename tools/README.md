@@ -85,7 +85,7 @@ Flags:
 | `--groups` | The block groups and value tokens the markdown parser found |
 | `--blind` | The brief for an independent derivation: each quantity, its unit and its inputs, with no formula and no value |
 | `--write-sums` | Records the checksums of the cited datasheets |
-| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing |
+| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing. A block in which any figure found no line is left unwritten, because a figure that moved far loses its own line and another figure of the block can take it. The far movers then go in by hand, and a second run writes the rest. A drawing is written by its `data-fig` keys and needs no such care |
 | `--sheets`, `--mutate`, `--no-stale` | Switch the named pass on, or off |
 
 A sheet comes back unusable in two ways, and both are reported as unread rather

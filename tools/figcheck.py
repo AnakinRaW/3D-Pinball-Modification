@@ -1136,9 +1136,44 @@ def _renumber(line: str, col: int, old_num: str, new_num: str):
     return head + " " * -delta + new_num + tail, True
 
 
+def _norm_map(raw: str) -> tuple[str, list[int]]:
+    """The normalised text, and for each of its characters where it sits in raw.
+
+    Only an entity changes length when it is normalised, so a position found in
+    the normalised text is carried back to the file through this map.
+    """
+    out, where, i = [], [], 0
+    while i < len(raw):
+        for entity in ("&#937;", "&#181;"):
+            if raw.startswith(entity, i):
+                out.append(_norm(entity))
+                where.append(i)
+                i += len(entity)
+                break
+        else:
+            out.append(_norm(raw[i]))
+            where.append(i)
+            i += 1
+    where.append(len(raw))
+    return "".join(out), where
+
+
 def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
-    """Write every figure the model computes into the line that states it."""
-    edits, shifted = defaultdict(list), 0
+    """Write every figure the model computes into the line that states it.
+
+    A figure is found by its value, so one that moved far no longer finds its
+    own line, and another figure of its block may then take that line for its
+    own new value. A block in which any figure could not be placed is therefore
+    written nowhere: its lines are reported, and once the far movers stand in
+    by hand a second run writes the rest.
+    """
+    placed = {t.claimed_by for t in tokens if t.claimed_by}
+    unsure = defaultdict(list)
+    for f in model.figs.values():
+        if f.stated is True and f.key not in placed:
+            unsure[(f.group, f.section)].append(f.key)
+
+    edits, shifted, held = defaultdict(list), 0, set()
     for t in tokens:
         if not t.claimed_by:
             continue
@@ -1149,7 +1184,15 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
         have = t.text.split(" ")[0] if " " in t.text else t.text
         if want == have:
             continue
+        if (f.group, f.section) in unsure:
+            held.add((f.group, f.section))
+            continue
         edits[t.doc].append((t, have, want))
+    for group, section in sorted(held, key=lambda g: (g[0] or "", g[1] or "")):
+        rep.note(f"not written {group!r}: "
+                 + ", ".join(unsure[(group, section)])
+                 + " found no line, so a line found for another figure of that block "
+                   "may be theirs, and none is written")
 
     for path, items in edits.items():
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -1165,39 +1208,46 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
                      f"({t.claimed_by})" + ("" if kept else ", column moved"))
         path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
+    # A drawing names each figure's key, so its place is known whatever the
+    # value did. The element is matched in the file as it stands and the number
+    # replaced at its own offset: the same text may stand in several elements,
+    # and an entity ahead of a number moves it in the normalised text.
     drawn = 0
     for path in model.drawings:
         body = path.read_text(encoding="utf-8")
-        out, changed = body, 0
-        for m in DATA_FIG_RE.finditer(_norm(body)):
-            key, text = m.group(3), m.group(4)
-            if key not in model.figs:
-                continue
-            f = model.figs[key]
-            toks = sorted((x for x in scan_tokens(_norm(text), None, None, 0, False)
-                           if x.unit == f.unit),
-                          key=lambda x: abs(x.value - f.value).v)
-            if not toks:
-                continue
-            t = toks[0]
-            have = t.text.split(" ")[0] if " " in t.text else t.text
-            want = print_as(f, t.decimals)
-            if want == have:
-                continue
-            # the SVG entity for the unit may differ from the normalised text,
-            # so the figure is replaced inside this element only
-            start = m.start(4)
-            elem = body[start:start + len(text)]
-            if have not in elem:
-                rep.error(f"{path.name} anchors {key} and its text "
-                          f"{elem.strip()!r} does not carry {have!r}")
-                continue
-            out = out.replace(elem, elem.replace(have, want, 1), 1)
-            changed += 1
-            drawn += 1
-            rep.note(f"wrote       {path.name} {have} -> {want} ({key})")
-        if changed:
-            path.write_text(out, encoding="utf-8", newline="\n")
+        cuts = []
+        for m in DATA_FIG_RE.finditer(body):
+            text, where = _norm_map(m.group(4))
+            toks = scan_tokens(text, None, None, 0, False)
+            taken = []
+            for key in m.group(3).split():
+                if key not in model.figs:
+                    continue
+                f = model.figs[key]
+                same = sorted((t for t in toks
+                               if t.unit == f.unit and id(t) not in taken),
+                              key=lambda t: abs(t.value - f.value).v)
+                if not same:
+                    continue
+                t = same[0]
+                taken.append(id(t))
+                have = t.text.split(" ")[0] if " " in t.text else t.text
+                want = print_as(f, t.decimals)
+                if want == have:
+                    continue
+                start = m.start(4) + where[t.col]
+                end = m.start(4) + where[t.col + len(have)]
+                if body[start:end] != have:
+                    rep.error(f"{path.name} anchors {key} and could not find "
+                              f"{have!r} in {m.group(4).strip()!r}")
+                    continue
+                cuts.append((start, end, want))
+                rep.note(f"wrote       {path.name} {have} -> {want} ({key})")
+        for start, end, want in sorted(cuts, reverse=True):
+            body = body[:start] + want + body[end:]
+        if cuts:
+            path.write_text(body, encoding="utf-8", newline="\n")
+            drawn += len(cuts)
 
     total = sum(len(v) for v in edits.values()) + drawn
     if shifted:
@@ -1471,7 +1521,8 @@ def main(argv=None):
         written = pass_write(model, tokens, rep)
         print(f"{written} figure{'' if written == 1 else 's'} written into the "
               f"document and the drawings."
-              + ("" if written else " Everything already agreed."))
+              + (" Everything already agreed." if not written and not rep.errors
+                 else ""))
         for n in rep.notes:
             print("  " + n)
         for e in rep.errors:
