@@ -16,9 +16,11 @@ Read these first. They hold the numbers this review is judged against. Do not re
 | `docs/research/teensy-4.1.md` | Pin voltage limit, per-pin current, VIN range, published draw |
 | `docs/pin-assignment.md` | Pins already spent, and the peripherals each one locks out |
 | `docs/parts-list.md` | Parts in play and their spec links |
-| `docs/research/*.md` | Component notes, measurements of the stock machine |
-| `docs/parts/*/README.md` | The circuit under review and the subsystems it connects to |
-| `docs/datasheets/*.pdf` | Manufacturer datasheets held locally |
+| `docs/research/Rokr/*.md` | Measurements and reconstructed circuits of the stock machine |
+| `docs/research/Sensors/*.md` | Notes on individual sensor parts, bench readings included |
+| `docs/parts/*/design.md` | The circuit under review and the subsystems it connects to |
+| `docs/parts/*/figures.py` | Every figure a subsystem derives, with its inputs and their sources. `python tools/figcheck.py <model> --graph <key>` reads one back |
+| `docs/datasheets/` | Manufacturer datasheets held locally, as PDF or as a translated markdown copy |
 | Manufacturer datasheets | Absolute maximums for every part in the circuit under review |
 
 If a value the review needs is absent from all of them, that is a finding. Do not fill the gap with a plausible number.

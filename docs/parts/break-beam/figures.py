@@ -116,7 +116,6 @@ _I("the gate reports the fastest ball the build assumes",
 for _text, _why in [
     ("2 cm", "the gap between the two bodies, a mounting dimension"),
     ("3 mm", "the LED package the two bodies carry"),
-    ("40", "the Teensy pin the receiver's output reaches"),
     ("0", "the gate's index, the timestamp's initial value, and the empty payload"),
     ("10000", "the dead time in microseconds, as the driver writes it without a unit"),
     ("2.54 mm", "the connector pitch"),

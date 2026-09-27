@@ -28,12 +28,15 @@ A two-pin connector carries the jack onto the mainboard. The following parts sit
 | Seen | Assumed Reading |
 |---|---|
 | `C5`, `C8`, two radial electrolytics marked `100 10V VT`, mounted with opposite polarity orientation to one another | 100 µF / 10 V each, in parallel across the input, 200 µF total |
-| `ASMD1812-200`, an 1812 SMD PPTC | Resettable overcurrent protection in the input feed |
-| `D4`, an SMA package marked `MDD` `SS34` | MDD SS34 Schottky rectifier, shunt across the input |
+| `FU1`, an 1812 SMD PPTC marked `200`, an ASMD1812-200 | Resettable overcurrent protection in the input feed |
+| `D4`, an SMA package marked `MDD` `SS34`, beside the silkscreen `POWER` at the input connector | MDD SS34 Schottky rectifier, shunt across the input |
+| `L2`, `D5`, `C11` and `C12`, in the same area | Not identified. Whether `C11` and `C12` designate the two electrolytics or parts beside them is unsettled, and reading the silkscreen next to each can body settles it |
 
 ### Power rails capacitors
 
 The board contains two 100 µF / 10 V (200 µF in total) electrolytic capacitors at the power input, read as sitting in parallel across the 5 V rail.
+
+They sit between the input connector and the three solenoid drivers. That position serves the input and the coils alike, so it settles neither as the reason they are fitted.
 
 Their most likely purpose is to carry the first microseconds of a load step while current through the barrel-jack cord is still rising, smooth the adapter's switching residue, and shunt the board's own switching noise to ground ahead of the cord. 200 µF is the conventional input bulk value for a 5 V board fed from a 2 A adapter.
 

@@ -1813,7 +1813,7 @@ _I("the reference brackets, and sits under the rail",
    lambda v: v.v_ref_min < v.v_ref_max < v.v_out_max)
 _I("the board fits the module",
    lambda v: v.i_tot < v.i_module)
-_I("the bench case fits the Teensy's 3V3 pin",
+_I("the board alone fits the Teensy's 3V3 pin on the bench",
    lambda v: v.i_tot_bench < v.i_teensy_3v3)
 _I("both emitter groups survive the maximum their ambient allows",
    lambda v: v.i_led_worst < v.i_f_max_at_t_a

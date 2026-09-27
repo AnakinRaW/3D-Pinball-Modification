@@ -28,6 +28,7 @@ Planned to implement:
 
 Evaluating:
 - Light under bells
+- Light for targets and other unplanned features
 - Light on ball lane entries
 - Light inside crocodile
 - Light under Slingshots
@@ -49,9 +50,13 @@ Whether or not to use discrete LEDs (such as [NeoPixel 5050](https://www.adafrui
 
 ## Power Consumption
 
+TODO: LEDS is huge consumer... In general LEDs not 100%, but intensitity needs to be tested what looks good. Roof and surrounding playfield strips only use every second LED. 
+
+ca. 50 Playfield LED + ambient = ~2.1 A at 30% brightness for animation-focused lightning 
+
 ### Software
 
-**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmare. See the timing rules in [`firmware/constraints.md`](../../../firmware/constraints.md).
+**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmare. See the timing rules in [`firmware/general-design.md`](../../../firmware/general-design.md) and the output path in [`firmware/lighting.md`](../../../firmware/lighting.md).
 
 The game logic addresses lighting through **logical groups** and **named effects**. 
 
@@ -113,7 +118,7 @@ The three ambient strips stay separate for this reason alone. Together they hold
 
 ## Teensy pins
 
-**Proposed, not yet entered in [`pin-assignment.md`](../../pin-assignment.md).**
+Reserved in [`pin-assignment.md`](../../pin-assignment.md).
 
 | Pin | Chain | What it costs |
 |---|---|---|
@@ -122,11 +127,11 @@ The three ambient strips stay separate for this reason alone. Together they hold
 | 7 | 3 | Serial2 RX |
 | 8 | 4 | Serial2 TX, I²S1 data input |
 | 9 | 5 | I²S1 data output alternative |
-| 10 | 6 | One of three SPI CS options, 36 and 37 remain |
+| 10 | 6 | One of three SPI CS options. The IR converters take 36 and 37, so a further SPI device would need pin 10 back or a pin outside the usual set |
 
-The set costs one UART and no analog input. Nine of the eighteen analog inputs already serve the IR sensing, and SPI stays whole in case the display becomes a TFT.
+The set costs one UART and no analog input. The IR sensing takes no analog input at all, since its channels are digitised on their own board, and it shares the SPI bus with whatever arrives later.
 
-PJRC's default set for Teensy 4.x is 2, 14, 7, 8, 6, 20, 21 and 5. Pin 2 carries I²S2 audio and pin 14 carries the IR channel S1, and pins 20 and 21 are analog. Teensy 4.x accepts any pin set, so the four remaining defaults are joined by 9 and 10 instead.
+PJRC's default set for Teensy 4.x is 2, 14, 7, 8, 6, 20, 21 and 5. Pin 2 carries I²S2 audio, and pins 14, 20 and 21 are analog inputs worth keeping. Teensy 4.x accepts any pin set, so the four remaining defaults are joined by 9 and 10 instead.
 
 ## Level shifting
 
@@ -141,7 +146,7 @@ The WS2812B data input threshold is specified against its own supply, so at 5 V 
 | OE, pins 1, 4, 10, 13 | All to ground. OE is active low, and an open OE leaves the output in high impedance |
 | Unused inputs | To ground. An open CMOS input oscillates and couples into the neighbouring channels in the same package |
 
-At I_OH = 4 mA the datasheet guarantees V_OH ≥ 3.7 V, well above what a CMOS input behind 100 Ω asks for.
+At I<sub>OH</sub> = 4 mA the datasheet guarantees V<sub>OH</sub> ≥ 3.7 V, well above what a CMOS input behind 100 Ω asks for.
 
 ## Signal wiring
 
@@ -163,9 +168,9 @@ Budget: **2.0 A for lighting**. The stock machine stayed well below that, so the
 LED budget, enforced in firmware      2.00 A
 Three solenoids energised             2.04 A   measured
 Audio at full output                  0.45 A   estimated
-Teensy and logic                      0.15 A   estimated
+Teensy and logic                      0.30 A   0.10 A Teensy, 0.19 A IR mainboard
                                       ------
-Simultaneous total                    4.64 A
+Simultaneous total                    4.79 A
 ```
 
 What the budget buys: quiescent draw takes 0.21 A, leaving 1.79 A across 135 lit positions, an average of **13 mA per position**. What that is worth depends on the base colour, since each die drawn costs its own 20 mA:
@@ -178,7 +183,7 @@ What the budget buys: quiescent draw takes 0.21 A, leaving 1.79 A across 135 lit
 
 The saturated palette is what makes the budget comfortable. Ambient alone, the 80 perimeter positions plus the 26 in the ceiling, comes to 2.12 A on one die at full and therefore still runs below full scale.
 
-**Supply: 5 V, 6 A.** Roughly 30 % headroom on the simultaneous case.
+**Supply: 5 V, 3 A.** The 4.79 A simultaneous case sits above it.
 
 The firmware limit is load bearing. Without it the lighting alone draws 8.1 A, the supply enters current limiting, the rail sags and the Teensy resets, possibly with a solenoid energised. The supply is therefore chosen to limit current rather than to latch off.
 
@@ -219,7 +224,7 @@ Cost: no Teensy pin and six slots in the frame. The ball count gains per-device 
 | P28 pin to LED position mapping | Note which LED glows during the same diode test |
 | P28 connector type, pitch and pin numbering direction | Caliper and inspection |
 | Rollover count | Count the added positions |
-| WS2812B current per die, quiescent draw and input threshold V_IH | The strip's datasheet. The 20 mA per die and 1 mA quiescent used above are convention, and no V_IH figure is sourced yet. The copy in `docs/datasheets/` is a scan with no text layer |
+| WS2812B current per die, quiescent draw and input threshold V<sub>IH</sub> | The strip's datasheet. The 20 mA per die and 1 mA quiescent used above are convention, and no V<sub>IH</sub> figure is sourced yet. The copy in `docs/datasheets/` is a scan with no text layer |
 | Whether WS2812B and SK6812 bit timings overlap enough for one waveform to drive both | The T0H, T1H and reset windows in the two datasheets. Only relevant if a mixed chain is ever wanted |
 | Maximum current of the stock amber LEDs on P28 | Unmarked parts with no datasheet. Start below the WS2811 figure on the bench and raise it |
 | Strip pitch, and with it every device count in this document | Caliper across ten devices on the strip. The 160 LEDs/m is the supplier's figure, not a measurement, and 213 devices, 2.4 ms and 8.1 A all follow from it |
@@ -228,6 +233,8 @@ Cost: no Teensy pin and six slots in the frame. The ball count gains per-device 
 ## Known limitations
 
 **FastLED colour correction does not apply to the P28 pixels.** Correction and gamma scale each channel differently, which is right for red, green and blue dies and wrong for six identical amber LEDs, where it would make them unequally bright at the same value. Either global correction is disabled and applied per pixel instead, or P28 sits on a chain of its own.
+
+**The chain's own PWM can raise the IR sensors' noise floor.** An IR channel subtracts a dark sample from a lit one taken 600 µs earlier, and a light source flickering at f leaves `1 − cos(2π f · 600 µs)` of its amplitude standing in the difference. That factor passes 1 at 417 Hz and reaches 2 at 833 Hz, where the subtraction cancels nothing. WS2811 gives its scan frequency as not less than 400 Hz, which is a floor and not a figure, so where a given device lands is unknown. A device in view of a sensor bore therefore contributes up to twice its own modulation amplitude to that channel's noise, and the sensors carry it as a smaller margin rather than as a failure: the IR driver's start-up calibration reads each channel's clear level and scales its threshold to whatever the channel delivers.
 
 **The firmware current limit is part of the power design.** It is recorded here rather than only in the firmware because the supply rating depends on it.
 
@@ -246,4 +253,4 @@ https://amzn.eu/d/0jcgB8mw - SEZO WS2812B IC RGB LED Strip 2.7mm 2M 160LEDs/m
 - [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and pitch, housing dimensions, P28
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): measured solenoid current, stock load inventory
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, per-pin current, analog input count
-- [`firmware/constraints.md`](../../../firmware/constraints.md): the 3 ms budget the IR sensing imposes on the loop
+- [`firmware/ir-sensing.md`](../../../firmware/ir-sensing.md): the 3 ms budget the IR sensing imposes on the loop

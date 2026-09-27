@@ -35,16 +35,16 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 
 | Pin | Signal | Peripheral | Subsystem | Held for |
 |---|---|---|---|---|
-| 0 | Bumper trigger 4 | plain digital output | Bumpers | — |
-| 1 | Bumper sense 1 | plain digital input | Bumpers | — |
+| 0 | Bumper trigger 4 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
+| 1 | Bumper sense 1 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
 | 5 | LED chain 1 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
 | 6 | LED chain 2 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
 | 7 | LED chain 3 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
 | 8 | LED chain 4 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
 | 9 | LED chain 5 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
 | 10 | LED chain 6 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 14 | Bumper sense 2 | plain digital input | Bumpers | — |
-| 15 | Bumper sense 3 | plain digital input | Bumpers | — |
+| 14 | Bumper sense 2 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
+| 15 | Bumper sense 3 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
 | 18 | SDA to the rotary sensors | Wire SDA | Hall | — |
 | 19 | SCL to the rotary sensors | Wire SCL | Hall | — |
 | 20 | Target sense 1 | plain digital input | Targets | — |
@@ -54,13 +54,13 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | 26 | MOSI to the display | SPI1 MOSI | Display | — |
 | 27 | SCK to the display | SPI1 SCK | Display | — |
 | 28 | CS to the display controller | plain digital output | Display | — |
-| 30 | CS to the touch controller | plain digital output | Display | — |
 | 31 | D/C to the display | plain digital output | Display | — |
-| 32 | Bumper trigger 1 | plain digital output | Bumpers | — |
-| 34 | Bumper trigger 2 | plain digital output | Bumpers | — |
-| 35 | Bumper trigger 3 | plain digital output | Bumpers | — |
+| 32 | Bumper trigger 1 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
+| 34 | Bumper trigger 2 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
+| 35 | Bumper trigger 3 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
 | 38 | Target sense 4 | plain digital input | Targets | — |
 | 39 | MISO from the display | SPI1 MISO | Display | — |
+| 41 | Background audio on/off | plain digital input | Controls | — |
 
 ### What the reservations cost
 
@@ -68,18 +68,20 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 |---|---|
 | Serial2 | Lighting, pins 7 and 8 |
 | The third SPI chip select | Lighting, pin 10 |
-| CAN3 | Display, pins 30 and 31 |
+| CAN3 | Display, pin 31. It needs 30 and 31 together, so taking one kills it, and 30 stays free as a plain pin |
 | Serial1 and CAN2 | Bumpers, pins 0 and 1 |
 | Serial8 | Bumpers, pins 34 and 35 |
 | Serial3 and S/PDIF | Bumpers, pins 14 and 15 |
 | CAN1 | Targets, pin 23, the only CAN1 RX. TX still has pin 22 once pin 11 carries MOSI, so the port dies on its receive side alone |
 | Wire2 and Serial6 | Servo, pin 24. Both need the pair 24 and 25 |
 | I²S1 | Targets, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
-| 12 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25, A17 on 41 |
+| 13 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display; A17 the audio switch. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25 |
+
+**The display's touch controller shares `Wire`.** It is capacitive and answers to 0x38 against the AS5600's 0x36, so both sit on pins 18 and 19 and the touchscreen costs no pin of its own.
 
 **One AS5600, on `Wire`.** Its address is fixed at 0x36 with no address pins, so a second one on the same two wires collides with the first. A second sensor takes `Wire1` on pins 16 and 17, or a TCA9548A multiplexer on pins 18 and 19, which carries up to eight and costs no further pin.
 
-**Where the next pins come from.** Five edge pins remain: 16, 17, 22, 25 and 41, all analog-capable. Of those, 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
+**Where the next pins come from.** Five edge pins remain: 16, 17, 22, 25 and 30. The first four are analog-capable, and 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
 
 ## Signal names
 

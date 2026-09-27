@@ -29,7 +29,7 @@ IR sensors are the main driver of this modification to detect if a ball has pass
 
 ### Sensor boards
 
-Three sensor boards come out of the stock machine. This modification keeps these boards, as they are already shaped for their install locations. To avoid designing multiple IR-sensing strategies it is planned that each new sensor board is built as a 1:1 copy of the stock boards.
+Three sensor boards come out of the stock machine. This modification keeps these boards, as they are already shaped for their install locations. Each new sensor board takes over their three-pin interface, so every channel is sensed the same way.
 
 ### Mainboard
 

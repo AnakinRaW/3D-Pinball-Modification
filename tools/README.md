@@ -2,7 +2,7 @@
 
 | File | Contents |
 |---|---|
-| [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them |
+| [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them. Checks every marked Teensy pin against the pin table |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
 
@@ -16,7 +16,15 @@ figcheck compares the values in a drawing. Whether the drawing can be read is a 
 python tools/svgcheck.py                       every SVG under docs/
 python tools/svgcheck.py path/to/one.svg ...   only those
 python tools/svgcheck.py --slack 4             a wider tolerance
+python tools/svgcheck.py --margin 8            clearance a label is owed from a shape
+python tools/svgcheck.py --margin 0            report only what actually touches
 ```
+
+The margin is clearance rather than tolerance. A label is grown by it before the
+overlap with a wire or a symbol is measured, so one that merely comes close is
+reported the same way one sitting on it is. It defaults to 4 and applies to the
+label-against-shape check alone: two lines of one caption sit close on purpose,
+so `overlap` keeps the tolerance and gets no margin.
 
 What it reports:
 
@@ -32,10 +40,11 @@ Widths are estimated from character classes for a sans-serif face, not measured 
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing is the only one so far. The checker imports the model, evaluates every figure, and compares the results against those files:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing, the break beam and the bumpers have one so far. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
 
 ```
-python tools/figcheck.py docs/parts/ir-reflective/figures.py --sheets
+python tools/figcheck.py --sheets                                  every model, then the pins
+python tools/figcheck.py docs/parts/ir-reflective/figures.py       one model, and the pins its files mark
 ```
 
 Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and metre. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
@@ -58,6 +67,7 @@ Each check reports on its own line, and any of them can fail the run:
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated |
+| Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), and the table gives no pin to two signals and no signal twice |
 | which way a figure moves | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
 | readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
 | what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
@@ -77,12 +87,32 @@ Flags:
 | `--groups` | The block groups and value tokens the markdown parser found |
 | `--blind` | The brief for an independent derivation: each quantity, its unit and its inputs, with no formula and no value |
 | `--write-sums` | Records the checksums of the cited datasheets |
-| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing |
+| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing. A block in which any figure found no line is left unwritten, because a figure that moved far loses its own line and another figure of the block can take it. The far movers then go in by hand, and a second run writes the rest. A drawing is written by its `data-fig` keys and needs no such care. A pin that moved in the pin table is carried into every place that marks it |
 | `--sheets`, `--mutate`, `--no-stale` | Switch the named pass on, or off |
+
+A sheet comes back unusable in two ways, and both are reported as unread rather
+than blamed on the readings in it. Fonts the extractor cannot map give noise,
+which the share of plausible characters catches. A scan of printed pages gives
+clean text that is not the sheet, a few navigation labels repeated, which scores
+full marks on plausibility and carries almost no vocabulary; the count of
+distinct words catches that one. `IRL540N.PDF` is the scan in this repository,
+and its readings are taken from the rendered page by eye.
 
 A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
 A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`firmware/ir-sensing.md`](../firmware/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.
+
+### Teensy pins
+
+A Teensy pin is typed once, in [`docs/pin-assignment.md`](../docs/pin-assignment.md). Every other place marks it with the signal it carries, named as the table's Signal column names it up to the first comma, so `CS-A` stands for "CS-A, converter for channels 1 to 8":
+
+| In | The marker |
+|---|---|
+| Markdown | A link to the table, titled with the signal: `[34](../../pin-assignment.md "Bumper trigger 2")` |
+| A fenced block | The line's comment, naming in order the signals of the numbers right of its `=`: `kSense[kSenses] = {1, 14, 15};  // pin-assignment.md: Bumper sense 1 to 3` |
+| A drawing | `data-pin` on the text element, several signals separated by semicolons: `<text data-pin="Bumper sense 1">pin 1</text>` |
+
+`Bumper sense 1 to 3` stands for the three signals it spans. The figure passes skip a marked number, so a pin needs no aside in the model. A pin number that carries no marker is not checked, which is right for a connector pin or a pin the research notes name.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
 

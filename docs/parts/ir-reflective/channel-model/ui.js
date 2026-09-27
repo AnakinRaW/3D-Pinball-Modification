@@ -569,9 +569,9 @@ $('rcolseg').addEventListener('click', e => {
   render();
 });
 
-// The collector load follows the sensor, because it is a property of the board the part sits on: the
-// rebuilt boards copy the stock one and carry it, and a CNY70 has no board yet. It stays a control,
-// so a trial that solders one anyway can be modelled.
+// Choosing a sensor resets the collector load to that part's default, which is what a rebuilt board
+// carries: none, with the collector at the rail. The three stock boards' 1.585 kOhm is set per
+// channel. It stays a control, so a trial that solders one anyway can be modelled.
 $('sensorseg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   $('sensor').value = b.dataset.v;

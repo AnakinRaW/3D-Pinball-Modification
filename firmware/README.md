@@ -4,5 +4,9 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 
 | File | Contents |
 |---|---|
-| [`constraints.md`](constraints.md) | Rules the firmware has to keep, derived from the hardware design |
-| [`performance-options.md`](performance-options.md) | Reserves for the case where the main loop runs out of time |
+| [`general-design.md`](general-design.md) | General design considerations of the firmare, such driver design and interrupt rules |
+| [`ir-sensing.md`](ir-sensing.md) | The IR ball sensing driver: its budget, sampling instant, calibration and performance reserves |
+| [`break-beam.md`](break-beam.md) | The ball drain gate: the event it publishes, the block a ball has to hold, and what one block cannot tell |
+| [`bumper.md`](bumper.md) | The bumper driver: what it does in the interrupt, what bounds a pull-in, and what the board depends on the firmware for |
+| [`lighting.md`](lighting.md) | The LED output path and the library that carries it |
+| [`input-handling.md`](input-handling.md) | Description of the event queue system to read and distribute inputs to the game logic |
