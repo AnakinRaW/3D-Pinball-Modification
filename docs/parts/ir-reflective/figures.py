@@ -1738,26 +1738,6 @@ dec("r_led_brighter", 150, "Ω", src="the E12 value below 220 Ω, for a channel 
     "returns too little light")
 dec("c_bulk_rating", 10, "V", src="the voltage rating asked of C5 and C6, three times the rail")
 
-# The bench feeds J-PWR from the Teensy's 3V3 pin, which two other subsystems draw
-# from as well. Their figures are derived in their own models and taken from there.
-_BENCH = "To the power distribution"
-asm("i_break_beam", 20, "mA", group=_BENCH, stated="loose",
-    src="the break beam's draw on the Teensy's 3V3 pin, I_SUP in "
-    "docs/parts/break-beam/design.md: the emitter's 10 mA working current and the "
-    "receiver bounded at the same")
-asm("i_bumper_foil", 0.898, "mA", group=_BENCH, stated="loose",
-    src="the bumper board's foil feed on the Teensy's 3V3 pin with all three bumpers "
-    "closed, I_FOIL in docs/parts/bumper/design.md")
-
-
-# Accepted as a known limitation of the bench, so no invariant holds it under the
-# pin's 250 mA.
-@fig("i_pin_bench", "mA", group=_BENCH, stated="loose",
-     rises_with=["i_break_beam", "i_bumper_foil", "i_iso_s1", "n_channels"],
-     falls_with=["r_led"])
-def _(i_tot_bench, i_break_beam, i_bumper_foil):
-    return i_tot_bench + i_break_beam + i_bumper_foil
-
 # A resistor change moves the operating point, so V_F has to be taken at the
 # new current. These two are the forward voltages the stated currents imply.
 # They are not fresh readings: Figure 3 is only checked for bracketing them.
