@@ -60,7 +60,7 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | 35 | Bumper trigger 3 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
 | 38 | Target sense 4 | plain digital input | Targets | — |
 | 39 | MISO from the display | SPI1 MISO | Display | — |
-| 41 | Background audio on/off | plain digital input | Controls | — |
+| 41 | Toggle switch, its function set by each game | plain digital input | Controls | [controls](parts/controls/design.md) |
 
 ### What the reservations cost
 
@@ -75,7 +75,7 @@ Held for a subsystem that is designed but not yet built. A reserved pin is not f
 | CAN1 | Targets, pin 23, the only CAN1 RX. TX still has pin 22 once pin 11 carries MOSI, so the port dies on its receive side alone |
 | Wire2 and Serial6 | Servo, pin 24. Both need the pair 24 and 25 |
 | I²S1 | Targets, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
-| 13 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display; A17 the audio switch. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25 |
+| 13 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display; A17 the toggle switch. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25 |
 
 **The display's touch controller shares `Wire`.** It is capacitive and answers to 0x38 against the AS5600's 0x36, so both sit on pins 18 and 19 and the touchscreen costs no pin of its own.
 

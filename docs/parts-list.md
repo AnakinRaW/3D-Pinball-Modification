@@ -1,4 +1,4 @@
-# Part List (BOM)
+# Part list (BOM)
 
 Every part needed to build the modification is listed here, with a link to what is known about it.
 
