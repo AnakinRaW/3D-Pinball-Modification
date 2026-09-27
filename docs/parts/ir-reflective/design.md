@@ -282,7 +282,7 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 
   ![Placement sketch of the mainboard](mainboard-placement.svg)
 
-## Component list
+## Part list
 
 Additional to the Teensy 4.1 and the sensor boards, grouped by type and sorted by value. Where the type designation depends on the package, both are named.
 

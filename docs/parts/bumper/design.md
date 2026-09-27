@@ -91,7 +91,7 @@ Controlling the hardware is handled by interrupt handlers. The top bumpers are t
 
 [`firmware/bumper.md`](../../../firmware/bumper.md) describes the driver.
 
-## Component list
+## Part list
 
 | Qty | Part | Through-hole | SMD | Where |
 |---|---|---|---|---|

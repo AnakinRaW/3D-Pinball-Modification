@@ -240,7 +240,7 @@ Cost: no Teensy pin and six slots in the frame. The ball count gains per-device 
 
 
 
-## Part List
+## Part list
 https://amzn.eu/d/0jcgB8mw - SEZO WS2812B IC RGB LED Strip 2.7mm 2M 160LEDs/m
 
 
