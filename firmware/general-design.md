@@ -2,20 +2,26 @@
 
 The rules here hold across the whole firmware. The figures they are checked against live in the design documents and are read from there: [`docs/parts/`](../docs/parts/), one directory per subsystem.
 
-What one driver alone has to keep sits with that driver:
-
 | Subsystem | File |
 |---|---|
 | IR ball sensing | [`ir-sensing.md`](ir-sensing.md) |
 | Break beam | [`break-beam.md`](break-beam.md) |
 | Bumpers | [`bumper.md`](bumper.md) |
 | Lighting | [`lighting.md`](lighting.md) |
+| Audio | [`audio.md`](audio.md) |
+| Storage, the SD card | [`storage.md`](storage.md) |
+| Hall rotary sensor | [`hall.md`](hall.md) |
+| Controls | [`controls.md`](controls.md) |
 
-## Nothing in the main loop may block
+## Firmware abstraction layers
 
-The main loop carries the game logic, the sensing, and IO such as displays, audio, LEDs. The sensing is the sensitive part, because an event can only be caught while it is happening. So nothing in the loop may block, the loop has to come round quickly.
+The firmware keeps three layers apart. The drivers work the hardware in their own interrupts and publish what they detect as events. Game components represent logical playfield's elements, such as the top roll-over lanes. They may contain multiple different hardware parts. The games hold the rules and talk to the components. Games are organized and run by a game host, as [game-abstraction](game-abstraction.md) describes.
 
-**A driver hands its waiting to hardware.** Where a transfer, a conversion or a frame takes time, a DMA channel or the peripheral itself moves the data and raises an interrupt when it is done, so the processor spends that time on something else. A job that cannot be handed over is split into pieces short enough that the loop still comes round in time.
+## Non-blocking coding
+
+The main loop carries the host and the game logic. The drivers catch every event in their own interrupts, so a slow loop only delays the game's reaction. A loop that stays away longer lets the event queues fill up and eventually may lead to droped events or and the watchdog restarts the machine. So nothing in the loop may block, and the loop has to come round quickly.
+
+A driver hands its waiting to hardware. Where a transfer, a conversion or a frame takes time, a DMA channel or the peripheral itself moves the data and raises an interrupt when it is done, so the processor spends that time on something else. A job that cannot be handed over is split into pieces short enough that the loop still comes round in time.
 
 ## The event queue
 
@@ -25,9 +31,13 @@ Subsystems are not meant to communicate directly with each other. Instead they p
 
 ## Drivers
 
-A driver reports state changes, not its current state. A state that persists over time produces no further event, and one physical change yields one event.
+Drivers work in their own interrupts and do not relay on the main loop to update them.
+
+Drivers report their state changes, not their current state. A state that persists over time produces no further event, and one physical change yields one event.
 
 The current state stays queryable.
+
+A driver whose `begin()` failed does nothing when called. This for example allows a game to run without an SD card or display installed.
 
 ## Interrupts
 
@@ -43,7 +53,7 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 |---|---|---|---|
 | FlexPWM3.1 compare, starting the read block | IR ball sensing | microseconds, the read block has to end inside its phase | 64 |
 | The interrupt after each SPI conversion | IR ball sensing | microseconds | 64 |
-| Pin interrupts, one IRQ shared by every pin | Bumpers, break beam | milliseconds | 96 |
+| Pin interrupts, one IRQ shared by every pin | Bumpers, break beam, controls | milliseconds | 96 |
 | `IntervalTimer`, ending the solenoid pulls | Bumpers | milliseconds | 96 |
 
 *Remarks: The pin interrupts and the bumpers' release timer share a level, so neither can interrupt the other and the bumper driver needs no lock. A further `IntervalTimer` therefore has to ask for 96 or a larger number.*
@@ -77,5 +87,79 @@ void setup() {
 void loop() {
     // ... the rest of the pass
     if (!bumpers.overdue()) watchdog.feed();   // each guarded component adds its condition
+}
+```
+
+## The main program
+
+The main file sets the machine up and runs the main loop. 
+
+`setup()` first runs every driver's `begin()` in the correct order. Then it adds all game components to the game host and starts the host. Lastly, it starts the watchdog.
+
+`loop()` knows no game. In each pass the event queue is dispatched to the host with `dispatch()` and updates the game host with the current time using `update()`. Lastly it feeds the watchdog given that every guard holds.
+
+The following is a basic sketch of the machine's main file:
+
+```cpp
+EventQueue       events;
+
+// drivers
+IrSensing        ir;
+BreakBeam        drain;
+BumperDriver     bumpers;
+Storage          storage;
+AudioDriver      audio;
+Lighting         lights;
+Display          display;
+HallRotaryDriver hallRotary;
+// other drivers
+
+// game components
+TopLanes         topLanes{ir, lights};   // a component, built on its drivers' parts
+// other game components
+
+GameHost         host;
+WDT_T4<WDT1>     watchdog;
+
+void setup() {
+    
+    // storage first, so every later driver can read its settings from the card
+    storage.begin(events.attach(storageQueue, kQueueDepth));
+
+    // bumpers next so we can drive the coils at startup
+    bumpers.begin(events.attach(bumperQueue, kQueueDepth));
+    
+    // light ahead of ir for better calibration
+    lights.begin();
+    ir.begin(events.attach(irQueue, kQueueDepth));
+    drain.begin(events.attach(drainQueue, kQueueDepth));
+   
+    // display must be initialized before hall sensor
+    const bool screen = display.begin(events.attach(displayQueue, kQueueDepth));
+    hallRotary.begin(events.attach(hallRotaryQueue, kQueueDepth));
+
+    audio.begin(events.attach(audioQueue, kQueueDepth));
+
+    // other drivers...
+
+    // every component, so the host routes its parts' driver events through it
+    host.add(topLanes);
+    // other components...
+
+    // the components, then the services no component owns
+    static Machine machine{topLanes, audio, storage, screen ? &display : nullptr};
+    host.begin(machine, screen && display.touch());
+
+    startWatchdog(watchdog);
+}
+
+void loop() {
+    PinballEvent batch[kBatch];
+    const size_t n = events.read(batch, kBatch);
+    for (size_t i = 0; i < n; ++i) host.dispatch(batch[i]);
+
+    host.update(micros());
+
+    if (/** watchdog conditions **/) watchdog.feed();
 }
 ```
