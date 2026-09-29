@@ -12,6 +12,7 @@ The rules here hold across the whole firmware. The figures they are checked agai
 | Storage, the SD card | [`storage.md`](storage.md) |
 | Hall rotary sensor | [`hall.md`](hall.md) |
 | Controls | [`controls.md`](controls.md) |
+| Servo | [`servo.md`](servo.md) |
 
 ## Firmware abstraction layers
 
