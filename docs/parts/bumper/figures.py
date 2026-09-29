@@ -72,8 +72,9 @@ dec("i_3v3_max", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V ra
 dec("n_drive", 4, "", stated=False,
     src="three bumper coils plus one spare solenoid channel without sense")
 dec("n_sense", 3, "", stated=False, src="one sense line per bumper shell")
-dec("r_gate", 2.2, "kΩ", src="chosen so the Teensy pin keeps a wide margin under its "
-    "4 mA at the switching moment, which costs only gate settling time",
+dec("r_gate", 1.1, "kΩ", src="chosen so the gate still clears the voltage R_DS(on) is "
+    "specified at against the power ground's rise, while the pin stays under its 4 mA at "
+    "the switching moment; 1.1 kΩ from inside that window because it is on hand",
     group="I_PIN", section=DRIVE, stated=True)
 dec("r_gate_pd", 10, "kΩ", src="chosen to hold the gate under the lowest turn-on "
     "threshold against the pin's keeper after a reset, while the divider it forms with "
@@ -143,11 +144,9 @@ asm("place_filter", 15, "mm", stated=False, src="how close R31 to R33 and C1 to 
 asm("place_flyback", 20, "mm", stated=False, src="how close D1 to D4 sit to their "
     "coil connector, which keeps the flyback loop short; no datasheet states one")
 
-asm("r_gnd_power", 50, "mΩ", src="the ground path over J-PWR and the distribution, "
-    "estimated from a short thick conductor and not measured",
-    group="GND", section=SUPPLY, stated=True)
-asm("r_gnd_signal", 330, "mΩ", src="the ground path over J-T pin 9, estimated from a "
-    "signal-cable conductor and not measured",
+asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contacts; every "
+    "wire is the same, so the ground paths differ only in how many wires they run "
+    "through; estimated from the conductor and not measured",
     group="GND", section=SUPPLY, stated=True)
 
 # ===========================================================================
@@ -525,19 +524,30 @@ def _(i_coil_short, rdson):
     return i_coil_short * i_coil_short * rdson
 
 
-@fig("i_gnd_signal", "mA", group="GND", section=SUPPLY,
-     rises_with=["i_coil_scoop", "r_gnd_power"], falls_with=["r_gnd_signal"])
-def _(i_coil_scoop, r_gnd_power, r_gnd_signal):
-    return i_coil_scoop * r_gnd_power / (r_gnd_power + r_gnd_signal)
+# The power ground reaches the distribution over J-PWR alone, so all four coils
+# at once lift it by their whole current across that one wire. The signal
+# ground and the Teensy carry none of it.
+@fig("v_power_rise", "mV", group="GND", section=SUPPLY, prints="up",
+     rises_with=["i_coil", "i_coil_scoop", "n_stock_drive", "r_lead"])
+def _(i_feed_max, r_lead):
+    return i_feed_max * r_lead
 
 
-@fig("v_gnd_shift", "mV", group="GND", section=SUPPLY,
-     rises_with=["i_coil_scoop", "r_gnd_power", "r_gnd_signal"])
-def _(i_gnd_signal, r_gnd_signal):
-    return i_gnd_signal * r_gnd_signal
+# The gate is driven from the Teensy's ground and measured against the power
+# ground, so the rise comes off the pin's level before the divider.
+@fig("v_gate_shifted", "V", group="GND", section=SUPPLY, prints="down",
+     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "r_lead", "i_coil"])
+def _(v_3v3, v_power_rise, r_gate_pd, r_gate):
+    return (v_3v3 - v_power_rise) * r_gate_pd / (r_gate + r_gate_pd)
 
 
-@fig("v_sense_margin", "mV", group="GND", section=SUPPLY,
+@fig("v_gate_margin_shifted", "mV", group="GND", section=SUPPLY, prints="down",
+     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "r_lead", "v_gs_rdson"])
+def _(v_gate_shifted, v_gs_rdson):
+    return v_gate_shifted - v_gs_rdson
+
+
+@fig("v_sense_margin", "mV", group="GND", section=SUPPLY, stated=False,
      rises_with=["v_3v3", "r_pulldown"],
      falls_with=["r_contact", "r_foil", "n_sense", "vih_frac"])
 def _(v_sense_all, v_ih):
@@ -597,8 +607,9 @@ _I("the bulk per ampere of solenoid stays above the stock machine's, taken at th
    lambda v: v.c_bulk * v.i_stock > v.c_stock * v.i_coil)
 _I("the bulk capacitor is bought at twice the rail it sits across",
    lambda v: v.v_cap_rating >= 2 * v.v_5v)
-_I("the ground loop shifts the sense reference by far less than the level holds",
-   lambda v: v.v_gnd_shift < v.v_sense_margin)
+_I("the gate still clears the voltage R_DS(on) is specified at, with the power "
+   "ground's rise against it",
+   lambda v: v.v_gate_shifted > v.v_gs_rdson)
 _I("the drain stays inside its rating through the switch-off spike C91 leaves",
    lambda v: v.v_drain_spike < v.v_ds_max)
 _I("the rail may not sag past what the tightest load on it accepts",
