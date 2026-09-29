@@ -109,9 +109,12 @@ _family(_COUL, [("C", 1.0), ("µC", 1e-6), ("nC", 1e-9)])
 _family(_K, [("°C", 1.0)])
 _family(_M, [("m", 1.0), ("cm", 1e-2), ("mm", 1e-3)])
 _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
+# Counts share the dimensionless family, so the unit check cannot tell a byte
+# from a sample; a model keeps them apart by name.
 _family(DIMLESS, [("%", 0.01), ("×", 1.0), ("steps", 1.0), ("step", 1.0),
                   ("τ_adc", 1.0), ("τ", 1.0), ("clocks", 1.0), ("clock", 1.0),
-                  ("dB", 1.0), ("bits", 1.0), ("", 1.0)])
+                  ("dB", 1.0), ("bits", 1.0), ("bytes", 1.0), ("KB", 1024.0),
+                  ("samples", 1.0), ("", 1.0)])
 
 DIM_NAMES = {DIMLESS: "1", _V: "V", _A: "A", _S: "s", _K: "°C", _OHM: "Ω",
              _WATT: "W", _FARAD: "F", _HENRY: "H", _HZ: "Hz", _COUL: "C",
@@ -235,6 +238,11 @@ def _q(x) -> Q:
 def db(ratio):
     """A voltage ratio in decibels."""
     return Q.of(20 * math.log10(_q(ratio).raw), "dB")
+
+
+def from_db(gain):
+    """The voltage ratio a gain in decibels stands for, the inverse of db()."""
+    return Q(10 ** (_q(gain).raw / 20))
 
 
 def ln(x):

@@ -650,6 +650,10 @@ for _text, _why in [
            "firmware/general-design.md"),
     ("128", "the NVIC priority the Teensy starts every interrupt at, "
             "firmware/general-design.md"),
+    ("208", "the NVIC priority of the Audio library's update interrupt, in the "
+            "table of firmware/general-design.md"),
+    ("240", "the NVIC priority of the storage driver's card interrupt, in the "
+            "table of firmware/general-design.md"),
     ("10000", "the cool-down after a release, in microseconds"),
     ("100000000", "the period the release timer is parked on between pulls, in "
                   "microseconds, so it keeps its hardware channel"),
