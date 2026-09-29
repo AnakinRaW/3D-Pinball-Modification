@@ -9,8 +9,8 @@
   <line x1="120" y1="100" x2="660" y2="100" stroke="#c0392b" stroke-width="2.5"/>
 
   <!-- sensor board -->
-  <rect x="690" y="110" width="170" height="190" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
-  <text x="704" y="136" font-size="15" font-weight="700" fill="#5c4a00">Sensor board</text>
+  <rect x="690" y="110" width="170" height="190" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="704" y="136" font-size="15" font-weight="700" fill="#7a2556">Sensor board</text>
   <circle cx="690" cy="160" r="6" fill="#c0392b"/>
   <text x="704" y="164" font-size="12" font-weight="700" fill="#c0392b">Pin 1 (red)</text>
   <circle cx="690" cy="200" r="6" fill="#2c3e50"/>

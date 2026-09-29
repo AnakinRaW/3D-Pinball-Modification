@@ -5,7 +5,7 @@
   <text x="40" y="68" font-size="13" font-weight="700" fill="#7a5c00">RECONSTRUCTED · transistor wiring inferred</text>
 
   <!-- Connector -->
-  <rect x="40" y="120" width="120" height="310" fill="#f4f4f4" stroke="#888" stroke-width="1.5"/>
+  <rect x="40" y="120" width="120" height="310" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="1.5"/>
   <text x="52" y="146" font-size="12" fill="#555">Connector</text>
   <circle cx="160" cy="190" r="6" fill="#c0392b"/>
   <text x="52" y="194" font-size="13" font-weight="700" fill="#c0392b">Pin 1</text>

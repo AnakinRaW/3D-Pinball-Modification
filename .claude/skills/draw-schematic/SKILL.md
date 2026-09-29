@@ -35,12 +35,25 @@ One colour per net class, used for the wire, the pin circle and the label. Never
 | LED / drive | wire `#b7950b`, pin fill `#f1c40f` stroke `#b7950b`, label `#8a6d0b` | Emitter and load lines |
 | Clock / control | `#8a2be2` | Toggled digital lines |
 
+## Block colours
+
+One colour per kind of block, so a connector, a part on the board and a part out in the machine read apart at a glance. The label is the block's title; secondary lines inside a block stay `#666` or `#777`.
+
+| Block | Fill | Stroke | Label | Use |
+|---|---|---|---|---|
+| Controller | `#eef3f8` | `#4a6785` | `#2c3e50` | The Teensy, and a stock controller |
+| Board component | `#f8f4ee` | `#8a6d0b` | `#5c4a00` | An IC or a module on the modification's electronics: U1, DFR0954, WS2811, MCP3008 |
+| Connector | `#f0f0f0` | `#6b6b6b` | `#333333` | J-PWR, J-T, J-Sn, a jack |
+| External component | `#fbeef5` | `#a8437a` | `#7a2556` | What sits out in the machine: servo, solenoid, speaker, switch, foil, a sensor at the playfield, a stock board |
+
+A net flag, the small box naming a net that leaves the drawing, keeps its net colour.
+
 ## Elements
 
 | Element | Markup |
 |---|---|
-| Module block | `<rect rx="8" stroke-width="2"/>` - controller `fill="#eef3f8" stroke="#4a6785"`, peripheral `fill="#f8f4ee" stroke="#8a6d0b"` |
-| Module label | `font-size="16" font-weight="700"`, controller `#2c3e50`, peripheral `#5c4a00` |
+| Block | `<rect rx="8" stroke-width="2"/>` in the colours of its kind from the block table |
+| Block label | `font-size="16" font-weight="700"` in the label colour of its kind |
 | Pin | `<circle r="6"/>` on the block edge, filled in its net colour |
 | Pin label | `font-size="13" font-weight="700"` in the net colour, with the pin number beneath at `font-size="11.5" fill="#777"` |
 | Wire | `<line stroke-width="2.5"/>` in the net colour, orthogonal segments only |
@@ -106,12 +119,12 @@ Enclose the group in a dashed rounded rectangle, in a colour that is never a net
 
 ```
 <rect rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-<text font-size="11.5" font-weight="700" fill="#0a8a6a">keep together &#8212; &lt; 10 mm &#8212; LDO loop stability</text>
+<text font-size="11.5" font-weight="700" fill="#0a8a6a">keep together, under 10 mm: LDO loop stability</text>
 ```
 
 The `8 4` dash pattern distinguishes this from `5 4`, which marks an unpopulated option.
 
-**Always state a distance.** "Close" is not a constraint. Where no figure is available from the datasheet, write the figure being assumed and mark it as an assumption.
+**Always state a distance.** "Close" is not a constraint. Where no datasheet gives a figure, the model declares the chosen one as `assumed`, and the drawing states the figure alone.
 
 Groups that usually carry one:
 

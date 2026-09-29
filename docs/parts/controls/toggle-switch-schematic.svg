@@ -15,8 +15,8 @@
   <text x="230" y="264" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- the stock switch -->
-  <rect x="540" y="110" width="250" height="190" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
-  <text x="640" y="138" font-size="16" font-weight="700" fill="#5c4a00">Toggle switch</text>
+  <rect x="540" y="110" width="250" height="190" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="640" y="138" font-size="16" font-weight="700" fill="#7a2556">Toggle switch</text>
   <text x="640" y="156" font-size="11.5" fill="#666">stock, from P26</text>
   <circle cx="540" cy="170" r="6" fill="#2c3e50"/>
   <circle cx="540" cy="260" r="6" fill="#1a1a1a"/>

@@ -13,8 +13,8 @@
   <circle cx="470" cy="125" r="4" fill="#c0392b"/>
 
   <!-- Emitter -->
-  <rect x="40" y="170" width="170" height="120" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
-  <text x="56" y="196" font-size="16" font-weight="700" fill="#5c4a00">Emitter</text>
+  <rect x="40" y="170" width="170" height="120" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="56" y="196" font-size="16" font-weight="700" fill="#7a2556">Emitter</text>
   <line x1="150" y1="205" x2="150" y2="218" stroke="#b7950b" stroke-width="2.5"/>
   <polygon points="138,218 162,218 150,242" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <line x1="136" y1="246" x2="164" y2="246" stroke="#1a1a1a" stroke-width="3.5"/>
@@ -46,8 +46,8 @@
   <text x="56" y="326" font-size="12.5" fill="#666">forward voltage 1.246 V</text>
 
   <!-- Receiver -->
-  <rect x="40" y="345" width="170" height="150" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
-  <text x="56" y="371" font-size="16" font-weight="700" fill="#5c4a00">Receiver</text>
+  <rect x="40" y="345" width="170" height="150" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="56" y="371" font-size="16" font-weight="700" fill="#7a2556">Receiver</text>
   <line x1="150" y1="395" x2="150" y2="455" stroke="#1a1a1a" stroke-width="4"/>
   <line x1="150" y1="405" x2="168" y2="387" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="168" y1="387" x2="210" y2="387" stroke="#2c3e50" stroke-width="2.5"/>

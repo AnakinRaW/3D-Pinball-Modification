@@ -13,8 +13,8 @@
   <text x="115" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- Level shifter -->
-  <rect x="250" y="90" width="180" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
-  <text x="266" y="115" font-size="16" font-weight="700" fill="#2c3e50">CD74HCT125E</text>
+  <rect x="250" y="90" width="180" height="80" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="266" y="115" font-size="16" font-weight="700" fill="#5c4a00">CD74HCT125E</text>
   <text x="266" y="133" font-size="11.5" fill="#777">one of four channels</text>
   <circle cx="250" cy="130" r="6" fill="#8a2be2"/>
   <text x="262" y="155" font-size="13" font-weight="700" fill="#8a2be2">A</text>
@@ -98,7 +98,7 @@
   <line x1="632" y1="265" x2="674" y2="265" stroke="#c0392b" stroke-width="2.5"/>
 
   <!-- Connector -->
-  <rect x="668" y="250" width="24" height="335" rx="4" fill="#ffffff" stroke="#777" stroke-width="1.5"/>
+  <rect x="668" y="250" width="24" height="335" rx="4" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="1.5"/>
   <circle cx="680" cy="265" r="6" fill="#c0392b"/>
   <circle cx="680" cy="320" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <circle cx="680" cy="360" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
@@ -106,7 +106,7 @@
   <circle cx="680" cy="480" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <circle cx="680" cy="520" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <circle cx="680" cy="560" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
-  <text x="680" y="606" text-anchor="middle" font-size="12" font-weight="700" fill="#444">7-way connector</text>
+  <text x="680" y="606" text-anchor="middle" font-size="12" font-weight="700" fill="#333333">7-way connector</text>
   <text x="680" y="622" text-anchor="middle" font-size="11.5" fill="#777">pin numbering and channel assignment not yet established</text>
 
   <!-- Drive lines -->
@@ -118,8 +118,8 @@
   <line x1="596" y1="560" x2="674" y2="560" stroke="#b7950b" stroke-width="2.5"/>
 
   <!-- P28 -->
-  <rect x="740" y="195" width="180" height="400" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
-  <text x="756" y="222" font-size="15" font-weight="700" fill="#5c4a00">P28</text>
+  <rect x="740" y="195" width="180" height="400" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="756" y="222" font-size="15" font-weight="700" fill="#7a2556">P28</text>
   <text x="756" y="240" font-size="11.5" fill="#777">six amber LEDs</text>
 
   <line x1="686" y1="265" x2="880" y2="265" stroke="#c0392b" stroke-width="2.5"/>
