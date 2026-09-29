@@ -1,6 +1,6 @@
 # Storage driver
 
-The storage driver controls the Teensy's built-in SD card. It is a small asynchronous wrapper around [SdFat](https://github.com/greiman/SdFat), the file system library Teensyduino ships, so that no call waits for the card. The firmware needs it because several consumers using the card at once without a guard are likely to crash the Teensy ([PJRC forum](https://forum.pjrc.com/index.php?posts/302916/)). The card holds the games' assets, such as sounds, and each game's settings and scores.
+The storage driver controls the Teensy's built-in SD card. It is a small asynchronous wrapper around [SdFat](https://github.com/greiman/SdFat), the file system library Teensyduino ships, so that no call waits for the card. The firmware needs it because several consumers using the card at once without a guard are likely to crash the Teensy ([PJRC forum](https://forum.pjrc.com/index.php?posts/302916/)). The card holds the games' assets, such as sounds, each game's settings and scores, and the drivers' own settings.
 
 ## Files
 
@@ -13,6 +13,8 @@ Every file on the card is read and written the same way. `useGame()` makes the r
 A consumer in the main loop, such as the host or a game, knows that a read has finished from the event `FileRead`. A driver passes a handler instead. The card interrupt calls it as soon as the bytes are in the buffer, so the driver that asked can use them without waiting for the main loop. The handler runs inside the card interrupt and has to stay short. 
 
 Requests on files are handled in the order they were made, just like ordinary synchronous blocking calls.
+
+During `setup()`, a driver may also read files such as settings from the SD card. However, as this code needs to run synchronous, `readNow()` should be used, as it blocks until completion. `readNow()` calls `read()` with a handler of its own and waits until that handler has run. A driver whose settings or card are missing works with its built-in defaults.
 
 ## Card access
 
@@ -69,6 +71,10 @@ public:
     // gets a file by its path from the index, such as "save/best"; one missing there
     // is created by its first write. No card access
     File open(const char* path);
+
+    // calls read() with a handler of its own and waits until that handler has run, so it
+    // belongs in setup(). Returns the bytes read, 0 for a missing file
+    size_t readNow(const char* path, void* buffer, size_t size);
 };
 ```
 
@@ -117,5 +123,21 @@ void Storage::card() {
         else if (r.done) r.done(r.context, n);      // a driver's read
         else             out_->publish(PinballEvent{micros(), EventType::FileRead, r.tag, (uint32_t)n});
     }
+}
+
+// read() with a handler of its own, and a wait until that handler has run
+struct Wait { volatile bool done = false; volatile size_t bytes = 0; };
+
+static void finished(void* context, size_t bytes) {
+    Wait* w = static_cast<Wait*>(context);
+    w->bytes = bytes;
+    w->done  = true;
+}
+
+size_t Storage::readNow(const char* path, void* buffer, size_t size) {
+    Wait w;
+    open(path).read(buffer, size, finished, &w);
+    while (!w.done) {}                              // the card interrupt runs above setup() and finishes it
+    return w.bytes;
 }
 ```
