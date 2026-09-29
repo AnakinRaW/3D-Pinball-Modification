@@ -223,6 +223,19 @@ Every finding is reported at one of four levels. The level follows from the cons
 
 **Counterproposals are written in chat.** Rule 8 still governs the files: design artifacts change when asked. Documentation follows rule 7, and a cosmetic fix in a file already open is made in passing.
 
+**Findings and questions are marked in chat.** The mark opens the line, and a level's mark is followed by the level's name.
+
+| Mark | Stands for |
+|---|---|
+| 🔴 | Critical |
+| 🟠 | Important |
+| 🟡 | Medium |
+| 🔵 | Low |
+| ❓ | A question the work waits on |
+| 🔧 | A part or a value that changes, placed before its level or its question |
+
+Documents and commit messages carry no marks.
+
 **What counts as significant.** A figure that breaks a rating, an absolute maximum or a stated requirement is Critical or Important. A figure that changes a number another document repeats, or changes a part choice, is Medium. A figure that changes nothing built and nothing written down is Low.
 
 **An unverifiable figure inherits the level of whatever depends on it**, and blocks only that (rule 3).
