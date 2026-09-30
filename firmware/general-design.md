@@ -10,7 +10,7 @@ The rules here hold across the whole firmware. The figures they are checked agai
 | Lighting | [`lighting.md`](lighting.md) |
 | Audio | [`audio.md`](audio.md) |
 | Storage, the SD card | [`storage.md`](storage.md) |
-| Hall rotary sensor | [`hall.md`](hall.md) |
+| Magnetic rotary sensor | [`magnetic-rotary.md`](magnetic-rotary.md) |
 | Controls | [`controls.md`](controls.md) |
 | Servo | [`servo.md`](servo.md) |
 
@@ -56,6 +56,7 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 | The interrupt after each SPI conversion | IR ball sensing | microseconds | 64 |
 | Pin interrupts, one IRQ shared by every pin | Bumpers, break beam, controls | milliseconds | 96 |
 | `IntervalTimer`, ending the solenoid pulls | Bumpers | milliseconds | 96 |
+| `IntervalTimer`, reading the rotary sensor | Magnetic rotary sensor | its next tick | 96 |
 
 *Remarks: The pin interrupts and the bumpers' release timer share a level, so neither can interrupt the other and the bumper driver needs no lock. A further `IntervalTimer` therefore has to ask for 96 or a larger number.*
 
@@ -112,7 +113,7 @@ Storage          storage;
 AudioDriver      audio;
 Lighting         lights;
 Display          display;
-HallRotaryDriver hallRotary;
+MagneticRotaryDriver rotary;
 // other drivers
 
 // game components
@@ -135,9 +136,9 @@ void setup() {
     ir.begin(events.attach(irQueue, kQueueDepth));
     drain.begin(events.attach(drainQueue, kQueueDepth));
    
-    // display must be initialized before hall sensor
+    // display must be initialized before the rotary sensor
     const bool screen = display.begin(events.attach(displayQueue, kQueueDepth));
-    hallRotary.begin(events.attach(hallRotaryQueue, kQueueDepth));
+    rotary.begin(events.attach(rotaryQueue, kQueueDepth));
 
     audio.begin(events.attach(audioQueue, kQueueDepth));
 

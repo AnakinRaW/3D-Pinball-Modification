@@ -1,0 +1,44 @@
+<svg viewBox="0 0 660 397" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="660" height="397" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Magnetic rotary sensor assembly</text>
+  <text x="30" y="56" font-size="13" fill="#666">The magnet on the seal rod's end faces the AS5600 on the Grove module across the gap</text>
+  <!-- the magnet model's side view, drawn for the documented magnet and gap, with the magnet's height assumed -->
+  <line x1="220" y1="91" x2="220" y2="381.7" stroke="#7C838D" stroke-width="1" stroke-dasharray="16.5 4.95 2.75 4.95"/>
+  <rect x="13.8" y="345.9" width="357.5" height="27.5" fill="#D9DBD4" stroke="#A9ACA3" stroke-width="1"/>
+  <polyline points="166.4,321.2 158.7,321.2 152.1,343.2 137.5,343.2" fill="none" stroke="#9AA0A6" stroke-width="5.5" stroke-linejoin="round"/>
+  <polyline points="273.6,321.2 281.3,321.2 287.9,343.2 302.5,343.2" fill="none" stroke="#9AA0A6" stroke-width="5.5" stroke-linejoin="round"/>
+  <rect x="166.4" y="301.4" width="107.25" height="40.42" rx="2.2" fill="#33383E"/>
+  <line x1="176" y1="314" x2="264" y2="314" stroke="#8A9099" stroke-width="1" stroke-dasharray="3.3 2.2"/>
+  <line x1="192.5" y1="314" x2="247.5" y2="314" stroke="#9E97F2" stroke-width="1.93"/>
+  <rect x="190.3" y="311.8" width="4.4" height="4.4" fill="#9E97F2"/>
+  <rect x="245.3" y="311.8" width="4.4" height="4.4" fill="#9E97F2"/>
+  <text x="220" y="333" fill="#E6E7E9" font-size="9.9" text-anchor="middle">AS5600</text>
+  <rect x="137.5" y="184.5" width="82.5" height="68.75" fill="#D9665E"/>
+  <rect x="220" y="184.5" width="82.5" height="68.75" fill="#5FA87A"/>
+  <rect x="137.5" y="184.5" width="165" height="68.75" fill="none" stroke="#1B1E22" stroke-width="1"/>
+  <text x="178.8" y="224.3" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">N</text>
+  <text x="261.3" y="224.3" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">S</text>
+  <rect x="192.5" y="102" width="55" height="82.5" fill="#C9CCCF" stroke="#6B7178" stroke-width="1"/>
+  <path d="M188.4,102 q15.68,-6.05 31.62,0 t31.62,0" fill="none" stroke="#6B7178" stroke-width="1"/>
+  <rect x="129.3" y="218.9" width="255.75" height="68.75" fill="#5B52C9" fill-opacity="0.14"/>
+  <line x1="129.3" y1="287.6" x2="385" y2="287.6" fill="none" stroke="#5B52C9" stroke-width="1" stroke-dasharray="4.13 2.75"/>
+  <line x1="129.3" y1="218.9" x2="385" y2="218.9" fill="none" stroke="#5B52C9" stroke-width="1" stroke-dasharray="4.13 2.75"/>
+  <polyline points="247.5,143.3 400.1,143.3 409.2,143.3" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="247.5" cy="143.3" r="1.38" fill="#666666"/>
+  <text x="412.5" y="147.3" fill="#666666" font-size="11.5">seal rod</text>
+  <polyline points="302.5,218.9 400.1,218.9 409.2,218.9" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="302.5" cy="218.9" r="1.38" fill="#666666"/>
+  <text x="412.5" y="222.9" fill="#666666" font-size="11.5" data-fig="d_magnet">magnet, 6 mm, diametric</text>
+  <polyline points="385,253.3 400.1,253.3 409.2,253.3" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="385" cy="253.3" r="1.38" fill="#666666"/>
+  <text x="412.5" y="257.3" fill="#666666" font-size="11.5" data-fig="gap_min gap_max">gap 0.5 to 3 mm</text>
+  <polyline points="247.5,314 400.1,314 409.2,314" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="247.5" cy="314" r="1.38" fill="#666666"/>
+  <text x="412.5" y="318" fill="#666666" font-size="11.5">Hall elements</text>
+  <polyline points="273.6,333.7 400.1,333.7 409.2,333.7" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="273.6" cy="333.7" r="1.38" fill="#666666"/>
+  <text x="412.5" y="337.8" fill="#666666" font-size="11.5">AS5600</text>
+  <polyline points="371.3,359.7 400.1,359.7 409.2,359.7" fill="none" stroke="#999999" stroke-width="1"/>
+  <circle cx="371.3" cy="359.7" r="1.38" fill="#666666"/>
+  <text x="412.5" y="363.7" fill="#666666" font-size="11.5">Grove AS5600 module</text>
+</svg>

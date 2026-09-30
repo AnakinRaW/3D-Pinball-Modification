@@ -1,0 +1,46 @@
+<svg viewBox="0 0 660 460" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="660" height="460" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Magnetic rotary sensor</text>
+  <text x="30" y="56" font-size="13" fill="#666">The AS5600 module reads the angle of the magnet on the seal rod and sends it to the Teensy</text>
+
+  <!-- Teensy block -->
+  <rect x="110" y="90" width="450" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="124" y="118" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <!-- one bracket over both bus pins, so the bus label belongs to SDA and SCL together -->
+  <polyline points="372,146 372,140 528,140 528,146" fill="none" stroke="#999" stroke-width="1"/>
+  <text x="450" y="133" text-anchor="middle" font-size="11.5" fill="#666" data-fig="f_scl">Wire, 100 kHz</text>
+
+  <circle cx="190" cy="190" r="6" fill="#c0392b"/>
+  <text x="190" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
+
+  <circle cx="290" cy="190" r="6" fill="#1a1a1a"/>
+  <text x="290" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <circle cx="390" cy="190" r="6" fill="#2c3e50"/>
+  <text x="390" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
+  <text x="390" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SDA to the rotary sensors">pin 18</text>
+
+  <circle cx="510" cy="190" r="6" fill="#8a2be2"/>
+  <text x="510" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="510" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SCL to the rotary sensors">pin 19</text>
+
+  <!-- wires -->
+  <line x1="190" y1="190" x2="190" y2="330" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="290" y1="190" x2="290" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="390" y1="190" x2="390" y2="330" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="510" y1="190" x2="510" y2="330" stroke="#8a2be2" stroke-width="2.5"/>
+
+  <!-- Grove AS5600 module -->
+  <rect x="110" y="330" width="450" height="100" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <circle cx="190" cy="330" r="6" fill="#c0392b"/>
+  <text x="190" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VCC</text>
+  <circle cx="290" cy="330" r="6" fill="#1a1a1a"/>
+  <text x="290" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+  <circle cx="390" cy="330" r="6" fill="#2c3e50"/>
+  <text x="390" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
+  <circle cx="510" cy="330" r="6" fill="#8a2be2"/>
+  <text x="510" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="124" y="394" font-size="16" font-weight="700" fill="#7a2556">Grove AS5600</text>
+  <text x="124" y="412" font-size="11.5" fill="#666">Seeed 101020692</text>
+
+</svg>
