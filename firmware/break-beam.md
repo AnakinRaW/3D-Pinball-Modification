@@ -10,7 +10,7 @@ The driver reports the ball at the moment the IR beam breaks. It runs on a pin i
 
 | Field | Content |
 |---|---|
-| Type | `EventType::BallDrained` |
+| Type | `DriverEventType::BallDrained` |
 | Source | The gate's index, always `0` in this build |
 | Timestamp | `micros()` in the handler, the moment the beam went |
 | Payload | None |
@@ -47,7 +47,7 @@ private:
         const uint32_t now = micros();
         if (now - last_ < kDeadUs) return;       // still the crossing just published
         last_ = now;
-        out_->publish(PinballEvent{now, EventType::BallDrained, kSource, 0});
+        out_->publish(DriverEvent{now, DriverEventType::BallDrained, kSource, 0});
     }
 
     static BreakBeamDriver* self_;

@@ -30,7 +30,7 @@ The card carries large files such as sounds and images, which have to stream wit
 
 | Field | Content |
 |---|---|
-| Type | `EventType::FileRead` |
+| Type | `DriverEventType::FileRead` |
 | Source | The tag the caller gave `read()` |
 | Timestamp | `micros()` in the card interrupt that finished the read |
 | Payload | The bytes read, `0` for a file the card does not hold |
@@ -121,7 +121,7 @@ void Storage::card() {
                                  : r.file->read(r.buffer, r.size);
         if (r.write)     release(r.buffer);         // the copy write() made
         else if (r.done) r.done(r.context, n);      // a driver's read
-        else             out_->publish(PinballEvent{micros(), EventType::FileRead, r.tag, (uint32_t)n});
+        else             out_->publish(DriverEvent{micros(), DriverEventType::FileRead, r.tag, (uint32_t)n});
     }
 }
 

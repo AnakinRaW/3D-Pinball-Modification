@@ -10,12 +10,12 @@ The driver reports the position printed on the switch, `1` or `0`. A low pin mea
 
 | Field | Content |
 |---|---|
-| Type | `EventType::ToggleSwitched` |
+| Type | `DriverEventType::ToggleSwitched` |
 | Source | The switch, always `0` in this build |
 | Timestamp | `micros()` in the handler, the moment the contact moved |
 | Payload | The new position, `1` or `0` |
 
-The driver runs on a pin interrupt on both edges and publishes the event the the event queue. It publishes only a position that differs from the one it reported last. Edges within 50 ms of a report are bounce and are dropped.
+The driver runs on a pin interrupt on both edges and publishes the event to the event queue. It publishes only a position that differs from the one it reported last. Edges within 50 ms of a report are bounce and are dropped.
 
 `position()` reads the pin itself, so it gives the switch's current position.
 
@@ -53,7 +53,7 @@ private:
         if (pos == reported_ || now - since_ < kQuietUs) return;
         reported_ = pos;
         since_    = now;
-        out_->publish(PinballEvent{now, EventType::ToggleSwitched, 0, pos});
+        out_->publish(DriverEvent{now, DriverEventType::ToggleSwitched, 0, pos});
     }
 
     static ToggleSwitch*  self_;

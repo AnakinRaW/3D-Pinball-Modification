@@ -4,7 +4,7 @@ The driver watches the three top bumper contacts, fires the coil of whichever on
 
 ## Sensing and firing
 
-The machine knows which top bumper to pull, when the ball closed circuit between the conductive foil and the specific shell. This pull the channel's input to HIGH. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
+The machine knows which top bumper to pull, when the ball closed circuit between the conductive foil and the specific shell. This pulls the channel's input to HIGH. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
 
 Firing the top bumpers belongs in the handler because a bumper has to answer the ball quickly and cannot wait for game logic to pick up the event. The event gets published to the event queue on pulling the solenoid.
 
@@ -18,7 +18,7 @@ At start-up `begin()` pulls every coil once, as the stock machine does at power-
 
 | Field | Content |
 |---|---|
-| Type | `EventType::BumperHit` |
+| Type | `DriverEventType::BumperHit` |
 | Source | The bumper, `0` to `2` |
 | Timestamp | `micros()` in the handler, the moment the contact closed |
 | Payload | None |
@@ -127,7 +127,7 @@ private:
             return;
         }
         if (now - opened_[bumper] < kCoolUs || !pull(bumper, now)) return;
-        out_->publish(PinballEvent{now, EventType::BumperHit, bumper, 0});
+        out_->publish(DriverEvent{now, DriverEventType::BumperHit, bumper, 0});
     }
 
     // starts the pull-in; the release timer is set to it only when no other coil

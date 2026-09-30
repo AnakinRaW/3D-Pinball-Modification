@@ -16,23 +16,23 @@ The rules here hold across the whole firmware. The figures they are checked agai
 
 ## Firmware abstraction layers
 
-The firmware keeps three layers apart. The drivers work the hardware in their own interrupts and publish what they detect as events. Game components represent logical playfield's elements, such as the top roll-over lanes. They may contain multiple different hardware parts. The games hold the rules and talk to the components. Games are organized and run by a game host, as [game-abstraction](game-abstraction.md) describes.
+The firmware keeps three layers apart. The drivers work the hardware in their own interrupts and publish what they detect as driver events. Game components represent logical playfield's elements, such as the top roll-over lanes. They may contain multiple different hardware parts. The games hold the rules and talk to the components. Games are organized and run by a game host, as [game-abstraction](game-abstraction.md) describes.
 
 ## Non-blocking coding
 
-The main loop carries the host and the game logic. The drivers catch every event in their own interrupts, so a slow loop only delays the game's reaction. A loop that stays away longer lets the event queues fill up and eventually may lead to droped events or and the watchdog restarts the machine. So nothing in the loop may block, and the loop has to come round quickly.
+The main loop carries the host and the game logic. The drivers catch every event in their own interrupts, so a slow loop only delays the game's reaction. A loop that stays away longer lets the event queues fill up and eventually may lead to dropped events or and the watchdog restarts the machine. So nothing in the loop may block, and the loop has to come round quickly.
 
 A driver hands its waiting to hardware. Where a transfer, a conversion or a frame takes time, a DMA channel or the peripheral itself moves the data and raises an interrupt when it is done, so the processor spends that time on something else. A job that cannot be handed over is split into pieces short enough that the loop still comes round in time.
 
 ## The event queue
 
-Subsystems are not meant to communicate directly with each other. Instead they publish their events to a shared event queue. Each event is stamped with the moment of detection. The main loop drains that queue at a single point. The game logic then decides how to handle the event.
+Subsystems are not meant to communicate directly with each other. Instead they publish their events to a shared event queue. Each event is stamped with the moment of detection. The main loop drains that queue at a single point. A game then handles them as pinball events, which [game-abstraction](game-abstraction.md#playfield-components) describes.
 
 [`input-handling.md`](input-handling.md) describes the event queue in more detail.
 
 ## Drivers
 
-Drivers work in their own interrupts and do not relay on the main loop to update them.
+Drivers work in their own interrupts and do not rely on the main loop to update them.
 
 Drivers report their state changes, not their current state. A state that persists over time produces no further event, and one physical change yields one event.
 
@@ -44,7 +44,7 @@ A driver whose `begin()` failed does nothing when called. This for example allow
 
 Detection may sit in an interrupt, the game logic never does.
 
-What cannot wait for the loop stays inside its own subsystem and reports to the event queue afterwards. E.g., a top bumper is sensed and triggered by the interrupt. The game logic gets the event through the event queue.
+What cannot wait for the loop stays inside its own subsystem and reports to the event queue afterwards. E.g., a top bumper is sensed and triggered by the interrupt. The game logic gets it through the event queue, as a pinball event of the bumpers' component.
 
 An interrupt that has to be on time gets a higher priority than one that can wait. Only one handler runs at a time, and while it runs every interrupt of the same or lower priority waits for it to finish.
 
@@ -155,7 +155,7 @@ void setup() {
 }
 
 void loop() {
-    PinballEvent batch[kBatch];
+    DriverEvent batch[kBatch];
     const size_t n = events.read(batch, kBatch);
     for (size_t i = 0; i < n; ++i) host.dispatch(batch[i]);
 

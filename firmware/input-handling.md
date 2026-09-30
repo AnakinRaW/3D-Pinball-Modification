@@ -6,7 +6,7 @@ The machine has several input subsystems: IR ball sensing, a break beam sensor, 
 
 These subsystems have in common that they are sensing events driven by the ball interacting with elements on the playfield. Their drivers are responsible for correct sensing, processing as well as notifying the event. The subsystems shall not communicate with each other directly, but only publish their events.
 
-The game logic reads those events and handles them by calling other subsystems to create things like visual effects or point scoring. The **Input Handling System** is the place to organise these events so that a game can use them.
+The main loop hands those events to the game host, and the [playfield components](game-abstraction.md#playfield-components) turn them into the pinball events a game gets. The game handles those by calling other subsystems to create things like visual effects or point scoring. The **Input Handling System** is the place to organise these events so that a game can use them.
 
 In order to be able to realise complex game mechanics the input system needs to fulfil a couple of requirements:
 
@@ -20,23 +20,23 @@ In order to be able to realise complex game mechanics the input system needs to 
 
 Every subsystem writes its events to a queue of its own as it detects them, each stamped with the moment of detection. The input handling system serves the oldest event across those queues on request. This should happen at a single point in the main loop, so the game logic sees one ordered stream and never runs inside an interrupt handler.
 
-An event carries its type, its source inside the subsystem, its timestamp and one payload field of 32 bits, interpreted according to the type. A read only looks at the timestamp.
+A driver event carries its type, its source inside the subsystem, its timestamp and one payload field of 32 bits, interpreted according to the type. A read only looks at the timestamp.
 
 ```cpp
-enum class EventType : uint16_t {
+enum class DriverEventType : uint16_t {
     // List of events
 };
 
-struct PinballEvent {
-    uint32_t  time;      // micros() at detection
-    EventType type;
-    uint8_t   source;    // channel, switch or target inside its subsystem
-    uint32_t  payload;   // interpreted according to the type
+struct DriverEvent {
+    uint32_t        time;      // micros() at detection
+    DriverEventType type;
+    uint8_t         source;    // channel, switch or target inside its subsystem
+    uint32_t        payload;   // interpreted according to the type
 };
 
 // one payload per type
-template <EventType Tag> struct PayloadOf;
-template <EventType Tag> typename PayloadOf<Tag>::type payload(const PinballEvent&);
+template <DriverEventType Tag> struct DriverPayloadOf;
+template <DriverEventType Tag> typename DriverPayloadOf<Tag>::type payload(const DriverEvent&);
 ```
 
 Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. The producer raises the write counter, the consumer raises the read counter, and each side only reads the other's. The producer stores the element before raising the write counter, and the consumer reads the write counter before taking the element. A memory barrier on each side keeps the compiler from swapping the two. A read searches the front of every queue for the oldest event. At an estimated size of ten producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
@@ -53,17 +53,17 @@ public:
     class Producer {
     public:
         // ISR-safe, false when full
-        bool publish(const PinballEvent& e);
-        template <EventType Tag>
-        bool publish(uint32_t now, uint8_t source, typename PayloadOf<Tag>::type value);
+        bool publish(const DriverEvent& e);
+        template <DriverEventType Tag>
+        bool publish(uint32_t now, uint8_t source, typename DriverPayloadOf<Tag>::type value);
         uint32_t dropped() const;
     };
 
     // setup() only, depth a power of two
-    Producer& attach(PinballEvent* storage, size_t depth);
+    Producer& attach(DriverEvent* storage, size_t depth);
 
     // up to max, oldest first
-    size_t    read(PinballEvent* out, size_t max);
+    size_t    read(DriverEvent* out, size_t max);
 };
 ```
 

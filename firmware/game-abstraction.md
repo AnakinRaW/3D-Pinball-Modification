@@ -42,7 +42,14 @@ A game is organized into phases and the host is responsible for their transition
 
 Every element of the playfield is a component, and a game talks to the components, rather than to a hardware driver. A component can map multiple hardware elements together, such as a line consists of an IR sensor, a light and solenoid. An element with a single part, such as the drain's break beam, is a component too, so no event of a playfield driver reaches a game.
 
-The host hands each driver event to the component that owns its source. The component updates its state and turns the event into one of its own, and the host passes that event on to the game. IR channel 9, for instance, becomes `LanePassed` for lane 2, stamped with the moment the IR driver saw the ball.
+A driver publishes a `DriverEvent`, and a game gets a `PinballEvent`. Both carry the moment of detection, a type, a source and a payload.
+
+The host dispatches each driver event to the components by calling their `translate()` one after the other, until the first of them takes it. `translate()` gets the driver event as the `in` parameter and the translated pinball events as `out` parameter. The return value indicates whether the component took it.
+The component however is not required to convert every driver event to a pinball event. The host therefore is required to check whether it needs to pass events to the game.
+
+A component may make several pinball events of one driver event. It keeps them in an array of its own, big enough for the most it can make at once. The `out` parameter contains the pointer and size to that array.
+
+Components are described under [`components/`](components/).
 
 ## Saved data
 
@@ -56,9 +63,32 @@ The card is written only while no game is in play. A game keeps its live score i
 ### Interfaces
 
 ```cpp
+// the events a game gets: those the components make, and those of the services
+enum class EventType : uint16_t {
+    // List of events
+};
+
+// what a game gets, with the fields of a DriverEvent
+struct PinballEvent {
+    uint32_t  time;      // micros() at detection, taken over from the driver event
+    EventType type;
+    uint8_t   source;    // lane, channel or tag inside its component or service
+    uint32_t  payload;   // interpreted according to the type
+};
+
+// one payload per type
+template <EventType Tag> struct PayloadOf;
+template <EventType Tag> typename PayloadOf<Tag>::type payload(const PinballEvent&);
+
 // what a game may use; the host hands it over in start()
 struct Machine {
     XXXComponent& component;  // for each component and each service, one struct field
+};
+
+// the pinball events a component made of one driver event; valid until its next translate()
+struct PinballEvents {
+    const PinballEvent* events = nullptr;   // points into the component's own list
+    uint8_t             count  = 0;         // how many it holds this time
 };
 
 // one element of the playfield, built on the drivers' parts
@@ -66,15 +96,15 @@ class Component {
 public:
     virtual ~Component() = default;
 
-    // turns a driver event of its own parts into its own event; false for any other
-    virtual bool translate(const PinballEvent& in, PinballEvent& out) = 0;
+    // takes a driver event of its own parts and points out at the pinball events it made of it, if any; false for any other
+    virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
 };
 
 // the three top roll-over lanes, each with its IR channel and its lamp
 class TopLanes : public Component {
 public:
     // an IR event of a lane's channel becomes LanePassed, with the lane as its source
-    bool     translate(const PinballEvent& in, PinballEvent& out) override;
+    bool     translate(const DriverEvent& in, PinballEvents& out) override;
     uint32_t passedAt(uint8_t lane) const;       // gets when a ball last rolled through a lane
     Color    color(uint8_t lane) const;          // gets a lane's lamp color
     void     light(uint8_t lane, Color c);       // sets a lane's lamp color, black for off
@@ -106,7 +136,7 @@ class GameHost {
 public:
     void add(Component& component);            // routes the driver events of the component's parts through it
     void begin(Machine& machine, bool touch);  // starts the game that ran last, or the default game
-    void dispatch(const PinballEvent& e);      // hands a driver event to its component, and that one's event to the game
+    void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game
     void update(uint32_t now);                 // updates the running game, and moves it on once its phase is done
     void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
 
@@ -117,6 +147,7 @@ private:
     void  prepare(Game* next);       // roots the storage driver in next's directory, reads its settings, sets audio, display and lighting up
     Game* lastGame();                // gets the game that ran last, or the default game
     void  saveSettings(Game* next);  // writes changed settings and the id of next to the card
+    bool  service(const DriverEvent& in, PinballEvent& out);   // copies a service's event into the pinball event of the same name; false for any other
 
     Machine* machine_ = nullptr;
     Game*    game_    = nullptr;
@@ -124,6 +155,8 @@ private:
     bool     touch_   = false;
     File     settings_;       // next's settings, read in step 3
     bool     settingsRead_ = false;   // their FileRead has arrived
+    Component* components_[kComponents];   // the components add() was given
+    size_t     componentCount_ = 0;
     static constexpr uint8_t kSettings = 0;   // the tag of the settings read; games use other tags
 };
 ```
@@ -137,12 +170,30 @@ void GameHost::begin(Machine& machine, bool touch) {
     launch(lastGame());
 }
 
-void GameHost::dispatch(const PinballEvent& e) {
-    if (e.type == EventType::FileRead && e.source == kSettings) {   // step 3 is done
+void GameHost::dispatch(const DriverEvent& e) {
+    if (e.type == DriverEventType::FileRead && e.source == kSettings) {   // step 3 is done
         settingsRead_ = true;
         return;
     }
-    // ... a driver event to the component that owns it, and that one's event to the game
+    PinballEvents t;
+    PinballEvent  copy;
+    bool taken = false;
+    for (size_t i = 0; i < componentCount_ && !taken; ++i) taken = components_[i]->translate(e, t);
+    if (!taken && service(e, copy)) t = {&copy, 1};   // a service's event goes on; any other untaken one is dropped
+    if (phase_ == Stopped) return;                     // a stopped game gets no calls
+    for (uint8_t i = 0; i < t.count; ++i) game_->event(t.events[i]);
+}
+
+bool GameHost::service(const DriverEvent& in, PinballEvent& out) {
+    EventType type;
+    switch (in.type) {
+        case DriverEventType::SoundEnded:     type = EventType::SoundEnded;     break;   // audio
+        case DriverEventType::FileRead:       type = EventType::FileRead;       break;   // storage
+        case DriverEventType::ToggleSwitched: type = EventType::ToggleSwitched; break;   // controls
+        default:                              return false;
+    }
+    out = {in.time, type, in.source, in.payload};
+    return true;
 }
 
 void GameHost::update(uint32_t now) {
