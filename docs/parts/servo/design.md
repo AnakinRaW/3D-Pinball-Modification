@@ -162,5 +162,5 @@ SUPPLY    the machine's rail, measured             5.0 V
 - [PJRC, PWMServo](https://github.com/PaulStoffregen/PWMServo): the 50 Hz frame, the 12-bit pulse and the default pulse range
 - [Adafruit, PCA9685 servo driver, Hooking it Up](https://learn.adafruit.com/16-channel-pwm-servo-driver/hooking-it-up): the starting capacitor per servo
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
-- [`parts/bumper/design.md`](../bumper/design.md): the rail's floor during a coil's pull, the feed's inductance and the length of a pull
+- [`parts/solenoid/design.md`](../solenoid/design.md): the rail's floor during a coil's pull, the feed's inductance and the length of a pull
 - [`pin-assignment.md`](../../pin-assignment.md): the servo's pin and its cost

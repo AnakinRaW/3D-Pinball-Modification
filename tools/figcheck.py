@@ -930,12 +930,12 @@ def pass_drawings(model: Model, rep: Report):
 # ---------------------------------------------------------------------------
 PIN_TABLE = ROOT / "docs" / "pin-assignment.md"
 # Markdown marks a pin as a link to the table, titled with the signal:
-#   [34](../../pin-assignment.md "Bumper trigger 2")
+#   [34](../../pin-assignment.md "Solenoid trigger 2")
 PIN_LINK_RE = re.compile(r'\[(\d+)\]\(([^)\s]*pin-assignment\.md)(?:#[^)\s]*)?\s+"([^"]+)"\)')
 # A fenced line names, in its comment, the signals of the numbers right of its `=`:
-#   kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Bumper trigger 1 to 4
+#   kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Solenoid trigger 1 to 4
 PIN_NOTE_RE = re.compile(r"//\s*[\w./-]*pin-assignment\.md:\s*(.+?)\s*$")
-# A drawing puts them on the text element: <text data-pin="Bumper sense 1">pin 1</text>
+# A drawing puts them on the text element: <text data-pin="Solenoid sense 1">pin 1</text>
 DATA_PIN_RE = re.compile(r'<(\w+)\b[^>]*\bdata-pin="([^"]+)"[^>]*>([^<]*)<')
 PIN_NUM_RE = re.compile(r"(?<![\w.])\d+(?![\w.])")
 PIN_RANGE_RE = re.compile(r"^(.*?)(\d+) to (\d+)$")
@@ -983,7 +983,7 @@ def pin_table(rep: Report) -> dict[str, int]:
 
 
 def _signals(text: str, table: dict[str, int]) -> list[str]:
-    """The signals a note or a data-pin names, `Bumper trigger 1 to 4` spelled out."""
+    """The signals a note or a data-pin names, `Solenoid trigger 1 to 4` spelled out."""
     out = []
     for item in (s.strip() for s in re.split(r"[,;]", text)):
         m = PIN_RANGE_RE.match(item)

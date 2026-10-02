@@ -31,14 +31,14 @@ public:
 
 ## Devices
 
-`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three top bumpers or the individual IR reflective channels. However, those parts are not represented by this enum.
+`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum.
 
 ```cpp
 // the devices of the machine; a device of one part has only part 0
 enum class Device : uint8_t {
     RotarySensor,
     BreakBeam,
-    Bumpers,
+    Solenoids,
     IrSensing,
     SdCard,
     // ... more devices
@@ -50,7 +50,7 @@ enum class Device : uint8_t {
 
 A driver detects its events inside its interrupts.
 
-Things that cannot wait for the game loop to pick up are handled directly inside their own subsystem and get reported to the event queue afterwards. E.g., a top bumper is sensed and triggered by the interrupt. The game logic gets it through the event queue, as a pinball event of the bumpers' component.
+Things that cannot wait for the game loop to pick up are handled directly inside their own subsystem and get reported to the event queue afterwards. E.g., the interrupt of a sensed solenoid's contact triggers its coil. The game logic gets the hit through the event queue, as a pinball event of the bumpers' component.
 
 Every interrupt's priority is set in the table of [general-design](general-design.md#interrupts).
 
@@ -58,7 +58,7 @@ Every interrupt's priority is set in the table of [general-design](general-desig
 
 One driver dedicated `IntervalTimer`, the driver tick, runs every 5 ms and serves every driver that needs a regular period. A driver can attach to this driver tick in its own `begin()`, together with a callback function and the period it needs, a multiple of 5 ms.
 
-For example, on every tick the rotary sensor reads values, the bumpers check whether a pull is due to end and the [device monitor](error-handling.md#device-faults) asks the drivers for failed parts every 100 ms. 
+For example, on every tick the rotary sensor reads values, the solenoid driver checks whether a pull is due to end and the [device monitor](error-handling.md#device-faults) asks the drivers for failed parts every 100 ms. 
 
 The timer starts on the very first attached driver. Attaching does not need to be in any special order. The driver tick ensures to call only the callbacks that are due.
 

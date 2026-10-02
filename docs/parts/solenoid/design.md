@@ -1,18 +1,18 @@
-# Bumpers
+# Solenoids
 
-This modification requires four solenoid channels. Three drive the top bumpers taken from the stock machine, and the fourth drives a [scoop](https://missionpinball.org/latest/mechs/scoops/), an [Adafruit 3992](https://www.adafruit.com/product/3992) push-pull solenoid.
+This modification requires four solenoid channels. Three of them drive solenoids that carry a contact the ball closes, called sensed solenoids. These are the top bumpers taken from the stock machine. The fourth drives a solenoid without a contact, called an unsensed solenoid. It is an [Adafruit 3992](https://www.adafruit.com/product/3992) push-pull solenoid and belongs to a [scoop](https://missionpinball.org/latest/mechs/scoops/). The bumpers and the scoop are the [game components](../../../firmware/game-abstraction.md#playfield-components) built on these solenoids.
 
-Driving the top bumpers follows the same principle as the stock machine, which is described in [`3_bumper-control.md`](../../research/Rokr/3_bumper-control.md).
+Driving the sensed solenoids follows the same principle as the stock machine's bumpers, which is described in [`3_bumper-control.md`](../../research/Rokr/3_bumper-control.md).
 
-A bumper fires when a ball closes a circuit between the conductive foil on the playfield and the metal shell of the bumper itself. The firmware then energises the solenoid for a short moment and releases it.
+A sensed solenoid fires when a ball closes a circuit between the conductive foil on the playfield and the metal shell of the solenoid itself. The firmware then energises the solenoid for a short moment and releases it.
 
 A single board drives all four. Below the schematic of the solenoid board. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
 
-![Bumper board schematic](board-schematic.svg)
+![Solenoid board schematic](board-schematic.svg)
 
 ## Requirements
 
-- The driver triggers a top bumper, not the game logic.
+- The driver triggers a sensed solenoid, not the game logic.
 - The game logic can fire a single solenoid itself.
 - A pull lasts long enough to kick the ball away, and short enough that a ball can be fired back and forth between the three top bumpers.
 - The solenoids are guarded against being held in. Their vendor and their specifications are unknown, so none is ever energised for longer than five seconds.
@@ -23,10 +23,10 @@ Each channel switches its coil on the low side with an N-channel MOSFET. The gat
 
 ## Sense
 
-The foil is one sheet on the playfield, fed from 3.3 V through R91. That resistor protect unlikely short circuits if anything other than the designed sense channels grounds the foil.
+The foil is one sheet on the playfield, fed from 3.3 V through R91. That resistor protects unlikely short circuits if anything other than the designed sense channels grounds the foil.
 
 
-Each solenoid shell reaches the board on a separate wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
+Each sensed solenoid's shell reaches the board on a separate wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
 
 ## Supply
 
@@ -90,11 +90,11 @@ Which pins carry them, and what each one costs elsewhere in the build, is in [`p
 
 ## Firmware
 
-The driver is responsible for sensing and firing solenoids. It also ensures that solenoids can not be permamently pulled and thus protected from overheat and damage. 
+The driver is responsible for sensing and firing solenoids. It also ensures that solenoids can not be permanently pulled and thus protected from overheat and damage. 
 
-Controlling the hardware is handled by interrupt handlers. The top bumpers are triggered automatically upon sense. The scoop solenoid is controlled by the game logic.
+Controlling the hardware is handled by interrupt handlers. The sensed solenoids are triggered automatically upon sense. The unsensed solenoid is controlled by the game logic.
 
-[`firmware/drivers/bumper.md`](../../../firmware/drivers/bumper.md) describes the driver.
+[`firmware/drivers/solenoid.md`](../../../firmware/drivers/solenoid.md) describes the driver.
 
 ## Part list
 
@@ -190,7 +190,7 @@ V_SENSE   the contact from foil to shell,
           measured at its worst point             30 Ω
           R91 in the foil feed, shared            330 Ω
           R_pulldown, one per channel             10 kΩ
-          the pin with one ball on a bumper     = 3.19 V
+          the pin with one ball on a shell      = 3.19 V
           the pin with all three closed, which
           loads R91 three ways                  = 2.99 V
           the pin with no ball                     0 V
@@ -293,4 +293,4 @@ HOLD      the watchdog timeout, after which the
 - [Worldsemi WS2811](../../datasheets/WS2811-Worldsemi.pdf): the supply range whose minimum sets how far the rail may sag
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
-- [`firmware/driver-design.md`](../../../firmware/driver-design.md): that a bumper is sensed and fired inside its interrupt and reports afterwards
+- [`firmware/driver-design.md`](../../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards

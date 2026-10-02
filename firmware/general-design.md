@@ -6,7 +6,7 @@ The rules here hold across the whole firmware. The figures they are checked agai
 |---|---|
 | IR ball sensing | [`drivers/ir-sensing.md`](drivers/ir-sensing.md) |
 | Break beam | [`drivers/break-beam.md`](drivers/break-beam.md) |
-| Bumpers | [`drivers/bumper.md`](drivers/bumper.md) |
+| Solenoids | [`drivers/solenoid.md`](drivers/solenoid.md) |
 | Lighting | [`drivers/lighting.md`](drivers/lighting.md) |
 | Audio | [`audio.md`](audio.md) |
 | Storage, the SD card | [`storage.md`](storage.md) |
@@ -42,8 +42,8 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 |---|---|---|---|
 | FlexPWM3.1 compare, starting the read block | IR ball sensing | microseconds, the read block has to end inside its phase | 64 |
 | The interrupt after each SPI conversion | IR ball sensing | microseconds | 64 |
-| Pin interrupts, one IRQ shared by every pin | Bumpers, break beam, controls | milliseconds | 96 |
-| `IntervalTimer`, the driver tick | Magnetic rotary sensor, bumpers, device monitor, storage | its next tick | 96 |
+| Pin interrupts, one IRQ shared by every pin | Solenoids, break beam, controls | milliseconds | 96 |
+| `IntervalTimer`, the driver tick | Magnetic rotary sensor, solenoids, device monitor, storage | its next tick | 96 |
 | I²S2 DMA, handing a block to the amplifier | Audio | the next audio block | 128 |
 | The Audio library's update, computing a block | Audio | the next audio block | 208 |
 | The SD controller's interrupt, ending one card transfer and starting the next | Storage | before a stream's buffer runs dry | 240 |
@@ -80,7 +80,7 @@ DeviceMonitor    deviceMonitor;          // the drivers register with it in thei
 // drivers
 IrSensing        ir;
 BreakBeam        drain;
-BumperDriver     bumpers;
+SolenoidDriver   solenoids;
 Storage          storage;
 AudioDriver      audio;
 Lighting         lights;
@@ -101,8 +101,8 @@ void setup() {
     // storage first, so every later driver can read its settings from the card
     storage.begin();
 
-    // bumpers next so we can drive the coils at startup
-    bumpers.begin();
+    // solenoids next so we can drive the coils at startup
+    solenoids.begin();
     
     // light ahead of ir for better calibration
     lights.begin();

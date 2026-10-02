@@ -2,7 +2,7 @@
 
 ## Requirements
 
-The machine has several input subsystems: IR ball sensing, a break beam sensor, hit targets, bumpers.
+The machine has several input subsystems: IR ball sensing, a break beam sensor, hit targets, sensed solenoids.
 
 These subsystems have in common that they are sensing events driven by the ball interacting with elements on the playfield. Their drivers are responsible for correct sensing, processing as well as notifying the event. The subsystems shall not communicate with each other directly, but only publish their events.
 
@@ -45,7 +45,7 @@ Each queue has one writer and one reader, so none needs a lock and no interrupt 
 
 Using `micros()` on the Teensy wraps every 71.6 minutes. Therefore, comparing two values should be implemented as `(int32_t)(a - b) < 0`, which holds while the two lie less than 35.8 minutes apart.
 
-> Real-time events, such as a top bumper triggering, are handled by their own subsystem. The message that the event happened is reported afterwards.
+> Real-time events, such as a sensed solenoid triggering, are handled by their own subsystem. The message that the event happened is reported afterwards.
 
 Device faults reach the queue through the device monitor, which [error-handling](error-handling.md#device-faults) describes together with the `Device` list.
 

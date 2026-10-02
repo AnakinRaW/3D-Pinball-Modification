@@ -102,7 +102,7 @@ ds("v_clamp_over", 0.31, "V", sheet=MCU, src="Table 7, Vin/Vout maximum given as
    "OVDD + 0.31 V, which leaves 0.31 V on a pin while the Teensy is unpowered",
    group="LEVELS", section=LEVELS, stated=True)
 asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contacts, every wire "
-    "the same; the estimate the bumper model takes, not measured",
+    "the same; the estimate the solenoid model takes, not measured",
     group="LEVELS", section=LEVELS, stated=True)
 ds("iik_u1", 20, "mA", src=f"{BUFFER}, 5.1 Absolute Maximum Ratings, input clamp current IIK "
    "at VI > VCC + 0.5 V; 7.3.3 places a clamp diode from each input to VCC",
@@ -231,7 +231,7 @@ def _(vcc_u1_max, r_series):
 # the supply
 # ===========================================================================
 msr("v_5v", 5.0, "V", src="the machine's rail, measured in operation at a bumper coil, "
-    "docs/parts/bumper/figures.py", group="SUPPLY", section=SUPPLY, stated=True)
+    "docs/parts/solenoid/figures.py", group="SUPPLY", section=SUPPLY, stated=True)
 ds("v_servo_min", 4.8, "V", sheet=SERVO, src="Operating Voltage, 4.8-6 V DC, minimum",
    group="SUPPLY", section=SUPPLY, stated=True)
 ds("v_servo_max", 6, "V", sheet=SERVO, src="Operating Voltage, maximum",
@@ -250,18 +250,18 @@ ds("i_stall", 800, "mA", sheet=SERVO, src="SPECIFICATION list, stall current at 
    group="SUPPLY", section=SUPPLY, stated=True)
 ds("t_block", 5, "s", sheet=SERVO, stated=False, src="Electronic Protection: after being "
    "blocked for 5 seconds the servo turns off its power")
-asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, taken as the bumper "
+asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, taken as the solenoid "
     "design takes its own: 30 cm of loose pair at roughly 1 µH per metre, estimated from "
     "the conductor and not measured", group="SUPPLY", section=SUPPLY, stated=True)
 dec("c_bulk", 100, "µF", src="C1, the 100 µF per servo that Adafruit's PCA9685 guide "
     "starts from", group="SUPPLY", section=SUPPLY, stated=True)
 dec("v_cap_rating", 10, "V", src="the working voltage C1 is bought at, twice the rail it "
     "sits across", group="SUPPLY", section=SUPPLY, stated=True)
-dec("v_sag", 4.5, "V", src="the floor the bumper design lets the rail sag to while a coil "
+dec("v_sag", 4.5, "V", src="the floor the solenoid design lets the rail sag to while a coil "
     "pulls, the minimum supply of the LED controllers on the same rail, "
-    "docs/parts/bumper/design.md", group="SUPPLY", section=SUPPLY, stated=True)
-dec("t_pull", 50, "ms", stated=False, src="the pull-in the bumper driver commands, "
-    "docs/parts/bumper/design.md")
+    "docs/parts/solenoid/design.md", group="SUPPLY", section=SUPPLY, stated=True)
+dec("t_pull", 50, "ms", stated=False, src="the pull-in the solenoid driver commands, "
+    "docs/parts/solenoid/design.md")
 ds("c_bypass", 100, "nF", src=f"{BUFFER}, 8.3 Power Supply Recommendations, a 0.1 µF "
    "capacitor at each VCC terminal, as close to it as possible",
    group="SUPPLY", section=SUPPLY, stated=True)

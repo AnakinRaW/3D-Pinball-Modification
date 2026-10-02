@@ -1,6 +1,6 @@
-"""The figures of the bumper board, as inputs plus formulas.
+"""The figures of the solenoid board, as inputs plus formulas.
 
-Run with:  python tools/figcheck.py docs/parts/bumper/figures.py --sheets
+Run with:  python tools/figcheck.py docs/parts/solenoid/figures.py --sheets
 
 Every input names where it comes from. Every derived quantity is a function
 whose parameter names are its dependencies, so `--graph <key>` answers what a
@@ -11,9 +11,9 @@ import pathlib
 from figcheck import Model, Q
 
 HERE = pathlib.Path(__file__).resolve().parent
-MODEL = Model("bumper", HERE / "design.md", section=None, until="## Sources",
+MODEL = Model("solenoid", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "bumper.md",
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "solenoid.md",
                          HERE.parents[2] / "firmware" / "general-design.md",
                          HERE.parents[2] / "firmware" / "driver-design.md",
                          HERE.parents[2] / "firmware" / "error-handling.md"])
@@ -72,8 +72,8 @@ dec("i_3v3_max", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V ra
 # what this design chooses
 # ===========================================================================
 dec("n_drive", 4, "", stated=False,
-    src="three bumper coils plus one spare solenoid channel without sense")
-dec("n_sense", 3, "", stated=False, src="one sense line per bumper shell")
+    src="the three sensed solenoids plus the one unsensed solenoid")
+dec("n_sense", 3, "", stated=False, src="one sense line per sensed solenoid's shell")
 dec("r_gate", 1.1, "kΩ", src="chosen so the gate still clears the voltage R_DS(on) is "
     "specified at against the power ground's rise, while the pin stays under its 4 mA at "
     "the switching moment; 1.1 kΩ from inside that window because it is on hand",
@@ -84,7 +84,7 @@ dec("r_gate_pd", 10, "kΩ", src="chosen to hold the gate under the lowest turn-o
     "the value R31 to R33 and R41 to R43 carry, so the board holds one resistor value "
     "fewer", group="V_GATE", section=DRIVE, stated=True)
 dec("r_pulldown", 10, "kΩ", src="chosen to hold the sense node at ground with no "
-    "ball on the bumper, at a fraction of a milliamp when one is",
+    "ball on the shell, at a fraction of a milliamp when one is",
     group="V_SENSE", section=SENSE, stated=True)
 dec("r_series", 10, "kΩ", src="chosen so a sense wire meeting a coil wire drives "
     "under a milliamp into the pin even with the Teensy unpowered, where the ceiling "
@@ -104,7 +104,7 @@ dec("v_cap_rating", 10, "V", src="the working voltage C91 is bought at, twice th
     "rail it sits across", group="C_BULK", section=SUPPLY, stated=True)
 dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far under "
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
-dec("t_contact_fail", 2, "s", stated=False, src="how long a top bumper's contact may stay closed before the driver "
+dec("t_contact_fail", 2, "s", stated=False, src="how long a sensed solenoid's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
 dec("t_contact_check", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
@@ -119,7 +119,7 @@ dec("t_late", 1, "ms", src="how far past its pull-in a coil may still be on befo
 dec("t_tick", 5, "ms", stated=False, src="the driver tick's period in firmware/driver-design.md, "
     "which the rotary sensor's read sets, docs/parts/magnetic-rotary/figures.py")
 dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the coil "
-    "may not fire again, and how long a top bumper's contact has to stay open before "
+    "may not fire again, and how long a sensed solenoid's contact has to stay open before "
     "that channel is armed; decided above the time the plunger takes to stroke and "
     "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)

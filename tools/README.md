@@ -40,7 +40,7 @@ Widths are estimated from character classes for a sans-serif face, not measured 
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. IR sensing, the break beam and the bumpers have one so far. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
 
 ```
 python tools/figcheck.py --sheets                                  every model, then the pins
@@ -108,11 +108,11 @@ A Teensy pin is typed once, in [`docs/pin-assignment.md`](../docs/pin-assignment
 
 | In | The marker |
 |---|---|
-| Markdown | A link to the table, titled with the signal: `[34](../../pin-assignment.md "Bumper trigger 2")` |
-| A fenced block | The line's comment, naming in order the signals of the numbers right of its `=`: `kSense[kSenses] = {1, 14, 15};  // pin-assignment.md: Bumper sense 1 to 3` |
-| A drawing | `data-pin` on the text element, several signals separated by semicolons: `<text data-pin="Bumper sense 1">pin 1</text>` |
+| Markdown | A link to the table, titled with the signal: `[34](../../pin-assignment.md "Solenoid trigger 2")` |
+| A fenced block | The line's comment, naming in order the signals of the numbers right of its `=`: `kSense[kSenses] = {1, 14, 15};  // pin-assignment.md: Solenoid sense 1 to 3` |
+| A drawing | `data-pin` on the text element, several signals separated by semicolons: `<text data-pin="Solenoid sense 1">pin 1</text>` |
 
-`Bumper sense 1 to 3` stands for the three signals it spans. The figure passes skip a marked number, so a pin needs no aside in the model. A pin number that carries no marker is not checked, which is right for a connector pin or a pin the research notes name.
+`Solenoid sense 1 to 3` stands for the three signals it spans. The figure passes skip a marked number, so a pin needs no aside in the model. A pin number that carries no marker is not checked, which is right for a connector pin or a pin the research notes name.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
 

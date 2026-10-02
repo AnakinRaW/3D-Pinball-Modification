@@ -1,12 +1,12 @@
-# Bumper driver
+# Solenoid driver
 
-The driver watches the three top bumper contacts, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel, used for a scoop, drives a solenoid without a contact, which the game logic fires.
+The driver watches the contacts of the three sensed solenoids, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel drives a solenoid without a contact, an unsensed solenoid, which the game logic fires. The top bumpers are built on the sensed solenoids and the scoop on the unsensed one.
 
 ## Sensing and firing
 
-The machine knows which top bumper to pull, when the ball closed circuit between the conductive foil and the specific shell. This pulls the channel's input to HIGH. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
+The machine knows which sensed solenoid to pull, when the ball closed circuit between the conductive foil and the specific shell. This pulls the channel's input to HIGH. The driver runs on a pin interrupt on both edges, raises the trigger pin from the handler when the line goes high, and publishes the event from there.
 
-Firing the top bumpers belongs in the handler because a bumper has to answer the ball quickly and cannot wait for game logic to pick up the event. The event gets published to the event queue on pulling the solenoid.
+Firing the sensed solenoids belongs in the handler because a sensed solenoid has to answer the ball quickly and cannot wait for game logic to pick up the event. The event gets published to the event queue on pulling the solenoid.
 
 All solenoids can also be fired by the game logic manually.
 
@@ -18,14 +18,14 @@ At start-up `begin()` pulls every coil once, as the stock machine does at power-
 
 | Field | Content |
 |---|---|
-| Type | `DriverEventType::BumperHit` |
-| Source | The bumper, `0` to `2` |
+| Type | `DriverEventType::SolenoidHit` |
+| Source | The sensed solenoid, `0` to `2` |
 | Timestamp | `micros()` in the handler, the moment the contact closed |
 | Payload | None |
 
 ## Solenoid protection
 
-A rising edge on a sense line pulls its coil once, even when the contact stays closed. A released coil can fire again only after the cool-down, and a top bumper's contact has to have been open for that long as well.
+A rising edge on a sense line pulls its coil once, even when the contact stays closed. A released coil can fire again only after the cool-down, and a sensed solenoid's contact has to have been open for that long as well.
 
 | Rule | Value |
 |---|---|
@@ -42,14 +42,14 @@ At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-
 
 ## Device faults
 
-A top bumper counts as failed once its contact has stayed closed for 2 s. This might be caused by a ball resting against a shell or a sense line touching the foil. 
+A sensed solenoid counts as failed once its contact has stayed closed for 2 s. This might be caused by a ball resting against a shell or a sense line touching the foil. 
 
-The closing edge notes the time. [`failed()`](../error-handling.md#device-faults) then checks for each top bumper whether its contact is still closed 2 s later.
+The closing edge notes the time. [`failed()`](../error-handling.md#device-faults) then checks for each sensed solenoid whether its contact is still closed 2 s later.
 
 ## The driver
 
 ```cpp
-class BumperDriver : public Driver {
+class SolenoidDriver : public Driver {
 public:
     // attaches the queue, attaches the release to the driver tick and registers with the
     // device monitor; false when the driver tick or the device monitor is full, and the
@@ -62,7 +62,7 @@ public:
             digitalWriteFast(kTrigger[c], LOW);
         }
         if (!driverTick.attach([this] { release(); }, DriverTick::kPeriodUs)) return false;
-        if (!deviceMonitor.watch(Device::Bumpers, *this)) return false;
+        if (!deviceMonitor.watch(Device::Solenoids, *this)) return false;
         ready_ = true;
 
         // every coil pulls once, one after another, before any contact is armed
@@ -79,8 +79,8 @@ public:
         return true;
     }
 
-    // the game logic's own path, and the only one the fourth coil has. The pin
-    // interrupts start pulls as well, so every interrupt, the IR driver's
+    // the game logic's own path, and the only one the unsensed solenoid has. The
+    // pin interrupts start pulls as well, so every interrupt, the IR driver's
     // included, waits the few instructions start() takes
     bool fire(uint8_t coil) {
         noInterrupts();
@@ -99,15 +99,15 @@ public:
     }
 
     // the state the game logic may query between events
-    bool ballOn(uint8_t bumper) const {
-        return digitalReadFast(kSense[bumper]) == HIGH;
+    bool ballOn(uint8_t solenoid) const {
+        return digitalReadFast(kSense[solenoid]) == HIGH;
     }
 
-    // gets which top bumpers have failed, one bit each: a contact closed for kFailMs; no error code
+    // gets which sensed solenoids have failed, one bit each: a contact closed for kFailMs; no error code
     Fault failed() const override {
         PartMask parts = 0;
-        for (uint8_t b = 0; b < kSenses; ++b) {
-            if (ballOn(b) && elapsedMs(closedAtMs_[b], kFailMs)) parts |= 1u << b;
+        for (uint8_t s = 0; s < kSenses; ++s) {
+            if (ballOn(s) && elapsedMs(closedAtMs_[s], kFailMs)) parts |= 1u << s;
         }
         return {parts, 0};
     }
@@ -115,9 +115,9 @@ public:
 private:
     static constexpr uint8_t  kCoils    = 4;
     static constexpr uint8_t  kSenses   = 3;
-    static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Bumper trigger 1 to 4
-    static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};      // pin-assignment.md: Bumper sense 1 to 3
-    static constexpr uint32_t kOnUs     = 50000;  // the longest pull-in, docs/parts/bumper
+    static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Solenoid trigger 1 to 4
+    static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};      // pin-assignment.md: Solenoid sense 1 to 3
+    static constexpr uint32_t kOnUs     = 50000;  // the longest pull-in, docs/parts/solenoid
     static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 45 ms, from here the tick ends a pull
     static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
     static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue
@@ -126,15 +126,15 @@ private:
     // both edges of a sense line arrive here; a closing edge fires only once the
     // contact has been open for the cool-down, so neither bounce nor a contact
     // held closed fires again
-    void edge(uint8_t bumper) {
+    void edge(uint8_t solenoid) {
         const uint32_t now = micros();
-        if (digitalReadFast(kSense[bumper]) == LOW) {
-            opened_[bumper] = now;                // the contact just let go
+        if (digitalReadFast(kSense[solenoid]) == LOW) {
+            opened_[solenoid] = now;              // the contact just let go
             return;
         }
-        closedAtMs_[bumper] = millis();           // the note failed() reads
-        if (!elapsedUs(opened_[bumper], kCoolUs) || !start(bumper, now)) return;
-        out_->publish(DriverEvent{now, DriverEventType::BumperHit, bumper, 0});
+        closedAtMs_[solenoid] = millis();         // the note failed() reads
+        if (!elapsedUs(opened_[solenoid], kCoolUs) || !start(solenoid, now)) return;
+        out_->publish(DriverEvent{now, DriverEventType::SolenoidHit, solenoid, 0});
     }
 
     // gets whether a coil pulls, read back from its trigger pin's output register
@@ -166,13 +166,13 @@ private:
         }
     }
 
-    static BumperDriver*  self_;
-    DriverEvent           queue_[kQueueDepth];
-    EventQueue::Producer* out_ = nullptr;
-    volatile bool         ready_ = false;
-    volatile uint32_t     since_[kCoils]       = {};
-    volatile uint32_t     released_[kCoils]    = {};
-    volatile uint32_t     opened_[kSenses]     = {};
-    volatile uint32_t     closedAtMs_[kSenses] = {};   // when the contact last closed
+    static SolenoidDriver* self_;
+    DriverEvent            queue_[kQueueDepth];
+    EventQueue::Producer*  out_ = nullptr;
+    volatile bool          ready_ = false;
+    volatile uint32_t      since_[kCoils]       = {};
+    volatile uint32_t      released_[kCoils]    = {};
+    volatile uint32_t      opened_[kSenses]     = {};
+    volatile uint32_t      closedAtMs_[kSenses] = {};   // when the contact last closed
 };
 ```

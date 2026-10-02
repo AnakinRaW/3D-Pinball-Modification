@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-No firmware, board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the bumpers are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+No firmware, board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 
@@ -58,7 +58,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 
 | | |
 |---|---|
-| `python tools/figcheck.py --sheets` | Recomputes every figure every subsystem derives, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`. A model path such as `docs/parts/bumper/figures.py` restricts the run to that subsystem and the pins its files mark. Three subsystems have a model so far: `ir-reflective`, `break-beam` and `bumper`. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the eleven checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs it on each push touching `docs/`, `firmware/` or `tools/` |
+| `python tools/figcheck.py --sheets` | Recomputes every figure every subsystem derives, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`. A model path such as `docs/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark. Eight subsystems have a model so far: `ir-reflective`, `break-beam`, `solenoid`, `audio`, `magnetic-rotary`, `controls`, `servo` and `lighting`. The lighting model governs only the Level shifting section of its document. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the eleven checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs it on each push touching `docs/`, `firmware/` or `tools/` |
 | `… ` prose pass | Every number in the prose, not only the ones in blocks and tables, is matched against every declared quantity with its unit converted. What the model does not compute is declared in it as `MODEL.aside(text, why)`, which is what stops a figure going stale where nothing anchors it |
 | `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a declaration's `group` and `section` are written; guessing them wastes a run |
 | `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |

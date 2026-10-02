@@ -1,6 +1,6 @@
 # Error handling
 
-The firmware handles errors on two levels. A device is the hardware a driver works, such as a sensor, the bumper contacts or the SD card. When a device stops working, its driver notices it, the fault is reported, and the machine goes on running without that device. When the firmware itself hangs, or would harm the hardware by keeping a coil on, the watchdog restarts the Teensy.
+The firmware handles errors on two levels. A device is the hardware a driver works, such as a sensor, the solenoids or the SD card. When a device stops working, its driver notices it, the fault is reported, and the machine goes on running without that device. When the firmware itself hangs, or would harm the hardware by keeping a coil on, the watchdog restarts the Teensy.
 
 ## Device faults
 
@@ -112,7 +112,7 @@ The following components are guarded by the watchdog:
 
 | Component | Condition for feeding | Shut-off Time Constraint |
 |---|---|---|
-| Bumper Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`bumper.md`](drivers/bumper.md) | ≤ 5 s |
+| Solenoid Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`solenoid.md`](drivers/solenoid.md) | ≤ 5 s |
 
 ```cpp
 #include "Watchdog_t4.h"         // the WDT_T4 library, github.com/tonton81/WDT_T4
@@ -128,6 +128,6 @@ void setup() {
 
 void loop() {
     // ... the rest of the pass
-    if (!bumpers.overdue()) watchdog.feed();   // each guarded component adds its condition
+    if (!solenoids.overdue()) watchdog.feed();   // each guarded component adds its condition
 }
 ```
