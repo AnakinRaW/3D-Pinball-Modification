@@ -13,7 +13,7 @@ from figcheck import Model, Q
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("break-beam", HERE / "design.md",
               section=None, until="## Sources",
-              documents=[HERE.parents[2] / "firmware" / "break-beam.md"])
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "break-beam.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -63,7 +63,7 @@ asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken a
     group="D_BALL", section=GATE, stated=True)
 dec("t_blocked_fail", 5, "s", stated=False, src="how long the beam may stay broken before the driver reports "
     "DeviceFailed, far longer than any passing ball keeps it broken")
-dec("t_beam_check", 100, "ms", stated=False, src="how often the device monitor of input-handling.md asks the driver")
+dec("t_beam_check", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_dead", 10, "ms", stated=False,
     src="the driver takes edges inside this window as one crossing, decided: an "
     "estimate above the few milliseconds the ball's edge takes to cross the beam "

@@ -94,7 +94,7 @@ The driver is responsible for sensing and firing solenoids. It also ensures that
 
 Controlling the hardware is handled by interrupt handlers. The top bumpers are triggered automatically upon sense. The scoop solenoid is controlled by the game logic.
 
-[`firmware/bumper.md`](../../../firmware/bumper.md) describes the driver.
+[`firmware/drivers/bumper.md`](../../../firmware/drivers/bumper.md) describes the driver.
 
 ## Part list
 

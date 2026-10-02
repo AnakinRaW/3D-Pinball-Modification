@@ -1,10 +1,10 @@
 # Controls driver
 
-The driver watches the toggle switch that [`docs/parts/controls/design.md`](../docs/parts/controls/design.md) describes. It publishes an event whenever the switch is moved, and the game logic can ask for the switch's position at any time.
+The driver watches the toggle switch that [`docs/parts/controls/design.md`](../../docs/parts/controls/design.md) describes. It publishes an event whenever the switch is moved, and the game logic can ask for the switch's position at any time.
 
 ## Position
 
-The driver reports the position printed on the switch, `1` or `0`. A low pin means the contact is closed, which the [controls design](../docs/parts/controls/design.md#toggle-switch) puts in position 1, and `kClosed` holds that position.
+The driver reports the position printed on the switch, `1` or `0`. A low pin means the contact is closed, which the [controls design](../../docs/parts/controls/design.md#toggle-switch) puts in position 1, and `kClosed` holds that position.
 
 ## Driver events
 

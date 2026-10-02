@@ -112,7 +112,7 @@ The following components are guarded by the watchdog:
 
 | Component | Condition for feeding | Shut-off Time Constraint |
 |---|---|---|
-| Bumper Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`bumper.md`](bumper.md) | ≤ 5 s |
+| Bumper Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`bumper.md`](drivers/bumper.md) | ≤ 5 s |
 
 ```cpp
 #include "Watchdog_t4.h"         // the WDT_T4 library, github.com/tonton81/WDT_T4

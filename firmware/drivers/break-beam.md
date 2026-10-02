@@ -21,7 +21,7 @@ The driver reports the ball at the moment the IR beam breaks. It runs on a pin i
 
 ## Device faults
 
-The beam counts as failed once it has stayed broken for 5 s, which no passing ball does. A dead emitter, a receiver knocked out of line or a ball stuck in the gate cause it. The falling edge notes the time the beam broke. [`failed()`](error-handling.md#device-faults) then checks whether the beam is still broken 5 s later.
+The beam counts as failed once it has stayed broken for 5 s, which no passing ball does. A dead emitter, a receiver knocked out of line or a ball stuck in the gate cause it. The falling edge notes the time the beam broke. [`failed()`](../error-handling.md#device-faults) then checks whether the beam is still broken 5 s later.
 
 ## The driver
 

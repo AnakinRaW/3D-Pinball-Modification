@@ -13,7 +13,7 @@ from figcheck import Model, Q, ln
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("magnetic-rotary", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "magnetic-rotary-schematic.svg", HERE / "magnetic-rotary-assembly.svg"],
-              documents=[HERE.parents[2] / "firmware" / "magnetic-rotary.md"])
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "magnetic-rotary.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -70,7 +70,7 @@ dec("n_bytes_ptr", 2, "", src="the bytes a library puts on the bus to set the re
     "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends them", stated=False)
 dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, "
     "long enough for its own recovery attempts and short enough for a game to react", stated=False)
-dec("t_monitor", 100, "ms", src="how often the device monitor of input-handling.md asks the driver", stated=False)
+dec("t_monitor", 100, "ms", src="how often the device monitor of firmware/error-handling.md asks the driver", stated=False)
 dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
     "before the driver reports the rod still, an estimate that keeps a seal coasting out of a "
     "spin from counting as stopped", stated=False)

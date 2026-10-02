@@ -1,6 +1,6 @@
 # Servo driver
 
-The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../docs/parts/servo/design.md) describes. It utilizes [PWMServo](https://github.com/PaulStoffregen/PWMServo).
+The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../../docs/parts/servo/design.md) describes. It utilizes [PWMServo](https://github.com/PaulStoffregen/PWMServo).
 
 ## Servo positions
 
@@ -14,7 +14,7 @@ The servo has no feedback line, so the driver cannot tell when a move has ended,
 
 ## PWMServo
 
-PWMServo sets the timer of pin [24](../docs/pin-assignment.md "Servo signal"), FlexPWM1.2, to a frame of 20 ms, and the timer repeats the pulse in every frame. The driver therefore needs no interrupt, and `moveTo()` returns at once.
+PWMServo sets the timer of pin [24](../../docs/pin-assignment.md "Servo signal"), FlexPWM1.2, to a frame of 20 ms, and the timer repeats the pulse in every frame. The driver therefore needs no interrupt, and `moveTo()` returns at once.
 
 `attach()` takes the SER0049's pulse range, 500 µs for 0° and 2500 µs for 180°.
 

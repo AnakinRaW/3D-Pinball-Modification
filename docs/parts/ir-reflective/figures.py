@@ -21,7 +21,7 @@ MODEL = Model("ir-reflective", HERE / "design.md",
               drawings=[HERE / "ir-sensor-mainboard.svg",
                         HERE / "pulsed-schematic.svg",
                         HERE / "mainboard-placement.svg"],
-              documents=[HERE.parents[2] / "firmware" / "ir-sensing.md"])
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "ir-sensing.md"])
 
 def _to_printed(q, unit, decimals):
     """A quantity as the appendix prints it, so a chain of stated figures adds
@@ -67,7 +67,7 @@ PI = Q(3.141592653589793)
 dec("n_channels", 16, "", src="sixteen positions, the case every figure is derived at")
 dec("n_stock", 3, "", src="the three sensors the stock machine fits")
 dec("n_eight", 8, "", src="eight positions, one converter fitted")
-dec("t_monitor", 100, "ms", stated=False, src="how often the device monitor of firmware/input-handling.md asks the driver")
+dec("t_monitor", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_channel_fail", 1, "s", stated=False, src="how long a channel's difference may stay under "
     "half its clear value before the driver reports DeviceFailed")
 dec("n_cal", 200, "", stated=False, src="readings the start-up calibration averages per channel, the quarter second that also gives the noise floor")

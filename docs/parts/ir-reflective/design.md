@@ -172,7 +172,7 @@ The driver is responsible to set an appropriate phase length depending on the in
 
 Sensors differ, either by their collector current or their assembly of the playfield. Thus, one channel can be stronger or weaker than the others. The driver sorts channel reading from strongest first to weakest channel last.
 
-[`ir-sensing.md`](../../../firmware/ir-sensing.md) documents the driver initialization model and startup calibration, as well as other constraints in detail. [`channel-model`](channel-model/index.html) is an interactive, static webpage that computes the phase, the pull-down and the detection margin that follows from them.
+[`ir-sensing.md`](../../../firmware/drivers/ir-sensing.md) documents the driver initialization model and startup calibration, as well as other constraints in detail. [`channel-model`](channel-model/index.html) is an interactive, static webpage that computes the phase, the pull-down and the detection margin that follows from them.
 
 ## IR sensor mainboard
 
@@ -548,8 +548,8 @@ per conversion  24 clocks / 1.35 MHz                     = 17.78 µs
 block           N × 17.78 µs, at N = 16                  =  284 µs
                                 at N = 8                 =  142 µs
 budget          plus 2 µs per conversion for the firmware's own
-                overhead, which firmware/ir-sensing.md puts
-                to a measurement                         =  320 µs at N = 16
+                overhead, which firmware/drivers/ir-sensing.md
+                puts to a measurement                    =  320 µs at N = 16
 phase           600 µs, from the dwell, below
 first read      phase − budget − 10 µs of start jitter   =  270 µs at N = 16
                 τ · ln 2 = 48.5 µs is the ceiling on the sign

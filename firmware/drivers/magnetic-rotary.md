@@ -1,6 +1,6 @@
 # Magnetic rotary sensor driver
 
-The driver reports how far the seal rod turns. It reads the AS5600 that [`docs/parts/magnetic-rotary/design.md`](../docs/parts/magnetic-rotary/design.md) describes, publishes every movement, and leaves the degrees to the [rotating seal component](components/rotating-seal.md).
+The driver reports how far the seal rod turns. It reads the AS5600 that [`docs/parts/magnetic-rotary/design.md`](../../docs/parts/magnetic-rotary/design.md) describes, publishes every movement, and leaves the degrees to the [rotating seal component](../components/rotating-seal.md).
 
 ## Driver events
 
@@ -23,7 +23,7 @@ The Teensy talks to the AS5600 over I²C at 100 kHz. The sensor gives the angle 
 
 The driver then adds the new value to the sum of all previous readings so that the seal rotary component can correctly compute on multiple sensor readings and still keep the right position when an event gets lost. An event gets lost when the queue is full, and the next event then carries the right position anyway. A component that added up raw angles itself would miscount a whole turn in that case.
 
-The processor never waits for the sensor. At each 5 ms [driver tick](driver-design.md#driver-intervaltimer) the angle of the previous tick is read from the sensors value buffer and then the next sensor read gets started.
+The processor never waits for the sensor. At each 5 ms [driver tick](../driver-design.md#driver-intervaltimer) the angle of the previous tick is read from the sensors value buffer and then the next sensor read gets started.
 
 Reading a sensor consists of three commands: address the sensor, receive two bytes, stop. The controller finishes the read long before the next tick, and the two bytes wait in its receive buffer until then. A read occupies the bus for 290 µs.
 
@@ -43,7 +43,7 @@ A tick that finds an error drops the read, clears the controller's flags and bot
 
 ## Device faults
 
-The sensor counts as failed once no angle has arrived for 1 s. Error cases are a sensor that does not answer, a line held low or a lost bus. Every read that delivers an angle notes its time. [`failed()`](error-handling.md#device-faults) then checks whether that time is more than 1 s ago. The error code it returns is the controller's error flags of the last failed read.
+The sensor counts as failed once no angle has arrived for 1 s. Error cases are a sensor that does not answer, a line held low or a lost bus. Every read that delivers an angle notes its time. [`failed()`](../error-handling.md#device-faults) then checks whether that time is more than 1 s ago. The error code it returns is the controller's error flags of the last failed read.
 
 ## Existing libraries
 

@@ -13,7 +13,7 @@ from figcheck import Model, Q
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("bumper", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "bumper.md",
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "bumper.md",
                          HERE.parents[2] / "firmware" / "general-design.md",
                          HERE.parents[2] / "firmware" / "driver-design.md",
                          HERE.parents[2] / "firmware" / "error-handling.md"])
@@ -106,7 +106,7 @@ dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far un
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
 dec("t_contact_fail", 2, "s", stated=False, src="how long a top bumper's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
-dec("t_contact_check", 100, "ms", stated=False, src="how often the device monitor of input-handling.md asks the driver")
+dec("t_contact_check", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
     "decided above the stock machine's visibly short pull: long enough to kick the ball "
     "away, short enough that a ball cannot be fired back and forth between the three top "
@@ -124,7 +124,7 @@ dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the co
     "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)
 dec("t_wdt", 2, "s", src="the watchdog timeout, firmware/error-handling.md; decided "
-    "above the usual length of a write through SdFat, which firmware/storage.md describes, "
+    "above the usual length of a write through SdFat, which firmware/drivers/storage.md describes, "
     "and well inside the five-second limit of the requirements, so a coil whose timer never "
     "fires is released by the restart", group="HOLD", section=COIL, stated=True)
 dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the "

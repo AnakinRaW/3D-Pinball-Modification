@@ -1,10 +1,10 @@
 # Lighting, firmware
 
-The driver here is the output path for the LED chains. The chains themselves are in [`docs/parts/lighting/design.md`](../docs/parts/lighting/design.md).
+The driver here is the output path for the LED chains. The chains themselves are in [`docs/parts/lighting/design.md`](../../docs/parts/lighting/design.md).
 
 ## The frame time has to fit the loop
 
-A clockless strip's frame time grows with the number of LEDs, and past some strip length it exceeds the dwell that [`general-design.md`](general-design.md) holds every participant in the loop to. Compute it from the LED count in the lighting design and hold it against the dwell before a strip is chosen.
+A clockless strip's frame time grows with the number of LEDs, and past some strip length it exceeds the dwell that [`general-design.md`](../general-design.md) holds every participant in the loop to. Compute it from the LED count in the lighting design and hold it against the dwell before a strip is chosen.
 
 Which library decides whether that time is blocked or not:
 

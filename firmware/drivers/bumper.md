@@ -32,11 +32,11 @@ A rising edge on a sense line pulls its coil once, even when the contact stays c
 | Duration of a solenoid pull | ~50 ms |
 | Duration of the cool-down phase after a solenoid pull | ~10 ms |
 
-When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 45 ms, so a pull lasts 45 to 50 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
+When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](../driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 45 ms, so a pull lasts 45 to 50 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
 
 The driver always writes the time first and switches the coil second. Whoever looks at a coil then finds the time that belongs to its state.
 
-If the firmware itself fails, the [watchdog](error-handling.md#the-watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
+If the firmware itself fails, the [watchdog](../error-handling.md#the-watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
 
 At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the board switch every coil off.
 
@@ -44,7 +44,7 @@ At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-
 
 A top bumper counts as failed once its contact has stayed closed for 2 s. This might be caused by a ball resting against a shell or a sense line touching the foil. 
 
-The closing edge notes the time. [`failed()`](error-handling.md#device-faults) then checks for each top bumper whether its contact is still closed 2 s later.
+The closing edge notes the time. [`failed()`](../error-handling.md#device-faults) then checks for each top bumper whether its contact is still closed 2 s later.
 
 ## The driver
 

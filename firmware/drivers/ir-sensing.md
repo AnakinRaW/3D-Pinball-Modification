@@ -1,6 +1,6 @@
 # IR Ball Sensing Driver
 
-The driver turns the IR channels into ball events, and takes its key information from [`docs/parts/ir-reflective/design.md`](../docs/parts/ir-reflective/design.md).
+The driver turns the IR channels into ball events, and takes its key information from [`docs/parts/ir-reflective/design.md`](../../docs/parts/ir-reflective/design.md).
 
 ## What the driver does
 
@@ -8,7 +8,7 @@ The emitters pulse in two phases, lit and dark, and every registered channel is 
 
 ## Driver events
 
-The driver publishes two kinds of events. Each names the channel as its source, carries the instant of detection as its timestamp, and goes into the queue that [`input-handling.md`](input-handling.md) describes.
+The driver publishes two kinds of events. Each names the channel as its source, carries the instant of detection as its timestamp, and goes into the queue that [`input-handling.md`](../input-handling.md) describes.
 
 | Event | When | Payload |
 |---|---|---|
@@ -21,7 +21,7 @@ Game logic can still poll the channel state with `State getState(channel, out ms
 
 Reading goes on continuously, in phases of one fixed length `T`. A phase toggles the emitters at its start, waits while the sensors answer that toggle, reads every registered channel, and evaluates what it read. The channels hang on converters that the Teensy reads over SPI. Reading one channel is one conversion: the converter samples the voltage at that channel and shifts a ten-bit number back over that bus.
 
-A free-running counter in the Teensy controls those phases, FlexPWM3.1, driven from the 150 MHz peripheral clock and recorded in [`docs/pin-assignment.md`](../docs/pin-assignment.md). It drives the CLOCK conductor, which switches every sensor LED to on and off. One cycle is `2T`, a dark phase and then a lit one at 50 % duty.
+A free-running counter in the Teensy controls those phases, FlexPWM3.1, driven from the 150 MHz peripheral clock and recorded in [`docs/pin-assignment.md`](../../docs/pin-assignment.md). It drives the CLOCK conductor, which switches every sensor LED to on and off. One cycle is `2T`, a dark phase and then a lit one at 50 % duty.
 
 The firmware never stops or stretches that counter, so a phase is a clock the driver cannot hold.
 
@@ -62,7 +62,7 @@ T         = 600 µs, the longest phase in that range
 t_first   = 600 µs − 320 µs − 10 µs                        = 270 µs
 ```
 
-[`channel-model`](../docs/parts/ir-reflective/channel-model/index.html) picks the phase on further criteria, among them the false-report target and the weakest sensor's margin. The driver can follow it later with the same arithmetic.
+[`channel-model`](../../docs/parts/ir-reflective/channel-model/index.html) picks the phase on further criteria, among them the false-report target and the weakest sensor's margin. The driver can follow it later with the same arithmetic.
 
 ### Execution and timing
 
@@ -100,7 +100,7 @@ The driver keeps starting conversions while `t_conv + t_ovh` still fits in what 
 
 The build step is performed once with the sensors already in the playfield, and the driver has its results from then on. It is repeated whenever the playfield changes under a sensor.
 
-**The build step records two figures per channel.** The detector's collector current spreads from 60 µA to 410 µA under identical conditions, so a pair that fits one channel misses another by several times over. [`docs/parts/ir-reflective/design.md`](../docs/parts/ir-reflective/design.md#driver) holds what a channel is expected to deliver.
+**The build step records two figures per channel.** The detector's collector current spreads from 60 µA to 410 µA under identical conditions, so a pair that fits one channel misses another by several times over. [`docs/parts/ir-reflective/design.md`](../../docs/parts/ir-reflective/design.md#driver) holds what a channel is expected to deliver.
 
 The pair also depends on where a channel sits in the read order as the sensors are still rising when the read block starts. A channel read early returns a smaller difference for the same ball. Both effects are fixed per channel, so the build step settles the pair and the read order together. Adding a channel or moving one voids them and needs the build step run again. The ranking puts the weakest sensor last, where the swing is largest.
 
@@ -130,7 +130,7 @@ At calibration, a channel that misses the margin condition restarts the driver w
 > [!WARNING]
 > ### TODO: measure σ on the finished board
 >
-> The σ in [`channel-model`](../docs/parts/ir-reflective/channel-model/index.html) is an estimate, so the phase and the margin condition rest on one. The start-up calibration measures σ on every boot, but only to set `release`, and nothing carries it back. Run it once on the finished board with the lighting subsystem running and the room lit by a flickering LED lamp rather than by daylight, and put the σ it reports into `channel-model`.
+> The σ in [`channel-model`](../../docs/parts/ir-reflective/channel-model/index.html) is an estimate, so the phase and the margin condition rest on one. The start-up calibration measures σ on every boot, but only to set `release`, and nothing carries it back. Run it once on the finished board with the lighting subsystem running and the room lit by a flickering LED lamp rather than by daylight, and put the σ it reports into `channel-model`.
 
 **A ball lying on a channel at power-up needs no special handling.** That channel reads about five times its clear value, while drift moves a reading only by tens of per cent, so the calibration tells the two cases apart and scales against `ball_build`.
 
@@ -171,7 +171,7 @@ calibrate():
 
 A channel counts as failed once its lit-minus-dark difference has stayed under half its clear value for 1 s. A ball over the sensor reflects more light and makes the difference larger, never smaller. A difference that stays low therefore means a channel.
 
-The evaluation notes the time whenever a channel's difference reaches half its clear value. [`failed()`](error-handling.md#device-faults) then checks for each channel whether that time is more than 1 s ago. A channel whose clear difference is small against its noise may not report a lost emitter, because the noise alone then keeps reaching half its clear value.
+The evaluation notes the time whenever a channel's difference reaches half its clear value. [`failed()`](../error-handling.md#device-faults) then checks for each channel whether that time is more than 1 s ago. A channel whose clear difference is small against its noise may not report a lost emitter, because the noise alone then keeps reaching half its clear value.
 
 At start-up, `calibrate()` expects every channel to read close to its clear value, or close to its ball value when a ball lies on it. A channel that reads neither counts as failed until the next start.
 

@@ -13,7 +13,7 @@ from figcheck import Model, ln
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("servo", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "servo-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "servo.md"])
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "servo.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 msr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="measured", **kw)

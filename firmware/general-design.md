@@ -4,15 +4,15 @@ The rules here hold across the whole firmware. The figures they are checked agai
 
 | Subsystem | File |
 |---|---|
-| IR ball sensing | [`ir-sensing.md`](ir-sensing.md) |
-| Break beam | [`break-beam.md`](break-beam.md) |
-| Bumpers | [`bumper.md`](bumper.md) |
-| Lighting | [`lighting.md`](lighting.md) |
+| IR ball sensing | [`drivers/ir-sensing.md`](drivers/ir-sensing.md) |
+| Break beam | [`drivers/break-beam.md`](drivers/break-beam.md) |
+| Bumpers | [`drivers/bumper.md`](drivers/bumper.md) |
+| Lighting | [`drivers/lighting.md`](drivers/lighting.md) |
 | Audio | [`audio.md`](audio.md) |
 | Storage, the SD card | [`storage.md`](storage.md) |
-| Magnetic rotary sensor | [`magnetic-rotary.md`](magnetic-rotary.md) |
-| Controls | [`controls.md`](controls.md) |
-| Servo | [`servo.md`](servo.md) |
+| Magnetic rotary sensor | [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) |
+| Controls | [`drivers/controls.md`](drivers/controls.md) |
+| Servo | [`drivers/servo.md`](drivers/servo.md) |
 
 ## Firmware abstraction layers
 
