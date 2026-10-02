@@ -32,6 +32,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 | Schematic + PCB | EasyEDA, working from local project files | Chosen — **Standard vs. Pro not yet recorded**, and they use different file formats |
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
+| Teensy core | Always the newest Teensyduino release | Chosen |
 
 **The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
