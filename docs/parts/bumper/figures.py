@@ -14,7 +14,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("bumper", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
               documents=[HERE.parents[2] / "firmware" / "bumper.md",
-                         HERE.parents[2] / "firmware" / "general-design.md"])
+                         HERE.parents[2] / "firmware" / "general-design.md",
+                         HERE.parents[2] / "firmware" / "driver-design.md",
+                         HERE.parents[2] / "firmware" / "error-handling.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -102,21 +104,28 @@ dec("v_cap_rating", 10, "V", src="the working voltage C91 is bought at, twice th
     "rail it sits across", group="C_BULK", section=SUPPLY, stated=True)
 dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far under "
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
+dec("t_contact_fail", 2, "s", stated=False, src="how long a top bumper's contact may stay closed before the driver "
+    "reports DeviceFailed, far longer than a ball touches a shell")
+dec("t_contact_check", 100, "ms", stated=False, src="how often the device monitor of input-handling.md asks the driver")
 dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
-    "decided above the stock machine's visibly short pull and far below the "
-    "seconds at which a mini solenoid overheats; a scope reading of the stock "
-    "pulse replaces it", group="DUTY", section=COIL, stated=True)
-dec("t_late", 1, "ms", src="how far past its pull-in a coil may still be on before the "
-    "main loop counts it overdue and stops feeding the watchdog; the coil's own timer "
-    "ends a pull-in within the latency of one interrupt, far inside this",
+    "decided above the stock machine's visibly short pull: long enough to kick the ball "
+    "away, short enough that a ball cannot be fired back and forth between the three top "
+    "bumpers, and far below the seconds at which a mini solenoid overheats",
     group="DUTY", section=COIL, stated=True)
+dec("t_late", 1, "ms", src="how far past its pull-in a coil may still be on before the "
+    "main loop counts it overdue and stops feeding the watchdog; the driver tick ends a "
+    "pull-in by t_on_max, late only by the other functions on the same tick, far inside this",
+    group="DUTY", section=COIL, stated=True)
+dec("t_tick", 5, "ms", stated=False, src="the driver tick's period in firmware/driver-design.md, "
+    "which the rotary sensor's read sets, docs/parts/magnetic-rotary/figures.py")
 dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the coil "
     "may not fire again, and how long a top bumper's contact has to stay open before "
     "that channel is armed; decided above the time the plunger takes to stroke and "
     "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)
-dec("t_wdt", 1, "s", src="the watchdog timeout, firmware/general-design.md; decided "
-    "well inside the five-second limit of the requirements, so a coil whose timer never "
+dec("t_wdt", 2, "s", src="the watchdog timeout, firmware/error-handling.md; decided "
+    "above the usual length of a write through SdFat, which firmware/storage.md describes, "
+    "and well inside the five-second limit of the requirements, so a coil whose timer never "
     "fires is released by the restart", group="HOLD", section=COIL, stated=True)
 dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the "
     "requirements in design.md, set because the solenoids' vendor and specifications "
@@ -441,6 +450,13 @@ def _(v_5v, i_coil):
     return v_5v * i_coil
 
 
+# The driver tick ends a pull on the first tick after it has been on this long,
+# so a pull lasts from t_on_min up to t_on_max.
+@fig("t_on_min", "ms", stated=False, rises_with=["t_on_max"], falls_with=["t_tick"])
+def _(t_on_max, t_tick):
+    return t_on_max - t_tick
+
+
 @fig("t_on_actual", "ms", group="DUTY", section=COIL,
      rises_with=["t_on_max", "t_late"])
 def _(t_on_max, t_late):
@@ -465,7 +481,7 @@ def _(p_coil, duty_max):
     return p_coil * duty_max
 
 
-# The worst case is a coil whose timer never fires: the loop feeds the watchdog
+# The worst case is a coil the driver tick never releases: the loop feeds the watchdog
 # until the coil turns overdue, and the restart comes one timeout later.
 @fig("t_hold_fault", "s", group="HOLD", section=COIL, prints="up",
      rises_with=["t_wdt", "t_on_max", "t_late"])
@@ -622,11 +638,11 @@ _I("the window a contact has to stay open outlasts the contact one hit makes",
    lambda v: v.t_rearm > v.t_contact)
 _I("the overdue margin sits far inside the pull-in it is added to",
    lambda v: v.t_late < v.t_on_max)
-_I("a coil whose timer never fires is released by the restart inside the limit "
+_I("a coil the driver tick never releases is released by the restart inside the limit "
    "the requirements set",
    lambda v: v.t_hold_fault < v.t_hold_max)
 _I("the gate settles far inside the shortest pull-in the driver can command",
-   lambda v: v.t_gate < v.t_on_max)
+   lambda v: v.t_gate < v.t_on_min)
 
 
 # ===========================================================================
@@ -655,8 +671,8 @@ for _text, _why in [
     # constants as the driver writes them, without a unit
     ("50000", "the commanded pull-in in microseconds"),
     ("1000", "the overdue margin in microseconds"),
-    ("96", "the NVIC priority of the release timer and the pin interrupts, "
-           "firmware/general-design.md"),
+    ("96", "the NVIC priority of the driver tick and the pin interrupts, in the table of "
+           "firmware/general-design.md and in the driver tick of firmware/driver-design.md"),
     ("64", "the NVIC priority of the IR driver's interrupts, in the table of "
            "firmware/general-design.md"),
     ("128", "the NVIC priority the Teensy starts every interrupt at, "
@@ -666,8 +682,12 @@ for _text, _why in [
     ("240", "the NVIC priority of the storage driver's card interrupt, in the "
             "table of firmware/general-design.md"),
     ("10000", "the cool-down after a release, in microseconds"),
-    ("100000000", "the period the release timer is parked on between pulls, in "
-                  "microseconds, so it keeps its hardware channel"),
+    ("2000", "how long a contact may stay closed before it counts as failed, in milliseconds"),
+    ("5000", "the driver tick's period in microseconds, as driver-design.md writes it"),
+    ("32", "the depth of the device monitor's queue, firmware/error-handling.md"),
+    ("100000", "the device monitor's check period in microseconds, as error-handling.md writes it"),
+    ("16", "the bytes a driver tick callback may capture, the size teensy::inplace_function "
+           "takes in PJRC's IntervalTimer.h"),
     ("250000", "the enforced pause in microseconds"),
     ("0805", "the resistor package, a name rather than a value"),
 ]:

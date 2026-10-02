@@ -14,6 +14,7 @@ A single board drives all four. Below the schematic of the solenoid board. The l
 
 - The driver triggers a top bumper, not the game logic.
 - The game logic can fire a single solenoid itself.
+- A pull lasts long enough to kick the ball away, and short enough that a ball can be fired back and forth between the three top bumpers.
 - The solenoids are guarded against being held in. Their vendor and their specifications are unknown, so none is ever energised for longer than five seconds.
 
 ## Drive
@@ -260,11 +261,11 @@ GND       one wire of a cable with its two
           what it still clears 2.5 V by          = 217 mV
 ```
 
-**The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when its timer never fires.
+**The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when the driver tick never releases it.
 
 ```
 DUTY      5 V × 0.68 A, while energised         = 3.4 W
-          the pull-in the driver commands          50 ms
+          the longest pull-in the driver commands  50 ms
           how far past that a coil may run
           before the loop counts it overdue        1 ms
           the longest a pull-in therefore lasts = 51 ms
@@ -274,9 +275,9 @@ DUTY      5 V × 0.68 A, while energised         = 3.4 W
           the first over the second             = 83.6 %
           3.4 W over the same fraction          = 2.84 W
 HOLD      the watchdog timeout, after which the
-          restart releases a coil still on         1 s
+          restart releases a coil still on         2 s
           that and the longest pull-in, how long
-          a coil whose timer never fires stays on = 1.051 s
+          a coil the tick never releases stays on = 2.051 s
           the limit from the requirements          5 s
 ```
 
@@ -292,4 +293,4 @@ HOLD      the watchdog timeout, after which the
 - [Worldsemi WS2811](../../datasheets/WS2811-Worldsemi.pdf): the supply range whose minimum sets how far the rail may sag
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
-- [`firmware/general-design.md`](../../../firmware/general-design.md): that a bumper is sensed and fired inside its interrupt and reports afterwards
+- [`firmware/driver-design.md`](../../../firmware/driver-design.md): that a bumper is sensed and fired inside its interrupt and reports afterwards

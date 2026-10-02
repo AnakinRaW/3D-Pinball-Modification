@@ -33,8 +33,8 @@ dec("r_pu", 4.7, "kΩ", src="R4 and R5 on the Grove module, SDA and SCL to the m
     "Teensy's own being stronger in parallel", group="BUS", section=BUS, stated=True)
 dec("r_pu_teensy", 22, "kΩ", src="the pad pull-up Wire switches on, IOMUXC_PAD_PUS(3) in "
     "PJRC's WireIMXRT.cpp", stated=False)
-asm("c_bus", 200, "pF", src="the capacitance of each bus line, taken for the module's lead "
-    "and a lead to the display's touch controller together; no measurement",
+asm("c_bus", 200, "pF", src="the capacitance of each bus line, taken for the module's cable with "
+    "margin; no measurement",
     group="BUS", section=BUS, stated=True)
 ds("vil_frac", 0.3, "", sheet=SENSOR, src="I²C electrical specification, logic low input "
    "voltage VIL, maximum 0.3 x VDD", group="BUS", section=BUS, stated=True)
@@ -62,10 +62,15 @@ dec("n_bytes", 3, "", src="the bytes on the bus in one read: the address, and th
     "of RAW ANGLE, whose pointer the AS5600 keeps between reads", stated=False)
 dec("n_bits_byte", 9, "bits", src="the clock periods one byte takes on the bus, eight data "
     "bits and the acknowledge, UM10204", group="READ", section=READ, stated=True)
-dec("t_tick", 5, "ms", src="the period of the driver's IntervalTimer, which collects one "
-    "read and starts the next", group="READ", section=READ, stated=True)
+dec("t_tick", 5, "ms", src="the period of the driver tick in firmware/driver-design.md, on "
+    "which the driver collects one read and starts the next", group="READ", section=READ, stated=True)
 ds("n_steps", 4096, "steps", sheet=SENSOR, src="the 12-bit resolution, 4096 positions per "
    "turn", group="READ", section=READ, stated=True)
+dec("n_bytes_ptr", 2, "", src="the bytes a library puts on the bus to set the register pointer "
+    "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends them", stated=False)
+dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, "
+    "long enough for its own recovery attempts and short enough for a game to react", stated=False)
+dec("t_monitor", 100, "ms", src="how often the device monitor of input-handling.md asks the driver", stated=False)
 dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
     "before the driver reports the rod still, an estimate that keeps a seal coasting out of a "
     "spin from counting as stopped", stated=False)
@@ -87,11 +92,26 @@ def _(t_read, t_tick):
     return t_read / t_tick
 
 
+# A library read: the pointer write and then the read, each with its own START and STOP,
+# with the processor waiting in Wire for both.
+@fig("t_lib_read", "µs", stated=False, prints="up",
+     rises_with=["n_bytes_ptr", "n_bytes", "n_bits_byte"], falls_with=["f_scl"])
+def _(n_bytes_ptr, n_bits_byte, f_scl, t_read):
+    return (n_bytes_ptr * n_bits_byte + 2) / f_scl + t_read
+
+
+@fig("lib_share", "%", stated=False, prints="up",
+     rises_with=["n_bytes_ptr", "n_bytes", "n_bits_byte"], falls_with=["f_scl", "t_tick"])
+def _(t_lib_read, t_tick):
+    return t_lib_read / t_tick
+
+
 # Two readings a tick apart are unwrapped modulo one turn, which holds while the
 # rod turns less than half a turn between them.
 @fig("f_turn_max", "Hz", group="READ", section=READ, prints="down", falls_with=["t_tick"])
 def _(t_tick):
     return 1 / (2 * t_tick)
+
 
 
 
@@ -142,7 +162,8 @@ _I("the report threshold stays a small part of a turn",
 for _text, _why in [
     ("0.25 mm", "how far the rod's axis may sit from the package centre with a 6 mm magnet, "
                 "AS5600 datasheet, a mounting figure"),
-    ("5000", "the tick in microseconds, as the driver writes it"),
+    ("96", "the NVIC priority of the tick, firmware/driver-design.md"),
+    ("1000", "the fail time in milliseconds, as the driver writes it"),
     ("12 bits", "the AS5600's resolution, RES in the datasheet's system specifications, "
                 "which gives the 4096 steps"),
     ("5", "the GPIO function in a pin's mux register, which recover() writes as Wire's "

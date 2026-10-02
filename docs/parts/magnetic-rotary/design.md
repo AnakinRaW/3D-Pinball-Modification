@@ -96,5 +96,5 @@ SUPPLY    the Teensy's rail                        3.3 V
 - [Seeed wiki, Grove AS5600](https://wiki.seeedstudio.com/Grove-12-bit-Magnetic-Rotary-Position-Sensor-AS5600/): the module's supply voltage and the magnet's gap
 - [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the I²C specification, Rev. 7.0, with the Standard-mode rise time in Table 10
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
-- [`pin-assignment.md`](../../pin-assignment.md): `Wire`, and the touch controller that shares it
+- [`pin-assignment.md`](../../pin-assignment.md): `Wire`
 - [PJRC, `WireIMXRT.cpp`](https://github.com/PaulStoffregen/Wire/blob/master/WireIMXRT.cpp): the 100 kHz start

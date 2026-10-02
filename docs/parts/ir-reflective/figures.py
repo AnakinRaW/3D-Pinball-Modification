@@ -13,7 +13,7 @@ table, the section the bold lead above it, the label a substring of the line.
 """
 import pathlib
 
-from figcheck import Model, Q, ceil_to, db, exp, floor_to, interp_log, ln, log10
+from figcheck import Model, Q, ceil_to, db, exp, floor_to, interp_log, ln, log10, sqrt
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("ir-reflective", HERE / "design.md",
@@ -67,6 +67,18 @@ PI = Q(3.141592653589793)
 dec("n_channels", 16, "", src="sixteen positions, the case every figure is derived at")
 dec("n_stock", 3, "", src="the three sensors the stock machine fits")
 dec("n_eight", 8, "", src="eight positions, one converter fitted")
+dec("t_monitor", 100, "ms", stated=False, src="how often the device monitor of firmware/input-handling.md asks the driver")
+dec("t_channel_fail", 1, "s", stated=False, src="how long a channel's difference may stay under "
+    "half its clear value before the driver reports DeviceFailed")
+dec("n_cal", 200, "", stated=False, src="readings the start-up calibration averages per channel, the quarter second that also gives the noise floor")
+dec("e_cal", 5, "%", src="the factor error the averaging may leave, well under the drift of tens of per cent the factor corrects")
+
+
+# the clear-track difference a channel needs, in multiples of the noise of one reading, so that
+# the factor averaged over n_cal readings keeps its error within e_cal
+@fig("clear_over_noise_min", "×", prints="up", falls_with=["e_cal", "n_cal"])
+def _(e_cal, n_cal):
+    return 1 / (e_cal * sqrt(n_cal))
 dec("budget_grain", 10, "µs", src="the step the firmware rounds the read block up to, so a phase holds whole tens")
 dec("n_contacts", 4, "", src="two connectors on the J-PWR cable, each with a contact on both conductors")
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the acquisition window is tested against")

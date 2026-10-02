@@ -61,6 +61,9 @@ asm("r_pullup", 22, "kΩ", src="the pull-up Teensyduino's INPUT_PULLUP switches 
 # ===========================================================================
 asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm",
     group="D_BALL", section=GATE, stated=True)
+dec("t_blocked_fail", 5, "s", stated=False, src="how long the beam may stay broken before the driver reports "
+    "DeviceFailed, far longer than any passing ball keeps it broken")
+dec("t_beam_check", 100, "ms", stated=False, src="how often the device monitor of input-handling.md asks the driver")
 dec("t_dead", 10, "ms", stated=False,
     src="the driver takes edges inside this window as one crossing, decided: an "
     "estimate above the few milliseconds the ball's edge takes to cross the beam "
@@ -97,6 +100,7 @@ def _(ball_diameter, v_ball):
     return ball_diameter / v_ball
 
 
+
 # ===========================================================================
 # what the design requires, stated over the quantities rather than over any
 # formula above
@@ -118,6 +122,7 @@ for _text, _why in [
     ("3 mm", "the LED package the two bodies carry"),
     ("0", "the gate's index, the timestamp's initial value, and the empty payload"),
     ("10000", "the dead time in microseconds, as the driver writes it without a unit"),
+    ("5000", "how long the beam may stay broken, in milliseconds, as the driver writes it"),
     ("2.54 mm", "the connector pitch"),
 ]:
     MODEL.aside(_text, _why)
