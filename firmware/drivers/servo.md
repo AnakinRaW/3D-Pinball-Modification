@@ -14,7 +14,7 @@ The servo has no feedback line, so the driver cannot tell when a move has ended,
 
 ## PWMServo
 
-PWMServo sets the timer of pin [24](../../docs/pin-assignment.md "Servo signal"), FlexPWM1.2, to a frame of 20 ms, and the timer repeats the pulse in every frame. The driver therefore needs no interrupt, and `moveTo()` returns at once.
+PWMServo sets the timer of pin [0](../../docs/pin-assignment.md "Servo signal"), FlexPWM1.1, to a frame of 20 ms, and the timer repeats the pulse in every frame. The driver therefore needs no interrupt, and `moveTo()` returns at once.
 
 `attach()` takes the SER0049's pulse range, 500 µs for 0° and 2500 µs for 180°.
 
@@ -63,8 +63,8 @@ public:
     Position position() const { return position_; }
 
 private:
-    static constexpr uint8_t  kPin   = 24;        // pin-assignment.md: Servo signal
-    static constexpr uint8_t  kSub   = 2;         // FlexPWM1's submodule 2, behind the pin
+    static constexpr uint8_t  kPin   = 0;         // pin-assignment.md: Servo signal
+    static constexpr uint8_t  kSub   = 1;         // FlexPWM1's submodule 1, behind the pin
     static constexpr uint16_t kMask  = 1 << kSub;
     static constexpr uint32_t kLoadTimeoutMs = 40;  // two frames of 20 ms
     static constexpr uint8_t  kStart = TODO;      // the start position in degrees, set on the machine

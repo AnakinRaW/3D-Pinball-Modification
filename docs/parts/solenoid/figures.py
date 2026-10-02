@@ -234,10 +234,9 @@ ds("vih_frac", 0.7, "", sheet=RT1062, stated=False,
 ds("vil_frac", 0.3, "", sheet=RT1062, stated=False,
    src="Table 22 single voltage GPIO DC parameters, low-level input voltage V_IL "
    "maximum, given as 0.3 x NVCC_XXXX")
-# Table 86 gives GPIO_AD_B0_03, GPIO_B1_13 and GPIO_B1_12, which PJRC's core_pins.h
-# maps to Teensy pins 0, 34 and 35, a keeper both on reset and as their default.
-# The keeper then holds the level the pin last drove, and the minimum is the
-# strongest it can be.
+# Table 86 gives every edge pin a keeper on reset, so a trigger pin has one wherever
+# it sits. The keeper then holds the level the pin last drove, and the minimum is
+# the strongest it can be.
 ds("r_keeper_min", 105, "kΩ", sheet=RT1062, src="Table 22 single voltage GPIO DC "
    "parameters, keeper circuit resistance minimum, at V_I = 0.3 and 0.7 x "
    "NVCC_XXXX", group="V_GATE", section=DRIVE, stated=True)

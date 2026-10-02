@@ -54,4 +54,4 @@ T_BLOCK   D_BALL / that speed, how long it
 
 - [`research/Sensors/hd-ds25cm-3mm.md`](../../research/Sensors/adafruit-2167-ir-break.md): the module's ratings, its lead colours, and the bench reading of the two output levels
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): what reaches an unpowered pin, and the 3.3 V rail available to external circuits
-- [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what pin [40](../../pin-assignment.md "Receiver output of the ball drain gate") costs
+- [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") costs

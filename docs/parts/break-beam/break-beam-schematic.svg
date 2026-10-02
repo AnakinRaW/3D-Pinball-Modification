@@ -11,7 +11,7 @@
   <text x="230" y="184" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
 
   <circle cx="240" cy="240" r="6" fill="#2c3e50"/>
-  <text x="230" y="244" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50" data-pin="Receiver output of the ball drain gate">PIN 40</text>
+  <text x="230" y="244" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50" data-pin="Receiver output of the ball drain gate">PIN 31</text>
 
   <circle cx="240" cy="300" r="6" fill="#1a1a1a"/>
   <text x="230" y="304" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
@@ -58,7 +58,7 @@
   <line x1="440" y1="228" x2="560" y2="228" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="440" y1="384" x2="560" y2="384" stroke="#1a1a1a" stroke-width="2.5"/>
 
-  <!-- signal: receiver OUT to Teensy pin 40 -->
+  <!-- signal: receiver OUT to the Teensy -->
   <line x1="560" y1="408" x2="400" y2="408" stroke="#2c3e50" stroke-width="2.5"/>
   <line x1="400" y1="408" x2="400" y2="240" stroke="#2c3e50" stroke-width="2.5"/>
   <line x1="400" y1="240" x2="240" y2="240" stroke="#2c3e50" stroke-width="2.5"/>

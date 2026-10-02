@@ -2,106 +2,110 @@
 
 ## Allocation
 
-| Pin | Signal | Peripheral | Subsystem | Settled in |
-|---|---|---|---|---|
-| 2 | DIN to the DFR0954 | I²S2 TX_DATA | Audio | — |
-| 3 | LRC to the DFR0954 | I²S2 TX_SYNC | Audio | — |
-| 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | Audio | — |
-| 11 | MOSI, shared SPI bus | SPI MOSI | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 12 | MISO, shared SPI bus | SPI MISO | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 13 | SCK, shared SPI bus | SPI SCK | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 29 | CLOCK, common LED pulse | FlexPWM3.1 channel A | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 33 | MCLK, unused by the amplifier | I²S2 MCLK | Audio | — |
-| 36 | CS-A, converter for channels 1 to 8 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 37 | CS-B, converter for channels 9 to 16 | SPI CS | IR ball sensing | [ir-reflective](parts/ir-reflective/design.md) |
-| 40 | Receiver output of the ball drain gate | plain digital input | Break beam | [break-beam](parts/break-beam/design.md) |
+| Pin | Signal | Peripheral | Subsystem |
+|---|---|---|---|
+| 0 | Servo signal | FlexPWM1.1 channel X | [Servo](parts/servo/design.md) |
+| 2 | DIN to the DFR0954 | I²S2 TX_DATA | [Audio](parts/audio/design.md) |
+| 3 | LRC to the DFR0954 | I²S2 TX_SYNC | [Audio](parts/audio/design.md) |
+| 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | [Audio](parts/audio/design.md) |
+| 11 | MOSI, data to the converters | SPI MOSI | [IR ball sensing](parts/ir-reflective/design.md) |
+| 12 | MISO, data from the converters | SPI MISO | [IR ball sensing](parts/ir-reflective/design.md) |
+| 13 | SCK, clock to the converters | SPI SCK | [IR ball sensing](parts/ir-reflective/design.md) |
+| 14 | CLOCK, common LED pulse | QuadTimer3 channel 2 | [IR ball sensing](parts/ir-reflective/design.md) |
+| 15 | CS-A, converter for channels 1 to 8 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
+| 16 | CS-B, converter for channels 9 to 16 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
+| 18 | SDA to the rotary sensors | Wire SDA | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
+| 19 | SCL to the rotary sensors | Wire SCL | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
+| 31 | Receiver output of the ball drain gate | plain digital input | [Break beam](parts/break-beam/design.md) |
+| 32 | Toggle switch, its function set by each game | plain digital input | [Controls](parts/controls/design.md) |
+| 33 | MCLK, unused by the amplifier | I²S2 MCLK | [Audio](parts/audio/design.md) |
+| 34 | Solenoid sense 3 | plain digital input | [Solenoids](parts/solenoid/design.md) |
+| 35 | Solenoid sense 2 | plain digital input | [Solenoids](parts/solenoid/design.md) |
+| 36 | Solenoid sense 1 | plain digital input | [Solenoids](parts/solenoid/design.md) |
+| 37 | Solenoid trigger 4 | plain digital output | [Solenoids](parts/solenoid/design.md) |
+| 38 | Solenoid trigger 3 | plain digital output | [Solenoids](parts/solenoid/design.md) |
+| 39 | Solenoid trigger 2 | plain digital output | [Solenoids](parts/solenoid/design.md) |
+| 40 | Solenoid trigger 1 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 
 ### What this allocation costs
+
+A port or a bus needs all of its pins at once, so taking one of its pins costs the whole port.
 
 | Lost | To |
 |---|---|
 | I²S2 | Audio, pins 2, 3, 4, 33 |
-| CAN1 TX on pin 11 | Sensors. CAN1 TX has 22 as its alternative, so CAN1 survives |
-| Serial7 | Sensors, pin 29. It needs 28 and 29 together, so taking one kills it, and 28 stays free as a plain pin |
-| The whole SPI bus | Sensors, pins 11, 12, 13, 36 and 37. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus. Pin 10, the third chip select of the set, stays free and can serve a device on another bus |
-| SPI1, by consequence | Sensors. With SPI reserved, the next SPI device lands on SPI1, which the display reservation below now holds |
-| 10 of 27 PWM channels | Audio 2, 3, 4, 33; sensors 11, 12, 13, 29, 36, 37. Every pin in the allocation is PWM-capable |
-| A16 | Break beam, pin 40 |
-| FlexPWM3.1, as a free-running timer | Sensors, pin 29, which generates the LED pulse in hardware at the phase frequency the driver sets. Pin 28 sits on the same submodule and shares that frequency, so it can still serve as a plain pin but not as a PWM output at a rate of its own |
+| The whole SPI bus | Sensors, pins 11, 12, 13, 15 and 16. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus |
+| QuadTimer3, all four channels | Sensors, pin 14. Channel 3 starts the read block and has no pin, and channels 0 and 1 stay unused because all four share one interrupt |
+| Serial3 and S/PDIF | Sensors, pins 14 and 15 |
+| Wire1 and Serial4 | Sensors, pin 16 |
+| Wire | Rotary sensor, pins 18 and 19 |
+| Serial1 and CAN2 | Servo, pin 0 |
+| FlexPWM1.1, at 50 Hz | Servo, pin 0. Pins 42 and 43 share its frequency and carry the SD card instead |
+| CAN3 | Break beam, pin 31 |
+| Serial8 | Solenoids, pins 34 and 35 |
+| 14 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37 |
+| 8 of 18 analog inputs | A0, A1, A2 sensors; A4, A5 rotary sensor; A14, A15, A16 solenoids |
+
+CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](../firmware/general-design.md#timers-a-driver-owns) sets out for the firmware.
 
 ## Reserved
 
-Held for a subsystem that is designed but not yet built. A reserved pin is not free: taking it means moving the subsystem that holds it.
+A reserved pin is held for a subsystem whose design is not finished yet. It is not free, and taking it means moving the subsystem that holds it.
 
-| Pin | Signal | Peripheral | Subsystem | Held for |
-|---|---|---|---|---|
-| 0 | Bumper trigger 4 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
-| 1 | Bumper sense 1 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
-| 5 | LED chain 1 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 6 | LED chain 2 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 7 | LED chain 3 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 8 | LED chain 4 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 9 | LED chain 5 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 10 | LED chain 6 | plain digital output | Lighting | [lighting](parts/lighting/design.md) |
-| 14 | Bumper sense 2 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
-| 15 | Bumper sense 3 | plain digital input | Bumpers | [bumper](parts/bumper/design.md) |
-| 18 | SDA to the rotary sensors | Wire SDA | Hall | — |
-| 19 | SCL to the rotary sensors | Wire SCL | Hall | — |
-| 20 | Target sense 1 | plain digital input | Targets | — |
-| 21 | Target sense 2 | plain digital input | Targets | — |
-| 23 | Target sense 3 | plain digital input | Targets | — |
-| 24 | Servo signal | PWM | Servo | — |
-| 26 | MOSI to the display | SPI1 MOSI | Display | — |
-| 27 | SCK to the display | SPI1 SCK | Display | — |
-| 28 | CS to the display controller | plain digital output | Display | — |
-| 31 | D/C to the display | plain digital output | Display | — |
-| 32 | Bumper trigger 1 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
-| 34 | Bumper trigger 2 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
-| 35 | Bumper trigger 3 | plain digital output | Bumpers | [bumper](parts/bumper/design.md) |
-| 38 | Target sense 4 | plain digital input | Targets | — |
-| 39 | MISO from the display | SPI1 MISO | Display | — |
-| 41 | Toggle switch, its function set by each game | plain digital input | Controls | [controls](parts/controls/design.md) |
+| Pin | Signal | Peripheral | Subsystem |
+|---|---|---|---|
+| 1 | MISO from the display | SPI1 MISO | Display |
+| 5 | LED chain 1 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 6 | LED chain 2 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 7 | LED chain 3 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 8 | LED chain 4 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 9 | LED chain 5 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 10 | LED chain 6 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 20 | Target sense 1 | plain digital input | Targets |
+| 21 | Target sense 2 | plain digital input | Targets |
+| 22 | Target sense 3 | plain digital input | Targets |
+| 23 | Target sense 4 | plain digital input | Targets |
+| 24 | SCL to the touch controller | Wire2 SCL | Display |
+| 25 | SDA to the touch controller | Wire2 SDA | Display |
+| 26 | MOSI to the display | SPI1 MOSI | Display |
+| 27 | SCK to the display | SPI1 SCK | Display |
+| 28 | CS to the display controller | plain digital output | Display |
+| 29 | D/C to the display | plain digital output | Display |
 
-### What the reservations cost
+### What the reserved pins cost
 
 | Lost | To |
 |---|---|
 | Serial2 | Lighting, pins 7 and 8 |
-| The third SPI chip select | Lighting, pin 10 |
-| CAN3 | Display, pin 31. It needs 30 and 31 together, so taking one kills it, and 30 stays free as a plain pin |
-| Serial1 and CAN2 | Bumpers, pins 0 and 1 |
-| Serial8 | Bumpers, pins 34 and 35 |
-| Serial3 and S/PDIF | Bumpers, pins 14 and 15 |
-| CAN1 | Targets, pin 23, the only CAN1 RX. TX still has pin 22 once pin 11 carries MOSI, so the port dies on its receive side alone |
-| Wire2 and Serial6 | Servo, pin 24. Both need the pair 24 and 25 |
-| I²S1 | Targets, pins 20, 21 and 23. Audio runs on I²S2, so nothing wanted it |
-| 13 of 18 analog inputs | A0, A1 bumpers; A4, A5 hall; A6, A7, A9 and A14 targets; A10 servo; A12, A13, A15 display; A17 the toggle switch. Free: A2, A3 on pins 16 and 17, A8 on 22, A11 on 25 |
+| I²S1 | Targets, pins 20, 21 and 23 |
+| CAN1 | Targets, pins 22 and 23 |
+| Wire2 and Serial6 | Display, pins 24 and 25 |
+| Serial7 | Display, pins 28 and 29 |
+| 8 of 18 analog inputs | A6 to A9 targets; A10 to A13 display. Free: A3 on 17, A17 on 41 |
 
-**The display's touch controller shares `Wire`.** It is capacitive and answers to 0x38 against the AS5600's 0x36, so both sit on pins 18 and 19 and the touchscreen costs no pin of its own.
+The display's touch controller sits on `Wire2`, pins 24 and 25, because `Wire` belongs to the rotary sensor's driver. Sharing `Wire` would save the two pins and cost DMA or reads split across ticks in that driver.
 
-**One AS5600, on `Wire`.** Its address is fixed at 0x36 with no address pins, so a second one on the same two wires collides with the first. A second sensor takes `Wire1` on pins 16 and 17, or a TCA9548A multiplexer on pins 18 and 19, which carries up to eight and costs no further pin.
+A second AS5600 needs a TCA9548A multiplexer on pins 18 and 19, because the AS5600's address 0x36 is fixed. The multiplexer carries up to eight sensors and costs no further pin.
 
-**Where the next pins come from.** Five edge pins remain: 16, 17, 22, 25 and 30. The first four are analog-capable, and 22 and 25 are the only two that can carry PWM. Beyond them lie the bottom-pad pins 42 to 54, which need soldering to the underside. A port expander on the `Wire` bus adds sixteen inputs for no further pin.
+Three edge pins remain, 17, 30 and 41, and none of them can carry PWM. Beyond them, the QSPI memory pads on the underside carry pins 48 to 54, which need soldering.
 
 ## Signal names
 
 | Name | What it is |
 |---|---|
-| **RX**, **TX** | Receive and transmit. RX is a pin data arrives on, TX one it leaves on. Two devices are wired crossed: TX to RX, RX to TX |
-| **Serial** (RX, TX) | UART — a byte stream between exactly two devices, one wire per direction. There is no addressing, so each connected device needs its own port |
-| **SPI** (SCK, MOSI, MISO, CS) | Synchronous bus sharing three wires across several devices: SCK the clock, MOSI (master out, slave in) data leaving the Teensy, MISO (master in, slave out) data arriving. Each device needs its own CS (chip select) in addition, pulled low to address it. Fast; costs 3 pins plus one per device |
-| **Wire** (SDA, SCL) | I²C — two wires total, SDA for data and SCL for the clock, shared by any number of devices, each answering to its own address. Slower than SPI, and the pin cost stays at two however many devices hang on it |
+| **RX**, **TX** | Receive and transmit. RX is a pin data arrives on, TX one it leaves on. Two devices are wired crossed, TX to RX and RX to TX |
+| **Serial** (RX, TX) | UART, a byte stream between exactly two devices with one wire per direction. It has no addressing, so each connected device needs its own port |
+| **SPI** (SCK, MOSI, MISO, CS) | Synchronous bus sharing three wires across several devices. SCK carries the clock, MOSI (master out, slave in) the data leaving the Teensy, MISO (master in, slave out) the data arriving. Each device needs its own CS (chip select) in addition, pulled low to address it. Fast, and costs 3 pins plus one per device |
+| **Wire** (SDA, SCL) | I²C, two wires shared by any number of devices, SDA for data and SCL for the clock. Each device answers to its own address. Slower than SPI, and the pin cost stays at two however many devices hang on it |
 | **CAN** (RX, TX) | Automotive differential bus. Needs an external transceiver chip |
-| **PWM** | A square wave whose duty cycle the hardware varies by itself. LED brightness, motor and solenoid drive |
+| **PWM** | A square wave the hardware generates at a set duty cycle. LED brightness, motor and solenoid drive |
 | **Analog in** (A0–A17) | The pin reads a voltage between 0 and 3.3 V as a number instead of only high or low |
 | **S/PDIF** | Digital audio in and out |
-| **LED** | The orange LED soldered to the board, on pin 13 |
+| **LED** | The orange LED soldered to the board, on pin 13, which also carries SPI SCK. It takes roughly 3 of the 4 mA recommended per pin whenever the pin is high |
 
 ## Shared resources
 
-Read `RX 0, TX 1` as: this port's RX signal sits on pin 0, its TX on pin 1. A slash lists alternatives — `CS 10 / 36 / 37` means any one of those three can serve as CS.
-
-A bus needs all of its pins at the same time. Using pin 19 as a plain output therefore kills `Wire` even though pin 18 stays free, because `Wire` needs both. The cost of spending a pin is every peripheral that needed it, not the one pin.
+`RX 0, TX 1` means that the port's RX signal sits on pin 0 and its TX on pin 1. A slash lists alternatives, so `CS 10 / 36 / 37` means that any one of the three can serve as CS.
 
 | Resource | Pins |
 |---|---|
@@ -115,26 +119,16 @@ A bus needs all of its pins at the same time. Using pin 19 as a plain output the
 | Serial8 | RX 34, TX 35 |
 | SPI | MOSI 11, MISO 12, SCK 13, CS 10 / 36 / 37 |
 | SPI1 | MOSI 26, MISO 1 / 39, SCK 27, CS 0 / 38 |
-| SPI2 | MOSI 43 / 50, MISO 42 / 54, SCK 45 / 49, CS 44 — none on the edge headers |
+| SPI2 | MOSI 43 / 50, MISO 42 / 54, SCK 45 / 49, CS 44 (none on the edge headers) |
 | Wire | SDA 18, SCL 19 |
 | Wire1 | SDA 17, SCL 16 |
 | Wire2 | SDA 25, SCL 24 |
 | CAN1 | RX 23, TX 22 / 11 |
 | CAN2 | RX 0, TX 1 |
 | CAN3 | RX 30, TX 31 |
-| I²S1 | MCLK 23, BCLK 21, LRCLK 20, data out 7 / 32 / 9 / 6, data in 8 / 38 — the Teensy Audio library's pin set, plus `Wire` (18, 19) for the codec |
+| I²S1 | MCLK 23, BCLK 21, LRCLK 20, data out 7 / 32 / 9 / 6, data in 8 / 38 (the Teensy Audio library's pin set) |
 | I²S2 | MCLK 33, BCLK 4, LRCLK 3, data out 2, data in 5 |
-
-## Pins claimed by two peripherals
-
-| Pins | Claimed by |
-|---|---|
-| 0, 1 | Serial1 and CAN2 |
-| 11 | SPI MOSI and CAN1 TX |
-| 13 | SPI SCK and the onboard LED. The LED takes roughly 3 of the 4 mA recommended per pin whenever the pin is high |
-| 14, 15 | Serial3 and S/PDIF out/in |
-| 16, 17 | Serial4 and Wire1 |
-| 24, 25 | Serial6 and Wire2 |
+| S/PDIF | out 14, in 15 |
 
 ## Capabilities on the edge headers
 
@@ -144,14 +138,14 @@ A bus needs all of its pins at the same time. Using pin 19 as a plain output the
 | Analog in | A0–A13 = 14–27 in order, A14–A17 = 38, 39, 40, 41 | 18 |
 | Interrupt | all digital pins | — |
 
-Pins 14–27 and 38–41 are the analog-capable ones, so any digital use of those costs an analog input.
+Any digital use of an analog-capable pin costs its analog input.
 
 ## Sources
 
-- [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf) — rev 4. Every pin figure above
-- [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png) — the LED and its series resistor on the pin 13 net, and that no buffer stands between them and the pin
-- [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html) — pin counts, microSD via SDIO, Ethernet PHY, USB host
-- [PWM and tone on Teensy](https://www.pjrc.com/teensy/td_pulse.html) — the PWM pin to timer table, that pins on one timer share a frequency, and that a lower frequency buys resolution
-- [`research/teensy-4.1.md`](research/teensy-4.1.md) — electrical limits per pin
+- [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf), rev 4: every pin figure above
+- [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png): the LED and its series resistor on the pin 13 net, and that no buffer stands between them and the pin
+- [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html): pin counts, microSD via SDIO, Ethernet PHY, USB host
+- [PWM and tone on Teensy](https://www.pjrc.com/teensy/td_pulse.html): the PWM pin to timer table, that pins on one timer share a frequency, and that a lower frequency buys resolution
+- [`research/teensy-4.1.md`](research/teensy-4.1.md): electrical limits per pin
 
-Cross-check against PJRC's headline counts: 42 header pins + 6 microSD + 7 bottom pads = 55 total I/O, and 27 PWM on the headers + 8 on the underside = 35 PWM. Both match the product page. The [technical specifications table](https://www.pjrc.com/teensy/techspecs.html) lists 2 SPI ports where the product page says 3; SPI2 falls entirely on pins 42–54, which accounts for the difference.
+Cross-check against PJRC's headline counts: 42 header pins + 6 microSD + 7 bottom pads = 55 total I/O, and 27 PWM on the headers + 8 on the underside = 35 PWM. Both match the product page. The [technical specifications table](https://www.pjrc.com/teensy/techspecs.html) lists 2 SPI ports where the product page says 3. SPI2 falls entirely on pins 42–54, which accounts for the difference.

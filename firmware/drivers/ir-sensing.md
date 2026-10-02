@@ -21,7 +21,7 @@ Game logic can still poll the channel state with `State getState(channel, out ms
 
 Reading goes on continuously, in phases of one fixed length `T`. A phase toggles the emitters at its start, waits while the sensors answer that toggle, reads every registered channel, and evaluates what it read. The channels hang on converters that the Teensy reads over SPI. Reading one channel is one conversion: the converter samples the voltage at that channel and shifts a ten-bit number back over that bus.
 
-A free-running counter in the Teensy controls those phases, FlexPWM3.1, driven from the 150 MHz peripheral clock and recorded in [`docs/pin-assignment.md`](../../docs/pin-assignment.md). It drives the CLOCK conductor, which switches every sensor LED to on and off. One cycle is `2T`, a dark phase and then a lit one at 50 % duty.
+A free-running counter in the Teensy controls those phases, FlexPWM3.1, driven from the 150 MHz peripheral clock and recorded in [`docs/pin-assignment.md`](../../docs/pin-assignment.md). It drives the CLOCK conductor, which switches every sensor LED to on and off. One cycle is `2T`, a dark phase and then a lit one at 50 % duty. The driver owns channels 2 and 3 of QuadTimer3, so no other code may use them, `analogWrite()` included.
 
 The firmware never stops or stretches that counter, so a phase is a clock the driver cannot hold.
 
@@ -70,8 +70,8 @@ No stage of a phase runs in the main loop. The Teensy's hardware components are 
 
 | Stage | Constraint | Hardware |
 |---|---|---|
-| Phase start | a constant phase length | FlexPWM3.1, the counter that controls the phases |
-| Settling | no channel read before `t_inv` into the phase | the same counter, whose compare at `t_first` starts the transfer |
+| Phase start | a constant phase length | channel 2 of QuadTimer3, the counter that controls the phases |
+| Settling | no channel read before `t_inv` into the phase | channel 3, which channel 2 restarts at every phase start and whose compare at `t_first` starts the transfer |
 | Reading | all channels read before the phase ends | a DMA transfer, with the core free for the loop |
 | Evaluating | finished before the next block's interrupt arrives | the interrupt of the last conversion |
 
@@ -144,7 +144,7 @@ begin():
     SPI.begin()
 
     planPhase(n)                   # T and t_first from the channel count, or refuse to run
-    startPhaseCounter()            # FlexPWM3.1, free-running from here
+    startPhaseCounter()            # QuadTimer3 channels 2 and 3, free-running from here
     discard(SETTLING_CYCLES)       # sensors and the converters' reference settle
     calibrate()
     deviceMonitor.watch(IrSensing, self)     # asks failed() every 100 ms from here on

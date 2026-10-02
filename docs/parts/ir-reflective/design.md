@@ -119,8 +119,8 @@ Both have to pass.
 
 Which pins this subsystem takes, and what each one locks out, is in [`pin-assignment.md`](../../pin-assignment.md). What constrained the choice:
 
-- **SPI is a bus.** SCK, MOSI and MISO are shared with whatever else arrives later, and each device adds only its own chip select.
-- **Two chip selects need no special function, the clock line takes a PWM channel** so the emitter pulse leaves the timer's compare logic rather than an interrupt. None of the three is analog-capable, so the analog inputs stay free.
+- **The SPI bus is reserved for the converters.** A second device on this bus will not work reliably, because U3 drives MISO whenever the Teensy is powered, even while no converter is selected. Each converter adds only its own chip select.
+- **Two chip selects need no special function, the clock line takes a PWM channel** so the emitter pulse leaves the timer's compare logic rather than an interrupt.
 
 ## Software
 
@@ -186,7 +186,7 @@ The channels are digitised on the board and cross to the Teensy over SPI. A Teen
 
 #### Multiplexing
 
-Using N channels read by the Teensy directly would also need N of its eighteen analog pins, and therefore requires sacrificing pins that carry the I²C buses or the serial ports. Two analog-digital converters (ADC) on the mainboard bring the pin cost down to a shared SPI bus and two chip selects.
+Using N channels read by the Teensy directly would also need N of its eighteen analog pins, and therefore requires sacrificing pins that carry the I²C buses or the serial ports. Two analog-digital converters (ADC) on the mainboard bring the pin cost down to one SPI bus and two chip selects.
 
 **The MCP3008** ([datasheet](../../datasheets/MCP3004-3008-Microchip.pdf)) is an eight-channel ten-bit ADC with an SPI interface containing also an internal channel multiplexer and its own sample-and-hold. Two of them cover sixteen positions.
 

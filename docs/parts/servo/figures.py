@@ -81,8 +81,8 @@ ds("v_ol_max", 0.15, "V", sheet=MCU, src="Table 22, low-level output voltage VOL
 ds("i_oh_test", 1, "mA", sheet=MCU, stated=False, src="Table 22, the current VOH and VOL "
    "are specified at for ipp_dse 011 to 111")
 ds("r_keeper_min", 105, "kΩ", sheet=MCU, src="Table 22, keeper circuit resistance "
-   "minimum; Table 86 gives GPIO_AD_B0_12, which PJRC's core_pins.h maps to pin 24, a "
-   "keeper on reset", group="LEVELS", section=LEVELS, stated=True)
+   "minimum; Table 86 gives every edge pin a keeper on reset",
+   group="LEVELS", section=LEVELS, stated=True)
 dec("r_pd", 10, "kΩ", src="R1, from the pin to ground, chosen to hold U1's input under its "
     "low level against the pin's keeper after a reset, at a third of a milliamp while the "
     "pin drives high", group="LEVELS", section=LEVELS, stated=True)
@@ -334,9 +334,8 @@ _I("C1 is bought at twice the rail",
    lambda v: v.v_cap_rating >= 2 * v.v_5v)
 
 for _text, _why in [
-    ("2", "FlexPWM1's submodule 2, the one the servo pin sits on, as the driver names it"),
-    ("1", "the submodule's bit in FlexPWM1's control registers, and the step past the "
-          "frame's last count, as the driver writes them"),
+    ("1", "FlexPWM1's submodule 1, the one the servo pin sits on, as the driver names it, "
+          "and the step past the frame's last count, as the driver writes it"),
     ("40", "t_load_timeout in milliseconds, as the driver writes it"),
 ]:
     MODEL.aside(_text, _why)

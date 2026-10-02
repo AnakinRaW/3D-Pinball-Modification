@@ -46,7 +46,7 @@ public:
     Fault failed() const override { return {blocked() && elapsedMs(brokenAtMs_, kFailMs), 0}; }
 
 private:
-    static constexpr uint8_t  kPin    = 40;      // pin-assignment.md: Receiver output of the ball drain gate
+    static constexpr uint8_t  kPin    = 31;      // pin-assignment.md: Receiver output of the ball drain gate
     static constexpr uint8_t  kSource = 0;       // the one gate this build has
     static constexpr uint32_t kDeadUs = 10000;   // 10 ms, edges inside it are one crossing
     static constexpr uint32_t kFailMs = 5000;    // 5 s, a beam broken this long has failed

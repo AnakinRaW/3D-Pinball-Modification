@@ -40,7 +40,7 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 
 | Interrupt | Driver | Deadline | Priority |
 |---|---|---|---|
-| FlexPWM3.1 compare, starting the read block | IR ball sensing | microseconds, the read block has to end inside its phase | 64 |
+| QuadTimer3 compare, starting the read block | IR ball sensing | microseconds, the read block has to end inside its phase | 64 |
 | The interrupt after each SPI conversion | IR ball sensing | microseconds | 64 |
 | Pin interrupts, one IRQ shared by every pin | Solenoids, break beam, controls | milliseconds | 96 |
 | `IntervalTimer`, the driver tick | Magnetic rotary sensor, solenoids, device monitor, storage | its next tick | 96 |

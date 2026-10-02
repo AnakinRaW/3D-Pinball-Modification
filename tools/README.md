@@ -67,14 +67,13 @@ Each check reports on a separate line, and any of them can fail the run:
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated |
-| Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), and the table gives no pin to two signals and no signal twice |
+| Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
 | which way a figure moves | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
 | readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
 | what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
 | readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
 | datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
 | the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
-
 A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/` or `firmware/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 
 Flags:
@@ -108,11 +107,15 @@ A Teensy pin is typed once, in [`docs/pin-assignment.md`](../docs/pin-assignment
 
 | In | The marker |
 |---|---|
-| Markdown | A link to the table, titled with the signal: `[34](../../pin-assignment.md "Solenoid trigger 2")` |
-| A fenced block | The line's comment, naming in order the signals of the numbers right of its `=`: `kSense[kSenses] = {1, 14, 15};  // pin-assignment.md: Solenoid sense 1 to 3` |
-| A drawing | `data-pin` on the text element, several signals separated by semicolons: `<text data-pin="Solenoid sense 1">pin 1</text>` |
+| Markdown | A link to the table, titled with the signal: `[39](../../pin-assignment.md "Solenoid trigger 2")` |
+| A fenced block | The line's comment, naming in order the signals of the numbers right of its `=`: `kSense[kSenses] = {36, 35, 34};  // pin-assignment.md: Solenoid sense 1 to 3` |
+| A drawing | `data-pin` on the text element, several signals separated by semicolons: `<text data-pin="Solenoid sense 1">pin 36</text>` |
 
-`Solenoid sense 1 to 3` stands for the three signals it spans. The figure passes skip a marked number, so a pin needs no aside in the model. A pin number that carries no marker is not checked, which is right for a connector pin or a pin the research notes name.
+`Solenoid sense 1 to 3` stands for the three signals it spans. The figure passes skip a marked number, so a pin needs no aside in the model.
+
+A number the text calls a Teensy pin in so many words, as in "Teensy pin 31", fails the run without its marker. A comment in a drawing cannot carry one, so it names no pin number.
+
+When a diff moves a pin in the table, its old number is listed under **Worth knowing** wherever it still stands unmarked. That covers the first column of a table headed Pin under a heading that names the Teensy, and every line that names a pin together with the Teensy, PJRC or one of its peripherals. A timer or a port the table no longer names is listed the same way. The pin table, the research notes and the datasheets are left out, since they describe the board rather than this build's allocation. Any other unmarked pin number is not checked, which is right for a connector pin or an IC's.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
 

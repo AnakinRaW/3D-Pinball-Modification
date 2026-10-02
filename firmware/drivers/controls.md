@@ -45,7 +45,7 @@ public:
     }
 
 private:
-    static constexpr uint8_t  kPin     = 41;     // pin-assignment.md: Toggle switch
+    static constexpr uint8_t  kPin     = 32;     // pin-assignment.md: Toggle switch
     static constexpr uint8_t  kClosed  = 1;      // the position that closes the contact
     static constexpr uint32_t kQuietUs = 50000;  // edges this soon after a report are bounce
 

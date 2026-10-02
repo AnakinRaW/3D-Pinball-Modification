@@ -930,15 +930,34 @@ def pass_drawings(model: Model, rep: Report):
 # ---------------------------------------------------------------------------
 PIN_TABLE = ROOT / "docs" / "pin-assignment.md"
 # Markdown marks a pin as a link to the table, titled with the signal:
-#   [34](../../pin-assignment.md "Solenoid trigger 2")
+#   [39](../../pin-assignment.md "Solenoid trigger 2")
 PIN_LINK_RE = re.compile(r'\[(\d+)\]\(([^)\s]*pin-assignment\.md)(?:#[^)\s]*)?\s+"([^"]+)"\)')
 # A fenced line names, in its comment, the signals of the numbers right of its `=`:
-#   kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Solenoid trigger 1 to 4
+#   kTrigger[kCoils] = {40, 39, 38, 37};  // pin-assignment.md: Solenoid trigger 1 to 4
 PIN_NOTE_RE = re.compile(r"//\s*[\w./-]*pin-assignment\.md:\s*(.+?)\s*$")
-# A drawing puts them on the text element: <text data-pin="Solenoid sense 1">pin 1</text>
+# A drawing puts them on the text element: <text data-pin="Solenoid sense 1">pin 36</text>
 DATA_PIN_RE = re.compile(r'<(\w+)\b[^>]*\bdata-pin="([^"]+)"[^>]*>([^<]*)<')
 PIN_NUM_RE = re.compile(r"(?<![\w.])\d+(?![\w.])")
 PIN_RANGE_RE = re.compile(r"^(.*?)(\d+) to (\d+)$")
+# A sentence or a drawing that calls a number the Teensy's pin in so many words, as
+# "Teensy pin 31" or "the Teensy's pin 0" do, names an allocation and carries the
+# mark. A comment in a drawing has no element to carry one, so it names no number.
+NAMED_PIN_RE = re.compile(rf"\bTeensy(?:'s)? pins? (\d+)(?![\w.])"
+                          rf"(?!\s?(?:{UNIT_ALT})(?![\wµ°]))")
+# A line speaks of the Teensy's pins when it names the board, its maker, its pads or
+# one of its peripherals. A pin a diff moves is looked for in such lines alone, since
+# a connector's or an IC's pin 1 is no Teensy pin.
+PIN_CONTEXT_RE = re.compile(r"Teensy|PJRC|core_pins|GPIO_|FlexPWM|QuadTimer|I²S\d|"
+                            r"Serial\d|CAN\d|S/PDIF|\bWire\d?\b|\bSPI\d?\b|\bPWM\b|[Aa]nalog")
+PERIPHERAL_RE = re.compile(r"FlexPWM\d\.\d|QuadTimer\d|I²S\d|Serial\d|CAN\d|"
+                           r"\bWire\d?\b|\bSPI\d?\b")
+LOOSE_NUM_RE = re.compile(rf"(?<![\w.])(\d{{1,2}})(?![\w.])(?!\s?(?:{UNIT_ALT})(?![\wµ°]))")
+PIN_PHRASE_RE = re.compile(r"\b[Pp]ins? \d+")
+# What a drawing shows, its text and its comments, without the attributes.
+SVG_TEXT_RE = re.compile(r"<!--(.*?)-->|>([^<>]+)<")
+# The research notes describe the board and the stock machine rather than this
+# build's allocation, and the datasheets are the manufacturers' own.
+UNALLOCATED = (ROOT / "docs" / "research", ROOT / "docs" / "datasheets")
 
 
 @dataclasses.dataclass
@@ -1073,6 +1092,11 @@ def pass_pins(files, rep: Report):
         refs += found
         for ln, a, b in taken:
             spans[(path.resolve(), ln)].append((a, b))
+    for path in files:
+        for line, number in named_pins(path):
+            rep.error(f"{_rel(path)}:{line} names Teensy pin {number} without the mark; "
+                      f"mark it with the signal it carries, or leave the number out",
+                      kind="pin", key="named")
     good = 0
     for r in refs:
         if r.signal not in table:
@@ -1084,6 +1108,117 @@ def pass_pins(files, rep: Report):
         else:
             good += 1
     return table, refs, spans, good
+
+
+def _allocating(path: pathlib.Path) -> bool:
+    """Whether a file's pin numbers speak of this build's allocation."""
+    p = pathlib.Path(path).resolve()
+    return p != PIN_TABLE.resolve() and not any(d.resolve() in p.parents
+                                                for d in UNALLOCATED)
+
+
+def _unmarked_lines(path: pathlib.Path) -> list[str]:
+    """The file's lines with every marked pin cut out, so what is left is unmarked.
+
+    A drawing keeps what it shows, its text and its comments, and drops the
+    attributes, whose coordinates are numbers too.
+    """
+    out = []
+    for raw in _norm(path.read_text(encoding="utf-8")).split("\n"):
+        if PIN_NOTE_RE.search(raw):
+            raw = ""
+        raw = PIN_LINK_RE.sub("", raw)
+        if path.suffix == ".svg":
+            raw = DATA_PIN_RE.sub("<", raw)
+            raw = " | ".join(a or b for a, b in SVG_TEXT_RE.findall(raw))
+        out.append(raw)
+    return out
+
+
+def named_pins(path: pathlib.Path) -> list[tuple[int, str]]:
+    """Every number the file calls a Teensy pin without the mark, with its line."""
+    if not _allocating(path):
+        return []
+    return [(i, m.group(1)) for i, line in enumerate(_unmarked_lines(path), 1)
+            for m in NAMED_PIN_RE.finditer(line)]
+
+
+def _pin_rows(text: str) -> list[tuple[int, str, str]]:
+    """Pin, signal and peripheral of every row in the tables headed Pin, Signal."""
+    rows, inside = [], False
+    for raw in text.split("\n"):
+        if not raw.startswith("|"):
+            inside = False
+            continue
+        cells = [c.strip() for c in raw.strip().strip("|").split("|")]
+        if cells[:2] == ["Pin", "Signal"]:
+            inside = True
+        elif inside and len(cells) >= 3 and cells[0].isdigit():
+            name = re.sub(r"[*`]", "", cells[1]).split(",")[0].strip()
+            rows.append((int(cells[0]), name, cells[2]))
+    return rows
+
+
+def allocating_files() -> list[pathlib.Path]:
+    return [p for d in (ROOT / "docs", ROOT / "firmware") for p in sorted(d.rglob("*"))
+            if p.suffix in {".md", ".svg", ".py"} and p.is_file() and _allocating(p)]
+
+
+def pass_moved_pins(base: str, rep: Report, files=None):
+    """Where a pin this diff moved in the table still stands under its old number.
+
+    A marked pin follows the table automatically. A number written without the mark
+    does not, and neither does the name of a timer or a port the table no longer
+    gives any pin. Both are listed for a reading rather than failed, because only
+    a reader tells a stale pin from a capability the sentence describes.
+    """
+    try:
+        old_text = subprocess.run(["git", "show", f"{base}:{_rel(PIN_TABLE)}"],
+                                  cwd=ROOT, capture_output=True, text=True,
+                                  encoding="utf-8", check=True).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return
+    old, new = _pin_rows(old_text), _pin_rows(PIN_TABLE.read_text(encoding="utf-8"))
+    now = {signal: pin for pin, signal, _ in new}
+    moved = {pin for pin, signal, _ in old if now.get(signal) != pin}
+    named = lambda rows: {m.group() for _, _, cell in rows
+                          for m in PERIPHERAL_RE.finditer(cell)}
+    gone = [(g, re.compile(rf"(?<!\w){re.escape(g)}(?!\.?\d)"))
+            for g in sorted(named(old) - named(new))]
+    if not moved and not gone:
+        return
+    for path in allocating_files() if files is None else files:
+        if not _allocating(path):
+            continue
+        pin_column, heading = False, ""
+        for i, line in enumerate(_unmarked_lines(path), 1):
+            # Under a heading that names the Teensy, the first column of a table
+            # headed Pin holds its pins. Elsewhere a line counts when it names a pin
+            # and the Teensy or one of its peripherals, and then every number in it
+            # does, since "take 36 and 37" names two.
+            if line.startswith("#"):
+                heading = line
+            cells = ([c.strip() for c in line.strip().strip("|").split("|")]
+                     if line.startswith("|") else None)
+            if cells is None:
+                pin_column = False
+            elif cells[0] == "Pin" and "Teensy" in heading:
+                pin_column = True
+                continue
+            hits = [cells[0]] if pin_column and cells and cells[0].isdigit() else []
+            if NAMED_PIN_RE.search(line) or (PIN_PHRASE_RE.search(line)
+                                             and PIN_CONTEXT_RE.search(line)):
+                hits += [m.group(1) for m in LOOSE_NUM_RE.finditer(line)]
+            if hits:
+                nums = [n for n in dict.fromkeys(hits) if int(n) in moved]
+                if nums:
+                    rep.note(f"pin{'s' if len(nums) > 1 else ''} {', '.join(nums)} moved in "
+                             f"this diff and still stand{'' if len(nums) > 1 else 's'} "
+                             f"unmarked in {_rel(path)}:{i}")
+            for g, rx in gone:
+                if rx.search(line):
+                    rep.note(f"{g} left the pin table in this diff and still stands in "
+                             f"{_rel(path)}:{i}")
 
 
 def write_pins(files, rep: Report) -> int:
@@ -1134,8 +1269,10 @@ def main_pins(write: bool) -> int:
     print(f"  files      {len(files)} under docs/ and firmware/, {marked} of them "
           f"marking a pin")
     print()
+    named = sum(1 for t in rep.tags if t == ("pin", "named"))
     _status(not rep.errors, "Teensy pins",
-            f"{good} of {len(refs)} marked pins match the table")
+            f"{good} of {len(refs)} marked pins match the table, "
+            f"{named} named without the mark")
     if rep.errors:
         print()
         print("To fix")
@@ -1793,8 +1930,10 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
                 f"{loose_svg} left with no anchor")
 
     if not whole:
+        named = sum(1 for t in rep.tags if t == ("pin", "named"))
         _status(rep.count("pin") == 0, "Teensy pins",
-                f"{pins_good} of {len(pins)} marked pins match {_rel(PIN_TABLE)}")
+                f"{pins_good} of {len(pins)} marked pins match {_rel(PIN_TABLE)}, "
+                f"{named} named without the mark")
 
     if any(f.rises_with or f.falls_with for f in model.figs.values()):
         directed = pass_direction(model, rep)
@@ -1837,6 +1976,7 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
 
     if not args.no_stale and not whole:
         pass_stale(args.base, rep)
+        pass_moved_pins(args.base, rep, [*own, path])
 
     if rep.notes:
         print()
@@ -1916,6 +2056,7 @@ def main(argv=None):
     if not args.no_stale and not args.write:
         rep = Report()
         pass_stale(args.base, rep)
+        pass_moved_pins(args.base, rep)
         if rep.notes:
             print()
             print("Worth knowing")

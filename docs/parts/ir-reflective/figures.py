@@ -97,6 +97,9 @@ dec("c_entry", 22, "µF", src="C5, printed value")
 dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin")
 dec("t_phase", 600, "µs", src="the phase, sitting on the dwell bound derived below")
 dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initialisations, the stock machine's own half period")
+dec("f_bus", 150, "MHz", src="the RT1062 peripheral clock QuadTimer3 counts, F_BUS_ACTUAL at the Teensy 4.1's default 600 MHz, PJRC's cores/teensy4/clockspeed.c")
+dec("qt_prescale", 4, "×", src="QuadTimer3's prescaler, the smallest power of two whose span holds the fallback phase")
+ds("qt_range", 65536, "steps", src="IMXRT1060RM Rev. 3, section 54.2: every QuadTimer channel counts in 16 bits")
 dec("v_mod_nom", 3.3, "V", group="V_OUT", section=BASE,
     stated=True, src="the D24V5F3 variant chosen for the 3.3 V rail")
 dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
@@ -1637,6 +1640,13 @@ def _(ball_diameter, phases_per_two_values, t_phase_fallback):
     return ball_diameter / (phases_per_two_values * t_phase_fallback)
 
 
+# how long QuadTimer3 counts before its counter wraps, at the prescaler the driver sets
+@fig("t_qt_span", "ms", stated=False, prints="down",
+     rises_with=["qt_range", "qt_prescale"], falls_with=["f_bus"])
+def _(qt_range, qt_prescale, f_bus):
+    return qt_range * qt_prescale / f_bus
+
+
 @fig("knob_firmware_bound", "µs", group="phase", section=KNOB,
      prints="down")
 def _(t_phase, tau_ln2, budget_grain):
@@ -1844,6 +1854,8 @@ _I("the first read sits past the sign inversion",
    lambda v: v.first_read_16 > v.sign_inversion)
 _I("the phase clears its own lower bound",
    lambda v: v.knob_phase_lower <= v.t_phase)
+_I("QuadTimer3's counter spans the longest phase the driver may run",
+   lambda v: v.t_phase < v.t_qt_span and v.t_phase_fallback < v.t_qt_span)
 _I("a DOUT bit is home inside the half period",
    lambda v: v.dout_round_trip < v.half_period)
 _I("both emitter resistors are above the single-channel bound",
@@ -1896,7 +1908,6 @@ for _text, _why in [
     ("0.063 Ω", "IRL540N R_DS(on) at V_GS = 5 V"),
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
     ("270 ns", "t_CSH of DS21295D, the chip-select high time"),
-    ("150 MHz", "the RT1062 peripheral clock the SPI divides from"),
 
     # a package, a pitch, a count: not a measured quantity at all
     ("0805", "the resistor package, a name rather than a value"),

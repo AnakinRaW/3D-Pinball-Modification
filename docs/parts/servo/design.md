@@ -27,7 +27,7 @@ The mechanism has two end positions. The angle of each is set once on the assemb
 
 ### Signal
 
-The Teensy's pin [24](../../pin-assignment.md "Servo signal") drives the servo through the level shifter U1, which turns the 3.3 V pulse into a 5 V pulse. Because the SER0049's datasheet states no input level, a direct drive from the pin was rejected. U1 also protects the Teensy's pin against faults on the servo's cable.
+The Teensy's pin [0](../../pin-assignment.md "Servo signal") drives the servo through the level shifter U1, which turns the 3.3 V pulse into a 5 V pulse. Because the SER0049's datasheet states no input level, a direct drive from the pin was rejected. U1 also protects the Teensy's pin against faults on the servo's cable.
 
 R1 pulls the pin to ground through 10 kΩ. The servo thus gets no pulse from a floating pin. R3 with 2.2 kΩ between the Teensy and U1 protects the Teensy's pin with the machine off and the Teensy on USB. The pin then delivers at most 1.83 mA. R2 with 1 kΩ between U1 and the servo protects U1 against a signal wire shorted to 5 V or ground.
 
@@ -43,7 +43,7 @@ The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground 
 
 | Signal | What the pin has to be |
 |---|---|
-| Servo signal | A PWM pin. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [24](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.2, only with pins 46 and 47, and the SD card holds both |
+| Servo signal | A PWM pin. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [0](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.1, only with pins 42 and 43, and the SD card holds both |
 
 [`pin-assignment.md`](../../pin-assignment.md) lists what the pin costs elsewhere in the build.
 
