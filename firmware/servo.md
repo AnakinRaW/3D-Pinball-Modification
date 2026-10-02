@@ -8,7 +8,7 @@ The servo is used in the ball drain as part of the ball separator. It moves a sm
 
 The driver knows the mechanism's two end positions, and `moveTo()` takes the servo to one of them. Their angles, in whole degrees, are the constants `kStart` and `kEnd`. They are set once on the assembled machine.
 
-## Event
+## Driver events
 
 The servo has no feedback line, so the driver cannot tell when a move has ended, and it publishes no event. `position()` gives the end position last moved to. A component that must know the servo has arrived waits a fixed travel time instead or uses other detection methods that imply the servo moved.
 
@@ -22,19 +22,23 @@ PWMServo sets the timer of pin [24](../docs/pin-assignment.md "Servo signal"), F
 
 PWMServo has the issue that its first move puts out an overlong pulse of up to 20 ms. The driver prevents that in `begin()` and then moves the servo to its start position. If the timer has not taken the fix after two frames, `begin()` resets the Teensy.
 
+## Device faults
+
+The driver notes no fault as the servo has no feedback line and thus cannot see a move that fails.
+
 ## Driver Code
 
 ```cpp
 #include <PWMServo.h>
 
-class ServoDriver {
+class ServoDriver : public Driver {
 public:
     enum class Position : uint8_t { Start, End };
 
     // attaches the pin with the SER0049's range, 500 µs to 2500 µs, parks the pulse and
     // moves the servo to its start position; resets the Teensy if the timer has not
     // taken the parked pulse after two frames
-    void begin() {
+    bool begin() override {
         servo_.attach(kPin, 500, 2500);
         IMXRT_FLEXPWM1.MCTRL |= FLEXPWM_MCTRL_CLDOK(kMask);
         IMXRT_FLEXPWM1.SM[kSub].VAL0 = IMXRT_FLEXPWM1.SM[kSub].VAL1 + 1;   // beyond the frame
@@ -45,6 +49,7 @@ public:
         }
         ready_ = true;
         moveTo(Position::Start);
+        return true;
     }
 
     // moves the servo to one of its two end positions

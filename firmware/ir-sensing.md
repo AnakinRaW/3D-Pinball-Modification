@@ -6,6 +6,8 @@ The driver turns the IR channels into ball events, and takes its key information
 
 The emitters pulse in two phases, lit and dark, and every registered channel is read in both. A ball changes the difference between the two readings, and the room light drops out of it. A channel reports a ball once that difference crosses its own threshold twice in a row, and reports the ball gone once it falls under the release threshold twice in a row.
 
+## Driver events
+
 The driver publishes two kinds of events. Each names the channel as its source, carries the instant of detection as its timestamp, and goes into the queue that [`input-handling.md`](input-handling.md) describes.
 
 | Event | When | Payload |
@@ -90,7 +92,7 @@ The driver keeps starting conversions while `t_conv + t_ovh` still fits in what 
 > [!WARNING]
 > ### TODO: measure `t_ovh`
 >
-> Read all `N` channels, time the block with `ARM_DWT_CYCCNT`, and take `t_ovh = block / N − t_conv`. Measure under load and keep the maximum over a long run. The constraint is `(T − jit − t_inv) / N − t_conv <= t_ovh`.
+> Read all `N` channels, time the block with `ARM_DWT_CYCCNT`, and take `t_ovh = block / N − t_conv`. Measure under load and keep the maximum over a long run. The constraint is `t_ovh <= (T − jit − t_inv) / N − t_conv`.
 
 ## Calibration
 
@@ -109,19 +111,21 @@ One row per sensor:
 | channel | the number the game uses for that sensor |
 | `clear_build` | the channel's value over a clear track, in converter steps |
 | `ball_build` | the same with a ball on it |
-| read oder index | the index of the read order for that channel |
+| read order index | the index of the read order for that channel |
+
+The installation has to give every channel a clear-track difference of at least 1.5× its noise, because the start-up calibration scales each channel by that difference. Averaged over two hundred readings, the factor then stays within 5 %. The build step measures the noise the way the start-up calibration does and checks this for every channel.
 
 ### At start-up
 
-**A build step cannot cover drift.** The supply voltage sets how much light a channel puts out, and it can sit anywhere in its tolerance band from one boot to the next. Ambient temperature moves the detector's collector current. The emitter ages over the years. All three scale the clear reading and the ball reading together, so a threshold built from two fixed numbers walks off the middle between them. The startup calibration therefore measures a factor per channel. It waits five cycles first, while the sensor outputs and the converters' reference settle.
+**A build step cannot cover drift.** The supply voltage sets how much light a channel puts out, and it can sit anywhere in its tolerance band from one boot to the next. Ambient temperature moves the detector's collector current. The emitter ages over the years. All three scale the clear reading and the ball reading together, so a threshold built from two fixed numbers walks off the middle between them. The startup calibration therefore measures a factor per channel, from the average of two hundred readings, because a single reading would carry its noise into the channel's threshold. It waits five cycles first, while the sensor outputs and the converters' reference settle.
 
 **Reporting and release use two thresholds.** A ball is reported once two readings in a row exceed `threshold`, and released once two in a row fall under `release`. Thus, a ball resting near `threshold` does not report and release on noise alone. 
 
 The release margin `m_r`, how far `release` sits under `threshold`, is defined for one false release a year, counted in multiples of the noise `σ` a channel's value carries with nothing moving over it. A ball resting exactly on `threshold` is released only when the noise falls under `−m_r σ` twice in a row. `Q(m_r)² × readings per second = 1 / year` settles `m_r`, where `Q` is the tail of the normal distribution. `release` also has to stay 2 σ above `clear`, or a ball that leaves is never released. For a channel that means the margin condition, `(ball − clear) / 2 ≥ (m_r + 2) σ`.
 
-At calibration, a channel that misses the margin condition restarts the driver with a longer phase. With a longer phase `ball − clear` grows while `m_r` falls. The price is lower ball speed for detection. If the first phase adjustent still fails the margin condition, a second driver restart falls back to 1.5 ms, the phase the stock machine runs. There is no third attempt, and a channel still failing is reported.
+At calibration, a channel that misses the margin condition restarts the driver with a longer phase. With a longer phase `ball − clear` grows while `m_r` falls. The price is lower ball speed for detection. If the first phase adjustment still fails the margin condition, a second driver restart falls back to 1.5 ms, the phase the stock machine runs. There is no third attempt, and a channel still failing is reported.
 
-**The startup calibration also reads the noise floor.** Two hundred readings of one clear channel, a quarter of a second, estimate σ to within 5 %. Less accuracy would cost: a σ 10 % low turns one false release a year into one every ten days. σ sets `release` alone, because a phase tuned to it would fit the machine to the room it booted in.
+**The startup calibration also reads the noise floor.** The same two hundred readings, a quarter of a second, estimate σ on one clear channel to within 5 %. Less accuracy would cost: a σ 10 % low turns one false release a year into one every ten days. σ sets `release` alone, because a phase tuned to it would fit the machine to the room it booted in.
 
 > [!WARNING]
 > ### TODO: measure σ on the finished board
@@ -133,7 +137,8 @@ At calibration, a channel that misses the margin condition restarts the driver w
 ## Start-up
 
 ```
-begin(channels):
+begin():
+    out = events.attach(queue, kQueueDepth)
     csA, csB = HIGH, HIGH          # before SPI, or both converters answer at once
     ledGate  = LOW                 # never INPUT_PULLUP, the isolator reads that as a high
     SPI.begin()
@@ -142,21 +147,42 @@ begin(channels):
     startPhaseCounter()            # FlexPWM3.1, free-running from here
     discard(SETTLING_CYCLES)       # sensors and the converters' reference settle
     calibrate()
+    deviceMonitor.watch(IrSensing, self)     # asks failed() every 100 ms from here on
 
 calibrate():
-    sigma = noiseFloor()           # one clear channel, sets `release`
+    v, sigma = averages()          # every channel's mean and one clear channel's σ, from the same readings
 
     for c in channels:
-        v = read(c)
-        if   v near c.clear_build:  c.scale = v / c.clear_build
-        elif v near c.ball_build:   c.scale = v / c.ball_build
-        else:                       c.scale = 1;  report(Fault, c)
+        if   v[c] near c.clear_build:  c.scale = v[c] / c.clear_build
+        elif v[c] near c.ball_build:   c.scale = v[c] / c.ball_build
+        else:                          c.scale = 1;  c.calFailed = true
 
         c.clear, c.ball = c.clear_build * c.scale, c.ball_build * c.scale
         c.threshold     = (c.clear + c.ball) / 2
         c.release       = c.threshold - m_r * sigma
+        c.lastGoodMs    = millis()
 
     if not marginHolds():          # (ball - clear) / 2 >= (m_r + 2) * sigma
         raisePhase() or fallBackToStockPhase() or report(Degraded)
         restart()
+```
+
+## Device faults
+
+A channel counts as failed once its lit-minus-dark difference has stayed under half its clear value for 1 s. A ball over the sensor reflects more light and makes the difference larger, never smaller. A difference that stays low therefore means a channel.
+
+The evaluation notes the time whenever a channel's difference reaches half its clear value. [`failed()`](error-handling.md#device-faults) then checks for each channel whether that time is more than 1 s ago. A channel whose clear difference is small against its noise may not report a lost emitter, because the noise alone then keeps reaching half its clear value.
+
+At start-up, `calibrate()` expects every channel to read close to its clear value, or close to its ball value when a ball lies on it. A channel that reads neither counts as failed until the next start.
+
+```
+note(c, diff):                     # after the ball logic, for every new difference
+    if diff >= c.clear / 2:        # a ball only raises the difference
+        c.lastGoodMs = millis()
+
+failed():                          # one bit per channel, for the device monitor
+    parts = 0
+    for c in channels:
+        if c.calFailed or elapsedMs(c.lastGoodMs, 1 s):  parts |= 1 << c
+    return Fault(parts, 0)            # no error code
 ```

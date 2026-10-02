@@ -23,7 +23,7 @@ The Teensy talks to the AS5600 over I²C at 100 kHz. The sensor gives the angle 
 
 The driver then adds the new value to the sum of all previous readings so that the seal rotary component can correctly compute on multiple sensor readings and still keep the right position when an event gets lost. An event gets lost when the queue is full, and the next event then carries the right position anyway. A component that added up raw angles itself would miscount a whole turn in that case.
 
-The sensor operates using an `IntervalTimer` that ticks every 5 ms at priority 96. The processor never waits for the sensor. Each tick reads the angle of the previous tick and starts the next sensor read. 
+The processor never waits for the sensor. At each 5 ms [driver tick](driver-design.md#driver-intervaltimer) the angle of the previous tick is read from the sensors value buffer and then the next sensor read gets started.
 
 Reading a sensor consists of three commands: address the sensor, receive two bytes, stop. The controller finishes the read long before the next tick, and the two bytes wait in its receive buffer until then. A read occupies the bus for 290 µs.
 
@@ -31,9 +31,9 @@ Reading a sensor consists of three commands: address the sensor, receive two byt
 
 `begin()` lets `Wire` set up the pins, their pull-ups and the 100 kHz clock, and reads the AS5600's STATUS and AGC registers once. STATUS says whether a magnet was detected and whether it is too weak or too strong, and AGC sits mid-range at the right gap. `magnet()` reports both, so every start shows whether the gap is right.
 
-`begin()` then reads the first angle, points the AS5600 at RAW ANGLE, takes an `IntervalTimer` and starts ticking. From then on the driver drives the LPI2C1 I²C controller itself, and `Wire` is not used again. 
+`begin()` then reads the first angle, points the AS5600 at RAW ANGLE and attaches its read to the driver tick. From then on the driver drives the LPI2C1 I²C controller itself, and `Wire` is not used again. 
 
-`begin()` returns false when the AS5600 does not answer or no `IntervalTimer` is free. A missing magnet leaves the driver running and silent, and `magnet()` says why.
+`begin()` returns false when the AS5600 does not answer. A missing magnet leaves the driver running and silent, and `magnet()` says why.
 
 ## The bus
 
@@ -43,7 +43,7 @@ A tick that finds an error drops the read, clears the controller's flags and bot
 
 ## Device faults
 
-When no read has worked for 1 s, the driver reports `DeviceFailed` once, with the controller's error flags as payload, and keeps trying. Error cases are a sensor that does not answer, a line held low or a lost bus. The first read that works afterwards brings `DeviceRecovered`.
+The sensor counts as failed once no angle has arrived for 1 s. Error cases are a sensor that does not answer, a line held low or a lost bus. Every read that delivers an angle notes its time. [`failed()`](error-handling.md#device-faults) then checks whether that time is more than 1 s ago. The error code it returns is the controller's error flags of the last failed read.
 
 ## Existing libraries
 
@@ -62,13 +62,13 @@ struct MagnetState {
     uint8_t agc;         // the gain the AS5600 settled on, mid-range at the right gap
 };
 
-class MagneticRotaryDriver {
+class MagneticRotaryDriver : public Driver {
 public:
-    // sets up Wire, reads STATUS, AGC and the first angle, points the AS5600 at
-    // RAW ANGLE and starts the tick; false when the AS5600 does not answer or no
-    // IntervalTimer is free
-    bool begin(EventQueue::Producer& out) {
-        out_ = &out;
+    // attaches the queue, sets up Wire, reads STATUS, AGC and the first angle, points
+    // the AS5600 at RAW ANGLE, attaches its read to the driver tick and registers with
+    // the device monitor; false when the AS5600 does not answer or either of the two is full
+    bool begin() override {
+        out_ = &events.attach(queue_, kQueueDepth);
         Wire.begin();                                        // the pins, their pull-ups and 100 kHz
 
         // reads n bytes from the register reg, high byte first; -1 when the AS5600 does not answer
@@ -90,9 +90,10 @@ public:
         magnet_.tooStrong = status & 0x08;                   // MH
         magnet_.agc       = agc;
         last_             = raw & 0x0FFF;                    // the 12 bits of RAW ANGLE
+        lastGoodMs_       = millis();                        // the first working read
 
-        timer_.priority(kPriority);
-        return timer_.begin([this] { tick(); }, kTickUs);    // tick() every 5 ms from here on
+        if (!driverTick.attach([this] { tick(); }, DriverTick::kPeriodUs)) return false;   // tick() every 5 ms from here on
+        return deviceMonitor.watch(Device::RotarySensor, *this);
     }
 
     // steps since begin(), 4096 to a turn
@@ -101,27 +102,28 @@ public:
     // what STATUS and AGC said at begin(): magnet found, too weak, too strong
     MagnetState magnet() const { return magnet_; }
 
+    // gets which parts have failed, bit 0 once no read has worked for kFailMs, with the
+    // controller's error flags of the last failed read as the error code
+    Fault failed() const override { return {elapsedMs(lastGoodMs_, kFailMs), lastError_}; }
+
 private:
     static constexpr uint8_t  kAddress  = 0x36;
     static constexpr uint8_t  kStatus   = 0x0B;
     static constexpr uint8_t  kAgc      = 0x1A;
     static constexpr uint8_t  kRawAngle = 0x0C;
-    static constexpr uint32_t kTickUs   = 5000;
-    static constexpr uint8_t  kPriority = 96;     // general-design.md
     static constexpr int32_t  kSteps    = 4096;
     static constexpr int32_t  kDeadband = 12;
     static constexpr int32_t  kStill    = 4;      // ticks without a degree of movement
-    static constexpr int32_t  kFail     = 200;    // ticks without a working read before DeviceFailed
+    static constexpr uint32_t kFailMs   = 1000;   // 1 s without a working read, and the sensor has failed
     static constexpr uint8_t  kSda      = 18;   // pin-assignment.md: SDA to the rotary sensors
     static constexpr uint8_t  kScl      = 19;   // pin-assignment.md: SCL to the rotary sensors
     static constexpr uint32_t kErrors   = LPI2C_MSR_NDF | LPI2C_MSR_ALF | LPI2C_MSR_FEF | LPI2C_MSR_PLTF;
 
-    // the IntervalTimer: collect the read the last tick started, start the next
+    // the driver tick: collect the read the last tick started, start the next
     void tick() {
         const uint32_t msr = LPI2C1_MSR;
-        if (!down_ && ++idle_ >= kFail)                      // a second without a working read
-            down_ = out_->publish(DriverEvent{micros(), DriverEventType::DeviceFailed, (uint8_t)Device::RotarySensor, msr & kErrors});
         if (msr & kErrors) {                                 // no answer, lost bus, FIFO error, line low
+            lastError_ = msr & kErrors;
             if (msr & LPI2C_MSR_PLTF) recover();
             LPI2C1_MCR |= LPI2C_MCR_RTF | LPI2C_MCR_RRF;     // drop the read
             LPI2C1_MSR  = 0x00007F00;                        // clear every flag, as Wire does
@@ -131,9 +133,7 @@ private:
             const uint32_t high = LPI2C1_MRDR & 0x0F;
             const uint32_t low  = LPI2C1_MRDR & 0xFF;
             const int32_t  raw  = (high << 8) | low;
-            if (down_ && out_->publish(DriverEvent{micros(), DriverEventType::DeviceRecovered, (uint8_t)Device::RotarySensor, 0}))
-                down_ = false;
-            idle_ = 0;
+            lastGoodMs_ = millis();                          // the note failed() reads
             const int32_t  step = (raw - last_ + kSteps + kSteps / 2) % kSteps - kSteps / 2;
             last_      = raw;
             position_ += (uint32_t)step;                   // wraps without harm
@@ -173,15 +173,15 @@ private:
         for (const uint8_t pin : {kSda, kScl}) *portConfigRegister(pin) = 3 | 0x10;   // back to LPI2C1
     }
 
-    IntervalTimer                timer_;
+    DriverEvent                  queue_[kQueueDepth];
     EventQueue::Producer*        out_       = nullptr;
     int32_t                      last_      = 0;       // the first angle, set by begin()
     volatile uint32_t            position_  = 0;
     uint32_t                     published_ = 0;       // the position the last event carried
     bool                         moving_    = false;   // a RotorMoved has come since the last RotorStopped
     int32_t                      still_     = 0;       // ticks since the last RotorMoved
-    int32_t                      idle_      = 0;       // ticks since the last working read
-    bool                         down_      = false;   // DeviceFailed has gone out
+    volatile uint32_t            lastGoodMs_ = 0;      // when a read last worked
+    volatile uint32_t            lastError_  = 0;      // the error flags of the last failed read
     MagnetState                  magnet_{};
 };
 ```

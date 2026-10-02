@@ -16,3 +16,7 @@ Which library decides whether that time is blocked or not:
 | Adafruit NeoPixel | Disables all interrupts for the whole frame. **Do not use** |
 
 **FastLED is the frontend, OctoWS2811 the output engine.** FastLED holds the pixel array, the effects and the power limit, and OctoWS2811 does the DMA transfer.
+
+## Device faults
+
+The driver notes no fault. The LED chains give the Teensy no feedback, so a dead chain goes unnoticed.

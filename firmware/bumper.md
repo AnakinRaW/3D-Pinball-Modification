@@ -1,6 +1,6 @@
 # Bumper driver
 
-The driver watches the three top bumper contacts, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel, used for a scoop, drives a solenoid that has no contact of its own and is asked for by the game logic.
+The driver watches the three top bumper contacts, fires the coil of whichever one a ball reached, and publishes the hit. A fourth channel, used for a scoop, drives a solenoid without a contact, which the game logic fires.
 
 ## Sensing and firing
 
@@ -14,7 +14,7 @@ The game logic can only request a pull with `fire()`, which returns false while 
 
 At start-up `begin()` pulls every coil once, as the stock machine does at power-on. It pulls them one after another, so the supply carries a single coil at a time.
 
-## The event
+## Driver events
 
 | Field | Content |
 |---|---|
@@ -25,38 +25,44 @@ At start-up `begin()` pulls every coil once, as the stock machine does at power-
 
 ## Solenoid protection
 
-Every pull ends on its own, even when a top bumper's contact stays closed. A released coil can fire again only after the cool-down, and a top bumper's contact has to have been open for that long as well.
+A rising edge on a sense line pulls its coil once, even when the contact stays closed. A released coil can fire again only after the cool-down, and a top bumper's contact has to have been open for that long as well.
 
 | Rule | Value |
 |---|---|
-| Duration of a solenoid pull | 50 ms |
-| Duration of the cool-down phase after a solenoid pull | 10 ms |
+| Duration of a solenoid pull | ~50 ms |
+| Duration of the cool-down phase after a solenoid pull | ~10 ms |
 
-One `IntervalTimer`, the release timer, ends every pull. It waits for the oldest running pull, switches off each coil that has had its 50 ms and then waits for the next, so no pull is ever cut short. `begin()` takes the timer once and never gives it back. Between pulls the timer is parked on a long period. If no `IntervalTimer` is free at start-up, `begin()` returns false.
+When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 45 ms, so a pull lasts 45 to 50 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
 
-If also the firmware fails an additional [watchdog](general-design.md#the-watchdog) steps in. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
+The driver always writes the time first and switches the coil second. Whoever looks at a coil then finds the time that belongs to its state.
+
+If the firmware itself fails, the [watchdog](error-handling.md#the-watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
 
 At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the board switch every coil off.
+
+## Device faults
+
+A top bumper counts as failed once its contact has stayed closed for 2 s. This might be caused by a ball resting against a shell or a sense line touching the foil. 
+
+The closing edge notes the time. [`failed()`](error-handling.md#device-faults) then checks for each top bumper whether its contact is still closed 2 s later.
 
 ## The driver
 
 ```cpp
-class BumperDriver {
+class BumperDriver : public Driver {
 public:
-    // takes the release timer and keeps it; false when no IntervalTimer is
-    // free, and the driver then never energises a coil
-    bool begin(EventQueue::Producer& out) {
-        out_  = &out;
+    // attaches the queue, attaches the release to the driver tick and registers with the
+    // device monitor; false when the driver tick or the device monitor is full, and the
+    // driver then never energises a coil
+    bool begin() override {
+        out_  = &events.attach(queue_, kQueueDepth);
         self_ = this;
         for (uint8_t c = 0; c < kCoils; ++c) {
             pinMode(kTrigger[c], OUTPUT);
             digitalWriteFast(kTrigger[c], LOW);
         }
-
-        // the release timer and every pin interrupt share one level, so none of
-        // them can interrupt another
-        timer_.priority(kPriority);
-        if (!timer_.begin(expire0, kIdleUs)) return false;
+        if (!driverTick.attach([this] { release(); }, DriverTick::kPeriodUs)) return false;
+        if (!deviceMonitor.watch(Device::Bumpers, *this)) return false;
         ready_ = true;
 
         // every coil pulls once, one after another, before any contact is armed
@@ -65,20 +71,20 @@ public:
             delayMicroseconds(kOnUs + kCoolUs);
         }
 
-        NVIC_SET_PRIORITY(IRQ_GPIO6789, kPriority);
-        for (uint8_t c = 0; c < kSenses; ++c) {
-            pinMode(kSense[c], INPUT);
-            attachInterrupt(digitalPinToInterrupt(kSense[c]), kEdge[c], CHANGE);
-        }
+        for (uint8_t c = 0; c < kSenses; ++c) pinMode(kSense[c], INPUT);
+
+        attachInterrupt(digitalPinToInterrupt(kSense[0]), [] { self_->edge(0); }, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(kSense[1]), [] { self_->edge(1); }, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(kSense[2]), [] { self_->edge(2); }, CHANGE);
         return true;
     }
 
-    // the game logic's own path, and the only one the fourth coil has. The
-    // release timer and the pin interrupts change what pull() changes, so every
-    // interrupt, the IR driver's included, waits the few instructions it takes
+    // the game logic's own path, and the only one the fourth coil has. The pin
+    // interrupts start pulls as well, so every interrupt, the IR driver's
+    // included, waits the few instructions start() takes
     bool fire(uint8_t coil) {
         noInterrupts();
-        const bool started = pull(coil, micros());
+        const bool started = start(coil, micros());
         interrupts();
         return started;
     }
@@ -86,9 +92,8 @@ public:
     // true once a coil has run more than kLateUs past its pull-in; the main loop
     // feeds the watchdog only while this is false
     bool overdue() const {
-        const uint32_t now = micros();
         for (uint8_t c = 0; c < kCoils; ++c) {
-            if (live_[c] && now - since_[c] > kOnUs + kLateUs) return true;
+            if (pulling(c) && elapsedUs(since_[c], kOnUs + kLateUs)) return true;
         }
         return false;
     }
@@ -98,24 +103,25 @@ public:
         return digitalReadFast(kSense[bumper]) == HIGH;
     }
 
+    // gets which top bumpers have failed, one bit each: a contact closed for kFailMs; no error code
+    Fault failed() const override {
+        PartMask parts = 0;
+        for (uint8_t b = 0; b < kSenses; ++b) {
+            if (ballOn(b) && elapsedMs(closedAtMs_[b], kFailMs)) parts |= 1u << b;
+        }
+        return {parts, 0};
+    }
+
 private:
     static constexpr uint8_t  kCoils    = 4;
     static constexpr uint8_t  kSenses   = 3;
     static constexpr uint8_t  kTrigger[kCoils] = {32, 34, 35, 0};  // pin-assignment.md: Bumper trigger 1 to 4
     static constexpr uint8_t  kSense[kSenses]  = {1, 14, 15};      // pin-assignment.md: Bumper sense 1 to 3
-    static constexpr uint32_t kOnUs     = 50000;  // the pull-in, docs/parts/bumper
+    static constexpr uint32_t kOnUs     = 50000;  // the longest pull-in, docs/parts/bumper
+    static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 45 ms, from here the tick ends a pull
     static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
     static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue
-    static constexpr uint32_t kIdleUs   = 100000000;  // parks the release timer between pulls
-    static constexpr uint8_t  kPriority = 96;     // general-design.md
-
-    // attachInterrupt and IntervalTimer take a plain function pointer, so a
-    // static one per source hands the call to the instance
-    static void edge0() { self_->edge(0); }
-    static void edge1() { self_->edge(1); }
-    static void edge2() { self_->edge(2); }
-    static constexpr void (*kEdge[kSenses])() = {edge0, edge1, edge2};
-    static void expire0() { self_->expire(); }
+    static constexpr uint32_t kFailMs   = 2000;   // 2 s, a contact closed this long has failed
 
     // both edges of a sense line arrive here; a closing edge fires only once the
     // contact has been open for the cool-down, so neither bounce nor a contact
@@ -126,52 +132,47 @@ private:
             opened_[bumper] = now;                // the contact just let go
             return;
         }
-        if (now - opened_[bumper] < kCoolUs || !pull(bumper, now)) return;
+        closedAtMs_[bumper] = millis();           // the note failed() reads
+        if (!elapsedUs(opened_[bumper], kCoolUs) || !start(bumper, now)) return;
         out_->publish(DriverEvent{now, DriverEventType::BumperHit, bumper, 0});
     }
 
-    // starts the pull-in; the release timer is set to it only when no other coil
-    // is on, because a coil that started earlier is always due first
-    bool pull(uint8_t coil, uint32_t now) {
-        if (!ready_ || live_[coil] || now - released_[coil] < kCoolUs) return false;
-        if (!timing_) {
-            timer_.begin(expire0, kOnUs);         // restarts on the channel it holds
-            timing_ = true;
-        }
-        live_[coil]  = true;
+    // gets whether a coil pulls, read back from its trigger pin's output register
+    bool pulling(uint8_t coil) const {
+        return *portOutputRegister(kTrigger[coil]) & digitalPinToBitMask(kTrigger[coil]);
+    }
+
+    // starts a pull; since_ is written before the pin goes high, so the tick never
+    // finds a pulling coil with an old start time
+    bool start(uint8_t coil, uint32_t now) {
+        if (!ready_ || pulling(coil) || !elapsedUs(released_[coil], kCoolUs)) return false;
         since_[coil] = now;
         digitalWriteFast(kTrigger[coil], HIGH);
         return true;
     }
 
-    // the release timer: switch off every coil that has been on for kOnUs, then
-    // wait for the next coil that is due, or park until the next pull
-    void expire() {
-        const uint32_t now = micros();
-        uint32_t next = 0;                        // what the oldest coil still on has left
-        for (uint8_t c = 0; c < kCoils; ++c) {
-            if (!live_[c]) continue;
-            const uint32_t on = now - since_[c];
-            if (on >= kOnUs) {
-                digitalWriteFast(kTrigger[c], LOW);
-                released_[c] = now;
-                live_[c]     = false;
-            } else if (next == 0 || kOnUs - on < next) {
-                next = kOnUs - on;
-            }
-        }
-        timing_ = next != 0;
-        timer_.begin(expire0, timing_ ? next : kIdleUs);  // restarts on the channel it holds
+    // ends a pull; released_ is written before the pin goes low, so a start never
+    // finds a free coil with an old release time
+    void stop(uint8_t coil, uint32_t now) {
+        released_[coil] = now;
+        digitalWriteFast(kTrigger[coil], LOW);
     }
 
-    IntervalTimer         timer_;
+    // the driver tick, every 5 ms: stops every coil that has pulled for kReleaseUs,
+    // so a pull lasts from kReleaseUs up to kOnUs
+    void release() {
+        for (uint8_t c = 0; c < kCoils; ++c) {
+            if (pulling(c) && elapsedUs(since_[c], kReleaseUs)) stop(c, micros());
+        }
+    }
+
     static BumperDriver*  self_;
+    DriverEvent           queue_[kQueueDepth];
     EventQueue::Producer* out_ = nullptr;
-    volatile bool         ready_  = false;
-    volatile bool         timing_ = false;
-    volatile bool         live_[kCoils]     = {};
-    volatile uint32_t     since_[kCoils]    = {};
-    volatile uint32_t     released_[kCoils] = {};
-    volatile uint32_t     opened_[kSenses]  = {};
+    volatile bool         ready_ = false;
+    volatile uint32_t     since_[kCoils]       = {};
+    volatile uint32_t     released_[kCoils]    = {};
+    volatile uint32_t     opened_[kSenses]     = {};
+    volatile uint32_t     closedAtMs_[kSenses] = {};   // when the contact last closed
 };
 ```

@@ -20,9 +20,7 @@ The firmware keeps three layers apart. The drivers work the hardware in their ow
 
 ## Non-blocking coding
 
-The main loop carries the host and the game logic. The drivers catch every event in their own interrupts, so a slow loop only delays the game's reaction. A loop that stays away longer lets the event queues fill up and eventually may lead to dropped events or and the watchdog restarts the machine. So nothing in the loop may block, and the loop has to come round quickly.
-
-A driver hands its waiting to hardware. Where a transfer, a conversion or a frame takes time, a DMA channel or the peripheral itself moves the data and raises an interrupt when it is done, so the processor spends that time on something else. A job that cannot be handed over is split into pieces short enough that the loop still comes round in time.
+The main loop carries the host and the game logic. The drivers catch every event in their own interrupts, so a slow loop only delays the game's reaction. A loop that stays away longer lets the event queues fill up and eventually may lead to dropped events and the watchdog restarts the machine. So nothing in the loop may block, and the loop has to come round quickly.
 
 ## The event queue
 
@@ -32,19 +30,9 @@ Subsystems are not meant to communicate directly with each other. Instead they p
 
 ## Drivers
 
-Drivers work in their own interrupts and do not rely on the main loop to update them.
-
-Drivers report their state changes, not their current state. A state that persists over time produces no further event, and one physical change yields one event.
-
-The current state stays queryable.
-
-A driver whose `begin()` failed does nothing when called. This for example allows a game to run without an SD card or display installed.
+[`driver-design.md`](driver-design.md) describes how every driver works: its interrupts and the driver tick.
 
 ## Interrupts
-
-Detection may sit in an interrupt, the game logic never does.
-
-What cannot wait for the loop stays inside its own subsystem and reports to the event queue afterwards. E.g., a top bumper is sensed and triggered by the interrupt. The game logic gets it through the event queue, as a pinball event of the bumpers' component.
 
 An interrupt that has to be on time gets a higher priority than one that can wait. Only one handler runs at a time, and while it runs every interrupt of the same or lower priority waits for it to finish.
 
@@ -55,48 +43,30 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 | FlexPWM3.1 compare, starting the read block | IR ball sensing | microseconds, the read block has to end inside its phase | 64 |
 | The interrupt after each SPI conversion | IR ball sensing | microseconds | 64 |
 | Pin interrupts, one IRQ shared by every pin | Bumpers, break beam, controls | milliseconds | 96 |
-| `IntervalTimer`, ending the solenoid pulls | Bumpers | milliseconds | 96 |
-| `IntervalTimer`, reading the rotary sensor | Magnetic rotary sensor | its next tick | 96 |
+| `IntervalTimer`, the driver tick | Magnetic rotary sensor, bumpers, device monitor, storage | its next tick | 96 |
+| I²S2 DMA, handing a block to the amplifier | Audio | the next audio block | 128 |
+| The Audio library's update, computing a block | Audio | the next audio block | 208 |
+| The SD controller's interrupt, ending one card transfer and starting the next | Storage | before a stream's buffer runs dry | 240 |
 
-*Remarks: The pin interrupts and the bumpers' release timer share a level, so neither can interrupt the other and the bumper driver needs no lock. A further `IntervalTimer` therefore has to ask for 96 or a larger number.*
+Two interrupts are shared by several drivers, the pin interrupt and the `IntervalTimer` interrupt. All pin interrupts run on one IRQ, and `setup()` sets its priority once. All four `IntervalTimer`s share one interrupt as well, which runs at the highest priority any of them asks for. The [driver tick](driver-design.md#driver-intervaltimer) is the only `IntervalTimer` the firmware uses.
 
-## The watchdog
+## Time measurement
 
-The watchdog is a hardware timer in the i.MX RT that resets the Teensy unless the firmware feeds it within a specified time. It keeps counting when the firmware has crashed, so it also catches a failure that stops every line of code. The watchdog is to be used to guard against major malfunctions which are not recoverable, critical to the system or would harm hardware.
-
-The watchdog time can be only as long as the shortest guard it has to ensure.
-
-The main loop feeds it once per pass, and only while every condition it should guard holds. Feeding the watchdog belongs in the main loop because interrupts keep running while the loop hangs, and a watchdog fed from one would never fire.
-
-The following components are guarded by the watchdog:
-
-| Component | Condition for feeding | Shut-off Time Constraint |
-|---|---|---|
-| Bumper Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`bumper.md`](bumper.md) | ≤ 5 s |
+Every time measurement compares a noted time with the clock. If the clock is read before the note, an interrupt in between can note a later time. The difference then turns negative, and as an unsigned number it reads as a very long time. `elapsedUs()` and `elapsedMs()` get the note first and read the clock after it, so the difference cannot turn negative. Every measurement goes through one of them.
 
 ```cpp
-#include "Watchdog_t4.h"         // the WDT_T4 library, github.com/tonton81/WDT_T4
+// gets whether at least span microseconds have passed since t
+inline bool elapsedUs(uint32_t t, uint32_t span) { return micros() - t >= span; }
 
-WDT_T4<WDT1> watchdog;           // the i.MX RT's WDOG1
-
-void setup() {
-    // ... every driver's begin() first, so a slow start-up cannot reset the Teensy
-    WDT_timings_t config;
-    config.timeout = 1;          // in seconds
-    watchdog.begin(config);
-}
-
-void loop() {
-    // ... the rest of the pass
-    if (!bumpers.overdue()) watchdog.feed();   // each guarded component adds its condition
-}
+// gets whether at least span milliseconds have passed since t
+inline bool elapsedMs(uint32_t t, uint32_t span) { return millis() - t >= span; }
 ```
 
 ## The main program
 
 The main file sets the machine up and runs the main loop. 
 
-`setup()` first runs every driver's `begin()` in the correct order. Then it adds all game components to the game host and starts the host. Lastly, it starts the watchdog.
+`setup()` first runs every driver's `begin()` in the correct order. Then it adds all game components to the game host and starts the host. Lastly, it starts the [watchdog](error-handling.md#the-watchdog).
 
 `loop()` knows no game. In each pass the event queue is dispatched to the host with `dispatch()` and updates the game host with the current time using `update()`. Lastly it feeds the watchdog given that every guard holds.
 
@@ -104,6 +74,8 @@ The following is a basic sketch of the machine's main file:
 
 ```cpp
 EventQueue       events;
+DriverTick       driverTick;             // the drivers attach to it in their begin()
+DeviceMonitor    deviceMonitor;          // the drivers register with it in their begin()
 
 // drivers
 IrSensing        ir;
@@ -124,23 +96,23 @@ GameHost         host;
 WDT_T4<WDT1>     watchdog;
 
 void setup() {
-    
+    NVIC_SET_PRIORITY(IRQ_GPIO6789, 96);    // sets the global priority of every pin interrupt
+
     // storage first, so every later driver can read its settings from the card
-    storage.begin(events.attach(storageQueue, kQueueDepth));
+    storage.begin();
 
     // bumpers next so we can drive the coils at startup
-    bumpers.begin(events.attach(bumperQueue, kQueueDepth));
+    bumpers.begin();
     
     // light ahead of ir for better calibration
     lights.begin();
-    ir.begin(events.attach(irQueue, kQueueDepth));
-    drain.begin(events.attach(drainQueue, kQueueDepth));
+    ir.begin();
+    drain.begin();
    
-    // display must be initialized before the rotary sensor
-    const bool screen = display.begin(events.attach(displayQueue, kQueueDepth));
-    rotary.begin(events.attach(rotaryQueue, kQueueDepth));
+    const bool screen = display.begin();
+    rotary.begin();
 
-    audio.begin(events.attach(audioQueue, kQueueDepth));
+    audio.begin();
 
     // other drivers...
 

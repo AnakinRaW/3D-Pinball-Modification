@@ -6,7 +6,7 @@ The games are kept apart from the machine they run on. A game holds the rules of
 
 A game holds all the rules and conditions for the player to collect points.
 
-A game is driven two ways. `event()` is the game's handler for every event of a game component, and for the events of a service such as the audio driver's `SoundEnded`. `update()` runs once per pass of the main loop and gets the current time. Both return as soon as their work is done, since [nothing in the loop may block](general-design.md#nothing-in-the-main-loop-may-block).
+A game is driven two ways. `event()` is the game's handler for every event of a game component, and for the events of a service such as the audio driver's `SoundEnded`. `update()` runs once per pass of the main loop and gets the current time. Both return as soon as their work is done, since [nothing in the loop may block](general-design.md#non-blocking-coding).
 
 A game may bring its own files on the SD card, under `/games/<id>`. It may also declare its own game options which can be changed by interacting with the touch display or the toggle button.
 
@@ -26,6 +26,8 @@ At every start of a game, including machine power-up, the host performs the same
 A ball still on the playfield carries on in the new game.
 
 The host also manages the user menu on the touch display. There the player switches games, changes a game's settings or configures the machine.
+
+The host catches every [device fault](error-handling.md#device-faults) and keeps the list of failed devices and handles them itself. Components and games should not see a fault.
 
 ## Game lifecycle
 
@@ -47,7 +49,7 @@ A driver publishes a `DriverEvent`, and a game gets a `PinballEvent`. Both carry
 The host dispatches each driver event to the components by calling their `translate()` one after the other, until the first of them takes it. `translate()` gets the driver event as the `in` parameter and the translated pinball events as `out` parameter. The return value indicates whether the component took it.
 The component however is not required to convert every driver event to a pinball event. The host therefore is required to check whether it needs to pass events to the game.
 
-A component may make several pinball events of one driver event. It keeps them in an array of its own, big enough for the most it can make at once. The `out` parameter contains the pointer and size to that array.
+A component may make several pinball events of one driver event. It keeps them in an array that is big enough for the most it can make at once. The `out` parameter contains the pointer and size to that array.
 
 Components are described under [`components/`](components/).
 
@@ -72,7 +74,7 @@ enum class EventType : uint16_t {
 struct PinballEvent {
     uint32_t  time;      // micros() at detection, taken over from the driver event
     EventType type;
-    uint8_t   source;    // lane, channel or tag inside its component or service
+    uint8_t   source;    // lane or channel inside its component or service
     uint32_t  payload;   // interpreted according to the type
 };
 
@@ -96,7 +98,7 @@ class Component {
 public:
     virtual ~Component() = default;
 
-    // takes a driver event of its own parts and points out at the pinball events it made of it, if any; false for any other
+    // takes a driver event of the component's parts and points out at the pinball events it made of it, if any; false for any other
     virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
 };
 
@@ -136,7 +138,7 @@ class GameHost {
 public:
     void add(Component& component);            // routes the driver events of the component's parts through it
     void begin(Machine& machine, bool touch);  // starts the game that ran last, or the default game
-    void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game
+    void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
     void update(uint32_t now);                 // updates the running game, and moves it on once its phase is done
     void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
 
@@ -144,7 +146,7 @@ private:
     enum Phase { Stopped, Intro, Play, PostGame };
 
     void  cleanUp();                 // resets the components after a game, such as the lamps
-    void  prepare(Game* next);       // roots the storage driver in next's directory, reads its settings, sets audio, display and lighting up
+    void  prepare(Game* next);       // reads next's settings, sets audio, display and lighting up
     Game* lastGame();                // gets the game that ran last, or the default game
     void  saveSettings(Game* next);  // writes changed settings and the id of next to the card
     bool  service(const DriverEvent& in, PinballEvent& out);   // copies a service's event into the pinball event of the same name; false for any other
@@ -155,6 +157,7 @@ private:
     bool     touch_   = false;
     File     settings_;       // next's settings, read in step 3
     bool     settingsRead_ = false;   // their FileRead has arrived
+    FailedDevices failed_;   // the failed parts of every device, for the menu
     Component* components_[kComponents];   // the components add() was given
     size_t     componentCount_ = 0;
     static constexpr uint8_t kSettings = 0;   // the tag of the settings read; games use other tags
@@ -171,6 +174,8 @@ void GameHost::begin(Machine& machine, bool touch) {
 }
 
 void GameHost::dispatch(const DriverEvent& e) {
+    if (e.type == DriverEventType::DeviceFailed)    { failed_.set((Device)e.source, e.payload); return; }     // the list the menu shows; no game sees it
+    if (e.type == DriverEventType::DeviceRecovered) { failed_.clear((Device)e.source, e.payload); return; }
     if (e.type == DriverEventType::FileRead && e.source == kSettings) {   // step 3 is done
         settingsRead_ = true;
         return;
@@ -188,7 +193,6 @@ bool GameHost::service(const DriverEvent& in, PinballEvent& out) {
     EventType type;
     switch (in.type) {
         case DriverEventType::SoundEnded:     type = EventType::SoundEnded;     break;   // audio
-        case DriverEventType::FileRead:       type = EventType::FileRead;       break;   // storage
         case DriverEventType::ToggleSwitched: type = EventType::ToggleSwitched; break;   // controls
         default:                              return false;
     }
@@ -239,7 +243,7 @@ public:
     void start(Machine& m) override {
         m_ = &m; phase_ = Intro; done_ = false; played_ = false; score_ = 0; balls_ = 3;
         best_     = 0;
-        bestFile_ = m.storage.open("save/best");
+        bestFile_ = m.storage.open("best");
         loaded_   = false;
         bestFile_.read(&best_, sizeof best_, kBest);   // the high score, there before the intro ends
         m.scoop.eject();                        // empty the scoop
@@ -265,7 +269,6 @@ public:
 
     void event(const PinballEvent& e) override {
         if (e.type == EventType::SoundEnded && e.source == 0) played_ = true;   // the music channel
-        if (e.type == EventType::FileRead && e.source == kBest) loaded_ = true;  // the high score is in
         if (phase_ != Play) return;
         if (e.type == EventType::LanePassed) score_ += 100;
         if (e.type == EventType::Drained && --balls_ == 0) done_ = true;       // the last ball: Play is done
