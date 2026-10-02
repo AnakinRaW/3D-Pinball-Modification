@@ -109,7 +109,7 @@ Rendering, placed clear of the circuit body:
 
 The reference designator in the table matches the one on the drawn symbol.
 
-Listing a variant asserts it has been through `review-circuit` and `design-review` on its own figures. An alternative that has not been checked is named in the circuit document as an option, and stays out of the diagram's variants table.
+Listing a variant asserts it has been through `review-circuit` and `design-review` with that variant's figures. An alternative that has not been checked is named in the circuit document as an option, and stays out of the diagram's variants table.
 
 ## Placement constraints
 

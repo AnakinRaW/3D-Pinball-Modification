@@ -150,7 +150,7 @@ At I<sub>OH</sub> = 4 mA the datasheet guarantees V<sub>OH</sub> ≥ 3.7 V, well
 
 ## Signal wiring
 
-**Series resistor of 47 to 220 Ω in each data line**, at the driving end. PJRC fits 100 Ω on its own adaptor board.
+**Series resistor of 47 to 220 Ω in each data line**, at the driving end. PJRC fits 100 Ω on its OctoWS2811 adaptor board.
 
 **Data and ground run together over the whole length of every link**, from the shifter to the first device of a chain and from one strip to the next. A shared ground point at the supply is necessary and does not replace this. The return current of a fast edge follows the signal conductor, and without a ground beside it the return takes a detour whose loop area both radiates and receives. Three solenoids switching 0.68 A are the interferer that loop is built for, and the disturbance then arrives in the same instant as the bumper hit.
 
@@ -193,7 +193,7 @@ The stock P28 carries six amber LEDs, a 7-pin connector and nothing else. Its va
 
 ![Ball count board P28 on the LED chain](ball-count-schematic.svg)
 
-**Two WS2811 on the modification's own board** drive it. The WS2811 is the controller of a WS2812 sold on its own, with three constant-current channels and no LEDs, so it supplies exactly what P28 lacks. Three channels each gives six.
+**Two WS2811 on the modification's own board** drive it. The WS2811 is the controller of a WS2812 sold as a separate chip, with three constant-current channels and no LEDs, so it supplies exactly what P28 lacks. Three channels each gives six.
 
 The chain's data line enters the first controller, passes to the second and continues into the rest of the chain. The six outputs run over the existing seven-way cable to the six LEDs, and the seventh wire carries the common connection to 5 V.
 
@@ -232,7 +232,7 @@ Cost: no Teensy pin and six slots in the frame. The ball count gains per-device 
 
 ## Known limitations
 
-**FastLED colour correction does not apply to the P28 pixels.** Correction and gamma scale each channel differently, which is right for red, green and blue dies and wrong for six identical amber LEDs, where it would make them unequally bright at the same value. Either global correction is disabled and applied per pixel instead, or P28 sits on a chain of its own.
+**FastLED colour correction does not apply to the P28 pixels.** Correction and gamma scale each channel differently, which is right for red, green and blue dies and wrong for six identical amber LEDs, where it would make them unequally bright at the same value. Either global correction is disabled and applied per pixel instead, or P28 sits on a separate chain.
 
 **The chain's own PWM can raise the IR sensors' noise floor.** An IR channel subtracts a dark sample from a lit one taken 600 µs earlier, and a light source flickering at f leaves `1 − cos(2π f · 600 µs)` of its amplitude standing in the difference. That factor passes 1 at 417 Hz and reaches 2 at 833 Hz, where the subtraction cancels nothing. WS2811 gives its scan frequency as not less than 400 Hz, which is a floor and not a figure, so where a given device lands is unknown. A device in view of a sensor bore therefore contributes up to twice its own modulation amplitude to that channel's noise, and the sensors carry it as a smaller margin rather than as a failure: the IR driver's start-up calibration reads each channel's clear level and scales its threshold to whatever the channel delivers.
 

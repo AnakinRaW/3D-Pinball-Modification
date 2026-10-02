@@ -942,7 +942,7 @@ def _(ripple_of_v_ref, bits):
     return Q(2 ** bits.raw) * ripple_of_v_ref.raw
 
 
-_BEAD = _FILTER  # the bead paragraph carries no bold of its own
+_BEAD = _FILTER  # the bead paragraph carries no bold lead
 
 
 @fig("z_10uh_at_fsw", "Ω", group=_BEAD, stated="loose")
@@ -1718,7 +1718,7 @@ for _key, _row in (("r_switch", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
 
 
 # ===========================================================================
-# what the main body states on its own
+# what the main body states without the appendix
 # ===========================================================================
 # These sit outside the appendix: the objections table, the troubleshooting
 # table and the connector tables. They are stated in prose, so each is located

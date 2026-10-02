@@ -75,7 +75,7 @@ No stage of a phase runs in the main loop. The Teensy's hardware components are 
 | Reading | all channels read before the phase ends | a DMA transfer, with the core free for the loop |
 | Evaluating | finished before the next block's interrupt arrives | the interrupt of the last conversion |
 
-The core spends one interrupt at `t_first` to start the transfer, one per conversion, and one evaluation per phase, whatever the loop is doing. The evaluation may run past the end of its own phase. Its deadline is the start of the next read, `jit + t_first` after the last conversion, and nothing touches the sensors in between.
+The core spends one interrupt at `t_first` to start the transfer, one per conversion, and one evaluation per phase, whatever the loop is doing. The evaluation may run past the end of its phase. Its deadline is the start of the next read, `jit + t_first` after the last conversion, and nothing touches the sensors in between.
 
 At sixteen channels, the conversions hold the sensors' SPI bus for 320 µs of every phase.
 
@@ -132,7 +132,7 @@ At calibration, a channel that misses the margin condition restarts the driver w
 >
 > The σ in [`channel-model`](../docs/parts/ir-reflective/channel-model/index.html) is an estimate, so the phase and the margin condition rest on one. The start-up calibration measures σ on every boot, but only to set `release`, and nothing carries it back. Run it once on the finished board with the lighting subsystem running and the room lit by a flickering LED lamp rather than by daylight, and put the σ it reports into `channel-model`.
 
-**A ball lying on a channel at power-up needs no special handling.** That channel reads about five times its clear value, while drift moves a reading only by tens of per cent, so the calibration tells the two cases apart on its own and scales against `ball_build`.
+**A ball lying on a channel at power-up needs no special handling.** That channel reads about five times its clear value, while drift moves a reading only by tens of per cent, so the calibration tells the two cases apart and scales against `ball_build`.
 
 ## Start-up
 

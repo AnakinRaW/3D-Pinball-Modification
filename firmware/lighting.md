@@ -12,7 +12,7 @@ Which library decides whether that time is blocked or not:
 |---|---|
 | [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html) | DMA, near-zero CPU, interrupts stay enabled. **Use this** |
 | [WS2812Serial](https://www.pjrc.com/non-blocking-ws2812-led-library/) | Also non-blocking, PJRC's own |
-| FastLED | Software-timed on its own clockless output, disruptable by other interrupts. Over `USE_OCTOWS2811` it hands the transfer to OctoWS2811 instead |
+| FastLED | Its built-in clockless output is timed in software, and other interrupts disrupt it. Over `USE_OCTOWS2811` it hands the transfer to OctoWS2811 instead |
 | Adafruit NeoPixel | Disables all interrupts for the whole frame. **Do not use** |
 
 **FastLED is the frontend, OctoWS2811 the output engine.** FastLED holds the pixel array, the effects and the power limit, and OctoWS2811 does the DMA transfer.

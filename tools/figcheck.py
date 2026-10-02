@@ -998,7 +998,7 @@ def pin_refs(path: pathlib.Path, table: dict[str, int], rep: Report):
     """Every marked pin in one file, and the spans of each line it occupies.
 
     The spans cover the number and, in a fenced block, the note naming it, whose
-    signal names carry digits of their own. The figure passes skip them, so a
+    signal names carry digits too. The figure passes skip them, so a
     pin needs no aside in the model.
     """
     body = _norm(path.read_text(encoding="utf-8"))
@@ -1706,8 +1706,7 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
                       + (f"  [{f.sheet}]" if f.sheet else ""))
             print()
         derived = [f for f in model.figs.values() if f.kind == "derived"]
-        print(f"{len(derived)} figures are computed from those, and carry no source "
-              f"of their own.")
+        print(f"{len(derived)} figures are computed from those and carry no source.")
         return 0
 
     tokens = parse_document(model.document, model.section, model.until)

@@ -14,7 +14,7 @@ A `Machine` typed struct is passed to the game, allowing it to access game compo
 
 ## The host
 
-The host runs the games. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). At start-up it starts the game that ran last, or a default game. Once the running game has finished, its post-game phase included, the host starts it anew on its own.
+The host runs the games. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). At start-up it starts the game that ran last, or a default game. Once the running game has finished, its post-game phase included, the host starts it anew.
 
 At every start of a game, including machine power-up, the host performs the same sequence:
 

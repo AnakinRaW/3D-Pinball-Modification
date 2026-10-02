@@ -705,7 +705,7 @@ Both parts give I<sub>GSS</sub> as 100 nA maximum, the IRL540N at V<sub>GS</sub>
 One standard value inside each of those walls:
 
 ```
-100 Ω    above the 42 Ω single-channel bound  → 22 mA solving V_F on its own curve, 47 mW
+100 Ω    above the 42 Ω single-channel bound  → 22 mA solving V_F on the LED's curve, 47 mW
 390 Ω    below the 431 Ω characterising point → 4.4 mA at the weakest corner
 2.2 kΩ   twice the 1 kΩ resolution floor      → 80 mV, 24 steps per 36.6 µA
 4.7 kΩ   under the 5.19 kΩ acquisition wall   → 7.6 τ of window, 501 µA of headroom

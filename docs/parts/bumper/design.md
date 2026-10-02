@@ -25,7 +25,7 @@ Each channel switches its coil on the low side with an N-channel MOSFET. The gat
 The foil is one sheet on the playfield, fed from 3.3 V through R91. That resistor protect unlikely short circuits if anything other than the designed sense channels grounds the foil.
 
 
-Each solenoid shell reaches the board on its own wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
+Each solenoid shell reaches the board on a separate wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
 
 ## Supply
 
@@ -201,7 +201,7 @@ R_S       between the node and the Teensy pin     10 kΩ
           pin clamps                            = 3.61 V
           5 V through the series resistor into an
           unpowered pin, whose ceiling is that
-          0.31 V on its own                     = 0.469 mA
+          0.31 V alone                          = 0.469 mA
           what PJRC calls unlikely to harm        1 mA
 I_FOIL    3.3 V through one closed branch       = 0.319 mA
           all three closed together             = 0.898 mA

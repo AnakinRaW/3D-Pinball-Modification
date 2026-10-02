@@ -74,7 +74,7 @@ Drop a section where its content is derivable from what already stands, and wher
 | Nothing | The whole paragraph goes |
 | One thing, and one sentence carries it | That sentence stays, everything else in the paragraph goes |
 | One thing, said in three formulations | One formulation stays |
-| Every sentence carries a claim of its own | The paragraph survives whole |
+| Every sentence carries a separate claim | The paragraph survives whole |
 
 The chip-select paragraph that prompted this rule said "the select is framed per conversion", then "the transfer list is split per conversion, with the select toggled between them", then "`SPI.transfer` leaves the select to the caller around each transfer". Three sentences, one instruction. What it owed the reader was the instruction, the failure it prevents and the reason the library allows it.
 

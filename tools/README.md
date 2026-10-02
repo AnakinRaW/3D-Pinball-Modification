@@ -59,7 +59,7 @@ An aside is a quoted datasheet row, a package, a pitch, a plain count, or a figu
 
 A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries.
 
-Each check reports on its own line, and any of them can fail the run:
+Each check reports on a separate line, and any of them can fail the run:
 
 | The run prints | What it checks |
 |---|---|
