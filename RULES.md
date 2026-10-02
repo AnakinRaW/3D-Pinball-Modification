@@ -150,6 +150,7 @@ Banned:
 - **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 
 - **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula, the hyphen inside a compound word and the dash spanning a numeric range, as in 18–20 mA, stay.
+- **Inserted asides.** No clause, appositive or example set into the middle of a sentence, whether commas, parentheses or dashes set it off. The inserted fact goes into a separate sentence. The sentence that prompted this rule: *"The SD specification allows a card at most 100 ms for each block it reads and 250 ms for each block it writes, so the longest transfer, one stream chunk, takes 800 ms at most."*
 
 **The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
 
