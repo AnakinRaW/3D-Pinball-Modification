@@ -46,7 +46,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | 14 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37 |
 | 8 of 18 analog inputs | A0, A1, A2 sensors; A4, A5 rotary sensor; A14, A15, A16 solenoids |
 
-CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](../firmware/general-design.md#timers-a-driver-owns) sets out for the firmware.
+CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](../firmware/general-design.md#peripherals-a-driver-owns) sets out for the firmware.
 
 ## Reserved
 
@@ -78,6 +78,7 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 |---|---|
 | Serial2 | Lighting, pins 7 and 8 |
 | I²S1 | Targets, pins 20, 21 and 23 |
+| Serial5 | Targets, pins 20 and 21 |
 | CAN1 | Targets, pins 22 and 23 |
 | Wire2 and Serial6 | Display, pins 24 and 25 |
 | Serial7 | Display, pins 28 and 29 |
@@ -140,12 +141,37 @@ Three edge pins remain, 17, 30 and 41, and none of them can carry PWM. Beyond th
 
 Any digital use of an analog-capable pin costs its analog input.
 
+### Timers behind the PWM pins
+
+The bracket names the channel of the timer that drives the pin: A, B or X for a FlexPWM submodule, 0 to 3 for a QuadTimer.
+
+| Timer | Pins, with the channel driving each |
+|---|---|
+| FlexPWM1.0 | 1 (X), 44 (B), 45 (A) |
+| FlexPWM1.1 | 0 (X), 42 (B), 43 (A) |
+| FlexPWM1.2 | 24 (X), 46 (B), 47 (A) |
+| FlexPWM1.3 | 7 (B), 8 (A), 25 (X) |
+| FlexPWM2.0 | 4 (A), 33 (B) |
+| FlexPWM2.1 | 5 (A) |
+| FlexPWM2.2 | 6 (A), 9 (B) |
+| FlexPWM2.3 | 36 (A), 37 (B) |
+| FlexPWM3.0 | 54 (A) |
+| FlexPWM3.1 | 28 (B), 29 (A) |
+| FlexPWM3.3 | 51 (B) |
+| FlexPWM4.0 | 22 (A) |
+| FlexPWM4.1 | 23 (A) |
+| FlexPWM4.2 | 2 (A), 3 (B) |
+| QuadTimer1 | 10 (0), 12 (1), 11 (2) |
+| QuadTimer2 | 13 (0) |
+| QuadTimer3 | 19 (0), 18 (1), 14 (2), 15 (3) |
+
 ## Sources
 
 - [Teensy 4.1 pin assignment card, front](https://www.pjrc.com/teensy/card11a_rev4_web.pdf) and [back](https://www.pjrc.com/teensy/card11b_rev4_web.pdf), rev 4: every pin figure above
 - [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png): the LED and its series resistor on the pin 13 net, and that no buffer stands between them and the pin
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html): pin counts, microSD via SDIO, Ethernet PHY, USB host
 - [PWM and tone on Teensy](https://www.pjrc.com/teensy/td_pulse.html): the PWM pin to timer table, that pins on one timer share a frequency, and that a lower frequency buys resolution
+- [`teensy4/pwm.c`](https://github.com/PaulStoffregen/cores/blob/master/teensy4/pwm.c) in PJRC's core: the timer and channel behind each PWM pin of the Teensy 4.1
 - [`research/teensy-4.1.md`](research/teensy-4.1.md): electrical limits per pin
 
 Cross-check against PJRC's headline counts: 42 header pins + 6 microSD + 7 bottom pads = 55 total I/O, and 27 PWM on the headers + 8 on the underside = 35 PWM. Both match the product page. The [technical specifications table](https://www.pjrc.com/teensy/techspecs.html) lists 2 SPI ports where the product page says 3. SPI2 falls entirely on pins 42–54, which accounts for the difference.

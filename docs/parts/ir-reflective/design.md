@@ -76,7 +76,7 @@ One transistor switches all emitters together, so a single Teensy pin controls t
 |---|---|
 | Supply | Pin 1 of every sensor board to the board's 3.3 V |
 | Signal, per channel | Pin 2 of each board to an analog input, with a 4.7 kΩ pull-down to GND at the sensor-side node. The pull-down converts the photocurrent into a voltage; without it the output carries no measurable signal |
-| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2 kΩ from the clock pin, with a 100 kΩ pull-down to GND at the gate |
+| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2 kΩ from the isolator's CLOCK output, with a 100 kΩ pull-down to GND at the gate |
 | Ground | No ground line runs to the sensor boards. The returns are Pin 2 through its pull-down and Pin 3 through its 220 Ω and the transistor |
 
 Every value here is derived in [the appendix](#appendix-derivations).
