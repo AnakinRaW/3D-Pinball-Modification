@@ -204,7 +204,7 @@
   <text x="710" y="444" font-size="12" font-weight="700" fill="#8a2be2">GRID · not identified</text>
   <text x="30" y="500" font-size="12.5" fill="#666">One grid is pulled to ground at a time, the other two float, so each LED is lit for at most a third of the pass.</text>
   <text x="30" y="522" font-size="12.5" fill="#666">The datasheet gives about 4 ms per display cycle, oscillator dependent, and does not say whether that is one grid or all three.</text>
-  <text x="30" y="544" font-size="12.5" fill="#666">Solid: measured at P28, six LEDs on one grid, each on its own segment line.</text>
+  <text x="30" y="544" font-size="12.5" fill="#666">Solid: measured at P28, six LEDs on one grid, each on a separate segment line.</text>
   <text x="30" y="566" font-size="12.5" fill="#666">Dashed: a position the matrix offers whose LED is not identified.</text>
   <text x="30" y="588" font-size="12.5" fill="#666">The mainboard carries 14 single-colour LEDs, which would fit in the 15 positions that remain.</text>
 </svg>

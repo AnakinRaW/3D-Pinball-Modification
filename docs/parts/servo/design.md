@@ -15,7 +15,7 @@ The SER0049 runs from 4.8 V to 6 V. A pulse of 500 µs turns it to 0°, and a pu
 
 The sheet gives no restart for the motor after a protection cut. The servo has no feedback line. The firmware cannot see a protection cut.
 
-The SER0049 has no end stop of its own and turns all the way round by hand. The mechanism's stops keep the arm inside its travel. With the arm off the mechanism, the direction of the first move after power-up is unknown.
+The SER0049 has no end stop and turns all the way round by hand. The mechanism's stops keep the arm inside its travel. With the arm off the mechanism, the direction of the first move after power-up is unknown.
 
 ## End positions
 
