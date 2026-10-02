@@ -40,11 +40,25 @@ Widths are estimated from character classes for a sans-serif face, not measured 
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. Two further models hold what several subsystems share: [`docs/research/teensy-4.1.py`](../docs/research/teensy-4.1.py) the figures of the board and its chip, and [`firmware/figures.py`](../firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
 
 ```
 python tools/figcheck.py --sheets                                  every model, then the pins
 python tools/figcheck.py docs/parts/ir-reflective/figures.py       one model, and the pins its files mark
+```
+
+A figure is declared in one model, and every other model that needs it takes it by name:
+
+```python
+MODEL.uses("v_3v3", of="teensy-4.1", group="V_GATE", section=DRIVE, stated=True)
+```
+
+The value, the unit, the kind and the source stay where the figure is declared. The taking model says only how its own documents state the figure, so each document is still checked line by line. Two models may take figures from each other, as the firmware takes the solenoids' pull-in while the solenoids take its watchdog. The models are evaluated figure by figure, and only a figure that rests on itself is a cycle.
+
+A constant a listing writes as a bare number follows the figure it encodes:
+
+```python
+MODEL.as_written("t_tick_us", of="t_tick", unit="µs")    # kPeriodUs = 5000
 ```
 
 Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and metre. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
@@ -55,9 +69,9 @@ Every number in the prose is checked too, against every declared quantity and wi
 MODEL.aside("2.54 mm", "the connector pitch")
 ```
 
-An aside is a quoted datasheet row, a package, a pitch, a plain count, or a figure the model already holds at another unit. Where the reason reads "derived in prose", the entry is a debt: rule 15 wants that figure in the model, and the list is where it is visible until it gets there.
+An aside is a quoted datasheet row, a package, a pitch or a plain count. A figure the model holds at another unit is declared with `as_written` instead. Where the reason reads "derived in prose", the entry is a debt: rule 15 wants that figure in the model, and the list is where it is visible until it gets there. An aside whose number no document states any more fails the run, since the model then names a number that has left the documents.
 
-A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries.
+A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries. A table cell holding nothing but a bare number, such as an interrupt priority, can be the line a dimensionless figure states. Nothing requires such a cell to be claimed, since a pin or a count fills a table the same way.
 
 Each check reports on a separate line, and any of them can fail the run:
 
@@ -68,12 +82,22 @@ Each check reports on a separate line, and any of them can fail the run:
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated |
 | Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
+| what the pins can carry | The pin table's port, capability, timer and FlexIO rows are the ones the board's model gives. See [What the pins can carry](#what-the-pins-can-carry) |
+| what the allocation costs | Each of the two cost tables names every port, timer and FlexIO its part of the table takes and nothing else, lists every pin a taken port has no alternative for, and states the PWM pins and analog inputs it takes correctly |
 | which way a figure moves | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
 | readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
 | what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
 | readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
 | datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
 | the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
+| one driver at a time | No net carries two outputs at once: an output that always drives shares its net with no other output, and tri-state outputs on one net have a select each. See [Wiring](#wiring) |
+| a defined level | A net that no push-pull output drives has a pull-up or a pull-down |
+| the Teensy's rail on its pins | Every output, pull and contact on a net that reaches a Teensy pin runs from the Teensy's own 3.3 V, or pulls to ground |
+| the pins the table gives | A model wires only to pins the pin table gives its subsystem, and wires every pin of the allocation table that it holds |
+| pin functions | Every pin's Peripheral entry is a port signal, a timer channel or a FlexIO signal the board's model gives that pin, or a plain digital pin |
+| owned peripherals | A peripheral a model owns is used by no other subsystem's pin and owned by no other model |
+| shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. A model draws a slot for every call of `driverTick.attach(` and `deviceMonitor.watch(` its listings make. On the bench a subsystem runs alone, and its own model checks that case |
+
 A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/` or `firmware/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 
 Flags:
@@ -116,6 +140,49 @@ A Teensy pin is typed once, in [`docs/pin-assignment.md`](../docs/pin-assignment
 A number the text calls a Teensy pin in so many words, as in "Teensy pin 31", fails the run without its marker. A comment in a drawing cannot carry one, so it names no pin number.
 
 When a diff moves a pin in the table, its old number is listed under **Worth knowing** wherever it still stands unmarked. That covers the first column of a table headed Pin under a heading that names the Teensy, and every line that names a pin together with the Teensy, PJRC or one of its peripherals. A timer or a port the table no longer names is listed the same way. The pin table, the research notes and the datasheets are left out, since they describe the board rather than this build's allocation. Any other unmarked pin number is not checked, which is right for a connector pin or an IC's.
+
+### Wiring
+
+Every model declares its subsystem's nets beside its figures. A net names the Teensy signal it reaches, as the pin table names it up to the first comma, and every part on it:
+
+```python
+MODEL.net("MISO, Teensy side",
+          drives("U3 OUTF through R34", "push-pull", rail=TEENSY_RAIL, src="..."),
+          teensy="MISO")
+MODEL.net("ADC-DOUT",
+          drives("U1 DOUT through R37", "tri-state", rail="3V3_ADC", select="CS-A", src="..."),
+          drives("U2 DOUT through R38", "tri-state", rail="3V3_ADC", select="CS-B", src="..."),
+          pull("R36", "the board's 3.3 V", src="..."),
+          reads("U3 INF", src="..."))
+```
+
+| Part | What it does to the net |
+|---|---|
+| `drives(name, "push-pull", rail=...)` | Drives the net whenever its rail is up |
+| `drives(name, "tri-state", rail=..., select=...)` | Drives it only while the signal `select` names is active |
+| `drives(name, "open-drain")` | Pulls it low, and lets go otherwise |
+| `contact(name, to=...)` | Closes it to ground, or to the rail `to` names |
+| `pull(name, rail)` | Holds it at a rail through a resistor, `"gnd"` for a pull-down |
+| `reads(name)` | Reads it and drives nothing |
+
+The Teensy pin itself takes the part its Peripheral entry gives it. A port signal drives the net the way the board's model declares that signal, a timer channel and a plain digital output drive it push-pull, and a plain digital input reads it. Nets that reach one Teensy signal merge across the models, so a second subsystem on a pin meets the parts of the first.
+
+`MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. Where a listing takes a slot by a call, `call="driverTick.attach("` names it, and every model's documents then make that call as often as the model draws a slot. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
+
+### What the pins can carry
+
+The board's model declares what each pin can carry, every declaration with its source:
+
+```python
+MODEL.port("SPI", ("MOSI", 11), ("MISO", 12), ("SCK", 13), ("CS", 10, 36, 37), src=CARD_PINS)
+MODEL.timer("QuadTimer3", (19, "0"), (18, "1"), (14, "2"), (15, "3"), src=PWM_C)
+MODEL.flexio("FlexIO3", (19, 0), (18, 1), (14, 2), (15, 3), ..., src=FLEXIO_RM)
+MODEL.analog(*range(14, 28), 38, 39, 40, 41, src=CARD_PINS)
+```
+
+A signal lists the pins that can carry it, alternatives in the order the pin card gives them. `port_roles` sets how a pin carrying a signal drives its net, and which signals a port works without, as SPI does without its CS pins. Invariants in the model hold the data to PJRC's own counts of pins, PWM pins and analog inputs.
+
+`--write` writes the pin table's port rows, its PWM and analog rows, its timer rows and its FlexIO rows from the model, and the run fails on a row that differs from it. A port, a timer or a FlexIO row also names the subsystem that uses it, which the run takes from the allocation rows that name it. The allocation itself stays typed in the table. The two cost tables are typed by hand as well, since their rows carry the reasons, and the run checks them against what the pins take. A port is taken once a pin carrying a signal it needs is taken, or once a row names one of its signals. A timer is taken once a row names one of its channels, and a FlexIO once a row names one of its signals.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
 

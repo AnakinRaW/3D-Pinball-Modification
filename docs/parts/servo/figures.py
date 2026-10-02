@@ -8,7 +8,7 @@ value feeds and what it rests on.
 """
 import pathlib
 
-from figcheck import Model, ln
+from figcheck import Model, drives, ln, pull, reads
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("servo", HERE / "design.md", section=None, until="## Sources",
@@ -22,7 +22,6 @@ asm = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="assumed", **kw)
 fig = MODEL.derived
 
 SERVO = "SER0049-DFRobot.pdf"
-MCU = "IMXRT1060CEC.pdf"
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
 
 PULSE = "The pulse"
@@ -71,18 +70,11 @@ def _(t_max, t_min, t_step):
 # ===========================================================================
 # the signal levels: the Teensy's pin through R3 into U1
 # ===========================================================================
-dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, PJRC pin assignment card 11a rev4",
-    group="LEVELS", section=LEVELS, stated=True)
-ds("v_oh_drop", 0.15, "V", sheet=MCU, stated=False, src="Table 22 single voltage GPIO DC "
-   "parameters, high-level output voltage VOH minimum, NVCC_XXXX - 0.15 V at Ioh = -1 mA "
-   "for ipp_dse 011 to 111; pinMode(OUTPUT) in PJRC's cores/teensy4/digital.c sets 7")
-ds("v_ol_max", 0.15, "V", sheet=MCU, src="Table 22, low-level output voltage VOL maximum "
-   "at Iol = 1 mA", group="LEVELS", section=LEVELS, stated=True)
-ds("i_oh_test", 1, "mA", sheet=MCU, stated=False, src="Table 22, the current VOH and VOL "
-   "are specified at for ipp_dse 011 to 111")
-ds("r_keeper_min", 105, "kΩ", sheet=MCU, src="Table 22, keeper circuit resistance "
-   "minimum; Table 86 gives every edge pin a keeper on reset",
-   group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("v_3v3", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("v_oh_drop", of="teensy-4.1")
+MODEL.uses("v_ol_max", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("i_oh_test", of="teensy-4.1")
+MODEL.uses("r_keeper_min", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
 dec("r_pd", 10, "kΩ", src="R1, from the pin to ground, chosen to hold U1's input under its "
     "low level against the pin's keeper after a reset, at a third of a milliamp while the "
     "pin drives high", group="LEVELS", section=LEVELS, stated=True)
@@ -96,14 +88,9 @@ ds("ii_u1", 1, "µA", src=f"{BUFFER}, 5.5 Electrical Characteristics, input leak
 dec("r_in", 2.2, "kΩ", src="R3, from the pin to U1's input, chosen so the pin's current into "
     "U1's clamp diode stays far under its 4 mA while the machine's 5 V is off",
     group="LEVELS", section=LEVELS, stated=True)
-dec("i_pin_max", 4, "mA", stated=False, src="the recommended maximum output current per "
-    "pin, Teensy 4.1 product page; the comparison table's 10 mA spans older generations")
-ds("v_clamp_over", 0.31, "V", sheet=MCU, src="Table 7, Vin/Vout maximum given as "
-   "OVDD + 0.31 V, which leaves 0.31 V on a pin while the Teensy is unpowered",
-   group="LEVELS", section=LEVELS, stated=True)
-asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contacts, every wire "
-    "the same; the estimate the solenoid model takes, not measured",
-    group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("i_pin_max", of="teensy-4.1")
+MODEL.uses("v_clamp_over", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("r_lead", of="solenoid", group="LEVELS", section=LEVELS, stated=True)
 ds("iik_u1", 20, "mA", src=f"{BUFFER}, 5.1 Absolute Maximum Ratings, input clamp current IIK "
    "at VI > VCC + 0.5 V; 7.3.3 places a clamp diode from each input to VCC",
    group="OFF", section=LEVELS, stated=True)
@@ -230,8 +217,7 @@ def _(vcc_u1_max, r_series):
 # ===========================================================================
 # the supply
 # ===========================================================================
-msr("v_5v", 5.0, "V", src="the machine's rail, measured in operation at a bumper coil, "
-    "docs/parts/solenoid/figures.py", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("v_5v", of="solenoid", group="SUPPLY", section=SUPPLY, stated=True)
 ds("v_servo_min", 4.8, "V", sheet=SERVO, src="Operating Voltage, 4.8-6 V DC, minimum",
    group="SUPPLY", section=SUPPLY, stated=True)
 ds("v_servo_max", 6, "V", sheet=SERVO, src="Operating Voltage, maximum",
@@ -250,18 +236,15 @@ ds("i_stall", 800, "mA", sheet=SERVO, src="SPECIFICATION list, stall current at 
    group="SUPPLY", section=SUPPLY, stated=True)
 ds("t_block", 5, "s", sheet=SERVO, stated=False, src="Electronic Protection: after being "
    "blocked for 5 seconds the servo turns off its power")
-asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, taken as the solenoid "
-    "design takes its own: 30 cm of loose pair at roughly 1 µH per metre, estimated from "
-    "the conductor and not measured", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("l_feed", of="solenoid", group="SUPPLY", section=SUPPLY, stated=True)
 dec("c_bulk", 100, "µF", src="C1, the 100 µF per servo that Adafruit's PCA9685 guide "
     "starts from", group="SUPPLY", section=SUPPLY, stated=True)
 dec("v_cap_rating", 10, "V", src="the working voltage C1 is bought at, twice the rail it "
     "sits across", group="SUPPLY", section=SUPPLY, stated=True)
-dec("v_sag", 4.5, "V", src="the floor the solenoid design lets the rail sag to while a coil "
-    "pulls, the minimum supply of the LED controllers on the same rail, "
-    "docs/parts/solenoid/design.md", group="SUPPLY", section=SUPPLY, stated=True)
-dec("t_pull", 50, "ms", stated=False, src="the pull-in the solenoid driver commands, "
-    "docs/parts/solenoid/design.md")
+# the floor the solenoid design lets the rail sag to while a coil pulls, the minimum
+# supply of the LED controllers on the same rail, and the pull-in its driver commands
+MODEL.uses("v_led_min", of="solenoid", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("t_on_max", of="solenoid")
 ds("c_bypass", 100, "nF", src=f"{BUFFER}, 8.3 Power Supply Recommendations, a 0.1 µF "
    "capacitor at each VCC terminal, as close to it as possible",
    group="SUPPLY", section=SUPPLY, stated=True)
@@ -285,9 +268,9 @@ def _(i_stall, l_feed, c_bulk):
 
 
 @fig("v_short", "V", group="SUPPLY", section=SUPPLY, prints="up",
-     rises_with=["v_servo_min"], falls_with=["v_sag"])
-def _(v_servo_min, v_sag):
-    return v_servo_min - v_sag
+     rises_with=["v_servo_min"], falls_with=["v_led_min"])
+def _(v_servo_min, v_led_min):
+    return v_servo_min - v_led_min
 
 
 # ===========================================================================
@@ -323,7 +306,7 @@ _I("a signal wire that meets 5 V or ground holds U1's output inside its rating",
 _I("the machine's rail sits in U1's supply range",
    lambda v: v.vcc_u1_min <= v.v_5v <= v.vcc_u1_max)
 _I("U1 still runs at the rail's floor while a coil pulls",
-   lambda v: v.v_sag >= v.vcc_u1_min)
+   lambda v: v.v_led_min >= v.vcc_u1_min)
 _I("the machine's rail sits in the servo's supply range",
    lambda v: v.v_servo_min <= v.v_5v <= v.v_servo_max)
 _I("the rise at C1 keeps the servo under its maximum",
@@ -339,3 +322,21 @@ for _text, _why in [
     ("40", "t_load_timeout in milliseconds, as the driver writes it"),
 ]:
     MODEL.aside(_text, _why)
+
+
+# ===========================================================================
+# wiring
+# ===========================================================================
+# the pin feeds U1 through R3, and R1 holds it low while nothing drives it; U1's input
+# clamp diode points to its own 5 V, so it can sink the pin's current but never raises the pin
+MODEL.net("Servo signal, Teensy side",
+          pull("R1", "gnd", src="design.md, R1 pulls the pin to ground through 10 kΩ"),
+          reads("U1 input A through R3", src="design.md, R3 between the Teensy and U1"),
+          teensy="Servo signal")
+MODEL.net("Servo signal, servo side",
+          drives("U1 output Y", "push-pull", rail="the machine's 5 V",
+                 src="design.md, U1 takes its 5 V at J-PWR, and OE on ground keeps its output on"),
+          reads("the SER0049's signal input through R2", src="design.md, R2 between U1 and the servo"))
+
+MODEL.owns("FlexPWM1.1", "PWMServo sets the submodule to a 20 ms frame, and the driver writes its "
+                         "VAL0 itself, firmware/drivers/servo.md")

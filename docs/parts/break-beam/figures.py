@@ -8,7 +8,7 @@ value feeds and what it rests on.
 """
 import pathlib
 
-from figcheck import Model, Q
+from figcheck import Model, Q, TEENSY_RAIL, drives, pull
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("break-beam", HERE / "design.md",
@@ -47,31 +47,23 @@ msr("v_ol", 11, "mV", src="the white lead against ground, beam blocked, at a 3.3
 # ===========================================================================
 # what the controller brings
 # ===========================================================================
-dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, PJRC pin assignment card 11a rev4",
-    group="V_3V3", section=GATE, stated=True)
-dec("i_teensy_3v3", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V rail "
-    "available to external circuits, the total across both 3V3 header pins",
-    group="I_SUP", section=GATE, stated=True)
-asm("r_pullup", 22, "kΩ", src="the pull-up Teensyduino's INPUT_PULLUP switches on, "
-    "given as 22 kΩ in the PJRC forum; pjrc.com publishes no value",
-    group="R_PU", section=GATE, stated=True)
+MODEL.uses("v_3v3", of="teensy-4.1", group="V_3V3", section=GATE, stated=True)
+MODEL.uses("i_teensy_3v3", of="teensy-4.1", group="I_SUP", section=GATE, stated=True)
+MODEL.uses("r_pullup", of="teensy-4.1", group="R_PU", section=GATE, stated=True)
+MODEL.uses("t_monitor", of="firmware")
 
 # ===========================================================================
 # what the machine brings
 # ===========================================================================
-asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm",
-    group="D_BALL", section=GATE, stated=True)
+MODEL.uses("ball_diameter", of="ir-reflective", group="D_BALL", section=GATE, stated=True)
 dec("t_blocked_fail", 5, "s", stated=False, src="how long the beam may stay broken before the driver reports "
     "DeviceFailed, far longer than any passing ball keeps it broken")
-dec("t_beam_check", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_dead", 10, "ms", stated=False,
     src="the driver takes edges inside this window as one crossing, decided: an "
     "estimate above the few milliseconds the ball's edge takes to cross the beam "
     "and far below the gap between two drains, to be replaced by a scope reading "
     "of the output during a crossing")
-dec("v_ball", 3, "m/s", src="the fastest ball this build assumes, the speed the IR "
-    "sensing phase still confirms a hit at, docs/parts/ir-reflective/design.md",
-    group="V_MAX", section=GATE, stated=True)
+MODEL.uses("v_ball", of="ir-reflective", group="V_MAX", section=GATE, stated=True)
 
 # ===========================================================================
 # derived
@@ -123,6 +115,20 @@ for _text, _why in [
     ("0", "the gate's index, the timestamp's initial value, and the empty payload"),
     ("10000", "the dead time in microseconds, as the driver writes it without a unit"),
     ("5000", "how long the beam may stay broken, in milliseconds, as the driver writes it"),
-    ("2.54 mm", "the connector pitch"),
 ]:
     MODEL.aside(_text, _why)
+
+
+# ===========================================================================
+# wiring
+# ===========================================================================
+# the receiver's open collector pulls the line low while the beam is blocked, and the
+# Teensy's internal pull-up holds it high otherwise
+MODEL.net("Receiver output",
+          drives("receiver OUT", "open-drain", src="design.md, the receiver's output is an open collector"),
+          pull("the Teensy's internal pull-up", TEENSY_RAIL,
+               src="firmware/drivers/break-beam.md, the pin runs with INPUT_PULLUP"),
+          teensy="Receiver output of the ball drain gate")
+
+MODEL.draws("i_supply", pool=TEENSY_RAIL)   # both bodies, fed from the Teensy's 3V3
+MODEL.draws(pool="device monitor")

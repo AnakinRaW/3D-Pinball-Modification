@@ -8,7 +8,7 @@ value feeds and what it rests on.
 """
 import pathlib
 
-from figcheck import Model, Q, ln
+from figcheck import Model, Q, TEENSY_RAIL, drives, ln, pull, reads
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("magnetic-rotary", HERE / "design.md", section=None, until="## Sources",
@@ -31,8 +31,7 @@ SUPPLY = "The supply"
 dec("r_pu", 4.7, "kΩ", src="R4 and R5 on the Grove module, SDA and SCL to the module's VCC, "
     "from Seeed's Eagle schematic of the 101020692; the weakest pull-up on the bus, the "
     "Teensy's own being stronger in parallel", group="BUS", section=BUS, stated=True)
-dec("r_pu_teensy", 22, "kΩ", src="the pad pull-up Wire switches on, IOMUXC_PAD_PUS(3) in "
-    "PJRC's WireIMXRT.cpp", stated=False)
+MODEL.uses("r_pullup", of="teensy-4.1")
 asm("c_bus", 200, "pF", src="the capacitance of each bus line, taken for the module's cable with "
     "margin; no measurement",
     group="BUS", section=BUS, stated=True)
@@ -62,15 +61,15 @@ dec("n_bytes", 3, "", src="the bytes on the bus in one read: the address, and th
     "of RAW ANGLE, whose pointer the AS5600 keeps between reads", stated=False)
 dec("n_bits_byte", 9, "bits", src="the clock periods one byte takes on the bus, eight data "
     "bits and the acknowledge, UM10204", group="READ", section=READ, stated=True)
-dec("t_tick", 5, "ms", src="the period of the driver tick in firmware/driver-design.md, on "
-    "which the driver collects one read and starts the next", group="READ", section=READ, stated=True)
+MODEL.uses("t_tick", of="firmware", group="READ", section=READ, stated=True)
 ds("n_steps", 4096, "steps", sheet=SENSOR, src="the 12-bit resolution, 4096 positions per "
    "turn", group="READ", section=READ, stated=True)
 dec("n_bytes_ptr", 2, "", src="the bytes a library puts on the bus to set the register pointer "
     "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends them", stated=False)
 dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, "
     "long enough for its own recovery attempts and short enough for a game to react", stated=False)
-dec("t_monitor", 100, "ms", src="how often the device monitor of firmware/error-handling.md asks the driver", stated=False)
+MODEL.uses("t_monitor", of="firmware")
+MODEL.as_written("t_fail_ms", of="t_fail", unit="ms")
 dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
     "before the driver reports the rod still, an estimate that keeps a seal coasting out of a "
     "spin from counting as stopped", stated=False)
@@ -134,8 +133,7 @@ dec("d_magnet", 6, "mm", src="the magnet diameter the AS5600 datasheet quotes it
 # ===========================================================================
 # the supply
 # ===========================================================================
-dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, which feeds the module's VCC, PJRC pin "
-    "assignment card 11a rev4", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("v_3v3", of="teensy-4.1", group="SUPPLY", section=SUPPLY, stated=True)
 dec("v_5v", 5, "V", src="the machine's 5 V, which must not feed the module's VCC because "
     "its pull-ups follow VCC", stated=False)
 ds("vdd_min", 3.0, "V", sheet=SENSOR, src="Operating conditions, VDD3V3 in 3.3 V mode, "
@@ -162,11 +160,35 @@ _I("the report threshold stays a small part of a turn",
 for _text, _why in [
     ("0.25 mm", "how far the rod's axis may sit from the package centre with a 6 mm magnet, "
                 "AS5600 datasheet, a mounting figure"),
-    ("96", "the NVIC priority of the tick, firmware/driver-design.md"),
-    ("1000", "the fail time in milliseconds, as the driver writes it"),
     ("12 bits", "the AS5600's resolution, RES in the datasheet's system specifications, "
                 "which gives the 4096 steps"),
     ("5", "the GPIO function in a pin's mux register, which recover() writes as Wire's "
           "force_clock() does in PJRC's WireIMXRT.cpp"),
 ]:
     MODEL.aside(_text, _why)
+
+
+# ===========================================================================
+# wiring
+# ===========================================================================
+# the module's only supply is VCC, which this build feeds from the Teensy's 3V3, so its
+# pull-ups sit at or below the Teensy's rail
+_PU = ("design.md, the module's pull-ups R4 and R5, 4.7 kΩ; the module runs from VCC alone, "
+       "which comes from the Teensy's 3V3")
+_WIRE = "firmware/drivers/magnetic-rotary.md, Wire.begin() sets up the pins and their pull-ups"
+MODEL.net("SDA",
+          drives("AS5600 SDA", "open-drain", src="UM10204, every I²C device drives SDA open-drain"),
+          pull("the module's pull-up on SDA", TEENSY_RAIL, src=_PU),
+          pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
+          teensy="SDA to the rotary sensors")
+MODEL.net("SCL",
+          reads("AS5600 SCL", src="design.md, the AS5600's input levels on the bus"),
+          pull("the module's pull-up on SCL", TEENSY_RAIL, src=_PU),
+          pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
+          teensy="SCL to the rotary sensors")
+
+MODEL.owns("Wire", "the driver runs the LPI2C1 controller itself after begin(), "
+                   "firmware/drivers/magnetic-rotary.md")
+MODEL.draws("i_dd", pool=TEENSY_RAIL)   # the module, fed from the Teensy's 3V3
+MODEL.draws(pool="driver tick")      # one read collected and the next started on every tick
+MODEL.draws(pool="device monitor")

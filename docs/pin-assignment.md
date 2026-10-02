@@ -5,9 +5,9 @@
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
 | 0 | Servo signal | FlexPWM1.1 channel X | [Servo](parts/servo/design.md) |
-| 2 | DIN to the DFR0954 | I²S2 TX_DATA | [Audio](parts/audio/design.md) |
-| 3 | LRC to the DFR0954 | I²S2 TX_SYNC | [Audio](parts/audio/design.md) |
-| 4 | BCLK to the DFR0954 | I²S2 TX_BCLK | [Audio](parts/audio/design.md) |
+| 2 | DIN to the DFR0954 | I²S2 data out | [Audio](parts/audio/design.md) |
+| 3 | LRC to the DFR0954 | I²S2 LRCLK | [Audio](parts/audio/design.md) |
+| 4 | BCLK to the DFR0954 | I²S2 BCLK | [Audio](parts/audio/design.md) |
 | 11 | MOSI, data to the converters | SPI MOSI | [IR ball sensing](parts/ir-reflective/design.md) |
 | 12 | MISO, data from the converters | SPI MISO | [IR ball sensing](parts/ir-reflective/design.md) |
 | 13 | SCK, clock to the converters | SPI SCK | [IR ball sensing](parts/ir-reflective/design.md) |
@@ -149,7 +149,7 @@ One edge pin remains, pin 1. The targets take the QSPI memory pads on the unders
 | Capability | Pins | Count |
 |---|---|---|
 | PWM | 0–15, 18, 19, 22–25, 28, 29, 33, 36, 37 | 27 |
-| Analog in | A0–A13 = 14–27 in order, A14–A17 = 38, 39, 40, 41 | 18 |
+| Analog in | A0–A13 = 14–27 in order, A14–A17 = 38–41 in order | 18 |
 | Interrupt | all digital pins | — |
 
 Any digital use of an analog-capable pin costs its analog input.

@@ -7,6 +7,7 @@ Component specifications and the reasoning behind a part choice are recorded her
 | Document | Contents |
 |---|---|
 | [`teensy-4.1.md`](teensy-4.1.md) | Specifications of the selected controller and the electrical constraints it imposes |
+| [`teensy-4.1.py`](teensy-4.1.py) | The controller's figures and what each of its pins can carry, each with its source, which the subsystems' models take their Teensy figures from |
 | [`Sensors/cny70.md`](Sensors/cny70.md) | The reflective sensor held for a bench trial: its ratings, what its datasheet leaves unspecified, and how it compares to the part in the stock boards |
 | [`Sensors/adafruit-2167-ir-break.md`](Sensors/adafruit-2167-ir-break.md) | The IR break-beam pair at the ball drain: the output polarity read on the bench, and the fastest ball its response time reports |
 | [`Rokr/1_power-supply.md`](Rokr/1_power-supply.md) | The stock 5 V input: adapter rating, the protection and filtering parts at the power entry, the inventory of loads on the rail, and why an undersized supply resets the machine |

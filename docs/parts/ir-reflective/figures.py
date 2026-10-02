@@ -13,7 +13,8 @@ table, the section the bold lead above it, the label a substring of the line.
 """
 import pathlib
 
-from figcheck import Model, Q, ceil_to, db, exp, floor_to, interp_log, ln, log10, sqrt
+from figcheck import (Model, Q, TEENSY_RAIL, ceil_to, db, drives, exp, floor_to,
+                      interp_log, ln, log10, pull, reads, sqrt)
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("ir-reflective", HERE / "design.md",
@@ -67,7 +68,7 @@ PI = Q(3.141592653589793)
 dec("n_channels", 16, "", src="sixteen positions, the case every figure is derived at")
 dec("n_stock", 3, "", src="the three sensors the stock machine fits")
 dec("n_eight", 8, "", src="eight positions, one converter fitted")
-dec("t_monitor", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
+MODEL.uses("t_monitor", of="firmware")
 dec("t_channel_fail", 1, "s", stated=False, src="how long a channel's difference may stay under "
     "half its clear value before the driver reports DeviceFailed")
 dec("n_cal", 200, "", stated=False, src="readings the start-up calibration averages per channel, the quarter second that also gives the noise floor")
@@ -97,16 +98,15 @@ dec("c_entry", 22, "µF", src="C5, printed value")
 dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin")
 dec("t_phase", 600, "µs", src="the phase, sitting on the dwell bound derived below")
 dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initialisations, the stock machine's own half period")
-dec("f_bus", 150, "MHz", src="the RT1062 peripheral clock QuadTimer3 counts, F_BUS_ACTUAL at the Teensy 4.1's default 600 MHz, PJRC's cores/teensy4/clockspeed.c")
+MODEL.uses("f_bus", of="teensy-4.1")
 dec("qt_prescale", 4, "×", src="QuadTimer3's prescaler, the smallest power of two whose span holds the fallback phase")
-ds("qt_range", 65536, "steps", src="IMXRT1060RM Rev. 3, section 54.2: every QuadTimer channel counts in 16 bits")
+MODEL.uses("qt_range", of="teensy-4.1")
 dec("v_mod_nom", 3.3, "V", group="V_OUT", section=BASE,
     stated=True, src="the D24V5F3 variant chosen for the 3.3 V rail")
 dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
     stated=True, src="carried on top of the module maximum as the working bound")
 dec("bits", 10, "", src="the MCP3008's resolution")
-dec("i_teensy_3v3", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V rail "
-    "available to external circuits")
+MODEL.uses("i_teensy_3v3", of="teensy-4.1")
 dec("r_led_e12_below", 47, "Ω", src="the E12 value above the single-channel bound")
 dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterising point")
 dec("r_pd_alt", 2.2, "kΩ", src="one standard value, twice the resolution floor")
@@ -1754,6 +1754,8 @@ asm("place_channel", 25, "mm", group=_PLACE, stated="loose",
     src="how far a channel's pull-down may sit from its converter input, so the stub adds little to the source resistance")
 asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm; "
     "no measurement of it is recorded")
+dec("v_ball", 3, "m/s", src="the fastest ball this build assumes, which the break beam and "
+    "the solenoids' sense lines take as well")
 msr("stock_pulse_rate", 333, "Hz", src="the stock mainboard's emitter drive, 1.5 ms on and "
     "1.5 ms off at the P33 sensor board, docs/research/Rokr/2_ir-reflective-sensor-p33.md")
 dec("r_led_brighter", 150, "Ω", src="the E12 value below 220 Ω, for a channel that "
@@ -1827,6 +1829,8 @@ MODEL.curve("Figure 4, collector current against ambient temperature",
 # any formula above. A slip that satisfies the arithmetic still has to satisfy
 # these, and several of them are the safety claims of the whole subsystem.
 _I = MODEL.invariant
+_I("the phase this design runs still confirms the fastest ball the build assumes",
+   lambda v: v.v_hit >= v.v_ball)
 _I("the three emitter cases are ordered",
    lambda v: v.i_led_least < v.i_led_nominal < v.i_led_worst)
 _I("the rail brackets its nominal",
@@ -1907,7 +1911,6 @@ for _text, _why in [
     ("0.053 Ω", "IRL540N R_DS(on) maximum at V_GS = 10 V"),
     ("0.063 Ω", "IRL540N R_DS(on) at V_GS = 5 V"),
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
-    ("270 ns", "t_CSH of DS21295D, the chip-select high time"),
 
     # a package, a pitch, a count: not a measured quantity at all
     ("0805", "the resistor package, a name rather than a value"),
@@ -1930,7 +1933,55 @@ for _text, _why in [
     ("111 µs", "derived in prose: the reference filter's time constant"),
     ("7.35 Ω", "derived in prose: the source resistance behind the machine's 5 V"),
     ("2.98 V", "derived in prose: the node ceiling of the rejected Design A"),
-    ("19.78 µs", "derived in prose: a conversion and its overhead, in the firmware note"),
     ("2.6 ms", "derived in prose: five time constants of the reference filter"),
 ]:
     MODEL.aside(_text, _why)
+
+
+# ===========================================================================
+# wiring: every net at the Teensy, and the isolator's board-side nets
+# ===========================================================================
+_SVG = "ir-sensor-mainboard.svg"
+_ISO_S1 = "design.md, U3: VCC1 from the Teensy's 3V3 over J-T pin 7, so U3 never drives MISO above the Teensy's own rail"
+_ISO_S2 = "design.md, U3: VCC2 from the board's rail"
+
+# side 1 of U3 reads the five signals the Teensy drives
+for _sig, _ch in (("SCK", "A"), ("MOSI", "B"), ("CS-A", "C"), ("CS-B", "D"), ("CLOCK", "E")):
+    _parts = [reads(f"U3 IN{_ch}", src=f"{_SVG}, channel {_ch} of the isolator")]
+    if _sig == "SCK":
+        _parts.append(reads("the Teensy's LED and its series resistor",
+                            src="PJRC schematic41.png, the LED on the SCK pin's net"))
+    MODEL.net(f"{_sig}, Teensy side", *_parts, teensy=_sig)
+
+# side 1 of U3 drives MISO: it has no enable pin, so it drives the line whenever the Teensy is powered
+MODEL.net("MISO, Teensy side",
+          drives("U3 OUTF through R34", "push-pull", rail=TEENSY_RAIL,
+                 src=_ISO_S1 + "; SLLSER1H Table 4-1 lists no enable pin"),
+          teensy="MISO")
+
+# side 2 of U3 drives the converters and Q1
+for _sig, _ch, _to in (("SCK", "A", "U1 and U2 CLK"), ("MOSI", "B", "U1 and U2 DIN"),
+                       ("CS-A", "C", "U1 CS"), ("CS-B", "D", "U2 CS")):
+    MODEL.net(f"{_sig}, board side", drives(f"U3 OUT{_ch}", "push-pull", rail="the board's 3.3 V", src=_ISO_S2),
+              reads(_to, src="design.md, the MCP3008 pin table"))
+MODEL.net("CLOCK, board side",
+          drives("U3 OUTE", "push-pull", rail="the board's 3.3 V", src=_ISO_S2),
+          reads("Q1 gate through R33", src="design.md, R33 limits the current into Q1's gate"),
+          pull("R35", "gnd", src="design.md, R35 holds the LED bus off while the board's rail comes up"))
+
+# the converters share DOUT, each driving it only while its own chip select is low
+MODEL.net("ADC-DOUT",
+          drives("U1 DOUT through R37", "tri-state", rail="3V3_ADC", select="CS-A",
+                 src="design.md, both converters release DOUT whenever neither is selected"),
+          drives("U2 DOUT through R38", "tri-state", rail="3V3_ADC", select="CS-B",
+                 src="design.md, both converters release DOUT whenever neither is selected"),
+          pull("R36", "the board's 3.3 V", src="design.md, R36 pulls ADC-DOUT to the board's rail"),
+          reads("U3 INF", src=f"{_SVG}, channel F of the isolator"))
+
+MODEL.owns("SPI", "U3 drives MISO whenever the Teensy is powered, so a second device on the bus "
+                  "will not work reliably, design.md")
+MODEL.owns("QuadTimer3", "channel 2 counts the phases and drives CLOCK, channel 3 starts the read "
+                         "block, and all four channels share one interrupt, firmware/drivers/ir-sensing.md")
+
+MODEL.draws("i_iso_s1", pool=TEENSY_RAIL)   # U3's side 1; the board itself runs from the D24V5F3
+MODEL.draws(pool="device monitor")   # the sixteen channels, firmware/drivers/ir-sensing.md

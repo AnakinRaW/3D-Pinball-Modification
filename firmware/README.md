@@ -18,3 +18,4 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`components/rotating-seal.md`](components/rotating-seal.md) | The rotating seal component: the shots and full turns a game sees of the seal |
 | [`drivers/controls.md`](drivers/controls.md) | The toggle switch driver: an event when the switch moves, and its position on request |
 | [`drivers/servo.md`](drivers/servo.md) | The servo driver: the angle as a pulse FlexPWM1.2 repeats without an interrupt |
+| [`figures.py`](figures.py) | The firmware's periods, watchdog timeout, interrupt priorities and slots, which `tools/figcheck.py` checks these documents against |

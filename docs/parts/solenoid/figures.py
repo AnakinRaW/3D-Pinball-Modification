@@ -8,15 +8,12 @@ value feeds and what it rests on.
 """
 import pathlib
 
-from figcheck import Model, Q
+from figcheck import Model, Q, TEENSY_RAIL, contact, pull, reads
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("solenoid", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "solenoid.md",
-                         HERE.parents[2] / "firmware" / "general-design.md",
-                         HERE.parents[2] / "firmware" / "driver-design.md",
-                         HERE.parents[2] / "firmware" / "error-handling.md"])
+              documents=[HERE.parents[2] / "firmware" / "drivers" / "solenoid.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -26,7 +23,6 @@ fig = MODEL.derived
 
 MOSFET = "AO3400A-AOS.pdf"
 DIODE = "1n5817.pdf"
-RT1062 = "IMXRT1060CEC.pdf"
 LED = "WS2811-Worldsemi.pdf"
 IRL = "IRL540N.PDF"
 
@@ -55,18 +51,24 @@ msr("r_contact", 30, "Ω", src="the ball's path from foil to shell, measured at 
     group="V_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
-# what the Teensy brings
+# what the Teensy and the firmware bring
 # ===========================================================================
-dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, PJRC pin assignment card 11a rev4",
-    group="V_GATE", section=DRIVE, stated=True)
-dec("v_not_tolerant", 5, "V", stated=False, src="the level the Teensy 4.1 product page "
-    "names in 'The pins are not 5V tolerant', drawn beside the Teensy block")
-dec("i_pin_max", 4, "mA", src="the recommended maximum output current per pin, "
-    "Teensy 4.1 product page; the comparison table's 10 mA spans older generations",
-    group="I_PIN", section=DRIVE, stated=True)
-dec("i_3v3_max", 250, "mA", src="PJRC pin assignment card 11a rev4, the 3.3 V rail "
-    "available to external circuits, the total across both 3V3 header pins",
-    group="I_FOIL", section=SENSE, stated=True)
+MODEL.uses("v_3v3", of="teensy-4.1", group="V_GATE", section=DRIVE, stated=True)
+MODEL.uses("v_not_tolerant", of="teensy-4.1")
+MODEL.uses("i_pin_max", of="teensy-4.1", group="I_PIN", section=DRIVE, stated=True)
+MODEL.uses("i_teensy_3v3", of="teensy-4.1", group="I_FOIL", section=SENSE, stated=True)
+MODEL.uses("i_pin_fault_max", of="teensy-4.1", group="R_S", section=SENSE, stated=True)
+MODEL.uses("v_clamp_over", of="teensy-4.1", group="R_S", section=SENSE, stated=True)
+MODEL.uses("vih_frac", of="teensy-4.1")
+MODEL.uses("vil_frac", of="teensy-4.1")
+# Table 86 of IMXRT1060CEC gives every edge pin a keeper on reset, so a trigger pin has
+# one wherever it sits. The keeper then holds the level the pin last drove, and the
+# minimum is the strongest it can be.
+MODEL.uses("r_keeper_min", of="teensy-4.1", group="V_GATE", section=DRIVE, stated=True)
+MODEL.uses("t_tick", of="firmware")
+MODEL.uses("t_monitor", of="firmware")
+MODEL.uses("t_wdt", of="firmware", group="HOLD", section=COIL, stated=True)
+MODEL.uses("ball_diameter", of="ir-reflective", group="T_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
 # what this design chooses
@@ -90,9 +92,6 @@ dec("r_series", 10, "kΩ", src="chosen so a sense wire meeting a coil wire drive
     "under a milliamp into the pin even with the Teensy unpowered, where the ceiling "
     "is 0.31 V rather than the rail plus that; the pin draws nothing, so the value "
     "costs no sense level", group="R_S", section=SENSE, stated=True)
-dec("i_pin_fault_max", 1, "mA", src="PJRC calls under 1 mA into an out-of-range pin "
-    "'very unlikely to cause harm', and states that even this does not follow NXP's "
-    "guidance", group="R_S", section=SENSE, stated=True)
 dec("r_foil", 330, "Ω", src="chosen to bound what the foil can draw from the Teensy's "
     "3.3 V rail if it reaches ground, at a value whose own fault dissipation stays "
     "well inside an 0805 and which still leaves level with all three contacts closed",
@@ -106,7 +105,6 @@ dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far un
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
 dec("t_contact_fail", 2, "s", stated=False, src="how long a sensed solenoid's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
-dec("t_contact_check", 100, "ms", stated=False, src="how often the device monitor of firmware/error-handling.md asks the driver")
 dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
     "decided above the stock machine's visibly short pull: long enough to kick the ball "
     "away, short enough that a ball cannot be fired back and forth between the three top "
@@ -116,17 +114,11 @@ dec("t_late", 1, "ms", src="how far past its pull-in a coil may still be on befo
     "main loop counts it overdue and stops feeding the watchdog; the driver tick ends a "
     "pull-in by t_on_max, late only by the other functions on the same tick, far inside this",
     group="DUTY", section=COIL, stated=True)
-dec("t_tick", 5, "ms", stated=False, src="the driver tick's period in firmware/driver-design.md, "
-    "which the rotary sensor's read sets, docs/parts/magnetic-rotary/figures.py")
 dec("t_rearm", 10, "ms", src="the cool-down after a release, during which the coil "
     "may not fire again, and how long a sensed solenoid's contact has to stay open before "
     "that channel is armed; decided above the time the plunger takes to stroke and "
     "return, which no mass or spring figure lets us compute",
     group="DUTY", section=COIL, stated=True)
-dec("t_wdt", 2, "s", src="the watchdog timeout, firmware/error-handling.md; decided "
-    "above the usual length of a write through SdFat, which firmware/drivers/storage.md describes, "
-    "and well inside the five-second limit of the requirements, so a coil whose timer never "
-    "fires is released by the restart", group="HOLD", section=COIL, stated=True)
 dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the "
     "requirements in design.md, set because the solenoids' vendor and specifications "
     "are unknown",
@@ -159,12 +151,9 @@ asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contac
     group="GND", section=SUPPLY, stated=True)
 
 # ===========================================================================
-# the ball, shared with the break beam so both subsystems assume one speed
+# the ball, the one speed every subsystem assumes
 # ===========================================================================
-asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm",
-    group="T_SENSE", section=SENSE, stated=True)
-dec("v_ball", 3, "m/s", src="the fastest ball this build assumes, "
-    "docs/parts/ir-reflective/design.md", group="T_SENSE", section=SENSE, stated=True)
+MODEL.uses("v_ball", of="ir-reflective", group="T_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
 # AO3400A, Alpha & Omega Semiconductor, Rev 3.1
@@ -221,25 +210,6 @@ ds("v_f_diode", 0.55, "V", sheet=DIODE, src="Table 4 static electrical "
    "characteristics, forward voltage drop at I_F = 1 A and T_j = 25 °C, "
    "1N5819 column", group="V_DRAIN", section=DRIVE, stated=True)
 
-
-# ===========================================================================
-# i.MX RT1062, NXP, IMXRT1060CEC Rev. 4
-# ===========================================================================
-ds("v_clamp_over", 0.31, "V", sheet=RT1062, src="Table 7, Vin/Vout maximum given "
-   "as OVDD + 0.31 V, which is where the pin's protection diode takes over",
-   group="R_S", section=SENSE, stated=True)
-ds("vih_frac", 0.7, "", sheet=RT1062, stated=False,
-   src="Table 22 single voltage GPIO DC parameters, high-level input voltage V_IH "
-   "minimum, given as 0.7 x NVCC_XXXX")
-ds("vil_frac", 0.3, "", sheet=RT1062, stated=False,
-   src="Table 22 single voltage GPIO DC parameters, low-level input voltage V_IL "
-   "maximum, given as 0.3 x NVCC_XXXX")
-# Table 86 gives every edge pin a keeper on reset, so a trigger pin has one wherever
-# it sits. The keeper then holds the level the pin last drove, and the minimum is
-# the strongest it can be.
-ds("r_keeper_min", 105, "kΩ", sheet=RT1062, src="Table 22 single voltage GPIO DC "
-   "parameters, keeper circuit resistance minimum, at V_I = 0.3 and 0.7 x "
-   "NVCC_XXXX", group="V_GATE", section=DRIVE, stated=True)
 
 # ===========================================================================
 # what else hangs on the machine's 5 V rail
@@ -630,7 +600,7 @@ _I("the drain stays inside its rating through the switch-off spike C91 leaves",
 _I("the rail may not sag past what the tightest load on it accepts",
    lambda v: v.v_5v - v.dv_allowed >= v.v_led_min)
 _I("the foil fits the Teensy's 3V3 pin",
-   lambda v: v.i_foil < v.i_3v3_max)
+   lambda v: v.i_foil < v.i_teensy_3v3)
 _I("the sense filter settles well inside how long a ball rests on a shell",
    lambda v: v.t_open < v.t_contact and v.t_close < v.t_open)
 _I("the window a contact has to stay open outlasts the contact one hit makes",
@@ -644,50 +614,43 @@ _I("the gate settles far inside the shortest pull-in the driver can command",
    lambda v: v.t_gate < v.t_on_min)
 
 
+# the driver's constants, as firmware/drivers/solenoid.md writes them
+MODEL.as_written("t_on_max_us", of="t_on_max", unit="µs")
+MODEL.as_written("t_rearm_us", of="t_rearm", unit="µs")
+MODEL.as_written("t_late_us", of="t_late", unit="µs")
+MODEL.as_written("t_contact_fail_ms", of="t_contact_fail", unit="ms")
+
+
 # ===========================================================================
 # what the documents state that the model does not compute
 # ===========================================================================
 for _text, _why in [
-    # quoted from a datasheet at a condition this design does not run
-    ("3 A", "the drain current AOS specifies R_DS(on) at"),
-
-    # measured on the stock machine, quoted rather than derived here
-    ("7.35 Ω", "the coil's winding resistance, measured"),
-    ("30 cm", "the length of the 5 V feed, from which its inductance is estimated"),
-    ("7", "the lower end of the measured contact resistance range"),
-    ("6 mm", "the plunger stroke, measured installed"),
-
-    # connector pin numbers and counts
     ("2", "a coil connector's pin count, and the second pin of one"),
-    ("5", "a connector pin number"),
-    ("6", "a connector pin number"),
-    ("8", "a connector pin number"),
     ("9", "a connector pin number, and J-T's conductor count"),
-
-    # a package, a pitch, a name rather than a value
-    ("2.54 mm", "the connector pitch"),
-
-    # constants as the driver writes them, without a unit
-    ("50000", "the commanded pull-in in microseconds"),
-    ("1000", "the overdue margin in microseconds"),
-    ("96", "the NVIC priority of the driver tick and the pin interrupts, in the table of "
-           "firmware/general-design.md and in the driver tick of firmware/driver-design.md"),
-    ("64", "the NVIC priority of the IR driver's interrupts, in the table of "
-           "firmware/general-design.md"),
-    ("128", "the NVIC priority the Teensy starts every interrupt at, "
-            "firmware/general-design.md"),
-    ("208", "the NVIC priority of the Audio library's update interrupt, in the "
-            "table of firmware/general-design.md"),
-    ("240", "the NVIC priority of the storage driver's card interrupt, in the "
-            "table of firmware/general-design.md"),
-    ("10000", "the cool-down after a release, in microseconds"),
-    ("2000", "how long a contact may stay closed before it counts as failed, in milliseconds"),
-    ("5000", "the driver tick's period in microseconds, as driver-design.md writes it"),
-    ("32", "the depth of the device monitor's queue, firmware/error-handling.md"),
-    ("100000", "the device monitor's check period in microseconds, as error-handling.md writes it"),
-    ("16", "the bytes a driver tick callback may capture, the size teensy::inplace_function "
-           "takes in PJRC's IntervalTimer.h"),
-    ("250000", "the enforced pause in microseconds"),
-    ("0805", "the resistor package, a name rather than a value"),
 ]:
     MODEL.aside(_text, _why)
+
+
+# ===========================================================================
+# wiring
+# ===========================================================================
+# each trigger drives its MOSFET's gate through R11 to R14, and R21 to R24 pull the gate
+# to power ground whenever the Teensy does not drive the pin
+for _n in range(1, 5):
+    MODEL.net(f"Trigger {_n}, Teensy side",
+              reads(f"Q{_n} gate through R1{_n}", src="design.md, R11 to R14 in series with the gates"),
+              pull(f"R2{_n} behind R1{_n}", "gnd", src="design.md, R21 to R24, the gate pull-downs on power ground"),
+              teensy=f"Solenoid trigger {_n}")
+
+# a ball bridges the foil and a solenoid's shell, which lifts that sense node to the
+# Teensy's 3V3 through R91; R31 to R33 hold it at signal ground otherwise
+for _n in range(1, 4):
+    MODEL.net(f"Sense {_n}, Teensy side",
+              contact(f"the ball between the foil and shell {_n}, through R91 and R4{_n}", to=TEENSY_RAIL,
+                      src="design.md, the foil is fed from the Teensy's 3V3 through R91"),
+              pull(f"R3{_n} behind R4{_n}", "gnd", src="design.md, R31 to R33, the sense pull-downs on signal ground"),
+              teensy=f"Solenoid sense {_n}")
+
+MODEL.draws("i_foil", pool=TEENSY_RAIL)   # the foil, fed from the Teensy's 3V3
+MODEL.draws(pool="driver tick")      # release() ends a pull-in on the tick after it is due
+MODEL.draws(pool="device monitor")

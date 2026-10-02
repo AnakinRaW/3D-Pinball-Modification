@@ -8,31 +8,26 @@ value feeds and what it rests on.
 """
 import pathlib
 
-from figcheck import Model
+from figcheck import Model, TEENSY_RAIL, contact, pull
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("controls", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "toggle-switch-schematic.svg"])
 
-ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
 fig = MODEL.derived
 
-MCU = "IMXRT1060CEC.pdf"
 R1 = "The series resistor"
 
 # ===========================================================================
 # a pin driven high into the closed switch
 # ===========================================================================
-dec("v_3v3", 3.3, "V", src="the Teensy's 3.3 V rail, the highest level a pin drives, "
-    "PJRC pin assignment card 11a rev4", group="I_FAULT", section=R1, stated=True)
+MODEL.uses("v_3v3", of="teensy-4.1", group="I_FAULT", section=R1, stated=True)
 dec("r_s", 1.1, "kΩ", src="R1, in series between the switch pin and the switch, a value "
     "on hand", group="I_FAULT", section=R1, stated=True)
 dec("r_tol", 5, "%", src="R1's tolerance, 5 % or better as the part list asks",
     group="I_FAULT", section=R1, stated=True)
-dec("i_pin_max", 4, "mA", src="the recommended maximum output current per pin, "
-    "Teensy 4.1 product page; the comparison table's 10 mA spans older generations",
-    group="I_FAULT", section=R1, stated=True)
+MODEL.uses("i_pin_max", of="teensy-4.1", group="I_FAULT", section=R1, stated=True)
 
 
 @fig("r_s_low", "kΩ", group="I_FAULT", section=R1,
@@ -52,11 +47,8 @@ def _(v_3v3, r_s_low):
 # ===========================================================================
 # the closed switch, read through R1
 # ===========================================================================
-ds("i_pu_max", 212, "µA", sheet=MCU, src="Table 22, Pull-up resistor (22 kΩ PU), "
-   "RPU_22K at Vin = 0 V, maximum; the pull-up INPUT_PULLUP selects, IOMUXC_PAD_PUS(3) "
-   "in PJRC's cores/teensy4/digital.c", group="V_LOW", section=R1, stated=True)
-ds("vil_frac", 0.3, "", sheet=MCU, stated=False, src="Table 22, Low-Level input voltage "
-   "VIL, maximum 0.3 x NVCC_XXXX, written into the label of the line it scales")
+MODEL.uses("i_pu_max", of="teensy-4.1", group="V_LOW", section=R1, stated=True)
+MODEL.uses("vil_frac", of="teensy-4.1")
 
 
 @fig("r_s_high", "kΩ", group="V_LOW", section=R1, rises_with=["r_s", "r_tol"])
@@ -86,3 +78,14 @@ _I("a pin driven high into the closed switch stays inside its 4 mA",
    lambda v: v.i_fault < v.i_pin_max)
 _I("the closed switch still reads low through R1",
    lambda v: v.v_low_max < v.v_il)
+
+
+# ===========================================================================
+# wiring
+# ===========================================================================
+# the switch closes the pin to ground through R1, and the Teensy's internal pull-up holds it high
+MODEL.net("Toggle switch",
+          contact("P26 through R1", src="design.md, the switch closes the pin to ground through R1"),
+          pull("the Teensy's internal pull-up", TEENSY_RAIL,
+               src="firmware/drivers/controls.md, the pin runs with INPUT_PULLUP"),
+          teensy="Toggle switch")

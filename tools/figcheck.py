@@ -324,6 +324,7 @@ class Fig:
     # None    nearest, and either side is accepted
     prints: str | None = None
     body: str | None = None           # the formula, as it is written
+    origin: str | None = None         # the model a taken figure is declared in
 
 
 def _formula_text(src: str) -> str | None:
@@ -341,6 +342,83 @@ def _formula_text(src: str) -> str | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Wiring: what sits on a net, as a model declares it
+# ---------------------------------------------------------------------------
+# A push-pull output drives its net whenever it is powered. A tri-state output
+# drives it only while its select is active, and an open-drain output and a
+# contact only pull it low. A pull is a resistor to a rail, "gnd" for a pull-down.
+DRIVER_KINDS = ("push-pull", "tri-state", "open-drain")
+# the Teensy's own 3.3 V pin: the one rail a part on a Teensy pin may run from or pull to
+TEENSY_RAIL = "teensy"
+
+
+@dataclasses.dataclass
+class Part:
+    name: str
+    role: str                   # one of DRIVER_KINDS, "contact", "pull" or "input"
+    rail: str | None = None     # what powers an output, or where a pull goes
+    select: str | None = None   # the signal that enables a tri-state output
+    src: str = ""
+
+
+@dataclasses.dataclass
+class Net:
+    name: str
+    teensy: str | None          # the Teensy signal the net reaches, None for one off the Teensy
+    parts: list
+    model: str
+
+
+def drives(name, kind, *, rail=None, select=None, src):
+    """An output on a net: push-pull, tri-state with the select that enables it, or open-drain."""
+    if kind not in DRIVER_KINDS:
+        raise ValueError(f"{name}: an output is one of {DRIVER_KINDS}, got {kind!r}")
+    if kind != "open-drain" and not rail:
+        raise ValueError(f"{name}: a {kind} output names the rail that powers it")
+    if kind == "tri-state" and not select:
+        raise ValueError(f"{name}: a tri-state output names the select that enables it")
+    return Part(name, kind, rail, select, src)
+
+
+def contact(name, *, to="gnd", src):
+    """A switch or a contact that closes the net to GND, or to the rail `to` names."""
+    return Part(name, "contact", to, src=src)
+
+
+def pull(name, rail, *, src):
+    """A resistor from the net to a rail, "gnd" for a pull-down."""
+    return Part(name, "pull", rail, src=src)
+
+
+def reads(name, *, src):
+    """An input that reads the net and drives nothing."""
+    return Part(name, "input", src=src)
+
+
+@dataclasses.dataclass
+class PinData:
+    """What each Teensy pin can carry, as the board's model declares it."""
+    sources: list = dataclasses.field(default_factory=list)  # (what, src) of each declaration
+    groups: dict = dataclasses.field(default_factory=dict)   # edge, sd, pads: their pins
+    inputs: tuple = ()          # signals a pin reads
+    open_drain: tuple = ()      # signals a pin drives open-drain
+    optional: tuple = ()        # signals a port works without
+    ports: dict = dataclasses.field(default_factory=dict)    # port: [(signal, pins), ...]
+    notes: dict = dataclasses.field(default_factory=dict)    # port: what its row adds
+    timers: dict = dataclasses.field(default_factory=dict)   # timer: [(pin, channel), ...]
+    flexio: dict = dataclasses.field(default_factory=dict)   # FlexIO module: [(pin, signal), ...]
+    analog: list = dataclasses.field(default_factory=list)   # the pins of A0, A1, ...
+
+    def kind(self, signal: str) -> str:
+        """How a pin carrying `signal` drives its net, as a wiring part's role."""
+        return ("input" if signal in self.inputs else
+                "open-drain" if signal in self.open_drain else "push-pull")
+
+    def pwm(self) -> list[int]:
+        return sorted(p for pins in self.timers.values() for p, _ in pins)
+
+
 class Model:
     def __init__(self, name: str, document: pathlib.Path, section: str, until: str,
                  drawings=(), documents=()):
@@ -353,6 +431,101 @@ class Model:
         self.curves: list = []
         self.unlinted: list = []
         self.asides: list = []
+        self.nets: list = []
+        self.owned: list = []
+        self.drawn: list = []
+        self.supplied: list = []
+        self.path: pathlib.Path | None = None
+        self.pin_data: PinData | None = None
+
+    def net(self, name, *parts, teensy=None):
+        """A net of the subsystem: every part on it, and the Teensy signal it reaches.
+
+        `teensy` is the signal as docs/pin-assignment.md names it up to the first
+        comma. Nets that reach one Teensy pin merge across the models, so a second
+        subsystem on a pin meets the first one's parts there.
+        """
+        self.nets.append(Net(name, teensy, list(parts), self.name))
+
+    def owns(self, peripheral, why):
+        """A peripheral the subsystem's driver programs itself, which no other code may use."""
+        self.owned.append((peripheral, why))
+
+    def supplies(self, key, *, pool, call=None):
+        """What a pool holds: the current a rail allows, a memory's size, a list's slots.
+
+        `call` is how a listing takes one of the pool's slots, as `driverTick.attach(`
+        does, and every model's documents then take as many slots as the model draws.
+        """
+        self.supplied.append((key, pool, call))
+
+    def draws(self, key=None, *, pool):
+        """What the subsystem takes from a pool in the machine: the figure `key`, or one slot.
+
+        The draws of every model add up against the one figure that supplies the
+        pool, since each model alone sees only its share of it. On the bench a
+        subsystem runs alone, so its own model checks that case.
+        """
+        self.drawn.append((key, pool))
+
+    def uses(self, key, *, of, group=None, label=None, section=None, tol_units=1.0,
+             stated=False):
+        """A figure the model `of` declares, addressed the way this model's documents state it.
+
+        The value, the unit, the kind and the source stay with that model, so the
+        figure is typed once and every document that states it follows it.
+        """
+        return self._add(Fig(key, "", "taken", group, label, section, tol_units=tol_units,
+                             stated=stated, origin=of))
+
+    def as_written(self, key, *, of, unit):
+        """The figure `of` as a listing writes it, a bare number of `unit`.
+
+        A constant such as `kPeriodUs = 5000` then follows the period it encodes,
+        and a period that moves leaves the old number with nothing to match.
+        """
+        return self._add(Fig(key, "", "derived", fn=lambda x: Q.of(x.to(unit), ""),
+                             deps=(of,), stated=False, body=f"{of} as a number of {unit}"))
+
+    # -- the pins, which the board's model alone declares ------------------
+    def _pins(self) -> PinData:
+        if self.pin_data is None:
+            self.pin_data = PinData()
+        return self.pin_data
+
+    def pin_groups(self, *, src, **groups):
+        """The pins of each group of the board: the edge headers, the SD socket, the pads."""
+        self._pins().groups.update({g: list(p) for g, p in groups.items()})
+        self.pin_data.sources.append(("the pin groups", src))
+
+    def port_roles(self, *, inputs, open_drain, optional, src):
+        """How a pin carrying a signal drives its net, and the signals a port works without."""
+        d = self._pins()
+        d.inputs, d.open_drain, d.optional = tuple(inputs), tuple(open_drain), tuple(optional)
+        d.sources.append(("the signals' directions", src))
+
+    def port(self, name, *signals, note=None, src):
+        """A port and its signals, each with the pins that can carry it."""
+        d = self._pins()
+        d.ports[name] = [(s[0], tuple(s[1:])) for s in signals]
+        if note:
+            d.notes[name] = note
+        d.sources.append((name, src))
+
+    def timer(self, name, *pins, src):
+        """A timer and the pins it drives, each with the channel that drives it."""
+        self._pins().timers[name] = [(p, str(ch)) for p, ch in pins]
+        self.pin_data.sources.append((name, src))
+
+    def flexio(self, name, *pins, src):
+        """A FlexIO module and the pins it reaches, each with the FlexIO signal it carries."""
+        self._pins().flexio[name] = [(p, str(n)) for p, n in pins]
+        self.pin_data.sources.append((name, src))
+
+    def analog(self, *pins, src):
+        """The pins of A0, A1 and on, in order."""
+        self._pins().analog = list(pins)
+        self.pin_data.sources.append(("the analog inputs", src))
 
     def aside(self, text: str, why: str):
         """A number the prose states that the model does not compute.
@@ -467,34 +640,39 @@ class Model:
         return vals
 
     def evaluate(self):
-        order, mark = [], {}
+        for k in self.order():
+            self.figure(k)
 
-        def visit(k, trail):
-            if mark.get(k) == 2:
-                return
-            if mark.get(k) == 1:
-                raise ValueError("cycle: " + " -> ".join(trail + [k]))
-            if k not in self.figs:
-                raise KeyError(f"{trail[-1] if trail else '?'} depends on unknown {k!r}")
-            mark[k] = 1
-            for d in self.figs[k].deps:
-                visit(d, trail + [k])
-            mark[k] = 2
-            order.append(k)
+    def figure(self, key, _trail=()) -> Fig:
+        """One figure, evaluated with everything it rests on, in its own model if it is taken.
 
-        for k in list(self.figs):
-            visit(k, [])
-        for k in order:
-            f = self.figs[k]
-            if f.fn is None:
-                continue
-            got = f.fn(*(self.figs[d].value for d in f.deps))
-            got = _q(got)
-            try:
-                got.to(f.unit)
-            except TypeError as e:
-                raise TypeError(f"{k}: {e}") from None
-            f.value = got
+        Two models may take figures from each other, as the firmware takes the
+        solenoids' pull-in while the solenoids take its watchdog. The models then
+        evaluate figure by figure, so only a figure that rests on itself is a cycle.
+        """
+        f = self.figs[key]
+        if f.value is not None:
+            return f
+        here = (self.name, key)
+        if here in _trail:
+            raise ValueError("cycle: " + " -> ".join(f"{m}.{k}" for m, k in _trail + (here,)))
+        trail = _trail + (here,)
+        if f.origin is not None:
+            source = model_named(f.origin)
+            if key not in source.figs:
+                raise KeyError(f"{self.name} takes {key!r} from {f.origin}, which does "
+                               f"not declare it")
+            g = source.figure(key, trail)
+            f.unit, f.kind, f.src, f.sheet, f.prints = g.unit, g.kind, g.src, g.sheet, g.prints
+            f.value = g.value
+            return f
+        got = _q(f.fn(*(self.figure(d, trail).value for d in f.deps)))
+        try:
+            got.to(f.unit)
+        except TypeError as e:
+            raise TypeError(f"{key}: {e}") from None
+        f.value = got
+        return f
 
     # -- graph queries ---------------------------------------------------
     def dependents(self, key) -> list[str]:
@@ -557,6 +735,7 @@ class Token:
     rhs: bool
     claimed_by: str | None = None
     doc: pathlib.Path | None = None
+    cell: bool = False      # a table cell holding a bare number, which nothing requires to be claimed
 
 
 def _precision(num: str) -> float:
@@ -668,6 +847,14 @@ def parse_document(path: pathlib.Path, section_head: str | None,
                 cells.append((text, col))
             head = re.sub(r"\*\*", "", cells[0][0])
             for text, col in cells[1:]:
+                if re.fullmatch(NUM, text):
+                    # A bare number in a cell, such as an interrupt priority, can be
+                    # the line a dimensionless figure states. A pin or a count in a
+                    # table is one as well, so none is required to be claimed.
+                    tokens.append(Token(i + 1, col, text, Q.of(float(text), ""), "",
+                                        _decimals(text), _precision(text), text,
+                                        head or section, section, False, False, cell=True))
+                    continue
                 tokens += scan_tokens(text, section, head or section, i + 1,
                                       strict=True, offset=col)
         else:
@@ -843,9 +1030,12 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
     # nothing anchoring it, so when the model moves under it nothing notices,
     # which is how a bench current stayed at 192 mA after it became 233 mA.
     allowed = {a for a, _ in model.asides}
+    named = set()
     loose_refs = 0
     for t in tokens:
-        if t.strict or t.claimed_by or t.text.strip() in allowed:
+        if t.text.strip() in allowed and not t.claimed_by:
+            named.add(t.text.strip())
+        if t.strict or t.claimed_by or t.cell or t.text.strip() in allowed:
             continue
         same = [(k, v) for k, v in values if v.d == t.value.d]
         if any(abs(v - t.value) <= Q.of(t.precision, t.unit) for _, v in same):
@@ -855,6 +1045,10 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
                   f"declared quantity has that value: a stale number, a figure "
                   f"the model is missing, or an aside the model has to name",
                   kind="prose")
+    for text, why in model.asides:
+        if text not in named:
+            rep.error(f"the aside {text!r} ({why}) stands in none of the documents, so the "
+                      f"number it names has left them", kind="aside")
     return refs, loose_refs
 
 
@@ -947,9 +1141,9 @@ NAMED_PIN_RE = re.compile(rf"\bTeensy(?:'s)? pins? (\d+)(?![\w.])"
 # A line speaks of the Teensy's pins when it names the board, its maker, its pads or
 # one of its peripherals. A pin a diff moves is looked for in such lines alone, since
 # a connector's or an IC's pin 1 is no Teensy pin.
-PIN_CONTEXT_RE = re.compile(r"Teensy|PJRC|core_pins|GPIO_|FlexPWM|QuadTimer|I²S\d|"
+PIN_CONTEXT_RE = re.compile(r"Teensy|PJRC|core_pins|GPIO_|FlexPWM|FlexIO|QuadTimer|I²S\d|"
                             r"Serial\d|CAN\d|S/PDIF|\bWire\d?\b|\bSPI\d?\b|\bPWM\b|[Aa]nalog")
-PERIPHERAL_RE = re.compile(r"FlexPWM\d\.\d|QuadTimer\d|I²S\d|Serial\d|CAN\d|"
+PERIPHERAL_RE = re.compile(r"FlexPWM\d\.\d|FlexIO\d|QuadTimer\d|I²S\d|Serial\d|CAN\d|"
                            r"\bWire\d?\b|\bSPI\d?\b")
 LOOSE_NUM_RE = re.compile(rf"(?<![\w.])(\d{{1,2}})(?![\w.])(?!\s?(?:{UNIT_ALT})(?![\wµ°]))")
 PIN_PHRASE_RE = re.compile(r"\b[Pp]ins? \d+")
@@ -969,6 +1163,60 @@ class PinRef:
     signal: str
 
 
+@dataclasses.dataclass
+class PinRow:
+    pin: int
+    signal: str         # the Signal cell up to its first comma
+    peripheral: str
+    subsystem: str      # the model the Subsystem cell links to, else the cell's text
+    reserved: bool
+    line: int
+    owner: str = ""     # the Subsystem cell as it reads, without its link
+
+
+def _md_tables(text: str):
+    """Every table of a markdown text: the section it stands in, its header, its rows.
+
+    A row is its line number, its cells and the line itself.
+    """
+    out, section, header, rows = [], "", None, []
+    for i, raw in enumerate(text.split("\n") + [""], 1):
+        if raw.startswith("## "):
+            section = raw[3:].strip()
+        if not raw.startswith("|"):
+            if header is not None:
+                out.append((section, header, rows))
+            header, rows = None, []
+            continue
+        cells = [c.strip() for c in raw.strip().strip("|").split("|")]
+        if header is None:
+            header = cells
+        elif not all(set(c) <= set("-: ") for c in cells):
+            rows.append((i, cells, raw))
+    return out
+
+
+def _pin_rows(text: str) -> list[PinRow]:
+    """Every row of the tables headed Pin, Signal: the allocation, then the reserved pins."""
+    rows = []
+    for section, header, body in _md_tables(text):
+        if header[:2] != ["Pin", "Signal"]:
+            continue
+        for line, cells, _ in body:
+            if len(cells) < 3 or not cells[0].isdigit():
+                continue
+            cell = cells[3] if len(cells) > 3 else ""
+            link = re.search(r"\(parts/([\w-]+)/", cell)
+            rows.append(PinRow(int(cells[0]), re.sub(r"[*`]", "", cells[1]).split(",")[0].strip(),
+                               cells[2], link.group(1) if link else cell, section == "Reserved",
+                               line, re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", cell).strip()))
+    return rows
+
+
+def pin_rows() -> list[PinRow]:
+    return _pin_rows(PIN_TABLE.read_text(encoding="utf-8"))
+
+
 def pin_table(rep: Report) -> dict[str, int]:
     """Signal to pin, from every table in docs/pin-assignment.md headed Pin, Signal.
 
@@ -977,27 +1225,15 @@ def pin_table(rep: Report) -> dict[str, int]:
     double booking and fails the run.
     """
     table, first, holder = {}, {}, {}
-    inside = False
-    for i, raw in enumerate(PIN_TABLE.read_text(encoding="utf-8").split("\n"), 1):
-        if not raw.startswith("|"):
-            inside = False
+    for r in pin_rows():
+        if r.signal in table:
+            rep.error(f"{_rel(PIN_TABLE)}:{r.line} lists {r.signal!r} again, first on line "
+                      f"{first[r.signal]}", kind="pin")
             continue
-        cells = [c.strip() for c in raw.strip().strip("|").split("|")]
-        if cells[:2] == ["Pin", "Signal"]:
-            inside = True
-            continue
-        if not inside or len(cells) < 2 or not cells[0].isdigit():
-            continue
-        pin = int(cells[0])
-        name = re.sub(r"[*`]", "", cells[1]).split(",")[0].strip()
-        if name in table:
-            rep.error(f"{_rel(PIN_TABLE)}:{i} lists {name!r} again, first on line "
-                      f"{first[name]}", kind="pin")
-            continue
-        if pin in holder:
-            rep.error(f"{_rel(PIN_TABLE)}:{i} gives pin {pin} to {name!r}, and line "
-                      f"{first[holder[pin]]} gives it to {holder[pin]!r}", kind="pin")
-        table[name], first[name], holder[pin] = pin, i, name
+        if r.pin in holder:
+            rep.error(f"{_rel(PIN_TABLE)}:{r.line} gives pin {r.pin} to {r.signal!r}, and line "
+                      f"{first[holder[r.pin]]} gives it to {holder[r.pin]!r}", kind="pin")
+        table[r.signal], first[r.signal], holder[r.pin] = r.pin, r.line, r.signal
     return table
 
 
@@ -1143,22 +1379,6 @@ def named_pins(path: pathlib.Path) -> list[tuple[int, str]]:
             for m in NAMED_PIN_RE.finditer(line)]
 
 
-def _pin_rows(text: str) -> list[tuple[int, str, str]]:
-    """Pin, signal and peripheral of every row in the tables headed Pin, Signal."""
-    rows, inside = [], False
-    for raw in text.split("\n"):
-        if not raw.startswith("|"):
-            inside = False
-            continue
-        cells = [c.strip() for c in raw.strip().strip("|").split("|")]
-        if cells[:2] == ["Pin", "Signal"]:
-            inside = True
-        elif inside and len(cells) >= 3 and cells[0].isdigit():
-            name = re.sub(r"[*`]", "", cells[1]).split(",")[0].strip()
-            rows.append((int(cells[0]), name, cells[2]))
-    return rows
-
-
 def allocating_files() -> list[pathlib.Path]:
     return [p for d in (ROOT / "docs", ROOT / "firmware") for p in sorted(d.rglob("*"))
             if p.suffix in {".md", ".svg", ".py"} and p.is_file() and _allocating(p)]
@@ -1178,11 +1398,10 @@ def pass_moved_pins(base: str, rep: Report, files=None):
                                   encoding="utf-8", check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError):
         return
-    old, new = _pin_rows(old_text), _pin_rows(PIN_TABLE.read_text(encoding="utf-8"))
-    now = {signal: pin for pin, signal, _ in new}
-    moved = {pin for pin, signal, _ in old if now.get(signal) != pin}
-    named = lambda rows: {m.group() for _, _, cell in rows
-                          for m in PERIPHERAL_RE.finditer(cell)}
+    old, new = _pin_rows(old_text), pin_rows()
+    now = {r.signal: r.pin for r in new}
+    moved = {r.pin for r in old if now.get(r.signal) != r.pin}
+    named = lambda rows: {m.group() for r in rows for m in PERIPHERAL_RE.finditer(r.peripheral)}
     gone = [(g, re.compile(rf"(?<!\w){re.escape(g)}(?!\.?\d)"))
             for g in sorted(named(old) - named(new))]
     if not moved and not gone:
@@ -1247,6 +1466,204 @@ def write_pins(files, rep: Report) -> int:
     return written
 
 
+def _runs(pins) -> str:
+    """Pins as the tables print them, a run of three or more as its two ends."""
+    out, run = [], []
+    for p in sorted(pins) + [None]:
+        if run and (p is None or p != run[-1] + 1):
+            out += [f"{run[0]}–{run[-1]}"] if len(run) > 2 else [str(x) for x in run]
+            run = []
+        if p is not None:
+            run.append(p)
+    return ", ".join(out)
+
+
+def _analog_text(pins: list[int]) -> str:
+    """The analog inputs as blocks of consecutive pins, A0–A13 = 14–27 in order."""
+    blocks, start = [], 0
+    for i in range(1, len(pins) + 1):
+        if i == len(pins) or pins[i] != pins[i - 1] + 1:
+            a, b = start, i - 1
+            blocks.append(f"A{a} = {pins[a]}" if a == b else
+                          f"A{a}–A{b} = {pins[a]}–{pins[b]} in order")
+            start = i
+    return ", ".join(blocks)
+
+
+def _owner(name: str, word: str, rows) -> str:
+    """The subsystems whose rows use a port, a timer or a FlexIO, in the order the table gives them."""
+    names = dict.fromkeys(r.owner + (", reserved" if r.reserved else "")
+                          for r in rows if r.peripheral.startswith(name + word))
+    return " and ".join(names)
+
+
+def pin_table_rows(data: PinData, rows) -> dict:
+    """The rows the board's model gives the pin table, by the header of the table holding them.
+
+    A table the model gives every row of is written whole. The capability table also
+    carries rows no model computes, and the model's rows are written among them. Who
+    uses a port, a timer or a FlexIO comes from the allocation, as the subsystem whose
+    rows name it.
+    """
+    edge = set(data.groups["edge"])
+    pwm = [p for p in data.pwm() if p in edge]
+    ports = [[name, ", ".join(f"{sig} {' / '.join(map(str, pins))}" for sig, pins in signals)
+              + (f" ({data.notes[name]})" if name in data.notes else ""), _owner(name, " ", rows)]
+             for name, signals in data.ports.items()]
+    timers = [[name, ", ".join(f"{p} ({ch})" for p, ch in pins), _owner(name, " channel ", rows)]
+              for name, pins in data.timers.items()]
+    flexio = [[name, ", ".join(f"{p} ({n})" for p, n in pins), _owner(name, " pin ", rows)]
+              for name, pins in data.flexio.items()]
+    return {("Resource", "Pins", "Used by"): (ports, True),
+            ("Capability", "Pins", "Count"): ([["PWM", _runs(pwm), str(len(pwm))],
+                                               ["Analog in", _analog_text(data.analog),
+                                                str(len(data.analog))]], False),
+            ("Timer", "Pins, with the channel driving each", "Used by"): (timers, True),
+            ("FlexIO", "Pins, with the signal each carries", "Used by"): (flexio, True)}
+
+
+def pass_pin_tables(data: PinData, rep: Report, write: bool) -> int:
+    """The pin table's capability rows against the board's model, written under --write."""
+    text = PIN_TABLE.read_text(encoding="utf-8")
+    lines, want_all = text.split("\n"), pin_table_rows(data, _pin_rows(text))
+    edits, checked = [], 0
+    for _, header, body in _md_tables(text):
+        if tuple(header) not in want_all:
+            continue
+        want, whole = want_all[tuple(header)]
+        have = {cells[0]: (line, cells) for line, cells, _ in body}
+        for cells in want:
+            checked += 1
+            got = have.get(cells[0])
+            if got is None:
+                rep.error(f"{_rel(PIN_TABLE)} has no {cells[0]!r} row under "
+                          f"{' | '.join(header)}, which the board's model declares", kind="table")
+            elif got[1] != cells:
+                rep.error(f"{_rel(PIN_TABLE)}:{got[0]} reads {' | '.join(got[1][1:])!r} where the "
+                          f"board's model gives {' | '.join(cells[1:])!r}", kind="table")
+        if not body:
+            continue
+        first, last = body[0][0], body[-1][0]
+        if whole:
+            for name, (line, _) in have.items():
+                if name not in {c[0] for c in want}:
+                    rep.error(f"{_rel(PIN_TABLE)}:{line} lists {name}, which the board's model "
+                              f"does not declare", kind="table")
+            edits.append((first, last, ["| " + " | ".join(c) + " |" for c in want]))
+        else:
+            for cells in want:
+                row = ["| " + " | ".join(cells) + " |"]
+                line = have.get(cells[0], (None,))[0]
+                # a missing row goes in after the table's last one
+                edits.append((line, line, row) if line else (last + 1, last, row))
+    if write and rep.count("table"):
+        for first, last, rows in sorted(edits, reverse=True):
+            lines[first - 1:last] = rows
+        PIN_TABLE.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+        rep.note(f"wrote       {_rel(PIN_TABLE)}, the rows the board's model gives it")
+    return checked
+
+
+def _pins_text(pins) -> str:
+    """Pins as a sentence names them: pin 14, pins 14 and 15, pins 1, 26 and 27."""
+    p = [str(x) for x in sorted(pins)]
+    return f"pin {p[0]}" if len(p) == 1 else f"pins {', '.join(p[:-1])} and {p[-1]}"
+
+
+def _numbers(text: str) -> set[int]:
+    return {int(n) for n in PIN_NUM_RE.findall(text)}
+
+
+def _channels(text: str) -> set[int]:
+    """The analog inputs a cell names, `A6 to A9` spelled out."""
+    out = set()
+    for a, b in re.findall(r"\bA(\d+)(?: to A(\d+))?", text):
+        out |= set(range(int(a), int(b or a) + 1))
+    return out
+
+
+def pass_costs(data: PinData, rep: Report) -> int:
+    """What the allocation and then the reserved pins take, against the two tables that list it.
+
+    A port is taken once a pin carrying one of the signals it needs is taken, or once
+    a subsystem's row names it, and a timer once a row names one of its channels. Each
+    cost table names everything its part of the table takes and nothing else, every pin
+    a taken port has no alternative for, and the counts of PWM pins and analog inputs.
+    """
+    rows = pin_rows()
+    tables = {section: body for section, header, body in _md_tables(
+        PIN_TABLE.read_text(encoding="utf-8")) if header[:2] == ["Lost", "To"]}
+    names = sorted([*data.ports, *data.timers, *data.flexio], key=len, reverse=True)
+    edge = set(data.groups["edge"])
+    pwm = [p for p in data.pwm() if p in edge]
+    analog = {p: i for i, p in enumerate(data.analog)}
+    taken, gone, checked = set(), set(), 0
+    for section, reserved in (("Allocation", False), ("Reserved", True)):
+        mine = [r for r in rows if r.reserved == reserved]
+        here = {r.pin for r in mine}
+        taken |= here
+        body = tables.get(section)
+        if body is None:
+            rep.error(f"{_rel(PIN_TABLE)} has no cost table under {section}", kind="cost")
+            continue
+        # every resource this part of the table takes, with the pins that have to be listed
+        lost = {}
+        for name, signals in data.ports.items():
+            users = {r.pin for r in mine if r.peripheral.startswith(name + " ")}
+            needed = [pins for sig, pins in signals if sig not in data.optional]
+            if name in gone or not (users or any(set(pins) <= taken for pins in needed)):
+                continue
+            lost[name] = users | {pins[0] for pins in needed
+                                  if len(pins) == 1 and pins[0] in here}
+        for name in [*data.timers, *data.flexio]:
+            word = " channel " if name in data.timers else " pin "
+            users = {r.pin for r in mine if r.peripheral.startswith(name + word)}
+            if users and name not in gone:
+                lost[name] = users
+        listed = set()
+        for line, cells, _ in body:
+            what, to = cells[0], cells[1]
+            where = f"{_rel(PIN_TABLE)}:{line}"
+            count = re.match(r"(\d+) of (\d+) (PWM pins|analog inputs)$", what)
+            if count:
+                checked += 1
+                n, of, kind = int(count.group(1)), int(count.group(2)), count.group(3)
+                if kind == "PWM pins":
+                    want, total, got = here & set(pwm), len(pwm), _numbers(to)
+                else:
+                    head, _, free = to.partition("Free:")
+                    want = {analog[p] for p in here if p in analog}
+                    total, got = len(analog), _channels(head)
+                    if free and _channels(free) != {i for p, i in analog.items() if p not in taken}:
+                        rep.error(f"{where} names A{', A'.join(map(str, sorted(_channels(free))))} "
+                                  f"free, and the free analog inputs are A"
+                                  + ", A".join(str(i) for p, i in sorted(analog.items(), key=lambda x: x[1])
+                                               if p not in taken), kind="cost")
+                if (n, of) != (len(want), total) or got != want:
+                    rep.error(f"{where} states {what} with {sorted(got)}, and {section.lower()} "
+                              f"takes {len(want)} of {total}: {sorted(want)}", kind="cost")
+                continue
+            found = [n for n in names if re.search(rf"(?<![\w.]){re.escape(n)}(?![\w.])", what)]
+            pins = _numbers(to.split(". ")[0])
+            for n in found:
+                checked += 1
+                listed.add(n)
+                if n not in lost:
+                    rep.error(f"{where} lists {n} as lost, which {section.lower()} leaves free",
+                              kind="cost")
+                elif not lost[n] <= pins:
+                    rep.error(f"{where} lists {n} without {_pins_text(lost[n] - pins)}",
+                              kind="cost")
+            if found and not pins <= here:
+                rep.error(f"{where} names {_pins_text(pins - here)}, which {section.lower()} "
+                          f"does not hold", kind="cost")
+        for n in sorted(set(lost) - listed):
+            rep.error(f"{section} takes {n}, on {_pins_text(lost[n])}, and its cost table does "
+                      f"not name it", kind="cost")
+        gone |= set(lost)
+    return checked
+
+
 def pin_files() -> list[pathlib.Path]:
     return sorted(p for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
                   if p.suffix in {".md", ".svg"} and p.is_file())
@@ -1255,14 +1672,19 @@ def pin_files() -> list[pathlib.Path]:
 def main_pins(write: bool) -> int:
     files = pin_files()
     rep = Report()
+    data = pin_data()
     if write:
         n = write_pins(files, rep)
+        pass_pin_tables(data, rep, write=True)
+        wrong = [e for e, (k, _) in zip(rep.errors, rep.tags) if k != "table"]
         print(f"{n} pin{'' if n == 1 else 's'} written from {_rel(PIN_TABLE)}."
               + (" Everything already agreed." if not n and not rep.errors else ""))
-        for m in rep.notes + rep.errors:
+        for m in rep.notes + wrong:
             print("  " + m)
-        return 1 if rep.errors else 0
+        return 1 if wrong else 0
     table, refs, _, good = pass_pins(files, rep)
+    rows = pass_pin_tables(data, rep, write=False)
+    costs = pass_costs(data, rep)
     marked = len({r.doc for r in refs})
     print("Checking Teensy pins")
     print(f"  table      {_rel(PIN_TABLE)}, {len(table)} signals")
@@ -1270,9 +1692,15 @@ def main_pins(write: bool) -> int:
           f"marking a pin")
     print()
     named = sum(1 for t in rep.tags if t == ("pin", "named"))
-    _status(not rep.errors, "Teensy pins",
+    _status(not rep.count("pin"), "Teensy pins",
             f"{good} of {len(refs)} marked pins match the table, "
             f"{named} named without the mark")
+    _status(not rep.count("table"), "what the pins can carry",
+            f"{rows - rep.count('table')} of {rows} rows match the board's model")
+    _status(not rep.count("cost"), "what the allocation costs",
+            f"{costs} entries match what the pins take" if not rep.count("cost") else
+            f"{rep.count('cost')} entr{'y' if rep.count('cost') == 1 else 'ies'} disagree"
+            f"{'s' if rep.count('cost') == 1 else ''} with what the pins take")
     if rep.errors:
         print()
         print("To fix")
@@ -1281,10 +1709,221 @@ def main_pins(write: bool) -> int:
         print()
         n = len(rep.errors)
         print(f"{n} problem{'' if n == 1 else 's'}. Nothing was changed: move the pin "
-              f"in the table, or run --write to carry the table's pin into the files.")
+              f"in the table, or run --write to carry the table's pin into the files and "
+              f"the board's model into the table.")
         return 1
     print()
     print("Nothing to fix. Every marked pin is the one the table gives its signal.")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Wiring and peripherals, checked across every model
+# ---------------------------------------------------------------------------
+def pin_data() -> PinData:
+    """What the pins can carry, from the one model that declares it."""
+    found = [m for m in (load_model(p) for p in find_models()) if m.pin_data]
+    if len(found) != 1:
+        raise ValueError(f"{len(found)} models declare what the pins can carry, and one has to")
+    return found[0].pin_data
+
+
+def _function(peripheral: str, pin: int, data: PinData):
+    """The port or timer a Peripheral entry names, its signal or channel, and whether the pin carries it."""
+    for t, pins in data.timers.items():
+        if peripheral.startswith(t + " channel "):
+            ch = peripheral[len(t) + len(" channel "):]
+            return t, ch, dict(pins).get(pin) == ch
+    for f, pins in data.flexio.items():
+        if peripheral.startswith(f + " pin "):
+            n = peripheral[len(f) + len(" pin "):]
+            return f, n, dict(pins).get(pin) == n
+    for port in sorted(data.ports, key=len, reverse=True):
+        if peripheral.startswith(port + " "):
+            signal = peripheral[len(port) + 1:]
+            return port, signal, pin in dict(data.ports[port]).get(signal, ())
+    return None, None, peripheral in ("plain digital input", "plain digital output")
+
+
+def teensy_part(row: PinRow, data: PinData) -> Part:
+    """The Teensy pin itself, driving its net the way the function its row gives it does."""
+    used, signal, _ = _function(row.peripheral, row.pin, data)
+    kind = (data.kind(signal) if used in data.ports else
+            "input" if row.peripheral == "plain digital input" else "push-pull")
+    return Part(f"Teensy pin {row.pin}", kind, TEENSY_RAIL if kind == "push-pull" else None,
+                src=f"{_rel(PIN_TABLE)}:{row.line}")
+
+
+def pass_wiring(models, rep: Report) -> int:
+    """One driver at a time on every net, a defined level, and the Teensy's rail on its pins."""
+    rows, data = {r.signal: r for r in pin_rows()}, pin_data()
+    merged = defaultdict(list)
+    for m in models:
+        for n in m.nets:
+            merged[("teensy", n.teensy) if n.teensy else ("local", m.name, n.name)].append(n)
+    for key, group in merged.items():
+        parts = [p for n in group for p in n.parts]
+        label = f"{group[0].name} in {', '.join(sorted({n.model for n in group}))}"
+        if key[0] == "teensy":
+            row = rows.get(key[1])
+            if row is None:
+                rep.error(f"{label} reaches the Teensy signal {key[1]!r}, which "
+                          f"{_rel(PIN_TABLE)} does not list", kind="pins")
+                continue
+            label += f", pin {row.pin}"
+            for n in group:
+                if n.model != row.subsystem:
+                    rep.error(f"{label}: {n.model} wires to a pin {_rel(PIN_TABLE)}:{row.line} "
+                              f"gives to {row.subsystem}", kind="pins")
+            parts = [teensy_part(row, data)] + parts
+            for p in parts:
+                powered = (p.role in ("push-pull", "tri-state")
+                           or (p.role in ("pull", "contact") and p.rail != "gnd"))
+                if powered and p.rail != TEENSY_RAIL:
+                    rep.error(f"{label}: {p.name} runs from {p.rail}, and only the Teensy's own "
+                              f"3.3 V may reach a Teensy pin", kind="rail")
+        always = [p for p in parts if p.role == "push-pull"]
+        others = [p for p in parts if p.role in ("tri-state", "open-drain", "contact")]
+        if len(always) > 1 or (always and others):
+            rest = ", ".join(p.name for p in always[1:] + others)
+            rep.error(f"{label}: {always[0].name} drives the line whenever it is powered, "
+                      f"and {rest} drives it as well", kind="contention")
+        selects = [p.select for p in parts if p.role == "tri-state"]
+        if len(set(selects)) < len(selects):
+            rep.error(f"{label}: two tri-state outputs share one select, so both answer at once",
+                      kind="contention")
+        if not always and not any(p.role == "pull" for p in parts):
+            rep.error(f"{label}: nothing holds the line while no output drives it, so it needs "
+                      f"a pull-up or a pull-down", kind="level")
+    wired = set(merged)
+    for r in rows.values():
+        if (r.subsystem in {m.name for m in models} and not r.reserved
+                and ("teensy", r.signal) not in wired):
+            rep.error(f"{_rel(PIN_TABLE)}:{r.line} gives pin {r.pin} ({r.signal}) to "
+                      f"{r.subsystem}, whose model wires no net to it", kind="pins")
+    return len(merged)
+
+
+def pass_peripherals(models, rep: Report) -> int:
+    """Every pin function is one the board's model gives that pin, and an owned peripheral has one user."""
+    data = pin_data()
+    owner = {}
+    for m in models:
+        for p, why in m.owned:
+            if p in owner and owner[p][0] != m.name:
+                rep.error(f"{p} is owned by {owner[p][0]} and by {m.name}", kind="owner")
+            owner.setdefault(p, (m.name, why))
+    for r in pin_rows():
+        where = f"{_rel(PIN_TABLE)}:{r.line}"
+        used, what, ok = _function(r.peripheral, r.pin, data)
+        if used is None and not ok:
+            rep.error(f"{where} names {r.peripheral!r}, which is no port signal, no timer "
+                      f"channel and no plain digital pin", kind="function")
+            continue
+        if not ok:
+            rep.error(f"{where} puts {r.peripheral} on pin {r.pin}, which "
+                      f"{'that channel' if used in data.timers else 'that signal'} of {used} "
+                      f"does not reach", kind="function")
+        if used in owner and owner[used][0] != r.subsystem:
+            rep.error(f"{where} gives {used} on pin {r.pin} to {r.subsystem}, and "
+                      f"{owner[used][0]} owns it: {owner[used][1]}", kind="owner")
+    return len(owner)
+
+
+# how the report names a pool that carries a wiring rail's name
+POOL_NAMES = {TEENSY_RAIL: "the Teensy's 3V3 pin"}
+
+
+def pass_budget(models, rep: Report) -> list:
+    """Every pool against the one figure that supplies it, with the draws of every model added up."""
+    supply, demand = {}, defaultdict(list)
+    for m in models:
+        for key, pool, call in m.supplied:
+            if pool in supply:
+                rep.error(f"{POOL_NAMES.get(pool, pool)} is supplied by {supply[pool][0].name} "
+                          f"and by {m.name}", kind="budget")
+                continue
+            supply[pool] = (m, key, call)
+        for key, pool in m.drawn:
+            demand[pool].append((m, key))
+    # a pool whose slots a listing takes by a call: each model draws as many as its documents call
+    unlisted = set()
+    for pool, (_, _, call) in supply.items():
+        if call is None:
+            continue
+        for m in models:
+            listed = sum(_fenced(d).count(call) for d in (m.document, *m.documents) if d.exists())
+            drawn = sum(1 for _, p in m.drawn if p == pool)
+            if listed != drawn:
+                unlisted.add(pool)
+                rep.error(f"{m.name}'s documents call {call}...) {listed} "
+                          f"time{'' if listed == 1 else 's'}, and the model draws {drawn} "
+                          f"slot{'' if drawn == 1 else 's'} of the {pool}", kind="budget")
+    out = []
+    for pool, users in demand.items():
+        name = POOL_NAMES.get(pool, pool)
+        if pool not in supply:
+            rep.error(f"{', '.join(sorted({m.name for m, _ in users}))} draw from {name}, which "
+                      f"no model supplies", kind="budget")
+            continue
+        holder, key, _ = supply[pool]
+        held = holder.figs[key]
+        total = Q.of(0, held.unit)
+        for m, k in users:
+            total = total + (m.figs[k].value if k else Q.of(1, ""))
+        if not total <= held.value:
+            rep.error(f"the subsystems take {_amount(total, held.unit)} together from {name} in "
+                      f"the machine, which holds {_amount(held.value, held.unit)}" if held.unit
+                      else f"{_amount(total, '')} drivers take a slot of the {name}, which holds "
+                      f"{_amount(held.value, '')}", kind="budget")
+        out.append((name, total, held, pool not in unlisted))
+    return out
+
+
+def _fenced(path: pathlib.Path) -> str:
+    """The fenced blocks of a markdown file, the listings."""
+    return "\n".join(re.findall(r"^```[^\n]*\n(.*?)^```", path.read_text(encoding="utf-8"),
+                                re.S | re.M))
+
+
+def _amount(q: Q, unit: str) -> str:
+    return f"{q.to(unit):.4g} {unit}".strip()
+
+
+def main_wiring(paths) -> int:
+    models = [load_model(p) for p in paths]
+    for m in models:
+        m.evaluate()
+    rep = Report()
+    nets = pass_wiring(models, rep)
+    owned = pass_peripherals(models, rep)
+    budget = pass_budget(models, rep)
+    print("Checking the wiring and what the subsystems share")
+    print(f"  models     {len(models)}, {nets} nets, {owned} owned peripherals and "
+          f"{len(budget)} shared budgets")
+    print()
+    _status(not rep.count("contention"), "one driver at a time",
+            f"{rep.count('contention')} nets driven by two outputs at once")
+    _status(not rep.count("level"), "a defined level",
+            f"{rep.count('level')} nets left floating while nothing drives them")
+    _status(not rep.count("rail"), "the Teensy's rail on its pins",
+            f"{rep.count('rail')} parts on a Teensy pin running from another rail")
+    _status(not rep.count("pins"), "the pins the table gives",
+            f"{rep.count('pins')} nets or allocated pins that disagree with the table")
+    _status(not rep.count("function"), "pin functions",
+            f"{rep.count('function')} functions a pin cannot carry")
+    _status(not rep.count("owner"), "owned peripherals",
+            f"{rep.count('owner')} used by a subsystem that does not own them")
+    for name, total, held, listed in budget:
+        _status(total <= held.value and listed, name,
+                f"{_amount(total, held.unit)} of {_amount(held.value, held.unit)} in the machine"
+                if held.unit else f"{_amount(total, '')} of {_amount(held.value, '')} slots taken")
+    if rep.errors:
+        print()
+        print("To fix")
+        for e in rep.errors:
+            print("  " + e)
+        return 1
     return 0
 
 
@@ -1432,8 +2071,10 @@ def pass_datasheets(model: Model, rep: Report):
     import pdftext
 
     by_sheet = defaultdict(list)
-    off_plot = [f for f in model.figs.values() if f.kind == "graph"]
-    for f in model.figs.values():
+    # a taken reading is looked up once, by the model that declares it
+    own = [f for f in model.figs.values() if f.origin is None]
+    off_plot = [f for f in own if f.kind == "graph"]
+    for f in own:
         if f.sheet and f.kind == "datasheet":
             by_sheet[f.sheet].append(f)
     looked = missing = 0
@@ -1628,7 +2269,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
 
 
 def pass_sums(model: Model, rep: Report, write: bool):
-    named = sorted({f.sheet for f in model.figs.values() if f.sheet})
+    named = sorted({f.sheet for f in model.figs.values() if f.sheet and f.origin is None})
     if write:
         lines = []
         for name in sorted(p.name for p in DATASHEETS.glob("*") if p.is_file()
@@ -1730,15 +2371,33 @@ def pass_mutate(model: Model, tokens: list[Token], rep: Report):
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+_LOADED: dict = {}
+
+
 def load_model(path: pathlib.Path) -> Model:
+    """The model a file declares, loaded once, so a figure another model takes is one object."""
+    path = pathlib.Path(path).resolve()
+    if path in _LOADED:
+        return _LOADED[path]
     # Run as a script this module is __main__; the model imports it by name, and
     # a second import would give it a second Q class that fails every isinstance.
     sys.modules.setdefault("figcheck", sys.modules[__name__])
-    spec = importlib.util.spec_from_file_location("figmodel", path)
+    name = f"figmodel_{len(_LOADED)}"
+    spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["figmodel"] = mod
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
+    mod.MODEL.path = path
+    _LOADED[path] = mod.MODEL
     return mod.MODEL
+
+
+def model_named(name: str) -> Model:
+    for path in find_models():
+        model = load_model(path)
+        if model.name == name:
+            return model
+    raise KeyError(f"no model is named {name!r}")
 
 
 def _rel(path) -> str:
@@ -1766,7 +2425,8 @@ def show_graph(paths, key: str) -> int:
             print()
         found = True
         f = model.figs[key]
-        print(f"{f.key} = {f.value.show(f.unit)}   [{f.kind}]   in {model.name}")
+        print(f"{f.key} = {f.value.show(f.unit)}   [{f.kind}]   in {model.name}"
+              + (f", taken from {f.origin}" if f.origin else ""))
         if f.src:
             print(f"  source     {f.src}")
         if f.deps:
@@ -1811,13 +2471,14 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
         print()
         print("## Given")
         print()
-        for f in sorted((x for x in model.figs.values() if x.kind != "derived"),
-                        key=lambda x: (x.kind, x.key)):
-            print(f"- `{f.key}` = {f.value.show(f.unit)}  [{f.kind}] {f.src or ''}")
+        given = [x for x in model.figs.values() if x.kind != "derived" or x.origin]
+        for f in sorted(given, key=lambda x: (x.kind, x.key)):
+            print(f"- `{f.key}` = {f.value.show(f.unit)}  [{f.kind}"
+                  + (f", from {f.origin}" if f.origin else "") + f"] {f.src or ''}")
         print()
         print("## To derive")
         print()
-        for f in sorted((x for x in model.figs.values() if x.kind == "derived"),
+        for f in sorted((x for x in model.figs.values() if x.kind == "derived" and not x.origin),
                         key=lambda x: x.key):
             print(f"- `{f.key}` in {f.unit or 'a bare ratio'}, from "
                   f"{', '.join(f.deps)}")
@@ -1825,8 +2486,9 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
 
     if args.provenance:
         by_kind = defaultdict(list)
+        taken = sorted((f for f in model.figs.values() if f.origin), key=lambda x: x.key)
         for f in model.figs.values():
-            if f.kind != "derived":
+            if f.kind != "derived" and not f.origin:
                 by_kind[f.kind].append(f)
         headings = {"datasheet": "read from a datasheet table",
                     "graph": "read off a plotted curve",
@@ -1842,7 +2504,16 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
                 print(f"  {f.key:<30} {f.value.show(f.unit):>14}   {f.src or ''}"
                       + (f"  [{f.sheet}]" if f.sheet else ""))
             print()
-        derived = [f for f in model.figs.values() if f.kind == "derived"]
+        if model.pin_data:
+            print(f"{len(model.pin_data.sources)} declarations of what the pins can carry")
+            for what, src in model.pin_data.sources:
+                print(f"  {what:<30} {src}")
+            print()
+        print(f"{len(taken)} taken from another model, which declares the source")
+        for f in taken:
+            print(f"  {f.key:<30} {f.value.show(f.unit):>14}   from {f.origin}, [{f.kind}]")
+        print()
+        derived = [f for f in model.figs.values() if f.kind == "derived" and not f.origin]
         print(f"{len(derived)} figures are computed from those and carry no source.")
         return 0
 
@@ -1857,7 +2528,7 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
             if f.stated is True:
                 declared[f.group].append(k)
         for t in tokens:
-            if not t.strict:
+            if not (t.strict or t.cell):
                 continue
             if (t.group, t.section) != cur:
                 cur = (t.group, t.section)
@@ -1868,7 +2539,8 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
         return 0
 
     rep = Report()
-    inputs = sum(1 for f in model.figs.values() if f.kind != "derived")
+    taken = sum(1 for f in model.figs.values() if f.origin)
+    inputs = sum(1 for f in model.figs.values() if f.kind != "derived" and not f.origin)
     print(f"Checking {model.name}")
     print(f"  document   {_rel(model.document)}")
     for extra in model.documents:
@@ -1876,7 +2548,8 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
     if model.drawings:
         print(f"  drawings   " + ", ".join(d.name for d in model.drawings))
     print(f"  model      {inputs} declared inputs, "
-          f"{len(model.figs) - inputs} derived figures")
+          f"{len(model.figs) - inputs - taken} derived figures"
+          + (f", {taken} taken from other models" if taken else ""))
     print()
 
     # A marked pin is checked against the pin table, so the figure passes leave
@@ -1918,10 +2591,10 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
     orphans = rep.count("orphan")
     _status(orphans == 0, "every number accounted for",
             f"{strict} in blocks and tables, {orphans} from nowhere")
-    stray = rep.count("prose")
-    _status(stray == 0, "every number in prose too",
-            f"{loose_refs} carry a quantity, {len(model.asides)} are named asides, "
-            f"{stray} match nothing")
+    stray, dead = rep.count("prose"), rep.count("aside")
+    _status(stray == 0 and dead == 0, "every number in prose too",
+            f"{loose_refs} carry a quantity, {len(model.asides) - dead} are named asides, "
+            f"{stray} match nothing" + (f", {dead} asides no document states" if dead else ""))
 
     if model.drawings:
         keyed, loose_svg = pass_drawings(model, rep)
@@ -2003,7 +2676,10 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
 
 
 def find_models() -> list[pathlib.Path]:
-    return sorted((ROOT / "docs" / "parts").glob("*/figures.py"))
+    """The Teensy's model and the firmware's first, since the subsystems take figures from them."""
+    return (sorted((ROOT / "docs" / "research").glob("*.py"))
+            + sorted((ROOT / "firmware").glob("figures.py"))
+            + sorted((ROOT / "docs" / "parts").glob("*/figures.py")))
 
 
 def main(argv=None):
@@ -2053,6 +2729,9 @@ def main(argv=None):
     print()
     if main_pins(args.write):
         failed.append("the pins")
+    print()
+    if main_wiring(paths):
+        failed.append("the wiring")
     if not args.no_stale and not args.write:
         rep = Report()
         pass_stale(args.base, rep)
@@ -2066,7 +2745,7 @@ def main(argv=None):
     if failed:
         print("Something to fix in " + ", ".join(failed) + ".")
         return 1
-    print(f"Nothing to fix in {len(paths)} models and the pin table.")
+    print(f"Nothing to fix in {len(paths)} models, the pin table and the wiring.")
     return 0
 
 
