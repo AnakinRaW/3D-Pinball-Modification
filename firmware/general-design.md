@@ -50,6 +50,22 @@ Every interrupt the drivers use sits at the priority below. A lower number is a 
 
 Two interrupts are shared by several drivers, the pin interrupt and the `IntervalTimer` interrupt. All pin interrupts run on one IRQ, and `setup()` sets its priority once. All four `IntervalTimer`s share one interrupt as well, which runs at the highest priority any of them asks for. The [driver tick](driver-design.md#driver-intervaltimer) is the only `IntervalTimer` the firmware uses.
 
+## Exclusive peripherals
+
+Each peripheral below belongs to one driver. Nothing else may use it, and no library may need it. The pins each one reaches are in [`pin-assignment.md`](../docs/pin-assignment.md#shared-resources). PJRC's [`pwm.c`](https://github.com/PaulStoffregen/cores/blob/master/teensy4/pwm.c) lists which library takes which timer.
+
+| Peripheral | Owner | What the driver does with it |
+|---|---|---|
+| SPI | IR ball sensing | reads the converters |
+| QuadTimer3, all four channels | IR ball sensing | counts the sensor phases and starts the read block |
+| QuadTimer4 | Lighting | OctoWS2811 times the LED data |
+| I²S2 | Audio | the Audio library hands every block to the amplifier |
+| Wire | Magnetic rotary sensor | runs the bus itself after `begin()` |
+| FlexPWM1.1 | Servo | PWMServo repeats the servo pulse |
+| FlexIO3 | Display | clocks the 8-bit bus out to the display |
+
+The IR driver takes all four channels of QuadTimer3, because they share one interrupt ([i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3, interrupt 135).
+
 ## Time measurement
 
 Every time measurement compares a noted time with the current time with `micros()` or `millis()`. If the current time is read before the note, an interrupt in between can note a later time. The difference then turns negative, and as an unsigned number it reads as a very long time. `elapsedUs()` and `elapsedMs()` get the note first and read the current time after it, so the difference cannot turn negative. Every measurement goes through one of them.

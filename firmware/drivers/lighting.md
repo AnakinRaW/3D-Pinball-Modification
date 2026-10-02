@@ -15,7 +15,7 @@ Which library decides whether that time is blocked or not:
 | FastLED | Its built-in clockless output is timed in software, and other interrupts disrupt it. Over `USE_OCTOWS2811` it hands the transfer to OctoWS2811 instead |
 | Adafruit NeoPixel | Disables all interrupts for the whole frame. **Do not use** |
 
-**FastLED is the frontend, OctoWS2811 the output engine.** FastLED holds the pixel array, the effects and the power limit, and OctoWS2811 does the DMA transfer. OctoWS2811 times that transfer with channels 0 to 2 of QuadTimer4, so QuadTimer4 belongs to the lighting driver, as [`general-design.md`](../general-design.md#peripherals-a-driver-owns) records.
+**FastLED is the frontend, OctoWS2811 the output engine.** FastLED holds the pixel array, the effects and the power limit, and OctoWS2811 does the DMA transfer. OctoWS2811 times that transfer with channels 0 to 2 of QuadTimer4, so QuadTimer4 belongs to the lighting driver, as [`general-design.md`](../general-design.md#exclusive-peripherals) records.
 
 ## Device faults
 

@@ -124,14 +124,14 @@ Reserved in [`pin-assignment.md`](../../pin-assignment.md).
 |---|---|---|
 | 5 | 1 | I²S2 data input, and no audio input is planned |
 | 6 | 2 | I²S1 data output alternative, and I²S1 is unused |
-| 7 | 3 | Serial2 RX |
+| 7 | 3 | Serial2 RX, I²S1 data output alternative |
 | 8 | 4 | Serial2 TX, I²S1 data input |
 | 9 | 5 | I²S1 data output alternative |
-| 10 | 6 | One of three SPI CS options. The IR converters take 36 and 37, so a further SPI device would need pin 10 back or a pin outside the usual set |
+| 10 | 6 | One of three SPI CS options. The IR sensing needs none of them, since its chip selects sit on [15](../../pin-assignment.md "CS-A") and [16](../../pin-assignment.md "CS-B") and no further device joins its bus |
 
-The set costs one UART and no analog input. The IR sensing takes no analog input at all, since its channels are digitised on their own board, and it shares the SPI bus with whatever arrives later.
+The set costs one UART and no analog input. The IR sensing reads no channel through an analog input, since its channels are digitised on the IR sensor mainboard.
 
-PJRC's default set for Teensy 4.x is 2, 14, 7, 8, 6, 20, 21 and 5. Pin 2 carries I²S2 audio, and pins 14, 20 and 21 are analog inputs worth keeping. Teensy 4.x accepts any pin set, so the four remaining defaults are joined by 9 and 10 instead.
+PJRC's default set for Teensy 4.x is 2, 14, 7, 8, 6, 20, 21 and 5. Pin 2 carries I²S2 audio, pin 14 the IR sensing's clock, and pins 20 and 21 two of the display's data lines. Teensy 4.x accepts any pin set, so the four remaining defaults are joined by 9 and 10 instead.
 
 ## Level shifting
 

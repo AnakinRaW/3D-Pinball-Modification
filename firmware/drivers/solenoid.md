@@ -115,7 +115,7 @@ public:
 private:
     static constexpr uint8_t  kCoils    = 4;
     static constexpr uint8_t  kSenses   = 3;
-    static constexpr uint8_t  kTrigger[kCoils] = {40, 39, 38, 37};  // pin-assignment.md: Solenoid trigger 1 to 4
+    static constexpr uint8_t  kTrigger[kCoils] = {40, 41, 30, 37};  // pin-assignment.md: Solenoid trigger 1 to 4
     static constexpr uint8_t  kSense[kSenses]  = {36, 35, 34};      // pin-assignment.md: Solenoid sense 1 to 3
     static constexpr uint32_t kOnUs     = 50000;  // the longest pull-in, docs/parts/solenoid
     static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 45 ms, from here the tick ends a pull
