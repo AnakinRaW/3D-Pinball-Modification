@@ -17,4 +17,4 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`magnetic-rotary.md`](magnetic-rotary.md) | The magnetic rotary sensor driver: how far the seal rod turned, read over I²C without waiting on the bus |
 | [`components/rotating-seal.md`](components/rotating-seal.md) | The rotating seal component: the shots and full turns a game sees of the seal |
 | [`controls.md`](controls.md) | The toggle switch driver: an event when the switch moves, and its position on request |
-| [`servo.md`](servo.md) | The servo driver: the angle as a pulse FlexPWM1.2 repeats on its own, with no interrupt |
+| [`servo.md`](servo.md) | The servo driver: the angle as a pulse FlexPWM1.2 repeats without an interrupt |

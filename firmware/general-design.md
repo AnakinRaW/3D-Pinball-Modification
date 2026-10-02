@@ -52,7 +52,7 @@ Two interrupts are shared by several drivers, the pin interrupt and the `Interva
 
 ## Time measurement
 
-Every time measurement compares a noted time with the clock. If the clock is read before the note, an interrupt in between can note a later time. The difference then turns negative, and as an unsigned number it reads as a very long time. `elapsedUs()` and `elapsedMs()` get the note first and read the clock after it, so the difference cannot turn negative. Every measurement goes through one of them.
+Every time measurement compares a noted time with the current time with `micros()` or `millis()`. If the current time is read before the note, an interrupt in between can note a later time. The difference then turns negative, and as an unsigned number it reads as a very long time. `elapsedUs()` and `elapsedMs()` get the note first and read the current time after it, so the difference cannot turn negative. Every measurement goes through one of them.
 
 ```cpp
 // gets whether at least span microseconds have passed since t
