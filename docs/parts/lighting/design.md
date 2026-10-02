@@ -1,62 +1,39 @@
 # Lighting
 
-This section describes the design to be used for lightening this modeification and uses the documentation of the [`stock machine lighting`](../../research/Rokr/4_lighting.md).
+This section describes the design to be used for lighting this modification and uses the documentation of the [`stock machine lighting`](../../research/Rokr/4_lighting.md).
 
 ## Stock Limitations
 
-The stock machine uses a very primitve design for lighting, which brings a couple of limitations when it comes to modding: 
+The stock machine uses a very primitive design for lighting, which brings a couple of limitations when it comes to modding: 
 
-- Most playfield LEDs are sodered to the mainboards (P37 and P39) and therefore are not reusable at all. This applies to the score, drain and bumper LEDs.
-- The ball track LED boards (the four arrows, P29 and P30) are dual color (red and white) but it is not possible to lit the four LEDs per board individually.
-- The LED stripes are single color and do not allow effects beside turning the whole stripe on or off.
+- Most playfield LEDs are soldered to the mainboards (P37 and P39) and therefore are not reusable at all. This applies to the score, drain and bumper LEDs.
+- The ball track LED boards (the four arrows, P29 and P30) are dual color (red and white) but it is not possible to light the four LEDs per board individually.
+- The LED strips are single color and do not allow effects beside turning the whole strip on or off.
 - The ball count board (P28) uses single color LEDs.
 
 ## Overview
 
-## Features & Layout
-
-The lightning positons of the stock machine is planned to be reused and augmented. 
-
-Most if not all lights shall be full RGB. All lights shall individually adressable.
-
-Planned to implement:
-- **NEW** - Top rollover lanes
-- **NEW** - Left and right side playfield 
-- **NEW** - Diorama ceilling
-- **NEW** - Playfield lights (at existing location) 
-- *Reused* - Life points in shooter lane
-
-Evaluating:
-- Light under bells
-- Light for targets and other unplanned features
-- Light on ball lane entries
-- Light inside crocodile
-- Light under Slingshots
-- Lights inside tunnel
-- Light for rotating seal raget
-- etc.
-
-
 ### LED Hardware
-Considering the vision of this modification (in combination with the limitations above), every light is planned to be an addressable RGB device. The part is the **WS2812B**, which operates at 5 V and can be fed from the existing 5 V power supply.
 
-> The only exception for this modification might be reusing P28 in the shooter lane. Reasons for that is that the PCB already fits in place and the LEDs can be lit individually, though mono-color only.
+The lighting positions of the stock machine is planned to be reused and augmented. 
+
+Most if not all lights shall be full RGB. All lights shall individually addressable using either WS2812 or SK6682. The LEDs operate at 5 V and can be fed from the existing 5 V power supply.
 
 A 2 m long and 2.7 mm thin, cuttable WS2812B LED strip covers most if not all needs for this modification. It fits, even though barely, the stock plastic trenches of the playfield's side panels.
 
-The sides and the diorama ceilling light already take 115.5 cm. Re-lighting the remaining stock lights takes approximately another 45 cm. This leaves nearly 40 cm over for custom lighting.
+The sides and the diorama ceiling light already take 115.5 cm. Re-lighting the remaining stock lights takes approximately another 45 cm. This leaves nearly 40 cm over for custom lighting.
 
-Whether or not to use discrete LEDs (such as [NeoPixel 5050](https://www.adafruit.com/product/1655)) is not yet decided. Larger package sizes are easy to handle but have limited use. The smaller star-shaped cutouts on piece E5 might only just fit a 2020 package size. Cutting and taping the LED strip, potentially wasting a couple of centimeters strip length, seems far more practial.
+Whether or not to use discrete LEDs (such as [NeoPixel 5050](https://www.adafruit.com/product/1655)) is not yet decided. Larger package sizes are easy to handle but have limited use. The smaller star-shaped cutouts on piece E5 might only just fit a 2020 package size. Cutting and taping the LED strip, potentially wasting a couple of centimeters strip length, seems far more practical.
 
 ## Power Consumption
 
-TODO: LEDS is huge consumer... In general LEDs not 100%, but intensitity needs to be tested what looks good. Roof and surrounding playfield strips only use every second LED. 
+TODO: LEDS is huge consumer... In general LEDs not 100%, but intensity needs to be tested what looks good. Roof and surrounding playfield strips only use every second LED. 
 
-ca. 50 Playfield LED + ambient = ~2.1 A at 30% brightness for animation-focused lightning 
+ca. 50 Playfield LED + ambient = ~2.1 A at 30% brightness for animation-focused lighting 
 
 ### Software
 
-**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmare. See the timing rules in [`firmware/general-design.md`](../../../firmware/general-design.md) and the output path in [`firmware/lighting.md`](../../../firmware/lighting.md).
+**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmware. See the timing rules in [`firmware/general-design.md`](../../../firmware/general-design.md) and the output path in [`firmware/drivers/lighting.md`](../../../firmware/drivers/lighting.md).
 
 The game logic addresses lighting through **logical groups** and **named effects**. 
 
@@ -101,7 +78,7 @@ Running below full scale keeps the 2.0 A limiter as a backstop. `setMaxPowerInVo
 
 ## Chains follow failure domains
 
-A chain is electrical rather than geometric and may wander anywhere on the board, so distributing lights across the playfield does not by itself require several chains.
+A chain is electrical rather than geometric and may wander anywhere on the board, so spreading lights across the playfield is no reason for a second chain.
 
 What does require them is failure behaviour. Three solenoids shake the cabinet, and a single chain of 213 devices puts 212 joints in series where any one of them darkens everything after it. Each chain is therefore one failure domain, cut so that a fault stays local and points at where to look.
 
@@ -116,24 +93,9 @@ What does require them is failure behaviour. Three solenoids shake the cabinet, 
 
 The three ambient strips stay separate for this reason alone. Together they hold 184 of the 213 devices and span the widest cable runs in the machine.
 
-## Teensy pins
+## Circuit
 
-Reserved in [`pin-assignment.md`](../../pin-assignment.md).
-
-| Pin | Chain | What it costs |
-|---|---|---|
-| 5 | 1 | I²S2 data input, and no audio input is planned |
-| 6 | 2 | I²S1 data output alternative, and I²S1 is unused |
-| 7 | 3 | Serial2 RX, I²S1 data output alternative |
-| 8 | 4 | Serial2 TX, I²S1 data input |
-| 9 | 5 | I²S1 data output alternative |
-| 10 | 6 | One of three SPI CS options. The IR sensing needs none of them, since its chip selects sit on [15](../../pin-assignment.md "CS-A") and [16](../../pin-assignment.md "CS-B") and no further device joins its bus |
-
-The set costs one UART and no analog input. The IR sensing reads no channel through an analog input, since its channels are digitised on the IR sensor mainboard.
-
-PJRC's default set for Teensy 4.x is 2, 14, 7, 8, 6, 20, 21 and 5. Pin 2 carries I²S2 audio, pin 14 the IR sensing's clock, and pins 20 and 21 two of the display's data lines. Teensy 4.x accepts any pin set, so the four remaining defaults are joined by 9 and 10 instead.
-
-## Level shifting
+### Level shifting
 
 The WS2812B data input threshold is specified against its own supply, so at 5 V it sits above the 3.3 V the Teensy can drive. The exact figure is an open point.
 
@@ -156,7 +118,7 @@ At I<sub>OH</sub> = 4 mA the datasheet guarantees V<sub>OH</sub> ≥ 3.7 V, well
 
 **The 5 V is injected separately at each strip** rather than passed along from the previous one. A link then carries signal current instead of operating current, and a contact going bad takes down one chain instead of the section behind it.
 
-## Current ceiling
+### Current ceiling
 
 135 lit positions at three dies each and roughly 20 mA per die come to **8.1 A** with everything at full, a figure no effect ever displays. Quiescent draw sits on top of it and does not vary with colour: 213 devices at roughly 1 mA come to **0.21 A**, 11 % of the lighting budget before anything is lit.
 
@@ -187,7 +149,7 @@ The saturated palette is what makes the budget comfortable. Ambient alone, the 8
 
 The firmware limit is load bearing. Without it the lighting alone draws 8.1 A, the supply enters current limiting, the rail sags and the Teensy resets, possibly with a solenoid energised. The supply is therefore chosen to limit current rather than to latch off.
 
-## Ball count board P28
+### Ball count board P28
 
 The stock P28 carries six amber LEDs, a 7-pin connector and nothing else. Its value is that it already fits: hole pattern, LED spacing and position in the wooden structure are all settled. The design keeps it untouched.
 
@@ -224,7 +186,7 @@ Cost: no Teensy pin and six slots in the frame. The ball count gains per-device 
 | P28 pin to LED position mapping | Note which LED glows during the same diode test |
 | P28 connector type, pitch and pin numbering direction | Caliper and inspection |
 | Rollover count | Count the added positions |
-| WS2812B current per die, quiescent draw and input threshold V<sub>IH</sub> | The strip's datasheet. The 20 mA per die and 1 mA quiescent used above are convention, and no V<sub>IH</sub> figure is sourced yet. The copy in `docs/datasheets/` is a scan with no text layer |
+| WS2812B current per die, quiescent draw, input threshold V<sub>IH</sub> and bit timing | The strip's datasheet. The 20 mA per die and 1 mA quiescent used above are convention, and no V<sub>IH</sub> figure is sourced yet. The bit timing has to take the shift the input resistors add, see Level shifting. The copy in `docs/datasheets/` is a scan with no text layer |
 | Whether WS2812B and SK6812 bit timings overlap enough for one waveform to drive both | The T0H, T1H and reset windows in the two datasheets. Only relevant if a mixed chain is ever wanted |
 | Maximum current of the stock amber LEDs on P28 | Unmarked parts with no datasheet. Start below the WS2811 figure on the bench and raise it |
 | Strip pitch, and with it every device count in this document | Caliper across ten devices on the strip. The 160 LEDs/m is the supplier's figure, not a measurement, and 213 devices, 2.4 ms and 8.1 A all follow from it |
@@ -249,8 +211,8 @@ https://amzn.eu/d/0jcgB8mw - SEZO WS2812B IC RGB LED Strip 2.7mm 2M 160LEDs/m
 - [Worldsemi WS2811 datasheet](../../datasheets/WS2811-Worldsemi.pdf): package options, pin functions, supply range, output current, SET pin, reset time
 - [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html): simultaneous DMA update of eight strips, default pin set for Teensy 4.x, free choice of pins, buffer chip and series resistor guidance
 - [`OctoWS2811.h`](https://github.com/PaulStoffregen/OctoWS2811/blob/master/OctoWS2811.h): the `WS2811_GRB` byte order, and the single `config` and `numPerStrip` shared by all pins of an instance
-- [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA
+- [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA, the input levels, the input clamp diodes and their current, the input capacitance and the longest input edge
 - [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and pitch, housing dimensions, P28
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): measured solenoid current, stock load inventory
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, per-pin current, analog input count
-- [`firmware/ir-sensing.md`](../../../firmware/ir-sensing.md): the 3 ms budget the IR sensing imposes on the loop
+- [`firmware/drivers/ir-sensing.md`](../../../firmware/drivers/ir-sensing.md): the 3 ms budget the IR sensing imposes on the loop
