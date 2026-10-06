@@ -28,7 +28,7 @@ jobs:
 
       # Every subsystem that derives figures declares them in its own
       # docs/parts/<subsystem>/figures.py, and the figures the subsystems share
-      # stand in docs/research/teensy-4.1.py and firmware/figures.py. figcheck
+      # stand in docs/research/teensy-4.1.py and docs/firmware/figures.py. figcheck
       # finds each one, checks it, and then checks every marked Teensy pin
       # against docs/pin-assignment.md.
       - name: Recompute every figure and check the documents and the pins against it
