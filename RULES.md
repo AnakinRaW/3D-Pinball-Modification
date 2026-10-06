@@ -53,7 +53,7 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 ## 5. Git
 
 - **Never push. Under no circumstances.** No `git push`, no remote creation with intent to push, no PR creation.
-- **Commit only when explicitly told to** — or these rules define scenrios give allowance.
+- **Commit only when explicitly told to** — or these rules define scenarios give allowance.
 - Everything else stays in the working tree until a commit is explicitly requested.
 - **Commit only the named files.** `git commit` writes the whole index, including files staged from outside the session. Name the paths — `git commit -- <path>` — and run `git diff --cached` first to see what is actually there. Anything staged elsewhere stays uncommitted. A file staged in part is the exception, because `git commit -- <path>` commits a named file as the working tree holds it. There `git diff --cached` has to show the intended hunks and nothing staged elsewhere, and `git commit` without paths then commits the index.
 - No force operations, no history rewriting, no branch deletion without an explicit request.
