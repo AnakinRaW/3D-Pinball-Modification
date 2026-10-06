@@ -40,7 +40,7 @@ Widths are estimated from character classes for a sans-serif face, not measured 
 
 ## figcheck
 
-A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. Two further models hold what several subsystems share: [`docs/research/teensy-4.1.py`](../docs/research/teensy-4.1.py) the figures of the board and its chip, and [`firmware/figures.py`](../firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
+A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. Two further models hold what several subsystems share: [`docs/research/teensy-4.1.py`](../docs/research/teensy-4.1.py) the figures of the board and its chip, and [`docs/firmware/figures.py`](../docs/firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files. It then checks the Teensy pins of the whole tree:
 
 ```
 python tools/figcheck.py --sheets                                  every model, then the pins
@@ -123,7 +123,7 @@ and its readings are taken from the rendered page by eye.
 
 A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
-A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`firmware/drivers/ir-sensing.md`](../firmware/drivers/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.
+A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`docs/firmware/drivers/ir-sensing.md`](../docs/firmware/drivers/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.
 
 ### Teensy pins
 

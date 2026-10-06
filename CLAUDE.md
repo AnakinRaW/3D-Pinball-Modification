@@ -44,6 +44,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 - `hardware/pcb/` — EasyEDA projects, one directory per board, each with a schematic PDF and a `fab/` directory of manufacturing outputs
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
+- `docs/firmware/` — the firmware's design, one document per driver and component, with `figures.py` for the timings, priorities and budgets they share
 - `docs/parts/` — the design itself, one directory per subsystem, each holding its circuit document and schematic SVGs
 - `docs/research/` — investigation of the stock machine and per-component notes
 - `docs/datasheets/` — manufacturer datasheets, referenced from the research and design documents

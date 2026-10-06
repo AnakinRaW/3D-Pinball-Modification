@@ -2678,7 +2678,7 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
 def find_models() -> list[pathlib.Path]:
     """The Teensy's model and the firmware's first, since the subsystems take figures from them."""
     return (sorted((ROOT / "docs" / "research").glob("*.py"))
-            + sorted((ROOT / "firmware").glob("figures.py"))
+            + sorted((ROOT / "docs" / "firmware").glob("figures.py"))
             + sorted((ROOT / "docs" / "parts").glob("*/figures.py")))
 
 
