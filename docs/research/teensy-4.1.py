@@ -46,6 +46,9 @@ ds("v_3v3", 3.3, "V", src=f"{CARD}, the 3.3 V rail, which is the level every pin
    group="Logic level", section=SPEC, stated=True)
 ds("v_not_tolerant", 5, "V", src=f"the level the {PAGE} names in 'The pins are not 5V "
    "tolerant'")
+ds("v_3v3_acc", 1, "%", src="TI TLV757P datasheet, SBVS322C, 5.5 Electrical Characteristics, "
+   "output accuracy ±1 % from -40 °C to 85 °C at VOUT ≥ 1 V; the board's one 3.3 V "
+   "regulator is a TLV75733P, PJRC's Teensy 4.1 schematic")
 
 ds("v_in_min", 3.6, "V", src=f"{CARD}, VIN", group="VIN input range", section=POWER,
    stated=True)
