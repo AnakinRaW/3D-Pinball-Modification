@@ -2,6 +2,9 @@
 
 A break-beam gate across the drain reports the ball leaving play. The pair is an [Adafruit 2167](../../research/Sensors/adafruit-2167-ir-break.md), emitter and receiver in separate bodies carrying 3 mm LEDs, facing each other across the drain at a gap of 2 cm.
 
+> [!NOTE]
+> Replacing the Adafruit 2167 with a pair of onsemi sidelookers is being considered. The emitter would be a QEE122 or QEE123 and the receiver a QSE114.
+
 ## Circuit & Signal
 
 Both bodies are powered directly from the Teensy's own 3V3 and GND pins. 
