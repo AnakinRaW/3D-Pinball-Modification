@@ -15,9 +15,9 @@ The stock machine requires the following loads:
 | Multicolour LED, bumper centre | 1 | ≤ 60 mA at full white | 0.06 A | Probably a WS2812B |
 | IR reflective sensor channel | 3 | 10 mA average | 0.03 A | Measured in [`2_ir-reflective-sensor-p33.md`](2_ir-reflective-sensor-p33.md) |
 | IR break-beam | 1 | 51 mA | 0.05 A | Emitter lit continuously through 82 Ω, measured in [`6_ir-break-beam.md`](6_ir-break-beam.md) |
-| Speaker, 8 Ω | 1 | 0.45 A estimated | 0.45 A | Bridge-tied on the 5 V rail at full output, class-AB at 70 % efficiency |
+| Speaker, 8 Ω | 1 | 0.37 A estimated | 0.37 A | Bridge-tied, 1.56 W into 8 Ω at full swing on the 5 V rail, class D assumed at 85 % efficiency; both wires switch, as measured in [`5_sound.md`](5_sound.md#drive) |
 | Controller and mainboard logic | 1 | 100 mA estimated | 0.10 A | MCU, audio amplifier quiescent draw and gate network on 5 V |
-| **Total** | | | **1.80 A** | Everything lit and sounding; **3.84 A** with all three coils energized |
+| **Total** | | | **1.72 A** | Everything lit and sounding; **3.76 A** with all three coils energized |
 
 ## Power Supply Circuit
 

@@ -2,10 +2,19 @@
 
 ## Speaker
 
-One speaker sits in the stock machine, wired to the mainboard through a 2-pin connector. Its impedance measures 8 Ω. Its share of the 5 V rail is budgeted in [`1_power-supply.md`](1_power-supply.md).
+One speaker sits in the stock machine, wired to the mainboard through a 2-pin connector. Its impedance measures 8 Ω. It carries no rating, and its size and build suggest 0.5 W to 1 W. Its share of the 5 V rail is budgeted in [`1_power-supply.md`](1_power-supply.md).
 
-> [!WARNING]
-> **TODO: Measure speaker power. Should be approx 0.5 W - 1 W, given its size and quality.**
+### Drive
+
+Both of the speaker's wires carry a switching output of the mainboard, and neither is at ground. A multimeter on its DC range gave these readings while the background music played.
+
+| Meter | Reading |
+|---|---|
+| Red probe on the red speaker wire, black probe on the supply's ground | 200 mV to 500 mV, jumping with the music |
+| Red probe on the red speaker wire, black probe on the black speaker wire | −4 mV to −9 mV |
+| In series with the red speaker wire, on its µA range | −100 µA to −180 µA |
+
+Each wire averages a few hundred millivolts, where a linear amplifier would hold it at 2.5 V.
 
 ## Gameplay sounds
 
