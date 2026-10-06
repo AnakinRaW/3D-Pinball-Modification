@@ -33,7 +33,7 @@ ca. 50 Playfield LED + ambient = ~2.1 A at 30% brightness for animation-focused 
 
 ### Software
 
-**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmware. See the timing rules in [`firmware/general-design.md`](../../../firmware/general-design.md) and the output path in [`firmware/drivers/lighting.md`](../../../firmware/drivers/lighting.md).
+**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmware. See the timing rules in [`docs/firmware/general-design.md`](../../firmware/general-design.md) and the output path in [`docs/firmware/drivers/lighting.md`](../../firmware/drivers/lighting.md).
 
 The game logic addresses lighting through **logical groups** and **named effects**. 
 

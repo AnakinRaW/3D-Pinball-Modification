@@ -39,9 +39,9 @@ VCC comes from the Teensy's 3V3.
 
 ## Firmware
 
-The driver only collects the rod's angle as steps every 5 ms without waiting on the bus. It uses the start-up value as reference and adds signed steps to it. The result of that addition is reported to the event queue. To minimize jitter events are only published if the new position compared to the last reported value is at least 12 steps. 4096 steps are 360°. Once the rod has not moved that far for 20 ms, the driver publishes one event saying the rod stands still. [`firmware/drivers/magnetic-rotary.md`](../../../firmware/drivers/magnetic-rotary.md) describes the driver.
+The driver only collects the rod's angle as steps every 5 ms without waiting on the bus. It uses the start-up value as reference and adds signed steps to it. The result of that addition is reported to the event queue. To minimize jitter events are only published if the new position compared to the last reported value is at least 12 steps. 4096 steps are 360°. Once the rod has not moved that far for 20 ms, the driver publishes one event saying the rod stands still. [`docs/firmware/drivers/magnetic-rotary.md`](../../firmware/drivers/magnetic-rotary.md) describes the driver.
 
-The sensor is further abstracted to the [rotating seal component](../../../firmware/components/rotating-seal.md). This component then provides the higher level functions a game can query and evaluate.
+The sensor is further abstracted to the [rotating seal component](../../firmware/components/rotating-seal.md). This component then provides the higher level functions a game can query and evaluate.
 
 ## Part list
 

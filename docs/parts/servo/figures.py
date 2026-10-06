@@ -13,7 +13,7 @@ from figcheck import Model, drives, ln, pull, reads
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("servo", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "servo-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "servo.md"])
+              documents=[HERE.parents[1] / "firmware" / "drivers" / "servo.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 msr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="measured", **kw)
@@ -316,12 +316,7 @@ _I("the stall current the design takes bounds the sheet's other figure",
 _I("C1 is bought at twice the rail",
    lambda v: v.v_cap_rating >= 2 * v.v_5v)
 
-for _text, _why in [
-    ("1", "FlexPWM1's submodule 1, the one the servo pin sits on, as the driver names it, "
-          "and the step past the frame's last count, as the driver writes it"),
-    ("40", "t_load_timeout in milliseconds, as the driver writes it"),
-]:
-    MODEL.aside(_text, _why)
+
 
 
 # ===========================================================================
@@ -339,4 +334,4 @@ MODEL.net("Servo signal, servo side",
           reads("the SER0049's signal input through R2", src="design.md, R2 between U1 and the servo"))
 
 MODEL.owns("FlexPWM1.1", "PWMServo sets the submodule to a 20 ms frame, and the driver writes its "
-                         "VAL0 itself, firmware/drivers/servo.md")
+                         "VAL0 itself, docs/firmware/drivers/servo.md")

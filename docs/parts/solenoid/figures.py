@@ -13,7 +13,7 @@ from figcheck import Model, Q, TEENSY_RAIL, contact, pull, reads
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("solenoid", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "board-schematic.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "solenoid.md"])
+              documents=[HERE.parents[1] / "firmware" / "drivers" / "solenoid.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -614,7 +614,7 @@ _I("the gate settles far inside the shortest pull-in the driver can command",
    lambda v: v.t_gate < v.t_on_min)
 
 
-# the driver's constants, as firmware/drivers/solenoid.md writes them
+# the driver's constants, as docs/firmware/drivers/solenoid.md writes them
 MODEL.as_written("t_on_max_us", of="t_on_max", unit="µs")
 MODEL.as_written("t_rearm_us", of="t_rearm", unit="µs")
 MODEL.as_written("t_late_us", of="t_late", unit="µs")

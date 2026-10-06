@@ -12,7 +12,7 @@ A LOW signal means a ball is breaking the IR beam. The output transistor pulls t
 
 ## Firmware
 
-A driver interrupts when a ball breaks the IR beam and publishes it to the event queue [`event queue`](../../../firmware/input-handling.md). [`firmware/drivers/break-beam.md`](../../../firmware/drivers/break-beam.md) describes the driver.
+A driver interrupts when a ball breaks the IR beam and publishes it to the event queue [`event queue`](../../firmware/input-handling.md). [`docs/firmware/drivers/break-beam.md`](../../firmware/drivers/break-beam.md) describes the driver.
 
 ## Mounting
 

@@ -1,6 +1,6 @@
 # Solenoids
 
-This modification requires four solenoid channels. Three of them drive solenoids that carry a contact the ball closes, called sensed solenoids. These are the top bumpers taken from the stock machine. The fourth drives a solenoid without a contact, called an unsensed solenoid. It is an [Adafruit 3992](https://www.adafruit.com/product/3992) push-pull solenoid and belongs to a [scoop](https://missionpinball.org/latest/mechs/scoops/). The bumpers and the scoop are the [game components](../../../firmware/game-abstraction.md#playfield-components) built on these solenoids.
+This modification requires four solenoid channels. Three of them drive solenoids that carry a contact the ball closes, called sensed solenoids. These are the top bumpers taken from the stock machine. The fourth drives a solenoid without a contact, called an unsensed solenoid. It is an [Adafruit 3992](https://www.adafruit.com/product/3992) push-pull solenoid and belongs to a [scoop](https://missionpinball.org/latest/mechs/scoops/). The bumpers and the scoop are the [game components](../../firmware/game-abstraction.md#playfield-components) built on these solenoids.
 
 Driving the sensed solenoids follows the same principle as the stock machine's bumpers, which is described in [`3_bumper-control.md`](../../research/Rokr/3_bumper-control.md).
 
@@ -94,7 +94,7 @@ The driver is responsible for sensing and firing solenoids. It also ensures that
 
 Controlling the hardware is handled by interrupt handlers. The sensed solenoids are triggered automatically upon sense. The unsensed solenoid is controlled by the game logic.
 
-[`firmware/drivers/solenoid.md`](../../../firmware/drivers/solenoid.md) describes the driver.
+[`docs/firmware/drivers/solenoid.md`](../../firmware/drivers/solenoid.md) describes the driver.
 
 ## Part list
 
@@ -293,4 +293,4 @@ HOLD      the watchdog timeout, after which the
 - [Worldsemi WS2811](../../datasheets/WS2811-Worldsemi.pdf): the supply range whose minimum sets how far the rail may sag
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
-- [`firmware/driver-design.md`](../../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards
+- [`docs/firmware/driver-design.md`](../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards

@@ -13,7 +13,7 @@ from figcheck import Model, Q, TEENSY_RAIL, drives, ln, pull, reads
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("magnetic-rotary", HERE / "design.md", section=None, until="## Sources",
               drawings=[HERE / "magnetic-rotary-schematic.svg", HERE / "magnetic-rotary-assembly.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "magnetic-rotary.md"])
+              documents=[HERE.parents[1] / "firmware" / "drivers" / "magnetic-rotary.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -162,8 +162,6 @@ for _text, _why in [
                 "AS5600 datasheet, a mounting figure"),
     ("12 bits", "the AS5600's resolution, RES in the datasheet's system specifications, "
                 "which gives the 4096 steps"),
-    ("5", "the GPIO function in a pin's mux register, which recover() writes as Wire's "
-          "force_clock() does in PJRC's WireIMXRT.cpp"),
 ]:
     MODEL.aside(_text, _why)
 
@@ -175,7 +173,7 @@ for _text, _why in [
 # pull-ups sit at or below the Teensy's rail
 _PU = ("design.md, the module's pull-ups R4 and R5, 4.7 kΩ; the module runs from VCC alone, "
        "which comes from the Teensy's 3V3")
-_WIRE = "firmware/drivers/magnetic-rotary.md, Wire.begin() sets up the pins and their pull-ups"
+_WIRE = "docs/firmware/drivers/magnetic-rotary.md, Wire.begin() sets up the pins and their pull-ups"
 MODEL.net("SDA",
           drives("AS5600 SDA", "open-drain", src="UM10204, every I²C device drives SDA open-drain"),
           pull("the module's pull-up on SDA", TEENSY_RAIL, src=_PU),
@@ -188,7 +186,7 @@ MODEL.net("SCL",
           teensy="SCL to the rotary sensors")
 
 MODEL.owns("Wire", "the driver runs the LPI2C1 controller itself after begin(), "
-                   "firmware/drivers/magnetic-rotary.md")
+                   "docs/firmware/drivers/magnetic-rotary.md")
 MODEL.draws("i_dd", pool=TEENSY_RAIL)   # the module, fed from the Teensy's 3V3
 MODEL.draws(pool="driver tick")      # one read collected and the next started on every tick
 MODEL.draws(pool="device monitor")

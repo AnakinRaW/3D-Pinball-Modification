@@ -87,5 +87,5 @@ _I("the closed switch still reads low through R1",
 MODEL.net("Toggle switch",
           contact("P26 through R1", src="design.md, the switch closes the pin to ground through R1"),
           pull("the Teensy's internal pull-up", TEENSY_RAIL,
-               src="firmware/drivers/controls.md, the pin runs with INPUT_PULLUP"),
+               src="docs/firmware/drivers/controls.md, the pin runs with INPUT_PULLUP"),
           teensy="Toggle switch")

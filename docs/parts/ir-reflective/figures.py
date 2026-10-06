@@ -22,7 +22,7 @@ MODEL = Model("ir-reflective", HERE / "design.md",
               drawings=[HERE / "ir-sensor-mainboard.svg",
                         HERE / "pulsed-schematic.svg",
                         HERE / "mainboard-placement.svg"],
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "ir-sensing.md"])
+              documents=[HERE.parents[1] / "firmware" / "drivers" / "ir-sensing.md"])
 
 def _to_printed(q, unit, decimals):
     """A quantity as the appendix prints it, so a chain of stated figures adds
@@ -1981,7 +1981,7 @@ MODEL.net("ADC-DOUT",
 MODEL.owns("SPI", "U3 drives MISO whenever the Teensy is powered, so a second device on the bus "
                   "will not work reliably, design.md")
 MODEL.owns("QuadTimer3", "channel 2 counts the phases and drives CLOCK, channel 3 starts the read "
-                         "block, and all four channels share one interrupt, firmware/drivers/ir-sensing.md")
+                         "block, and all four channels share one interrupt, docs/firmware/drivers/ir-sensing.md")
 
 MODEL.draws("i_iso_s1", pool=TEENSY_RAIL)   # U3's side 1; the board itself runs from the D24V5F3
-MODEL.draws(pool="device monitor")   # the sixteen channels, firmware/drivers/ir-sensing.md
+MODEL.draws(pool="device monitor")   # the sixteen channels, docs/firmware/drivers/ir-sensing.md

@@ -49,7 +49,7 @@ The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground 
 
 ## Firmware
 
-The driver ensures that the servo cannot be operated outside of the predefined angles. [`firmware/drivers/servo.md`](../../../firmware/drivers/servo.md) describes the driver.
+The driver ensures that the servo cannot be operated outside of the predefined angles. [`docs/firmware/drivers/servo.md`](../../firmware/drivers/servo.md) describes the driver.
 
 ## Part list
 

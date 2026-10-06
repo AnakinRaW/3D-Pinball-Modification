@@ -13,7 +13,7 @@ from figcheck import Model, Q, TEENSY_RAIL, drives, pull
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("break-beam", HERE / "design.md",
               section=None, until="## Sources",
-              documents=[HERE.parents[2] / "firmware" / "drivers" / "break-beam.md"])
+              documents=[HERE.parents[1] / "firmware" / "drivers" / "break-beam.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
@@ -112,9 +112,6 @@ _I("the gate reports the fastest ball the build assumes",
 for _text, _why in [
     ("2 cm", "the gap between the two bodies, a mounting dimension"),
     ("3 mm", "the LED package the two bodies carry"),
-    ("0", "the gate's index, the timestamp's initial value, and the empty payload"),
-    ("10000", "the dead time in microseconds, as the driver writes it without a unit"),
-    ("5000", "how long the beam may stay broken, in milliseconds, as the driver writes it"),
 ]:
     MODEL.aside(_text, _why)
 
@@ -127,7 +124,7 @@ for _text, _why in [
 MODEL.net("Receiver output",
           drives("receiver OUT", "open-drain", src="design.md, the receiver's output is an open collector"),
           pull("the Teensy's internal pull-up", TEENSY_RAIL,
-               src="firmware/drivers/break-beam.md, the pin runs with INPUT_PULLUP"),
+               src="docs/firmware/drivers/break-beam.md, the pin runs with INPUT_PULLUP"),
           teensy="Receiver output of the ball drain gate")
 
 MODEL.draws("i_supply", pool=TEENSY_RAIL)   # both bodies, fed from the Teensy's 3V3
