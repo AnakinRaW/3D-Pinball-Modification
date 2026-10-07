@@ -4,6 +4,9 @@ inline bool elapsedUs(uint32_t t, uint32_t span) { return micros() - t >= span; 
 // gets whether at least span milliseconds have passed since t
 inline bool elapsedMs(uint32_t t, uint32_t span) { return millis() - t >= span; }
 
+// gets whether time a lies before time b, also across the wrap of micros()
+inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
+
 EventQueue       events;
 DriverTick       driverTick;             // the drivers attach to it in their begin()
 DeviceMonitor    deviceMonitor;          // the drivers register with it in their begin()

@@ -77,7 +77,7 @@ The IR driver takes all four channels of QuadTimer3, because they share one inte
 
 ## Time measurement
 
-Every time measurement goes through `elapsedUs()` or `elapsedMs()`. Both read the noted time before the current one, so an interrupt in between cannot make the difference negative.
+Every time measurement goes through `elapsedUs()` or `elapsedMs()`, and every comparison of two times goes through `before()`. The first two read the noted time before the current one, so an interrupt in between cannot make the difference negative. `micros()` wraps every 71.6 minutes, and `before()` keeps two times in order across the wrap.
 
 ```cpp
 // gets whether at least span microseconds have passed since t
@@ -85,6 +85,9 @@ inline bool elapsedUs(uint32_t t, uint32_t span) { return micros() - t >= span; 
 
 // gets whether at least span milliseconds have passed since t
 inline bool elapsedMs(uint32_t t, uint32_t span) { return millis() - t >= span; }
+
+// gets whether time a lies before time b, also across the wrap of micros()
+inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 ```
 
 ## The main program

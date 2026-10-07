@@ -13,7 +13,7 @@ In order to be able to realise complex game mechanics the input system needs to 
 - The game logic can tell the order in which events happened, whichever subsystem detected which.
 - The game logic can tell how much time passed between two events, so a timing window can be judged.
 - An event can additionally carry a payload that the game logic consumes.
-- No event is lost while the loop is busy with something else, such as a display redraw or an LED frame, as long as its queue has room.
+- No event is lost while the loop is busy with a display redraw, an LED frame or anything else, as long as its queue has space left.
 - Events can be read out and dispatched without an interrupt, so the game logic runs in the main loop.
 
 ## The concept
@@ -41,13 +41,11 @@ template <DriverEventType Tag> struct DriverPayloadOf;
 template <DriverEventType Tag> typename DriverPayloadOf<Tag>::type payload(const DriverEvent&);
 ```
 
-Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. The producer raises the write counter, the consumer raises the read counter, and each side only reads the other's. The producer stores the element before raising the write counter, and the consumer reads the write counter before taking the element. A memory barrier on each side keeps the compiler from swapping the two. A read searches the front of every queue for the oldest event. At an estimated size of ten producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
+Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. A read searches the front of every queue for the oldest event and compares their times with [`before()`](general-design.md#time-measurement). At an estimated size of ten producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
 
-Using `micros()` on the Teensy wraps every 71.6 minutes. Therefore, comparing two values should be implemented as `(int32_t)(a - b) < 0`, which holds while the two lie less than 35.8 minutes apart.
+> A real-time event is handled by the subsystem that detects it, and the message that it happened is reported afterwards. A sensed solenoid triggering is such an event.
 
-> Real-time events, such as a sensed solenoid triggering, are handled by their own subsystem. The message that the event happened is reported afterwards.
-
-Device faults reach the queue through the device monitor, which [error-handling](error-handling.md#device-faults) describes together with the `Device` list.
+Device faults reach the queue through the device monitor, which [error-handling](error-handling.md#device-faults) describes. The `Device` list stands in [driver-design](driver-design.md#devices).
 
 ## API
 
@@ -63,7 +61,7 @@ public:
         uint32_t dropped() const;
     };
 
-    // setup() only, depth a power of two
+    // before the main loop only, depth a power of two
     Producer& attach(DriverEvent* storage, size_t depth);
 
     // up to max, oldest first
@@ -77,8 +75,8 @@ extern EventQueue events;
 
 | Approach | Outcome |
 |---|---|
-| A callback per subsystem, called where the event is detected | The game logic runs wherever detection happened, an interrupt included, and each subsystem reaches them by a path of a different length, so the order is whatever those paths make it |
+| A callback per subsystem, called where the event is detected | The game logic runs wherever detection happened, an interrupt included. Each subsystem reaches it by a path of a different length, so the order is whatever those paths make it |
 | The game polls every subsystem once per loop pass | The order becomes the polling order, which has nothing to do with real time, and anything happening twice between two passes collapses into one |
 | The game diffs a driver's state each pass | As above, and every change between two passes disappears. That state stays as something a rule can query, rather than as the way an event is found |
 | The payload as a type parameter, `Event<TPayload>` | Every payload type gives a separate event type, and one queue carries one type, so the one ordered stream falls apart |
-| An RTOS with tasks and message queues | Would work, but its queue neither stamps an event nor brings several subsystems into one order, so the timestamp and the ordering are written on top of it anyway. It also splits the interrupts in two, those that may call the RTOS and those that must not |
+| FreeRTOS's message queues | Its queue neither stamps an event nor brings several subsystems into one order, so the timestamp and the ordering would be written on top of it anyway. FreeRTOS also briefly blocks interrupts for every event a driver publishes to such a queue, so each event would cost more than in the lock-free queues and gain nothing |
