@@ -1380,7 +1380,7 @@ def named_pins(path: pathlib.Path) -> list[tuple[int, str]]:
 
 
 def allocating_files() -> list[pathlib.Path]:
-    return [p for d in (ROOT / "docs", ROOT / "firmware") for p in sorted(d.rglob("*"))
+    return [p for d in (ROOT / "docs", ROOT / "firmware" / "src") if d.exists() for p in sorted(d.rglob("*"))
             if p.suffix in {".md", ".svg", ".py"} and p.is_file() and _allocating(p)]
 
 
@@ -1665,7 +1665,7 @@ def pass_costs(data: PinData, rep: Report) -> int:
 
 
 def pin_files() -> list[pathlib.Path]:
-    return sorted(p for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
+    return sorted(p for d in (ROOT / "docs", ROOT / "firmware" / "src") if d.exists() for p in d.rglob("*")
                   if p.suffix in {".md", ".svg"} and p.is_file())
 
 
@@ -1688,7 +1688,7 @@ def main_pins(write: bool) -> int:
     marked = len({r.doc for r in refs})
     print("Checking Teensy pins")
     print(f"  table      {_rel(PIN_TABLE)}, {len(table)} signals")
-    print(f"  files      {len(files)} under docs/ and firmware/, {marked} of them "
+    print(f"  files      {len(files)} under docs/ and firmware/src/, {marked} of them "
           f"marking a pin")
     print()
     named = sum(1 for t in rep.tags if t == ("pin", "named"))
@@ -2321,7 +2321,7 @@ def pass_stale(base: str, rep: Report):
             added |= toks
     gone = sorted(removed - added)
     files = {p: _norm(p.read_text(encoding="utf-8", errors="replace"))
-             for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
+             for d in (ROOT / "docs", ROOT / "firmware" / "src") if d.exists() for p in d.rglob("*")
              if p.suffix in {".md", ".svg", ".py"} and p.is_file()}
     for num, unit in gone:
         tok = f"{num} {unit}"
