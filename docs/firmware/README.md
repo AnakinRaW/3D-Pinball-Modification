@@ -4,7 +4,7 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 
 | File | Contents |
 |---|---|
-| [`general-design.md`](general-design.md) | General design considerations of the firmware: its layers, the event queue, the interrupt priorities and the main program |
+| [`general-design.md`](general-design.md) | General design considerations of the firmware: its layers, the event queue, the interrupt priorities, the tasks and the main program |
 | [`driver-design.md`](driver-design.md) | How every driver works: its rules, the interface every driver implements, its interrupts and the driver tick |
 | [`drivers/ir-sensing.md`](drivers/ir-sensing.md) | The IR ball sensing driver: its budget, sampling instant, calibration and performance reserves |
 | [`drivers/break-beam.md`](drivers/break-beam.md) | The ball drain gate: the event it publishes, the block a ball has to hold, and what one block cannot tell |
@@ -17,5 +17,5 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) | The magnetic rotary sensor driver: how far the seal rod turned, read over I²C without waiting on the bus |
 | [`components/rotating-seal.md`](components/rotating-seal.md) | The rotating seal component: the shots and full turns a game sees of the seal |
 | [`drivers/controls.md`](drivers/controls.md) | The toggle switch driver: an event when the switch moves, and its position on request |
-| [`drivers/servo.md`](drivers/servo.md) | The servo driver: the angle as a pulse FlexPWM1.2 repeats without an interrupt |
+| [`firmware/gist/`](../../firmware/gist/) | Code notes for the drivers and components, which the real firmware starts from |
 | [`figures.py`](figures.py) | The firmware's periods, watchdog timeout, interrupt priorities and slots, which `tools/figcheck.py` checks these documents against |

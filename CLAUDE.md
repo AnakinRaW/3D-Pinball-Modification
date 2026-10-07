@@ -33,6 +33,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
 | Teensy core | Always the newest Teensyduino release | Chosen |
+| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/gist/freertos-config.h`](firmware/gist/freertos-config.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
 **The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
@@ -40,7 +41,10 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 
 ## Repository layout
 
-- `firmware/` — embedded software for the Teensy 4.1
+- `firmware/` — the firmware for the Teensy 4.1: its source, its tests and code notes
+- `firmware/gist/` — code notes, not firmware
+- `firmware/src/` — the real firmware project
+- `firmware/tests/` — the firmware's test code
 - `hardware/pcb/` — EasyEDA projects, one directory per board, each with a schematic PDF and a `fab/` directory of manufacturing outputs
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
@@ -76,6 +80,7 @@ No build system exists yet. Record build/flash/test commands here once the firmw
 
 ## Conventions
 
+- **Once a subsystem's code runs on the Teensy, the code holds how it works.** Its document then keeps what changes rarely: what the subsystem is for and has to achieve, the decisions with their reasons, its interface, the derived figures with their sources, and its known limitations. The implementation moves into `firmware/`, one subsystem at a time as each comes up on hardware.
 - Update `docs/parts-list.md` whenever a hardware design change adds or removes a component (subject to rule 8 — the BOM is a design artifact, so ask first). Keep it to identification plus a spec link; specs and rationale go in `docs/research/`, one file per component. Every BOM row must resolve to its specification — local notes where they exist, manufacturer datasheet otherwise.
 - **Check [`docs/pin-assignment.md`](docs/pin-assignment.md) before committing any Teensy pin, and add a row there once a design settles on one.** It is the single record of which pins this build has spent, and the only way a conflict gets caught across sessions. Its shared-resource tables are what a candidate pin must be checked against — taking one pin of a bus or serial port commits the whole group. Those tables are written from `docs/research/teensy-4.1.py` by `--write`, and figcheck checks the two cost tables against what the allocation takes, so a re-allocation that leaves a cost table stale fails the run. Keep it to occupation: which pin, which signal, which peripheral, which subsystem. Rationale for a choice belongs in the subsystem document, and a re-allocation is discussed in chat and then written straight into the table. Every other mention of a Teensy pin is marked with the signal it carries, figcheck checks the mark against the table, and `--write` carries a moved pin into every place that marks it. After a move, the run lists under Worth knowing every place where the old number still stands without a mark. A subsystem's pins sit together on one edge of the board, in one run where the peripherals it needs allow. [`tools/README.md`](tools/README.md#teensy-pins) gives the markers.
 - Reference designators follow IEEE 315: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.

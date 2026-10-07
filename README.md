@@ -6,6 +6,7 @@ This repository hosts everything for the project:
 
 | Content | Location |
 |---|---|
+| Firmware: source, tests and code notes | [`firmware/`](firmware/) |
 | Firmware design, one document per driver and component | [`docs/firmware/`](docs/firmware/) |
 | PCB designs (schematics & layout) | [`hardware/pcb/`](hardware/pcb/) |
 | 3D CAD files | [`hardware/cad/`](hardware/cad/) |
