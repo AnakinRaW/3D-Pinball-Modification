@@ -31,7 +31,7 @@ Logger           logger{files};          // the machine's log on the card
 // other game components
 
 GameHost         host;
-WDT_T4<WDT1>     watchdog;
+Watchdog         watchdog;               // the i.MX RT's WDOG1, error-handling.md
 
 extern uint8_t _ebss[], _estack[];          // PJRC's linker script: the end of the static variables, and the start of the stack
 static StaticTask_t mainTask_;
@@ -63,6 +63,14 @@ void setup() {
 
 void loop() {}                              // never runs, the main task carries the main loop
 
+static volatile bool startingUp = true;     // until the main loop runs
+
+// FreeRTOS's idle task calls it while the other tasks wait: feeds the watchdog until the main loop
+// runs. freertos-teensy v11.2.0_v4 sets configUSE_IDLE_HOOK 1 and defines a weak, empty hook
+extern "C" void vApplicationIdleHook() {
+    if (startingUp) watchdog.check();
+}
+
 // the main task: sets the machine up, then runs the main loop
 static void machineTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, 0);   // the core's priority, which the kernel's start reset
@@ -70,13 +78,13 @@ static void machineTask(void*) {
 
     // the watchdog before the first coil pulls, so a fault from here on ends in a restart; the idle
     // task feeds it while the start-up waits
-    startWatchdog(watchdog);
+    watchdog.begin();
     solenoids.begin();                      // pulls every coil once, as the stock machine does at power-on
 
     // storage next, so every later driver can read its settings from the card
     storage.begin();                        // starts the storage task and waits for the mount
     logger.begin();                         // finds where the log goes on, which needs the card
-    logRestart(logger);                     // the cause of the last restart, error-handling.md
+    watchdog.report(logger);                // the cause of the last restart, which needs the log
 
     // light ahead of ir for better calibration
     lights.begin();
@@ -111,6 +119,6 @@ static void machineTask(void*) {
         logger.update(now);                 // writes the collected log lines once a second
         screen.update();                    // shows a picture once it has landed
 
-        checkWatchdog();                    // feeds the watchdog while every guard holds
+        watchdog.check();                   // feeds the watchdog while every guard holds
     }
 }

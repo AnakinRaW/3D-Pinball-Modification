@@ -48,6 +48,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 
 | Driver and job | Interrupt | Deadline | Priority |
 |---|---|---|---|
+| Watchdog, warning before a restart | WDOG1's warning interrupt | none, the restart follows | 32 |
 | IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | 64 |
 | IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | 64 |
 | Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | 96 |
@@ -97,7 +98,7 @@ inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 1. the [watchdog](error-handling.md#the-watchdog), so it guards the coils from their first pull;
 2. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 3. the storage driver's `begin()`, so later drivers can read their settings from the card;
-4. the logger's `begin()`;
+4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the `begin()` of every other driver, the lighting's ahead of the IR's;
 6. the game host's `begin()`;
 7. the main loop, which hands the queued events to the host, updates the host, the logger and the screen, and feeds the watchdog.
