@@ -12,10 +12,8 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`drivers/lighting.md`](drivers/lighting.md) | The LED output path and the library that carries it |
 | [`input-handling.md`](input-handling.md) | Description of the event queue system to read and distribute inputs to the game logic |
 | [`error-handling.md`](error-handling.md) | Error handling: the device monitor that reports failed devices, and the watchdog that restarts a firmware that stopped |
-| [`storage.md`](storage.md) | The storage driver: the SD card's only user, streaming the sounds and keeping every game's own files |
-| [`game-abstraction.md`](game-abstraction.md) | The main file, the generic main loop, the host that runs the games, and the interface every game implements |
-| [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) | The magnetic rotary sensor driver: how far the seal rod turned, read over I²C without waiting on the bus |
-| [`components/rotating-seal.md`](components/rotating-seal.md) | The rotating seal component: the shots and full turns a game sees of the seal |
-| [`drivers/controls.md`](drivers/controls.md) | The toggle switch driver: an event when the switch moves, and its position on request |
+| [`game-abstraction.md`](game-abstraction.md) | The host that runs the games, the game lifecycle, and the interface every game implements |
+| [`drivers/`](drivers/) | One document per driver, the code that works a piece of hardware |
+| [`components/`](components/) | One document per component: the playfield elements and the services a game uses |
 | [`firmware/gist/`](../../firmware/gist/) | Code notes for the drivers and components, which the real firmware starts from |
 | [`figures.py`](figures.py) | The firmware's periods, watchdog timeout, interrupt priorities and slots, which `tools/figcheck.py` checks these documents against |
