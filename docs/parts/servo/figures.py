@@ -24,10 +24,10 @@ fig = MODEL.derived
 SERVO = "SER0049-DFRobot.pdf"
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
 
-PULSE = "The pulse"
-LEVELS = "The signal levels"
-OUTPUT = "The output"
-SUPPLY = "The supply"
+PULSE = "Pulse"
+LEVELS = "Signal levels"
+OUTPUT = "Output"
+SUPPLY = "Supply"
 
 # ===========================================================================
 # the pulse

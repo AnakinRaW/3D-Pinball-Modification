@@ -54,7 +54,7 @@ The sensor is further abstracted to the [rotating seal component](../../firmware
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
-### The bus
+### Bus
 
 ```
 BUS       the module's pull-up, R4 and R5          4.7 kΩ
@@ -66,7 +66,7 @@ BUS       the module's pull-up, R4 and R5          4.7 kΩ
           what Standard-mode allows                1000 ns
 ```
 
-### The read
+### Read
 
 ```
 READ      the bus clock                            100 kHz
@@ -80,7 +80,7 @@ READ      the bus clock                            100 kHz
           turn per tick                          = 100 Hz
 ```
 
-### The supply
+### Supply
 
 ```
 SUPPLY    the Teensy's rail                        3.3 V

@@ -17,7 +17,7 @@ MODEL = Model("controls", HERE / "design.md", section=None, until="## Sources",
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
 fig = MODEL.derived
 
-R1 = "The series resistor"
+R1 = "Series resistor"
 
 # ===========================================================================
 # a pin driven high into the closed switch

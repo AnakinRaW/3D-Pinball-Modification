@@ -21,9 +21,9 @@ asm = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="assumed", **kw)
 fig = MODEL.derived
 
 SENSOR = "AS5600-ams.pdf"
-BUS = "The bus"
-READ = "The read"
-SUPPLY = "The supply"
+BUS = "Bus"
+READ = "Read"
+SUPPLY = "Supply"
 
 # ===========================================================================
 # the bus
