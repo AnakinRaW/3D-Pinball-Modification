@@ -24,7 +24,7 @@ The main loop carries the whole game logic. It lays out the game rules and orche
 
 A service a game uses is a component too, such as the [file system](components/file-system.md) on the SD card. The games hold the rules and talk to the components. A game host organises and runs the games, as [game-abstraction](game-abstraction.md) describes.
 
-## The event queue
+## Event queue
 
 Every driver publishes its events, each stamped with the moment of detection, to one shared queue. The main loop drains it at one point. [`input-handling.md`](input-handling.md) describes the queue.
 
@@ -46,19 +46,22 @@ The firmware runs two tasks, the main task with priority 1 for the main loop and
 
 A lower number is a higher priority, and a handler makes every interrupt of the same or a lower priority wait.
 
-| Driver and job | Interrupt | Deadline | Priority |
-|---|---|---|---|
-| Watchdog, warning before a restart | WDOG1's warning interrupt | none, the restart follows | 32 |
-| IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | 64 |
-| IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | 64 |
-| Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | 96 |
-| Rotary sensor, solenoids, device monitor and display, their periodic work | `IntervalTimer`, the driver tick | its next tick | 96 |
-| Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | 128 |
-| Lighting, refilling the half of the LED bit buffer that has gone out | OctoWS2811's DMA | the next half of the bit buffer | 128 |
-| Storage, waking the storage task at the end of a transfer | the SD controller's interrupt | none, the storage task waits for it | 240 |
-| FreeRTOS, its tick and its task switch | SysTick and PendSV | its next tick, 1 ms | 240 |
+| Driver and job | Interrupt | Deadline | Calls FreeRTOS | Priority |
+|---|---|---|---|---|
+| Watchdog, warning before a restart | WDOG1's warning interrupt | none, the restart follows | no | 32 |
+| IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | no | 64 |
+| IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | no | 64 |
+| Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | no | 96 |
+| Rotary sensor, solenoids, device monitor and display, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
+| Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
+| Lighting, refilling the half of the LED bit buffer that has gone out | OctoWS2811's DMA | the next half of the bit buffer | no | 128 |
+| FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
+| Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
+| Display, refilling its bus | FlexIO3 | none, a late refill only pauses the bus | yes | 224 |
+| Storage, waking the storage task at the end of a transfer | the SD controller's interrupt | none, the storage task waits for it | yes | 240 |
+| FreeRTOS, its tick and its task switch | SysTick and PendSV | its next tick, 1 ms | yes | 240 |
 
-Only the interrupts from 208 on call FreeRTOS, and FreeRTOS masks only those. Its tick counts `millis()` and `micros()`, and a tick held off for more than 1 ms is lost for good.
+FreeRTOS holds back the interrupts that call it for a moment while it changes its task lists. The more urgent interrupts never wait for it.
 
 ## Exclusive peripherals
 
@@ -73,29 +76,35 @@ Each peripheral below belongs to one driver, and no other code or library may us
 | Wire | Magnetic rotary sensor | runs the bus itself after `begin()` |
 | FlexPWM1.1 | Servo | PWMServo repeats the servo pulse |
 | FlexIO3 | Display | clocks the 8-bit bus out to the display |
+| GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
 
 The IR driver takes all four channels of QuadTimer3, because they share one interrupt ([i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3, interrupt 135).
 
 ## Time measurement
 
-Every time measurement goes through `elapsedUs()` or `elapsedMs()`, and every comparison of two times goes through `before()`. The first two read the noted time before the current one, so an interrupt in between cannot make the difference negative. `micros()` wraps every 71.6 minutes, and `before()` keeps two times in order across the wrap.
+The firmware takes its times from GPT2, a hardware counter that counts microseconds from the board's crystal. `setup()` starts it before anything takes a time, and `nowUs()` reads it. Time measurement in this firmware goes through `elapsedUs()` or `elapsedMs()`, and every comparison of two times goes through `before()`. 
+
+The two `elapsed` functions read the noted time before the current one, so an interrupt in between cannot make the difference negative. `nowUs()` wraps every 71.6 minutes. `before()` keeps two times in order across the wrap.
 
 ```cpp
-// gets whether at least span microseconds have passed since t
-inline bool elapsedUs(uint32_t t, uint32_t span) { return micros() - t >= span; }
+// gets the microseconds GPT2 has counted since setup() started it
+inline uint32_t nowUs() { return GPT2_CNT; }
 
-// gets whether at least span milliseconds have passed since t
-inline bool elapsedMs(uint32_t t, uint32_t span) { return millis() - t >= span; }
+// gets whether at least span microseconds have passed since t, a time from nowUs()
+inline bool elapsedUs(uint32_t t, uint32_t span) { return nowUs() - t >= span; }
 
-// gets whether time a lies before time b, also across the wrap of micros()
+// gets whether at least span milliseconds have passed since t, a time from nowUs()
+inline bool elapsedMs(uint32_t t, uint32_t span) { return nowUs() - t >= span * 1000; }
+
+// gets whether time a lies before time b, also across the wrap of nowUs()
 inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 ```
 
-## The main program
+## Main program
 
-`setup()` only creates the main task and starts FreeRTOS. The main task then runs, in this order:
+`setup()` starts the [clock](#time-measurement), creates the main task and starts FreeRTOS. The main task then runs, in this order:
 
-1. the [watchdog](error-handling.md#the-watchdog), so it guards the coils from their first pull;
+1. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
 2. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 3. the storage driver's `begin()`, so later drivers can read their settings from the card;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);

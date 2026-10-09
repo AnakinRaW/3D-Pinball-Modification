@@ -52,7 +52,7 @@ public:
 extern DeviceMonitor deviceMonitor;
 ```
 
-## The watchdog
+## Watchdog
 
 The watchdog is a hardware timer in the i.MX RT that resets the Teensy unless the firmware feeds it within a specified time. It keeps counting when the firmware has crashed, so it also catches a failure that stops every line of code. The watchdog is to be used to guard against major malfunctions which are not recoverable, critical to the system or would harm hardware.
 

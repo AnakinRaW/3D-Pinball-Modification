@@ -9,7 +9,7 @@ enum class DriverEventType : uint16_t {
 };
 
 struct DriverEvent {
-    uint32_t        time;      // micros() at detection
+    uint32_t        time;      // nowUs() at detection
     DriverEventType type;
     uint8_t         source;    // channel, switch or target inside its subsystem
     uint32_t        payload;   // interpreted according to the type
@@ -89,7 +89,7 @@ public:
     }
 
     // up to max, oldest first; compares the times with before(), so the order holds across the
-    // wrap of micros()
+    // wrap of nowUs()
     size_t read(DriverEvent* out, size_t max) {
         size_t n = 0;
         while (n < max) {

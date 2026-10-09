@@ -71,7 +71,7 @@ The driver publishes `WritingStarted` when it begins a write while none ran, and
 |---|---|
 | Type | `DriverEventType::WritingStarted` or `DriverEventType::WritingEnded` |
 | Source | `0`, the one card |
-| Timestamp | `micros()` in the storage task |
+| Timestamp | `nowUs()` in the storage task |
 | Payload | None |
 
 Each request reports its own end. A failing card reaches the event queue through the [device monitor](../error-handling.md#device-faults).

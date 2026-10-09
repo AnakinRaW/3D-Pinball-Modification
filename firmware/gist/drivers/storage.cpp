@@ -219,7 +219,7 @@ private:
 struct Storage::OpenFile {
     FsFile   sd;                     // SdFat's file
     char     path[Storage::kPath];   // empty for a free entry
-    uint32_t used;                   // micros() of its last request; a full table closes the entry used longest ago
+    uint32_t used;                   // nowUs() of its last request; a full table closes the entry used longest ago
     bool     writes;                 // opened for writing, which also creates a missing file
 };
 Storage::OpenFile Storage::files_[kOpen];   // the table
@@ -287,7 +287,7 @@ void Storage::run() {
     mounted_ = card_.begin(SdioConfig(DMA_SDIO));   // SdFat waits for the card here, through yield()
     down_    = !mounted_ || !volume_.begin(&counted_);   // a file system that does not read is asked again like a failed card
     if (down_) lastError_ = card_.errorCode();
-    probed_  = millis();
+    probed_  = nowUs();
     sdfat_ = _VectorsRam[IRQ_SDHC1 + 16];          // the handler SdFat's begin() attached, which ends a DMA transfer
     attachInterruptVector(IRQ_SDHC1, [] { self_->transferEnded(); });
     NVIC_SET_PRIORITY(IRQ_SDHC1, 240);
@@ -300,7 +300,7 @@ void Storage::run() {
             if (writing_ && !writeWaits()) report(DriverEventType::WritingEnded);
             continue;
         }
-        const uint32_t untilProbe = kProbeMs - min(kProbeMs, millis() - probed_);
+        const uint32_t untilProbe = kProbeMs - min(kProbeMs, (nowUs() - probed_) / 1000);
         ulTaskNotifyTakeIndexed(kRequest, pdTRUE, down_ && mounted_ ? pdMS_TO_TICKS(untilProbe) : portMAX_DELAY);
     }
 }
@@ -339,13 +339,13 @@ void Storage::probe() {
         down_     = false;
         failures_ = 0;
     }
-    probed_ = millis();                             // the next query comes a second after this one has ended
+    probed_ = nowUs();                              // the next query comes a second after this one has ended
 }
 
 // publishes WritingStarted or WritingEnded and notes which one it was
 void Storage::report(DriverEventType type) {
     writing_ = type == DriverEventType::WritingStarted;
-    out_->publish(DriverEvent{micros(), type, 0, 0});
+    out_->publish(DriverEvent{nowUs(), type, 0, 0});
 }
 
 // gets whether a write waits in either list; callers add at the tails meanwhile
@@ -468,7 +468,7 @@ bool Storage::writeAll(FileRequest& r, OpenFile& f) {
 void Storage::end(FileRequest& r, bool worked, OpenFile* f) {
     const bool         wakes = r.wakes_;
     const IRQ_NUMBER_t wake  = r.wake_;
-    if (f) f->used = micros();
+    if (f) f->used = nowUs();
     r.fileSize_ = f ? f->sd.fileSize() : 0;         // 0 after a card error
     if (!worked) r.bytes_ = 0;
     RequestList&      l = lists_[(uint8_t)r.priority_];
@@ -488,7 +488,7 @@ void Storage::failure(uint32_t code) {
     failures_  = failures_ + 1;
     if (recover() && failures_ < kFailures) return;
     down_   = true;                                 // from now on every request ends at once
-    probed_ = millis();
+    probed_ = nowUs();
 }
 
 // down_ and lastError_ are volatile, since the device monitor reads them on the driver tick. down_

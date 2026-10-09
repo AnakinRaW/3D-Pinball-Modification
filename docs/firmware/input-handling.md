@@ -16,7 +16,7 @@ In order to be able to realise complex game mechanics the input system needs to 
 - No event is lost while the loop is busy with a display redraw, an LED frame or anything else, as long as its queue has space left.
 - Events can be read out and dispatched without an interrupt, so the game logic runs in the main loop.
 
-## The concept
+## Concept
 
 Every subsystem writes its events to a separate queue as it detects them, each stamped with the moment of detection. The input handling system serves the oldest event across those queues on request. This should happen at a single point in the main loop, so the game logic sees one ordered stream and never runs inside an interrupt handler.
 
@@ -30,7 +30,7 @@ enum class DriverEventType : uint16_t {
 };
 
 struct DriverEvent {
-    uint32_t        time;      // micros() at detection
+    uint32_t        time;      // nowUs() at detection
     DriverEventType type;
     uint8_t         source;    // channel, switch or target inside its subsystem
     uint32_t        payload;   // interpreted according to the type

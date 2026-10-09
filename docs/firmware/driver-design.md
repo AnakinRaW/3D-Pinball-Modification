@@ -14,9 +14,9 @@ Device faults reach the event queue through the [device monitor](error-handling.
 
 `begin()` returns false when it fails. Every later call to that driver answers at once with either `false` or empty data. This lets a game run without an SD card or a display installed, for example.
 
-## The driver interface
+## Driver interface
 
-Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#the-main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()` and registers itself in `begin()`.
+Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()` and registers itself in `begin()`.
 
 ```cpp
 // the interface every driver implements

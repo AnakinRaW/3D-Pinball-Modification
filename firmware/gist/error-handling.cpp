@@ -73,7 +73,7 @@ private:
                 const auto     type = (s.reported & bit) ? DriverEventType::DeviceRecovered
                                                          : DriverEventType::DeviceFailed;
                 const uint32_t code = type == DriverEventType::DeviceFailed ? f.code : 0;
-                if (out_->publish(DriverEvent{micros(), type, faultSource(s.device, part), code})) s.reported ^= bit;
+                if (out_->publish(DriverEvent{nowUs(), type, faultSource(s.device, part), code})) s.reported ^= bit;
             }
         }
     }
