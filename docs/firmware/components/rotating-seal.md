@@ -4,10 +4,10 @@ The component turns the rod's movements into the event a game uses of the rotati
 
 ## Requirements
 
-The game has the following requirements to this component: 
+The game has the following requirements for this component:
 
 The game wants to ...
-- know whether the seal moved as the result of a ball shot. Non-shot-based movements such as caused from vibration should be ignored.
+- know whether the seal moved as the result of a ball shot. Non-shot-based movements such as those caused by vibration should be ignored.
 - know the direction of movement
 - set the minimum angle a rotation is treated as a shot
 - know whether the seal completed a full turn and how many turns there had been in the past.
@@ -19,7 +19,7 @@ The machine's vibration, the rod's play and a nudge short of the set angle count
 
 | Event | When | Payload |
 |---|---|---|
-| `SealShot` | The seal stands still again after a movement from rest that turned it at least the set angle | The whole angle of that movement, in whole degrees, positive clockwise and negative counterclockwise, seen from above |
+| `SealShot` | The seal stands still again after a movement from rest that turned it at least the set angle | The whole angle of that movement in whole degrees, positive clockwise and negative counterclockwise, seen from above |
 
 A movement begins when the seal leaves its resting position and ends with the driver's `RotorStopped`. The component reads each movement from the `RotorStopped` event. Therefore a shot's angle is the difference between the resting position that `RotorStopped` carries and the one reported before. The component is initialized with the driver's start-up position, which it sets as the first reported resting position without ever reporting it. 
 
