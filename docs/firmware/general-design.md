@@ -40,7 +40,7 @@ The SD card driver is one exception because the library SdFat internally waits f
 
 The solution to this is using [freertos-teensy](https://github.com/tsandmann/freertos-teensy), a small real-time scheduler for microcontrollers. FreeRTOS runs several tasks side by side on the one processor and organizes scheduling using SysTick and PendSV.
 
-The firmware runs two tasks, the main task with priority 1 for the main loop and the storage task with priority 2 for the SD card. While SdFat waits for the card, the main loop runs, and the card's interrupt wakes the storage task the moment a transfer ends. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
+The firmware runs two tasks, the main task with priority 1 for the main loop and the storage task with priority 2 for the SD card (In FreeRTOS a lower priority number means lower priority). While SdFat waits for the card, the main loop runs, and the card's interrupt wakes the storage task the moment a transfer ends. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
 
 ## Interrupts
 
