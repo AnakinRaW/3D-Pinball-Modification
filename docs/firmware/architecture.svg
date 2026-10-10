@@ -1,0 +1,123 @@
+<svg viewBox="0 0 1000 760" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#16808a"/>
+    </marker>
+    <marker id="call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1000" height="760" fill="#ffffff"/>
+  <text x="30" y="36" font-size="20" font-weight="700" fill="#1a1a1a">Firmware architecture</text>
+
+  <!-- ===== legend ===== -->
+  <line x1="640" y1="31" x2="670" y2="31" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="678" y="36" font-size="12" fill="#555">event path</text>
+  <line x1="790" y1="31" x2="820" y2="31" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="828" y="36" font-size="12" fill="#555">call</text>
+
+  <!-- ===== main task ===== -->
+  <rect x="20" y="56" width="750" height="294" rx="10" fill="#f5f8fb" stroke="#4a6785" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="36" y="78" font-size="13" font-weight="700" fill="#4a6785">Main task (main loop)</text>
+
+  <!-- frames of the interrupts and the storage task, behind every arrow -->
+  <rect x="20" y="480" width="750" height="180" rx="10" fill="#fcfaf6" stroke="#8a6d0b" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="36" y="502" font-size="13" font-weight="700" fill="#8a6d0b">Interrupts</text>
+  <rect x="815" y="480" width="175" height="180" rx="10" fill="#f6faf6" stroke="#3d7a3d" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="829" y="502" font-size="13" font-weight="700" fill="#3d7a3d">Storage task</text>
+
+  <rect x="40" y="96" width="180" height="234" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="54" y="122" font-size="15" font-weight="700" fill="#2c3e50">Game host</text>
+  <text x="54" y="146" font-size="12" fill="#333">runs one game at a time</text>
+  <text x="54" y="163" font-size="12" fill="#333">through its lifecycle</text>
+  <text x="54" y="187" font-size="12" fill="#333">keeps the failed devices</text>
+  <text x="54" y="211" font-size="12" fill="#333">carries the menu</text>
+
+  <rect x="330" y="96" width="420" height="74" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="344" y="122" font-size="15" font-weight="700" fill="#2c3e50">Games</text>
+  <text x="344" y="142" font-size="12" fill="#333">hold the rules of play</text>
+  <text x="344" y="159" font-size="12" fill="#333">see the playfield only through the components</text>
+
+  <rect x="330" y="230" width="420" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="344" y="252" font-size="15" font-weight="700" fill="#2c3e50">Components</text>
+  <rect x="344" y="262" width="192" height="58" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="356" y="282" font-size="12.5" font-weight="700" fill="#2c3e50">Playfield components</text>
+  <text x="356" y="298" font-size="11.5" fill="#333">one per playfield element,</text>
+  <text x="356" y="313" font-size="11.5" fill="#333">built on one or more drivers</text>
+  <rect x="548" y="262" width="188" height="58" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="560" y="282" font-size="12.5" font-weight="700" fill="#2c3e50">Services</text>
+  <text x="560" y="298" font-size="11.5" fill="#333">what a game uses besides</text>
+  <text x="560" y="313" font-size="11.5" fill="#333">the playfield, such as files</text>
+
+  <!-- host to games and components -->
+  <line x1="220" y1="133" x2="330" y2="133" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="275" y="125" text-anchor="middle" font-size="11.5" fill="#16808a">pinball events</text>
+  <text x="275" y="150" text-anchor="middle" font-size="11.5" fill="#16808a">and lifecycle</text>
+  <line x1="220" y1="270" x2="330" y2="270" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="275" y="262" text-anchor="middle" font-size="11.5" fill="#16808a">driver events</text>
+  <line x1="330" y1="300" x2="220" y2="300" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="275" y="316" text-anchor="middle" font-size="11.5" fill="#16808a">pinball events</text>
+
+  <!-- games to components -->
+  <line x1="720" y1="170" x2="720" y2="230" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="712" y="204" text-anchor="end" font-size="11.5" fill="#555">calls</text>
+
+  <!-- ===== watchdog ===== -->
+  <rect x="828" y="96" width="150" height="74" rx="8" fill="#f2f2f2" stroke="#777" stroke-width="2"/>
+  <text x="842" y="122" font-size="15" font-weight="700" fill="#333">Watchdog</text>
+  <text x="842" y="142" font-size="12" fill="#333">restarts the Teensy</text>
+  <text x="842" y="159" font-size="12" fill="#333">unless it is fed</text>
+  <line x1="770" y1="133" x2="828" y2="133" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="799" y="126" text-anchor="middle" font-size="11.5" fill="#555">feeds</text>
+
+  <!-- ===== event queue, between the interrupts and the main task ===== -->
+  <rect x="40" y="380" width="180" height="70" rx="8" fill="#f7f7f7" stroke="#555" stroke-width="2"/>
+  <text x="54" y="402" font-size="15" font-weight="700" fill="#333">Event queue</text>
+  <text x="54" y="421" font-size="12" fill="#333">driver events with the time</text>
+  <text x="54" y="437" font-size="12" fill="#333">of detection, oldest first</text>
+  <line x1="130" y1="380" x2="130" y2="330" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+
+  <!-- components to drivers and storage -->
+  <line x1="720" y1="330" x2="720" y2="520" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="712" y="430" text-anchor="end" font-size="11.5" fill="#555">calls, return at once</text>
+  <path d="M750 290 H950 V520" fill="none" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="942" y="410" text-anchor="end" font-size="11.5" fill="#555">files</text>
+
+  <!-- ===== interrupts ===== -->
+
+  <rect x="40" y="520" width="180" height="120" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="54" y="544" font-size="15" font-weight="700" fill="#5c4a00">Device monitor</text>
+  <text x="54" y="566" font-size="12" fill="#333">reports every device part</text>
+  <text x="54" y="582" font-size="12" fill="#333">that fails or recovers</text>
+
+  <rect x="330" y="520" width="420" height="120" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="344" y="544" font-size="15" font-weight="700" fill="#5c4a00">Drivers</text>
+  <text x="344" y="566" font-size="12" fill="#333">one per hardware subsystem</text>
+  <text x="344" y="583" font-size="12" fill="#333">work in their interrupts and hand their waiting to the hardware</text>
+  <text x="344" y="600" font-size="12" fill="#333">report each change as an event</text>
+
+  <line x1="130" y1="520" x2="130" y2="450" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="138" y="470" font-size="11.5" fill="#16808a">faults</text>
+  <line x1="220" y1="590" x2="330" y2="590" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="275" y="582" text-anchor="middle" font-size="11.5" fill="#555">asks for faults</text>
+  <path d="M380 520 V415 H220" fill="none" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="236" y="407" font-size="11.5" fill="#16808a">driver events</text>
+
+  <!-- ===== storage task ===== -->
+
+  <rect x="828" y="520" width="150" height="120" rx="8" fill="#eef6ee" stroke="#3d7a3d" stroke-width="2"/>
+  <text x="840" y="544" font-size="15" font-weight="700" fill="#2d5a2d">Storage driver</text>
+  <text x="840" y="566" font-size="12" fill="#333">the only code that</text>
+  <text x="840" y="582" font-size="12" fill="#333">uses the SD card,</text>
+  <text x="840" y="598" font-size="12" fill="#333">and may wait for it</text>
+
+  <line x1="750" y1="610" x2="828" y2="610" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="792" y="602" text-anchor="middle" font-size="11.5" fill="#555">files</text>
+
+  <!-- ===== hardware ===== -->
+  <rect x="20" y="690" width="970" height="50" rx="8" fill="#f2f2f2" stroke="#777" stroke-width="2"/>
+  <text x="36" y="720" font-size="15" font-weight="700" fill="#333">Hardware</text>
+  <text x="124" y="720" font-size="12" fill="#555">the Teensy's peripherals and the parts of the machine</text>
+  <line x1="540" y1="640" x2="540" y2="690" stroke="#1a1a1a" stroke-width="2" marker-start="url(#call)" marker-end="url(#call)"/>
+  <line x1="903" y1="640" x2="903" y2="690" stroke="#1a1a1a" stroke-width="2" marker-start="url(#call)" marker-end="url(#call)"/>
+</svg>

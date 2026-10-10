@@ -18,6 +18,8 @@ This document describes the general concepts of the firmware, which apply to all
 
 The firmware keeps three layers apart.
 
+![Firmware architecture](architecture.svg)
+
 The drivers work the hardware in their own interrupts and publish what they detect as driver events.
 
 The main loop carries the whole game logic. It lays out the game rules and orchestrates most of the hardware in reaction to what happens on the playfield. Game components represent logical elements of the playfield, such as the top roll-over lanes, and may combine several hardware parts. They run in the main loop as well.
@@ -54,7 +56,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | no | 96 |
 | Rotary sensor, solenoids, device monitor and display, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
-| Lighting, refilling the half of the LED bit buffer that has gone out | OctoWS2811's DMA | the next half of the bit buffer | no | 128 |
+| Lighting, refilling the half of the LED bit buffer that has gone out | FastLED's DMA | the next half of the bit buffer | no | 128 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
 | Display, refilling its bus | FlexIO3 | none, a late refill only pauses the bus | yes | 224 |
@@ -71,7 +73,7 @@ Each peripheral below belongs to one driver, and no other code or library may us
 |---|---|---|
 | SPI | IR ball sensing | reads the converters |
 | QuadTimer3, all four channels | IR ball sensing | counts the sensor phases and starts the read block |
-| QuadTimer4 | Lighting | OctoWS2811 times the LED data |
+| QuadTimer4 | Lighting | FastLED's ObjectFLED driver times the LED data |
 | I²S2 | Audio | the Audio library hands every block to the amplifier |
 | Wire | Magnetic rotary sensor | runs the bus itself after `begin()` |
 | FlexPWM1.1 | Servo | PWMServo repeats the servo pulse |
@@ -110,4 +112,4 @@ inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the `begin()` of every other driver, the lighting's ahead of the IR's;
 6. the game host's `begin()`;
-7. the main loop, which hands the queued events to the host, updates the host, the logger and the screen, and feeds the watchdog.
+7. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lights, and feeds the watchdog.
