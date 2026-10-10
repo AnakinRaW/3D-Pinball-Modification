@@ -12,6 +12,7 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`drivers/lighting.md`](drivers/lighting.md) | The LED output path and the library that carries it |
 | [`input-handling.md`](input-handling.md) | Description of the event queue system to read and distribute inputs to the game logic |
 | [`error-handling.md`](error-handling.md) | Error handling: the device monitor that reports failed devices, and the watchdog that restarts a firmware that stopped |
+| [`logging.md`](logging.md) | The logger: the machine's log on the SD card, what belongs in it, and how a game, a component or the host writes into it |
 | [`file-channel.md`](file-channel.md) | The file channel: files read ahead from the card into a ring, one after another, for the sounds and the movies |
 | [`game-abstraction.md`](game-abstraction.md) | The host that runs the games, the game lifecycle, and the interface every game implements |
 | [`drivers/`](drivers/) | One document per driver, the code that works a piece of hardware |

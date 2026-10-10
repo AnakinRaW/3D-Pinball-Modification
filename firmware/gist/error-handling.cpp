@@ -176,13 +176,13 @@ void Watchdog::report(Logger& logger) {
     if (!CrashReport && !(SRC_SRSR & ~SRC_SRSR_IPP_RESET_B)) return;
     struct Lines : Print {
         Logger& log;
-        char    line[Logger::kLine + 1];
+        char    line[Logger::kBuffer];
         size_t  n = 0;
         explicit Lines(Logger& l) : log(l) {}
         size_t write(uint8_t c) override {
             if (c == '\r') return 1;
             if (c != '\n') {
-                if (n < Logger::kLine) line[n++] = c;   // the rest of a longer line is cut, as write() does
+                if (n < sizeof(line) - 1) line[n++] = c;   // a line longer than the log takes is cut
                 return 1;
             }
             line[n] = 0;
