@@ -151,6 +151,7 @@ Banned:
 
 - **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula, the hyphen inside a compound word and the dash spanning a numeric range, as in 18–20 mA, stay.
 - **Inserted asides.** No clause, appositive or example set into the middle of a sentence, whether commas, parentheses or dashes set it off. The inserted fact goes into a separate sentence. The sentence that prompted this rule: *"The SD specification allows a card at most 100 ms for each block it reads and 250 ms for each block it writes, so the longest transfer, one stream chunk, takes 800 ms at most."*
+- **Two clauses joined by a comma and "and".** Each clause becomes its own sentence, or one clause gives the reason for the other. The sentence that prompted this rule: *"Playback depends on the card's read speed, and the file channel's ring buffer only bridges short delays."*
 
 **The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
 
