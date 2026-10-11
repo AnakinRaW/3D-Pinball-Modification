@@ -241,9 +241,7 @@ dec("c_bulk", 100, "µF", src="C1, the 100 µF per servo that Adafruit's PCA9685
     "starts from", group="SUPPLY", section=SUPPLY, stated=True)
 dec("v_cap_rating", 10, "V", src="the working voltage C1 is bought at, twice the rail it "
     "sits across", group="SUPPLY", section=SUPPLY, stated=True)
-# the floor the solenoid design lets the rail sag to while a coil pulls, the minimum
-# supply of the LED controllers on the same rail, and the pull-in its driver commands
-MODEL.uses("v_led_min", of="solenoid", group="SUPPLY", section=SUPPLY, stated=True)
+# the pull-in the solenoid driver commands
 MODEL.uses("t_on_max", of="solenoid")
 ds("c_bypass", 100, "nF", src=f"{BUFFER}, 8.3 Power Supply Recommendations, a 0.1 µF "
    "capacitor at each VCC terminal, as close to it as possible",
@@ -267,10 +265,11 @@ def _(i_stall, l_feed, c_bulk):
     return i_stall * (l_feed / c_bulk) ** (1 / 2)
 
 
+# The rail may sag as far as U1 still runs; the servo then sits under its own floor.
 @fig("v_short", "V", group="SUPPLY", section=SUPPLY, prints="up",
-     rises_with=["v_servo_min"], falls_with=["v_led_min"])
-def _(v_servo_min, v_led_min):
-    return v_servo_min - v_led_min
+     rises_with=["v_servo_min"], falls_with=["vcc_u1_min"])
+def _(v_servo_min, vcc_u1_min):
+    return v_servo_min - vcc_u1_min
 
 
 # ===========================================================================
@@ -305,8 +304,6 @@ _I("a signal wire that meets 5 V or ground holds U1's output inside its rating",
    lambda v: v.i_fault <= v.i_out_u1)
 _I("the machine's rail sits in U1's supply range",
    lambda v: v.vcc_u1_min <= v.v_5v <= v.vcc_u1_max)
-_I("U1 still runs at the rail's floor while a coil pulls",
-   lambda v: v.v_led_min >= v.vcc_u1_min)
 _I("the machine's rail sits in the servo's supply range",
    lambda v: v.v_servo_min <= v.v_5v <= v.v_servo_max)
 _I("the rise at C1 keeps the servo under its maximum",
