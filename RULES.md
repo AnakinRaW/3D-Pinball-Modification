@@ -195,6 +195,8 @@ The stock machine's original functionality must remain restorable. An alteration
 | Drilling a new hole in the playfield or in a track | Permitted, the original function survives it |
 | Cutting a cable | Permitted once a connector is soldered to each end |
 
+The table sets the default. An alteration it forbids is permitted for a named part once that alteration is decided explicitly. The part's document records the decision. Rule 14 then no longer reports it.
+
 ## 13. Amending these rules
 
 New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
