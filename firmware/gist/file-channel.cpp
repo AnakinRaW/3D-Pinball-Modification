@@ -15,9 +15,9 @@ public:
               Storage::Priority priority = Storage::Priority::Normal)
         : read_(priority, true, wake), ring_(ring), chunk_(chunk) {}
 
-    // reads file from its beginning, and from its beginning again at its end when loop is set; the
-    // bytes of the file read before are gone at once
-    void start(const FileReader& file, bool loop);
+    // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
+    // of the file read before are gone at once
+    void start(const FileReader& file, bool loop, uint32_t at = 0);
 
     void stop();                           // ends the file it reads; its bytes are gone at once
 
@@ -51,13 +51,13 @@ private:
 };
 
 template <uint8_t Chunks>
-void FileChannel<Chunks>::start(const FileReader& file, bool loop) {
+void FileChannel<Chunks>::start(const FileReader& file, bool loop, uint32_t at) {
     file_   = file;
     loop_   = loop;
     stale_  = reading_;                    // a read of the old file still on its way lands later and is dropped
     failed_ = false;
     done_   = !file_.name()[0];
-    at_     = 0;
+    at_     = at;
     front_  = 0;
     back_   = 0;
     count_  = 0;

@@ -1,0 +1,88 @@
+<svg viewBox="0 0 950 500" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="950" height="500" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Audio output</text>
+  <text x="30" y="56" font-size="13" fill="#666" data-fig="r_spk v_dd">The Teensy sends I²S to a MAX98357A module, which drives the stock 8 Ω speaker from the machine's 5 V</text>
+
+  <!-- 5 V rail -->
+  <text x="440" y="90" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_dd">5 V from the power distribution</text>
+  <line x1="440" y1="100" x2="680" y2="100" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="560" cy="100" r="4" fill="#c0392b"/>
+  <line x1="560" y1="100" x2="560" y2="180" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="680" y1="100" x2="680" y2="110" stroke="#c0392b" stroke-width="2.5"/>
+
+  <!-- R1, GAIN to VCC -->
+  <rect x="667" y="110" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="702" y="132" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
+  <text x="702" y="148" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gain">100 kΩ</text>
+  <text x="702" y="164" font-size="11.5" fill="#666" data-fig="gain">3 dB, the lowest gain</text>
+  <line x1="680" y1="170" x2="680" y2="180" stroke="#2c3e50" stroke-width="2.5"/>
+
+  <!-- Teensy block -->
+  <rect x="50" y="180" width="190" height="300" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="64" y="208" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <text x="64" y="226" font-size="11.5" fill="#666">I²S2 port</text>
+
+  <circle cx="240" cy="250" r="6" fill="#2c3e50"/>
+  <text x="230" y="254" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">DIN</text>
+  <text x="230" y="270" text-anchor="end" font-size="11.5" fill="#777" data-pin="DIN to the DFR0954">pin 2</text>
+
+  <circle cx="240" cy="300" r="6" fill="#8a2be2"/>
+  <text x="230" y="304" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">LRC</text>
+  <text x="230" y="320" text-anchor="end" font-size="11.5" fill="#777" data-pin="LRC to the DFR0954">pin 3</text>
+
+  <circle cx="240" cy="350" r="6" fill="#8a2be2"/>
+  <text x="230" y="354" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">BCLK</text>
+  <text x="230" y="370" text-anchor="end" font-size="11.5" fill="#777" data-pin="BCLK to the DFR0954">pin 4</text>
+
+  <circle cx="240" cy="460" r="6" fill="#1a1a1a"/>
+  <text x="230" y="464" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <!-- DFR0954 module -->
+  <rect x="520" y="180" width="200" height="300" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="620" y="398" text-anchor="middle" font-size="16" font-weight="700" fill="#5c4a00">DFR0954</text>
+  <text x="620" y="416" text-anchor="middle" font-size="11.5" fill="#666">MAX98357A, class D</text>
+  <text x="620" y="432" text-anchor="middle" font-size="11.5" fill="#666">SD set to mix both channels</text>
+
+  <circle cx="560" cy="180" r="6" fill="#c0392b"/>
+  <text x="560" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VCC</text>
+
+  <circle cx="680" cy="180" r="6" fill="#2c3e50"/>
+  <text x="680" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">GAIN</text>
+
+  <circle cx="520" cy="250" r="6" fill="#2c3e50"/>
+  <text x="532" y="254" font-size="13" font-weight="700" fill="#2c3e50">DIN</text>
+
+  <circle cx="520" cy="300" r="6" fill="#8a2be2"/>
+  <text x="532" y="304" font-size="13" font-weight="700" fill="#8a2be2">LRC</text>
+
+  <circle cx="520" cy="350" r="6" fill="#8a2be2"/>
+  <text x="532" y="354" font-size="13" font-weight="700" fill="#8a2be2">BCLK</text>
+
+  <circle cx="520" cy="460" r="6" fill="#1a1a1a"/>
+  <text x="532" y="464" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+
+  <circle cx="720" cy="280" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
+  <text x="708" y="284" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">SPK+</text>
+
+  <circle cx="720" cy="340" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
+  <text x="708" y="344" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">SPK−</text>
+
+  <!-- I²S lines -->
+  <line x1="240" y1="250" x2="520" y2="250" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="240" y1="300" x2="520" y2="300" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="240" y1="350" x2="520" y2="350" stroke="#8a2be2" stroke-width="2.5"/>
+
+  <!-- speaker -->
+  <rect x="800" y="240" width="120" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="832" y="304" font-size="16" font-weight="700" fill="#7a2556">Speaker</text>
+  <text x="832" y="322" font-size="11.5" fill="#666" data-fig="r_spk">8 Ω, stock</text>
+  <circle cx="800" cy="280" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
+  <text x="812" y="284" font-size="13" font-weight="700" fill="#8a6d0b">+</text>
+  <circle cx="800" cy="340" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
+  <text x="812" y="344" font-size="13" font-weight="700" fill="#8a6d0b">−</text>
+  <line x1="720" y1="280" x2="800" y2="280" stroke="#b7950b" stroke-width="2.5"/>
+  <line x1="720" y1="340" x2="800" y2="340" stroke="#b7950b" stroke-width="2.5"/>
+
+  <!-- GND -->
+  <line x1="240" y1="460" x2="520" y2="460" stroke="#1a1a1a" stroke-width="2.5"/>
+</svg>

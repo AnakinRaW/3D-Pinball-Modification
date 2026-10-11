@@ -5,6 +5,7 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | File | Contents |
 |---|---|
 | [`general-design.md`](general-design.md) | General design considerations of the firmware: its layers, the event queue, the interrupt priorities, the tasks and the main program |
+| [`architecture.svg`](architecture.svg) | The firmware's layers and tasks, and the path an event takes from a driver to a game |
 | [`driver-design.md`](driver-design.md) | How every driver works: its rules, the interface every driver implements, its interrupts and the driver tick |
 | [`drivers/ir-sensing.md`](drivers/ir-sensing.md) | The IR ball sensing driver: its budget, sampling instant, calibration and performance reserves |
 | [`drivers/break-beam.md`](drivers/break-beam.md) | The ball drain gate: the event it publishes, the block a ball has to hold, and what one block cannot tell |

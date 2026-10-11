@@ -12,7 +12,7 @@ The file channel keeps the bytes it has read ahead in a ring buffer. The card fi
 
 ## Reading a file
 
-`start()` sets the file to read and begins reading it from its beginning at once. With `loop` set, the file starts over whenever it ends. A new `start()` replaces the file at once, and the bytes of the previous file in the ring are gone. `stop()` drops the file in the same way and reads nothing. A piece of the old file that the card is still reading is thrown away when it arrives.
+`start()` sets the file to read and begins reading it at once, from its beginning or from a byte the caller names. With `loop` set, the file starts over whenever it ends. A new `start()` replaces the file at once, and the bytes of the previous file in the ring are gone. `stop()` drops the file in the same way and reads nothing. A piece of the old file that the card is still reading is thrown away when it arrives.
 
 `take(to, n)` copies up to `n` bytes from the ring into `to` and returns the number it copied. That number may be smaller than `n` when the ring holds fewer bytes. With `to` set to `nullptr`, `take()` skips the bytes instead.
 
@@ -48,9 +48,9 @@ public:
     FileChannel(uint8_t* ring, uint32_t chunk, IRQ_NUMBER_t wake,
               Storage::Priority priority = Storage::Priority::Normal);
 
-    // reads file from its beginning, and from its beginning again at its end when loop is set; the
-    // bytes of the file read before are gone at once
-    void start(const FileReader& file, bool loop);
+    // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
+    // of the file read before are gone at once
+    void start(const FileReader& file, bool loop, uint32_t at = 0);
 
     void stop();                           // ends the file it reads; its bytes are gone at once
 

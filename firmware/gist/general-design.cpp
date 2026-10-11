@@ -26,10 +26,7 @@ MagneticRotaryDriver rotary;
 // other drivers
 
 // game components
-TopLanes         topLanes{ir, lights};   // a component, built on its drivers' parts
-FileSystem       files{storage};         // the files of the games, the host and the logger
-Sounds           sounds{audio};          // the running game's sounds
-Screen           screen{display};        // the game's layer, background and movies, and the host's layer
+Sounds           sounds{audio, files};   // the running game's sounds
 Logger           logger{files};          // the machine's log on the card
 // other game components
 

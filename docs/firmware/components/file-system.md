@@ -1,6 +1,6 @@
 # File system component
 
-The file system component gives the games, the host and the logger the files they read and write on the SD card. 
+The file system component gives the games, the host, the logger, the sounds and the screen the files they read and write on the SD card. 
 
 Each file is a [`FileWriter`](../drivers/storage.md#files) of the [storage driver](../drivers/storage.md).
 
