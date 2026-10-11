@@ -53,9 +53,9 @@ public:
     // it ends an interlude
     void music(const char* name, bool loop = false);
 
-    // plays a sound of the running game in place of the music; the music goes on where it stopped
-    // once the sound has ended
-    void interlude(const char* name);
+    // plays a sound of the running game in place of the music, over and over with loop; the music
+    // goes on where it stopped once the sound has ended
+    void interlude(const char* name, bool loop = false);
 
     void stopInterlude();                  // ends the interlude early; the music goes on where it stopped
     void stopMusic();                      // silences the music, and an interlude with it
