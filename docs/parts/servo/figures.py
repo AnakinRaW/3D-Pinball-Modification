@@ -253,7 +253,7 @@ asm("place_bulk", 20, "mm", stated=False, src="how close C1 sits to where the fe
 
 
 dec("t_load_timeout", 40, "ms", stated=False, src="how long begin() waits for the timer to "
-    "take the parked pulse before it resets the Teensy: two frames, while the next reload "
+    "take the parked pulse before it fails: two frames, while the next reload "
     "after attach() comes within one")
 
 

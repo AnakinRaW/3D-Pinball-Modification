@@ -20,11 +20,11 @@ The timer of pin [0](../../pin-assignment.md "Servo signal") is FlexPWM1.1. PWMS
 
 ## Start-up
 
-PWMServo has the issue that its first move puts out an overlong pulse of up to 20 ms. The driver prevents that in `begin()` and then moves the servo to its start position. If the timer has not taken the fix after two frames, `begin()` resets the Teensy.
+PWMServo has the issue that its first move puts out an overlong pulse of up to 20 ms. The driver prevents that in `begin()` and then moves the servo to its start position. If the timer has not taken the fix after two frames, `begin()` returns false. The servo then gets no pulse.
 
 ## Device faults
 
-The driver notes no fault as the servo has no feedback line and thus cannot see a move that fails.
+The servo counts as failed when its timer has not taken the fix in `begin()`. A move that fails stays unseen, since the servo has no feedback line.
 
 ## Driver Code
 
@@ -33,9 +33,9 @@ class ServoDriver : public Driver {
 public:
     enum class Position : uint8_t { Start, End };
 
-    // attaches the pin with the SER0049's range, 500 µs to 2500 µs, parks the pulse and
-    // moves the servo to its start position; resets the Teensy if the timer has not
-    // taken the parked pulse after two frames
+    // registers with the device monitor, attaches the pin with the SER0049's range, 500 µs to
+    // 2500 µs, parks the pulse and moves the servo to its start position; false when the device
+    // monitor is full or the timer has not taken the parked pulse after two frames
     bool begin() override;
 
     // moves the servo to one of its two end positions
@@ -43,5 +43,8 @@ public:
 
     // gets the end position last moved to
     Position position() const;
+
+    // gets the servo as failed once its timer has not taken the parked pulse in begin()
+    Fault failed() const override;
 };
 ```
