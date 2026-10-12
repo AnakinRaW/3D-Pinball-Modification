@@ -332,3 +332,4 @@ MODEL.net("Servo signal, servo side",
 
 MODEL.owns("FlexPWM1.1", "PWMServo sets the submodule to a 20 ms frame, and the driver writes its "
                          "VAL0 itself, docs/firmware/drivers/servo.md")
+MODEL.draws(pool="device monitor")   # a timer that has not taken the parked pulse in begin()

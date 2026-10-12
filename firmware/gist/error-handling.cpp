@@ -55,7 +55,7 @@ public:
     }
 
 private:
-    static constexpr uint8_t  kSlots   = 8;
+    static constexpr uint8_t  kSlots   = (uint8_t)Device::Count;   // one for each device; a device that reports nothing leaves its slot empty
     static constexpr size_t   kDepth   = 32;          // a converter that stops answering fails eight parts at once
     static constexpr uint32_t kCheckUs = 100000;      // 100 ms from one check to the next
 

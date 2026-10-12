@@ -33,7 +33,7 @@ public:
 
 ## Devices
 
-`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum.
+`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum. Every device has an entry, also one whose driver reports no faults.
 
 ```cpp
 // the devices of the machine; a device of one part has only part 0
@@ -43,7 +43,12 @@ enum class Device : uint8_t {
     Solenoids,
     IrSensing,
     SdCard,
-    // ... more devices
+    Display,
+    Touch,
+    Servo,
+    Amplifier,
+    LedChains,
+    ToggleSwitch,
     Count,        // the number of devices
 };
 ```

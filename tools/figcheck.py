@@ -99,7 +99,7 @@ def _family(dim, entries):
 
 _family(_V, [("V", 1.0), ("mV", 1e-3), ("µV", 1e-6), ("kV", 1e3)])
 _family(_A, [("A", 1.0), ("mA", 1e-3), ("µA", 1e-6), ("nA", 1e-9)])
-_family(_S, [("s", 1.0), ("ms", 1e-3), ("µs", 1e-6), ("ns", 1e-9)])
+_family(_S, [("minutes", 60.0), ("s", 1.0), ("ms", 1e-3), ("µs", 1e-6), ("ns", 1e-9)])
 _family(_OHM, [("Ω", 1.0), ("mΩ", 1e-3), ("kΩ", 1e3), ("MΩ", 1e6)])
 _family(_WATT, [("W", 1.0), ("mW", 1e-3), ("µW", 1e-6)])
 _family(_FARAD, [("F", 1.0), ("µF", 1e-6), ("nF", 1e-9), ("pF", 1e-12)])
@@ -109,12 +109,14 @@ _family(_COUL, [("C", 1.0), ("µC", 1e-6), ("nC", 1e-9)])
 _family(_K, [("°C", 1.0)])
 _family(_M, [("m", 1.0), ("cm", 1e-2), ("mm", 1e-3)])
 _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
+# an input's longest edge, as a logic datasheet gives it: time per volt of swing
+_family((-1, 0, 1, 0, 0), [("ns/V", 1e-9)])
 # Counts share the dimensionless family, so the unit check cannot tell a byte
 # from a sample; a model keeps them apart by name.
 _family(DIMLESS, [("%", 0.01), ("×", 1.0), ("steps", 1.0), ("step", 1.0),
                   ("τ_adc", 1.0), ("τ", 1.0), ("clocks", 1.0), ("clock", 1.0),
-                  ("dB", 1.0), ("bits", 1.0), ("bytes", 1.0), ("KB", 1024.0),
-                  ("samples", 1.0), ("", 1.0)])
+                  ("dB", 1.0), ("bits", 1.0), ("bytes", 1.0), ("KB", 1024.0), ("MB", 1048576.0),
+                  ("samples", 1.0), ("sectors", 1.0), ("sector", 1.0), ("", 1.0)])
 
 DIM_NAMES = {DIMLESS: "1", _V: "V", _A: "A", _S: "s", _K: "°C", _OHM: "Ω",
              _WATT: "W", _FARAD: "F", _HENRY: "H", _HZ: "Hz", _COUL: "C",

@@ -13,6 +13,8 @@ This document describes the general concepts of the firmware, which apply to all
 | Magnetic rotary sensor | [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) |
 | Controls | [`drivers/controls.md`](drivers/controls.md) |
 | Servo | [`drivers/servo.md`](drivers/servo.md) |
+| Display | [`drivers/display.md`](drivers/display.md) |
+| Touch | [`drivers/touch.md`](drivers/touch.md) |
 
 ## Firmware abstraction layers
 
@@ -54,7 +56,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | no | 64 |
 | IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | no | 64 |
 | Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | no | 96 |
-| Rotary sensor, solenoids, device monitor and display, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
+| Rotary sensor, solenoids, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
 | Lighting, refilling the half of the LED bit buffer that has gone out | FastLED's DMA | the next half of the bit buffer | no | 128 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
@@ -78,6 +80,8 @@ Each peripheral below belongs to one driver, and no other code or library may us
 | Wire | Magnetic rotary sensor | runs the bus itself after `begin()` |
 | FlexPWM1.1 | Servo | PWMServo repeats the servo pulse |
 | FlexIO3 | Display | clocks the 8-bit bus out to the display |
+| FlexIO2 | Display | runs on FlexIO3's clock, which the driver sets |
+| Wire2 | Touch | drives the touch controller's bus after `begin()` |
 | GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
 
 The IR driver takes all four channels of QuadTimer3, because they share one interrupt ([i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3, interrupt 135).
@@ -110,6 +114,6 @@ inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 2. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 3. the storage driver's `begin()`, so later drivers can read their settings from the card;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
-5. the `begin()` of every other driver, the lighting's ahead of the IR's;
+5. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
 6. the game host's `begin()`;
 7. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lights, and feeds the watchdog.

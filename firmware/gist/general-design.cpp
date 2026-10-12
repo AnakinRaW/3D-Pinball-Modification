@@ -22,11 +22,15 @@ Storage          storage;
 AudioDriver      audio;
 Lighting         lights;
 Display          display;
+Touch            touch;
 MagneticRotaryDriver rotary;
 // other drivers
 
 // game components
+FileSystem       files{storage};         // the files of the games, the host, the logger, the sounds and the screen
 Sounds           sounds{audio, files};   // the running game's sounds
+Screen           screen{display, touch}; // the game's layer and background, and the host's layer
+VideoPlayer      videoPlayer{display, files, sounds};   // the videos on the background, with their sound
 Logger           logger{files};          // the machine's log on the card
 // other game components
 
@@ -103,6 +107,7 @@ static void machineTask(void*) {
     drain.begin();
    
     display.begin();
+    touch.begin();                          // after the display, so the black screen does not wait for the controller
     rotary.begin();
 
     audio.begin();
@@ -113,11 +118,12 @@ static void machineTask(void*) {
     host.add(topLanes);
     host.add(sounds);
     host.add(screen);
+    host.add(videoPlayer);
     // other components...
 
     // the components, then the services no component owns
-    static Machine machine{topLanes, files, sounds, screen, logger};
-    host.begin(machine, display.touch());
+    static Machine machine{files, sounds, screen, videoPlayer, lights, logger};
+    host.begin(machine, touch.present());
 
     startingUp = false;                     // from here on only the main loop feeds the watchdog
     for (;;) {                              // the main loop

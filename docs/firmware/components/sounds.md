@@ -16,7 +16,7 @@ The music plays one track at a time. A new track replaces the one playing. A tra
 
 Effects play on top of music, up to three at once. When all three channels are busy, a new effect replaces the oldest.
 
-An interlude plays in place of the music. Once it has ended, the music goes on where it stopped. Music that was off stays off. A new track or `stopMusic()` ends the interlude. `stopInterlude()` ends it early, after which the music goes on where it stopped.
+An interlude interrupts the music currently playing. Once it has ended, the music goes on where it stopped. Music that was off stays off. A new track or `stopMusic()` ends the interlude. `stopInterlude()` ends it early, after which the music goes on where it stopped.
 
 A sound is named by its file name in the game's audio directory, such as `bumper.wav`. 
 

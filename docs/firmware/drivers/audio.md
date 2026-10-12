@@ -21,7 +21,7 @@ Both calls only leave a request for the channel, so they return at once.
 
 ## Audio files
 
-A sound file is a WAV with 16-bit PCM at 44.1 kHz, mono. PJRC's Audio library only plays at 44.1 kHz and the machine only has one speaker.
+A sound file is a WAV with 16-bit PCM at 44.1 kHz, mono. PJRC's Audio library only plays at 44.1 kHz and the machine only has one speaker. [`media.md`](../../../assets/media.md) shows how FFmpeg makes such a file.
 
 ## Audio chain
 

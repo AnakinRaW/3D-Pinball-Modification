@@ -14,8 +14,19 @@
 | 14 | CLOCK, common LED pulse | QuadTimer3 channel 2 | [IR ball sensing](parts/ir-reflective/design.md) |
 | 15 | CS-A, converter for channels 1 to 8 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
 | 16 | CS-B, converter for channels 9 to 16 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
+| 17 | WR to the display | FlexIO3 pin 6 | [Display](parts/display/design.md) |
 | 18 | SDA to the rotary sensors | Wire SDA | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
 | 19 | SCL to the rotary sensors | Wire SCL | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
+| 20 | D2 to the display | FlexIO3 pin 10 | [Display](parts/display/design.md) |
+| 21 | D3 to the display | FlexIO3 pin 11 | [Display](parts/display/design.md) |
+| 22 | D0 to the display | FlexIO3 pin 8 | [Display](parts/display/design.md) |
+| 23 | D1 to the display | FlexIO3 pin 9 | [Display](parts/display/design.md) |
+| 24 | SCL to the touch controller | Wire2 SCL | [Display](parts/display/design.md) |
+| 25 | SDA to the touch controller | Wire2 SDA | [Display](parts/display/design.md) |
+| 26 | D6 to the display | FlexIO3 pin 14 | [Display](parts/display/design.md) |
+| 27 | D7 to the display | FlexIO3 pin 15 | [Display](parts/display/design.md) |
+| 28 | CS to the display controller | plain digital output | [Display](parts/display/design.md) |
+| 29 | D/C to the display | plain digital output | [Display](parts/display/design.md) |
 | 30 | Solenoid trigger 3 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 | 31 | Receiver output of the ball drain gate | plain digital input | [Break beam](parts/break-beam/design.md) |
 | 32 | Toggle switch, its function set by each game | plain digital input | [Controls](parts/controls/design.md) |
@@ -24,6 +35,8 @@
 | 35 | Solenoid sense 2 | plain digital input | [Solenoids](parts/solenoid/design.md) |
 | 36 | Solenoid sense 1 | plain digital input | [Solenoids](parts/solenoid/design.md) |
 | 37 | Solenoid trigger 4 | plain digital output | [Solenoids](parts/solenoid/design.md) |
+| 38 | D4 to the display | FlexIO3 pin 12 | [Display](parts/display/design.md) |
+| 39 | D5 to the display | FlexIO3 pin 13 | [Display](parts/display/design.md) |
 | 40 | Solenoid trigger 1 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 | 41 | Solenoid trigger 2 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 
@@ -37,16 +50,23 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | The whole SPI bus | Sensors, pins 11, 12, 13, 15 and 16. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus |
 | QuadTimer3, all four channels | Sensors, pin 14. Channel 3 starts the read block and has no pin, and channels 0 and 1 stay unused because all four share one interrupt |
 | Serial3 and S/PDIF | Sensors, pins 14 and 15 |
-| Wire1 and Serial4 | Sensors, pin 16 |
+| Wire1 and Serial4 | Sensors, pin 16; display, pin 17 |
 | Wire | Rotary sensor, pins 18 and 19 |
 | Serial1 and CAN2 | Servo, pin 0 |
 | FlexPWM1.1, at 50 Hz | Servo, pin 0. Pins 42 and 43 share its frequency and carry the SD card instead |
 | CAN3 | Break beam, pin 31; solenoids, pin 30 |
 | Serial8 | Solenoids, pins 34 and 35 |
-| 14 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37 |
-| 7 of 18 analog inputs | A0, A1, A2 sensors; A4, A5 rotary sensor; A16, A17 solenoids |
+| FlexIO3 | Display, pins 17, 20, 21, 22, 23, 26, 27, 38 and 39. The data bus needs signals 8 to 15 in order, and WR takes signal 6 |
+| SPI1 | Display, pins 26 and 27 |
+| I²S1 | Display, pins 20, 21 and 23 |
+| Serial5 | Display, pins 20 and 21 |
+| CAN1 | Display, pins 22 and 23 |
+| Wire2 and Serial6 | Display, pins 24 and 25 |
+| Serial7 | Display, pins 28 and 29 |
+| 20 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
+| 18 of 18 analog inputs | A0, A1, A2 sensors; A3, A6 to A15 display; A4, A5 rotary sensor; A16, A17 solenoids |
 
-CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](../firmware/general-design.md#exclusive-peripherals) sets out for the firmware.
+CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](firmware/general-design.md#exclusive-peripherals) sets out for the firmware.
 
 Solenoid trigger 3 sits on 30, apart from the solenoids' other pins, because the display's data bus takes 38 and 39 between them.
 
@@ -62,19 +82,6 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 | 8 | LED chain 4 | plain digital output | [Lighting](parts/lighting/design.md) |
 | 9 | LED chain 5 | plain digital output | [Lighting](parts/lighting/design.md) |
 | 10 | LED chain 6 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 17 | WR to the display | FlexIO3 pin 6 | Display |
-| 20 | D2 to the display | FlexIO3 pin 10 | Display |
-| 21 | D3 to the display | FlexIO3 pin 11 | Display |
-| 22 | D0 to the display | FlexIO3 pin 8 | Display |
-| 23 | D1 to the display | FlexIO3 pin 9 | Display |
-| 24 | SCL to the touch controller | Wire2 SCL | Display |
-| 25 | SDA to the touch controller | Wire2 SDA | Display |
-| 26 | D6 to the display | FlexIO3 pin 14 | Display |
-| 27 | D7 to the display | FlexIO3 pin 15 | Display |
-| 28 | CS to the display controller | plain digital output | Display |
-| 29 | D/C to the display | plain digital output | Display |
-| 38 | D4 to the display | FlexIO3 pin 12 | Display |
-| 39 | D5 to the display | FlexIO3 pin 13 | Display |
 | 48 | Target sense 1 | plain digital input | Targets |
 | 49 | Target sense 2 | plain digital input | Targets |
 | 50 | Target sense 3 | plain digital input | Targets |
@@ -85,18 +92,6 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 | Lost | To |
 |---|---|
 | Serial2 | Lighting, pins 7 and 8 |
-| FlexIO3 | Display, pins 17, 20, 21, 22, 23, 26, 27, 38 and 39. The data bus needs signals 8 to 15 in order, and WR takes signal 6 |
-| SPI1 | Display, pins 26 and 27 |
-| I²S1 | Display, pins 20, 21 and 23 |
-| Serial5 | Display, pins 20 and 21 |
-| CAN1 | Display, pins 22 and 23 |
-| Wire2 and Serial6 | Display, pins 24 and 25 |
-| Serial7 | Display, pins 28 and 29 |
-| 11 of 18 analog inputs | A3, A6 to A15 display |
-
-The display's data bus takes 20 to 23, 26, 27, 38 and 39, because an 8-bit bus needs eight FlexIO3 signals in a row, and signals 8 to 15 are the run that leaves the sensors and the rotary sensor in place. FlexIO3 has no DMA request, so the display's driver feeds the bus from an interrupt. RD stays at 3.3 V, since the driver reads nothing back. The display resets itself at power-up, so its RST pin stays unconnected.
-
-The display's touch controller sits on `Wire2`, pins 24 and 25, because `Wire` belongs to the rotary sensor's driver. Sharing `Wire` would save the two pins and cost DMA or reads split across ticks in that driver.
 
 A second AS5600 needs a TCA9548A multiplexer on pins 18 and 19, because the AS5600's address 0x36 is fixed. The multiplexer carries up to eight sensors and costs no further pin.
 
@@ -136,7 +131,7 @@ One edge pin remains, pin 1. The targets take the QSPI memory pads on the unders
 | SPI2 | MOSI 43 / 50, MISO 42 / 54, SCK 45 / 49, CS 44 (none on the edge headers) |  |
 | Wire | SDA 18, SCL 19 | Magnetic rotary sensor |
 | Wire1 | SDA 17, SCL 16 |  |
-| Wire2 | SDA 25, SCL 24 | Display, reserved |
+| Wire2 | SDA 25, SCL 24 | Display |
 | CAN1 | RX 23, TX 22 / 11 |  |
 | CAN2 | RX 0, TX 1 |  |
 | CAN3 | RX 30, TX 31 |  |
@@ -184,7 +179,7 @@ The bracket names the FlexIO3 signal a pin carries.
 
 | FlexIO | Pins, with the signal each carries | Used by |
 |---|---|---|
-| FlexIO3 | 19 (0), 18 (1), 14 (2), 15 (3), 40 (4), 41 (5), 17 (6), 16 (7), 22 (8), 23 (9), 20 (10), 21 (11), 38 (12), 39 (13), 26 (14), 27 (15), 8 (16), 7 (17), 36 (18), 37 (19), 35 (28), 34 (29) | Display, reserved |
+| FlexIO3 | 19 (0), 18 (1), 14 (2), 15 (3), 40 (4), 41 (5), 17 (6), 16 (7), 22 (8), 23 (9), 20 (10), 21 (11), 38 (12), 39 (13), 26 (14), 27 (15), 8 (16), 7 (17), 36 (18), 37 (19), 35 (28), 34 (29) | Display |
 
 ## Sources
 
