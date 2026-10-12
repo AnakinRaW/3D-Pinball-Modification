@@ -290,3 +290,11 @@ What a request touches:
 | `--blind` | Prints every quantity, its unit and its inputs, with no formula and no value. A later session derives them from the schematic and the datasheets without reading the model, and the two derivations are diffed. |
 
 **`--blind` is for larger reviews**: a design review, a subsystem whose supply or part choice changed, a run of figures that moved together. A single changed value is re-derived under rule 9 instead.
+
+## 16. Reuse before design
+
+**Before a subsystem is designed, established libraries and frameworks are searched at every level of it.** The levels run from the driver through the rendering and the user interface to the assets. A level that a library covers is built on that library, or the subsystem's document records why it is not. The case that prompted this rule: the display stack was designed from the driver up as layers of pixels, and a user interface library that keeps no pixels per layer was found only afterwards.
+
+**When workarounds pile up, the model beneath them is questioned.** A design that needs a further fix for each problem it solves is re-derived from its requirements under rule 9 before the next fix goes in. The display's palettes, its dithering and its opacity in the palette each solved a problem that the layers of pixels had created.
+
+**An assumption that shapes a design is named as an assumption.** It constrains the design only once it is confirmed as a requirement. The display assumed a main loop that never waits for the bus, and that assumption alone ruled out drawing on demand.
