@@ -319,12 +319,16 @@ void Storage::transferEnded() {
 }
 
 // SdFat calls yield() while it waits for the card: the storage task sleeps until the SD
-// controller's interrupt or the kernel's next tick, and every other caller goes on at once. A
-// status query the card left unanswered blocks the command line, which is freed for the next one
-// while no transfer runs
+// controller's interrupt or the kernel's next tick. Every other task gets freertos-teensy's
+// default_yield(), which runs the serial events and EventResponder as Teensyduino's yield() does,
+// so that work never runs while SdFat waits. A status query the card left unanswered blocks the
+// command line, which is freed for the next one while no transfer runs
 void yield() {
     if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING || inInterrupt()) return;
-    if (xTaskGetCurrentTaskHandle() != storageTask_) return;
+    if (xTaskGetCurrentTaskHandle() != storageTask_) {
+        freertos::default_yield();
+        return;
+    }
     if ((USDHC1_PRES_STATE & (kCmdBusy | kDataBusy)) == kCmdBusy) resetLines(kCmdBusy);
     ulTaskNotifyTakeIndexed(kCard, pdTRUE, 1);
 }

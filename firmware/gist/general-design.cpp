@@ -135,6 +135,7 @@ static void machineTask(void*) {
         host.update(now);
         logger.update(now);                 // writes the collected log lines once a second
         screen.update();                    // shows a picture once it has landed
+        yield();                            // serial events and EventResponder, which no Arduino loop() runs under FreeRTOS
 
         watchdog.check();                   // feeds the watchdog while every guard holds
     }

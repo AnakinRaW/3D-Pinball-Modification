@@ -64,6 +64,14 @@ The driver publishes `SoundEnded` once a sound has played to its end or a read h
 
 Playback depends on the card's read speed. Using the file channel's ring buffer only bridges short delays.
 
+## Existing libraries
+
+The driver uses the output and the master gain of PJRC's Audio library unchanged. It cannot use any of the existing SD players, because each of them reads the card directly. Only the storage task may access the card, as the [storage driver](storage.md#requirements-and-use-cases) requires.
+
+`AudioPlaySdWav` and `AudioPlaySdRaw` read the card inside the audio interrupt. h4yn0nnym0u5e's [buffered players](https://github.com/PaulStoffregen/Audio/pull/483) and newdigate's [TeensyVariablePlayback](https://github.com/newdigate/teensy-variable-playback) open and read the file in the main loop when a sound starts. The main loop would then wait for the card at every new sound.
+
+`AudioMixer4` clips when the channels together exceed full scale, as [PJRC's documentation](https://www.pjrc.com/teensy/gui/?info=AudioMixer4) states. It also switches a channel to a new gain at once, without a ramp. The driver's own mixer turns the sum down in advance and ramps every change of volume.
+
 ## Device faults
 
 The driver notes no fault. The amplifier gives the Teensy no feedback, so the driver cannot tell whether it plays. A failing card shows up as the storage driver's fault.

@@ -24,6 +24,8 @@ The firmware uses the card at start-up, while it runs and for the streams of sou
 
 All card work runs in the storage task, one of the FreeRTOS [tasks](../general-design.md#execution-model). It is the only task that calls SdFat. It has a higher priority than the main task, so the next transfer starts as soon as one ends. It wakes for every new request and carries the requests out one after another, in the order they were started. A read started after a write therefore returns the new data. While the card moves the data by DMA, the task sleeps and the main loop runs.
 
+While SdFat waits for the card, it keeps calling the Arduino function `yield()`. The firmware replaces `yield()`. Called from within the storage task, the new `yield()` puts the task to sleep until the card's interrupt wakes it. Everywhere else, it calls freertos-teensy's `default_yield()`, which handles serial events and PJRC's `EventResponder` as on any Teensy. The main loop calls `yield()` once per pass, because the Arduino `loop()` is not used under FreeRTOS.
+
 ## Files
 
 A file is addressed by its full path from the card's root, such as `/games/<id>/best`. `storage.open()` gives a `FileReader`, which only reads. The [file system component](../components/file-system.md)'s `open()` gives a `FileWriter`, which writes as well. Both give only a handle, and card IO operations start with the first read or write. 
@@ -91,6 +93,14 @@ A card that `begin()` could not set up, and a card pulled out and put back, stay
 ## Limitations
 
 When the card gives a broken answer to a command that starts a transfer, the main loop can be stuck for one second.
+
+## Existing libraries
+
+SdFat reads and writes the card. No library offers a prioritised request queue that callers can poll. The storage task provides one.
+
+[FreeRTOS+FAT](https://github.com/FreeRTOS/Lab-Project-FreeRTOS-FAT) has no driver for the i.MX RT's SD controller and cannot read exFAT. SdFat already brings that driver for the Teensy 4.1.
+
+NXP's [SD stack](https://github.com/nxp-mcuxpresso/mcux-sdk-middleware-sdmmc) is not part of Teensyduino. Porting it would take a lot of work and gain nothing new. Its calls block as well, so the storage task would still be needed.
 
 ## Driver Interface
 

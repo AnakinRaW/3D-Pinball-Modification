@@ -30,6 +30,10 @@ Calls that come from the driver's interrupt return at once. That interrupt must 
 
 A file channel supports setting a higher priority, so its reads are scheduled before other reads and writes.
 
+## Existing libraries
+
+A ring such as SdFat's [`RingBuf`](https://github.com/PaulStoffregen/SdFat/blob/master/src/RingBuf.h) or a FreeRTOS stream buffer passes bytes from one writer to one reader. Neither reads the file. The file channel also starts the reads, switches files, starts a file over and skips bytes. `RingBuf` also turns every interrupt off for a moment in each call from a task.
+
 ## Interface
 
 ```cpp
