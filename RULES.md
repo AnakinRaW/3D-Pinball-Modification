@@ -5,6 +5,7 @@ The working agreement for this repository. This file is the authority; it is com
 ## 1. Language
 
 - **Repository language is English.** All code, comments, commit messages, documentation, schematics, labels and file names are in English.
+- **English is spelled the American way.** Write color, center, behavior, initialize, meter, aluminum and toward. Names in code follow the same spelling.
 - **Conversation may be German or English.** Follow the language the question is asked in.
 
 ## 2. Who this project is for
@@ -123,7 +124,7 @@ Consistency with a previous answer is not evidence that the previous answer was 
 
 ## 10. Writing style
 
-Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a licence to write a fact in fewer words than it needs.
+Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a license to write a fact in fewer words than it needs.
 
 **A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
 
@@ -140,7 +141,7 @@ Banned:
 
   Negative reasoning belongs one level down, in the proof: a measurement that rules out one of several candidate parts, or a calculation that eliminates a value, stays.
 - **A sentence that restates the heading above it.**
-- **Closing paragraphs that summarise what was just written.**
+- **Closing paragraphs that summarize what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
 - **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."* What is banned is the added explanatory sentence. A short clause inside a sentence that names the consequence and keeps it readable stays, as in *"An open sense line has to be held at a defined level, or the bumper fires on noise."*
 
