@@ -228,7 +228,7 @@ Every finding is reported at one of four levels. The level follows from the cons
 
 **Counterproposals are written in chat.** Rule 8 still governs the files: design artifacts change when asked. Documentation follows rule 7, and a cosmetic fix in a file already open is made in passing.
 
-**Findings and questions are marked in chat.** The mark opens the line, and a level's mark is followed by the level's name.
+**Findings and questions are marked in chat.** The mark opens the line, and a level's mark is followed by the level's name. Findings listed together are numbered, so a reply can name them by number.
 
 | Mark | Stands for |
 |---|---|
