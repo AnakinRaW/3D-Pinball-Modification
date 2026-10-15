@@ -5,6 +5,7 @@ The working agreement for this repository. This file is the authority; it is com
 ## 1. Language
 
 - **Repository language is English.** All code, comments, commit messages, documentation, schematics, labels and file names are in English.
+- **English is spelled the American way.** Write color, center, behavior, initialize, meter, aluminum and toward. Names in code follow the same spelling.
 - **Conversation may be German or English.** Follow the language the question is asked in.
 
 ## 2. Who this project is for
@@ -123,7 +124,7 @@ Consistency with a previous answer is not evidence that the previous answer was 
 
 ## 10. Writing style
 
-Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a licence to write a fact in fewer words than it needs.
+Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a license to write a fact in fewer words than it needs.
 
 **A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
 
@@ -140,7 +141,7 @@ Banned:
 
   Negative reasoning belongs one level down, in the proof: a measurement that rules out one of several candidate parts, or a calculation that eliminates a value, stays.
 - **A sentence that restates the heading above it.**
-- **Closing paragraphs that summarise what was just written.**
+- **Closing paragraphs that summarize what was just written.**
 - **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
 - **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."* What is banned is the added explanatory sentence. A short clause inside a sentence that names the consequence and keeps it readable stays, as in *"An open sense line has to be held at a defined level, or the bumper fires on noise."*
 
@@ -151,6 +152,7 @@ Banned:
 
 - **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula, the hyphen inside a compound word and the dash spanning a numeric range, as in 18–20 mA, stay.
 - **Inserted asides.** No clause, appositive or example set into the middle of a sentence, whether commas, parentheses or dashes set it off. The inserted fact goes into a separate sentence. The sentence that prompted this rule: *"The SD specification allows a card at most 100 ms for each block it reads and 250 ms for each block it writes, so the longest transfer, one stream chunk, takes 800 ms at most."*
+- **Two clauses joined by a comma and "and".** Each clause becomes its own sentence, or one clause gives the reason for the other. The sentence that prompted this rule: *"Playback depends on the card's read speed, and the file channel's ring buffer only bridges short delays."*
 
 **The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
 
@@ -194,6 +196,8 @@ The stock machine's original functionality must remain restorable. An alteration
 | Drilling a new hole in the playfield or in a track | Permitted, the original function survives it |
 | Cutting a cable | Permitted once a connector is soldered to each end |
 
+The table sets the default. An alteration it forbids is permitted for a named part once that alteration is decided explicitly. The part's document records the decision. Rule 14 then no longer reports it.
+
 ## 13. Amending these rules
 
 New or changed rules are added here by the assistant when they are stated, in their intent rather than verbatim, and committed. Where a rule is ambiguous, the assistant records its interpretation and flags it for confirmation rather than guessing silently.
@@ -224,7 +228,7 @@ Every finding is reported at one of four levels. The level follows from the cons
 
 **Counterproposals are written in chat.** Rule 8 still governs the files: design artifacts change when asked. Documentation follows rule 7, and a cosmetic fix in a file already open is made in passing.
 
-**Findings and questions are marked in chat.** The mark opens the line, and a level's mark is followed by the level's name.
+**Findings and questions are marked in chat.** The mark opens the line, and a level's mark is followed by the level's name. Findings listed together are numbered, so a reply can name them by number.
 
 | Mark | Stands for |
 |---|---|
@@ -287,3 +291,11 @@ What a request touches:
 | `--blind` | Prints every quantity, its unit and its inputs, with no formula and no value. A later session derives them from the schematic and the datasheets without reading the model, and the two derivations are diffed. |
 
 **`--blind` is for larger reviews**: a design review, a subsystem whose supply or part choice changed, a run of figures that moved together. A single changed value is re-derived under rule 9 instead.
+
+## 16. Reuse before design
+
+**Before a subsystem is designed, established libraries and frameworks are searched at every level of it.** The levels run from the driver through the rendering and the user interface to the assets. A level that a library covers is built on that library, or the subsystem's document records why it is not. The case that prompted this rule: the display stack was designed from the driver up as layers of pixels, and a user interface library that keeps no pixels per layer was found only afterwards.
+
+**When workarounds pile up, the model beneath them is questioned.** A design that needs a further fix for each problem it solves is re-derived from its requirements under rule 9 before the next fix goes in. The display's palettes, its dithering and its opacity in the palette each solved a problem that the layers of pixels had created.
+
+**An assumption that shapes a design is named as an assumption.** It constrains the design only once it is confirmed as a requirement. The display assumed a main loop that never waits for the bus, and that assumption alone ruled out drawing on demand.

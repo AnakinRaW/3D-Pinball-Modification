@@ -1,23 +1,23 @@
 ---
 name: design-review
-description: Use to judge whether a design meets the professional quality bar of rule 3, not merely whether it works - covers derating targets, thermal calculation, schematic craft, inductive loads, testability, serviceability and failure behaviour. Trigger on "is this good design", "would an engineer approve this", "review the quality", "is this professional", or before a board is sent for fabrication.
+description: Use to judge whether a design meets the professional quality bar of rule 3, not merely whether it works - covers derating targets, thermal calculation, schematic craft, inductive loads, testability, serviceability and failure behavior. Trigger on "is this good design", "would an engineer approve this", "review the quality", "is this professional", or before a board is sent for fabrication.
 ---
 
 # Design review
 
-`review-circuit` answers whether the circuit survives. This answers whether it is *good* - the judgement a reviewing engineer makes on top of correctness. Rule 3 sets the bar; this operationalises it.
+`review-circuit` answers whether the circuit survives. This answers whether it is *good* - the judgment a reviewing engineer makes on top of correctness. Rule 3 sets the bar; this operationalises it.
 
 Run after `review-circuit`, never instead of it.
 
 ## 1. Derating
 
-Working inside the absolute maximum is correctness. Professional practice leaves margin for tolerance, ageing and worst case.
+Working inside the absolute maximum is correctness. Professional practice leaves margin for tolerance, aging and worst case.
 
 | Part | Target | Reason |
 |---|---|---|
 | Resistor power | ≤ 50 % of rating | Rating assumes free air at 25 °C; a board is neither |
 | Ceramic capacitor voltage | ≤ 50 % of rating | See DC bias below |
-| Electrolytic voltage | ≤ 80 % of rating | Ripple and ageing |
+| Electrolytic voltage | ≤ 80 % of rating | Ripple and aging |
 | Semiconductor continuous current | ≤ 80 % | Datasheet figures assume ideal cooling |
 | Connector current per contact | ≤ 80 % | Contact resistance rises with wear |
 | LED forward current | ≤ 80 % of maximum | Lifetime falls steeply near the limit |
@@ -61,7 +61,7 @@ What makes a schematic reviewable by someone who was not there.
 - **Every pin accounted for** - connected, or carrying an explicit no-connect marker.
 - **Values and ratings on every passive** where the rating is part of the design.
 - **Title block**: board name, revision, date.
-- **Functional blocks grouped** and labelled, one concern per region of the sheet.
+- **Functional blocks grouped** and labeled, one concern per region of the sheet.
 
 ## 4. Inductive and switching loads
 
@@ -75,12 +75,12 @@ What makes a schematic reviewable by someone who was not there.
 The difference between a board that can be debugged and one that must be replaced.
 
 - Test points on every supply rail and every signal worth probing.
-- Connectors keyed or polarised, and labelled on the silkscreen.
-- Pin 1 marked. Polarity marked on every polarised part.
+- Connectors keyed or polarized, and labeled on the silkscreen.
+- Pin 1 marked. Polarity marked on every polarized part.
 - Designators readable on the assembled board.
 - Modules replaceable without desoldering the parts around them.
 
-## 6. Failure behaviour
+## 6. Failure behavior
 
 For each of these, state what happens and whether the result is dangerous, dead, or degraded:
 
@@ -116,4 +116,4 @@ Where meeting a target in one package would need a different **value**, the two 
 | **Craft** | Schematic or board conventions |
 | **Missing** | Something rule 3 requires that does not exist yet |
 
-Each finding names the target it misses and the calculation or convention behind it. Where a judgement depends on a number no source provides, report it as unverifiable and name the measurement that settles it.
+Each finding names the target it misses and the calculation or convention behind it. Where a judgment depends on a number no source provides, report it as unverifiable and name the measurement that settles it.

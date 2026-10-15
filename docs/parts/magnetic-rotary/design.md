@@ -15,13 +15,13 @@ The Grove AS5600 is a small board from Seeed that carries the AS5600, a chip mea
 
 ## Magnet and mount
 
-A 6 mm disc magnet, magnetized across its diameter, is mounted to the end of the seal rod, centred on the rod's axis.
+A 6 mm disc magnet, magnetized across its diameter, is mounted to the end of the seal rod, centered on the rod's axis.
 
-The AS5600 faces the magnet closely at 0.5 mm to 3 mm. The datasheet allows the axis 0.25 mm from the centre of the package for a magnet of that size. The AS5600 raises its gain for a weak field and lowers it for a strong one, and reports the setting as AGC. The gap is right when the AGC reports a value of roughly 64. The driver reads it at start-up.
+The AS5600 faces the magnet closely at 0.5 mm to 3 mm. The datasheet allows the axis 0.25 mm from the center of the package for a magnet of that size. The AS5600 raises its gain for a weak field and lowers it for a strong one, and reports the setting as AGC. The gap is right when the AGC reports a value of roughly 64. The driver reads it at start-up.
 
 ![Magnetic rotary sensor assembly](magnetic-rotary-assembly.svg)
 
-[`magnet-model`](magnet-model/index.html) is an interactive, static webpage that computes the gap range and the angle error an off-centre axis causes for a magnet of any diameter, height and grade, and draws the side view.
+[`magnet-model`](magnet-model/index.html) is an interactive, static webpage that computes the gap range and the angle error an off-center axis causes for a magnet of any diameter, height and grade, and draws the side view.
 
 ## Circuit
 
@@ -54,7 +54,7 @@ The sensor is further abstracted to the [rotating seal component](../../firmware
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
-### The bus
+### Bus
 
 ```
 BUS       the module's pull-up, R4 and R5          4.7 kΩ
@@ -66,7 +66,7 @@ BUS       the module's pull-up, R4 and R5          4.7 kΩ
           what Standard-mode allows                1000 ns
 ```
 
-### The read
+### Read
 
 ```
 READ      the bus clock                            100 kHz
@@ -80,7 +80,7 @@ READ      the bus clock                            100 kHz
           turn per tick                          = 100 Hz
 ```
 
-### The supply
+### Supply
 
 ```
 SUPPLY    the Teensy's rail                        3.3 V

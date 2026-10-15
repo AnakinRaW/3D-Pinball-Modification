@@ -21,7 +21,7 @@ R1 = 1.585 kΩ bridges Pin 1 and the phototransistor collector (Pad B) as the co
 
 ### Pad naming
 
-The four pads were labelled by position rather than by datasheet pin number, because the part's orientation on the board was unknown when the measurements were taken.
+The four pads were labeled by position rather than by datasheet pin number, because the part's orientation on the board was unknown when the measurements were taken.
 
 | Label | Position as viewed | Datasheet pin | Datasheet function | Function derived from the measurements |
 |---|---|---|---|---|
@@ -47,7 +47,7 @@ Four near-zero readings group the points into nets:
 
 That leaves three things to identify.
 
-**The LED runs D → C.** `1 → 3` reads 1.082 V in the diode range one way and OL the other: a single junction, anode towards Pin 1. The same junction appears as `D → C` (1.077 V) and `1 → C` (1.078 V). An IR LED fits, since the datasheet's V<sub>F</sub> is 1.2 V at 20 mA and the meter's test current is far below that. In the resistance range the same path reads 12.5 MΩ, because the ohms source cannot forward-bias an LED.
+**The LED runs D → C.** `1 → 3` reads 1.082 V in the diode range one way and OL the other: a single junction, anode toward Pin 1. The same junction appears as `D → C` (1.077 V) and `1 → C` (1.078 V). An IR LED fits, since the datasheet's V<sub>F</sub> is 1.2 V at 20 mA and the meter's test current is far below that. In the resistance range the same path reads 12.5 MΩ, because the ohms source cannot forward-bias an LED.
 
 **The phototransistor runs B (collector) → A (emitter), NPN.** `1 → 2` conducts at 6 k…35 kΩ and tracks illumination; `2 → 1` reads 46 M…OL. A light-controlled device that conducts only with its Pin 1 side positive has its collector on that side.
 

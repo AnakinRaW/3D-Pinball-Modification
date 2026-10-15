@@ -1,218 +1,146 @@
 # Lighting
 
-This section describes the design to be used for lighting this modification and uses the documentation of the [`stock machine lighting`](../../research/Rokr/4_lighting.md).
+Every light of the modification is an RGB LED whose color is set separately. The Teensy drives the lights on multiple chains through level shifters.
 
-## Stock Limitations
+## Stock lighting
 
-The stock machine uses a very primitive design for lighting, which brings a couple of limitations when it comes to modding: 
+The stock lights are single-colored, soldered to the mainboards or switched only in groups, so none of them can be reused. [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md) lists them.
 
-- Most playfield LEDs are soldered to the mainboards (P37 and P39) and therefore are not reusable at all. This applies to the score, drain and bumper LEDs.
-- The ball track LED boards (the four arrows, P29 and P30) are dual color (red and white) but it is not possible to light the four LEDs per board individually.
-- The LED strips are single color and do not allow effects beside turning the whole strip on or off.
-- The ball count board (P28) uses single color LEDs.
+## LEDs
 
-## Overview
+The modification keeps the stock light positions but also adds new lights for game mechanics. 
 
-### LED Hardware
+Most lights come from a cuttable strip of WS2812B LEDs, 2 m long and 2.7 mm wide. This format also barely fits the stock plastic trenches along the playfield's side panels. A WS2812B is an RGB LED with its own controller. It takes its color from a data line and passes the remaining data on to the next LED, so the LEDs on one data line form a chain. A segment is a piece cut from the strip and fitted at one place. The segments of a chain are wired one after the other.
 
-The lighting positions of the stock machine is planned to be reused and augmented. 
+The sides and the diorama ceiling take 115.5 cm of the strip and the other stock positions about 45 cm.
 
-Most if not all lights shall be full RGB. All lights shall individually addressable using either WS2812 or SK6682. The LEDs operate at 5 V and can be fed from the existing 5 V power supply.
+The ball count board P28 is taken out whole and kept intact. Six LEDs take its positions.
 
-A 2 m long and 2.7 mm thin, cuttable WS2812B LED strip covers most if not all needs for this modification. It fits, even though barely, the stock plastic trenches of the playfield's side panels.
+## Light layout
 
-The sides and the diorama ceiling light already take 115.5 cm. Re-lighting the remaining stock lights takes approximately another 45 cm. This leaves nearly 40 cm over for custom lighting.
+Positions follow the stock inventory in [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md), with the three stock strips replaced by strips with 160 LEDs/m.
 
-Whether or not to use discrete LEDs (such as [NeoPixel 5050](https://www.adafruit.com/product/1655)) is not yet decided. Larger package sizes are easy to handle but have limited use. The smaller star-shaped cutouts on piece E5 might only just fit a 2020 package size. Cutting and taping the LED strip, potentially wasting a couple of centimeters strip length, seems far more practical.
+Due to power saving, the perimeter may [light only every second LED](#current-ceiling). The table below lists all LEDs currently planned in the project.
 
-## Power Consumption
-
-TODO: LEDS is huge consumer... In general LEDs not 100%, but intensity needs to be tested what looks good. Roof and surrounding playfield strips only use every second LED. 
-
-ca. 50 Playfield LED + ambient = ~2.1 A at 30% brightness for animation-focused lighting 
-
-### Software
-
-**Ball sensing and game logic have priority over lighting.** Since all code shares one main loop, special attention must be applied, so light code is not blocking other critical paths of the firmware. See the timing rules in [`docs/firmware/general-design.md`](../../firmware/general-design.md) and the output path in [`docs/firmware/drivers/lighting.md`](../../firmware/drivers/lighting.md).
-
-The game logic addresses lighting through **logical groups** and **named effects**. 
-
-- A group can be physical (e.g., region on the playfield) or logical (e.g, track lights): 
-
-- An effect is what a group is asked to do: on, off, flash, pulse, fade, or a named animation.
-
-## Detailed Light Layout
-
-Positions follow the stock inventory in [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md), with the three stock strips replaced at 160 LEDs/m, 6.25 mm pitch.
-
-**Devices** are what sits in a chain and what a frame has to clock out. **Lit** are the ones an effect may turn on. The two differ only on the perimeter, see [Perimeter: every second device](#perimeter-every-second-device-below-full-scale).
-
-| Group | Devices | Lit | Function |
+| Location | Chain | LEDs | Lit |
 |---|---|---|---|
-| Perimeter left | 79 | 40 | Ambient, along the playfield frame |
-| Perimeter right | 79 | 40 | Ambient, along the playfield frame |
-| Diorama ceiling | 26 | 26 | Ambient, overhead |
-| Score | 10 | 10 | Score bar |
-| Ball count | 6 | 6 | Balls remaining, on the reused P28 board |
-| Track | 8 | 8 | Four tracks, two lights each |
-| Bumper section | 4 | 4 | Three around the bumpers, one at the centre |
-| Drain | 1 | 1 | |
-| Top lane rollovers | not yet counted | not yet counted | Added by the modification, absent from the stock machine |
-| **Total** | **213 plus rollovers** | **135 plus rollovers** | |
+| Perimeter left | A | 79 | 40 |
+| Perimeter right | B | 79 | 40 |
+| Diorama ceiling | C | 26 | 26 |
+| Playfield score stars | D | 10 | 10 |
+| Drain | D | 1 | 1 |
+| Shooter Lane Lights (stock: P28) | D | 6 | 6 |
+| Track Arrows | E | 4 | 4 |
+| Track Lights* | E | 3 | 3 |
+| Scoop* | E | 1 | 1 |
+| Targets* | E | 4 | 4 |
+| Bumper section | F | 4 | 4 |
+| Top lane rollovers* | F | 3 | 3 |
+| Playfield action lights* | D - F | 20 | 20 |
+| **Total** |  | **240** | **162** |
 
-## Perimeter: every second device, below full scale
+**New in this machine*
 
-158 of the 213 devices sit in the two perimeter strips, and they carry ambient light rather than indication. Every second device is lit, giving 12.5 mm spacing against the strip's own 6.25 mm, and the group runs below full scale. The stock strips it replaces sit at 13.5 mm.
+The LEDs are organized in chains by where they sit and by how the game uses them. There are two kinds:
 
-| Quantity | Effect of the decision |
-|---|---|
-| Lit-die current on the perimeter | Halved, from 9.5 A to 4.8 A with all three dies on |
-| Frame time | **Unchanged.** A dark device still takes its 24 bits and passes the remainder along, so the longest chain stays 79 devices and 2.4 ms |
-| Quiescent current | **Unchanged**, roughly 1 mA per device whether lit or dark, 0.21 A over all 213 |
-| Chain topology, failure domains, pin count | Unchanged |
-| Supply rating | **Unchanged.** The supply is sized for the enforced 2.0 A budget, not for the unconstrained maximum |
+1. Playfield lights are single lights that stand for something in the game, such as a bumper or a score star. A component switches each of them. They share chains by location, which keeps the chains and their wiring short.
+2. Ambient lights along the perimeter and in the ceiling act as strips. Effects run along a strip as a whole, so the game never needs to know which LED is which. Each strip forms a chain, since the three together hold 184 of the 240 LEDs.
 
-The dark devices stay fitted and stay addressable, so the spacing is a firmware constant. An effect that wants the full density has it.
+Chains A to C are the three ambient strips. Chain D covers the lower playfield, chain E the middle and chain F the upper playfield.
 
-Running below full scale keeps the 2.0 A limiter as a backstop. `setMaxPowerInVoltsAndMilliamps` scales **global** brightness, so a perimeter that regularly reaches the budget dims every other group with it, and a bumper flash then loses brightness because an ambient fade happened to be running at the same moment. A perimeter that leaves headroom means only unusual scenes reach the limiter.
+The new lights without a chain get one once their positions are fixed.
 
-## Chains follow failure domains
+The locations of the **playfield action lights** are not yet decided. Their amount is estimated to plan for reserve. 
 
-A chain is electrical rather than geometric and may wander anywhere on the board, so spreading lights across the playfield is no reason for a second chain.
+> [!TODO]
+> Picture of the playfield with new light positions.
 
-What does require them is failure behaviour. Three solenoids shake the cabinet, and a single chain of 213 devices puts 212 joints in series where any one of them darkens everything after it. Each chain is therefore one failure domain, cut so that a fault stays local and points at where to look.
+## Mounting
 
-| Chain | Contents | Devices |
-|---|---|---|
-| 1 | Perimeter left | 79 |
-| 2 | Perimeter right | 79 |
-| 3 | Diorama ceiling | 26 |
-| 4 | Lower playfield: score, drain, ball count | 17 |
-| 5 | Mid playfield: track lights | 8 |
-| 6 | Top playfield: bumper section, rollovers | 4 plus rollovers |
+Each new playfield light sits in a hole drilled through the playfield. The hole is 6 to 10 mm wide, depending on the position. A 3D-printed diffuser plugs the hole, as in the stock machine, and the LED sits inside it. A light that stays out of sight needs no plug and a much smaller hole.
 
-The three ambient strips stay separate for this reason alone. Together they hold 184 of the 213 devices and span the widest cable runs in the machine.
+The perimeter segments lie in the transparent trenches along the side panels, like the stock strips. The ceiling segment is glued to the diorama ceiling, like the stock strip.
+
+## Current ceiling
+
+> [!TODO]
+> Measure the strip's current per color and set FastLED's power model to it. Until then the cap lets more current through than it states.
+
+At full white, the 162 lit LEDs would draw 9.72 A, with red, green and blue at about 20 mA each. The controller in each LED adds about 1 mA even while the LED is dark, 0.24 A for all 240. The supply cannot deliver that.
+
+This machine is designed for power supplies which deliver 3 to 6 A. 0.65 A are reserved for permanent consumers, such as the Teensy, Audio or the display and sensors. Not counting solenoids here, that leaves at least 2.35 A for the lighting. 
+
+The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current.
+
+The perimeters may light only every second LED, which halves their current at full white from 9.5 A to 4.8 A. The perimeters and the ceiling also never run at full brightness.
 
 ## Circuit
 
+![Lighting control: level shifters and chain outputs](lighting-schematic.svg)
+
 ### Level shifting
 
-The WS2812B data input threshold is specified against its own supply, so at 5 V it sits above the 3.3 V the Teensy can drive. The exact figure is an open point.
+A Teensy pin outputs only 3.3 V. The LED chain needs at least 3.5 V for a high bit, so the data lines need level shifting to 5 V.
 
-**Two CD74HCT125E**, four channels each, covering up to eight chains. The HCT input threshold accepts 3.3 V as a valid high and the output swings to 5 V.
+**Two CD74HCT125E** buffers shift the data lines to 5 V. Each has four channels. Their inputs accept 3.3 V as a valid high. U1 carries chains A to D and U2 chains E and F.
 
 | Connection | Requirement |
 |---|---|
 | VCC, pin 14 | 5 V. The part is specified from 4.5 to 5.5 V and has no 3.3 V operating range |
-| Decoupling | 100 nF between pin 14 and pin 7, as close to the package as the layout allows |
+| Decoupling | C1 at U1 and C2 at U2, 100 nF each between pin 14 and pin 7, under 10 mm from pin 14 |
 | OE, pins 1, 4, 10, 13 | All to ground. OE is active low, and an open OE leaves the output in high impedance |
-| Unused inputs | To ground. An open CMOS input oscillates and couples into the neighbouring channels in the same package |
+| Used inputs | 2.2 kΩ from the Teensy pin to each, under 10 mm from the input. Each input has a clamp diode to VCC. With the machine off and the Teensy on USB, the resistor holds the pin's current into it to 1.5 mA |
+| Unused inputs | To ground |
 
-At I<sub>OH</sub> = 4 mA the datasheet guarantees V<sub>OH</sub> ≥ 3.7 V, well above what a CMOS input behind 100 Ω asks for.
+For the LEDs to read a high bit, each buffer has to put out at least 3.5 V. The buffer puts out at least 3.7 V.
 
-## Signal wiring
+The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slightly, but the signal still reaches the LEDs well inside their timing.
 
-**Series resistor of 47 to 220 Ω in each data line**, at the driving end. PJRC fits 100 Ω on its OctoWS2811 adaptor board.
+### Signal wiring
 
-**Data and ground run together over the whole length of every link**, from the shifter to the first device of a chain and from one strip to the next. A shared ground point at the supply is necessary and does not replace this. The return current of a fast edge follows the signal conductor, and without a ground beside it the return takes a detour whose loop area both radiates and receives. Three solenoids switching 0.68 A are the interferer that loop is built for, and the disturbance then arrives in the same instant as the bumper hit.
+**A series resistor sits in each data line** at the buffer's output. On a long cable it damps the ringing a steep edge would cause. If a data wire touches 5 V or ground, the 220 Ω resistor also limits the output's current to 25 mA, inside the 35 mA the output is rated for.
 
-**The 5 V is injected separately at each strip** rather than passed along from the previous one. A link then carries signal current instead of operating current, and a contact going bad takes down one chain instead of the section behind it.
+### Supply
 
-### Current ceiling
+The board takes the machine's 5 V through J-PWR and passes it on to J-LA to J-LF. The buffers also take their 5 V at J-PWR. J-PWR is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends.
 
-135 lit positions at three dies each and roughly 20 mA per die come to **8.1 A** with everything at full, a figure no effect ever displays. Quiescent draw sits on top of it and does not vary with colour: 213 devices at roughly 1 mA come to **0.21 A**, 11 % of the lighting budget before anything is lit.
+C1 and C2 sit at the supply pins of U1 and U2. They deliver the short current peak a buffer draws each time it switches.
 
-**The ceiling is enforced in firmware and the supply is sized for the ceiling.** FastLED's `setMaxPowerInVoltsAndMilliamps` scales global brightness before every `show()` so that the sum stays within a set budget.
+C3 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 80 mΩ at 100 kHz. Even if the whole lighting cap switches on at once, the buffers keep at least 4.74 V with the 3 A supply and 4.57 V with the 6 A supply.
 
-Budget: **2.0 A for lighting**. The stock machine stayed well below that, so the modification is brighter than the original while the supply stays modest.
+## Teensy pins
 
-```
-LED budget, enforced in firmware      2.00 A
-Three solenoids energised             2.04 A   measured
-Audio at full output                  0.45 A   estimated
-Teensy and logic                      0.30 A   0.10 A Teensy, 0.19 A IR mainboard
-                                      ------
-Simultaneous total                    4.79 A
-```
-
-What the budget buys: quiescent draw takes 0.21 A, leaving 1.79 A across 135 lit positions, an average of **13 mA per position**. What that is worth depends on the base colour, since each die drawn costs its own 20 mA:
-
-| Base colour | Per position | 13 mA is |
-|---|---|---|
-| Saturated, one die | 20 mA | 66 % |
-| Mixed, two dies | 40 mA | 33 % |
-| White, three dies | 60 mA | 22 % |
-
-The saturated palette is what makes the budget comfortable. Ambient alone, the 80 perimeter positions plus the 26 in the ceiling, comes to 2.12 A on one die at full and therefore still runs below full scale.
-
-**Supply: 5 V, 3 A.** The 4.79 A simultaneous case sits above it.
-
-The firmware limit is load bearing. Without it the lighting alone draws 8.1 A, the supply enters current limiting, the rail sags and the Teensy resets, possibly with a solenoid energised. The supply is therefore chosen to limit current rather than to latch off.
-
-### Ball count board P28
-
-The stock P28 carries six amber LEDs, a 7-pin connector and nothing else. Its value is that it already fits: hole pattern, LED spacing and position in the wooden structure are all settled. The design keeps it untouched.
-
-![Ball count board P28 on the LED chain](ball-count-schematic.svg)
-
-**Two WS2811 on the modification's own board** drive it. The WS2811 is the controller of a WS2812 sold as a separate chip, with three constant-current channels and no LEDs, so it supplies exactly what P28 lacks. Three channels each gives six.
-
-The chain's data line enters the first controller, passes to the second and continues into the rest of the chain. The six outputs run over the existing seven-way cable to the six LEDs, and the seventh wire carries the common connection to 5 V.
-
-To the library the pair reads as two RGB pixels whose channels happen to be six separate amber LEDs. A helper hides that:
-
-```cpp
-void setBallLamp(uint8_t i, uint8_t brightness) {   // i = 0..5, from the top
-  leds[BALL_LAMP_FIRST + i / 3][i % 3] = brightness;
-}
-```
-
-Cost: no Teensy pin and six slots in the frame. The ball count gains per-device brightness, so a lost ball fades out and the bar can show intermediate states.
-
-| WS2811 property | Value |
+| Signal | What the pin has to be |
 |---|---|
-| Package | SOP8 or DIP8 |
-| Supply | 4.5 to 5.5 V, absolute maximum 6.0 to 7.0 V |
-| Output current per channel | 18.5 mA typical, fixed in the IC with no external setting |
-| Output type | Sink, rated to 12 V, which is what makes the common anode necessary |
-| SET pin | **Left open on both devices.** Open selects 800 kHz, tying it to VDD selects 400 kHz, and the rest of the chain runs at 800 kHz |
+| Data of chains A to F | A plain digital output for each chain. |
 
+[`pin-assignment.md`](../../pin-assignment.md) lists the pins and what they cost elsewhere in the build.
 
-## Open points
+## Firmware
 
-| Point | What settles it |
-|---|---|
-| P28 common pin: anode or cathode | Diode test from the common pin to one LED pad, board disconnected. A cathode means cutting the common trace and joining the six anodes instead |
-| P28 pin to LED position mapping | Note which LED glows during the same diode test |
-| P28 connector type, pitch and pin numbering direction | Caliper and inspection |
-| Rollover count | Count the added positions |
-| WS2812B current per die, quiescent draw, input threshold V<sub>IH</sub> and bit timing | The strip's datasheet. The 20 mA per die and 1 mA quiescent used above are convention, and no V<sub>IH</sub> figure is sourced yet. The bit timing has to take the shift the input resistors add, see Level shifting. The copy in `docs/datasheets/` is a scan with no text layer |
-| Whether WS2812B and SK6812 bit timings overlap enough for one waveform to drive both | The T0H, T1H and reset windows in the two datasheets. Only relevant if a mixed chain is ever wanted |
-| Maximum current of the stock amber LEDs on P28 | Unmarked parts with no datasheet. Start below the WS2811 figure on the bench and raise it |
-| Strip pitch, and with it every device count in this document | Caliper across ten devices on the strip. The 160 LEDs/m is the supplier's figure, not a measurement, and 213 devices, 2.4 ms and 8.1 A all follow from it |
-| Perimeter brightness cap | Bench check on the assembled machine: the level at which the perimeter reads as ambient light and still leaves the indicator groups their share of the 2.0 A budget |
-
-## Known limitations
-
-**FastLED colour correction does not apply to the P28 pixels.** Correction and gamma scale each channel differently, which is right for red, green and blue dies and wrong for six identical amber LEDs, where it would make them unequally bright at the same value. Either global correction is disabled and applied per pixel instead, or P28 sits on a separate chain.
-
-**The chain's own PWM can raise the IR sensors' noise floor.** An IR channel subtracts a dark sample from a lit one taken 600 µs earlier, and a light source flickering at f leaves `1 − cos(2π f · 600 µs)` of its amplitude standing in the difference. That factor passes 1 at 417 Hz and reaches 2 at 833 Hz, where the subtraction cancels nothing. WS2811 gives its scan frequency as not less than 400 Hz, which is a floor and not a figure, so where a given device lands is unknown. A device in view of a sensor bore therefore contributes up to twice its own modulation amplitude to that channel's noise, and the sensors carry it as a smaller margin rather than as a failure: the IR driver's start-up calibration reads each channel's clear level and scales its threshold to whatever the channel delivers.
-
-**The firmware current limit is part of the power design.** It is recorded here rather than only in the firmware because the supply rating depends on it.
-
-
+The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to the chains. The [lamps component](../../firmware/components/lamps.md) organizes the lamps in groups and runs the effects the game sets on them.
 
 ## Part list
-https://amzn.eu/d/0jcgB8mw - SEZO WS2812B IC RGB LED Strip 2.7mm 2M 160LEDs/m
 
+| Qty | Part | Where |
+|---|---|---|
+| 1 | SEZO WS2812B strip, 2.7 mm wide, 160 LEDs/m, 2 m | the perimeters, the ceiling and the playfield segments |
+| 2 | CD74HCT125E quad buffer, DIP-14 | U1 and U2, the level shifters |
+| 6 | 2.2 kΩ resistor | R1 to R6, from the Teensy pins to the buffer inputs |
+| 6 | 220 Ω resistor, 0.5 W | R7 to R12, in the data lines at the buffer outputs |
+| 2 | 100 nF ceramic capacitor | C1 and C2, at the buffers' supply pins |
+| 1 | Rubycon 16ZLH1000MEFC8X20, 1000 µF, 16 V | C3, at J-PWR |
 
 ## Sources
 
-- [Worldsemi WS2811 datasheet](../../datasheets/WS2811-Worldsemi.pdf): package options, pin functions, supply range, output current, SET pin, reset time
-- [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html): simultaneous DMA update of eight strips, default pin set for Teensy 4.x, free choice of pins, buffer chip and series resistor guidance
-- [`OctoWS2811.h`](https://github.com/PaulStoffregen/OctoWS2811/blob/master/OctoWS2811.h): the `WS2811_GRB` byte order, and the single `config` and `numPerStrip` shared by all pins of an instance
+- [SEZO WS2812B LED strip](https://amzn.eu/d/0jcgB8mw): the strip's length, its 2.7 mm width and its 160 LEDs/m, as the supplier states them
+- [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html): buffer chip and series resistor guidance
+- [FastLED's ObjectFLED driver](https://fastled.io/docs/de/d7a/_object_f_l_e_d_8h_source.html): parallel DMA output on any pins of the Teensy 4.x, channels 0 to 2 of QuadTimer4
+- [PJRC: FastLED adds massive parallel LED output](https://www.pjrc.com/fastled-adds-massive-parallel-led-output/): ObjectFLED as FastLED's driver on the Teensy 4.x
 - [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA, the input levels, the input clamp diodes and their current, the input capacitance and the longest input edge
-- [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and pitch, housing dimensions, P28
+- [Rubycon ZLH datasheet](https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/ZLH.pdf): C3's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
+- [Panasonic EEE-FK1A102P](https://www.futureelectronics.com/es/p/passives--capacitors--aluminum-electrolytic-capacitors/eee-fk1a102p-panasonic-industry-3028584): C3's SMD variant and its impedance
+- [`parts/solenoid/design.md`](../solenoid/design.md): the feed's inductance
+- [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and LED spacing, housing dimensions
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): measured solenoid current, stock load inventory
-- [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, per-pin current, analog input count
-- [`firmware/drivers/ir-sensing.md`](../../../firmware/drivers/ir-sensing.md): the 3 ms budget the IR sensing imposes on the loop
+- [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, per-pin current

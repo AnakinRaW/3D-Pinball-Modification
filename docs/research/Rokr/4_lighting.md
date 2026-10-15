@@ -4,7 +4,7 @@ The following light sources exist in the stock machine
 
 ## Discrete LEDs
 
-| Board | Qty | Colour | Function |
+| Board | Qty | Color | Function |
 |---|---|---|---|
 | Mainboards P37, P39 | 10 | Red | Score |
 | Mainboards P37, P39 | 3 | Orange | Bumper section |
@@ -12,13 +12,13 @@ The following light sources exist in the stock machine
 | Mainboards P37, P39 | 1 | Blue | Drain |
 | P28 | 6 | Amber | Ball count |
 | P29, P30 | 4 + 4 | Red, white | Track lighting, one pair per track |
-| **Total** | **29** | | **28 single-colour, 1 RGB** |
+| **Total** | **29** | | **28 single-color, 1 RGB** |
 
 All LEDs are mounted directly on PCBs. The package appearance of the RGB LED is consistent with a WS2812B.
 
 ## LED strips
 
-Three flexible strips ship with the stock machine, 2.5 mm wide and 0.9 mm high, each with a 2-pin connection. The LED colour is a yellowish white.
+Three flexible strips ship with the stock machine, 2.5 mm wide and 0.9 mm high, each with a 2-pin connection. The LED color is a yellowish white.
 
 | Length | Pitch | LEDs on strip |
 |---|---|---|
@@ -44,9 +44,9 @@ The two long strips run left and right around the playfield, threaded into a tre
 | Connector | LEDs | Independently switched groups | Pins |
 |---|---|---|---|
 | P28 | 6 | 6, one per LED | 7 |
-| P29, P30 | 4 | 2, one per colour | 3 |
+| P29, P30 | 4 | 2, one per color | 3 |
 
-On P29 and P30 the two LEDs of a colour sit in parallel on one line and can only be lit together. Each board carries two tracks, so the stock machine switches track lighting by colour and not by track. The pair also shares one series resistor, which divides the channel current between them according to their forward voltages rather than equally.
+On P29 and P30 the two LEDs of a color sit in parallel on one line and can only be lit together. Each board carries two tracks, so the stock machine switches track lighting by color and not by track. The pair also shares one series resistor, which divides the channel current between them according to their forward voltages rather than equally.
 
 ### Driver stage
 

@@ -51,7 +51,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 | Package | SMD, the footprint the stock boards carry | leaded, 7 x 7 x 6 mm |
 | Peak detecting distance | 3 mm | under 0.5 mm, above 20 % of peak out to 5 mm |
 | Collector current | 60 µA min, 410 µA max | 0.3 mA min, 1.0 mA typ |
-| the condition it is given at | I_F = 4 mA, V_CE = 2 V, aluminium evaporation on glass at 4 mm | I_F = 20 mA, V_CE = 5 V, white card at 0.3 mm |
+| the condition it is given at | I_F = 4 mA, V_CE = 2 V, aluminum evaporation on glass at 4 mm | I_F = 20 mA, V_CE = 5 V, white card at 0.3 mm |
 | Rise and fall time | 20 µs typ, 100 µs max at R_L = 1 kΩ, V_CE = 2 V, I_C = 100 µA, d = 4 mm, with Figure 6 plotting it against load resistance | none published |
 | Forward voltage | 1.2 V typ, 1.4 V max at I_F = 20 mA | 1.25 V typ, 1.6 V max at I_F = 50 mA |
 | Forward current maximum | 50 mA | 50 mA |
@@ -63,7 +63,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 
 **Vishay publishes no switching figure of any kind for the CNY70.** No rise time, no fall time, no curve against load resistance. The settling models in the [channel model](../../parts/ir-reflective/channel-model/) that rest on Sharp's Figure 6 therefore have no counterpart here, and every τ for this part starts from a measurement. Two shapes carry that measurement to other pull-downs and bracket the answer: τ proportional to the load, which is the first-order relation a load resistance against a fixed capacitance gives, and τ flat, which is what the measurement alone states.
 
-## The collector load
+## Collector load
 
 **The collector is not brought out, so the 1.585 kΩ cannot be a measuring resistor.** The board's three pins are the supply, the emitter and the LED cathode, and R1 bridges the supply and the collector, which reaches nothing outside the board. Both are meter readings on the stock board: `1 → B` and `1 → R1L` at 1.585 kΩ, `2 → A` at 0.10 Ω.
 

@@ -5,6 +5,7 @@
 | [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them. Checks every marked Teensy pin against the pin table |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
+| [`picture.py`](picture.py) | Turns the PNGs of one screen layer, each at most 320 × 240 pixels, into picture files that share one palette of 255 colors with their opacity, dithered, as [`media.md`](../assets/media.md) describes |
 
 Python 3, standard library only, no build step.
 
@@ -61,7 +62,7 @@ A constant a listing writes as a bare number follows the figure it encodes:
 MODEL.as_written("t_tick_us", of="t_tick", unit="µs")    # kPeriodUs = 5000
 ```
 
-Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and metre. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
+Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and meter. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
 
 Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing anchoring it, so when the model moves under it nothing notices, which is how a bench current stayed at 192 mA after it had become 233 mA. What a document states and the model does not compute is declared as an aside, with the reason:
 
@@ -96,9 +97,9 @@ Each check reports on a separate line, and any of them can fail the run:
 | the pins the table gives | A model wires only to pins the pin table gives its subsystem, and wires every pin of the allocation table that it holds |
 | pin functions | Every pin's Peripheral entry is a port signal, a timer channel or a FlexIO signal the board's model gives that pin, or a plain digital pin |
 | owned peripherals | A peripheral a model owns is used by no other subsystem's pin and owned by no other model |
-| shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. A model draws a slot for every call of `driverTick.attach(` and `deviceMonitor.watch(` its listings make. On the bench a subsystem runs alone, and its own model checks that case |
+| shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. On the bench a subsystem runs alone, and its own model checks that case |
 
-A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/` or `firmware/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
+A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 
 Flags:
 
@@ -167,7 +168,7 @@ MODEL.net("ADC-DOUT",
 
 The Teensy pin itself takes the part its Peripheral entry gives it. A port signal drives the net the way the board's model declares that signal, a timer channel and a plain digital output drive it push-pull, and a plain digital input reads it. Nets that reach one Teensy signal merge across the models, so a second subsystem on a pin meets the parts of the first.
 
-`MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. Where a listing takes a slot by a call, `call="driverTick.attach("` names it, and every model's documents then make that call as often as the model draws a slot. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
+`MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
 
 ### What the pins can carry
 

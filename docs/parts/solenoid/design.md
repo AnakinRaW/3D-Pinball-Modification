@@ -226,19 +226,18 @@ T_SENSE   C_filter at the terminal                10 nF
 **The supply.** What the bulk capacitor covers, and the stock machine it is measured against.
 
 ```
-C_BULK    the WS2812B's minimum supply            4.5 V
-          how far the rail may sag              = 0.5 V
-          C91                                     100 µF
-          bought at a working voltage of          10 V
-          that charge over the scoop's 0.8 A, the
-          worst case, how long one coil is carried
-          from the capacitor                    = 62.5 µs
-          taking the coil as a current step, which
-          its own inductance stretches severalfold
+C_BULK    the most the Teensy's VIN takes         5.5 V
+          how far the rail may rise             = 0.5 V
           the feed from the distribution,
           estimated from its length                0.3 µH
-          0.8 A across it into C91, the rail
-          lifted at switch-off                  = 43.8 mV
+          the scoop's coil, the largest current
+          the feed carries                         0.8 A
+          the least bulk that holds the rise at
+          switch-off to that                    = 0.77 µF
+          C91                                     100 µF
+          bought at a working voltage of          10 V
+          0.8 A across the feed into C91, the
+          rail lifted at switch-off             = 43.8 mV
           the drain then                        = 5.59 V
           the board's own copper with C91
           unfitted, estimated                      2 nF
@@ -265,19 +264,19 @@ GND       one wire of a cable with its two
 
 ```
 DUTY      5 V × 0.68 A, while energised         = 3.4 W
-          the longest pull-in the driver commands  50 ms
+          the longest pull-in the driver commands  30 ms
           how far past that a coil may run
           before the loop counts it overdue        1 ms
-          the longest a pull-in therefore lasts = 51 ms
+          the longest a pull-in therefore lasts = 31 ms
           the cool-down after a release, before
           the coil may fire again                  10 ms
-          that and the pull-in together         = 61 ms
-          the first over the second             = 83.6 %
-          3.4 W over the same fraction          = 2.84 W
+          that and the pull-in together         = 41 ms
+          the first over the second             = 75.6 %
+          3.4 W over the same fraction          = 2.57 W
 HOLD      the watchdog timeout, after which the
           restart releases a coil still on         2 s
           that and the longest pull-in, how long
-          a coil the tick never releases stays on = 2.051 s
+          a coil the tick never releases stays on = 2.031 s
           the limit from the requirements          5 s
 ```
 
@@ -290,7 +289,6 @@ HOLD      the watchdog timeout, after which the
 - [International Rectifier IRL540N](../../datasheets/IRL540N.PDF): the through-hole variant's ratings and gate threshold
 - [STMicroelectronics 1N5817, 1N5818, 1N5819](../../datasheets/1n5817.pdf), DocID 6262 Rev 5: the 1N5819 column of the ratings and static characteristics tables
 - [NXP i.MX RT1060 Crossover Processors for Consumer Products](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: the GPIO high-level input voltage, given as 0.7 × NVCC_XXXX
-- [Worldsemi WS2811](../../datasheets/WS2811-Worldsemi.pdf): the supply range whose minimum sets how far the rail may sag
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
 - [`docs/firmware/driver-design.md`](../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards

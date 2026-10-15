@@ -10,7 +10,7 @@
 </head>
 <body>
 <!--
-     Accent-coloured figures are the ones that leave this page as firmware constants.
+     Accent-colored figures are the ones that leave this page as firmware constants.
 
      swing(t) = 1 - 2*e^(-t/tau) / (1 + e^(-T/tau)), sign inversion at tau*ln(2/(1+x)), flicker residue
      amp*(1-cos(w*Ts)) from the gap between the lit sample and the mean of the two darks, noise combined
@@ -68,8 +68,8 @@
       </div></div>
     <input type="hidden" id="sensor" value="gp2s700">
     <!--
-         The photocurrents below stay where they are when the sensor changes. Sharp characterises I_C at
-         4 mA into an aluminium mirror 4 mm away, Vishay at 20 mA against a white card 0.3 mm away, and
+         The photocurrents below stay where they are when the sensor changes. Sharp characterizes I_C at
+         4 mA into an aluminum mirror 4 mm away, Vishay at 20 mA against a white card 0.3 mm away, and
          no scaling carries one condition to the other, so the sheets do not rank the two parts for this
          job. What the choice does change is τ, the channel's emitter resistor and what that resistor draws.
     -->
@@ -193,7 +193,7 @@
          rail itself, taken at its high tolerance corner, which makes every step as coarse as it gets.
     -->
     <!--
-         The noise figure is the 61 dB SINAD of DS21295D, with the 0.29 steps of quantisation that ten bits cost
+         The noise figure is the 61 dB SINAD of DS21295D, with the 0.29 steps of quantization that ten bits cost
          already inside it. The datasheet gives it as a typical with no bound at all, and at 5 V rather than 3.3
          V. What a hand-built board adds on top of the part shows up in the measurement, not here.
     -->

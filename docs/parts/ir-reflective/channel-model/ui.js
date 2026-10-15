@@ -29,7 +29,7 @@ const syncTau = c => {
 // What a channel is built as. The collector load belongs to the board and not to the part: the
 // three boards out of the stock machine carry 1.585 kOhm and may not be changed, and a rebuilt
 // board takes the collector to the rail whichever detector sits on it.
-// The leaded part the new boards will carry is not chosen yet, so the two characterised parts
+// The leaded part the new boards will carry is not chosen yet, so the two characterized parts
 // stand in for it and the board is what the column names.
 const BOARDS = [
   { key: 'stock', label: 'stock board', sensor: 'gp2s700', rcol: 1.58 },
@@ -260,7 +260,7 @@ function sweepChart(p, opt) {
   T0 = Math.min(T0, p.T - st); T1 = Math.max(T1, p.T + st);   // the phase in use stays on the chart
   if (opt) { T0 = Math.min(T0, opt.T - st); T1 = Math.max(T1, opt.T + st); }   // and the one marked best
   const CAP = 3.15e9;                          // a hundred years; past it the axis says nothing more
-  // Only phase lengths the slider can reach are plotted. Sampling between them draws the quantised
+  // Only phase lengths the slider can reach are plotted. Sampling between them draws the quantized
   // read start as a sawtooth: inside one step the phase keeps growing and flickering more while the
   // read instant stays put, so the curve sags and snaps back at the next step. Not one of those
   // intermediate points is a phase this design can be set to.
@@ -496,7 +496,7 @@ $('dl').addEventListener('click', async () => {
     try { await dl.save({ filename: name, data: txt }); say('Saved'); }
     catch (e) {
       const c = e && e.code;
-      say(c === 'declined' ? 'Cancelled' : c === 'rate_limited' ? 'One at a time' : 'Use Copy instead', 3000);
+      say(c === 'declined' ? 'Canceled' : c === 'rate_limited' ? 'One at a time' : 'Use Copy instead', 3000);
     }
     return;
   }
@@ -571,7 +571,7 @@ $('rcolseg').addEventListener('click', e => {
 
 // Choosing a sensor resets the collector load to that part's default, which is what a rebuilt board
 // carries: none, with the collector at the rail. The three stock boards' 1.585 kOhm is set per
-// channel. It stays a control, so a trial that solders one anyway can be modelled.
+// channel. It stays a control, so a trial that solders one anyway can be modeled.
 $('sensorseg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   $('sensor').value = b.dataset.v;

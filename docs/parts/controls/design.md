@@ -32,7 +32,7 @@ Each game decides what the switch does. The firmware reports only its position.
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
-### The series resistor
+### Series resistor
 
 ```
 I_FAULT   the rail the pin drives high             3.3 V

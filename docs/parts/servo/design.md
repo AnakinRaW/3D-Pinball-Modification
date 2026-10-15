@@ -9,7 +9,7 @@ This build uses a DFRobot SER0049 9 g micro servo with a clutch. It's planned as
 - The servo moves only between them.
 - The servo moves only on command.
 
-## The SER0049
+## SER0049 Sservo Motor
 
 The SER0049 runs from 4.8 V to 6 V. A pulse of 500 µs turns it to 0°, and a pulse of 2500 µs turns it to 180°. The full sweep varies by up to 10° from servo to servo. A clutch in its gears slips under force from the ball or a hand. After 5 s of blocking, the servo switches its motor off.
 
@@ -68,7 +68,7 @@ The driver ensures that the servo cannot be operated outside of the predefined a
 
 [`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
 
-### The pulse
+### Pulse
 
 ```
 PULSE     the frame of the Arduino Servo library   20 ms
@@ -80,7 +80,7 @@ PULSE     the frame of the Arduino Servo library   20 ms
           the servo's travel in steps            = 410 steps
 ```
 
-### The signal levels
+### Signal levels
 
 ```
 LEVELS    the Teensy's rail                        3.3 V
@@ -118,7 +118,7 @@ EDGE      U1's input capacitance                   10 pF
           U1's longest input edge allowed          400 ns
 ```
 
-### The output
+### Output
 
 ```
 OUTPUT    U1's supply, from                        4.5 V
@@ -132,7 +132,7 @@ OUTPUT    U1's supply, from                        4.5 V
           absolute maximum                         35 mA
 ```
 
-### The supply
+### Supply
 
 ```
 SUPPLY    the machine's rail, measured             5.0 V
@@ -147,7 +147,7 @@ SUPPLY    the machine's rail, measured             5.0 V
           C1                                       100 µF
           its working voltage                      10 V
           the rise at C1 at a sudden stop        = 43.9 mV
-          the rail during a coil's pull, at least  4.5 V
+          the rail's floor, where U1 still runs    4.5 V
           the shortfall under the servo's floor  = 0.3 V
           C2, at U1's supply pin                   100 nF
 ```
@@ -162,5 +162,5 @@ SUPPLY    the machine's rail, measured             5.0 V
 - [PJRC, PWMServo](https://github.com/PaulStoffregen/PWMServo): the 50 Hz frame, the 12-bit pulse and the default pulse range
 - [Adafruit, PCA9685 servo driver, Hooking it Up](https://learn.adafruit.com/16-channel-pwm-servo-driver/hooking-it-up): the starting capacitor per servo
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
-- [`parts/solenoid/design.md`](../solenoid/design.md): the rail's floor during a coil's pull, the feed's inductance and the length of a pull
+- [`parts/solenoid/design.md`](../solenoid/design.md): the feed's inductance and the length of a pull
 - [`pin-assignment.md`](../../pin-assignment.md): the servo's pin and its cost

@@ -11,8 +11,8 @@ The stock machine requires the following loads:
 | Load | Qty | Per unit | Total | Note |
 |---|---|---|---|---|
 | Bumper solenoid | 3 | 0.68 A while energized | 2.04 A | Measured in [`3_bumper-control.md`](3_bumper-control.md) |
-| Single-colour LED position, warm white | ~111 | 10 mA estimated | 1.11 A | 83 strip positions plus 28 discrete, counted in [`4_lighting.md`](4_lighting.md) |
-| Multicolour LED, bumper centre | 1 | ≤ 60 mA at full white | 0.06 A | Probably a WS2812B |
+| Single-color LED position, warm white | ~111 | 10 mA estimated | 1.11 A | 83 strip positions plus 28 discrete, counted in [`4_lighting.md`](4_lighting.md) |
+| Multicolor LED, bumper center | 1 | ≤ 60 mA at full white | 0.06 A | Probably a WS2812B |
 | IR reflective sensor channel | 3 | 10 mA average | 0.03 A | Measured in [`2_ir-reflective-sensor-p33.md`](2_ir-reflective-sensor-p33.md) |
 | IR break-beam | 1 | 51 mA | 0.05 A | Emitter lit continuously through 82 Ω, measured in [`6_ir-break-beam.md`](6_ir-break-beam.md) |
 | Speaker, 8 Ω | 1 | 0.37 A estimated | 0.37 A | Bridge-tied, 1.56 W into 8 Ω at full swing on the 5 V rail, class D assumed at 85 % efficiency; both wires switch, as measured in [`5_sound.md`](5_sound.md#drive) |

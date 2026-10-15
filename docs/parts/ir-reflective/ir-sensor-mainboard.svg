@@ -1,7 +1,7 @@
 <svg viewBox="0 0 960 1990" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="960" height="2201" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR sensor mainboard schematic</text>
-  <text x="30" y="56" font-size="12.5" fill="#666">Up to sixteen reflective IR channels on a shared pulsed LED bus, digitised on the board and read over SPI.</text>
+  <text x="30" y="56" font-size="12.5" fill="#666">Up to sixteen reflective IR channels on a shared pulsed LED bus, digitized on the board and read over SPI.</text>
 
   <!-- ===== BAND 1: the crossing and the two converters ===== -->
   <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">SPI crossing and the two converters</text>

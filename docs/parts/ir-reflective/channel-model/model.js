@@ -94,7 +94,7 @@ const IRTM = (function () {
     day: { room: 500, mod: 0 }
   };
 
-  const START = 10;                              // microseconds the read block's start is quantised to
+  const START = 10;                              // microseconds the read block's start is quantized to
   const BALL_MM = 9;                             // the ball crosses a sensor over its own diameter
 
   // The signal follows tau exponentially, so how hard a wrong tau hits depends on where the read sits
@@ -168,7 +168,7 @@ const IRTM = (function () {
     // Samples at t-Ts, t, t+Ts. mean(dark) - lit = A sin(wt) [cos(w Ts) - 1], so the peak residue is
     // A (1 - cos(w Ts)), capped at 2A. Its small-angle form 0.5 A w^2 Ts^2 held here until the phase
     // passed a millisecond: at 600 us it runs 1 % high, at 1200 us 5 %, and at the stock board's 3 ms
-    // 36 %, where it reports 64 steps against the exact 47. Unbounded growth pushed the optimiser to
+    // 36 %, where it reports 64 steps against the exact 47. Unbounded growth pushed the optimizer to
     // short phases for a reason that was arithmetic rather than physical.
     // Each channel's emitter resistor follows its part, so the bus is a sum and not N times one value.
     const bus = (p.CH && p.CH.length ? p.CH : Array.from({ length: p.N }, () => ({ sensor: p.sensor })))
@@ -378,7 +378,7 @@ const IRTM = (function () {
   }
 
   // The phase lengths the control can actually be set to, over the whole slider range, with the
-  // usable ones marked. Sampling between the steps draws the quantised read start as a sawtooth.
+  // usable ones marked. Sampling between the steps draws the quantized read start as a sawtooth.
   function sweep(p, bounds, T0, T1) {
     const st = bounds.step || 1, out = [];
     for (let T = Math.ceil(T0 / st) * st; T <= T1 + 1e-9; T += st) out.push(model(p, T));

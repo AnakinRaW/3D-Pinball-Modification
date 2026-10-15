@@ -99,7 +99,7 @@ def _family(dim, entries):
 
 _family(_V, [("V", 1.0), ("mV", 1e-3), ("µV", 1e-6), ("kV", 1e3)])
 _family(_A, [("A", 1.0), ("mA", 1e-3), ("µA", 1e-6), ("nA", 1e-9)])
-_family(_S, [("s", 1.0), ("ms", 1e-3), ("µs", 1e-6), ("ns", 1e-9)])
+_family(_S, [("minutes", 60.0), ("s", 1.0), ("ms", 1e-3), ("µs", 1e-6), ("ns", 1e-9)])
 _family(_OHM, [("Ω", 1.0), ("mΩ", 1e-3), ("kΩ", 1e3), ("MΩ", 1e6)])
 _family(_WATT, [("W", 1.0), ("mW", 1e-3), ("µW", 1e-6)])
 _family(_FARAD, [("F", 1.0), ("µF", 1e-6), ("nF", 1e-9), ("pF", 1e-12)])
@@ -109,12 +109,16 @@ _family(_COUL, [("C", 1.0), ("µC", 1e-6), ("nC", 1e-9)])
 _family(_K, [("°C", 1.0)])
 _family(_M, [("m", 1.0), ("cm", 1e-2), ("mm", 1e-3)])
 _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
+# an input's longest edge, as a logic datasheet gives it: time per volt of swing
+_family((-1, 0, 1, 0, 0), [("ns/V", 1e-9)])
+# a wire's resistance per length, as a gauge table gives it
+_family((1, -1, 0, 0, -1), [("Ω/m", 1.0), ("mΩ/m", 1e-3)])
 # Counts share the dimensionless family, so the unit check cannot tell a byte
 # from a sample; a model keeps them apart by name.
 _family(DIMLESS, [("%", 0.01), ("×", 1.0), ("steps", 1.0), ("step", 1.0),
                   ("τ_adc", 1.0), ("τ", 1.0), ("clocks", 1.0), ("clock", 1.0),
-                  ("dB", 1.0), ("bits", 1.0), ("bytes", 1.0), ("KB", 1024.0),
-                  ("samples", 1.0), ("", 1.0)])
+                  ("dB", 1.0), ("bits", 1.0), ("bytes", 1.0), ("KB", 1024.0), ("MB", 1048576.0),
+                  ("samples", 1.0), ("sectors", 1.0), ("sector", 1.0), ("", 1.0)])
 
 DIM_NAMES = {DIMLESS: "1", _V: "V", _A: "A", _S: "s", _K: "°C", _OHM: "Ω",
              _WATT: "W", _FARAD: "F", _HENRY: "H", _HZ: "Hz", _COUL: "C",
@@ -451,13 +455,9 @@ class Model:
         """A peripheral the subsystem's driver programs itself, which no other code may use."""
         self.owned.append((peripheral, why))
 
-    def supplies(self, key, *, pool, call=None):
-        """What a pool holds: the current a rail allows, a memory's size, a list's slots.
-
-        `call` is how a listing takes one of the pool's slots, as `driverTick.attach(`
-        does, and every model's documents then take as many slots as the model draws.
-        """
-        self.supplied.append((key, pool, call))
+    def supplies(self, key, *, pool):
+        """What a pool holds: the current a rail allows, a memory's size, a list's slots."""
+        self.supplied.append((key, pool))
 
     def draws(self, key=None, *, pool):
         """What the subsystem takes from a pool in the machine: the figure `key`, or one slot.
@@ -1158,7 +1158,7 @@ UNALLOCATED = (ROOT / "docs" / "research", ROOT / "docs" / "datasheets")
 class PinRef:
     doc: pathlib.Path
     line: int
-    pos: int        # where the number sits in the normalised file
+    pos: int        # where the number sits in the normalized file
     number: str
     signal: str
 
@@ -1380,7 +1380,7 @@ def named_pins(path: pathlib.Path) -> list[tuple[int, str]]:
 
 
 def allocating_files() -> list[pathlib.Path]:
-    return [p for d in (ROOT / "docs", ROOT / "firmware") for p in sorted(d.rglob("*"))
+    return [p for p in sorted((ROOT / "docs").rglob("*"))
             if p.suffix in {".md", ".svg", ".py"} and p.is_file() and _allocating(p)]
 
 
@@ -1665,7 +1665,7 @@ def pass_costs(data: PinData, rep: Report) -> int:
 
 
 def pin_files() -> list[pathlib.Path]:
-    return sorted(p for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
+    return sorted(p for p in (ROOT / "docs").rglob("*")
                   if p.suffix in {".md", ".svg"} and p.is_file())
 
 
@@ -1688,7 +1688,7 @@ def main_pins(write: bool) -> int:
     marked = len({r.doc for r in refs})
     print("Checking Teensy pins")
     print(f"  table      {_rel(PIN_TABLE)}, {len(table)} signals")
-    print(f"  files      {len(files)} under docs/ and firmware/, {marked} of them "
+    print(f"  files      {len(files)} under docs/, {marked} of them "
           f"marking a pin")
     print()
     named = sum(1 for t in rep.tags if t == ("pin", "named"))
@@ -1838,27 +1838,14 @@ def pass_budget(models, rep: Report) -> list:
     """Every pool against the one figure that supplies it, with the draws of every model added up."""
     supply, demand = {}, defaultdict(list)
     for m in models:
-        for key, pool, call in m.supplied:
+        for key, pool in m.supplied:
             if pool in supply:
                 rep.error(f"{POOL_NAMES.get(pool, pool)} is supplied by {supply[pool][0].name} "
                           f"and by {m.name}", kind="budget")
                 continue
-            supply[pool] = (m, key, call)
+            supply[pool] = (m, key)
         for key, pool in m.drawn:
             demand[pool].append((m, key))
-    # a pool whose slots a listing takes by a call: each model draws as many as its documents call
-    unlisted = set()
-    for pool, (_, _, call) in supply.items():
-        if call is None:
-            continue
-        for m in models:
-            listed = sum(_fenced(d).count(call) for d in (m.document, *m.documents) if d.exists())
-            drawn = sum(1 for _, p in m.drawn if p == pool)
-            if listed != drawn:
-                unlisted.add(pool)
-                rep.error(f"{m.name}'s documents call {call}...) {listed} "
-                          f"time{'' if listed == 1 else 's'}, and the model draws {drawn} "
-                          f"slot{'' if drawn == 1 else 's'} of the {pool}", kind="budget")
     out = []
     for pool, users in demand.items():
         name = POOL_NAMES.get(pool, pool)
@@ -1866,7 +1853,7 @@ def pass_budget(models, rep: Report) -> list:
             rep.error(f"{', '.join(sorted({m.name for m, _ in users}))} draw from {name}, which "
                       f"no model supplies", kind="budget")
             continue
-        holder, key, _ = supply[pool]
+        holder, key = supply[pool]
         held = holder.figs[key]
         total = Q.of(0, held.unit)
         for m, k in users:
@@ -1876,14 +1863,8 @@ def pass_budget(models, rep: Report) -> list:
                       f"the machine, which holds {_amount(held.value, held.unit)}" if held.unit
                       else f"{_amount(total, '')} drivers take a slot of the {name}, which holds "
                       f"{_amount(held.value, '')}", kind="budget")
-        out.append((name, total, held, pool not in unlisted))
+        out.append((name, total, held))
     return out
-
-
-def _fenced(path: pathlib.Path) -> str:
-    """The fenced blocks of a markdown file, the listings."""
-    return "\n".join(re.findall(r"^```[^\n]*\n(.*?)^```", path.read_text(encoding="utf-8"),
-                                re.S | re.M))
 
 
 def _amount(q: Q, unit: str) -> str:
@@ -1914,8 +1895,8 @@ def main_wiring(paths) -> int:
             f"{rep.count('function')} functions a pin cannot carry")
     _status(not rep.count("owner"), "owned peripherals",
             f"{rep.count('owner')} used by a subsystem that does not own them")
-    for name, total, held, listed in budget:
-        _status(total <= held.value and listed, name,
+    for name, total, held in budget:
+        _status(total <= held.value, name,
                 f"{_amount(total, held.unit)} of {_amount(held.value, held.unit)} in the machine"
                 if held.unit else f"{_amount(total, '')} of {_amount(held.value, '')} slots taken")
     if rep.errors:
@@ -2044,7 +2025,7 @@ def pass_curves(model: Model, rep: Report):
                 u = model.figs[yk].unit
                 rep.error(f"{name}: {yk} is {y.show(u)} at "
                           f"{x.show(model.figs[xk].unit)}, outside the "
-                          f"{lo.show(u)} to {hi.show(u)} its neighbours read")
+                          f"{lo.show(u)} to {hi.show(u)} its neighbors read")
                 continue
             checked += 1
         for yk, lok, hik in bounded:
@@ -2149,10 +2130,10 @@ def _renumber(line: str, col: int, old_num: str, new_num: str):
 
 
 def _norm_map(raw: str) -> tuple[str, list[int]]:
-    """The normalised text, and for each of its characters where it sits in raw.
+    """The normalized text, and for each of its characters where it sits in raw.
 
-    Only an entity changes length when it is normalised, so a position found in
-    the normalised text is carried back to the file through this map.
+    Only an entity changes length when it is normalized, so a position found in
+    the normalized text is carried back to the file through this map.
     """
     out, where, i = [], [], 0
     while i < len(raw):
@@ -2223,7 +2204,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
     # A drawing names each figure's key, so its place is known whatever the
     # value did. The element is matched in the file as it stands and the number
     # replaced at its own offset: the same text may stand in several elements,
-    # and an entity ahead of a number moves it in the normalised text.
+    # and an entity ahead of a number moves it in the normalized text.
     drawn = 0
     for path in model.drawings:
         body = path.read_text(encoding="utf-8")
@@ -2304,7 +2285,7 @@ def pass_sums(model: Model, rep: Report, write: bool):
 
 def pass_stale(base: str, rep: Report):
     try:
-        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs", "firmware"],
+        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs"],
                               cwd=ROOT, capture_output=True, text=True,
                               encoding="utf-8", check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
@@ -2321,7 +2302,7 @@ def pass_stale(base: str, rep: Report):
             added |= toks
     gone = sorted(removed - added)
     files = {p: _norm(p.read_text(encoding="utf-8", errors="replace"))
-             for d in (ROOT / "docs", ROOT / "firmware") for p in d.rglob("*")
+             for p in (ROOT / "docs").rglob("*")
              if p.suffix in {".md", ".svg", ".py"} and p.is_file()}
     for num, unit in gone:
         tok = f"{num} {unit}"

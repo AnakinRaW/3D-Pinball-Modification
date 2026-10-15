@@ -7,6 +7,7 @@ whose parameter names are its dependencies, so `--graph <key>` answers what a
 value feeds and what it rests on.
 """
 import pathlib
+from math import inf
 
 from figcheck import Model, Q, TEENSY_RAIL, contact, pull, reads
 
@@ -23,7 +24,6 @@ fig = MODEL.derived
 
 MOSFET = "AO3400A-AOS.pdf"
 DIODE = "1n5817.pdf"
-LED = "WS2811-Worldsemi.pdf"
 IRL = "IRL540N.PDF"
 
 DRIVE = "The drive channel"
@@ -68,6 +68,7 @@ MODEL.uses("r_keeper_min", of="teensy-4.1", group="V_GATE", section=DRIVE, state
 MODEL.uses("t_tick", of="firmware")
 MODEL.uses("t_monitor", of="firmware")
 MODEL.uses("t_wdt", of="firmware", group="HOLD", section=COIL, stated=True)
+MODEL.uses("v_in_max", of="teensy-4.1", group="C_BULK", section=SUPPLY, stated=True)
 MODEL.uses("ball_diameter", of="ir-reflective", group="T_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
@@ -105,8 +106,9 @@ dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far un
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
 dec("t_contact_fail", 2, "s", stated=False, src="how long a sensed solenoid's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
-dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
-    "decided above the stock machine's visibly short pull: long enough to kick the ball "
+dec("t_on_max", 30, "ms", src="the ceiling the driver enforces on one pull-in, "
+    "at the top of the 18 to 30 ms the Mission Pinball Framework's coil examples use, "
+    "and above the stock machine's visibly short pull: long enough to kick the ball "
     "away, short enough that a ball cannot be fired back and forth between the three top "
     "bumpers, and far below the seconds at which a mini solenoid overheats",
     group="DUTY", section=COIL, stated=True)
@@ -125,7 +127,7 @@ dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the
     group="HOLD", section=COIL, stated=True)
 
 asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, 30 cm of loose "
-    "pair at roughly 1 µH per metre, estimated from the conductor and not measured",
+    "pair at roughly 1 µH per meter, estimated from the conductor and not measured",
     group="C_BULK", section=SUPPLY, stated=True)
 asm("c_stray", 2, "nF", src="what the board's own copper offers the feed current with "
     "C91 unfitted, an order-of-magnitude estimate that C91 is there to make "
@@ -212,11 +214,8 @@ ds("v_f_diode", 0.55, "V", sheet=DIODE, src="Table 4 static electrical "
 
 
 # ===========================================================================
-# what else hangs on the machine's 5 V rail
+# the sense channel's resistor package
 # ===========================================================================
-ds("v_led_min", 4.5, "V", sheet=LED, src="supply voltage range, minimum; the "
-   "WS2812B carries this same controller and is the tightest load on the rail",
-   group="C_BULK", section=SUPPLY, stated=True)
 ds("p_0805", 125, "mW", src="the 25 °C free-air rating of an 0805 thick-film resistor",
    group="I_FOIL", section=SENSE, stated=True)
 
@@ -461,10 +460,12 @@ def _(t_wdt, t_on_actual):
 # ===========================================================================
 # derived: the supply
 # ===========================================================================
+# The Teensy's VIN hangs on the same rail, so the rise at switch-off stays under
+# what VIN takes.
 @fig("dv_allowed", "V", group="C_BULK", section=SUPPLY,
-     rises_with=["v_5v"], falls_with=["v_led_min"])
-def _(v_5v, v_led_min):
-    return v_5v - v_led_min
+     rises_with=["v_in_max"], falls_with=["v_5v"])
+def _(v_in_max, v_5v):
+    return v_in_max - v_5v
 
 
 @fig("i_stock", "A", group="C_BULK", section=SUPPLY,
@@ -473,10 +474,14 @@ def _(n_stock_coils, i_coil):
     return n_stock_coils * i_coil
 
 
-@fig("t_cover", "µs", group="C_BULK", section=SUPPLY,
-     rises_with=["c_bulk", "v_5v"], falls_with=["v_led_min", "i_coil_scoop"])
-def _(c_bulk, dv_allowed, i_coil_scoop):
-    return c_bulk * dv_allowed / i_coil_scoop
+# At switch-off the feed's inductance drives its current on into the bulk: half
+# L I squared into half C dV squared, solved for C.
+@fig("c_bulk_min", "µF", group="C_BULK", section=SUPPLY, prints="up",
+     rises_with=["l_feed", "i_coil_scoop", "v_5v"], falls_with=["v_in_max"])
+def _(l_feed, i_coil_scoop, dv_allowed):
+    if dv_allowed.v <= 0:              # a rail already at VIN's limit leaves no rise to absorb
+        return Q.of(inf, "µF")
+    return l_feed * (i_coil_scoop / dv_allowed) ** 2
 
 
 @fig("v_spike", "mV", group="C_BULK", section=SUPPLY,
@@ -597,8 +602,8 @@ _I("the gate still clears the voltage R_DS(on) is specified at, with the power "
    lambda v: v.v_gate_shifted > v.v_gs_rdson)
 _I("the drain stays inside its rating through the switch-off spike C91 leaves",
    lambda v: v.v_drain_spike < v.v_ds_max)
-_I("the rail may not sag past what the tightest load on it accepts",
-   lambda v: v.v_5v - v.dv_allowed >= v.v_led_min)
+_I("C91 holds the rise at switch-off under what the Teensy's VIN takes",
+   lambda v: v.c_bulk >= v.c_bulk_min)
 _I("the foil fits the Teensy's 3V3 pin",
    lambda v: v.i_foil < v.i_teensy_3v3)
 _I("the sense filter settles well inside how long a ball rests on a shell",

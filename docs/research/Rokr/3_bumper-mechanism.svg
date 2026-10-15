@@ -87,7 +87,7 @@
   <text x="816" y="552" font-size="12" fill="#666">SHELL 2/3 and COIL 2/3 wired alike, not drawn</text>
 
   <!-- ===== Legend ===== -->
-  <text x="70" y="612" font-size="13" font-weight="700" fill="#1a1a1a">Wire colours</text>
+  <text x="70" y="612" font-size="13" font-weight="700" fill="#1a1a1a">Wire colors</text>
   <line x1="70" y1="634" x2="100" y2="634" stroke="#8a8a8a" stroke-width="5"/>
   <line x1="70" y1="634" x2="100" y2="634" stroke="#ffffff" stroke-width="2.5"/>
   <text x="112" y="638" font-size="12" fill="#444">white — +5 V to the playfield foil</text>
@@ -96,5 +96,5 @@
   <line x1="70" y1="686" x2="100" y2="686" stroke="#1a1a1a" stroke-width="2.5"/>
   <text x="112" y="690" font-size="12" fill="#444">black — coil, the other conductor</text>
   <line x1="70" y1="712" x2="100" y2="712" stroke="#b7950b" stroke-width="2.5"/>
-  <text x="112" y="716" font-size="12" fill="#444">shell sense — one line per bumper, conductor colour not recorded</text>
+  <text x="112" y="716" font-size="12" fill="#444">shell sense — one line per bumper, conductor color not recorded</text>
 </svg>

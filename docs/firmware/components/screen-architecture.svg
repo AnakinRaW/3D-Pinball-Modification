@@ -1,0 +1,227 @@
+<svg viewBox="0 0 1240 1120" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#16808a"/>
+    </marker>
+    <marker id="call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1240" height="1120" fill="#ffffff"/>
+  <text x="30" y="36" font-size="20" font-weight="700" fill="#1a1a1a">Screen architecture</text>
+
+  <!-- ===== legend ===== -->
+  <line x1="860" y1="31" x2="890" y2="31" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="898" y="36" font-size="12" fill="#555">event path</text>
+  <line x1="990" y1="31" x2="1020" y2="31" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="1028" y="36" font-size="12" fill="#555">call</text>
+  <rect x="1080" y="22" width="30" height="18" rx="4" fill="#ffffff" stroke="#4a6785" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="1118" y="36" font-size="12" fill="#555">proposed</text>
+
+  <!-- ===== main task ===== -->
+  <rect x="20" y="56" width="1200" height="634" rx="10" fill="#f5f8fb" stroke="#4a6785" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="36" y="78" font-size="13" font-weight="700" fill="#4a6785">Main task (main loop)</text>
+
+  <rect x="40" y="96" width="220" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="54" y="120" font-size="15" font-weight="700" fill="#2c3e50">Game host</text>
+  <text x="54" y="140" font-size="12" fill="#333">runs one game at a time</text>
+  <text x="54" y="156" font-size="12" fill="#333">hands every event to the</text>
+  <text x="54" y="172" font-size="12" fill="#333">components' translate()</text>
+  <text x="54" y="188" font-size="12" fill="#333">showHost(), takeGesture()</text>
+
+  <rect x="290" y="96" width="250" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="304" y="120" font-size="15" font-weight="700" fill="#2c3e50">MainMenu</text>
+  <text x="304" y="140" font-size="12" fill="#333">the host's menu, opened by the host</text>
+  <text x="304" y="156" font-size="12" fill="#333">its widgets and their handlers</text>
+  <text x="304" y="172" font-size="12" fill="#333">launch(game), musicVolume(v)</text>
+  <text x="304" y="188" font-size="12" fill="#333">modal: its View takes every touch</text>
+
+  <rect x="570" y="96" width="440" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="584" y="120" font-size="15" font-weight="700" fill="#2c3e50">Game</text>
+  <text x="584" y="140" font-size="12" fill="#333">draws its score into its layer</text>
+  <text x="584" y="156" font-size="12" fill="#333">loads its background, plays videos</text>
+  <text x="584" y="172" font-size="12" fill="#333">adds its own widgets to its View</text>
+  <text x="584" y="188" font-size="12" fill="#333">hides its drawings with showLayer(false)</text>
+
+  <rect x="1040" y="96" width="160" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="1054" y="120" font-size="15" font-weight="700" fill="#2c3e50">VideoPlayer</text>
+  <text x="1054" y="140" font-size="12" fill="#333">play(name, viewport,</text>
+  <text x="1054" y="156" font-size="12" fill="#333">loop, sound)</text>
+  <text x="1054" y="172" font-size="12" fill="#333">calls display.play()</text>
+  <text x="1054" y="188" font-size="12" fill="#333">reports MovieEnded</text>
+
+  <!-- UI library -->
+  <rect x="290" y="236" width="530" height="140" rx="10" fill="#ffffff" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="304" y="256" font-size="12.5" font-weight="700" fill="#2c3e50">UI control library</text>
+
+  <rect x="304" y="266" width="224" height="96" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="316" y="286" font-size="12.5" font-weight="700" fill="#2c3e50">View, host layer</text>
+  <text x="316" y="302" font-size="11.5" fill="#333">redraws, then one show()</text>
+  <text x="316" y="317" font-size="11.5" fill="#333">keeps the touch it took</text>
+  <rect x="316" y="326" width="100" height="28" rx="5" fill="#eef3f8" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="366" y="344" text-anchor="middle" font-size="12" font-weight="700" fill="#2c3e50">TouchButton</text>
+  <rect x="424" y="326" width="96" height="28" rx="5" fill="#eef3f8" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="472" y="344" text-anchor="middle" font-size="12" font-weight="700" fill="#2c3e50">TouchSlider</text>
+
+  <rect x="584" y="266" width="176" height="96" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="596" y="286" font-size="12.5" font-weight="700" fill="#2c3e50">View, game layer</text>
+  <text x="596" y="302" font-size="11.5" fill="#333">the same library</text>
+  <text x="596" y="317" font-size="11.5" fill="#333">for the game</text>
+  <rect x="596" y="326" width="104" height="28" rx="5" fill="#eef3f8" stroke="#4a6785" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="648" y="344" text-anchor="middle" font-size="12" font-weight="700" fill="#2c3e50">TouchButton</text>
+
+  <rect x="1040" y="256" width="160" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="1054" y="280" font-size="15" font-weight="700" fill="#2c3e50">Sounds</text>
+  <text x="1054" y="300" font-size="12" fill="#333">interlude(name)</text>
+  <text x="1054" y="316" font-size="12" fill="#333">in place of the music</text>
+
+  <!-- screen -->
+  <rect x="40" y="416" width="970" height="130" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="54" y="438" font-size="15" font-weight="700" fill="#2c3e50">Screen</text>
+
+  <rect x="54" y="452" width="192" height="78" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="66" y="472" font-size="12.5" font-weight="700" fill="#2c3e50">translate(e)</text>
+  <text x="66" y="489" font-size="11.5" fill="#333">sinks front to back</text>
+  <text x="66" y="504" font-size="11.5" fill="#333">until a View takes it,</text>
+  <text x="66" y="519" font-size="11.5" fill="#333">else a tap or a hold</text>
+
+  <rect x="304" y="452" width="224" height="78" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="472" font-size="12.5" font-weight="700" fill="#2c3e50">Host canvas</text>
+  <text x="316" y="489" font-size="11.5" fill="#333">hostLayer()</text>
+  <text x="316" y="504" font-size="11.5" fill="#333">front layer</text>
+
+  <rect x="584" y="452" width="222" height="78" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="596" y="472" font-size="12.5" font-weight="700" fill="#2c3e50">Game canvas</text>
+  <text x="596" y="489" font-size="11.5" fill="#333">layer(), showLayer()</text>
+  <text x="596" y="504" font-size="11.5" fill="#333">middle layer</text>
+
+  <rect x="858" y="452" width="138" height="78" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="870" y="472" font-size="12.5" font-weight="700" fill="#2c3e50">Background</text>
+  <text x="870" y="489" font-size="11.5" fill="#333">background()</text>
+  <text x="870" y="504" font-size="11.5" fill="#333">load(file)</text>
+  <text x="870" y="519" font-size="11.5" fill="#333">back layer</text>
+
+  <rect x="1040" y="436" width="160" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="1054" y="460" font-size="15" font-weight="700" fill="#2c3e50">File system</text>
+  <text x="1054" y="480" font-size="12" fill="#333">open(path)</text>
+  <text x="1054" y="496" font-size="12" fill="#333">in /games/&lt;id&gt;/</text>
+
+  <rect x="40" y="576" width="220" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="54" y="600" font-size="15" font-weight="700" fill="#2c3e50">Event queue</text>
+  <text x="54" y="618" font-size="12" fill="#333">driver events, oldest first</text>
+  <text x="54" y="634" font-size="12" fill="#333">TouchDown, TouchMoved,</text>
+  <text x="54" y="650" font-size="12" fill="#333">TouchHeld, TouchUp,</text>
+  <text x="54" y="666" font-size="12" fill="#333">MovieEnded</text>
+
+  <!-- ===== interrupts ===== -->
+  <rect x="20" y="716" width="1000" height="274" rx="10" fill="#fcfaf6" stroke="#8a6d0b" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="36" y="738" font-size="13" font-weight="700" fill="#8a6d0b">Interrupts</text>
+
+  <rect x="40" y="756" width="220" height="100" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="54" y="780" font-size="15" font-weight="700" fill="#5c4a00">Touch driver</text>
+  <text x="54" y="800" font-size="12" fill="#333">driver tick, every 20 ms</text>
+  <text x="54" y="816" font-size="12" fill="#333">reads 5 bytes by DMA</text>
+  <text x="54" y="832" font-size="12" fill="#333">finger()</text>
+
+  <rect x="290" y="756" width="710" height="216" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <text x="304" y="780" font-size="15" font-weight="700" fill="#5c4a00">Display driver</text>
+
+  <rect x="304" y="794" width="224" height="70" rx="5" fill="#ffffff" stroke="#8a6d0b" stroke-width="1.2"/>
+  <text x="316" y="814" font-size="12.5" font-weight="700" fill="#5c4a00">Front layer</text>
+  <text x="316" y="832" font-size="11.5" fill="#333">75 KB</text>
+  <text x="316" y="848" font-size="11.5" fill="#333">palette with opacity</text>
+
+  <rect x="584" y="794" width="222" height="70" rx="5" fill="#ffffff" stroke="#8a6d0b" stroke-width="1.2"/>
+  <text x="596" y="814" font-size="12.5" font-weight="700" fill="#5c4a00">Middle layer</text>
+  <text x="596" y="832" font-size="11.5" fill="#333">75 KB</text>
+  <text x="596" y="848" font-size="11.5" fill="#333">palette with opacity</text>
+
+  <rect x="858" y="794" width="132" height="70" rx="5" fill="#ffffff" stroke="#8a6d0b" stroke-width="1.2"/>
+  <text x="870" y="814" font-size="12.5" font-weight="700" fill="#5c4a00">Back layer</text>
+  <text x="870" y="832" font-size="11.5" fill="#333">pixels or</text>
+  <text x="870" y="848" font-size="11.5" fill="#333">movie in its viewport</text>
+
+  <rect x="304" y="880" width="686" height="80" rx="5" fill="#ffffff" stroke="#8a6d0b" stroke-width="1.2"/>
+  <text x="316" y="900" font-size="12.5" font-weight="700" fill="#5c4a00">Compose while sending</text>
+  <text x="316" y="918" font-size="11.5" fill="#333">FlexIO3 interrupt, priority 224: front over middle over back</text>
+  <text x="316" y="934" font-size="11.5" fill="#333">partly opaque colors blended with what lies behind</text>
+  <text x="316" y="950" font-size="11.5" fill="#333">only the rows that show() marked</text>
+
+  <!-- ===== storage task ===== -->
+  <rect x="1040" y="716" width="180" height="274" rx="10" fill="#f6faf6" stroke="#3d7a3d" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="1054" y="738" font-size="13" font-weight="700" fill="#3d7a3d">Storage task</text>
+  <rect x="1052" y="756" width="156" height="100" rx="8" fill="#eef6ee" stroke="#3d7a3d" stroke-width="2"/>
+  <text x="1064" y="780" font-size="15" font-weight="700" fill="#2d5a2d">Storage driver</text>
+  <text x="1064" y="800" font-size="12" fill="#333">reads the files of</text>
+  <text x="1064" y="816" font-size="12" fill="#333">pictures and movies</text>
+
+  <!-- ===== hardware ===== -->
+  <rect x="40" y="1030" width="220" height="60" rx="8" fill="#f2f2f2" stroke="#777" stroke-width="2"/>
+  <text x="54" y="1056" font-size="15" font-weight="700" fill="#333">Touch panel</text>
+  <text x="54" y="1076" font-size="12" fill="#555">CST026 on I²C</text>
+  <rect x="290" y="1030" width="710" height="60" rx="8" fill="#f2f2f2" stroke="#777" stroke-width="2"/>
+  <text x="304" y="1056" font-size="15" font-weight="700" fill="#333">ILI9341 panel</text>
+  <text x="304" y="1076" font-size="12" fill="#555">keeps the last picture, gets the changed rows over the 8-bit bus</text>
+  <rect x="1052" y="1030" width="156" height="60" rx="8" fill="#f2f2f2" stroke="#777" stroke-width="2"/>
+  <text x="1064" y="1056" font-size="15" font-weight="700" fill="#333">SD card</text>
+  <text x="1064" y="1076" font-size="12" fill="#555">read over SDIO</text>
+
+  <!-- ===== drawing: calls down to the panel ===== -->
+  <line x1="260" y1="146" x2="288" y2="146" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="370" y1="196" x2="370" y2="264" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="378" y="212" font-size="11.5" fill="#555">add(), onPress()</text>
+  <line x1="620" y1="196" x2="620" y2="264" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="628" y="212" font-size="11.5" fill="#555">add()</text>
+  <line x1="790" y1="196" x2="790" y2="450" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="798" y="212" font-size="11.5" fill="#555">print(), show()</text>
+  <line x1="930" y1="196" x2="930" y2="450" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="938" y="300" font-size="11.5" fill="#555">load(file)</text>
+  <line x1="1010" y1="146" x2="1038" y2="146" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="1120" y1="196" x2="1120" y2="254" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="1128" y="230" font-size="11.5" fill="#555">interlude()</text>
+  <path d="M1200 150 H1212 V476 H1202" fill="none" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <path d="M1040 180 H1025 V784 H1002" fill="none" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+
+  <line x1="370" y1="362" x2="370" y2="450" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="378" y="398" font-size="11.5" fill="#555">draw(), show()</text>
+  <line x1="640" y1="362" x2="640" y2="450" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="648" y="398" font-size="11.5" fill="#555">draw(), show()</text>
+
+  <line x1="370" y1="530" x2="370" y2="792" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="378" y="706" font-size="11.5" fill="#555">show(top, bottom), palette()</text>
+  <line x1="640" y1="530" x2="640" y2="792" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="648" y="706" font-size="11.5" fill="#555">show(), palette()</text>
+  <line x1="930" y1="530" x2="930" y2="792" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="938" y="706" font-size="11.5" fill="#555">show()</text>
+
+  <line x1="416" y1="864" x2="416" y2="878" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="695" y1="864" x2="695" y2="878" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="924" y1="864" x2="924" y2="878" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="640" y1="960" x2="640" y2="1028" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="648" y="1012" font-size="11.5" fill="#555">changed rows</text>
+  <line x1="1052" y1="820" x2="1002" y2="820" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <line x1="1130" y1="856" x2="1130" y2="1030" stroke="#1a1a1a" stroke-width="2" marker-start="url(#call)" marker-end="url(#call)"/>
+
+  <!-- ===== touch: events up, calls into the widgets ===== -->
+  <line x1="150" y1="856" x2="150" y2="1030" stroke="#1a1a1a" stroke-width="2" marker-start="url(#call)" marker-end="url(#call)"/>
+  <line x1="150" y1="756" x2="150" y2="678" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="158" y="706" font-size="11.5" fill="#16808a">touch events</text>
+  <path d="M290 930 H275 V640 H262" fill="none" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="282" y="742" font-size="11.5" fill="#16808a">MovieEnded</text>
+  <line x1="150" y1="576" x2="150" y2="532" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="158" y="560" font-size="11.5" fill="#16808a">via the host</text>
+
+  <path d="M200 452 V316 H302" fill="none" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="52" y="340" font-size="11.5" fill="#555">press(), drag(),</text>
+  <text x="52" y="356" font-size="11.5" fill="#555">release(), front to</text>
+  <text x="52" y="372" font-size="11.5" fill="#555">back until taken</text>
+  <line x1="480" y1="264" x2="480" y2="198" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="488" y="224" font-size="11.5" fill="#555">handler()</text>
+  <line x1="700" y1="264" x2="700" y2="198" stroke="#1a1a1a" stroke-width="2" marker-end="url(#call)"/>
+  <text x="708" y="224" font-size="11.5" fill="#555">handler()</text>
+
+  <line x1="230" y1="452" x2="230" y2="198" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="222" y="240" text-anchor="end" font-size="11.5" fill="#16808a">taps, holds</text>
+  <path d="M150 96 V90 H790 V94" fill="none" stroke="#16808a" stroke-width="2" marker-end="url(#ev)"/>
+  <text x="420" y="84" font-size="11.5" fill="#16808a">ScreenTapped, ScreenHeld, MovieEnded</text>
+</svg>

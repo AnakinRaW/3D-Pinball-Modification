@@ -1,6 +1,6 @@
 ---
 name: review-schematic-svg
-description: Use to check that a schematic SVG in this repository matches the circuit it documents and is unambiguous to read - verifies every pin and value against the source markdown, junction dots, net colour consistency, English labels and decimal notation. Trigger on "check this diagram", "does the SVG match the text", or before committing a drawn schematic.
+description: Use to check that a schematic SVG in this repository matches the circuit it documents and is unambiguous to read - verifies every pin and value against the source markdown, junction dots, net color consistency, English labels and decimal notation. Trigger on "check this diagram", "does the SVG match the text", or before committing a drawn schematic.
 ---
 
 # Reviewing a schematic SVG
@@ -24,12 +24,12 @@ Any mismatch is reported as a finding against the diagram. The document is the a
 
 ### Readability
 
-- **Junction dots.** Every place wires join carries `<circle r="4"/>` in the net colour. Every crossing without a dot is genuinely not connected. This is the single most common way such a diagram misleads.
-- **Orphan pins.** Every pin circle drawn on a module either has a wire or is labelled as unused.
+- **Junction dots.** Every place wires join carries `<circle r="4"/>` in the net color. Every crossing without a dot is genuinely not connected. This is the single most common way such a diagram misleads.
+- **Orphan pins.** Every pin circle drawn on a module either has a wire or is labeled as unused.
 - **Net labels.** Every net is named somewhere along its run.
-- **Colour consistency.** One net class, one colour, throughout. The same colour never appears on two unrelated nets.
+- **Color consistency.** One net class, one color, throughout. The same color never appears on two unrelated nets.
 - **Package variants.** Every part whose type designation depends on its package appears in the variants table with both types named. Parts whose designation is package-independent are absent from it. Designators in the table match those on the drawn symbols.
-- **Placement constraints.** Every group the circuit document requires to sit close together is enclosed and labelled, with a distance and a reason. A group marked without a distance is a finding - "close" cannot be built to. The enclosure uses the `8 4` dash pattern, never the `5 4` reserved for unpopulated options.
+- **Placement constraints.** Every group the circuit document requires to sit close together is enclosed and labeled, with a distance and a reason. A group marked without a distance is a finding - "close" cannot be built to. The enclosure uses the `8 4` dash pattern, never the `5 4` reserved for unpopulated options.
 - **Overlap.** No text sits on a wire or another label.
 - **Wire endpoints.** Lines actually meet the pin circles - a gap of a few units reads as connected but is a drawing error worth fixing before it is copied.
 
@@ -54,7 +54,7 @@ Not a substitute for `review-circuit`, but cheap to check while reading:
 | Severity | Meaning |
 |---|---|
 | **Wrong** | Diagram contradicts the document |
-| **Ambiguous** | Can be read two ways - missing junction dot, unlabelled net, overlapping text |
-| **Convention** | Language, notation, naming, colour reuse |
+| **Ambiguous** | Can be read two ways - missing junction dot, unlabeled net, overlapping text |
+| **Convention** | Language, notation, naming, color reuse |
 
 State the SVG line number for each finding.

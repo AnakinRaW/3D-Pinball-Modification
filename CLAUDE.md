@@ -33,6 +33,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
 | Teensy core | Always the newest Teensyduino release | Chosen |
+| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/gist/freertos-config.h`](firmware/gist/freertos-config.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
 **The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
@@ -40,7 +41,10 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 
 ## Repository layout
 
-- `firmware/` — embedded software for the Teensy 4.1
+- `firmware/` — the firmware for the Teensy 4.1: its source, its tests and code notes
+- `firmware/gist/` — code notes, not firmware
+- `firmware/src/` — the real firmware project
+- `firmware/tests/` — the firmware's test code
 - `hardware/pcb/` — EasyEDA projects, one directory per board, each with a schematic PDF and a `fab/` directory of manufacturing outputs
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
@@ -59,7 +63,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 
 | | |
 |---|---|
-| `python tools/figcheck.py --sheets` | Recomputes every figure every subsystem derives, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`. Each model also declares its subsystem's nets, the peripherals its driver owns and what it draws from a shared budget, such as the Teensy's 3V3 pin or a slot of the driver tick, and the run checks that wiring and those budgets across all models. A model path such as `docs/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark. Eight subsystems have a model so far: `ir-reflective`, `break-beam`, `solenoid`, `audio`, `magnetic-rotary`, `controls`, `servo` and `lighting`. The lighting model governs only the Level shifting section of its document. Two more hold what the subsystems share: `docs/research/teensy-4.1.py` the board's and the chip's figures, `firmware/figures.py` the firmware's periods, watchdog, interrupt priorities and slots. A figure is declared in one model, and every other model takes it with `MODEL.uses(key, of=...)`, so a Teensy or firmware figure is never declared twice. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the twenty checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs it on each push touching `docs/`, `firmware/` or `tools/` |
+| `python tools/figcheck.py --sheets` | Recomputes every figure every subsystem derives, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`. Each model also declares its subsystem's nets, the peripherals its driver owns and what it draws from a shared budget, such as the Teensy's 3V3 pin or a slot of the driver tick, and the run checks that wiring and those budgets across all models. A model path such as `docs/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark. Nine subsystems have a model so far: `ir-reflective`, `break-beam`, `solenoid`, `audio`, `magnetic-rotary`, `controls`, `servo`, `lighting` and `display`. The lighting model governs only the Level shifting, Signal wiring and Supply sections of its document, plus the lamps component's document. Two more hold what the subsystems share: `docs/research/teensy-4.1.py` the board's and the chip's figures, `docs/firmware/figures.py` the firmware's periods, watchdog, interrupt priorities and slots. A figure is declared in one model, and every other model takes it with `MODEL.uses(key, of=...)`, so a Teensy or firmware figure is never declared twice. Rule 15 governs when it runs and what it is worth; [`tools/README.md`](tools/README.md) lists the twenty checks it reports and the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs it on each push touching `docs/`, `firmware/` or `tools/` |
 | `… ` prose pass | Every number in the prose, not only the ones in blocks and tables, is matched against every declared quantity with its unit converted. What the model does not compute is declared in it as `MODEL.aside(text, why)`, which is what stops a figure going stale where nothing anchors it |
 | `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a declaration's `group` and `section` are written; guessing them wastes a run |
 | `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |
@@ -71,11 +75,13 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --write-sums` | Records the datasheet checksums after a datasheet is added |
 | `python tools/svgcheck.py` | Measures every label in every drawing under `docs/` and reports the ones that leave the viewBox, leave the box they sit in, or land on another label, and it reports two boxes that cross where one of them is an outline. figcheck checks what a drawing says, this checks whether it can be read. **Run it after moving or adding any text or any box in an SVG.** It stays out of CI: widths are estimated from character classes rather than measured from a font, so a report is a place to look and not a verdict |
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
+| `python tools/picture.py [--color <rrggbb>] <png>...` | Turns the PNGs of one screen layer, each at most 320 × 240 pixels, into picture files beside them. They share one palette of 255 colors with their opacity, dithered after Floyd–Steinberg. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
 
 No build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
 
 ## Conventions
 
+- **Once a subsystem's code runs on the Teensy, the code holds how it works.** Its document then keeps what changes rarely: what the subsystem is for and has to achieve, the decisions with their reasons, its interface, the derived figures with their sources, and its known limitations. The implementation moves into `firmware/`, one subsystem at a time as each comes up on hardware.
 - Update `docs/parts-list.md` whenever a hardware design change adds or removes a component (subject to rule 8 — the BOM is a design artifact, so ask first). Keep it to identification plus a spec link; specs and rationale go in `docs/research/`, one file per component. Every BOM row must resolve to its specification — local notes where they exist, manufacturer datasheet otherwise.
 - **Check [`docs/pin-assignment.md`](docs/pin-assignment.md) before committing any Teensy pin, and add a row there once a design settles on one.** It is the single record of which pins this build has spent, and the only way a conflict gets caught across sessions. Its shared-resource tables are what a candidate pin must be checked against — taking one pin of a bus or serial port commits the whole group. Those tables are written from `docs/research/teensy-4.1.py` by `--write`, and figcheck checks the two cost tables against what the allocation takes, so a re-allocation that leaves a cost table stale fails the run. Keep it to occupation: which pin, which signal, which peripheral, which subsystem. Rationale for a choice belongs in the subsystem document, and a re-allocation is discussed in chat and then written straight into the table. Every other mention of a Teensy pin is marked with the signal it carries, figcheck checks the mark against the table, and `--write` carries a moved pin into every place that marks it. After a move, the run lists under Worth knowing every place where the old number still stands without a mark. A subsystem's pins sit together on one edge of the board, in one run where the peripherals it needs allow. [`tools/README.md`](tools/README.md#teensy-pins) gives the markers.
 - Reference designators follow IEEE 315: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
@@ -100,10 +106,10 @@ Repository-local, in `.claude/skills/`, so they version with the project.
 | Skill | Fires when |
 |---|---|
 | `review-circuit` | A circuit is about to be built or committed. Loads constraints from `docs/research/`, `docs/parts/`, `docs/datasheets/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time rather than hardcoding them |
-| `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colours, module blocks, pin markers |
+| `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colors, module blocks, pin markers |
 | `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
 | `verify-easyeda` | An EasyEDA board changed. Diffs the Allegro `.tel` netlist against a baseline |
 | `revise-document` | A document has to be shortened or made readable. Structure first, then paragraphs, then sentences, deletions accounted for against the diff |
-| `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behaviour. Operationalises rule 3 |
+| `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behavior. Operationalises rule 3 |
 
 `review-circuit` asks whether the circuit survives, `design-review` whether it is good, `verify-easyeda` whether the board matches the intent. None substitutes for another.

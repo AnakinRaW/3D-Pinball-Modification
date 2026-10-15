@@ -31,11 +31,11 @@ Work through every category. A category with nothing to report is reported as cl
 
 ### Voltage domains
 
-For every net that reaches a Teensy pin, establish the highest voltage it can carry **under any condition** - normal operation, during boot, with a connector unplugged, with a wire shorted to a neighbour, with an inductive load switching off.
+For every net that reaches a Teensy pin, establish the highest voltage it can carry **under any condition** - normal operation, during boot, with a connector unplugged, with a wire shorted to a neighbor, with an inductive load switching off.
 
 - The Teensy 4.1 is not 5 V tolerant on any digital or analog pin.
 - Sources of over-voltage that are easy to miss: a pull-up to a 5 V rail, an open-collector output referenced to a higher rail, a sensor powered from a rail above the one it signals into, inductive kickback from a solenoid or motor, a long cable acting as an antenna or accumulating ESD.
-- A divider or level shifter is a fix. "The output never actually goes that high" is not, unless the ceiling is set by a rail rather than by expected behaviour.
+- A divider or level shifter is a fix. "The output never actually goes that high" is not, unless the ceiling is set by a rail rather than by expected behavior.
 
 ### Current
 
@@ -61,14 +61,14 @@ For every net that reaches a Teensy pin, establish the highest voltage it can ca
 
 - Decoupling: bulk capacitor plus 100 nF ceramic per regulator and per IC, placed close to the part.
 - An LDO's output capacitor is part of its control loop. Confirm the type and value the datasheet requires.
-- Electrolytic and tantalum capacitors are polarised. Confirm orientation against the rail.
+- Electrolytic and tantalum capacitors are polarized. Confirm orientation against the rail.
 - Every current has a return path. Trace it. Where a board has no ground wire, name what the return actually is.
 - Reverse polarity protection on any externally supplied rail.
 
 ### Connectors
 
 - Can a plug go in reversed, or into the wrong socket of the same size? Say what happens if it does.
-- Where a swap is destructive rather than merely dead, require a polarised or keyed connector.
+- Where a swap is destructive rather than merely dead, require a polarized or keyed connector.
 
 ### Margin
 
