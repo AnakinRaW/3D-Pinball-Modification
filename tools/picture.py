@@ -1,17 +1,17 @@
 """Turns the PNGs of one layer, each at most 320 x 240 pixels, into picture files for the screen component.
 
 The PNGs are converted together as one set and share one palette of 255 entries of
-colour and opacity, which every file of the set holds. A file starts with 256 palette
+color and opacity, which every file of the set holds. A file starts with 256 palette
 entries, as docs/firmware/components/screen.md describes. An entry is four bytes: the
-colour in RGB565, high byte first, its opacity from 0 to 255, and an unused byte.
+color in RGB565, high byte first, its opacity from 0 to 255, and an unused byte.
 Entry 0 holds the width and the height instead, each high byte first, since index 0
 stays transparent. Then come the pixels row by row from the top left, one byte each
 with the pixel's palette index. A pixel below the first of the display's 32 opacity steps becomes index 0.
-Each --colour puts an opaque colour into the palette as it is, such as the colour of a
-text. Floyd-Steinberg dithering spreads the error of every pixel onto its neighbours,
-so a picture with more colours keeps its look. Each file lands beside its PNG.
+Each --color puts an opaque color into the palette as it is, such as the color of a
+text. Floyd-Steinberg dithering spreads the error of every pixel onto its neighbors,
+so a picture with more colors keeps its look. Each file lands beside its PNG.
 
-    python tools/picture.py [--colour ffffff ...] table.png lamp.png ...
+    python tools/picture.py [--color ffffff ...] table.png lamp.png ...
 """
 import pathlib
 import struct
@@ -19,8 +19,8 @@ import sys
 import zlib
 
 WIDTH, HEIGHT = 320, 240
-COLOURS = 255                      # index 0 is transparent
-CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}   # PNG colour type -> samples per pixel
+COLORS = 255                      # index 0 is transparent
+CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}   # PNG color type -> samples per pixel
 
 
 def read_png(path: pathlib.Path):
@@ -89,7 +89,7 @@ def rgb565(c) -> int:
 
 
 def expand(v: int):
-    """The colour an RGB565 value shows, back in 8 bits a channel."""
+    """The color an RGB565 value shows, back in 8 bits a channel."""
     r, g, b = v >> 11, (v >> 5) & 0x3F, v & 0x1F
     return (r << 3 | r >> 2, g << 2 | g >> 4, b << 3 | b >> 2)
 
@@ -106,7 +106,7 @@ def shown(entry):
 
 
 def median_cut(counts: dict, n: int) -> list:
-    """Up to n colours, each the weighted mean of one box the colours were cut into."""
+    """Up to n colors, each the weighted mean of one box the colors were cut into."""
     dims = range(len(next(iter(counts))))
     def box(entries):
         lo = [min(c[k] for c, _ in entries) for k in dims]
@@ -138,7 +138,7 @@ def median_cut(counts: dict, n: int) -> list:
 
 
 def palette(pictures: list, forced: list) -> list:
-    """One palette for every picture of the set, as entries (RGB565, step), the forced colours among them."""
+    """One palette for every picture of the set, as entries (RGB565, step), the forced colors among them."""
     fixed = sorted({(rgb565(c), step(255)) for c in forced})
     counts = {}
     for _, _, rows in pictures:
@@ -147,7 +147,7 @@ def palette(pictures: list, forced: list) -> list:
                 if step(p[3]) > 0:
                     c = shown((rgb565(p), step(p[3])))     # what the display can tell apart
                     counts[c] = counts.get(c, 0) + 1
-    room = COLOURS - len(fixed)
+    room = COLORS - len(fixed)
     picked = {(rgb565(c), max(1, step(c[3]))) for c in median_cut(counts, room)} if counts and room else set()
     return fixed + sorted(picked - set(fixed))
 
@@ -182,7 +182,7 @@ def convert(src: pathlib.Path, picture, entries: list):
                     for k in range(4):
                         work[ny][nx][k] += err[k] * part / 16
 
-    table = entries + [(0, 0)] * (COLOURS - len(entries))
+    table = entries + [(0, 0)] * (COLORS - len(entries))
     out = struct.pack(">HH", width, height) + b"".join(struct.pack(">HBB", v, s << 3 | s >> 2, 0) for v, s in table)
     dst = src.with_suffix(".img")
     dst.write_bytes(out + bytes(index))
@@ -193,17 +193,17 @@ def main(args: list):
     forced, sources = [], []
     while args:
         a = args.pop(0)
-        if a == "--colour":
+        if a == "--color":
             if not args or len(args[0]) != 6:
-                sys.exit("--colour takes a colour as six hex digits, such as ffffff")
+                sys.exit("--color takes a color as six hex digits, such as ffffff")
             v = int(args.pop(0), 16)
             forced.append((v >> 16, v >> 8 & 0xFF, v & 0xFF, 255))
         else:
             sources.append(pathlib.Path(a))
     if not sources:
         sys.exit(__doc__.strip().splitlines()[-1].strip())
-    if len(forced) > COLOURS:
-        sys.exit(f"a palette holds {COLOURS} colours")
+    if len(forced) > COLORS:
+        sys.exit(f"a palette holds {COLORS} colors")
     pictures = []
     for src in sources:
         width, height, rows = read_png(src)

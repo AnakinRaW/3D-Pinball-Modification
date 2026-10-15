@@ -158,7 +158,7 @@ _I("the report threshold stays a small part of a turn",
    lambda v: v.n_dead < v.n_steps)
 
 for _text, _why in [
-    ("0.25 mm", "how far the rod's axis may sit from the package centre with a 6 mm magnet, "
+    ("0.25 mm", "how far the rod's axis may sit from the package center with a 6 mm magnet, "
                 "AS5600 datasheet, a mounting figure"),
     ("12 bits", "the AS5600's resolution, RES in the datasheet's system specifications, "
                 "which gives the 4096 steps"),

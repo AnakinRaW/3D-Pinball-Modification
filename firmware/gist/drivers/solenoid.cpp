@@ -72,8 +72,8 @@ private:
     static constexpr uint8_t  kSenses   = 3;
     static constexpr uint8_t  kTrigger[kCoils] = {40, 41, 30, 37};  // pin-assignment.md: Solenoid trigger 1 to 4
     static constexpr uint8_t  kSense[kSenses]  = {36, 35, 34};      // pin-assignment.md: Solenoid sense 1 to 3
-    static constexpr uint32_t kOnUs     = 50000;  // the longest pull-in, docs/parts/solenoid
-    static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 45 ms, from here the tick ends a pull
+    static constexpr uint32_t kOnUs     = 30000;  // the longest pull-in, docs/parts/solenoid
+    static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 25 ms, from here the tick ends a pull
     static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
     static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue
     static constexpr uint32_t kFailMs   = 2000;   // 2 s, a contact closed this long has failed

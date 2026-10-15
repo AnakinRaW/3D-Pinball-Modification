@@ -274,7 +274,7 @@ def check(path, slack, margin=0.0):
             # course, and the tolerance covers that. It may not be raised above
             # the tolerance: a wire is thinner than that, so the overlap with
             # one can never reach a higher floor however squarely the label
-            # sits on it, which is how a label centred on a wire went unseen.
+            # sits on it, which is how a label centered on a wire went unseen.
             if ox <= slack or oy <= slack:
                 continue
             # Nothing is painted inside an outline, so only its border band can

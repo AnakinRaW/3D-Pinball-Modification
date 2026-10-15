@@ -25,7 +25,7 @@
   <line x1="684" y1="200" x2="300" y2="200" stroke="#2c3e50" stroke-width="2.5"/>
   <rect x="200" y="190" width="100" height="20" rx="3" fill="#eef3f8" stroke="#4a6785" stroke-width="1.5"/>
   <text x="250" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#2c3e50">CHn</text>
-  <text x="200" y="228" font-size="10.5" fill="#666">to its digitising input</text>
+  <text x="200" y="228" font-size="10.5" fill="#666">to its digitizing input</text>
   <text x="200" y="242" font-size="10.5" fill="#666">on the mainboard</text>
   <text x="470" y="192" font-size="11.5" fill="#2c3e50">0 &#8230; 2.98 V at V_OUT max</text>
   <circle cx="440" cy="200" r="4" fill="#2c3e50"/>

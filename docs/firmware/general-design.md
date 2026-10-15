@@ -26,7 +26,7 @@ The drivers work the hardware in their own interrupts and publish what they dete
 
 The main loop carries the whole game logic. It lays out the game rules and orchestrates most of the hardware in reaction to what happens on the playfield. Game components represent logical elements of the playfield, such as the top roll-over lanes, and may combine several hardware parts. They run in the main loop as well.
 
-A service a game uses is a component too, such as the [file system](components/file-system.md) on the SD card. The games hold the rules and talk to the components. A game host organises and runs the games, as [game-abstraction](game-abstraction.md) describes.
+A service a game uses is a component too, such as the [file system](components/file-system.md) on the SD card. The games hold the rules and talk to the components. A game host organizes and runs the games, as [game-abstraction](game-abstraction.md) describes.
 
 ## Event queue
 

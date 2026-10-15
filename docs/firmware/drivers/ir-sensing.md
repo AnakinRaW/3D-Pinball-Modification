@@ -27,7 +27,7 @@ The firmware never stops or stretches that counter, so a phase is a clock the dr
 
 ### Phase length
 
-The phase length `T` is not a constant of the firmware. At initialisation the driver computes it from the number of channels registered with it. The parameters that enter it:
+The phase length `T` is not a constant of the firmware. At initialization the driver computes it from the number of channels registered with it. The parameters that enter it:
 
 ```
 D         a ball's dwell over a sensor            = 3 ms, estimated from the stock machine's measured emitter period
@@ -46,7 +46,7 @@ The dwell sets the longest possible phase length. The two readings a hit has to 
 
 The read sets the shortest possible phase length. Every registered channel has to be read inside the current phase, one after another. None of them may be read right at the start of a phase, where a sensor's output still sits near the level of the previous one. The read block therefore starts no earlier than `t_inv` and ends with the phase. A phase can hold `N` channels only if `t_budget + t_inv + jit ≤ T`.
 
-Between the two bounds, a longer phase leaves the sensors more time to settle and returns more signal, and it demands a longer dwell, which is to say a slower ball. `T_max` is a price rather than a wall: it follows from the dwell this design assumes, and the fastest ball a phase still confirms is the ball's diameter over `(2k + 1) · T`, 3 m/s at the phase this design runs. At initialisation the driver works through these steps:
+Between the two bounds, a longer phase leaves the sensors more time to settle and returns more signal, and it demands a longer dwell, which is to say a slower ball. `T_max` is a price rather than a wall: it follows from the dwell this design assumes, and the fastest ball a phase still confirms is the ball's diameter over `(2k + 1) · T`, 3 m/s at the phase this design runs. At initialization the driver works through these steps:
 
 1. `T_max`, the longest phase the dwell allows: `D / (2k + 1)`, down to the next 10 µs.
 2. `t_budget`, what reading its own `N` channels costs: `N · (t_conv + t_ovh)`, up to the next 10 µs.

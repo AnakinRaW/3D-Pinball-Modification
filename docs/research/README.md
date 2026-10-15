@@ -13,7 +13,7 @@ Component specifications and the reasoning behind a part choice are recorded her
 | [`Rokr/1_power-supply.md`](Rokr/1_power-supply.md) | The stock 5 V input: adapter rating, the protection and filtering parts at the power entry, the inventory of loads on the rail, and why an undersized supply resets the machine |
 | [`Rokr/2_ir-reflective-sensor-p33.md`](Rokr/2_ir-reflective-sensor-p33.md) | The stock ball sensor: measurements, reconstructed schematics of the sensor board and of its mainboard channel, and why the stock circuit is built that way |
 | [`Rokr/3_bumper-control.md`](Rokr/3_bumper-control.md) | The stock bumpers: solenoid figures, the foil-and-shell trigger contact, wiring to the mainboard, and the parts seen on the board |
-| [`Rokr/4_lighting.md`](Rokr/4_lighting.md) | The stock lighting: the LED inventory by board and colour, the strips and their housings, the driver stage read from the mainboard, and the TM1617 display driver |
+| [`Rokr/4_lighting.md`](Rokr/4_lighting.md) | The stock lighting: the LED inventory by board and color, the strips and their housings, the driver stage read from the mainboard, and the TM1617 display driver |
 | [`Rokr/5_sound.md`](Rokr/5_sound.md) | The stock sound: the speaker's impedance, connection and drive, the sounds heard in play and what triggers them, and the single-voice playback |
 | [`Rokr/6_ir-break-beam.md`](Rokr/6_ir-break-beam.md) | The stock through-beam sensor: the emitter and receiver on their solder points, the parts of its mainboard channel, and the continuously lit emitter |
 

@@ -1,11 +1,11 @@
 ---
 name: draw-schematic
-description: Use when drawing, generating or updating a wiring diagram or schematic SVG for this modification - produces diagrams in the repository's established house style with consistent net colours, module blocks and pin markers. Trigger on "draw the schematic", "make a diagram of this circuit", "visualise this wiring", or when a circuit documented in markdown needs a picture.
+description: Use when drawing, generating or updating a wiring diagram or schematic SVG for this modification - produces diagrams in the repository's established house style with consistent net colors, module blocks and pin markers. Trigger on "draw the schematic", "make a diagram of this circuit", "visualize this wiring", or when a circuit documented in markdown needs a picture.
 ---
 
 # Drawing a schematic
 
-Diagrams in this repository are hand-authored SVG showing modules as labelled blocks and nets as coloured wires between named pins. They exist to make a circuit followable by someone who cannot read a conventional symbol schematic. The EasyEDA project remains the design of record.
+Diagrams in this repository are hand-authored SVG showing modules as labeled blocks and nets as colored wires between named pins. They exist to make a circuit followable by someone who cannot read a conventional symbol schematic. The EasyEDA project remains the design of record.
 
 Existing examples to match: `docs/parts/ir-reflective/pulsed-schematic.svg`, `docs/research/Rokr/2_IR-Reflective-Mainboard-Schematic.svg`.
 
@@ -23,11 +23,11 @@ Read the markdown that describes the circuit. The diagram carries no fact the do
 Title at `x="30" y="34"`, `font-size="20"`, `font-weight="700"`, `fill="#1a1a1a"`.
 Subtitle beneath at `y="56"`, `font-size="13"`, `fill="#666"` - one line naming what the circuit does.
 
-## Net colours
+## Net colors
 
-One colour per net class, used for the wire, the pin circle and the label. Never reuse a colour for an unrelated net.
+One color per net class, used for the wire, the pin circle and the label. Never reuse a color for an unrelated net.
 
-| Net | Colour | Use |
+| Net | Color | Use |
 |---|---|---|
 | Supply 3V3 / 5V | `#c0392b` | Wire, pin, label |
 | Signal / analog | `#2c3e50` | Wire, pin, label |
@@ -35,9 +35,9 @@ One colour per net class, used for the wire, the pin circle and the label. Never
 | LED / drive | wire `#b7950b`, pin fill `#f1c40f` stroke `#b7950b`, label `#8a6d0b` | Emitter and load lines |
 | Clock / control | `#8a2be2` | Toggled digital lines |
 
-## Block colours
+## Block colors
 
-One colour per kind of block, so a connector, a part on the board and a part out in the machine read apart at a glance. The label is the block's title; secondary lines inside a block stay `#666` or `#777`.
+One color per kind of block, so a connector, a part on the board and a part out in the machine read apart at a glance. The label is the block's title; secondary lines inside a block stay `#666` or `#777`.
 
 | Block | Fill | Stroke | Label | Use |
 |---|---|---|---|---|
@@ -46,18 +46,18 @@ One colour per kind of block, so a connector, a part on the board and a part out
 | Connector | `#f0f0f0` | `#6b6b6b` | `#333333` | J-PWR, J-T, J-Sn, a jack |
 | External component | `#fbeef5` | `#a8437a` | `#7a2556` | What sits out in the machine: servo, solenoid, speaker, switch, foil, a sensor at the playfield, a stock board |
 
-A net flag, the small box naming a net that leaves the drawing, keeps its net colour.
+A net flag, the small box naming a net that leaves the drawing, keeps its net color.
 
 ## Elements
 
 | Element | Markup |
 |---|---|
-| Block | `<rect rx="8" stroke-width="2"/>` in the colours of its kind from the block table |
-| Block label | `font-size="16" font-weight="700"` in the label colour of its kind |
-| Pin | `<circle r="6"/>` on the block edge, filled in its net colour |
-| Pin label | `font-size="13" font-weight="700"` in the net colour, with the pin number beneath at `font-size="11.5" fill="#777"` |
-| Wire | `<line stroke-width="2.5"/>` in the net colour, orthogonal segments only |
-| Junction | `<circle r="4"/>` in the net colour - **required** wherever wires join |
+| Block | `<rect rx="8" stroke-width="2"/>` in the colors of its kind from the block table |
+| Block label | `font-size="16" font-weight="700"` in the label color of its kind |
+| Pin | `<circle r="6"/>` on the block edge, filled in its net color |
+| Pin label | `font-size="13" font-weight="700"` in the net color, with the pin number beneath at `font-size="11.5" fill="#777"` |
+| Wire | `<line stroke-width="2.5"/>` in the net color, orthogonal segments only |
+| Junction | `<circle r="4"/>` in the net color - **required** wherever wires join |
 | Crossing | no dot, and where ambiguity remains, route around |
 | Resistor | `<rect fill="#fff" stroke="#1a1a1a" stroke-width="2"/>` - `26x60` vertical, `70x20` horizontal |
 | Value label | `font-weight="700" fill="#1a1a1a"`, **inside the body** with `text-anchor="middle"` and the size dropped until it fits. Beside the body only where the text cannot fit inside, such as a 26-wide vertical one |
@@ -96,7 +96,7 @@ Where the difference does arise, and the pair is not already sourced in the circ
 | Schottky diode | 1N5819, DO-41 | SS14, SMA |
 | Small-signal transistor | TO-92 type | SOT-23 type |
 | Logic-level MOSFET | TO-220 type | SOT-23 type |
-| Electrolytic | radial | SMD aluminium or tantalum |
+| Electrolytic | radial | SMD aluminum or tantalum |
 
 Rendering, placed clear of the circuit body:
 
@@ -115,7 +115,7 @@ Listing a variant asserts it has been through `review-circuit` and `design-revie
 
 A wiring diagram carries connectivity. Where a group must also sit physically close, the diagram says so, with the distance and the reason - otherwise the constraint survives only in someone's head between the drawing and the perfboard.
 
-Enclose the group in a dashed rounded rectangle, in a colour that is never a net colour, and label it:
+Enclose the group in a dashed rounded rectangle, in a color that is never a net color, and label it:
 
 ```
 <rect rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>

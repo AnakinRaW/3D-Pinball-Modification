@@ -6,7 +6,7 @@
 constexpr uint32_t kTable = 256 * 4;          // where the pixels start
 
 // a picture smaller than the screen, read once into a buffer the game gives and then drawn as
-// often as needed into a layer with the colours of its set
+// often as needed into a layer with the colors of its set
 class Picture {
 public:
     template <size_t N>
@@ -43,20 +43,20 @@ public:
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t index) override;   // fills a rectangle row by row
     void fillScreen(uint16_t index) override;                                        // fills the whole layer
     void draw(const Picture& picture, int16_t x, int16_t y);                            // draws a picture with its top left corner at x, y; its transparent pixels leave the layer as it is
-    void palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity = 255);   // sets a colour of the layer's palette, 255 opaque, and marks every row
+    void palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity = 255);   // sets a color of the layer's palette, 255 opaque, and marks every row
     void show();                                                                     // hands the rows drawn since the last show() to the driver
 
-    // reads a full-screen picture file into the layer with its colours and returns at once. The
+    // reads a full-screen picture file into the layer with its colors and returns at once. The
     // screen's update() shows the picture once it has landed; a newer picture replaces one still
     // on its way
     void load(const FileReader& picture);
 
     // takes the palette of a picture file for the layer, without its pixels, and returns at once.
     // It loads like a picture, and replaces one still on its way
-    void colours(const FileReader& picture);
+    void colors(const FileReader& picture);
 
     bool    loading() const;                                                         // gets whether a picture or a palette still loads
-    uint8_t nearest(uint8_t r, uint8_t g, uint8_t b) const;                          // gets the index of the layer's opaque colour closest to r, g, b, 0 when it has none
+    uint8_t nearest(uint8_t r, uint8_t g, uint8_t b) const;                          // gets the index of the layer's opaque color closest to r, g, b, 0 when it has none
 
 private:
     friend class Screen;
@@ -74,11 +74,11 @@ private:
     int16_t        top_    = kHeight;          // no row drawn yet
     int16_t        bottom_ = 0;
     FileRequest    pixelsRead_;                // the read of a picture's pixels into the layer
-    FileRequest    coloursRead_;               // and of its palette into colours_
-    uint8_t        colours_[kTable];           // the palette of the picture that loads, four bytes an entry
+    FileRequest    colorsRead_;               // and of its palette into colors_
+    uint8_t        colors_[kTable];           // the palette of the picture that loads, four bytes an entry
     FileReader     next_;                      // what waits for the reads on their way, a picture, a palette or a file with no name for a clear
     bool           waits_         = false;     // next_ waits
-    bool           nextPixels_    = true;      // next_ brings its pixels, false for colours()
+    bool           nextPixels_    = true;      // next_ brings its pixels, false for colors()
     bool           landing_       = false;     // a picture's reads have started, and update() has not shown it yet
     bool           landingPixels_ = true;      // the picture on its way brings its pixels
 };
@@ -173,16 +173,16 @@ void Canvas::show() {
 void Canvas::palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity) {
     if (index == 0) return;                  // 0 stays transparent
     display_.palette(layer_, index, (r & 0xF8) << 8 | (g & 0xFC) << 3 | b >> 3, opacity);
-    drawn(0, kHeight);                       // any row may use the colour
+    drawn(0, kHeight);                       // any row may use the color
 }
 
-// weighs the channels as tools/picture.py does when it picks a picture's colours
+// weighs the channels as tools/picture.py does when it picks a picture's colors
 uint8_t Canvas::nearest(uint8_t r, uint8_t g, uint8_t b) const {
     uint8_t  best    = 0;
     uint32_t closest = UINT32_MAX;
     for (int i = 1; i < 256; ++i) {
         if (!display_.opaque(layer_, i)) continue;
-        const uint16_t c  = display_.colour(layer_, i);
+        const uint16_t c  = display_.color(layer_, i);
         const int      dr = (c >> 8 & 0xF8) - r;
         const int      dg = (c >> 3 & 0xFC) - g;
         const int      db = (c << 3 & 0xF8) - b;
@@ -248,7 +248,7 @@ void Canvas::load(const FileReader& picture) {
     settle();                                // starts the reads at once where none is on its way
 }
 
-void Canvas::colours(const FileReader& picture) {
+void Canvas::colors(const FileReader& picture) {
     next_       = picture;
     nextPixels_ = false;
     waits_      = true;
@@ -265,7 +265,7 @@ bool Canvas::loading() const {
 
 // what waits replaces a picture that has landed, without showing it
 void Canvas::settle() {
-    if (pixelsRead_.status() == FileStatus::Pending || coloursRead_.status() == FileStatus::Pending) return;
+    if (pixelsRead_.status() == FileStatus::Pending || colorsRead_.status() == FileStatus::Pending) return;
     if (waits_) {
         waits_         = false;
         landing_       = next_.name()[0] != 0;
@@ -275,21 +275,21 @@ void Canvas::settle() {
             show();
             return;
         }
-        next_.read(0, colours_, sizeof colours_, coloursRead_);
-        if (landingPixels_) next_.read(sizeof colours_, pixels_, kWidth * kHeight, pixelsRead_);   // straight into the layer, which is aligned in RAM2
+        next_.read(0, colors_, sizeof colors_, colorsRead_);
+        if (landingPixels_) next_.read(sizeof colors_, pixels_, kWidth * kHeight, pixelsRead_);   // straight into the layer, which is aligned in RAM2
         return;
     }
     if (!landing_) return;
     landing_ = false;
-    const bool read = coloursRead_.bytes() == sizeof colours_;
-    if (!landingPixels_) {                   // colours() takes the palette of a picture of any size
-        if (read) display_.palette(layer_, colours_);
-        drawn(0, kHeight);                   // any row may use the colours
+    const bool read = colorsRead_.bytes() == sizeof colors_;
+    if (!landingPixels_) {                   // colors() takes the palette of a picture of any size
+        if (read) display_.palette(layer_, colors_);
+        drawn(0, kHeight);                   // any row may use the colors
         show();
         return;
     }
-    const bool whole = read && (colours_[0] << 8 | colours_[1]) == kWidth && (colours_[2] << 8 | colours_[3]) == kHeight;
-    if (whole) display_.palette(layer_, colours_);
+    const bool whole = read && (colors_[0] << 8 | colors_[1]) == kWidth && (colors_[2] << 8 | colors_[3]) == kHeight;
+    if (whole) display_.palette(layer_, colors_);
     const size_t kept = whole ? pixelsRead_.bytes() : 0;
     memset(pixels_ + kept, 0, kWidth * kHeight - kept);      // a missing, short or smaller file reads as empty
     drawn(0, kHeight);                       // the picture's rows

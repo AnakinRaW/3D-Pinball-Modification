@@ -1,6 +1,6 @@
 ---
 name: revise-document
-description: Use when a document in this repository has to be shortened, tightened or made readable - works structure first, then paragraphs, then sentences, deletes what repeats rather than rewriting it, and accounts for everything the edit removed. Trigger on "kürz das", "shorten this document", "go through the doc", "make this readable", "optimise this section", or when a review of prose rather than of figures is asked for.
+description: Use when a document in this repository has to be shortened, tightened or made readable - works structure first, then paragraphs, then sentences, deletes what repeats rather than rewriting it, and accounts for everything the edit removed. Trigger on "kürz das", "shorten this document", "go through the doc", "make this readable", "optimize this section", or when a review of prose rather than of figures is asked for.
 ---
 
 # Revising a document

@@ -51,7 +51,7 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 | Package | SMD, the footprint the stock boards carry | leaded, 7 x 7 x 6 mm |
 | Peak detecting distance | 3 mm | under 0.5 mm, above 20 % of peak out to 5 mm |
 | Collector current | 60 µA min, 410 µA max | 0.3 mA min, 1.0 mA typ |
-| the condition it is given at | I_F = 4 mA, V_CE = 2 V, aluminium evaporation on glass at 4 mm | I_F = 20 mA, V_CE = 5 V, white card at 0.3 mm |
+| the condition it is given at | I_F = 4 mA, V_CE = 2 V, aluminum evaporation on glass at 4 mm | I_F = 20 mA, V_CE = 5 V, white card at 0.3 mm |
 | Rise and fall time | 20 µs typ, 100 µs max at R_L = 1 kΩ, V_CE = 2 V, I_C = 100 µA, d = 4 mm, with Figure 6 plotting it against load resistance | none published |
 | Forward voltage | 1.2 V typ, 1.4 V max at I_F = 20 mA | 1.25 V typ, 1.6 V max at I_F = 50 mA |
 | Forward current maximum | 50 mA | 50 mA |

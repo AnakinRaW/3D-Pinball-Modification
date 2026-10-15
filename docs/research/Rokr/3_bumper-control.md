@@ -10,7 +10,7 @@ A conductive foil glued onto the playfield sits at 5 V whenever the machine runs
 
 A ball on the foil touching a shell connects that bumper's frame to 5 V. The conductive path reads 7-30 Ω, measured along the foil and across a closed contact, at various points. Each frame has its own wire to the mainboard, which is how the board tells the three bumpers apart.
 
-## Trigger behaviour
+## Trigger behavior
 
 One trigger produces one short pull-in. Manually forcing a permanent contact of a sensing eyelet and the foil eyelet does not keep the coil energized.
 This is presumably done in order to protect the solenoid. Various other vendors include a warning in their datasheet that such a mini solenoid should not be driven longer than a couple of seconds. Whether hardware or firmware enforces the cut-off is not identified.

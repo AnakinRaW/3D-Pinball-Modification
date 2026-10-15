@@ -111,7 +111,7 @@ svg .bar{stroke:var(--ink);stroke-width:.03}
     <h2>Result</h2>
     <div class="fig hero"><span>Gap, magnet face to package top</span><b id="gap"></b></div>
     <p class="note" id="gapNote"></p>
-    <div class="fig"><span>Angle error, axis 0.25 mm off centre</span><b id="err"></b></div>
+    <div class="fig"><span>Angle error, axis 0.25 mm off center</span><b id="err"></b></div>
     <div class="fig"><span>The same for the 6 × 2.5 mm reference</span><b id="ref"></b></div>
   </div>
 
@@ -206,7 +206,7 @@ const MAG = (function () {
     return best;
   }
 
-  // gets the worst angle error in degrees over one turn, the axis off centre by off towards dir
+  // gets the worst angle error in degrees over one turn, the axis off center by off toward dir
   function errorAt(D, t, z, off, dir) {
     const el = [45, 135, 225, 315].map(a => {      // the elements' angles, Figure 41
       const px = SENSOR.rHall * Math.cos(rad(a)) - off * Math.cos(dir);
@@ -223,7 +223,7 @@ const MAG = (function () {
     return Math.max(...e.map(x => Math.abs(x - mean))) * 180 / Math.PI;
   }
 
-  // gets the worst angle error in degrees across a gap range, the axis REF.offset off centre
+  // gets the worst angle error in degrees across a gap range, the axis REF.offset off center
   function offsetError(D, t, range) {
     let worst = 0;
     for (let i = 0; i <= 8; i++) {

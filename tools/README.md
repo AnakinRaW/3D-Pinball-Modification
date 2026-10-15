@@ -5,7 +5,7 @@
 | [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them. Checks every marked Teensy pin against the pin table |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
-| [`picture.py`](picture.py) | Turns the PNGs of one screen layer, each at most 320 × 240 pixels, into picture files that share one palette of 255 colours with their opacity, dithered, as [`media.md`](../assets/media.md) describes |
+| [`picture.py`](picture.py) | Turns the PNGs of one screen layer, each at most 320 × 240 pixels, into picture files that share one palette of 255 colors with their opacity, dithered, as [`media.md`](../assets/media.md) describes |
 
 Python 3, standard library only, no build step.
 
@@ -62,7 +62,7 @@ A constant a listing writes as a bare number follows the figure it encodes:
 MODEL.as_written("t_tick_us", of="t_tick", unit="µs")    # kPeriodUs = 5000
 ```
 
-Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and metre. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
+Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and meter. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
 
 Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing anchoring it, so when the model moves under it nothing notices, which is how a bench current stayed at 192 mA after it had become 233 mA. What a document states and the model does not compute is declared as an aside, with the reason:
 

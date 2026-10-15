@@ -4,9 +4,9 @@ The driver puts the picture on the display that [`docs/parts/display/design.md`]
 
 ## Picture composition
 
-The picture is 320 x 240 pixels. It is composed of three layers. From the front, they are `Front`, `Middle` and `Back`. Each pixel shows the front-most layer that has a colour there. A layer can be hidden. Where no layer has a colour, the pixel is black.
+The picture is 320 x 240 pixels. It is composed of three layers. From the front, they are `Front`, `Middle` and `Back`. Each pixel shows the front-most layer that has a color there. A layer can be hidden. Where no layer has a color, the pixel is black.
 
-Each layer keeps a table of 256 colours. This table is the layer's palette. An entry of the palette holds a 16-bit RGB565 colour and an opacity in 32 steps. A pixel of the layer stores the number of its entry in the palette. This number is the pixel's index and takes one byte. Index 0 means transparent. Behind a partly opaque colour, the layers further back shine through.
+Each layer keeps a table of 256 colors. This table is the layer's palette. An entry of the palette holds a 16-bit RGB565 color and an opacity in 32 steps. A pixel of the layer stores the number of its entry in the palette. This number is the pixel's index and takes one byte. Index 0 means transparent. Behind a partly opaque color, the layers further back shine through.
 
 Movies play inside a viewport on the back layer. The viewport is a rectangle that can be sized and placed. Outside the viewport, the back layer keeps showing its own pixels.
 
@@ -16,7 +16,7 @@ The driver combines the three layers and a playing movie into one picture while 
 
 The display keeps showing what it received last. The driver therefore sends only the rows that changed. A component marks its changed rows with `show()`. A row that changes again while it is being sent goes out a second time, so no change is lost.
 
-Changing a palette colour does not update the pixels on the screen until `show()` sends the rows with that colour again.
+Changing a palette color does not update the pixels on the screen until `show()` sends the rows with that color again.
 
 ## Movies
 
@@ -38,7 +38,7 @@ When a movie ends or is stopped, the back layer shows its own pixels in the view
 
 Sending the whole combined picture once takes 12.8 ms.
 
-While the driver sends, it takes an estimated 21.9 % of the processor. Partly opaque colours on the front and the middle layer raise this to 61.9 % at most. The sending keeps its speed even then.
+While the driver sends, it takes an estimated 21.9 % of the processor. Partly opaque colors on the front and the middle layer raise this to 61.9 % at most. The sending keeps its speed even then.
 
 The finished picture exists only on the display. No buffer in the Teensy holds it. The three layers take 75 KB each. The movie needs a buffer of 64 KB for the frames read ahead from the card. In all, the driver takes 289 KB of RAM2.
 
@@ -71,9 +71,9 @@ public:
     bool begin() override;
 
     uint8_t* pixels(Layer layer);                            // gets a layer's palette indices, row by row
-    void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a colour of a layer's palette, opacity 0 to 255 in 32 steps
+    void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a color of a layer's palette, opacity 0 to 255 in 32 steps
     void     palette(Layer layer, const uint8_t* entries);    // sets all 256 entries of a layer's palette from a picture file's table, entry 0 unused
-    uint16_t colour(Layer layer, uint8_t index) const;       // gets the RGB565 colour of a palette entry, the back layer's with its opacity folded in
+    uint16_t color(Layer layer, uint8_t index) const;       // gets the RGB565 color of a palette entry, the back layer's with its opacity folded in
     bool     opaque(Layer layer, uint8_t index) const;       // gets whether a palette entry covers what lies behind it, every entry of the back layer
     void     show(uint16_t top, uint16_t bottom);            // marks rows top to bottom - 1 as drawn; returns at once
     void     shown(Layer layer, bool shown);                 // shows or hides a layer and marks every row

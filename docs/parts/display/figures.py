@@ -101,8 +101,8 @@ ds("r_drv", 157, "Ω", sheet=MCU, src="Table 27, GPIO output buffer average impe
    stated=True)
 dec("l_cable", 50, "cm", src="the longest cable from the Teensy to the module in the diorama",
     group="EDGE", section=BUS, stated=True)
-asm("c_cable", 50, "pF", src="one wire of the cable of at most 50 cm against its neighbours, "
-    "about twice what a flat cable of 28 AWG carries per half metre; no measurement",
+asm("c_cable", 50, "pF", src="one wire of the cable of at most 50 cm against its neighbors, "
+    "about twice what a flat cable of 28 AWG carries per half meter; no measurement",
     group="EDGE", section=BUS, stated=True)
 ds("c_io", 5.5, "pF", sheet=BUFFER, src="7.5 Electrical Characteristics, Cio of the A or B "
    "ports at VCC = 3.3 V, typical", group="EDGE", section=BUS, stated=True)
@@ -165,11 +165,11 @@ ds("n_rows", 240, "", sheet=PANEL, src="the panel's 240 columns, the height in l
    group="FRAME", section=FRAME, stated=True)
 ds("b_pixel", 2, "bytes", sheet=PANEL, src="8-bit bus, 16 bits per pixel in RGB 5-6-5, two "
    "writes per pixel, p. 65", group="FRAME", section=FRAME, stated=True)
-dec("b_index", 1, "bytes", src="one palette index per pixel in a layer, 256 colours",
+dec("b_index", 1, "bytes", src="one palette index per pixel in a layer, 256 colors",
     stated=False)
 dec("n_layers", 3, "", src="the game's layer, the host's layer and the game's background",
     stated=False)
-dec("n_colours", 256, "", src="the colours of a layer's palette, every value of its byte, "
+dec("n_colors", 256, "", src="the colors of a layer's palette, every value of its byte, "
     "index 0 transparent", stated=False)
 ds("n_shifters", 8, "", src=f"{RM}, 50.6.1.3.3: FlexIO3 has eight shifters, chained into "
    "one buffer of a burst", stated=False)
@@ -239,17 +239,17 @@ def _(n_isr, t_burst, f_cpu):
     return n_isr / (t_burst * f_cpu)
 
 
-# partly opaque colours: a palette entry carries an opacity, and the refill blends such a pixel
-# with the colour behind it
+# partly opaque colors: a palette entry carries an opacity, and the refill blends such a pixel
+# with the color behind it
 dec("n_alpha", 32, "", src="the opacity steps a palette entry holds, five bits, the steps the "
     "RGB565 blend multiplies in", stated=False)
 asm("n_blend", 20, "clocks", src="the processor clocks one refill adds to blend one pixel of a "
-    "partly opaque layer with the colour behind it: the opacity test, the lookup of the layer "
+    "partly opaque layer with the color behind it: the opacity test, the lookup of the layer "
     "behind, the RGB565 blend in 32 steps and the branch misses where opaque and partly opaque "
     "pixels alternate; an estimate from the instruction count, no measurement",
     group="FRAME", section=FRAME, stated=True)
 dec("n_blend_layers", 2, "", src="the layers that blend at one pixel at most, the front and the "
-    "middle layer; the back layer's opacity is folded into its palette colour when it is set, "
+    "middle layer; the back layer's opacity is folded into its palette color when it is set, "
     "since only black lies behind it", stated=False)
 
 

@@ -89,7 +89,7 @@ What a channel delivers is one number: the LED-on reading minus the LED-off read
 
 | Issue | Reason | Change |
 |---|---|---|
-| One channel catches the ball sometimes and misses it sometimes, while its neighbours are reliable. The jump is there, but too small to threshold against | Too little IR comes back: that sensor sits further from the ball, at a worse angle, or over a duller patch | Make its emitter brighter: that channel's **220 Ω → 150 Ω**, raising it from 9.3 to about 13.4 mA nominal, 14.9 mA worst case |
+| One channel catches the ball sometimes and misses it sometimes, while its neighbors are reliable. The jump is there, but too small to threshold against | Too little IR comes back: that sensor sits further from the ball, at a worse angle, or over a duller patch | Make its emitter brighter: that channel's **220 Ω → 150 Ω**, raising it from 9.3 to about 13.4 mA nominal, 14.9 mA worst case |
 | One channel sits near the top of its range all the time, ball or no ball, so a ball cannot push it any higher. It either never reports one or reports one permanently | Ambient IR alone already drives the phototransistor to its limit, leaving no headroom for the reflection | Make it less sensitive: that channel's **4.7 kΩ → 2.2 kΩ**, or 1.5 kΩ where that is still short. The same photocurrent then produces less voltage, so the range opens up again |
 
 ### Limits
@@ -100,7 +100,7 @@ A swap has to pass two checks.
 
 | Resistor | Range | Set by |
 |---|---|---|
-| Emitter | <u>47 Ω</u> … 431 Ω | **Below:** the emitter burns out, past its 50 mA I<sub>F</sub> absolute maximum at V<sub>OUT</sub> max and V<sub>F</sub> min. Under 82 Ω that channel's emitter resistor passes half its own rated power and has to move to a larger case. **Above:** the emitter drops below the 4 mA the detector is characterised at, and the datasheet stops saying what comes back |
+| Emitter | <u>47 Ω</u> … 431 Ω | **Below:** the emitter burns out, past its 50 mA I<sub>F</sub> absolute maximum at V<sub>OUT</sub> max and V<sub>F</sub> min. Under 82 Ω that channel's emitter resistor passes half its own rated power and has to move to a larger case. **Above:** the emitter drops below the 4 mA the detector is characterized at, and the datasheet stops saying what comes back |
 | Pull-down | 1 kΩ … 5 kΩ | **Below:** the gap between a ball and a clear track shrinks into the noise, 36.6 µA giving about 11 steps of a ten-bit read at 1 kΩ. **Above:** the converter cannot read a source this large in the time it has and mixes one channel into the next; and the same room light makes more voltage, until it alone fills the range a ball would need |
 
 *The <u>underlined</u> bound destroys hardware when crossed; the others stop the channel from working and damage nothing.*
@@ -128,7 +128,7 @@ Which pins this subsystem takes, and what each one locks out, is in [`pin-assign
 
 The IR sensing is delivered as a library. The library exposes a public-facing API for initialization and reporting. The library also acts a the driver and owns things such as IR pulsing, timing constraints, and calibration and evaluation logic.
 
-The library publishes events. Two event kinds, one level query and initialisation are the whole interface.
+The library publishes events. Two event kinds, one level query and initialization are the whole interface.
 
 | | |
 |---|---|
@@ -158,13 +158,13 @@ scale      how much of that the channel still returns, read at each start
 threshold  scale × (clear + ball) / 2
 release    threshold − margin,      margin from the noise floor read at each start
 ```
-`clear` and `ball` get hardcoded per channel. `scale` is measured at initialisation: the ratio between what a channel returns now and what it returned when those two were taken. It takes out what has changed since, dust on the sensor or its ageing. Since a channel may hold a ball at the time of initialization, the driver simply calibrates against whichever of `clear` and `ball` the reading at that moment sits nearer to.
+`clear` and `ball` get hardcoded per channel. `scale` is measured at initialization: the ratio between what a channel returns now and what it returned when those two were taken. It takes out what has changed since, dust on the sensor or its aging. Since a channel may hold a ball at the time of initialization, the driver simply calibrates against whichever of `clear` and `ball` the reading at that moment sits nearer to.
 
 A ball status change is reported once two readings in a row cross the same threshold. The second reading is an additional choice against false positives.
 
 The driver is a state machine, ticked from a timer. That tick is what keeps the measurement independent of the main loop, and has to happen on time.
 
-Every channel is read as late in the phase as it can be. The sensor is still settling after the LED switches, so a later reading carries more signal. The driver knows how many channels are fitted, and it places the read block to end with the phase at initialisation. Reading must be completed at the phase's end and must not extend into the next phase. Additionally, the read block must not start before `τ · ln 2` into the phase, where τ is the settling time constant of the sensor, because until then a channel still carries more of the previous phase than of this one.
+Every channel is read as late in the phase as it can be. The sensor is still settling after the LED switches, so a later reading carries more signal. The driver knows how many channels are fitted, and it places the read block to end with the phase at initialization. Reading must be completed at the phase's end and must not extend into the next phase. Additionally, the read block must not start before `τ · ln 2` into the phase, where τ is the settling time constant of the sensor, because until then a channel still carries more of the previous phase than of this one.
 
 The stock machine limits how long a phase may be. Its emitter pulses with a measured 3 ms period, and it needs both windows of that period to tell a ball from ambient light, so a ball it catches stays over the sensor for at least one full period.
 
@@ -182,7 +182,7 @@ One board carries everything the channels need. It sits between the Teensy, the 
 
 ### Digital data reading
 
-The channels are digitised on the board and cross to the Teensy over SPI. A Teensy analog input would measure the same node just as well. The difference appears in situations where the Teensy is powered off and cannot be protected from the board's rail driving current into its pins (read more [below](#separating-power-rails)).
+The channels are digitized on the board and cross to the Teensy over SPI. A Teensy analog input would measure the same node just as well. The difference appears in situations where the Teensy is powered off and cannot be protected from the board's rail driving current into its pins (read more [below](#separating-power-rails)).
 
 #### Multiplexing
 
@@ -266,7 +266,7 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 ## Notes for PCB building
 
 - **On a board Q1 should be the IRL540N in TO-220** ([datasheet](../../datasheets/IRL540N.PDF)), while this build stays through-hole. The AO3400A in SOT-23 is the SMD variant.
-- **C5 and C6 should be X5R or X7R, rated 10 V or more, and reach 11 µF at 3.3 V bias**, the figure every derivation uses. A Y5V loses too much of its nominal value to DC bias to reach it, an aluminium electrolytic fails on ESR.
+- **C5 and C6 should be X5R or X7R, rated 10 V or more, and reach 11 µF at 3.3 V bias**, the figure every derivation uses. A Y5V loses too much of its nominal value to DC bias to reach it, an aluminum electrolytic fails on ESR.
 
 **Placement distances.** The figures are assumptions, no datasheet states one.
 
@@ -315,7 +315,7 @@ The sensors beyond the three that come out of the stock machine sit on boards bu
 |---|---|---|---|---|
 | up to 13 | Reflective photointerrupter | not yet chosen | n/a | Emitter and detector |
 
-**The detector for these boards is not settled.** The stock GP2S700HCP is a leadless package which is hard to hand-solder. Thus, the modification favours through-hole sensors. The **OPB606A** and the **QRE1113** are the two candidates.
+**The detector for these boards is not settled.** The stock GP2S700HCP is a leadless package which is hard to hand-solder. Thus, the modification favors through-hole sensors. The **OPB606A** and the **QRE1113** are the two candidates.
 
 **The new sensor boards get no collector resistor.** This design reads the node with a converter where the stock board drives a transistor base. This is a completely different design compared to the stock machine making 1.585 kΩ unnecessary. The three boards from the stock machine keep theirs, sacrificing roughly 25 % read performance but therefore keeping boards that already physically fit in the machine.
 
@@ -456,7 +456,7 @@ Droop         ΔI / (2π · f_c · C), C5 fitted, 21 µF:
 
 Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 202 mA that is 38 to 65 mV, the order of the 77 mV above. The rail's minimum with the bus on is 3.146 V, so the converters' 2.7 V floor stands 369 mV below the droop with C5 fitted, and 124 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 77 mV against the 2269 mV across the emitter resistor, 3.4 % of the current, over the first tens of µs of the lit phase, and the first channel is read 270 µs into it.
 
-**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 77 mV droop; an aluminium electrolytic at 2 Ω would put 404 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
+**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 77 mV droop; an aluminum electrolytic at 2 Ω would put 404 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
 
 **Load release overshoots by the same order**, and the reference overshoots with it, so the reading is unaffected and the channel node cannot leave the converter's input range. U3 sees the excursion on VCC2: 3.432 V plus at most about 70 mV is 3.50 V, inside the 5.5 V at which its recommended operating conditions end.
 
@@ -474,7 +474,7 @@ An inductor or a ferrite bead in place of R39 works at 500 kHz and does nothing 
 
 The converter reports `1024 × V_IN / V_REF`, and V<sub>REF</sub> is the rail. Between the two phases the rail load steps by 202 mA, so V<sub>REF</sub> differs between them by the module's load regulation plus the drop across the supply cable, so the dark reading is taken against a slightly different ruler than the lit one. Scaling it by the ratio of the two rail voltages would remove that.
 
-**Nothing scales the dark reading.** What such a factor moves is its departure from unity times that reading, so inverting it gives the departure at which it would shift one converter step, and no figure for the module's unpublished load regulation is needed to get there. A sensor at its installed position reads 3.8 mV with its emitter dark and the track clear, which is 1.15 steps, so the ratio would have to stand 86.9 % off unity. A switching module with half a metre of cable stands near one per cent.
+**Nothing scales the dark reading.** What such a factor moves is its departure from unity times that reading, so inverting it gives the departure at which it would shift one converter step, and no figure for the module's unpublished load regulation is needed to get there. A sensor at its installed position reads 3.8 mV with its emitter dark and the track clear, which is 1.15 steps, so the ratio would have to stand 86.9 % off unity. A switching module with half a meter of cable stands near one per cent.
 
 What would change that answer is a brighter room, and the input to watch is the dark reading rather than the rail: a factor earns its place once a channel reads around a hundred converter steps with its emitter off. The start-up calibration reads every channel's dark level, so the driver sees that case arriving.
 
@@ -592,7 +592,7 @@ Settling          τ at the fitted pull-down, measured       =   70 µs
                                                               97 % at τ =  62 µs
                                                              100 % at τ =  43 µs
                   sign inverts below τ · ln(2 / (1 + x))   = 48.5 µs at τ = 70 µs → 5.6×
-                  that instant rises with τ towards T/2, so a
+                  that instant rises with τ toward T/2, so a
                   read past the phase midpoint holds its sign
                   for any part
 ```
@@ -613,7 +613,7 @@ Below that instant the decaying dark trace still sits above the rising lit trace
 
 **Where the ball signal comes from.** It is measured: a stock sensor board at its installed position over the track, 100 Ω in the emitter line and the 4.7 kΩ pull-down, read with a ball on the track and with the track clear, each against its own dark reading. [The sensor board's notes](../../research/Rokr/2_ir-reflective-sensor-p33.md) hold the four readings. Leaving 172 mV across the pull-down, of which 165 mV stands at the first read.
 
-The datasheet characterises I<sub>C</sub> at 60 µA minimum and 410 µA maximum, at I<sub>F</sub> = 4 mA, V<sub>CE</sub> = 2 V and d = 4 mm against an aluminium-evaporated mirror on glass, and carries no curve of I<sub>C</sub> against forward current, so that condition and this one cannot be computed into each other: the emitters run at 20.5 mA, 5.13× the characterising current, and the 9 mm ball returns far less than a mirror. Scaled linearly back to 4 mA the measurement is 7.14 µA against that 60 µA minimum, and the ball is what accounts for the gap. It holds at 25 °C; Figure 4 puts the collector current at 92 % of that at the 40 °C the sensors are bounded at, and the LED's falling V<sub>F</sub> gives 1 to 2 % of it back.
+The datasheet characterizes I<sub>C</sub> at 60 µA minimum and 410 µA maximum, at I<sub>F</sub> = 4 mA, V<sub>CE</sub> = 2 V and d = 4 mm against an aluminum-evaporated mirror on glass, and carries no curve of I<sub>C</sub> against forward current, so that condition and this one cannot be computed into each other: the emitters run at 20.5 mA, 5.13× the characterizing current, and the 9 mm ball returns far less than a mirror. Scaled linearly back to 4 mA the measurement is 7.14 µA against that 60 µA minimum, and the ball is what accounts for the gap. It holds at 25 °C; Figure 4 puts the collector current at 92 % of that at the 40 °C the sensors are bounded at, and the LED's falling V<sub>F</sub> gives 1 to 2 % of it back.
 
 A smaller value is faster and more tolerant of ambient light, and less sensitive. At the 270 µs read instant 4.7 kΩ carries 165 mV against 80 mV at 2.2 kΩ. Above it the signal keeps climbing, and what ends the sweep is the acquisition window rather than the settling.
 
@@ -653,7 +653,7 @@ The pull-down alone limits the phototransistor branch, on a rebuilt board where 
                              which the bench case does not allow
         the upper bound takes the smallest U_R, V_OUT min and V_F max:
                              U_R = 3.146 − 1.4 − 0.020             = 1.726 V
-        upper                datasheet characterises I_C at I_F = 4 mA:
+        upper                datasheet characterizes I_C at I_F = 4 mA:
                              R = 1.726 V / 4 mA                    =  431 Ω
 
 4.7 kΩ lower                 resolution at a 36.6 µA delta:
@@ -706,7 +706,7 @@ One standard value inside each of those walls:
 
 ```
 100 Ω    above the 42 Ω single-channel bound  → 22 mA solving V_F on the LED's curve, 47 mW
-390 Ω    below the 431 Ω characterising point → 4.4 mA at the weakest corner
+390 Ω    below the 431 Ω characterizing point → 4.4 mA at the weakest corner
 2.2 kΩ   twice the 1 kΩ resolution floor      → 80 mV, 24 steps per 36.6 µA
 4.7 kΩ   under the 5.19 kΩ acquisition wall   → 7.6 τ of window, 501 µA of headroom
 ```

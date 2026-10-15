@@ -97,7 +97,7 @@ dec("c_ref", 22, "µF", src="C6, printed value")
 dec("c_entry", 22, "µF", src="C5, printed value")
 dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin")
 dec("t_phase", 600, "µs", src="the phase, sitting on the dwell bound derived below")
-dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initialisations, the stock machine's own half period")
+dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initializations, the stock machine's own half period")
 MODEL.uses("f_bus", of="teensy-4.1")
 dec("qt_prescale", 4, "×", src="QuadTimer3's prescaler, the smallest power of two whose span holds the fallback phase")
 MODEL.uses("qt_range", of="teensy-4.1")
@@ -108,7 +108,7 @@ dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
 dec("bits", 10, "", src="the MCP3008's resolution")
 MODEL.uses("i_teensy_3v3", of="teensy-4.1")
 dec("r_led_e12_below", 47, "Ω", src="the E12 value above the single-channel bound")
-dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterising point")
+dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterizing point")
 dec("r_pd_alt", 2.2, "kΩ", src="one standard value, twice the resolution floor")
 dec("r_pd_alt_high", 10, "kΩ", src="the pull-down one decade up, weighed in the "
     "sweep below")
@@ -133,7 +133,7 @@ dec("cable_drop_bound", 22, "mV", group="V_OUT", section=BASE, stated=True,
     label="bounded at",
     src="the drop the rail minimum leaves for the cable, from which the 0.1 Ω follows")
 asm("contact_r", 20, "mΩ", src="one crimped 2.54 mm contact")
-asm("awg28_per_m", 0.20, "Ω", src="round figure for 28 AWG per metre, one conductor")
+asm("awg28_per_m", 0.20, "Ω", src="round figure for 28 AWG per meter, one conductor")
 asm("f_c_pess", 20, "kHz", src="pessimistic reading of the module's crossover, against "
     "the 75 kHz of the FN8373.2 worked example")
 asm("f_c_worst", 10, "kHz", src="the crossover the module's own capacitance is quoted at")
@@ -152,10 +152,10 @@ asm("burst_freq_low", 9, "kHz", src="the low end of the power-save burst rate at
 asm("further_drop", 17, "mV", src="one step of further cable drop past the bound")
 asm("cable_length", 5, "cm", src="the run from the module to J-PWR the bound is "
     "taken at")
-dec("one_metre", 1, "m", src="the length awg28_per_m is quoted per")
+dec("one_meter", 1, "m", src="the length awg28_per_m is quoted per")
 asm("rds_hypothetical", 1, "Ω", src="the R_DS(on) the IRL540N estimate is tested "
     "against, an order of magnitude above it")
-asm("esr_electrolytic", 2, "Ω", src="the ESR an aluminium electrolytic would bring "
+asm("esr_electrolytic", 2, "Ω", src="the ESR an aluminum electrolytic would bring "
     "in place of C5")
 
 # ===========================================================================
@@ -247,12 +247,12 @@ gr("i_f_end_at", 85, "°C", src=_F1 + ", the temperature axis", sheet=SENSOR)
 ds("i_c_abs_max", 20, "mA", src="GP2S700HCP D3-A02201EN, absolute maximum collector "
    "current", sheet=SENSOR)
 ds("i_f_char", 4, "mA", src="GP2S700HCP D3-A02201EN, the forward current I_C is "
-   "characterised at", sheet=SENSOR)
+   "characterized at", sheet=SENSOR)
 ds("i_c_ds_min", 60, "µA", src="GP2S700HCP D3-A02201EN, I_C minimum at I_F = 4 mA, "
-   "V_CE = 2 V, d = 4 mm against an aluminium mirror", sheet=SENSOR)
+   "V_CE = 2 V, d = 4 mm against an aluminum mirror", sheet=SENSOR)
 ds("i_c_ds_max", 410, "µA", src="GP2S700HCP D3-A02201EN, I_C maximum at the same "
    "condition", sheet=SENSOR)
-ds("v_ce_char", 2, "V", src="GP2S700HCP D3-A02201EN, the V_CE I_C is characterised at",
+ds("v_ce_char", 2, "V", src="GP2S700HCP D3-A02201EN, the V_CE I_C is characterized at",
    sheet=SENSOR)
 ds("t_rf_max_1k", 100, "µs", src="GP2S700HCP D3-A02201EN, t_r and t_f maximum at "
    "R_L = 1 kΩ", sheet=SENSOR)
@@ -268,7 +268,7 @@ gr("fig6_4k7", 71, "µs", src="GP2S700HCP D3-A02201EN Figure 6, read at 4.7 kΩ"
 gr("fig6_10k", 94, "µs", src="GP2S700HCP D3-A02201EN Figure 6, at 10 kΩ", sheet=SENSOR)
 gr("i_c_at_40c", 92, "%", src="GP2S700HCP D3-A02201EN Figure 4, collector current "
    "against ambient temperature", sheet=SENSOR)
-gr("i_c_at_25c", 100, "%", src="GP2S700HCP D3-A02201EN Figure 4 normalises I_C to its "
+gr("i_c_at_25c", 100, "%", src="GP2S700HCP D3-A02201EN Figure 4 normalizes I_C to its "
    "value at 25 °C, which is the curve's anchor", sheet=SENSOR)
 gr("fig6_1k_at", 1, "kΩ", src="GP2S700HCP D3-A02201EN Figure 6, the load axis",
    sheet=SENSOR)
@@ -707,7 +707,7 @@ def _(v_out_max, vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, p_0805,
       r_min_single, r_led_alt_high):
     # The emitter branch reaches half an 0805's rating at this resistor. V_F
     # moves with the current, so the resistance is bisected between the
-    # single-channel bound and the characterising point.
+    # single-channel bound and the characterizing point.
     curve = [(vf75_10ma_at, vf75_10ma), (vf75_50ma_at, vf75_50ma)]
     return _bisect_r(p_0805 / 2, v_out_max, curve, r_min_single, r_led_alt_high)
 
@@ -891,8 +891,8 @@ def _(contact_r, n_contacts):
 
 
 @fig("wire_5cm", "mΩ", group=_CABLE, stated="loose")
-def _(awg28_per_m, cable_length, one_metre):
-    return 2 * awg28_per_m * (cable_length / one_metre).raw
+def _(awg28_per_m, cable_length, one_meter):
+    return 2 * awg28_per_m * (cable_length / one_meter).raw
 
 
 @fig("further_drop_of_least", "%", group=_CABLE, stated="loose")
@@ -1864,7 +1864,7 @@ _I("a DOUT bit is home inside the half period",
    lambda v: v.dout_round_trip < v.half_period)
 _I("both emitter resistors are above the single-channel bound",
    lambda v: v.r_min_single < v.r_led_sharp and v.r_min_single < v.r_led)
-_I("both emitter resistors are below the characterising point",
+_I("both emitter resistors are below the characterizing point",
    lambda v: v.r_led < v.knob_r_upper and v.r_led_sharp < v.knob_r_upper)
 _I("both emitter resistors stay inside an 0805",
    lambda v: v.p_r_led < v.p_0805 and v.p_r_led_sharp < v.p_0805)

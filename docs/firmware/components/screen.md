@@ -16,21 +16,21 @@ When the host starts a game, the component clears the stopped game's layer and b
     
 ## Drawing
 
-A `Canvas` stands for one layer. It is an [Adafruit_GFX](https://github.com/adafruit/Adafruit-GFX-Library) canvas, so it draws text, lines, rectangles, circles and bitmaps. Every pixel of a canvas holds a palette index. Index 0 is transparent. `palette()` sets the 255 colours a layer uses besides index 0. Each colour also has an opacity from 0 to 255. The display shows the opacity in 32 steps. A partly opaque colour lets what lies behind it shine through. `nearest()` gets the index of the layer's opaque colour closest to a colour. A game finds the colour of its text this way.
+A `Canvas` stands for one layer. It is an [Adafruit_GFX](https://github.com/adafruit/Adafruit-GFX-Library) canvas, so it draws text, lines, rectangles, circles and bitmaps. Every pixel of a canvas holds a palette index. Index 0 is transparent. `palette()` sets the 255 colors a layer uses besides index 0. Each color also has an opacity from 0 to 255. The display shows the opacity in 32 steps. A partly opaque color lets what lies behind it shine through. `nearest()` gets the index of the layer's opaque color closest to a color. A game finds the color of its text this way.
 
-Drawing changes the layer in memory. `show()` brings the changes to the screen and returns at once. A game first draws everything that changes and then calls `show()` once. A new colour from `palette()` also appears with the next `show()`.
+Drawing changes the layer in memory. `show()` brings the changes to the screen and returns at once. A game first draws everything that changes and then calls `show()` once. A new color from `palette()` also appears with the next `show()`.
 
 A game loads its background picture once and draws only what changes into its own layer. Where the game erases its layer back to 0, the background shows through.
 
 ## Pictures
 
-A picture is a file on the card, opened through the [file system](file-system.md). It starts with 256 palette entries. An entry takes four bytes: the colour in RGB565 with its high byte first, its opacity and an unused byte. Entry 0 holds the width and the height instead, each in two bytes with the high byte first. Then come the pixels row by row from the top left, one byte each with the pixel's palette index. The pictures of one layer share one palette. [`media.md`](../../../assets/media.md) shows how the tool makes them from PNGs.
+A picture is a file on the card, opened through the [file system](file-system.md). It starts with 256 palette entries. An entry takes four bytes: the color in RGB565 with its high byte first, its opacity and an unused byte. Entry 0 holds the width and the height instead, each in two bytes with the high byte first. Then come the pixels row by row from the top left, one byte each with the pixel's palette index. The pictures of one layer share one palette. [`media.md`](../../../assets/media.md) shows how the tool makes them from PNGs.
 
-`load()` reads a full-screen picture into a layer with its colours and returns at once. `update()` shows it once it has been read from the card. Until then, `loading()` is true and drawing into the layer is lost, because the picture overwrites it. A second `load()` replaces a picture still on its way. While a picture lands, the screen can briefly show it in the layer's old colours. A file that is missing, short or smaller than the screen leaves the layer empty.
+`load()` reads a full-screen picture into a layer with its colors and returns at once. `update()` shows it once it has been read from the card. Until then, `loading()` is true and drawing into the layer is lost, because the picture overwrites it. A second `load()` replaces a picture still on its way. While a picture lands, the screen can briefly show it in the layer's old colors. A file that is missing, short or smaller than the screen leaves the layer empty.
 
-`colours()` gives a layer only the palette of a picture file. A layer of smaller pictures and text gets its colours this way. The palette loads like a picture.
+`colors()` gives a layer only the palette of a picture file. A layer of smaller pictures and text gets its colors this way. The palette loads like a picture.
 
-A smaller picture is read once into a `Picture` and drawn from there as often as needed. The game gives the `Picture` a buffer with room for the pixels. `draw()` puts the picture into a layer at a position, in the layer's colours. Its transparent pixels leave the layer as it is. Parts outside the layer are cut off. While the picture loads, `draw()` draws nothing, so a game loads its pictures in `start()` and waits for them in its intro. A file that is missing, short or larger than the buffer draws nothing.
+A smaller picture is read once into a `Picture` and drawn from there as often as needed. The game gives the `Picture` a buffer with room for the pixels. `draw()` puts the picture into a layer at a position, in the layer's colors. Its transparent pixels leave the layer as it is. Parts outside the layer are cut off. While the picture loads, `draw()` draws nothing, so a game loads its pictures in `start()` and waits for them in its intro. A file that is missing, short or larger than the buffer draws nothing.
 
 ## Touch
 
@@ -47,7 +47,7 @@ A touch sinks from the front layer to the back. A hidden layer lets it pass. A s
 
 ```cpp
 // a picture smaller than the screen, read once into a buffer the game gives and then drawn as
-// often as needed into a layer with the colours of its set
+// often as needed into a layer with the colors of its set
 class Picture {
 public:
     template <size_t N>
@@ -68,13 +68,13 @@ public:
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t index) override;   // fills a rectangle row by row
     void fillScreen(uint16_t index) override;                                        // fills the whole layer
     void draw(const Picture& picture, int16_t x, int16_t y);                            // draws a picture with its top left corner at x, y; its transparent pixels leave the layer as it is
-    void palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity = 255);   // sets a colour of the layer's palette, 255 opaque, and marks every row
+    void palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity = 255);   // sets a color of the layer's palette, 255 opaque, and marks every row
     void show();                                                                     // hands the rows drawn since the last show() to the driver
-    void load(const FileReader& picture);                                            // reads a full-screen picture file into the layer with its colours and returns at once
-    void colours(const FileReader& picture);                                         // takes the palette of a picture file for the layer and returns at once
+    void load(const FileReader& picture);                                            // reads a full-screen picture file into the layer with its colors and returns at once
+    void colors(const FileReader& picture);                                         // takes the palette of a picture file for the layer and returns at once
 
     bool    loading() const;                                                         // gets whether a picture or a palette still loads
-    uint8_t nearest(uint8_t r, uint8_t g, uint8_t b) const;                          // gets the index of the layer's opaque colour closest to r, g, b, 0 when it has none
+    uint8_t nearest(uint8_t r, uint8_t g, uint8_t b) const;                          // gets the index of the layer's opaque color closest to r, g, b, 0 when it has none
 };
 
 // the picture: the game's layer and background, and the host's layer over them

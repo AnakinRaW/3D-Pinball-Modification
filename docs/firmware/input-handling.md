@@ -6,9 +6,9 @@ The machine has several input subsystems: IR ball sensing, a break beam sensor, 
 
 These subsystems have in common that they are sensing events driven by the ball interacting with elements on the playfield. Their drivers are responsible for correct sensing, processing as well as notifying the event. The subsystems shall not communicate with each other directly, but only publish their events.
 
-The main loop hands those events to the game host, and the [playfield components](game-abstraction.md#playfield-components) turn them into the pinball events a game gets. The game handles those by calling other subsystems to create things like visual effects or point scoring. The **Input Handling System** is the place to organise these events so that a game can use them.
+The main loop hands those events to the game host, and the [playfield components](game-abstraction.md#playfield-components) turn them into the pinball events a game gets. The game handles those by calling other subsystems to create things like visual effects or point scoring. The **Input Handling System** is the place to organize these events so that a game can use them.
 
-In order to be able to realise complex game mechanics the input system needs to fulfil a couple of requirements:
+In order to be able to realize complex game mechanics the input system needs to fulfill a couple of requirements:
 
 - The game logic can tell the order in which events happened, whichever subsystem detected which.
 - The game logic can tell how much time passed between two events, so a timing window can be judged.

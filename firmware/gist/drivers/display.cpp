@@ -6,9 +6,9 @@ public:
     bool begin() override;
 
     uint8_t* pixels(Layer layer);                            // gets a layer's palette indices, row by row
-    void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a colour of a layer's palette, opacity 0 to 255 in 32 steps
+    void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a color of a layer's palette, opacity 0 to 255 in 32 steps
     void     palette(Layer layer, const uint8_t* entries);    // sets all 256 entries of a layer's palette from a picture file's table, entry 0 unused
-    uint16_t colour(Layer layer, uint8_t index) const;       // gets the RGB565 colour of a palette entry, the back layer's with its opacity folded in
+    uint16_t color(Layer layer, uint8_t index) const;       // gets the RGB565 color of a palette entry, the back layer's with its opacity folded in
     bool     opaque(Layer layer, uint8_t index) const;       // gets whether a palette entry covers what lies behind it, every entry of the back layer
     void     show(uint16_t top, uint16_t bottom);            // marks rows top to bottom - 1 as drawn; returns at once
     void     shown(Layer layer, bool shown);                 // shows or hides a layer and marks every row
@@ -20,7 +20,7 @@ public:
 private:
     static constexpr uint16_t kWidth        = 320;
     static constexpr uint16_t kHeight       = 240;
-    static constexpr uint16_t kColours      = 256;     // a palette, index 0 transparent
+    static constexpr uint16_t kColors      = 256;     // a palette, index 0 transparent
     static constexpr uint32_t kOpaque       = 31;      // the highest of the 32 opacity steps
     static constexpr uint8_t  kShifters     = 8;       // FlexIO3's shifters, one buffer of a burst
     static constexpr uint8_t  kDataLines    = 8;       // D0 to D7 on one shifter
@@ -49,7 +49,7 @@ DMAMEM uint8_t Display::middle_[kWidth * kHeight] __attribute__((aligned(32))); 
 DMAMEM uint8_t Display::back_[kWidth * kHeight] __attribute__((aligned(32)));     // the back layer
 DMAMEM uint8_t Display::ring_[kChunks * kChunk] __attribute__((aligned(32)));   // the movie's chunks
 FileChannel<Display::kChunks> Display::movie_(ring_, kChunk, IRQ_FLEXIO3);            // the movie playing, read ahead into the ring; every read raises FlexIO3
-uint32_t       Display::palette_[3][kColours];                                   // RGB565 in the lower half, the opacity step above it; entry 0 transparent
+uint32_t       Display::palette_[3][kColors];                                   // RGB565 in the lower half, the opacity step above it; entry 0 transparent
 
 // a play() request: the main loop fills the slot the request word does not name, then publishes
 // it, and the interrupt reads the slot the word names
@@ -64,7 +64,7 @@ struct MovieRequest {
 static MovieRequest requests_[2];
 
 // gets fg over bg, both RGB565, at a of 32: green apart from red and blue in one word, so
-// one multiply a colour blends all three
+// one multiply a color blends all three
 static inline uint16_t blend(uint16_t fg, uint16_t bg, uint32_t a) {
     const uint32_t f = (fg | (uint32_t)fg << 16) & 0x07E0F81F;
     const uint32_t b = (bg | (uint32_t)bg << 16) & 0x07E0F81F;
@@ -72,7 +72,7 @@ static inline uint16_t blend(uint16_t fg, uint16_t bg, uint32_t a) {
     return (uint16_t)(c | c >> 16);
 }
 
-// gets a palette entry; the back layer's opacity goes into its colour, since only black lies behind it
+// gets a palette entry; the back layer's opacity goes into its color, since only black lies behind it
 uint32_t Display::entry(Layer layer, uint16_t rgb565, uint8_t opacity) {
     const uint32_t a = opacity >> 3;                                     // 0 to 31
     if (layer != Layer::Back) return rgb565 | a << 16;
@@ -83,7 +83,7 @@ void Display::palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opaci
     if (index != 0) palette_[(int)layer][index] = entry(layer, rgb565, opacity);   // 0 stays transparent
 }
 
-uint16_t Display::colour(Layer layer, uint8_t index) const {
+uint16_t Display::color(Layer layer, uint8_t index) const {
     return palette_[(int)layer][index];
 }
 
@@ -93,7 +93,7 @@ bool Display::opaque(Layer layer, uint8_t index) const {
 
 // a picture file's entry: RGB565 high byte first, the opacity, an unused byte
 void Display::palette(Layer layer, const uint8_t* entries) {
-    for (int i = 1; i < kColours; ++i) {
+    for (int i = 1; i < kColors; ++i) {
         const uint8_t* e = entries + 4 * i;
         palette_[(int)layer][i] = entry(layer, e[0] << 8 | e[1], e[2]);
     }

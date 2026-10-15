@@ -118,7 +118,7 @@ C3 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail
 
 ## Firmware
 
-The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to the chains. The [lamps component](../../firmware/components/lamps.md) gives the other components their lamps and the effects that run on them.
+The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to the chains. The [lamps component](../../firmware/components/lamps.md) organizes the lamps in groups and runs the effects the game sets on them.
 
 ## Part list
 

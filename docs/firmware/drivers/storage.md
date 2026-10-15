@@ -96,7 +96,7 @@ When the card gives a broken answer to a command that starts a transfer, the mai
 
 ## Existing libraries
 
-SdFat reads and writes the card. No library offers a prioritised request queue that callers can poll. The storage task provides one.
+SdFat reads and writes the card. No library offers a prioritized request queue that callers can poll. The storage task provides one.
 
 [FreeRTOS+FAT](https://github.com/FreeRTOS/Lab-Project-FreeRTOS-FAT) has no driver for the i.MX RT's SD controller and cannot read exFAT. SdFat already brings that driver for the Teensy 4.1.
 

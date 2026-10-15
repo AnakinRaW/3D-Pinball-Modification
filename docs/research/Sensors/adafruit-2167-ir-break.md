@@ -17,5 +17,5 @@ The gate reports a 9 mm ball for as long as it blocks the beam. The 2 ms respons
 ## Sources
 
 - [Adafruit 2167 product page](https://www.adafruit.com/product/2167): the pull-up requirement, and that the output is low while the beam is blocked
-- [HD-DS25CM-3MM datasheet](../../datasheets/HD-DS25CM-3MM-Adafruit.pdf): the 2 ms response time, and the lead colours
+- [HD-DS25CM-3MM datasheet](../../datasheets/HD-DS25CM-3MM-Adafruit.pdf): the 2 ms response time, and the lead colors
 - Meter readings on the bench
