@@ -76,12 +76,12 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
-| 5 | LED chain 1 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 6 | LED chain 2 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 7 | LED chain 3 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 8 | LED chain 4 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 9 | LED chain 5 | plain digital output | [Lighting](parts/lighting/design.md) |
-| 10 | LED chain 6 | plain digital output | [Lighting](parts/lighting/design.md) |
+| 5 | LED chain A | plain digital output | [Lighting](parts/lighting/design.md) |
+| 6 | LED chain B | plain digital output | [Lighting](parts/lighting/design.md) |
+| 7 | LED chain C | plain digital output | [Lighting](parts/lighting/design.md) |
+| 8 | LED chain D | plain digital output | [Lighting](parts/lighting/design.md) |
+| 9 | LED chain E | plain digital output | [Lighting](parts/lighting/design.md) |
+| 10 | LED chain F | plain digital output | [Lighting](parts/lighting/design.md) |
 | 48 | Target sense 1 | plain digital input | Targets |
 | 49 | Target sense 2 | plain digital input | Targets |
 | 50 | Target sense 3 | plain digital input | Targets |

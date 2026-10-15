@@ -13,7 +13,7 @@ Figures from the [lighting design](../parts/lighting/design.md), the [audio desi
 | Varied | |
 |---|---|
 | Solenoids energised | 0 to 3, 0.68 A each |
-| Lit positions and their brightness | up to 135, 60 mA at full |
+| Lit positions and their brightness | up to 162, 60 mA at full |
 
 Output: the sum against the supply rating, and the brightness at which the two meet.
 

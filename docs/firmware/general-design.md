@@ -116,4 +116,4 @@ inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
 6. the game host's `begin()`;
-7. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lights, calls `yield()` and feeds the watchdog.
+7. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lamps, calls `yield()` and feeds the watchdog.

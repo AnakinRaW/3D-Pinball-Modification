@@ -20,13 +20,14 @@ BreakBeam        drain;
 SolenoidDriver   solenoids;
 Storage          storage;
 AudioDriver      audio;
-Lighting         lights;
+Lighting         lighting;
 Display          display;
 Touch            touch;
 MagneticRotaryDriver rotary;
 // other drivers
 
 // game components
+Lamps            lamps{lighting};        // the lamps in fixed groups and their effects
 FileSystem       files{storage};         // the files of the games, the host, the logger, the sounds and the screen
 Sounds           sounds{audio, files};   // the running game's sounds
 Screen           screen{display, touch}; // the game's layer and background, and the host's layer
@@ -102,7 +103,7 @@ static void machineTask(void*) {
     watchdog.report(logger);                // the cause of the last restart, which needs the log
 
     // light ahead of ir for better calibration
-    lights.begin();
+    lighting.begin();
     ir.begin();
     drain.begin();
    
@@ -122,7 +123,7 @@ static void machineTask(void*) {
     // other components...
 
     // the components, then the services no component owns
-    static Machine machine{files, sounds, screen, videoPlayer, lights, logger};
+    static Machine machine{files, sounds, screen, videoPlayer, lamps, logger};
     host.begin(machine, touch.present());
 
     startingUp = false;                     // from here on only the main loop feeds the watchdog
@@ -135,6 +136,7 @@ static void machineTask(void*) {
         host.update(now);
         logger.update(now);                 // writes the collected log lines once a second
         screen.update();                    // shows a picture once it has landed
+        lamps.update(now);                  // advances every lamp's effect and hands on a frame once its period has passed
         yield();                            // serial events and EventResponder, which no Arduino loop() runs under FreeRTOS
 
         watchdog.check();                   // feeds the watchdog while every guard holds
