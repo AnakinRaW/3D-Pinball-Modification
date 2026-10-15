@@ -12,6 +12,7 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`logging.md`](logging.md) | The logger: the machine's log on the SD card, what belongs in it, and how a game, a component or the host writes into it |
 | [`file-channel.md`](file-channel.md) | The file channel: files read ahead from the card into a ring, one after another, for the sounds and the movies |
 | [`game-abstraction.md`](game-abstraction.md) | The host that runs the games, the game lifecycle, and the interface every game implements |
+| [`testing.md`](testing.md) | The tests of the firmware: where each one runs, the lines a test prints, the bench, the test card, and what each test checks |
 | [`drivers/`](drivers/) | One document per driver, the code that works a piece of hardware |
 | [`components/`](components/) | One document per component: the playfield elements and the services a game uses |
 | [`firmware/gist/`](../../firmware/gist/) | Code notes for the drivers and components, which the real firmware starts from |
