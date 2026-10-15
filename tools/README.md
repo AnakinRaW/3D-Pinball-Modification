@@ -97,9 +97,9 @@ Each check reports on a separate line, and any of them can fail the run:
 | the pins the table gives | A model wires only to pins the pin table gives its subsystem, and wires every pin of the allocation table that it holds |
 | pin functions | Every pin's Peripheral entry is a port signal, a timer channel or a FlexIO signal the board's model gives that pin, or a plain digital pin |
 | owned peripherals | A peripheral a model owns is used by no other subsystem's pin and owned by no other model |
-| shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. A model draws a slot for every call of `driverTick.attach(` and `deviceMonitor.watch(` its listings make. On the bench a subsystem runs alone, and its own model checks that case |
+| shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. On the bench a subsystem runs alone, and its own model checks that case |
 
-A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/` or `firmware/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
+A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 
 Flags:
 
@@ -168,7 +168,7 @@ MODEL.net("ADC-DOUT",
 
 The Teensy pin itself takes the part its Peripheral entry gives it. A port signal drives the net the way the board's model declares that signal, a timer channel and a plain digital output drive it push-pull, and a plain digital input reads it. Nets that reach one Teensy signal merge across the models, so a second subsystem on a pin meets the parts of the first.
 
-`MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. Where a listing takes a slot by a call, `call="driverTick.attach("` names it, and every model's documents then make that call as often as the model draws a slot. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
+`MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
 
 ### What the pins can carry
 
