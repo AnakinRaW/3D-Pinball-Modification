@@ -66,7 +66,7 @@ The following components are guarded by the watchdog:
 
 | Component | Condition for feeding | Shut-off Time Constraint |
 |---|---|---|
-| Solenoid Driver | no coil has been on for longer than 51 ms, which `overdue()` checks, see [`solenoid.md`](drivers/solenoid.md) | ≤ 5 s |
+| Solenoid Driver | no coil has been on for longer than 31 ms, which `overdue()` checks, see [`solenoid.md`](drivers/solenoid.md) | ≤ 5 s |
 
 ```cpp
 #include "Watchdog_t4.h"         // the WDT_T4 library, github.com/tonton81/WDT_T4

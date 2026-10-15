@@ -106,8 +106,9 @@ dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far un
     "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
 dec("t_contact_fail", 2, "s", stated=False, src="how long a sensed solenoid's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
-dec("t_on_max", 50, "ms", src="the ceiling the driver enforces on one pull-in, "
-    "decided above the stock machine's visibly short pull: long enough to kick the ball "
+dec("t_on_max", 30, "ms", src="the ceiling the driver enforces on one pull-in, "
+    "at the top of the 18 to 30 ms the Mission Pinball Framework's coil examples use, "
+    "and above the stock machine's visibly short pull: long enough to kick the ball "
     "away, short enough that a ball cannot be fired back and forth between the three top "
     "bumpers, and far below the seconds at which a mini solenoid overheats",
     group="DUTY", section=COIL, stated=True)
@@ -126,7 +127,7 @@ dec("t_hold_max", 5, "s", src="the longest any coil may stay energised, from the
     group="HOLD", section=COIL, stated=True)
 
 asm("l_feed", 0.3, "µH", src="the 5 V feed from the distribution, 30 cm of loose "
-    "pair at roughly 1 µH per metre, estimated from the conductor and not measured",
+    "pair at roughly 1 µH per meter, estimated from the conductor and not measured",
     group="C_BULK", section=SUPPLY, stated=True)
 asm("c_stray", 2, "nF", src="what the board's own copper offers the feed current with "
     "C91 unfitted, an order-of-magnitude estimate that C91 is there to make "

@@ -29,14 +29,14 @@ A rising edge on a sense line pulls its coil once, even when the contact stays c
 
 | Rule | Value |
 |---|---|
-| Duration of a solenoid pull | ~50 ms |
+| Duration of a solenoid pull | ~30 ms |
 | Duration of the cool-down phase after a solenoid pull | ~10 ms |
 
-When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](../driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 45 ms, so a pull lasts 45 to 50 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
+When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](../driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 25 ms, so a pull lasts 25 to 30 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
 
 The driver always writes the time first and switches the coil second. Whoever looks at a coil then finds the time that belongs to its state.
 
-If the firmware itself fails, the [watchdog](../error-handling.md#watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 51 ms.
+If the firmware itself fails, the [watchdog](../error-handling.md#watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 31 ms.
 
 At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the board switch every coil off.
 
@@ -61,7 +61,7 @@ public:
     // neither fires its coil nor publishes a hit. Disarmed after begin()
     void arm(bool armed);
 
-    // gets the coils that have been on for longer than 51 ms, one bit each; the main loop feeds
+    // gets the coils that have been on for longer than 31 ms, one bit each; the main loop feeds
     // the watchdog only while this is 0
     uint8_t overdue() const;
 

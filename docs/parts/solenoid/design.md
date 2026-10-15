@@ -264,19 +264,19 @@ GND       one wire of a cable with its two
 
 ```
 DUTY      5 V × 0.68 A, while energised         = 3.4 W
-          the longest pull-in the driver commands  50 ms
+          the longest pull-in the driver commands  30 ms
           how far past that a coil may run
           before the loop counts it overdue        1 ms
-          the longest a pull-in therefore lasts = 51 ms
+          the longest a pull-in therefore lasts = 31 ms
           the cool-down after a release, before
           the coil may fire again                  10 ms
-          that and the pull-in together         = 61 ms
-          the first over the second             = 83.6 %
-          3.4 W over the same fraction          = 2.84 W
+          that and the pull-in together         = 41 ms
+          the first over the second             = 75.6 %
+          3.4 W over the same fraction          = 2.57 W
 HOLD      the watchdog timeout, after which the
           restart releases a coil still on         2 s
           that and the longest pull-in, how long
-          a coil the tick never releases stays on = 2.051 s
+          a coil the tick never releases stays on = 2.031 s
           the limit from the requirements          5 s
 ```
 
