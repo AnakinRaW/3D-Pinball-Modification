@@ -188,19 +188,21 @@ dec("i_supply_6a", 6, "A", src="the larger supply the machine is designed for; d
 dec("i_budget", 2.0, "A", src="the lighting's cap with the 3 A supply, which the firmware holds "
     "with FastLED's setMaxPowerInVoltsAndMilliamps; design.md, Current ceiling",
     stated=False)
-dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply: 6 A less the 0.65 A "
-    "of the permanent consumers and the 2.04 A of three solenoids pulling at once, rounded "
-    "down; design.md, Current ceiling", stated=False)
+dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply, kept at 3.3 A: with "
+    "the permanent consumers of the power design and three bumpers pulling at once the sum "
+    "passes the adapter by 0.22 A for at most one pull-in, which the design accepts as it "
+    "accepts the 3 A adapter's overrun; design.md, Current ceiling, and the power design's "
+    "Adapter section",
+    stated=False)
 dec("len_jpwr", 30, "cm", src="the longest J-PWR cable, the length the feed's inductance "
     "is estimated for", group=SUPPLY, stated="loose")
 ds("r_awg22", 52.96, "mΩ/m", src="ASTM B258, 22 AWG annealed copper at 20 °C", stated=False)
 MODEL.uses("l_feed", of="solenoid")
 dec("c_bulk", 1000, "µF", src="C3, at J-PWR", group=SUPPLY, stated="loose")
-ds("z_bulk", 80, "mΩ", src="C3's impedance at 100 kHz, the larger of its two variants: "
-   "Rubycon 16ZLH1000MEFC8X20 at 29 mΩ as DigiKey lists it from the ZLH sheet, and "
-   "Panasonic EEE-FK1A102P at 0.08 Ω as Future Electronics lists it",
+ds("z_bulk", 29, "mΩ", src="C3's impedance at 100 kHz, Rubycon 16ZLH1000MEFC8X20, as "
+   "DigiKey lists it from the ZLH sheet; the radial part serves both builds",
    group=SUPPLY, stated="loose")
-ds("f_z_bulk", 100, "kHz", src="the frequency both listings state C3's impedance at",
+ds("f_z_bulk", 100, "kHz", src="the frequency the listing states C3's impedance at",
    group=SUPPLY, stated="loose")
 asm("place_bulk", 20, "mm", src="how close C3 sits to J-PWR, where the feed arrives; no "
     "datasheet states one", group=SUPPLY, stated="loose")

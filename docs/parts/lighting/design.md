@@ -106,7 +106,7 @@ The board takes the machine's 5 V through J-PWR and passes it on to J-LA to J-LF
 
 C1 and C2 sit at the supply pins of U1 and U2. They deliver the short current peak a buffer draws each time it switches.
 
-C3 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 80 mΩ at 100 kHz. Even if the whole lighting cap switches on at once, the buffers keep at least 4.74 V with the 3 A supply and 4.57 V with the 6 A supply.
+C3 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 29 mΩ at 100 kHz. Even if the whole lighting cap switches on at once, the buffers keep at least 4.84 V with the 3 A supply and 4.74 V with the 6 A supply.
 
 ## Teensy pins
 
@@ -139,7 +139,6 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 - [PJRC: FastLED adds massive parallel LED output](https://www.pjrc.com/fastled-adds-massive-parallel-led-output/): ObjectFLED as FastLED's driver on the Teensy 4.x
 - [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA, the input levels, the input clamp diodes and their current, the input capacitance and the longest input edge
 - [Rubycon ZLH datasheet](https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/ZLH.pdf): C3's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
-- [Panasonic EEE-FK1A102P](https://www.futureelectronics.com/es/p/passives--capacitors--aluminum-electrolytic-capacitors/eee-fk1a102p-panasonic-industry-3028584): C3's SMD variant and its impedance
 - [`parts/solenoid/design.md`](../solenoid/design.md): the feed's inductance
 - [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and LED spacing, housing dimensions
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): measured solenoid current, stock load inventory
