@@ -205,7 +205,7 @@ A channel resolves to ten bits, one step of 3.3 mV at V<sub>REF</sub> max.
 
 Populated with sixteen channels the board can draw up to 222 mA. The board takes all of it through J-PWR, from the module in the machine and from the Teensy's 3V3 pin on the bench. The 250 mA that pin allows is what the bench case is sized against, and it is shared with whatever else of this modification hangs on the Teensy.
 
-In normal operation the board will be supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module on the power distribution, fed from the machine's 5 V. It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
+In normal operation the board will be supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module at J-PWR, fed with the machine's 5 V from the [power board](../power/design.md). It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
 
 On the test bench the Teensy's 3V3 pin feeds J-PWR.
 
