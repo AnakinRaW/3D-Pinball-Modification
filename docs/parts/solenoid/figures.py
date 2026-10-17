@@ -37,6 +37,9 @@ SUPPLY = "The supply"
 # ===========================================================================
 msr("v_5v", 5.0, "V", src="the machine's rail, measured in operation at the coil",
     group="V_DRAIN", section=DRIVE, stated=True)
+msr("v_coil_min", 4.4, "V", src="the least rail at which a stock coil still kicks, "
+    "measured on the stock machine as 4.3 to 4.4 V; the higher end is the floor",
+    group="V_DRAIN", section=DRIVE, stated=True)
 msr("i_coil", 0.68, "A", src="measured in series at the coil while running, and "
     "5.0 V / 7.35 Ω gives the same",
     group="I_CH", section=DRIVE, stated=True)

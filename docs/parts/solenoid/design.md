@@ -38,7 +38,7 @@ The board has two ground nets. The sense channels sit on the signal ground, whic
 
 **C91, 100 µF at J-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the board's copper.
 
-Rail sag, shorts and overcurrent are not handled on this board, but centrally on the power supply board.
+The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, J-PWR stays above the 4.4 V a stock coil needs for its kick.
 
 ## Board
 
@@ -161,6 +161,7 @@ V_KICK    a step on the drain lifts the gate through
           which is the case at switch-off and not
           when the rail comes up behind C91
 V_DRAIN   the machine's rail, measured            5 V
+          a stock coil kicks down to, measured   4.4 V
           the diode's forward drop at 1 A         0.55 V
           the drain at switch-off, clamped      = 5.55 V
           the MOSFET's drain-source rating        30 V
