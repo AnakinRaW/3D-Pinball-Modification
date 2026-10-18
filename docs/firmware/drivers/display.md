@@ -54,6 +54,8 @@ The source is always `0`. The timestamp is the moment the movie ended. A full qu
 
 The panel never answers, since its read line RD is tied high. The driver therefore cannot tell whether the panel works and reports no fault.
 
+The panel shares the module's supervisor with the touch controller. If the module's 3.3 V falls below 3 V, the supervisor resets both. The panel then comes back asleep with its display off. The [touch driver](touch.md#device-faults) reports the controller failed while it is silent and recovered once it answers again. The host then calls `restart()`. The driver sends the panel the same setup as `begin()`. Afterwards it sends the whole picture again. While the panel waits during the setup, the processor goes on with other work.
+
 ## Existing libraries
 
 [ILI9341_t3](https://github.com/PaulStoffregen/ILI9341_t3) and [ILI9341_T4](https://github.com/vindar/ILI9341_T4) drive the ILI9341 over SPI. This build wires the panel to the 8-bit bus.
@@ -69,6 +71,7 @@ public:
 
     // sets up FlexIO3 and the panel and attaches to the driver tick; false when it is full
     bool begin() override;
+    void restart();                                          // sets the panel up again after a supervisor reset and marks every row; returns at once
 
     uint8_t* pixels(Layer layer);                            // gets a layer's palette indices, row by row
     void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a color of a layer's palette, opacity 0 to 255 in 32 steps

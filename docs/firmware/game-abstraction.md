@@ -31,7 +31,7 @@ The host also manages the user menu on the touch display. There the player switc
 
 The host can provide what all games share, such as settings the player changes in the menu. A game then needs no code for them.
 
-The host catches every [device fault](error-handling.md#device-faults) and keeps the list of failed devices and handles them itself. Components and games should not see a fault.
+The host catches every [device fault](error-handling.md#device-faults) and keeps the list of failed devices and handles them itself. Components and games should not see a fault. When the touch controller recovers, the host also calls `restart()` of the [display driver](drivers/display.md#device-faults), because the panel was reset with it.
 
 ## Game lifecycle
 

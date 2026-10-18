@@ -68,6 +68,11 @@ ds("i_teensy_3v3", 250, "mA", src=f"{CARD}, the 3.3 V rail available to external
 ds("i_teensy_40", 100, "mA", src="PJRC's current draw at 600 MHz, published for the "
    "Teensy 4.0 and not for the 4.1", group="Current draw @ 600 MHz", section=POWER,
    stated=True)
+ds("i_sd_card", 200, "mA", sheet="SD-Part1-PhysicalLayer-Simplified-3.01.pdf",
+   src="SD Physical Layer Simplified Specification Version 3.01, Table 3-4 in 3.9.6, the "
+   "maximum current of a card in High Speed mode at 3.3 V signaling; the card socket's "
+   "supply pin sits on the 3.3 V net in PJRC's Teensy 4.1 schematic",
+   group="SD card, in High Speed mode", section=POWER, stated=True)
 dec("i_pin_fault_max", 1, "mA", src="PJRC calls under 1 mA into an out-of-range pin 'very "
     "unlikely to cause harm', and states that even this does not follow NXP's guidance; "
     "forum thread 60528, posts by Paul Stoffregen",
@@ -130,6 +135,7 @@ def _(ram, ram1):
 
 
 MODEL.supplies("i_teensy_3v3", pool=TEENSY_RAIL)
+MODEL.draws("i_sd_card", pool=TEENSY_RAIL)   # the card in the on-board socket, fed from the same regulator
 MODEL.supplies("ram2", pool="RAM2")
 
 # ===========================================================================

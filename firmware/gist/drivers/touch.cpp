@@ -23,7 +23,7 @@ private:
     static constexpr uint8_t  kTouchBytes   = 5;       // TD_STATUS and the first touch point
     static constexpr uint8_t  kSlop         = 10;      // pixels a finger moves before TouchMoved
     static constexpr uint8_t  kHoldTicks    = 50;      // ticks a finger rests before TouchHeld, 1 s
-    static constexpr uint32_t kFailMs       = 1000;    // 1 s without a working read, and the controller has failed
+    static constexpr uint32_t kFailMs       = 100;     // 100 ms without a working read, five reads, and the controller has failed
     static constexpr uint32_t kTouchReadyMs = 580;     // after power-up, docs/parts/display
     static constexpr uint8_t  kTouchAddress = 0x38;    // the CST026
     static constexpr uint8_t  kTdStatus     = 0x02;    // the number of touches, then the first touch point
