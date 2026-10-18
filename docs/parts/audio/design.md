@@ -33,7 +33,7 @@ The speaker carries no marking. Its size suggests a rating of 0.5 W to 1 W. The 
 
 ### Supply
 
-The module runs on the machine's 5 V from the power distribution and decouples its own supply pin. Capped at 0.5 W, it draws at most 129 mA.
+The module runs on the machine's 5 V from the power board's J-AMP and decouples its own supply pin. Capped at 0.5 W, it draws at most 129 mA.
 
 A 3.3 V supply from the Teensy was rejected, because the other subsystems already take nearly all of its 3V3 pin.
 

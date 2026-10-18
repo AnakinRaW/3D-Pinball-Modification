@@ -4,8 +4,20 @@
   <text x="30" y="56" font-size="13" fill="#666" data-fig="r_spk v_dd">The Teensy sends I²S to a MAX98357A module, which drives the stock 8 Ω speaker from the machine's 5 V</text>
 
   <!-- 5 V rail -->
-  <text x="440" y="90" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_dd">5 V from the power distribution</text>
-  <line x1="440" y1="100" x2="680" y2="100" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="330" y="72" width="96" height="80" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="342" y="92" font-size="13" font-weight="700" fill="#333333">J-AMP</text>
+  <text x="342" y="107" font-size="11" fill="#666">from the</text>
+  <text x="342" y="121" font-size="11" fill="#666">power board</text>
+  <circle cx="426" cy="100" r="6" fill="#c0392b"/>
+  <text x="416" y="105" text-anchor="end" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_dd">5 V</text>
+  <circle cx="426" cy="136" r="6" fill="#1a1a1a"/>
+  <text x="416" y="141" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <line x1="432" y1="136" x2="450" y2="136" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="450" y1="136" x2="450" y2="150" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="436" y1="150" x2="464" y2="150" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="441" y1="156" x2="459" y2="156" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="446" y1="162" x2="454" y2="162" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="432" y1="100" x2="680" y2="100" stroke="#c0392b" stroke-width="2.5"/>
   <circle cx="560" cy="100" r="4" fill="#c0392b"/>
   <line x1="560" y1="100" x2="560" y2="180" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="680" y1="100" x2="680" y2="110" stroke="#c0392b" stroke-width="2.5"/>
@@ -85,4 +97,9 @@
 
   <!-- GND -->
   <line x1="240" y1="460" x2="520" y2="460" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="380" cy="460" r="4" fill="#1a1a1a"/>
+  <line x1="380" y1="460" x2="380" y2="474" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="366" y1="474" x2="394" y2="474" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="371" y1="480" x2="389" y2="480" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="376" y1="486" x2="384" y2="486" stroke="#1a1a1a" stroke-width="2"/>
 </svg>
