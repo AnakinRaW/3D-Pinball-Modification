@@ -3,6 +3,10 @@
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR sensor mainboard schematic</text>
   <text x="30" y="56" font-size="12.5" fill="#666">Up to sixteen reflective IR channels on a shared pulsed LED bus, digitized on the board and read over SPI.</text>
 
+  <!-- ===== board outline ===== -->
+  <rect x="16" y="70" width="928" height="1666" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <text x="928" y="94" text-anchor="end" font-size="15" font-weight="700" fill="#5c4a00">IR sensor mainboard</text>
+
   <!-- ===== BAND 1: the crossing and the two converters ===== -->
   <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">SPI crossing and the two converters</text>
 
