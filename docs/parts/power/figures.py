@@ -136,8 +136,8 @@ MODEL.curve(f"{Q1}, Figure 10, normalized R_DS(on) against junction temperature"
 # ===========================================================================
 # C1 and C2, the bulk at the input
 # ===========================================================================
-dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}, the part the lighting board's "
-    "C3 already is", group="RAIL", section=RAIL, stated=True)
+dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}, the part the C2 on each lighting "
+    "board already is", group="RAIL", section=RAIL, stated=True)
 dec("n_bulk", 2, "", src="C1 and C2 in parallel, the fewest of that part that hold the "
     "release under the Teensy's VIN maximum with the 6 A adapter", stated=False)
 ds("z_c", 29, "mΩ", sheet=BULK_SHEET, src=f"{BULK}, impedance maximum at 100 kHz as DigiKey lists it from "

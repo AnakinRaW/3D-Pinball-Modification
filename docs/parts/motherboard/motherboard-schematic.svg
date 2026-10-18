@@ -1,0 +1,120 @@
+<svg viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1000" height="650" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Teensy motherboard</text>
+  <text x="30" y="56" font-size="13" fill="#666">The Teensy in its socket, its supply from the power board, its 3V3 and GND rails to the subsystems, and R1 of the toggle switch</text>
+
+  <!-- ===== board outline ===== -->
+  <rect x="200" y="90" width="600" height="520" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <text x="216" y="114" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
+
+  <!-- ===== J-TEENSY from the power board ===== -->
+  <rect x="30" y="150" width="130" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="42" y="172" font-size="13" font-weight="700" fill="#333333">J-TEENSY</text>
+  <text x="42" y="188" font-size="11" fill="#666">from the</text>
+  <text x="42" y="202" font-size="11" fill="#666">power board</text>
+  <circle cx="160" cy="190" r="6" fill="#c0392b"/>
+  <text x="150" y="195" text-anchor="end" font-size="12.5" font-weight="700" fill="#c0392b">VIN</text>
+  <circle cx="160" cy="230" r="6" fill="#1a1a1a"/>
+  <text x="150" y="235" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <line x1="166" y1="190" x2="224" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="166" y1="230" x2="224" y2="230" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- ===== J-PWR ===== -->
+  <rect x="230" y="150" width="90" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="275" y="170" text-anchor="middle" font-size="14" font-weight="700" fill="#333333">J-PWR</text>
+  <circle cx="230" cy="190" r="6" fill="#c0392b"/>
+  <circle cx="320" cy="190" r="6" fill="#c0392b"/>
+  <text x="275" y="194" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b">VIN</text>
+  <circle cx="230" cy="230" r="6" fill="#1a1a1a"/>
+  <circle cx="320" cy="230" r="6" fill="#1a1a1a"/>
+  <text x="275" y="234" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
+  <line x1="326" y1="190" x2="374" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+
+  <!-- ===== Teensy ===== -->
+  <rect x="380" y="140" width="180" height="240" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <text x="394" y="162" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <text x="394" y="178" font-size="11" fill="#666">in socket headers</text>
+  <circle cx="380" cy="190" r="6" fill="#c0392b"/>
+  <text x="392" y="200" font-size="13" font-weight="700" fill="#c0392b">VIN</text>
+  <circle cx="380" cy="300" r="6" fill="#1a1a1a"/>
+  <text x="392" y="304" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+  <text x="392" y="320" font-size="11.5" fill="#777">all three pins</text>
+  <circle cx="560" cy="190" r="6" fill="#c0392b"/>
+  <text x="548" y="200" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
+  <circle cx="470" cy="380" r="6" fill="#2c3e50"/>
+  <text x="470" y="356" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">SWITCH</text>
+  <text x="470" y="370" text-anchor="middle" font-size="11.5" fill="#777" data-pin="Toggle switch">pin 32</text>
+
+  <!-- ===== GND rail ===== -->
+  <line x1="326" y1="230" x2="340" y2="230" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="340" y1="230" x2="340" y2="542" stroke="#1a1a1a" stroke-width="5"/>
+  <line x1="374" y1="300" x2="340" y2="300" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="300" r="5" fill="#1a1a1a"/>
+  <text x="352" y="560" font-size="12.5" font-weight="700" fill="#1a1a1a">GND rail</text>
+
+  <line x1="340" y1="330" x2="204" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="330" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="330" r="4" fill="#1a1a1a"/>
+  <text x="188" y="334" text-anchor="end" font-size="11.5" fill="#333">IR mainboard, J-T</text>
+  <line x1="340" y1="360" x2="204" y2="360" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="360" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="360" r="4" fill="#1a1a1a"/>
+  <text x="188" y="364" text-anchor="end" font-size="11.5" fill="#333">solenoid sense board, J-T</text>
+  <line x1="340" y1="390" x2="204" y2="390" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="390" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="390" r="4" fill="#1a1a1a"/>
+  <text x="188" y="394" text-anchor="end" font-size="11.5" fill="#333">lighting data cable</text>
+  <line x1="340" y1="420" x2="204" y2="420" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="420" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="420" r="4" fill="#1a1a1a"/>
+  <text x="188" y="424" text-anchor="end" font-size="11.5" fill="#333">I²S cable</text>
+  <line x1="340" y1="450" x2="204" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="450" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="450" r="4" fill="#1a1a1a"/>
+  <text x="188" y="454" text-anchor="end" font-size="11.5" fill="#333">rotary sensor</text>
+  <line x1="340" y1="480" x2="204" y2="480" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="480" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="480" r="4" fill="#1a1a1a"/>
+  <text x="188" y="484" text-anchor="end" font-size="11.5" fill="#333">display bus</text>
+  <line x1="340" y1="510" x2="204" y2="510" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="340" cy="510" r="4" fill="#1a1a1a"/>
+  <circle cx="200" cy="510" r="4" fill="#1a1a1a"/>
+  <text x="188" y="514" text-anchor="end" font-size="11.5" fill="#333">break beam</text>
+  <line x1="340" y1="540" x2="204" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="200" cy="540" r="4" fill="#1a1a1a"/>
+  <text x="188" y="544" text-anchor="end" font-size="11.5" fill="#333">toggle switch</text>
+
+  <!-- ===== 3V3 rail ===== -->
+  <line x1="566" y1="190" x2="680" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="680" y1="148" x2="680" y2="272" stroke="#c0392b" stroke-width="5"/>
+  <circle cx="680" cy="190" r="5" fill="#c0392b"/>
+  <text x="688" y="294" font-size="12.5" font-weight="700" fill="#c0392b">3V3 rail</text>
+
+  <line x1="680" y1="150" x2="796" y2="150" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="800" cy="150" r="4" fill="#c0392b"/>
+  <text x="812" y="154" font-size="11.5" fill="#333">IR mainboard, J-T</text>
+  <line x1="680" y1="180" x2="796" y2="180" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="680" cy="180" r="4" fill="#c0392b"/>
+  <circle cx="800" cy="180" r="4" fill="#c0392b"/>
+  <text x="812" y="184" font-size="11.5" fill="#333">solenoid sense board, J-T</text>
+  <line x1="680" y1="210" x2="796" y2="210" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="680" cy="210" r="4" fill="#c0392b"/>
+  <circle cx="800" cy="210" r="4" fill="#c0392b"/>
+  <text x="812" y="214" font-size="11.5" fill="#333">break beam</text>
+  <line x1="680" y1="240" x2="796" y2="240" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="680" cy="240" r="4" fill="#c0392b"/>
+  <circle cx="800" cy="240" r="4" fill="#c0392b"/>
+  <text x="812" y="244" font-size="11.5" fill="#333">rotary sensor</text>
+  <line x1="680" y1="270" x2="796" y2="270" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="800" cy="270" r="4" fill="#c0392b"/>
+  <text x="812" y="274" font-size="11.5" fill="#333">display touch cable</text>
+
+  <!-- ===== R1, in series with the toggle switch ===== -->
+  <line x1="470" y1="386" x2="470" y2="420" stroke="#2c3e50" stroke-width="2.5"/>
+  <rect x="457" y="420" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="491" y="444" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
+  <text x="491" y="462" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.1 kΩ</text>
+  <line x1="470" y1="480" x2="470" y2="606" stroke="#2c3e50" stroke-width="2.5"/>
+  <circle cx="470" cy="610" r="4" fill="#2c3e50"/>
+  <text x="470" y="630" text-anchor="middle" font-size="11.5" fill="#333">toggle switch</text>
+</svg>

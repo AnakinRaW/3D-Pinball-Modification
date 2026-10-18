@@ -55,11 +55,11 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 
 | Output | To | Current at most |
 |---|---|---|
-| J-LIGHT | the lighting board | 2.0 A with the 3 A adapter, 3.3 A with the 6 A adapter |
+| J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 3.3 A with the 6 A adapter, each |
 | J-SOL | the solenoids' coil board | 2.84 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-AMP | the amplifier board | 129 mA |
-| J-TEENSY | the Teensy's VIN | 350 mA |
+| J-TEENSY | the Teensy motherboard | 350 mA |
 | J-IR | the D24V5F3 at the IR mainboard | 198 mA |
 | J-DISP | the display board | 198 mA |
 
@@ -79,7 +79,7 @@ The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4
 
 Every output is rated for 22 AWG wiring. A 22 AWG wire carries at most 7 A, more than the 6 A adapter is rated for. 
 
-For better performance, thicker wires can be used for DC-IN-to-board, J-LIGHT-to-board and the ground star point. 
+For better performance, thicker wires can be used for DC-IN-to-board, the two J-LIGHT pairs and the ground star point. 
 
 For better convenience, thinner wires such as 26 AWG can be used for low current consumers.
 
