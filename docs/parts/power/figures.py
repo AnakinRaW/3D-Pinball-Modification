@@ -95,7 +95,8 @@ ds("i_awg16_max", 22, "A", src=f"{AMPS}, 16 AWG", stated=False)
 ds("i_awg22_max", 7, "A", src=f"{AMPS}, 22 AWG", stated=False)
 
 # ===========================================================================
-# Q1, the reverse-polarity switch in the ground line
+# Q1, the reverse-polarity switch in the ground line. It is optional, and every figure takes it
+# fitted: leaving it out only takes its drop off the bus.
 # ===========================================================================
 ds("rdson_q1", 4.2, "mΩ", sheet=Q1_SHEET, src=f"{Q1}, Table 4, R_DS(on) maximum at V_GS = 4.5 V, "
    "I_D = 60 A, T_case = 25 °C", group="INPUT", section=INPUT, stated=True)

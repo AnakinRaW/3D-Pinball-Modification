@@ -1,12 +1,11 @@
 # Power supply
 
-The power board takes the 5 V of an external adapter and passes it to every subsystem of the machine. It protects the machine against plus and minus swapped at its input and holds the rail through load steps.
+The power board takes the 5 V of an external adapter and passes it to every subsystem of the machine. It holds the rail through load steps. An optional switch protects the machine against plus and minus swapped at its input.
 
 ## Requirements
 
 - The machine runs from a 5 V adapter of 3 A up to 6 A.
 - Every subsystem takes its 5 V and its ground over a separate pair from one point on the board.
-- Plus and minus swapped at the input damage nothing, whether the adapter or the wiring to J-IN swaps them.
 - The rail stays inside the range every subsystem accepts, at power-up and at every load step.
 
 ## Adapter
@@ -35,9 +34,22 @@ One ball triggers at most two bumpers within one pull-in, however fast it is, wh
 
 The adapter's plug goes into the machine's barrel jack. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
 
-Q1 protects the machine against swapped polarity at J-IN. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity.
-
 C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics which keep the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 20 mm of J-IN.
+
+### Input protection
+
+The board proposes an optinal protection against swapped polarity. Q1 protects the machine against swapped polarity at J-IN. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity. Q1 and R1 are optional. Without them a wire joins J-IN's negative to the board's ground. Every figure of this design is derived with Q1 fitted, and leaving it out only raises the bus.
+
+> [!WARNING]
+> Without Q1, swapped polarity at J-IN reaches every subsystem. It destroys the Teensy and the ICs on the boards.
+
+> [!WARNING]
+> The board has no overvoltage protection. An adapter above 5.5 V destroys the Teensy.
+
+> [!WARNING]
+> The board also has no fuse. The board relies on the adapter's overcurrent protection.
+
+With the Teensy on USB, the USB cable connects the machine's ground to the computer's ground. If the computer and the adapter are both earthed, part of the machine's current flows back through the USB cable instead of the adapter's cable. The computer can then lose the USB connection to the Teensy, but nothing gets damaged.
 
 ### Outputs
 
@@ -55,7 +67,7 @@ C1 and C2 keep the rail steady when the load steps. They are low-impedance elect
 
 Every output carries its own ground wire back to one point at C1 and C2. The coils, the LEDs and the servo return their currents there.
 
-The adapter's negative reaches the machine through Q1 alone.
+The adapter's negative reaches the machine through Q1 or its wire alone.
 
 ### Teensy Supply
 
@@ -71,13 +83,6 @@ For better performance, thicker wires can be used for DC-IN-to-board, J-LIGHT-to
 
 For better convenience, thinner wires such as 26 AWG can be used for low current consumers.
 
-## Limitations
-
-The board has no overvoltage protection. An adapter above 5.5 V destroys the Teensy.
-
-The board also has not fuse. The board relies on the adapters overcurrent protection.
-
-With the Teensy on USB, the USB cable connects the machine's ground to the computer's ground. If the computer and the adapter are both earthed, part of the machine's current flows back through the USB cable instead of the adapter's cable. That can upset the USB connection. Nothing gets damaged, swapped polarity included.
 
 Both adapters deliver less than the machine draws at its peak. With the 3 A adapter, the lighting at its cap leaves no room for a coil. With the 6 A adapter, the lighting at its cap, two bumpers and the scoop together ask for 0.34 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops.
 
@@ -85,8 +90,8 @@ Both adapters deliver less than the machine draws at its peak. With the 3 A adap
 
 | Qty | Part | Where |
 |---|---|---|
-| 1 | STP160N3LL, N-channel MOSFET, TO-220 | Q1, the reverse-polarity switch in the ground line |
-| 1 | 10 kΩ resistor | R1, from Q1's gate to the 5 V bus |
+| 1 | STP160N3LL, N-channel MOSFET, TO-220 | Q1, the optional reverse-polarity switch in the ground line |
+| 1 | 10 kΩ resistor | R1, with Q1, from its gate to the 5 V bus |
 | 2 | Rubycon 16ZLH1000MEFC8X20, 1000 µF, 16 V | C1 and C2, the bulk at J-IN |
 
 ## Appendix: derivations
