@@ -23,6 +23,8 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
+A display board beside the module carries J-PWR and the Adafruit 757 as a daughter board. J-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, GND, SDA and SCL run from the board to the module. The bus and its ground run from the Teensy straight to the module.
+
 ![Display schematic](display-schematic.svg)
 
 ### Bus
@@ -47,7 +49,7 @@ After power-up, the module holds the panel and the touch controller in reset for
 
 ### Supply
 
-The module takes its 5 V from the power board over [J-DISP](../power/design.md#display) and makes its own 3.3 V on board. The display draws at most 198 mA from J-DISP.
+The module takes its 5 V from the power board's [J-DISP](../power/design.md#outputs) over the display board and makes its own 3.3 V. The display draws at most 198 mA from J-DISP.
 
 ## Teensy pins
 
@@ -79,8 +81,7 @@ The video rate rests on an estimate of the card's speed. A slower card makes a v
 | Qty | Part | Where |
 |---|---|---|
 | 1 | Adafruit 2090, 2.8" TFT with capacitive touch, ILI9341 and CST026 | in the diorama |
-| 1 | Adafruit 757, bidirectional logic level converter, BSS138 | in SDA and SCL between the Teensy and the module |
-
+| 1 | Adafruit 757, bidirectional logic level converter, BSS138 | on the display board, in SDA and SCL between the Teensy and the module |
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names. `tools/figcheck.py` compares each one against the line that states it.

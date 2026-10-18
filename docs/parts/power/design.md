@@ -56,12 +56,12 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 | Output | To | Current at most |
 |---|---|---|
 | J-LIGHT | the lighting board | 2.0 A with the 3 A adapter, 3.3 A with the 6 A adapter |
-| J-SOL | the solenoid board | 2.84 A |
-| J-SERVO | the servo | 0.8 A |
-| J-AMP | the DFR0954 | 129 mA |
+| J-SOL | the solenoids' coil board | 2.84 A |
+| J-SERVO | the servo board | 0.8 A |
+| J-AMP | the amplifier board | 129 mA |
 | J-TEENSY | the Teensy's VIN | 350 mA |
 | J-IR | the D24V5F3 at the IR mainboard | 198 mA |
-| J-DISP | the display | 198 mA |
+| J-DISP | the display board | 198 mA |
 
 ### Ground
 
@@ -189,7 +189,7 @@ FLOORS    what the lighting's buffers need         4.5 V
           at 3 A                                 = 4.77 V
           at 6 A                                 = 4.71 V
           two bumpers and the scoop at once        2.16 A
-          the solenoid board while they pull,
+          the solenoids' coil board while they pull,
           at 3 A                                 = 4.48 V
           at 6 A                                 = 4.42 V
           what a stock coil kicks down to          4.4 V

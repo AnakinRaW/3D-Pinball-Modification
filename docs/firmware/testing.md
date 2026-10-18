@@ -45,7 +45,7 @@ The bench is the Teensy on USB with the boards of the subsystems under test, the
 
 | Board | On the bench |
 |---|---|
-| Solenoid board | Its two GND nets are bridged, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
+| Solenoid coil board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
 | Servo board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/servo/design.md#supply) requires |
 | IR mainboard | It runs from its D24V5F3 on the bench supply, or from the Teensy's 3V3 pin while everything that pin feeds stays within the pin's [rating](../research/teensy-4.1.md#power) |
 

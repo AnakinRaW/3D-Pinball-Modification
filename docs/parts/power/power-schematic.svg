@@ -111,7 +111,7 @@
   <circle cx="1088" cy="430" r="6" fill="#1a1a1a"/>
   <text x="1088" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-SOL</text>
   <text x="1088" y="380" text-anchor="middle" font-size="11.5" fill="#666">solenoid</text>
-  <text x="1088" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
+  <text x="1088" y="396" text-anchor="middle" font-size="11.5" fill="#666">coil board</text>
   <line x1="1088" y1="436" x2="1088" y2="516" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1088" y1="516" x2="836" y2="516" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="516" r="4" fill="#1a1a1a"/>
@@ -122,6 +122,7 @@
   <circle cx="1172" cy="430" r="6" fill="#1a1a1a"/>
   <text x="1172" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-SERVO</text>
   <text x="1172" y="380" text-anchor="middle" font-size="11.5" fill="#666">servo</text>
+  <text x="1172" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
   <line x1="1172" y1="436" x2="1172" y2="532" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1172" y1="532" x2="836" y2="532" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="532" r="4" fill="#1a1a1a"/>
@@ -131,7 +132,8 @@
   <circle cx="1256" cy="330" r="6" fill="#c0392b"/>
   <circle cx="1256" cy="430" r="6" fill="#1a1a1a"/>
   <text x="1256" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-AMP</text>
-  <text x="1256" y="380" text-anchor="middle" font-size="11.5" fill="#666">DFR0954</text>
+  <text x="1256" y="380" text-anchor="middle" font-size="11.5" fill="#666">amplifier</text>
+  <text x="1256" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
   <line x1="1256" y1="436" x2="1256" y2="548" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1256" y1="548" x2="836" y2="548" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="548" r="4" fill="#1a1a1a"/>
@@ -162,8 +164,8 @@
   <circle cx="1508" cy="330" r="6" fill="#c0392b"/>
   <circle cx="1508" cy="430" r="6" fill="#1a1a1a"/>
   <text x="1508" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-DISP</text>
-  <text x="1508" y="380" text-anchor="middle" font-size="11.5" fill="#666">the</text>
-  <text x="1508" y="396" text-anchor="middle" font-size="11.5" fill="#666">display</text>
+  <text x="1508" y="380" text-anchor="middle" font-size="11.5" fill="#666">display</text>
+  <text x="1508" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
   <line x1="1508" y1="436" x2="1508" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1508" y1="596" x2="836" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="596" r="4" fill="#1a1a1a"/>

@@ -644,7 +644,6 @@ MODEL.as_written("t_contact_fail_ms", of="t_contact_fail", unit="ms")
 # ===========================================================================
 for _text, _why in [
     ("2", "a coil connector's pin count, and the second pin of one"),
-    ("9", "a connector pin number, and J-T's conductor count"),
 ]:
     MODEL.aside(_text, _why)
 

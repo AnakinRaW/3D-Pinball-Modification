@@ -378,7 +378,7 @@ def _(v_bus_6a, i_stall, r_lead, esr_bus):
     return v_bus_6a - 2 * i_stall * r_lead - i_stall * esr_bus
 
 
-# The solenoid board behind its pair while two bumpers and the scoop pull at once.
+# The solenoids' coil board behind its pair while two bumpers and the scoop pull at once.
 @fig("v_sol_3a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min", "n_bulk"],
      falls_with=["i_supply_3a", "rdson_q1", "r_board", "i_coils_at_once", "r_lead", "z_c"])
@@ -440,7 +440,7 @@ _I("with the 6 A adapter, the lighting's buffers stay inside their supply range"
    lambda v: v.v_light_6a >= v.vcc_min)
 _I("the servo's buffer stays inside its supply range while the servo stalls, with either "
    "adapter", lambda v: min(v.v_servo_3a, v.v_servo_6a) >= v.vcc_u1_min)
-_I("the solenoid board stays above what a stock coil kicks down to while two bumpers "
+_I("the solenoids' coil board stays above what a stock coil kicks down to while two bumpers "
    "and the scoop pull, with either adapter", lambda v: min(v.v_sol_3a, v.v_sol_6a) >= v.v_coil_min)
 _I("the Teensy's VIN stays inside its range", lambda v: v.v_teensy_6a >= v.v_in_min)
 _I("the D24V5F3 at the IR mainboard gets more than its lowest input",

@@ -17,6 +17,8 @@ The amplifier drives one speaker. I²S always sends two channels. The module mix
 
 ## Circuit
 
+An amplifier board carries J-PWR, R1 and the DFR0954 as a daughter board. J-PWR takes 5 V and GND from the power board's J-AMP. The I²S cable from the Teensy ends on the board and brings the Teensy's ground beside the three lines. The speaker connects to the board.
+
 ![Audio schematic](audio-schematic.svg)
 
 ### Signal
@@ -47,9 +49,8 @@ The Teensy drives the module's inputs directly, and the module's 5 V never reach
 
 | Qty | Part | Where |
 |---|---|---|
-| 1 | DFRobot DFR0954, MAX98357A amplifier module | between the Teensy and the speaker |
-| 1 | 100 kΩ resistor, 5 % or better | R1, from GAIN to VCC on the module |
-
+| 1 | DFRobot DFR0954, MAX98357A amplifier module | on the amplifier board, between the Teensy and the speaker |
+| 1 | 100 kΩ resistor, 5 % or better | R1, on the amplifier board from GAIN to VCC |
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
