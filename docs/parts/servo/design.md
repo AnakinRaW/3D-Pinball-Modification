@@ -41,6 +41,8 @@ The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground 
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 
+> Before the Teensy's wire is clamped into J-PWR for the first time, the signal terminal should be measured against J-PWR's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
+
 ## Teensy pins
 
 | Signal | What the pin has to be |
