@@ -182,6 +182,9 @@ I_CH      the coil, measured                      0.68 A
 I_FEED    3 stock channels at 0.68 A plus the
           scoop's 0.8 A, the unarbitrated demand
           the protection interrupts             = 2.84 A
+          two bumpers off one ball and the scoop
+          ejecting the other, the most that pull
+          at once in play                       = 2.16 A
 ```
 
 **The sense channel.** What a closed contact puts on the pin, and how fast the node follows.

@@ -47,6 +47,8 @@ ds("i_coil_scoop", 0.8, "A", src="Adafruit 3992 product page, current draw at 5 
    "the scoop's coil, larger than the three stock coils and the one that sets the "
    "per-channel worst case, since all four drive channels are built identical",
    group="I_CH", section=DRIVE, stated=True)
+dec("n_bumpers_at_once", 2, "", src="the most bumpers one ball can trigger within one "
+    "pull-in, however fast it is; a second ball may sit in the scoop meanwhile", stated=False)
 dec("n_stock_drive", 3, "", stated=False,
     src="the three drive channels wired to stock coils, the fourth to the scoop's")
 msr("r_contact", 30, "Ω", src="the ball's path from foil to shell, measured at "
@@ -321,6 +323,14 @@ def _(i_coil_scoop, rdson):
      rises_with=["i_coil_scoop", "rdson"])
 def _(i_coil_scoop, rdson):
     return i_coil_scoop * i_coil_scoop * rdson
+
+
+# The most that pulls at once in play: two bumpers off one ball, and the scoop ejecting
+# the other ball at the same moment.
+@fig("i_coils_at_once", "A", group="I_FEED", section=DRIVE,
+     rises_with=["n_bumpers_at_once", "i_coil", "i_coil_scoop"])
+def _(n_bumpers_at_once, i_coil, i_coil_scoop):
+    return n_bumpers_at_once * i_coil + i_coil_scoop
 
 
 @fig("i_feed_max", "A", group="I_FEED", section=DRIVE,

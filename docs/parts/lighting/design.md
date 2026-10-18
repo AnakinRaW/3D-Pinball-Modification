@@ -68,7 +68,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 At full white, the 162 lit LEDs would draw 9.72 A, with red, green and blue at about 20 mA each. The controller in each LED adds about 1 mA even while the LED is dark, 0.24 A for all 240. The supply cannot deliver that.
 
-This machine is designed for power supplies which deliver 3 to 6 A. 0.65 A are reserved for permanent consumers, such as the Teensy, Audio or the display and sensors. Not counting solenoids here, that leaves at least 2.35 A for the lighting. 
+This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.87 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.13 A for the lighting.
 
 The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current.
 

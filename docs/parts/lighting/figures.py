@@ -189,8 +189,8 @@ dec("i_budget", 2.0, "A", src="the lighting's cap with the 3 A supply, which the
     "with FastLED's setMaxPowerInVoltsAndMilliamps; design.md, Current ceiling",
     stated=False)
 dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply, kept at 3.3 A: with "
-    "the permanent consumers of the power design and three bumpers pulling at once the sum "
-    "passes the adapter by 0.22 A for at most one pull-in, which the design accepts as it "
+    "the permanent consumers of the power design and two bumpers with the scoop pulling at once "
+    "the sum passes the adapter by 0.34 A for at most one pull-in, which the design accepts as it "
     "accepts the 3 A adapter's overrun; design.md, Current ceiling, and the power design's "
     "Adapter section",
     stated=False)

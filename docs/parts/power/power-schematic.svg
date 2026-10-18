@@ -1,0 +1,190 @@
+<svg viewBox="0 0 1600 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1600" height="780" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Power board</text>
+  <text x="30" y="56" font-size="13" fill="#666" data-fig="v_rail">5 V from the adapter to every subsystem, with reverse-polarity protection and bulk at the input</text>
+  <!-- ===== adapter and barrel jack ===== -->
+  <rect x="20" y="100" width="150" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="34" y="126" font-size="16" font-weight="700" fill="#7a2556">Adapter</text>
+  <text x="34" y="146" font-size="11.5" fill="#666" data-fig="v_rail i_supply_3a i_supply_6a">5 V, 3 A or 6 A</text>
+  <text x="34" y="162" font-size="11.5" fill="#666">short-circuit protected</text>
+  <circle cx="170" cy="170" r="6" fill="#c0392b"/>
+  <text x="158" y="174" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">+</text>
+  <circle cx="170" cy="210" r="6" fill="#1a1a1a"/>
+  <text x="158" y="214" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">&#8722;</text>
+  <line x1="176" y1="170" x2="234" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="176" y1="210" x2="234" y2="210" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="178" y="160" font-size="11.5" fill="#666">adapter</text>
+  <text x="178" y="232" font-size="11.5" fill="#666" data-fig="len_adapter_min">1.0 m to</text>
+  <text x="178" y="246" font-size="11.5" fill="#666" data-fig="len_adapter_max">2.0 m</text>
+  <rect x="240" y="100" width="100" height="140" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="290" y="126" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">Barrel</text>
+  <text x="290" y="144" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">jack</text>
+  <circle cx="240" cy="170" r="6" fill="#c0392b"/>
+  <circle cx="240" cy="210" r="6" fill="#1a1a1a"/>
+  <circle cx="340" cy="170" r="6" fill="#c0392b"/>
+  <circle cx="340" cy="210" r="6" fill="#1a1a1a"/>
+  <text x="290" y="196" text-anchor="middle" font-size="11.5" fill="#666">in the</text>
+  <text x="290" y="230" text-anchor="middle" font-size="11.5" fill="#666">machine</text>
+  <!-- ===== board outline ===== -->
+  <rect x="450" y="80" width="1130" height="560" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <text x="466" y="104" font-size="15" font-weight="700" fill="#5c4a00">Power board</text>
+  <line x1="346" y1="170" x2="484" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="346" y1="210" x2="484" y2="210" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="352" y="160" font-size="11.5" fill="#666">16 AWG pair,</text>
+  <text x="352" y="232" font-size="11.5" fill="#666" data-fig="len_dcin">at most 30 cm</text>
+  <rect x="490" y="120" width="84" height="120" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="532" y="144" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-IN</text>
+  <circle cx="490" cy="170" r="6" fill="#c0392b"/>
+  <circle cx="490" cy="210" r="6" fill="#1a1a1a"/>
+  <circle cx="574" cy="170" r="6" fill="#c0392b"/>
+  <circle cx="574" cy="210" r="6" fill="#1a1a1a"/>
+  <text x="532" y="174" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V</text>
+  <text x="532" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <line x1="580" y1="170" x2="1508" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="1016" y="158" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V bus</text>
+  <!-- ===== Q1, N-channel, reverse polarity in the ground line ===== -->
+  <line x1="580" y1="210" x2="600" y2="210" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="600" y1="210" x2="600" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="600" y1="330" x2="620" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="620" y1="330" x2="620" y2="300" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="700" y1="300" x2="700" y2="330" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="612" y1="300" x2="630" y2="300" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="651" y1="300" x2="669" y2="300" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="690" y1="300" x2="708" y2="300" stroke="#1a1a1a" stroke-width="4"/>
+  <line x1="660" y1="300" x2="660" y2="316" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="660" y1="316" x2="700" y2="316" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="700" cy="316" r="4" fill="#1a1a1a"/>
+  <polygon points="660,302 654,313 666,313" fill="#1a1a1a"/>
+  <line x1="608" y1="290" x2="712" y2="290" stroke="#1a1a1a" stroke-width="3"/>
+  <text x="630" y="352" font-size="13" font-weight="700" fill="#1a1a1a">Q1</text>
+  <text x="612" y="324" text-anchor="end" font-size="11.5" fill="#777">D</text>
+  <text x="708" y="324" font-size="11.5" fill="#777">S</text>
+  <text x="652" y="280" text-anchor="end" font-size="11.5" fill="#777">G</text>
+  <text x="630" y="368" font-size="11.5" fill="#666">STP160N3LL</text>
+  <text x="630" y="384" font-size="11.5" fill="#666">N-channel</text>
+  <line x1="660" y1="290" x2="660" y2="266" stroke="#1a1a1a" stroke-width="2.5"/>
+  <rect x="647" y="206" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="660" y1="206" x2="660" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="660" cy="170" r="4" fill="#c0392b"/>
+  <text x="679" y="230" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
+  <text x="679" y="248" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gate">10 k&#937;</text>
+  <!-- ===== C1 and C2 ===== -->
+  <circle cx="790" cy="170" r="4" fill="#c0392b"/>
+  <line x1="790" y1="170" x2="790" y2="214" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="772" y1="214" x2="808" y2="214" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 772 232 Q 790 220 808 232" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <text x="769" y="220" text-anchor="end" font-size="14" font-weight="700" fill="#1a1a1a">+</text>
+  <text x="812" y="210" font-size="12.5" font-weight="700" fill="#1a1a1a">C1</text>
+  <line x1="790" y1="226" x2="790" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="870" cy="170" r="4" fill="#c0392b"/>
+  <line x1="870" y1="170" x2="870" y2="214" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="852" y1="214" x2="888" y2="214" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 852 232 Q 870 220 888 232" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <text x="849" y="220" text-anchor="end" font-size="14" font-weight="700" fill="#1a1a1a">+</text>
+  <text x="892" y="210" font-size="12.5" font-weight="700" fill="#1a1a1a">C2</text>
+  <line x1="870" y1="226" x2="870" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="790" y1="250" x2="870" y2="250" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="842" y="274" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="c_one v_c_rating">1000 &#181;F each, 16 V</text>
+  <text x="842" y="290" font-size="11.5" fill="#666">Rubycon ZLH</text>
+  <rect x="750" y="140" width="210" height="160" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
+  <text x="750" y="116" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bulk">keep together, under 20 mm:</text>
+  <text x="750" y="130" font-size="11.5" font-weight="700" fill="#0a8a6a">C1 and C2 at J-IN</text>
+  <!-- ===== outputs ===== -->
+  <circle cx="1004" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1004" y1="170" x2="1004" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="964" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1004" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1004" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1004" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-LIGHT</text>
+  <text x="1004" y="380" text-anchor="middle" font-size="11.5" fill="#666">lighting</text>
+  <text x="1004" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
+  <line x1="1004" y1="436" x2="1004" y2="500" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1004" y1="500" x2="836" y2="500" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="500" r="4" fill="#1a1a1a"/>
+  <circle cx="1088" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1088" y1="170" x2="1088" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1048" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1088" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1088" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1088" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-SOL</text>
+  <text x="1088" y="380" text-anchor="middle" font-size="11.5" fill="#666">solenoid</text>
+  <text x="1088" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
+  <line x1="1088" y1="436" x2="1088" y2="516" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1088" y1="516" x2="836" y2="516" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="516" r="4" fill="#1a1a1a"/>
+  <circle cx="1172" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1172" y1="170" x2="1172" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1132" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1172" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1172" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1172" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-SERVO</text>
+  <text x="1172" y="380" text-anchor="middle" font-size="11.5" fill="#666">servo</text>
+  <line x1="1172" y1="436" x2="1172" y2="532" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1172" y1="532" x2="836" y2="532" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="532" r="4" fill="#1a1a1a"/>
+  <circle cx="1256" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1256" y1="170" x2="1256" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1216" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1256" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1256" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1256" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-AMP</text>
+  <text x="1256" y="380" text-anchor="middle" font-size="11.5" fill="#666">DFR0954</text>
+  <line x1="1256" y1="436" x2="1256" y2="548" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1256" y1="548" x2="836" y2="548" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="548" r="4" fill="#1a1a1a"/>
+  <circle cx="1340" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1340" y1="170" x2="1340" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1300" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1340" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1340" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1340" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-TEENSY</text>
+  <text x="1340" y="380" text-anchor="middle" font-size="11.5" fill="#666">Teensy</text>
+  <text x="1340" y="396" text-anchor="middle" font-size="11.5" fill="#666">VIN</text>
+  <line x1="1340" y1="436" x2="1340" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1340" y1="564" x2="836" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="564" r="4" fill="#1a1a1a"/>
+  <circle cx="1424" cy="170" r="4" fill="#c0392b"/>
+  <line x1="1424" y1="170" x2="1424" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1384" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1424" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1424" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1424" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-IR</text>
+  <text x="1424" y="380" text-anchor="middle" font-size="11.5" fill="#666">IR main-</text>
+  <text x="1424" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
+  <line x1="1424" y1="436" x2="1424" y2="580" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1424" y1="580" x2="836" y2="580" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="580" r="4" fill="#1a1a1a"/>
+  <line x1="1508" y1="170" x2="1508" y2="324" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="1468" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <circle cx="1508" cy="330" r="6" fill="#c0392b"/>
+  <circle cx="1508" cy="430" r="6" fill="#1a1a1a"/>
+  <text x="1508" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-DISP</text>
+  <text x="1508" y="380" text-anchor="middle" font-size="11.5" fill="#666">the</text>
+  <text x="1508" y="396" text-anchor="middle" font-size="11.5" fill="#666">display</text>
+  <line x1="1508" y1="436" x2="1508" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1508" y1="596" x2="836" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="836" cy="596" r="4" fill="#1a1a1a"/>
+  <!-- ===== GND star point ===== -->
+  <rect x="824" y="470" width="12" height="154" fill="#1a1a1a"/>
+  <circle cx="830" cy="250" r="4" fill="#1a1a1a"/>
+  <line x1="830" y1="250" x2="830" y2="470" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="700" y1="330" x2="740" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="740" y1="330" x2="740" y2="560" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="740" y1="560" x2="824" y2="560" stroke="#1a1a1a" stroke-width="2.5"/>
+  <circle cx="824" cy="560" r="4" fill="#1a1a1a"/>
+  <text x="814" y="600" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">GND star point at C1 and C2:</text>
+  <text x="814" y="616" text-anchor="end" font-size="11.5" fill="#666">every ground wire lands here</text>
+  <text x="848" y="612" font-size="11.5" fill="#666">each output a 22 AWG pair</text>
+  <!-- ===== placement ===== -->
+  <text x="20" y="680" font-size="13" font-weight="700" fill="#1a1a1a">Placement</text>
+  <text x="20" y="702" font-size="12" font-weight="700" fill="#1a1a1a">Group</text>
+  <text x="220" y="702" font-size="12" font-weight="700" fill="#1a1a1a">Distance</text>
+  <text x="320" y="702" font-size="12" font-weight="700" fill="#1a1a1a">Reason</text>
+  <line x1="20" y1="709" x2="840" y2="709" stroke="#ccc" stroke-width="1"/>
+  <text x="20" y="727" font-size="11.5" fill="#444">C1 and C2 at J-IN</text>
+  <text x="220" y="727" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
+  <text x="320" y="727" font-size="11.5" fill="#444">the bulk sits where the input current enters the bus</text>
+  <text x="20" y="745" font-size="11.5" fill="#444">the GND star point</text>
+  <text x="220" y="745" font-size="11.5" fill="#444">one point</text>
+  <text x="320" y="745" font-size="11.5" fill="#444">no coil, LED or servo current crosses another output's ground</text>
+</svg>
