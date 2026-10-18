@@ -111,6 +111,7 @@ _I("the gate reports the fastest ball the build assumes",
 
 for _text, _why in [
     ("2 cm", "the gap between the two bodies, a mounting dimension"),
+    ("3.9 cm", "the gap the sidelookers of the considered option would sit at, a mounting dimension"),
     ("3 mm", "the LED package the two bodies carry"),
 ]:
     MODEL.aside(_text, _why)
