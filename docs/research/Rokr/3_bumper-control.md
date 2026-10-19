@@ -22,6 +22,7 @@ At power-on all three coils pull in once, together, and light and sound follow a
 | Property | Value |
 |---|---|
 | Supply | 5 V, measured in operation |
+| Least supply | 4.3–4.4 V, measured; below it the coil no longer kicks |
 | Winding resistance | ≈ 7.35 Ω, measured |
 | Coil current | ≈ 0.68 A, measured in series at the coil while running; 5.0 V ÷ 7.35 Ω gives the same, so the stock trigger path drops nothing measurable |
 | Power while energized | ≈ 3.4 W, 5.0 V × 0.68 A |

@@ -3,6 +3,10 @@
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Toggle switch</text>
   <text x="30" y="56" font-size="13" fill="#666" data-pin="Toggle switch">The stock toggle switch closes pin 32 to ground, and each game decides what it does</text>
 
+  <!-- ===== board outline ===== -->
+  <rect x="30" y="72" width="440" height="246" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <text x="46" y="92" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
+
   <!-- Teensy block -->
   <rect x="50" y="100" width="190" height="200" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="64" y="128" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>

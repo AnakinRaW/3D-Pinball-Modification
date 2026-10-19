@@ -57,8 +57,11 @@ Sources: [Can 3.3 V be safely applied to a Teensy 4 I/O pin while the Teensy 4 p
 | Output pin figure in the comparison table | 10 mA at 3.3 V | [PJRC technical specifications table](https://www.pjrc.com/teensy/techspecs.html) |
 | 3.3 V rail available to external circuits | 250 mA, the total across both 3V3 header pins | PJRC pin assignment card 11a rev4, and the [Teensy 4.1 schematic](https://www.pjrc.com/teensy/schematic41.png) for the single regulator |
 | Current draw @ 600 MHz | ≈ 100 mA | PJRC. **Published for the Teensy 4.0, not the 4.1** |
+| SD card, in High Speed mode | 200 mA | [SD Physical Layer Simplified Specification 3.01](../datasheets/SD-Part1-PhysicalLayer-Simplified-3.01.pdf), Table 3-4 |
 
 **The two 3V3 header pins are one net.** The board carries a single 3.3 V regulator, the TLV75733P, and both pins hang off its output. A second pin buys shorter wiring and a second contact, not a second budget: 250 mA is the sum.
+
+**The card socket hangs on the same regulator.** Its supply pin sits on the 3.3 V net in the Teensy 4.1 schematic, so a card's current comes out of the 250 mA like any external circuit. The SD specification allows a card 200 mA in High Speed mode, the larger of the two figures it gives for 3.3 V signaling, and the budget takes that figure.
 
 Three open points:
 
@@ -77,6 +80,8 @@ The 1 kΩ belongs to that one sample setting. A longer window admits a higher re
 ### Powering from something other than USB
 
 The VUSB-VIN trace on the underside must be cut when an external supply is used. PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
+
+A Schottky diode across the cut, from VUSB to VIN, lets the board still run from USB alone, while the external supply cannot reach the USB host. PJRC's [external power page](https://www.pjrc.com/teensy/external_power.html), written for the earlier boards, solders a 1N5817 between the two pads for this.
 
 ### I²S1 spends three analog-capable pins
 
@@ -109,3 +114,4 @@ Source: [PJRC, Pulse Width and Tone](https://www.pjrc.com/teensy/td_pulse.html).
 
 - [Teensy 4.1 product page](https://www.pjrc.com/store/teensy41.html): specifications and the 5 V tolerance warnings
 - [Teensy technical specifications comparison table](https://www.pjrc.com/teensy/techspecs.html): per-pin output rating
+- [SD Physical Layer Simplified Specification, Version 3.01](../datasheets/SD-Part1-PhysicalLayer-Simplified-3.01.pdf), Table 3-4: the current a card may draw in each bus speed mode; the [SD Association](https://www.sdcard.org/downloads/pls/) publishes the current version

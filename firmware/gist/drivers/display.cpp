@@ -4,6 +4,7 @@ public:
 
     // sets up FlexIO3 and the panel and attaches to the driver tick; false when it is full
     bool begin() override;
+    void restart();                                          // sets the panel up again after a supervisor reset and marks every row; returns at once
 
     uint8_t* pixels(Layer layer);                            // gets a layer's palette indices, row by row
     void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a color of a layer's palette, opacity 0 to 255 in 32 steps
@@ -18,6 +19,8 @@ public:
     bool     moviePlaying() const;                           // gets whether a movie plays
 
 private:
+    enum class Step : uint8_t { Idle, Reset, SleepOut };   // where a restart stands; the FlexIO3 interrupt alone steps it
+
     static constexpr uint16_t kWidth        = 320;
     static constexpr uint16_t kHeight       = 240;
     static constexpr uint16_t kColors      = 256;     // a palette, index 0 transparent
@@ -105,6 +108,12 @@ void Display::show(uint16_t top, uint16_t bottom) {
     NVIC_SET_PENDING(IRQ_FLEXIO3);
 }
 
+// asks the FlexIO3 interrupt for the panel's setup: the main loop is the only writer of restarts_
+void Display::restart() {
+    restarts_ = restarts_ + 1;
+    NVIC_SET_PENDING(IRQ_FLEXIO3);
+}
+
 // FlexIO3 at 120 MHz: PLL3's 480 MHz divided by 2 and by 2. The pads drive at their weakest
 void Display::setUpBus() {
     CCM_CSCMR2 = (CCM_CSCMR2 & ~CCM_CSCMR2_FLEXIO2_CLK_SEL(3)) | CCM_CSCMR2_FLEXIO2_CLK_SEL(3);
@@ -155,6 +164,15 @@ void Display::command(uint8_t cmd, const uint8_t* params, uint8_t count);
 // the power, frame rate and gamma commands the ILI9341 libraries send after a reset
 void Display::startUpTable();
 
+// sends what follows the software reset up to Sleep Out, for begin() and a restart alike
+void Display::setUp() {
+    startUpTable();                                                      // the ILI9341 libraries' power and gamma table
+    const uint8_t rgb565 = 0x55, landscape = 0x28;
+    command(0x3A, &rgb565, 1);                                           // COLMOD, 16 bits a pixel
+    command(0x36, &landscape, 1);                                        // MADCTL, 320 across, matched to the mounting
+    command(0x11, nullptr, 0);                                           // Sleep Out
+}
+
 // the rows the interrupt sends next: the first run of rows whose drawn and sent counters
 // differ, outside the movie's rows while a movie plays; no rows when none waits
 Run Display::waitingRows();
@@ -176,6 +194,36 @@ void Display::takeRequests();
 // gets whether the movie's next frame is due: the ticks since its start have reached the frame's,
 // and the movie has not run out
 bool Display::frameDue() const;
+
+// takes the next step of a restart between two runs: the software reset, the setup once the
+// panel's 120 ms after it have passed, Display On and every row marked once its 120 ms after
+// Sleep Out have passed. The driver tick raises the interrupt while a step waits. Gets whether
+// the restart still holds the bus
+bool Display::restarting() {
+    if (step_ == Step::Idle) {
+        if (restarts_ == restartsTaken_) return false;
+        restartsTaken_ = restarts_;
+        single();
+        command(0x01, nullptr, 0);                                       // software reset
+        stepAt_ = nowUs();
+        step_   = Step::Reset;
+        return true;
+    }
+    const uint32_t waited = nowUs() - stepAt_;
+    if (step_ == Step::Reset) {
+        if (waited < kResetMs * 1000) return true;
+        setUp();
+        stepAt_ = nowUs();
+        step_   = Step::SleepOut;
+        return true;
+    }
+    if (waited < kSleepOutMs * 1000) return true;
+    command(0x29, nullptr, 0);                                           // Display On
+    bursts();
+    for (uint16_t row = 0; row < kHeight; ++row) sent_[row] = drawn_[row] - 1;   // every row goes out again
+    step_ = Step::Idle;
+    return false;
+}
 
 // writes the next 16 pixels into the shifter buffers, shifter 7 last since it starts the
 // burst; false while the movie's next chunk has not arrived
@@ -238,6 +286,7 @@ void Display::isr() {
         delayNanoseconds(kEndWaitNs);                                    // and has left the bus after this, however late the interrupt came
         endRun();                                                        // MovieEnded once a movie's last row is out
     }
+    if (restarting()) return;                                            // the panel's setup holds the bus until it is back
     takeRequests();                                                      // play() and stopMovie() of the main loop
     if (frameDue()) startRun(movieY_, movieY_ + movieHeight_, true);    // the movie's rows and its next frame
     else if (const Run r = waitingRows(); r.rows) startRun(r.top, r.top + r.rows, false);
@@ -250,11 +299,7 @@ bool Display::begin() {
     single();
     command(0x01, nullptr, 0);                                           // software reset
     delay(kResetMs);
-    startUpTable();                                                      // the ILI9341 libraries' power and gamma table
-    const uint8_t rgb565 = 0x55, landscape = 0x28;
-    command(0x3A, &rgb565, 1);                                           // COLMOD, 16 bits a pixel
-    command(0x36, &landscape, 1);                                        // MADCTL, 320 across, matched to the mounting
-    command(0x11, nullptr, 0);                                           // Sleep Out
+    setUp();
     delay(kSleepOutMs);
     command(0x29, nullptr, 0);                                           // Display On
     bursts();
@@ -270,8 +315,8 @@ bool Display::begin() {
     return driverTick.attach([this] { tick(); }, kTickUs);
 }
 
-// the driver tick, every kTickUs: the movie's next frame
+// the driver tick, every kTickUs: the movie's next frame, and the next step of a restart
 void Display::tick() {
     ticks_ = ticks_ + 1;                                                 // frameDue() counts the frames from it
-    if (playing_) NVIC_SET_PENDING(IRQ_FLEXIO3);                         // the interrupt starts the frame
+    if (playing_ || step_ != Step::Idle) NVIC_SET_PENDING(IRQ_FLEXIO3);  // the interrupt starts the frame or takes the step
 }

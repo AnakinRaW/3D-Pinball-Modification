@@ -37,7 +37,7 @@ A payload holds x in its lower 16 bits and y in its upper 16, 0 at the top left.
 
 A controller that did not answer at `begin()` means this machine does not use touch input. This is not a fault.
 
-A controller that answered at `begin()` counts as [failed](../error-handling.md#device-faults) once it has answered no read for 1 s. A read gets an answer whether or not a finger touches the screen. The error code holds the LPI2C4 error flags of the last failed read. 
+A controller that answered at `begin()` counts as [failed](../error-handling.md#device-faults) once it has answered no read for 100 ms. A read gets an answer whether or not a finger touches the screen. The error code holds the LPI2C4 error flags of the last failed read. 
 
 A failed read is retried at once. When the controller blocks the bus, the driver sends clock pulses until the controller releases it.
 
@@ -65,7 +65,7 @@ public:
     Finger finger() const;      // gets where a finger touches the screen
 
     // gets which parts have failed, bit 0 once the controller that answered at begin() has brought
-    // no read for 1 s, with the LPI2C4 error flags of the last failed read as the error code
+    // no read for 100 ms, with the LPI2C4 error flags of the last failed read as the error code
     Fault failed() const override;
 };
 ```

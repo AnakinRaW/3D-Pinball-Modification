@@ -23,6 +23,8 @@ The mechanism has two end positions. The angle of each is set once on the assemb
 
 ## Circuit
 
+A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-PWR. The servo plugs into it. J-PWR takes 5 V and GND from the power board's J-SERVO and the signal from the Teensy's pin [0](../../pin-assignment.md "Servo signal"). The board's ground comes over J-SERVO from the power board's star point, so no ground wire runs from the Teensy.
+
 ![Servo schematic](servo-schematic.svg)
 
 ### Signal
@@ -38,6 +40,8 @@ U1 has four buffers. The servo uses one of them. Its enable pin OE sits on groun
 The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground at J-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 43.9 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
+
+> Before the Teensy's wire is clamped into J-PWR for the first time, the signal terminal should be measured against J-PWR's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
 
 ## Teensy pins
 
@@ -56,13 +60,12 @@ The driver ensures that the servo cannot be operated outside of the predefined a
 | Qty | Part | Where |
 |---|---|---|
 | 1 | DFRobot SER0049, 9 g micro servo with clutch | on the ball separator |
-| 1 | CD74HCT125E quad buffer, DIP-14 | U1, beside the Teensy |
+| 1 | CD74HCT125E quad buffer, DIP-14 | U1, on the servo board |
 | 1 | 10 kΩ resistor | R1, from the pin to GND |
 | 1 | 1 kΩ resistor | R2, from U1's output to the servo's signal wire |
 | 1 | 2.2 kΩ resistor | R3, from the pin to U1's input |
 | 1 | 100 nF ceramic capacitor | C2, at U1's supply pin |
 | 1 | 100 µF electrolytic capacitor, 10 V or more | C1, across the servo's supply at the start of its cable |
-| 1 | reverse-proof 2-pin connector | J-PWR, 5 V and GND from the power distribution |
 
 ## Appendix: derivations
 

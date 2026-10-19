@@ -38,7 +38,7 @@ The driver always writes the time first and switches the coil second. Whoever lo
 
 If the firmware itself fails, the [watchdog](../error-handling.md#watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 31 ms.
 
-At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the board switch every coil off.
+At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the coil board switch every coil off.
 
 ## Device faults
 

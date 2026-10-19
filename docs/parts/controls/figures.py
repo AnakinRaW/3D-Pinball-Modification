@@ -12,7 +12,8 @@ from figcheck import Model, TEENSY_RAIL, contact, pull
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("controls", HERE / "design.md", section=None, until="## Sources",
-              drawings=[HERE / "toggle-switch-schematic.svg"])
+              drawings=[HERE / "toggle-switch-schematic.svg",
+                        HERE.parent / "motherboard" / "motherboard-schematic.svg"])
 
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
 fig = MODEL.derived

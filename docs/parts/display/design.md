@@ -23,6 +23,8 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
+A display board beside the module carries J-PWR and the Adafruit 757 as a daughter board. J-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, GND, SDA and SCL run from the board to the module. The bus and its ground run from the Teensy straight to the module.
+
 ![Display schematic](display-schematic.svg)
 
 ### Bus
@@ -33,19 +35,21 @@ FlexIO3 is a programmable I/O block of the i.MX RT. FlexIO3's timer drives WR on
 
 The driver sets the bus pins to their weakest drive and their slow slew rate. WR then rises too gently to ring, so the display takes each byte exactly once. That edge is still fast enough for FlexIO3's clock.
 
-The display only receives, so RD is wired to Vin. CCS is tied to Vin too, which keeps the module's card socket off. MOSI is tied to GND. RST, Lite and the touch controller's IRQ stay unconnected.
+The display only receives, so RD is wired to the module's 3.3Vout pin. CCS is tied to 3.3Vout too, which keeps the module's card socket off. MOSI is tied to GND. RST, Lite and the touch controller's IRQ stay unconnected.
 
 ### Touch
 
 The touch controller sits on `Wire2`, with SDA on pin [25](../../pin-assignment.md "SDA to the touch controller") and SCL on pin [24](../../pin-assignment.md "SCL to the touch controller"). The bus runs at the Standard-mode rate of 100 kHz.
 
+Between the Teensy and the module both lines pass an Adafruit 757, a converter with a BSS138 and a 10 kΩ pull-up per line on each side. Its LV side takes the Teensy's 3.3 V over a third wire of the touch cable, its HV side the module's Vin. The Teensy's pins therefore see only their own rail. Without the Teensy's 3.3 V the transistors are off, and their body diodes block toward the Teensy, so nothing reaches a Teensy that is off. On the module R13 and R14 pull the HV side to Vin as well.
+
 ### Reset
 
-After power-up, the module holds the panel and the touch controller in reset for up to 280 ms. Until then, both ignore every command.
+After power-up, the module holds the panel and the touch controller in reset for up to 280 ms. Until then, both ignore every command. If the module's 3.3 V falls below 3 V during play, the module resets both again. The panel then comes back with its display off. The [display driver](../../firmware/drivers/display.md) then sets it up again and redraws the picture.
 
 ### Supply
 
-The module takes its supply Vin from the Teensy's 3V3 pin. The module draws at most 191 mA of the 250 mA the 3V3 pin supplies.
+The module takes its 5 V from the power board's [J-DISP](../power/design.md#outputs) over the display board and makes its own 3.3 V. The display draws at most 198 mA from J-DISP.
 
 ## Teensy pins
 
@@ -77,7 +81,7 @@ The video rate rests on an estimate of the card's speed. A slower card makes a v
 | Qty | Part | Where |
 |---|---|---|
 | 1 | Adafruit 2090, 2.8" TFT with capacitive touch, ILI9341 and CST026 | in the diorama |
-
+| 1 | Adafruit 757, bidirectional logic level converter, BSS138 | on the display board, in SDA and SCL between the Teensy and the module |
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names. `tools/figcheck.py` compares each one against the line that states it.
@@ -170,7 +174,10 @@ TOUCH     the bus clock                            100 kHz
           the address again and five bytes       = 750 µs
           the touch driver's tick                  20 ms
           its share of the bus at one read a tick= 3.75 %
-          the module's pull-up on SDA and SCL      10 kΩ
+          the converter's pull-up on SDA and SCL   10 kΩ
+          the converter's pull-ups at the Teensy,
+          both lines low                         = 0.66 mA
+          the BSS138's gate threshold, at most     1.5 V
           each bus line, estimated                 100 pF
           a rising edge between 0.3 and 0.7 of
           the rail                               = 848 ns
@@ -180,24 +187,38 @@ TOUCH     the bus clock                            100 kHz
 ### Supply
 
 ```
-SUPPLY    the Teensy's rail, at most             = 3.333 V
+SUPPLY    the power board's rail                   5 V
+          VCC, the module regulator's output,
+          at most                                = 3.35 V
           each LED's resistor                      10 Ω
           an LED's forward voltage, at least       2.9 V
-          one LED, at most                       = 43.3 mA
-          the four LEDs                          = 173.2 mA
+          one LED, at most                       = 45 mA
+          the four LEDs                          = 180 mA
           the ILI9341, assumed                     10 mA
           the touch controller, at most            5 mA
-          the module from the 3V3 pin, at most   = 191 mA
-          what the 3V3 pin supplies                250 mA
-VCC       the Teensy's rail, at least            = 3.267 V
-          the regulator's dropout at that
-          current, at most                       = 127 mV
-          VCC, at least                          = 3.14 V
+          the module, at most                    = 197 mA
+          the converter's pull-ups at Vin, both
+          lines low                              = 1 mA
+          J-DISP carries, at most                = 198 mA
+          the adapter with no load, at most        5.25 V
+          what the regulator dissipates, at most = 0.4 W
+          its thermal resistance, SOT25, no
+          heatsink                                 184 °C/W
+          the air around it                        40 °C
+          its junction, at most                  = 113 °C
+          its junction rating                      150 °C
+          its input, at most                       6 V
+          the rail's highest peak                  5.46 V
+VCC       the regulator's accuracy                 1.5 %
+          VCC, at least                          = 3.25 V
+          the regulator's dropout at the module's
+          current, at most                       = 132 mV
+          Vin it needs, at least                 = 3.49 V
           the ILI9341's lowest supply              2.5 V
           the supervisor's threshold, below        3 V
           the ILI9341's highest supply             3.3 V
-          VCC from the module's regulator on 5 V,
-          at most                                = 3.35 V
+          VCC above it, at most                  = 50 mV
+          the ILI9341's absolute maximum           4.6 V
 START     the supervisor's reset after power-up,
           at most                                  280 ms
           the ILI9341, from its reset to its
@@ -213,13 +234,16 @@ START     the supervisor's reset after power-up,
 
 ## Sources
 
-- [`datasheets/ILI9341-Ilitek.pdf`](../../datasheets/ILI9341-Ilitek.pdf), ILI9341_DS_V1.11: the 8080-I write timing in 18.3.1, the supply range and the input levels in 18.2.1, the reset timing in 15.4, Sleep Out, the RGB565 transfer and the frame memory
+- [`datasheets/ILI9341-Ilitek.pdf`](../../datasheets/ILI9341-Ilitek.pdf), ILI9341_DS_V1.11: the 8080-I write timing in 18.3.1, the absolute maximum in 18.1, the supply range and the input levels in 18.2.1, the reset timing in 15.4, Sleep Out, the RGB565 transfer and the frame memory
+- [Adafruit 757, EAGLE files](https://github.com/adafruit/4-Channel-Level-Shifter-PCB), Adafruit FET 4-Channel Shifter.sch: the converter's transistors and pull-ups
+- [`datasheets/BSS138-onsemi.pdf`](../../datasheets/BSS138-onsemi.pdf), Rev C: the gate threshold and the drain-source voltage
+- [`parts/power/design.md`](../power/design.md): the adapter's no-load maximum, the rail's peak and J-DISP
 - [`datasheets/CH280QV10-CT-ChengHao.pdf`](../../datasheets/CH280QV10-CT-ChengHao.pdf), Rev. D: the panel Adafruit names for the 2090, its active area, its four backlight LEDs and their forward voltage, and the CST026 as its touch controller
 - [Adafruit, 2090 product page](https://www.adafruit.com/product/2090): the module's size, its holes and weight, and the CST026
 - [Adafruit, EAGLE files of the 2090](https://github.com/adafruit/Adafruit-2.8-TFT-with-Capacitive-Touch-PCB), rev D: the buffers and their direction, the pull-ups on RD, SDA, SCL and Lite, the backlight's resistors, the supervisor and the unconnected TE
 - [Adafruit, 2.8" and 3.2" Color TFT Touchscreen Breakout v2](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-2-8-and-3-2-color-tft-touchscreen-breakout-v2.pdf): Vin from 3 V, the touch controller's address
 - [`datasheets/SN74LVC245A-TI.pdf`](../../datasheets/SN74LVC245A-TI.pdf), SCAS218X: the input levels, the transition rate, the input capacitance and the delay, standing for the module's 74LVC245
-- [`datasheets/AP2112-Diodes.pdf`](../../datasheets/AP2112-Diodes.pdf), DS39724: the dropout, the output current and the accuracy
+- [`datasheets/AP2112-Diodes.pdf`](../../datasheets/AP2112-Diodes.pdf), DS39724: the dropout, the output current, the accuracy, the input range and the thermal resistance
 - [`datasheets/APX803-Diodes.pdf`](../../datasheets/APX803-Diodes.pdf), DS32131: the reset timeout, the threshold variants and their hysteresis
 - [`datasheets/CST026-Hynitron.pdf`](../../datasheets/CST026-Hynitron.pdf): the touch controller's supply current and its I²C clock
 - [FocalTech, FT6x06 datasheet](https://cdn-shop.adafruit.com/datasheets/FT6x06%20Datasheet_V0.1_Preliminary_20120723.pdf), V0.1: the time from reset to the first I²C answer
@@ -227,5 +251,5 @@ START     the supervisor's reset after power-up,
 - [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3: Table 14-5, the FlexIO clock's limit; 50.3.3.1, the shifters that drive several pins; Table 4-3, no DMA request for FlexIO3
 - [SD Specifications Part 1, Physical Layer Simplified Specification](https://www.sdcard.org/downloads/pls/), version 6.00: the A1 class in 4.16, the source of the estimated read rate, and its clocks in Table 4-72
 - [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the Standard-mode rise time
-- [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant, and the 3V3 pin's budget
+- [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
 - [`pin-assignment.md`](../../pin-assignment.md): the display's pins and their cost

@@ -107,7 +107,7 @@ dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
     stated=True, src="carried on top of the module maximum as the working bound")
 dec("bits", 10, "", src="the MCP3008's resolution")
 MODEL.uses("i_teensy_3v3", of="teensy-4.1")
-dec("r_led_e12_below", 47, "Ω", src="the E12 value above the single-channel bound")
+dec("r_led_e12_below", 56, "Ω", src="the E12 value above the single-channel bound")
 dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterizing point")
 dec("r_pd_alt", 2.2, "kΩ", src="one standard value, twice the resolution floor")
 dec("r_pd_alt_high", 10, "kΩ", src="the pull-down one decade up, weighed in the "
@@ -389,9 +389,9 @@ def _vf75(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i):
     return interp_log([(vf75_10ma_at, vf75_10ma), (vf75_50ma_at, vf75_50ma)], i)
 
 
-@fig("v_f_75c_at_50ma", "V", stated=False)
-def _(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max):
-    return _vf75(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max)
+@fig("v_f_75c_at_t_a", "V", stated=False)
+def _(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max_at_t_a):
+    return _vf75(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max_at_t_a)
 
 
 @fig("rds_ao_hot_factor", "×", stated=False)
@@ -1483,16 +1483,16 @@ def _(v_out_max, r_col_new, r_pd):
 @fig("u_r_at_i_f_max", "V", group=KNOB, section=KNOB,
      rises_with=["v_out_max"],
      falls_with=["vf75_50ma"])
-def _(v_out_max, v_f_75c_at_50ma):
-    return v_out_max - v_f_75c_at_50ma
+def _(v_out_max, v_f_75c_at_t_a):
+    return v_out_max - v_f_75c_at_t_a
 
 
 @fig("r_min_single", "Ω", group=KNOB, section=KNOB,
-     rises_with=["v_out_max"],
-     falls_with=["i_f_max", "vf75_50ma"],
+     rises_with=["v_out_max", "t_a"],
+     falls_with=["i_f_knee", "vf75_50ma"],
      prints="up")
-def _(u_r_at_i_f_max, i_f_max):
-    return u_r_at_i_f_max / i_f_max
+def _(u_r_at_i_f_max, i_f_max_at_t_a):
+    return u_r_at_i_f_max / i_f_max_at_t_a
 
 
 def _r_for_supply(i_supply, i_fixed, n, i_c, v_rail, curve):
@@ -1920,7 +1920,7 @@ for _text, _why in [
     # a figure the model holds at another unit or another rounding
     ("3.146", "V_OUT min, restated without its unit"),
     ("3.449", "V_OUT max, restated without its unit"),
-    ("1.38", "V_F at 50 mA on the 75 °C curve, restated without its unit"),
+    ("1.35", "V_F at 40 mA on the 75 °C curve, restated without its unit"),
     ("53 µs", "the τ reading before it was rounded up to the 70 µs the design runs"),
 
     # derived in prose, which rule 15 says they should not be

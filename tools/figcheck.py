@@ -113,6 +113,10 @@ _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
 _family((-1, 0, 1, 0, 0), [("ns/V", 1e-9)])
 # a wire's resistance per length, as a gauge table gives it
 _family((1, -1, 0, 0, -1), [("Ω/m", 1.0), ("mΩ/m", 1e-3)])
+# a cable's loop inductance per length
+_family((1, -1, 1, 0, -1), [("µH/m", 1e-6)])
+# a package's thermal resistance, junction to ambient
+_family((-1, -1, 0, 1, 0), [("°C/W", 1.0)])
 # Counts share the dimensionless family, so the unit check cannot tell a byte
 # from a sample; a model keeps them apart by name.
 _family(DIMLESS, [("%", 0.01), ("×", 1.0), ("steps", 1.0), ("step", 1.0),

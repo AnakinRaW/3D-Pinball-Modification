@@ -30,6 +30,8 @@ LDO = "AP2112-Diodes.pdf"
 SUPERVISOR = "APX803-Diodes.pdf"
 TOUCH_IC = "CST026-Hynitron.pdf"
 BUFFER = "SN74LVC245A-TI.pdf"
+LVL = "Adafruit 757, Adafruit FET 4-Channel Shifter.sch in github.com/adafruit/4-Channel-Level-Shifter-PCB"
+BSS = "BSS138-onsemi.pdf"
 MCU = "IMXRT1060CEC.pdf"
 RM = "IMXRT1060RM Rev. 3"
 SCH = ("Adafruit's EAGLE schematic of the 2090, rev D, "
@@ -410,18 +412,21 @@ dec("n_touch_data", 5, "", src="the bytes that read brings, TD_STATUS and P1_XH 
 dec("n_conditions", 3, "clocks", src="START, the repeated START and STOP, about one clock "
     "period each", stated=False)
 MODEL.uses("n_bits_byte", of="magnetic-rotary", group="TOUCH", section=TOUCH, stated=True)
-ds("r_pu_touch", 10, "kΩ", src=f"{SCH}: R13 on SCL and R14 on SDA, from the header to Vin",
-   group="TOUCH", section=TOUCH, stated=True)
-asm("c_touch", 100, "pF", src="each bus line: the cable of at most 50 cm, the BSS138 on the "
-    "module and the Teensy's pin, with margin; no measurement", group="TOUCH",
+ds("r_pu_touch", 10, "kΩ", src=f"{LVL}: R1, R4, R5 and R8 "
+   "from each LV line to LV, R2, R3, R6 and R7 from each HV line to HV; the Teensy's own "
+   "22 kΩ in parallel only speeds the edge", group="TOUCH", section=TOUCH, stated=True)
+asm("c_touch", 100, "pF", src="each bus line: the cable of at most 50 cm, the converter's "
+    "BSS138 and the Teensy's pin, with margin; no measurement", group="TOUCH",
     section=TOUCH, stated=True)
 MODEL.uses("vil_frac", of="teensy-4.1")
 MODEL.uses("vih_frac", of="teensy-4.1")
 MODEL.uses("t_r_std", of="magnetic-rotary", group="TOUCH", section=TOUCH, stated=True)
 ds("f_scl_max", 400, "kHz", sheet=TOUCH_IC, src="I2C slave interface up to 400 kHz, p. 1 and "
    "the AC table, p. 9", stated=False)
-dec("t_fail", 1, "s", src="how long no touch read may work before the touch controller "
-    "counts as failed, as for the rotary sensor", stated=False)
+dec("t_fail", 100, "ms", src="how long no touch read may work before the touch controller "
+    "counts as failed: five reads in a row, so a single failed read does not count, and "
+    "short enough that the silence of a supervisor reset reaches the device monitor, which "
+    "then has the host restart the display", group="Device faults", stated="loose")
 MODEL.as_written("t_fail_ms", of="t_fail", unit="ms")
 
 
@@ -484,11 +489,26 @@ def _(t_hold, t_ttick):
 
 
 # ===========================================================================
-# the supply: the module runs from the Teensy's 3V3 pin
+# the supply: the module's own regulator makes VCC from the power board's 5 V
 # ===========================================================================
-MODEL.uses("v_3v3_acc", of="teensy-4.1")
 MODEL.uses("v_not_tolerant", of="teensy-4.1")
-MODEL.uses("i_teensy_3v3", of="teensy-4.1", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("v_3v3_acc", of="teensy-4.1")
+MODEL.uses("v_rail", of="lighting", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("v_jack_max", of="power", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("v_release_6a", of="power", group="SUPPLY", section=SUPPLY, stated=True)
+MODEL.uses("t_a", of="ir-reflective", group="SUPPLY", section=SUPPLY, stated=True)
+ds("v_ldo_acc", 1.5, "%", sheet=LDO, src="Electrical Characteristics, output voltage accuracy",
+   group="VCC", section=SUPPLY, stated=True)
+ds("v_in_ldo_max", 6, "V", sheet=LDO, src="Recommended Operating Conditions, supply voltage "
+   "maximum", group="SUPPLY", section=SUPPLY, stated=True, tol_units=0.5)
+ds("rth_ldo", 184, "°C/W", sheet=LDO, src="thermal resistance junction to ambient of the SOT25 "
+   "with no heatsink", group="SUPPLY", section=SUPPLY, stated=True)
+ds("t_j_ldo_max", 150, "°C", sheet=LDO, src="Absolute Maximum Ratings, operating junction "
+   "temperature", group="SUPPLY", section=SUPPLY, stated=True)
+ds("v_gs_th_bss", 1.5, "V", sheet=BSS, src="BSS138 Rev C, On Characteristics, VGS(th) maximum "
+   "at ID = 1 mA", group="TOUCH", section=TOUCH, stated=True)
+ds("v_dss_bss", 50, "V", sheet=BSS, src="BSS138 Rev C, Absolute Maximum Ratings, drain-source "
+   "voltage", stated=False)
 ds("r_led", 10, "Ω", src=f"{SCH}: R1 to R4, one from VCC to each LED's anode",
    group="SUPPLY", section=SUPPLY, stated=True)
 ds("n_led", 4, "", sheet=GLASS, src="8 Backlight Characteristics: 4 white LEDs in parallel, "
@@ -512,24 +532,24 @@ ds("i_ldo_q", 80, "µA", sheet=LDO, src="Electrical Characteristics, quiescent c
    "maximum", stated=False)
 
 
-@fig("v_3v3_max", "V", group="SUPPLY", section=SUPPLY, prints="up",
-     rises_with=["v_3v3", "v_3v3_acc"])
-def _(v_3v3, v_3v3_acc):
-    return v_3v3 * (1 + v_3v3_acc.raw)
+# VCC is the module regulator's output, which runs from the 5 V rail; each LED takes the
+# rest over its own resistor, and a forward voltage at its lowest takes the most
+@fig("v_vcc_max", "V", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["v_3v3", "v_ldo_acc"])
+def _(v_3v3, v_ldo_acc):
+    return v_3v3 * (1 + v_ldo_acc.raw)
 
 
-@fig("v_3v3_min", "V", group="VCC", section=SUPPLY, prints="down",
-     rises_with=["v_3v3"], falls_with=["v_3v3_acc"])
-def _(v_3v3, v_3v3_acc):
-    return v_3v3 * (1 - v_3v3_acc.raw)
+@fig("v_vcc_min", "V", group="VCC", section=SUPPLY, prints="down",
+     rises_with=["v_3v3"], falls_with=["v_ldo_acc"])
+def _(v_3v3, v_ldo_acc):
+    return v_3v3 * (1 - v_ldo_acc.raw)
 
 
-# VCC follows Vin in dropout and never rises above it; each LED takes the rest over
-# its own resistor, and a forward voltage at its lowest takes the most
 @fig("i_led_max", "mA", group="SUPPLY", section=SUPPLY, prints="up",
-     rises_with=["v_3v3", "v_3v3_acc"], falls_with=["vf_min", "r_led"])
-def _(v_3v3_max, vf_min, r_led):
-    return (v_3v3_max - vf_min) / r_led
+     rises_with=["v_3v3", "v_ldo_acc"], falls_with=["vf_min", "r_led"])
+def _(v_vcc_max, vf_min, r_led):
+    return (v_vcc_max - vf_min) / r_led
 
 
 @fig("i_backlight", "mA", group="SUPPLY", section=SUPPLY, prints="up",
@@ -541,9 +561,50 @@ def _(i_led_max, n_led):
 @fig("i_module", "mA", group="SUPPLY", section=SUPPLY, prints="up",
      rises_with=["v_3v3", "n_led", "i_panel", "i_touch", "n_pulls"],
      falls_with=["vf_min", "r_led", "r_pull"])
-def _(i_backlight, i_panel, i_touch, n_pulls, v_3v3_max, r_pull, i_buffer, i_sup, i_ldo_q):
-    return (i_backlight + i_panel + i_touch + n_pulls * v_3v3_max / r_pull
+def _(i_backlight, i_panel, i_touch, n_pulls, v_vcc_max, r_pull, i_buffer, i_sup, i_ldo_q):
+    return (i_backlight + i_panel + i_touch + n_pulls * v_vcc_max / r_pull
             + 2 * i_buffer + i_sup + i_ldo_q)
+
+
+# the converter's pull-ups, both lines held low: the LV side out of the Teensy's 3V3, the
+# HV side out of Vin
+@fig("i_conv_lv", "mA", group="TOUCH", section=TOUCH, prints="up",
+     rises_with=["v_3v3"], falls_with=["r_pu_touch"])
+def _(v_3v3, r_pu_touch):
+    return 2 * v_3v3 / r_pu_touch
+
+
+@fig("i_conv_hv", "mA", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["v_rail"], falls_with=["r_pu_touch"])
+def _(v_rail, r_pu_touch):
+    return 2 * v_rail / r_pu_touch
+
+
+# J-DISP carries the module and the converter's HV pull-ups
+@fig("i_disp", "mA", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["v_3v3", "n_led", "v_rail"], falls_with=["vf_min", "r_led", "r_pu_touch"])
+def _(i_module, i_conv_hv):
+    return i_module + i_conv_hv
+
+
+# the module's regulator drops the rail to VCC; the adapter at its no-load maximum and VCC
+# at the bottom of its tolerance put the most across it
+@fig("p_ldo", "W", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["v_jack_max", "n_led"], falls_with=["r_led"])
+def _(v_jack_max, v_vcc_min, i_module):
+    return (v_jack_max - v_vcc_min) * i_module
+
+
+@fig("t_j_ldo", "°C", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["t_a", "v_jack_max", "rth_ldo"])
+def _(t_a, p_ldo, rth_ldo):
+    return t_a + p_ldo * rth_ldo
+
+
+# the Teensy's rail at its lowest is what switches the converter's transistors on
+@fig("v_3v3_min", "V", stated=False, rises_with=["v_3v3"], falls_with=["v_3v3_acc"])
+def _(v_3v3, v_3v3_acc):
+    return v_3v3 * (1 - v_3v3_acc.raw)
 
 
 # ---------------------------------------------------------------------------
@@ -559,8 +620,8 @@ ds("vci_min", 2.5, "V", sheet=PANEL, src="18.2.1, VCI operating voltage, minimum
    group="VCC", section=SUPPLY, stated=True)
 ds("vci_max", 3.3, "V", sheet=PANEL, src="18.2.1, VCI and VDDI operating voltage, maximum, "
    "p. 236", group="VCC", section=SUPPLY, stated=True)
-ds("v_ldo_acc", 1.5, "%", sheet=LDO, src="Electrical Characteristics, output voltage "
-   "accuracy", stated=False)
+ds("vci_abs", 4.6, "V", sheet=PANEL, src="18.1 Absolute Maximum Ratings, VCI and VDDI, "
+   "p. 235", group="VCC", section=SUPPLY, stated=True)
 asm("v_sup_max", 3, "V", src="the supervisor's threshold: Adafruit's schematic names no "
     "variant of the APX803, and Adafruit rates Vin down to 3 V, under which the module's "
     "regulator leaves less than 3 V on VCC, so the fitted threshold lies below 3 V",
@@ -576,16 +637,18 @@ def _(v_do_max, i_do, i_module):
     return v_do_max * i_module / i_do
 
 
-@fig("v_vcc_min", "V", group="VCC", section=SUPPLY, prints="down",
-     rises_with=["vf_min", "i_do"], falls_with=["v_3v3_acc", "v_do_max", "n_led"])
-def _(v_3v3_min, v_dropout):
-    return v_3v3_min - v_dropout
+# the least Vin the module's regulator keeps VCC at its top from
+@fig("v_in_mod_min", "V", group="VCC", section=SUPPLY, prints="up",
+     rises_with=["v_3v3", "v_ldo_acc", "v_do_max", "n_led"], falls_with=["i_do", "vf_min"])
+def _(v_vcc_max, v_dropout):
+    return v_vcc_max + v_dropout
 
 
-# the module's regulator fed from 5 V, as Adafruit runs it, at the top of its accuracy
-@fig("v_vcc_5v_max", "V", group="VCC", section=SUPPLY, prints="up", rises_with=["v_ldo_acc"])
-def _(v_3v3, v_ldo_acc):
-    return v_3v3 * (1 + v_ldo_acc.raw)
+# at the top of the regulator's tolerance VCC passes the ILI9341's operating maximum by this
+@fig("v_over_vci", "mV", group="VCC", section=SUPPLY, prints="up",
+     rises_with=["v_3v3", "v_ldo_acc"], falls_with=["vci_max"])
+def _(v_vcc_max, vci_max):
+    return v_vcc_max - vci_max
 
 
 # ---------------------------------------------------------------------------
@@ -640,6 +703,10 @@ def _(n_layers, b_layer, ring):
 # requirements
 # ===========================================================================
 _I = MODEL.invariant
+_I("a single failed touch read does not count as a failure",
+   lambda v: v.t_fail > 2 * v.t_ttick)
+_I("the shortest supervisor reset silences the touch controller longer than its failure time",
+   lambda v: v.t_fail < v.t_sup_min)
 _I("a run ends only once its last burst has left the bus, however late the interrupt comes",
    lambda v: v.t_end_wait > v.t_burst)
 _I("FlexIO3 runs at a clock the reference manual allows",
@@ -698,8 +765,16 @@ _I("VCC stays above the ILI9341's lowest supply",
    lambda v: v.v_vcc_min > v.vci_min)
 _I("VCC stays above the supervisor's threshold and its hysteresis, so the panel leaves reset",
    lambda v: v.v_vcc_min > v.v_sup_max + v.v_sup_hyst)
-_I("VCC stays inside the range the module's own regulator gives it from 5 V",
-   lambda v: v.v_3v3_max <= v.v_vcc_5v_max)
+_I("VCC stays under the ILI9341's absolute maximum",
+   lambda v: v.v_vcc_max < v.vci_abs)
+_I("the module's regulator stays under its junction rating with no heatsink",
+   lambda v: v.t_j_ldo < v.t_j_ldo_max)
+_I("the rail's highest peak stays inside the module regulator's input range",
+   lambda v: v.v_release_6a <= v.v_in_ldo_max)
+_I("the Teensy's rail at its lowest switches the converter's transistors on",
+   lambda v: v.v_3v3_min > v.v_gs_th_bss)
+_I("the converter's transistors take the rail on their HV side",
+   lambda v: v.v_release_6a < v.v_dss_bss)
 _I("the touch controller answers only after the panel's reset is over",
    lambda v: v.t_touch_ready > v.t_panel_ready)
 
@@ -729,30 +804,46 @@ MODEL.net("CS", reads("the module's control buffer, input CS", src=_LVC),
 MODEL.net("D/C", reads("the module's control buffer, input C/D", src=_LVC),
           teensy="D/C to the display")
 
-_I2C = (f"{SCH}: R13 and R14 pull SCL and SDA up to Vin, which this build feeds from the "
-        "Teensy's 3V3; Q2 and Q3, BSS138, pass the lines to the touch controller")
+_I2C = (f"{LVL}: each line passes a BSS138 whose gate sits at LV, the Teensy's 3V3, with a "
+        "10 kΩ pull-up to LV on the Teensy's side and one to HV, the display's Vin, on the "
+        f"module's side; {SCH}: R13 and R14 pull SCL and SDA up to Vin on the module, Q2 and "
+        "Q3, BSS138, pass them to the touch controller")
 _WIRE = "docs/firmware/drivers/touch.md, Wire2.begin() sets up the pins and their pull-ups"
 MODEL.net("SDA",
-          drives("Q3 on the module, for the touch controller", "open-drain", src=_I2C),
-          pull("R14 on the module", TEENSY_RAIL, src=_I2C),
+          drives("the converter's BSS138, which passes the touch controller's low",
+                 "open-drain", src=_I2C),
+          pull("the converter's LV pull-up", TEENSY_RAIL, src=_I2C),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SDA to the touch controller")
 MODEL.net("SCL",
-          drives("Q2 on the module, for the touch controller", "open-drain", src=_I2C),
-          pull("R13 on the module", TEENSY_RAIL, src=_I2C),
+          drives("the converter's BSS138, which passes the touch controller's low",
+                 "open-drain", src=_I2C),
+          pull("the converter's LV pull-up", TEENSY_RAIL, src=_I2C),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SCL to the touch controller")
 
+# the module's side of the touch bus, between the converter and the module
+MODEL.net("SDA at the module",
+          drives("the converter's BSS138, which passes the Teensy's low", "open-drain", src=_I2C),
+          drives("Q3 on the module, for the touch controller", "open-drain", src=_I2C),
+          pull("the converter's HV pull-up", "display Vin", src=_I2C),
+          pull("R14 on the module", "display Vin", src=_I2C))
+MODEL.net("SCL at the module",
+          drives("the converter's BSS138, which passes the Teensy's low", "open-drain", src=_I2C),
+          drives("Q2 on the module, for the touch controller", "open-drain", src=_I2C),
+          pull("the converter's HV pull-up", "display Vin", src=_I2C),
+          pull("R13 on the module", "display Vin", src=_I2C))
+
 # the module's own lines that reach no Teensy pin
 MODEL.net("RD",
-          drives("the wire from RD to Vin on the header", "push-pull", rail=TEENSY_RAIL,
-                 src="design.md, RD is tied to Vin"),
+          drives("the wire from RD to 3.3Vout on the header", "push-pull", rail="module 3.3Vout",
+                 src="design.md, RD is tied to the module's 3.3Vout"),
           pull("R12 on the module", "gnd", src=f"{SCH}: R12 from RD to GND"),
           reads("the control buffer's input RD, and the data buffer's direction",
                 src=f"{SCH}: RD drives U3's DIR"))
 MODEL.net("CCS",
-          drives("the wire from CCS to Vin on the header", "push-pull", rail=TEENSY_RAIL,
-                 src="design.md, the card's chip select is tied to Vin"),
+          drives("the wire from CCS to 3.3Vout on the header", "push-pull", rail="module 3.3Vout",
+                 src="design.md, the card's chip select is tied to the module's 3.3Vout"),
           reads("the control buffer's input for the card's chip select", src=_LVC))
 MODEL.net("MOSI",
           drives("the wire from MOSI to GND on the header", "push-pull", rail="gnd",
@@ -763,7 +854,7 @@ MODEL.owns("FlexIO3", "the driver programs its shifters and its timer to clock t
                       "docs/firmware/drivers/display.md")
 MODEL.owns("Wire2", "the touch driver runs the LPI2C4 controller itself after begin(), "
                     "docs/firmware/drivers/touch.md")
-MODEL.draws("i_module", pool=TEENSY_RAIL)   # the module, fed from the Teensy's 3V3
+MODEL.draws("i_conv_lv", pool=TEENSY_RAIL)   # the converter's LV pull-ups, fed from the Teensy's 3V3
 MODEL.draws("ram_display", pool="RAM2")
 MODEL.draws(pool="driver tick")      # the display driver: the movie's frames, every 40 ms
 MODEL.draws(pool="driver tick")      # the touch driver: the touch read, every 20 ms

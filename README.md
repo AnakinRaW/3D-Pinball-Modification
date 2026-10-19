@@ -29,6 +29,12 @@ Early stage. Research and design in progress; nothing has been built yet.
 
 The modification is built around a **Teensy 4.1** controller.
 
+## Bench warnings
+
+- Do not plug or unplug the Teensy while the machine is powered, and do not connect a powered board to an unpowered Teensy. Its pins must not carry voltage while it is off.
+- With the Teensy connected powered from USB, ensure that grounds between Teensy and an externally powered board are connected.
+- Do not use an adapter that puts out more than 5.5 V or is rated above 6 A. The power board has no overvoltage protection, and the Teensy's VIN ends at 5.5 V. Above 6 A a short on a board's feed wire no longer trips the adapter and overheats the wire.
+
 ## Disclaimer
 
 This modification is developed with AI and in the context that electricity is involved, reuse any information at your own risk.

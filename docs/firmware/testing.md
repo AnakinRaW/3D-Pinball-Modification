@@ -45,7 +45,7 @@ The bench is the Teensy on USB with the boards of the subsystems under test, the
 
 | Board | On the bench |
 |---|---|
-| Solenoid board | Its two GND nets are bridged, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
+| Solenoid coil board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
 | Servo board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/servo/design.md#supply) requires |
 | IR mainboard | It runs from its D24V5F3 on the bench supply, or from the Teensy's 3V3 pin while everything that pin feeds stays within the pin's [rating](../research/teensy-4.1.md#power) |
 
@@ -267,6 +267,7 @@ The program `display` checks the [display driver](drivers/display.md).
 |---|---|---|---|
 | `compose` | computer | Compose rows from every combination of the front, the middle and the back layer, each shown or hidden, opaque or partly opaque, with and without a movie, and from rows where no source has a pixel | Every pixel takes the color of the front-most layer in the [order](drivers/display.md#picture-composition) that has something there, blended in 32 steps with what lies behind where that color is partly opaque, with its high byte first |
 | `start` | bench | Start the Teensy from power-up, then restart it while the display is awake | The screen turns black both times, with no garbage and no white flash |
+| `restart` | bench | Disconnect the 5 V of J-DISP for half a second while a picture shows, then connect it again | The picture returns within two seconds, and the Teensy keeps running |
 | `picture` | bench | Show color bars, a ramp of every palette color and the words TOP LEFT in that corner | The colors are right, the ramp runs smoothly, and the words stand upright at the top left |
 | `layers` | bench | Draw an overlapping shape into each layer, play a movie behind them, then hide the front layer | The shapes lie over one another in the [order](drivers/display.md#picture-composition), index 0 shows what lies behind, and hiding the front layer changes nothing else |
 | `rows` | Teensy | Mark single rows and runs of rows as drawn, and draw into a row while it goes out | Exactly the marked rows go out, and the row drawn into goes out once more |
@@ -284,7 +285,7 @@ The program `touch` checks the [touch driver](drivers/touch.md).
 |---|---|---|---|
 | `touch` | bench | Touch the marks the test draws in the corners and the center, then drag a finger and rest it | Each touch lands inside the mark touched, and `TouchDown`, `TouchMoved`, `TouchHeld` and `TouchUp` come as the [events](drivers/touch.md#driver-events) describe |
 | `no-touch` | bench | Start with the touch controller disconnected | `present()` is false, the picture works, no touch event comes, and no fault is reported |
-| `touch-lost` | bench | Disconnect the touch controller while the machine runs | The controller is reported failed after 1 s |
+| `touch-lost` | bench | Disconnect the touch controller while the machine runs | The controller is reported failed after 100 ms |
 
 ### Every driver
 
@@ -419,7 +420,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `lifecycle` | computer | Run a test game whose `done()` turns true in each phase | The host calls `start()`, `play()`, `end()` and `stop()` in the order of the [lifecycle](game-abstraction.md#game-lifecycle), and starts the game anew after its post-game phase |
 | `stopped` | computer | Dispatch events and update while no game runs | No game gets a call |
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
-| `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, and the host's list marks the part and clears it again |
+| `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the display's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
 | `launch` | computer | Launch game b while a picture of game a still lands | Game a stops, the id of b is written, and b starts only once the screen has settled |
 | `last-game` | Teensy | Start game b, then restart | Game b starts again |

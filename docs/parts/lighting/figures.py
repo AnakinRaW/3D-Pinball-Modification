@@ -25,7 +25,7 @@ fig = MODEL.derived
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
 
 SHIFT = "Level shifting"
-BUFFERS = "Two CD74HCT125E"
+BUFFERS = "One CD74HCT125E"
 SERIES = "A series resistor sits in each data line"
 SUPPLY = "Supply"
 
@@ -188,21 +188,23 @@ dec("i_supply_6a", 6, "A", src="the larger supply the machine is designed for; d
 dec("i_budget", 2.0, "A", src="the lighting's cap with the 3 A supply, which the firmware holds "
     "with FastLED's setMaxPowerInVoltsAndMilliamps; design.md, Current ceiling",
     stated=False)
-dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply: 6 A less the 0.65 A "
-    "of the permanent consumers and the 2.04 A of three solenoids pulling at once, rounded "
-    "down; design.md, Current ceiling", stated=False)
+dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply, kept at 3.3 A: with "
+    "the permanent consumers of the power design and two bumpers with the scoop pulling at once "
+    "the sum passes the adapter by 0.34 A for at most one pull-in, which the design accepts as it "
+    "accepts the 3 A adapter's overrun; design.md, Current ceiling, and the power design's "
+    "Adapter section",
+    stated=False)
 dec("len_jpwr", 30, "cm", src="the longest J-PWR cable, the length the feed's inductance "
     "is estimated for", group=SUPPLY, stated="loose")
 ds("r_awg22", 52.96, "mΩ/m", src="ASTM B258, 22 AWG annealed copper at 20 °C", stated=False)
 MODEL.uses("l_feed", of="solenoid")
-dec("c_bulk", 1000, "µF", src="C3, at J-PWR", group=SUPPLY, stated="loose")
-ds("z_bulk", 80, "mΩ", src="C3's impedance at 100 kHz, the larger of its two variants: "
-   "Rubycon 16ZLH1000MEFC8X20 at 29 mΩ as DigiKey lists it from the ZLH sheet, and "
-   "Panasonic EEE-FK1A102P at 0.08 Ω as Future Electronics lists it",
+dec("c_bulk", 1000, "µF", src="C2, one on each board at J-PWR", group=SUPPLY, stated="loose")
+ds("z_bulk", 29, "mΩ", src="C2's impedance at 100 kHz, Rubycon 16ZLH1000MEFC8X20, as "
+   "DigiKey lists it from the ZLH sheet; the radial part serves both builds",
    group=SUPPLY, stated="loose")
-ds("f_z_bulk", 100, "kHz", src="the frequency both listings state C3's impedance at",
+ds("f_z_bulk", 100, "kHz", src="the frequency the listing states C2's impedance at",
    group=SUPPLY, stated="loose")
-asm("place_bulk", 20, "mm", src="how close C3 sits to J-PWR, where the feed arrives; no "
+asm("place_bulk", 20, "mm", src="how close C2 sits to J-PWR, where the feed arrives; no "
     "datasheet states one", group=SUPPLY, stated="loose")
 
 
@@ -212,7 +214,8 @@ def _(len_jpwr, r_awg22):
     return len_jpwr * r_awg22
 
 
-# Both wires of J-PWR carry the lighting's whole current.
+# Both wires of J-PWR carry the lighting's whole current. The cap holds for all chains
+# together, so either board can draw all of it, and each board's figures take the whole cap.
 @fig("v_jpwr", "V", stated=False, prints="up",
      rises_with=["i_budget", "len_jpwr", "r_awg22"])
 def _(i_budget, r_jpwr):
@@ -226,8 +229,8 @@ def _(i_budget_6a, r_jpwr):
 
 
 # When the LED current steps, the feed's inductance holds its current for a moment,
-# and C3 carries the step. The worst step is the whole cap at once. The rail then
-# falls by the step across C3's impedance and the feed's characteristic impedance.
+# and C2 carries the step. The worst step is the whole cap at once. The rail then
+# falls by the step across C2's impedance and the feed's characteristic impedance.
 @fig("z_step", "mΩ", stated=False, rises_with=["z_bulk", "l_feed"], falls_with=["c_bulk"])
 def _(z_bulk, l_feed, c_bulk):
     return z_bulk + (l_feed / c_bulk) ** (1 / 2)

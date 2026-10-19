@@ -68,7 +68,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 At full white, the 162 lit LEDs would draw 9.72 A, with red, green and blue at about 20 mA each. The controller in each LED adds about 1 mA even while the LED is dark, 0.24 A for all 240. The supply cannot deliver that.
 
-This machine is designed for power supplies which deliver 3 to 6 A. 0.65 A are reserved for permanent consumers, such as the Teensy, Audio or the display and sensors. Not counting solenoids here, that leaves at least 2.35 A for the lighting. 
+This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.87 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.13 A for the lighting.
 
 The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current.
 
@@ -76,18 +76,20 @@ The perimeters may light only every second LED, which halves their current at fu
 
 ## Circuit
 
-![Lighting control: level shifters and chain outputs](lighting-schematic.svg)
+![Lighting board: level shifter and chain outputs](lighting-schematic.svg)
+
+The lighting runs on two identical boards. The ambient board drives chains A to C, the perimeters and the ceiling. The playfield board drives chains D to F.
 
 ### Level shifting
 
 A Teensy pin outputs only 3.3 V. The LED chain needs at least 3.5 V for a high bit, so the data lines need level shifting to 5 V.
 
-**Two CD74HCT125E** buffers shift the data lines to 5 V. Each has four channels. Their inputs accept 3.3 V as a valid high. U1 carries chains A to D and U2 chains E and F.
+**One CD74HCT125E** on each board shifts the data lines to 5 V. It has four channels. Its inputs accept 3.3 V as a valid high. Three of the channels carry the board's chains.
 
 | Connection | Requirement |
 |---|---|
 | VCC, pin 14 | 5 V. The part is specified from 4.5 to 5.5 V and has no 3.3 V operating range |
-| Decoupling | C1 at U1 and C2 at U2, 100 nF each between pin 14 and pin 7, under 10 mm from pin 14 |
+| Decoupling | C1, 100 nF between pin 14 and pin 7, under 10 mm from pin 14 |
 | OE, pins 1, 4, 10, 13 | All to ground. OE is active low, and an open OE leaves the output in high impedance |
 | Used inputs | 2.2 kΩ from the Teensy pin to each, under 10 mm from the input. Each input has a clamp diode to VCC. With the machine off and the Teensy on USB, the resistor holds the pin's current into it to 1.5 mA |
 | Unused inputs | To ground |
@@ -102,11 +104,11 @@ The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slig
 
 ### Supply
 
-The board takes the machine's 5 V through J-PWR and passes it on to J-LA to J-LF. The buffers also take their 5 V at J-PWR. J-PWR is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends.
+Each board takes the machine's 5 V through its own J-PWR and passes it on to its three chain outputs, J-LA to J-LC on the ambient board and J-LD to J-LF on the playfield board. The buffer also takes its 5 V at J-PWR. J-PWR is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends.
 
-C1 and C2 sit at the supply pins of U1 and U2. They deliver the short current peak a buffer draws each time it switches.
+C1 sits at U1's supply pin. It delivers the short current peak the buffer draws each time it switches.
 
-C3 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 80 mΩ at 100 kHz. Even if the whole lighting cap switches on at once, the buffers keep at least 4.74 V with the 3 A supply and 4.57 V with the 6 A supply.
+C2 is a 1000 µF electrolytic within 20 mm of J-PWR. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 29 mΩ at 100 kHz. The cap holds for all chains together, so either board can draw all of it. Even if the whole cap switches on at once on one board, its buffer keeps at least 4.84 V with the 3 A supply and 4.74 V with the 6 A supply.
 
 ## Teensy pins
 
@@ -125,11 +127,11 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 | Qty | Part | Where |
 |---|---|---|
 | 1 | SEZO WS2812B strip, 2.7 mm wide, 160 LEDs/m, 2 m | the perimeters, the ceiling and the playfield segments |
-| 2 | CD74HCT125E quad buffer, DIP-14 | U1 and U2, the level shifters |
-| 6 | 2.2 kΩ resistor | R1 to R6, from the Teensy pins to the buffer inputs |
-| 6 | 220 Ω resistor, 0.5 W | R7 to R12, in the data lines at the buffer outputs |
-| 2 | 100 nF ceramic capacitor | C1 and C2, at the buffers' supply pins |
-| 1 | Rubycon 16ZLH1000MEFC8X20, 1000 µF, 16 V | C3, at J-PWR |
+| 2 | CD74HCT125E quad buffer, DIP-14 | U1 on each board, the level shifter |
+| 6 | 2.2 kΩ resistor | R1 to R3 on each board, from the Teensy pins to the buffer inputs |
+| 6 | 220 Ω resistor, 0.5 W | R4 to R6 on each board, in the data lines at the buffer outputs |
+| 2 | 100 nF ceramic capacitor | C1 on each board, at the buffer's supply pin |
+| 2 | Rubycon 16ZLH1000MEFC8X20, 1000 µF, 16 V | C2 on each board, at J-PWR |
 
 ## Sources
 
@@ -138,8 +140,7 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 - [FastLED's ObjectFLED driver](https://fastled.io/docs/de/d7a/_object_f_l_e_d_8h_source.html): parallel DMA output on any pins of the Teensy 4.x, channels 0 to 2 of QuadTimer4
 - [PJRC: FastLED adds massive parallel LED output](https://www.pjrc.com/fastled-adds-massive-parallel-led-output/): ObjectFLED as FastLED's driver on the Teensy 4.x
 - [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA, the input levels, the input clamp diodes and their current, the input capacitance and the longest input edge
-- [Rubycon ZLH datasheet](https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/ZLH.pdf): C3's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
-- [Panasonic EEE-FK1A102P](https://www.futureelectronics.com/es/p/passives--capacitors--aluminum-electrolytic-capacitors/eee-fk1a102p-panasonic-industry-3028584): C3's SMD variant and its impedance
+- [Rubycon ZLH datasheet](https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/ZLH.pdf): C2's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
 - [`parts/solenoid/design.md`](../solenoid/design.md): the feed's inductance
 - [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md): stock LED inventory, strip lengths and LED spacing, housing dimensions
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): measured solenoid current, stock load inventory

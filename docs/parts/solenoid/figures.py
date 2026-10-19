@@ -37,6 +37,9 @@ SUPPLY = "The supply"
 # ===========================================================================
 msr("v_5v", 5.0, "V", src="the machine's rail, measured in operation at the coil",
     group="V_DRAIN", section=DRIVE, stated=True)
+msr("v_coil_min", 4.4, "V", src="the least rail at which a stock coil still kicks, "
+    "measured on the stock machine as 4.3 to 4.4 V; the higher end is the floor",
+    group="V_DRAIN", section=DRIVE, stated=True)
 msr("i_coil", 0.68, "A", src="measured in series at the coil while running, and "
     "5.0 V / 7.35 Ω gives the same",
     group="I_CH", section=DRIVE, stated=True)
@@ -44,6 +47,8 @@ ds("i_coil_scoop", 0.8, "A", src="Adafruit 3992 product page, current draw at 5 
    "the scoop's coil, larger than the three stock coils and the one that sets the "
    "per-channel worst case, since all four drive channels are built identical",
    group="I_CH", section=DRIVE, stated=True)
+dec("n_bumpers_at_once", 2, "", src="the most bumpers one ball can trigger within one "
+    "pull-in, however fast it is; a second ball may sit in the scoop meanwhile", stated=False)
 dec("n_stock_drive", 3, "", stated=False,
     src="the three drive channels wired to stock coils, the fourth to the scoop's")
 msr("r_contact", 30, "Ω", src="the ball's path from foil to shell, measured at "
@@ -318,6 +323,14 @@ def _(i_coil_scoop, rdson):
      rises_with=["i_coil_scoop", "rdson"])
 def _(i_coil_scoop, rdson):
     return i_coil_scoop * i_coil_scoop * rdson
+
+
+# The most that pulls at once in play: two bumpers off one ball, and the scoop ejecting
+# the other ball at the same moment.
+@fig("i_coils_at_once", "A", group="I_FEED", section=DRIVE,
+     rises_with=["n_bumpers_at_once", "i_coil", "i_coil_scoop"])
+def _(n_bumpers_at_once, i_coil, i_coil_scoop):
+    return n_bumpers_at_once * i_coil + i_coil_scoop
 
 
 @fig("i_feed_max", "A", group="I_FEED", section=DRIVE,
@@ -631,7 +644,6 @@ MODEL.as_written("t_contact_fail_ms", of="t_contact_fail", unit="ms")
 # ===========================================================================
 for _text, _why in [
     ("2", "a coil connector's pin count, and the second pin of one"),
-    ("9", "a connector pin number, and J-T's conductor count"),
 ]:
     MODEL.aside(_text, _why)
 

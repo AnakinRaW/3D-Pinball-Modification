@@ -6,9 +6,9 @@ Driving the sensed solenoids follows the same principle as the stock machine's b
 
 A sensed solenoid fires when a ball closes a circuit between the conductive foil on the playfield and the metal shell of the solenoid itself. The firmware then energises the solenoid for a short moment and releases it.
 
-A single board drives all four. Below the schematic of the solenoid board. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
+Two boards drive and sense them. The coil board carries the four drive channels. The sense board carries the three sense channels. Below the schematic of both boards. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
 
-![Solenoid board schematic](board-schematic.svg)
+![Solenoid boards schematic](board-schematic.svg)
 
 ## Requirements
 
@@ -26,46 +26,45 @@ Each channel switches its coil on the low side with an N-channel MOSFET. The gat
 The foil is one sheet on the playfield, fed from 3.3 V through R91. That resistor protects unlikely short circuits if anything other than the designed sense channels grounds the foil.
 
 
-Each sensed solenoid's shell reaches the board on a separate wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
+Each sensed solenoid's shell reaches the sense board on a separate wire. A pull-down holds that wire at ground until a ball bridges foil and shell and pulls it up to the rail. A capacitor at the terminal filters what the playfield wire brings in, and a series resistor carries it on to the Teensy pin. A fault that ties a sense wire to a coil wire puts 5 V on that node. R41 to R43 are 10 kΩ, sized for the worst case (the Teensy unpowered) to keep the resulting current under the 1 mA PJRC calls very unlikely to cause harm.
 
 ## Supply
 
-The four coils draw from the central 5 V power distribution, brought in at J-PWR. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails are not wired to each other on this board.
+The four coils draw from the central 5 V power distribution, brought in at J-PWR. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
 
-The board has two ground nets. The sense channels sit on the signal ground, which reaches the Teensy over J-T. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the power ground, which reaches the distribution over J-PWR. In normal operation, the two grounds are not wired to each other on this board.
+Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's J-T. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over J-PWR. The coil board's J-T carries no ground.
 
-> On the bench, with the Teensy on USB, the two GND nets must be bridged on the board.
+> On the bench, with the Teensy on USB, the coil board's GND must be joined with the Teensy's GND.
 
-**C91, 100 µF at J-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the board's copper.
+**C91, 100 µF at J-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
 
-Rail sag, shorts and overcurrent are not handled on this board, but centrally on the power supply board.
+The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, J-PWR stays above the 4.4 V a stock coil needs for its kick.
 
-## Board
+## Boards
 
 ### Connectors
 
-One board sits near the three bumpers and carries all four drive channels and all three sense channels.
+Both boards sit near the three bumpers.
 
-| Connector | Poles | To |
-|---|---|---|
-| **J-PWR** | 2 | 5 V and GND from the power distribution, keyed |
-| **J-T** | 9 | The Teensy |
-| **J-C1** to **J-C4** | 2 each | 5 V and the MOSFET's drain to the solenoids |
-| **J-M** | 4 | Open wires with eyelets. One 3V for the foil and the three eyelets unpowered to the solenoid shells. |
+| Board | Connector | Poles | To |
+|---|---|---|---|
+| Coil board | **J-PWR** | 2 | 5 V and GND from the power distribution, keyed |
+| | **J-T** | 4 | The Teensy |
+| | **J-C1** to **J-C4** | 2 each | 5 V and the MOSFET's drain to the solenoids |
+| Sense board | **J-T** | 5 | The Teensy |
+| | **J-M** | 4 | Open wires with eyelets. One 3V for the foil and the three eyelets unpowered to the solenoid shells. |
+
+The coil board's J-T carries trigger 1 to trigger 4 from the Teensy, in that order. The sense board's J-T carries the three senses, the Teensy's 3V3 and its ground.
 
 | J-T pin | Signal | Direction |
 |---|---|---|
-| 1 | Trigger 1 | Teensy to the board |
-| 2 | Trigger 2 | Teensy to the board |
-| 3 | Trigger 3 | Teensy to the board |
-| 4 | Trigger 4 | Teensy to the board |
-| 5 | Sense 1 | board to the Teensy |
-| 6 | Sense 2 | board to the Teensy |
-| 7 | Sense 3 | board to the Teensy |
-| 8 | 3V3 | the Teensy's rail, feeding the foil through R91 |
-| 9 | GND | the Teensy's ground, beside the signals |
+| 1 | Sense 1 | board to the Teensy |
+| 2 | Sense 2 | board to the Teensy |
+| 3 | Sense 3 | board to the Teensy |
+| 4 | 3V3 | the Teensy's rail, feeding the foil through R91 |
+| 5 | GND | the Teensy's ground, beside the signals |
 
-> Before the Teensy is plugged in for the first time, every J-T pin should be measured against J-PWR's GND with J-PWR powered and J-T open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
+> Before the Teensy is plugged in for the first time, every pin of both J-T should be measured against J-PWR's GND with J-PWR powered and both J-T open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
 
 ### Layout
 
@@ -76,7 +75,7 @@ The following parts should be placed close to each other forming a group:
 | Group | Why |
 |---|---|
 | R11 and R21 at the gate of Q1 | A long loop here lets switching noise couple into the gate, which R21 might not hold down fast enough |
-| R31 and C1 at the screw terminal | Placed further away, the wire between the terminal and the filter would carry the signal unfiltered, and pick up more noise on the way |
+| R31 and C1 at J-M | Placed further away, the wire between the terminal and the filter would carry the signal unfiltered, and pick up more noise on the way |
 | D1 at J-C1 | A long loop here adds inductance to the flyback path itself, raising the voltage spike at switch-off |
 
 ## Teensy pins
@@ -107,10 +106,6 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 | 3 | 10 nF capacitor | | | **C1** to **C3**, sense filter |
 | 1 | 330 Ω resistor | | | **R91**, foil feed |
 | 1 | 100 µF electrolytic, 10 V or more | | | **C91**, bulk at J-PWR |
-| 4 | 2-pin connector, mating the stock coil connector | | | **J-C1** to **J-C4** |
-| 1 | 4-way screw terminal | | | **J-M**, foil and three shells |
-| 1 | 2-pin connector that cannot be plugged in reversed | | | **J-PWR** |
-| 1 | 9-pin connector that cannot be plugged in reversed | | | **J-T** |
 
 ## Appendix: derivations
 
@@ -161,6 +156,7 @@ V_KICK    a step on the drain lifts the gate through
           which is the case at switch-off and not
           when the rail comes up behind C91
 V_DRAIN   the machine's rail, measured            5 V
+          a stock coil kicks down to, measured   4.4 V
           the diode's forward drop at 1 A         0.55 V
           the drain at switch-off, clamped      = 5.55 V
           the MOSFET's drain-source rating        30 V
@@ -181,6 +177,9 @@ I_CH      the coil, measured                      0.68 A
 I_FEED    3 stock channels at 0.68 A plus the
           scoop's 0.8 A, the unarbitrated demand
           the protection interrupts             = 2.84 A
+          two bumpers off one ball and the scoop
+          ejecting the other, the most that pull
+          at once in play                       = 2.16 A
 ```
 
 **The sense channel.** What a closed contact puts on the pin, and how fast the node follows.
