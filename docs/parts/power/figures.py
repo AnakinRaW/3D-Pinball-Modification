@@ -31,6 +31,7 @@ LOADS = "Loads"
 INPUT = "Input path"
 RAIL = "Rail ceiling"
 FLOORS = "Supply floors"
+FUSE_SEC = "Fuse"
 
 # ===========================================================================
 # what the other subsystems draw and accept
@@ -61,6 +62,9 @@ MODEL.uses("v_buffer_min", of="lighting")
 MODEL.uses("v_buffer_min_6a", of="lighting")
 MODEL.uses("r_lead", of="solenoid", group="FLOORS", section=FLOORS, stated=True)
 MODEL.uses("i_coils_at_once", of="solenoid", group="FLOORS", section=FLOORS, stated=True)
+# D1 on the Teensy motherboard is the solenoids' flyback type, a 1N5819
+MODEL.uses("v_f_diode", of="solenoid", group="FLOORS", section=FLOORS, stated=True)
+MODEL.uses("i_f_av", of="solenoid")
 MODEL.uses("v_coil_min", of="solenoid", group="FLOORS", section=FLOORS, stated=True)
 MODEL.uses("t_a", of="ir-reflective", group="INPUT", section=INPUT, stated=True)
 
@@ -93,6 +97,20 @@ asm("r_board", 5, "mΩ", src="the board's own wiring from the input to the outpu
     group="INPUT", section=INPUT, stated=True)
 ds("i_awg16_max", 22, "A", src=f"{AMPS}, 16 AWG", stated=False)
 ds("i_awg22_max", 7, "A", src=f"{AMPS}, 22 AWG", stated=False)
+
+# ===========================================================================
+# the Teensy on USB alone: D2 across the cut VUSB-VIN trace, a 1N5819WS
+# ===========================================================================
+USB = "Universal Serial Bus Specification Revision 2.0"
+D2_SHEET = "1N5819WS-Slkor.pdf"
+ds("v_usb_min", 4.75, "V", src=f"{USB}, Table 7-7: VBUS at a high-power port, minimum",
+   group="FLOORS", section=FLOORS, stated=True)
+ds("i_usb_max", 500, "mA", src=f"{USB}, 7.2.1: the most a high-power port supplies, five "
+   "unit loads", group="FLOORS", section=FLOORS, stated=True)
+ds("v_f_d2", 0.58, "V", sheet=D2_SHEET, src="Slkor 1N5819WS, Rev.1: maximum instantaneous "
+   "forward voltage at 1.0 A", group="FLOORS", section=FLOORS, stated=True)
+ds("i_f_av_d2", 1, "A", sheet=D2_SHEET, src="Slkor 1N5819WS, Rev.1: maximum average forward "
+   "rectified current", stated=False)
 
 # ===========================================================================
 # Q1, the reverse-polarity switch in the ground line. It is optional, and every figure takes it
@@ -155,6 +173,22 @@ asm("place_bulk", 20, "mm", src="how close C1 and C2 sit to J-IN, where the inpu
 asm("eta_u1", 80, "%", src="the D24V5F3's efficiency, the low end of the 80 % to 93 % Pololu gives "
     "as typical for the D24V5F3; no minimum is published", group="LOADS", section=LOADS,
     stated=True)
+
+# ===========================================================================
+# F1, the optional fuse in the 5 V of the outputs that draw little current
+# ===========================================================================
+FUSE = "a T2A fuse, 2 A time-lag, 5 x 20 mm"
+SIBA = "SIBA L520TG technical data sheet, Lab.-No. P17-050"
+FST = "Schurter FST 5x20 datasheet, schurter.com"
+dec("i_f1", 2, "A", src=f"F1, {FUSE}: the smallest standard time-lag rating above what the "
+    "outputs behind it draw at most", group="FUSE", section=FUSE_SEC, stated=True)
+ds("v_drop_f1", 190, "mV", src=f"{SIBA}, voltage drop of L520TG02-000, a T2A to DIN 41571-3; "
+   "the Schurter FST sheet gives at most 150 mV for its T2A", group="FUSE", section=FUSE_SEC,
+   stated=True)
+ds("k_open", 2.1, "×", src=f"{FST}, Pre-Arcing Time to IEC 60127-2/3, the multiple of In with a "
+   "maximum time for 0.125 to 6.3 A", group="FUSE", section=FUSE_SEC, stated=True)
+ds("t_open", 120, "s", src=f"{FST}, Pre-Arcing Time, the maximum at 2.1 × In for 0.125 to 6.3 A",
+   group="FUSE", section=FUSE_SEC, stated=True)
 
 
 # ===========================================================================
@@ -220,9 +254,9 @@ def _(i_tot, v_mod_max, eta_u1, v_mod_in_min):
 
 
 @fig("v_ir_end", "V", group="FLOORS", section=FLOORS, prints="down",
-     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "r_lead", "i_tot"])
-def _(v_bus_6a, i_ir_max, r_lead):
-    return v_bus_6a - 2 * i_ir_max * r_lead
+     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "r_lead", "i_tot", "v_drop_f1"])
+def _(v_bus_6a, i_ir_max, r_lead, v_f1):
+    return v_bus_6a - 2 * i_ir_max * r_lead - v_f1
 
 
 @fig("i_ir_in", "mA", group="LOADS", section=LOADS, prints="up",
@@ -344,8 +378,47 @@ def _(v_jack_max, r_up_min, l_up_min, c_total):
 
 
 # ===========================================================================
+# derived: F1
+# ===========================================================================
+# What passes F1 at most: every output behind it, the servo stalled and the IR mainboard's
+# module at its lowest input, where it draws the most.
+@fig("i_small", "A", group="FUSE", section=FUSE_SEC, prints="up",
+     rises_with=["i_teensy_40", "i_teensy_3v3", "i_amp", "i_tot", "i_disp", "i_stall"],
+     falls_with=["eta_u1", "v_mod_in_min"])
+def _(i_teensy_vin, i_amp, i_ir_max, i_disp, i_stall):
+    return i_teensy_vin + i_amp + i_ir_max + i_disp + i_stall
+
+
+# The drop at the rated current bounds the resistance at any current under it.
+@fig("r_f1", "mΩ", group="FUSE", section=FUSE_SEC, prints="up",
+     rises_with=["v_drop_f1"], falls_with=["i_f1"])
+def _(v_drop_f1, i_f1):
+    return v_drop_f1 / i_f1
+
+
+@fig("v_f1", "mV", group="FUSE", section=FUSE_SEC, prints="up",
+     rises_with=["v_drop_f1", "i_stall", "i_disp"], falls_with=["i_f1"])
+def _(r_f1, i_small):
+    return r_f1 * i_small
+
+
+@fig("i_f1_open", "A", group="FUSE", section=FUSE_SEC, prints="up", rises_with=["i_f1", "k_open"])
+def _(i_f1, k_open):
+    return i_f1 * k_open.raw
+
+
+# The most a T2A may drop at its rating before the servo's buffer, the tightest floor behind
+# F1, leaves its supply range.
+@fig("v_drop_f1_max", "mV", group="FUSE", section=FUSE_SEC, prints="down",
+     rises_with=["v_jack_min", "i_f1"], falls_with=["vcc_u1_min", "i_stall"])
+def _(v_servo_6a, v_f1, vcc_u1_min, i_f1, i_small):
+    return (v_servo_6a + v_f1 - vcc_u1_min) * i_f1 / i_small
+
+
+# ===========================================================================
 # derived: the floors the consumers see
 # ===========================================================================
+# F1 is taken fitted. Leaving it out only raises what the outputs behind it see.
 # The lighting's own figures start from 5 V at the board. Behind the board the rail
 # starts lower by the board's drop, and the bulk's resistance adds its share of the
 # lighting's step.
@@ -366,16 +439,18 @@ def _(v_buffer_min_6a, v_rail, v_bus_6a, i_budget_6a, esr_bus):
 # The servo's buffer behind the servo's pair while it stalls.
 @fig("v_servo_3a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min", "n_bulk"],
-     falls_with=["i_supply_3a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c"])
-def _(v_bus_3a, i_stall, r_lead, esr_bus):
-    return v_bus_3a - 2 * i_stall * r_lead - i_stall * esr_bus
+     falls_with=["i_supply_3a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c",
+                 "v_drop_f1"])
+def _(v_bus_3a, i_stall, r_lead, esr_bus, v_f1):
+    return v_bus_3a - 2 * i_stall * r_lead - i_stall * esr_bus - v_f1
 
 
 @fig("v_servo_6a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min", "n_bulk"],
-     falls_with=["i_supply_6a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c"])
-def _(v_bus_6a, i_stall, r_lead, esr_bus):
-    return v_bus_6a - 2 * i_stall * r_lead - i_stall * esr_bus
+     falls_with=["i_supply_6a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c",
+                 "v_drop_f1"])
+def _(v_bus_6a, i_stall, r_lead, esr_bus, v_f1):
+    return v_bus_6a - 2 * i_stall * r_lead - i_stall * esr_bus - v_f1
 
 
 # The solenoids' coil board behind its pair while two bumpers and the scoop pull at once.
@@ -393,17 +468,27 @@ def _(v_bus_6a, i_coils_at_once, r_lead, esr_bus):
     return v_bus_6a - 2 * i_coils_at_once * r_lead - i_coils_at_once * esr_bus
 
 
+# The Teensy's VIN sits behind D1 on the motherboard.
 @fig("v_teensy_6a", "V", group="FLOORS", section=FLOORS, prints="down",
-     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "rdson_q1", "r_lead"])
-def _(v_bus_6a, i_teensy_vin, r_lead):
-    return v_bus_6a - 2 * i_teensy_vin * r_lead
+     rises_with=["v_jack_min"],
+     falls_with=["i_supply_6a", "rdson_q1", "r_lead", "v_drop_f1", "v_f_diode"])
+def _(v_bus_6a, i_teensy_vin, r_lead, v_f1, v_f_diode):
+    return v_bus_6a - 2 * i_teensy_vin * r_lead - v_f1 - v_f_diode
+
+
+# On USB alone, VIN takes the USB port's 5 V through D2 across the cut VUSB-VIN trace.
+@fig("v_teensy_usb", "V", group="FLOORS", section=FLOORS, prints="down",
+     rises_with=["v_usb_min"], falls_with=["v_f_d2"])
+def _(v_usb_min, v_f_d2):
+    return v_usb_min - v_f_d2
 
 
 # U1 at the display sits at the end of J-DISP's pair
 @fig("v_disp_in", "V", group="FLOORS", section=FLOORS, prints="down",
-     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "rdson_q1", "r_lead", "i_disp"])
-def _(v_bus_6a, i_disp, r_lead):
-    return v_bus_6a - 2 * i_disp * r_lead
+     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "rdson_q1", "r_lead", "i_disp",
+                                           "v_drop_f1"])
+def _(v_bus_6a, i_disp, r_lead, v_f1):
+    return v_bus_6a - 2 * i_disp * r_lead - v_f1
 
 
 
@@ -443,7 +528,19 @@ _I("the servo's buffer stays inside its supply range while the servo stalls, wit
 _I("the solenoids' coil board stays above what a stock coil kicks down to while two bumpers "
    "and the scoop pull, with either adapter", lambda v: min(v.v_sol_3a, v.v_sol_6a) >= v.v_coil_min)
 _I("the Teensy's VIN stays inside its range", lambda v: v.v_teensy_6a >= v.v_in_min)
+_I("D1 carries the Teensy's current inside its rating", lambda v: v.i_teensy_vin < v.i_f_av)
+_I("on USB alone, the Teensy's VIN stays inside its range",
+   lambda v: v.v_teensy_usb >= v.v_in_min)
+_I("on USB alone, D2 carries the Teensy's current inside its rating",
+   lambda v: v.i_teensy_vin < v.i_f_av_d2)
+_I("on USB alone, a high-power port supplies the Teensy's whole current",
+   lambda v: v.i_teensy_vin <= v.i_usb_max)
 _I("the D24V5F3 at the IR mainboard gets more than its lowest input",
    lambda v: v.v_ir_end >= v.v_mod_in_min)
 _I("the display's regulator gets the input it needs at full load",
    lambda v: v.v_disp_in >= v.v_in_mod_min)
+_I("F1 carries the most the outputs behind it draw", lambda v: v.i_small <= v.i_f1)
+_I("the T2A the floors take drops less than the outputs behind F1 tolerate",
+   lambda v: v.v_drop_f1 <= v.v_drop_f1_max)
+_I("a fault the 6 A adapter feeds opens F1 within its maximum time",
+   lambda v: v.i_f1_open <= v.i_supply_6a)

@@ -1,7 +1,7 @@
 <svg viewBox="0 0 1690 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="1690" height="780" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Power board</text>
-  <text x="30" y="56" font-size="13" fill="#666" data-fig="v_rail">5 V from the adapter to every subsystem, with optional reverse-polarity protection and bulk at the input</text>
+  <text x="30" y="56" font-size="13" fill="#666" data-fig="v_rail">5 V from the adapter to every subsystem, with optional reverse-polarity protection, bulk at the input and an optional fuse for the outputs that draw little current</text>
   <!-- ===== adapter and barrel jack ===== -->
   <rect x="20" y="100" width="150" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
   <text x="34" y="126" font-size="16" font-weight="700" fill="#7a2556">Adapter</text>
@@ -42,6 +42,12 @@
   <text x="532" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
   <line x1="580" y1="170" x2="1592" y2="170" stroke="#c0392b" stroke-width="2.5"/>
   <text x="1016" y="158" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V bus</text>
+  <!-- ===== F1, optional fuse in the 5 V of the outputs that draw little current ===== -->
+  <rect x="1188" y="162" width="36" height="16" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="1206" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">F1</text>
+  <text x="1206" y="150" text-anchor="middle" font-size="11.5" fill="#666" data-fig="i_f1">2 A, time-lag</text>
+  <text x="1270" y="120" font-size="11.5" fill="#666">F1 optional: without it</text>
+  <text x="1270" y="136" font-size="11.5" fill="#666">a wire bridges it</text>
   <!-- ===== Q1, N-channel, reverse polarity in the ground line ===== -->
   <line x1="580" y1="210" x2="600" y2="210" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="600" y1="210" x2="600" y2="330" stroke="#1a1a1a" stroke-width="2.5"/>
