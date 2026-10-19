@@ -9,7 +9,9 @@ comes from. Every derived quantity is a function whose parameter names are its d
 """
 import pathlib
 
-from figcheck import Model, ln, reads
+from math import inf
+
+from figcheck import Model, Q, ln, reads
 
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("lighting", HERE / "design.md", section="### Level shifting",
@@ -36,6 +38,8 @@ MODEL.uses("v_3v3", of="teensy-4.1", group=SHIFT, stated="loose")
 MODEL.uses("v_oh_drop", of="teensy-4.1")
 MODEL.uses("v_ol_max", of="teensy-4.1")
 MODEL.uses("i_pin_max", of="teensy-4.1")
+MODEL.uses("v_3v3_max", of="teensy-4.1")
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", stated=False)
 dec("v_rail", 5, "V", src="the machine's rail, which feeds the buffers and, through J-LA to J-LF, the segments",
     group=SHIFT, stated="loose")
 ds("vih_led_frac", 70, "%", stated=False, src="XINGLIGHT XL-0807RGBC-WS2812B datasheet, "
@@ -66,35 +70,55 @@ ds("i_oh_test", 4, "mA", src=f"{BUFFER}, 5.5 Electrical Characteristics, the out
    "current VOH is specified at for the bus-driver load", group=BUFFERS, stated=False)
 ds("v_oh_out", 3.7, "V", src=f"{BUFFER}, 5.5 Electrical Characteristics, VOH minimum at "
    "IOH = -4 mA and VCC = 4.5 V, -55 °C to 125 °C", group=BUFFERS, stated="loose")
-dec("r_out", 220, "Ω", src="the series resistor at each buffer output, chosen so a data "
-    "wire that meets 5 V or ground holds the buffer's output inside its continuous output "
-    "current", group=SERIES, stated="loose")
+dec("r_out", 330, "Ω", src="R4 to R6, the series resistor at each buffer output, chosen so "
+    "a data wire that meets 5 V or ground holds the buffer's output inside its continuous output "
+    "current and the resistor inside half its rating: the 330 Ω of the resistor kit, the "
+    "smallest of its values that does both", group=SERIES, stated="loose")
 
 # ===========================================================================
 # the series resistor in each data line
 # ===========================================================================
 ds("i_out_max", 35, "mA", src=f"{BUFFER}, 5.1 Absolute Maximum Ratings, continuous output "
    "current IO; 5.3 states no output current", group=SERIES, stated="loose")
-dec("p_rating", 0.5, "W", src="the series resistor's power rating, chosen so a shorted data "
-    "wire loads it to under half of it", stated=False)
-dec("p_derate", 50, "%", stated=False, src="the derating target for resistor power in the "
-    "design-review skill, at most half the rating")
+MODEL.input("p_kit", 0.25, "W", kind="datasheet", src="the same kit and page: power rating 0.25 W", group=SERIES, stated="loose")
+ds("r_out_best_min", 47, "Ω", src="PJRC, OctoWS2811 page, Signal Quality: values of 47 to "
+   "220 Ω are probably best for the series resistor, depending on the wire", group=SERIES,
+   stated="loose")
+ds("r_out_best_max", 220, "Ω", src="the same page, the upper end of that range", group=SERIES,
+   stated="loose")
+MODEL.input("p_derate", 50, "%", kind="decision", src="the derating target for resistor power in the design-review skill, at most half the rating", stated=False)
 MODEL.uses("i_coil", of="solenoid")
 
 
 # A data wire that meets ground while the buffer drives high, or 5 V while it drives
 # low, leaves the resistor alone between the rail and the output. The rail is taken
-# at the highest the buffer accepts, and the output's own resistance is not counted.
+# at the highest the buffer accepts, the resistor at its low end, and the output's own
+# resistance is not counted.
 @fig("i_fault", "mA", group=SERIES, stated="loose", prints="up",
-     rises_with=["vcc_max"], falls_with=["r_out"])
-def _(vcc_max, r_out):
-    return vcc_max / r_out
+     rises_with=["vcc_max", "kit_tol"], falls_with=["r_out"])
+def _(vcc_max, r_out, kit_tol):
+    return vcc_max / (r_out * (1 - kit_tol))
 
 
 @fig("p_fault", "W", stated=False, prints="up",
-     rises_with=["vcc_max"], falls_with=["r_out"])
+     rises_with=["vcc_max", "kit_tol"], falls_with=["r_out"])
 def _(vcc_max, i_fault):
     return vcc_max * i_fault
+
+
+# The resistor's floor: the least value whose low end holds the fault inside the output's
+# rating, and the least whose low end carries it at the share of its rating every
+# resistor is held to.
+@fig("r_out_min", "Ω", stated=False, prints="up",
+     rises_with=["vcc_max", "kit_tol"], falls_with=["i_out_max"])
+def _(vcc_max, i_out_max, kit_tol):
+    return vcc_max / (i_out_max * (1 - kit_tol))
+
+
+@fig("r_out_min_p", "Ω", stated=False, prints="up",
+     rises_with=["vcc_max", "kit_tol"], falls_with=["p_kit", "p_derate"])
+def _(vcc_max, p_kit, p_derate, kit_tol):
+    return vcc_max * vcc_max / (p_kit * p_derate * (1 - kit_tol))
 
 
 # ===========================================================================
@@ -102,7 +126,8 @@ def _(vcc_max, i_fault):
 # ===========================================================================
 dec("r_in", 2.2, "kΩ", src="the resistor from each Teensy pin to its buffer input, chosen "
     "so the pin's current into the input's clamp diode stays far under its 4 mA while the "
-    "machine's 5 V is off, and so the edge it slows leaves the data timing near its own",
+    "machine's 5 V is off, and so the edge it slows leaves the data timing near its own: "
+    "the 2.2 kΩ of the resistor kit",
     group="Used inputs", section=BUFFERS, stated=True)
 asm("place_in", 10, "mm", src="how close the resistor sits to its buffer input, which keeps "
     "the wiring between them short; no datasheet states one",
@@ -178,6 +203,60 @@ def _(tau_in, v_oh_min, vih):
     return tau_in * ln(vih / (v_oh_min - vih))
 
 
+# R1 to R3's window. The least value whose low end holds the pin inside its 4 mA with the
+# 5 V off, the rail at its high end, and the most whose high end still stretches a high by
+# less than the LED's timing tolerance, the edge the window rests on.
+@fig("r_in_min", "kΩ", stated=False, prints="up",
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["i_pin_max"])
+def _(v_3v3_max, i_pin_max, kit_tol):
+    return v_3v3_max / (i_pin_max * (1 - kit_tol))
+
+
+@fig("r_in_max", "kΩ", stated=False, prints="down",
+     rises_with=["t_bit_tol", "vil"],
+     falls_with=["c_in", "c_stray", "v_3v3_max", "v_ol_max", "kit_tol"])
+def _(t_bit_tol, c_in, c_stray, v_3v3_max, vil, v_ol_max, kit_tol):
+    return t_bit_tol / ((c_in + c_stray) * ln((v_3v3_max - vil) / (vil - v_ol_max))
+                        * (1 + kit_tol))
+
+
+asm("c_data", 150, "pF", src="the data wire from the board to a chain's first LED together with "
+    "that LED's input, estimated generously and not measured", group=SERIES, stated="loose")
+ds("vil_led_frac", 30, "%", stated=False, src="XINGLIGHT XL-0807RGBC-WS2812B datasheet, "
+   "electrical characteristics, input signal threshold VIL at most 0.3 × VDD at VDD = 5 V; "
+   "the older WS2812B sheets state the same")
+
+
+@fig("vil_led", "V", stated=False, prints="down", rises_with=["vil_led_frac", "v_rail"])
+def _(vil_led_frac, v_rail):
+    return vil_led_frac * v_rail
+
+
+# The resistor into the data wire and the first LED's input is a single pole too. The LED's
+# high starts where the edge crosses its high level and ends where it falls through its low
+# level, so the high arrives shorter by tau ln(VIL / (VOH - VIH)), taken at the buffer's lowest
+# high and with the resistor at its high end.
+@fig("t_out_shorter", "ns", group=SERIES, stated="loose", prints="up",
+     rises_with=["r_out", "kit_tol", "c_data", "vil_led_frac", "vih_led_frac", "v_rail"],
+     falls_with=["v_oh_out"])
+def _(r_out, kit_tol, c_data, vil_led, v_oh_out, vih_led):
+    if (v_oh_out - vih_led).v <= 0:    # a high that never reaches the LED's high level
+        return Q.of(inf, "ns")
+    return r_out * (1 + kit_tol) * c_data * ln(vil_led / (v_oh_out - vih_led))
+
+
+# The most the resistor may be: at its high end the two edges together still shorten a high
+# by less than the LED's timing tolerance.
+@fig("r_out_max", "Ω", stated=False, prints="down",
+     rises_with=["t_bit_tol", "v_oh_out"],
+     falls_with=["c_data", "vil_led_frac", "kit_tol", "r_in"])
+def _(t_bit_tol, t_shorter, c_data, vil_led, v_oh_out, vih_led, kit_tol):
+    if (v_oh_out - vih_led).v <= 0:    # no resistor passes a high the LED cannot read
+        return Q.of(0, "Ω")
+    return ((t_bit_tol - t_shorter)
+            / (c_data * ln(vil_led / (v_oh_out - vih_led)) * (1 + kit_tol)))
+
+
 # ===========================================================================
 # the supply through J-PWR
 # ===========================================================================
@@ -198,10 +277,9 @@ dec("len_jpwr", 30, "cm", src="the longest J-PWR cable, the length the feed's in
     "is estimated for", group=SUPPLY, stated="loose")
 ds("r_awg22", 52.96, "mΩ/m", src="ASTM B258, 22 AWG annealed copper at 20 °C", stated=False)
 MODEL.uses("l_feed", of="solenoid")
-dec("c_bulk", 1000, "µF", src="C2, one on each board at J-PWR", group=SUPPLY, stated="loose")
-ds("z_bulk", 29, "mΩ", src="C2's impedance at 100 kHz, Rubycon 16ZLH1000MEFC8X20, as "
-   "DigiKey lists it from the ZLH sheet; the radial part serves both builds",
-   group=SUPPLY, stated="loose")
+MODEL.uses("c_one", of="power", group=SUPPLY, stated="loose")   # C2 on each board, the power board's bulk part
+dec("n_bulk_light", 2, "", src="C2, one on each of the two lighting boards at J-PWR", stated=False)
+MODEL.uses("z_c", of="power", group=SUPPLY, stated="loose")
 ds("f_z_bulk", 100, "kHz", src="the frequency the listing states C2's impedance at",
    group=SUPPLY, stated="loose")
 asm("place_bulk", 20, "mm", src="how close C2 sits to J-PWR, where the feed arrives; no "
@@ -231,31 +309,31 @@ def _(i_budget_6a, r_jpwr):
 # When the LED current steps, the feed's inductance holds its current for a moment,
 # and C2 carries the step. The worst step is the whole cap at once. The rail then
 # falls by the step across C2's impedance and the feed's characteristic impedance.
-@fig("z_step", "mΩ", stated=False, rises_with=["z_bulk", "l_feed"], falls_with=["c_bulk"])
-def _(z_bulk, l_feed, c_bulk):
-    return z_bulk + (l_feed / c_bulk) ** (1 / 2)
+@fig("z_step", "mΩ", stated=False, rises_with=["z_c", "l_feed"], falls_with=["c_one"])
+def _(z_c, l_feed, c_one):
+    return z_c + (l_feed / c_one) ** (1 / 2)
 
 
 @fig("v_dip", "V", stated=False, prints="up",
-     rises_with=["i_budget", "z_bulk", "l_feed"], falls_with=["c_bulk"])
+     rises_with=["i_budget", "z_c", "l_feed"], falls_with=["c_one"])
 def _(i_budget, z_step):
     return i_budget * z_step
 
 
 @fig("v_dip_6a", "V", stated=False, prints="up",
-     rises_with=["i_budget_6a", "z_bulk", "l_feed"], falls_with=["c_bulk"])
+     rises_with=["i_budget_6a", "z_c", "l_feed"], falls_with=["c_one"])
 def _(i_budget_6a, z_step):
     return i_budget_6a * z_step
 
 
 @fig("v_buffer_min", "V", group=SUPPLY, stated="loose", prints="down",
-     rises_with=["v_rail"], falls_with=["i_budget", "len_jpwr", "r_awg22", "z_bulk", "l_feed"])
+     rises_with=["v_rail"], falls_with=["i_budget", "len_jpwr", "r_awg22", "z_c", "l_feed"])
 def _(v_rail, v_jpwr, v_dip):
     return v_rail - v_jpwr - v_dip
 
 
 @fig("v_buffer_min_6a", "V", group=SUPPLY, stated="loose", prints="down",
-     rises_with=["v_rail"], falls_with=["i_budget_6a", "len_jpwr", "r_awg22", "z_bulk", "l_feed"])
+     rises_with=["v_rail"], falls_with=["i_budget_6a", "len_jpwr", "r_awg22", "z_c", "l_feed"])
 def _(v_rail, v_jpwr_6a, v_dip_6a):
     return v_rail - v_jpwr_6a - v_dip_6a
 
@@ -319,7 +397,15 @@ _I("the edge through the resistor stays inside the longest input edge the buffer
 _I("a data wire that meets 5 V or ground holds the buffer's output inside its rating",
    lambda v: v.i_fault <= v.i_out_max)
 _I("the series resistor carries that fault at no more than half its rating",
-   lambda v: v.p_fault <= v.p_rating * v.p_derate)
+   lambda v: v.p_fault <= v.p_kit * v.p_derate)
+_I("R1 to R3 sit inside their window", lambda v: v.r_in_min <= v.r_in <= v.r_in_max)
+_I("the data-line resistor holds a shorted wire inside the buffer's rating, at its low end",
+   lambda v: v.r_out_min <= v.r_out)
+_I("and carries it at no more than half its rating",
+   lambda v: v.r_out_min_p <= v.r_out)
+_I("and at its high end leaves the first LED's high inside the timing tolerance",
+   lambda v: v.r_out <= v.r_out_max and v.t_shorter + v.t_out_shorter < v.t_bit_tol)
+
 _I("with the 3 A supply, a step of the whole cap leaves the buffers inside their supply range",
    lambda v: v.v_buffer_min >= v.vcc_min)
 _I("with the 6 A supply, a step of the whole cap leaves the buffers inside their supply range",
