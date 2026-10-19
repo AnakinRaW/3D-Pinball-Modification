@@ -39,10 +39,12 @@ ds("dac_fs", 2.1, "dB", sheet=AMP, src="Gain Selection: the full-scale output of
 dec("gain", 3, "dB", src="the lowest of the five steps in Table 8 of "
     "MAX98357A-MAX98357B-Maxim.pdf, GAIN_SLOT connected to VDD through 100 kΩ",
     group="LEVEL", section=LEVEL, stated=True)
-dec("r_gain", 100, "kΩ", src="the resistor Table 8 names for the 3 dB step",
-    stated=False)
+ds("r_gain_table", 100, "kΩ", sheet=AMP, src="Table 8, the resistor it names for the 3 dB "
+   "step", stated=False)
 ds("r_gain_tol", 5, "%", sheet=AMP, src="Table 8, the tolerance asked of that resistor",
    stated=False)
+dec("r_gain", 100, "kΩ", src="R4, from GAIN to VCC: the 100 kΩ of the resistor kit", stated=False)
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", stated=False)
 msr("r_spk", 8, "Ω", src="the stock speaker's impedance, measured, "
     "docs/research/Rokr/5_sound.md", group="LEVEL", section=LEVEL, stated=True)
 asm("p_spk", 0.5, "W", src="the lower end of the 0.5 W to 1 W that "
@@ -101,6 +103,20 @@ dec("v_dd", 5, "V", src="the machine's 5 V from the power distribution, the rail
 
 ds("gain_frac_max", 0.85, "", sheet=AMP, src="GAIN_SLOT comparator trip points, the "
    "upper edge of the 3 dB window, 0.85 x VDD", stated=False)
+
+
+# Table 8 asks for its resistor within r_gain_tol, so R4's own band has to sit inside that
+# band around the value Table 8 names.
+@fig("r_gain_min", "kΩ", stated=False, prints="up",
+     rises_with=["r_gain_table", "kit_tol"], falls_with=["r_gain_tol"])
+def _(r_gain_table, r_gain_tol, kit_tol):
+    return r_gain_table * (1 - r_gain_tol) / (1 - kit_tol)
+
+
+@fig("r_gain_max", "kΩ", stated=False, prints="down",
+     rises_with=["r_gain_table", "r_gain_tol"], falls_with=["kit_tol"])
+def _(r_gain_table, r_gain_tol, kit_tol):
+    return r_gain_table * (1 + r_gain_tol) / (1 + kit_tol)
 
 
 @fig("v_gain_max", "V", group="INPUTS", section=INPUTS, rises_with=["gain_frac_max", "v_dd"])
@@ -288,6 +304,9 @@ _I("the cap holds the loudest digital signal to that power",
    lambda v: v.g_cap * v.g_cap * v.p_square <= v.p_spk)
 _I("the rail does not clip a full-scale signal",
    lambda v: v.v_peak < v.v_dd)
+_I("R4's tolerance band sits inside the band Table 8 asks of the resistor it names",
+   lambda v: v.r_gain * (1 - v.kit_tol) >= v.r_gain_table * (1 - v.r_gain_tol)
+   and v.r_gain * (1 + v.kit_tol) <= v.r_gain_table * (1 + v.r_gain_tol))
 _I("the Teensy's high level switches the amplifier's inputs",
    lambda v: v.v_3v3 > v.v_ih)
 _I("and stays inside their rating, powered or not",
