@@ -101,11 +101,9 @@ Rule 3 requires that someone else could rebuild this from the repository alone.
 - A bring-up procedure exists: inspect, check for shorts between supply and ground, power through a current-limited supply, then verify rail by rail.
 - Known limitations written down rather than left silent.
 
-## 8. Package variants
+## 8. Packages
 
-Derating and thermal targets are met per variant, never inherited from the other one. The same value in a different package carries a different power rating, a different thermal resistance and, for ceramics, a different DC-bias curve.
-
-Where meeting a target in one package would need a different **value**, the two have stopped being variants of one design. Report that rather than substituting quietly: it becomes a second design, documented separately, per rule 7.
+The build is through-hole (RULES.md rule 17). Derating and thermal targets are met for the through-hole package the design names. A part that exists only as SMD is judged in its own package, on its adapter.
 
 ## Report
 

@@ -74,18 +74,18 @@ For every net that reaches a Teensy pin, establish the highest voltage it can ca
 
 For each operating point, state the ratio to the absolute maximum. A design with no stated margin has not been reviewed.
 
-## 3. Package variants
+## 3. Packages
 
-Where a circuit names a through-hole and an SMD build, the two share topology, values and netlist, and share nothing else. Run these **per variant**, and label every finding with the variant it applies to:
+The build is through-hole (RULES.md rule 17). Check every figure for the through-hole package the circuit names:
 
-| Figure | Why it differs |
+| Figure | What the package sets |
 |---|---|
-| Resistor power rating | An axial part is commonly 0.25 W, a 0805 chip commonly 0.125 W |
-| Capacitor voltage rating and DC-bias loss | A smaller case loses more capacitance under the same working voltage |
-| Semiconductor current rating and R_DS(on) | Different die and different bond-out per package |
-| Thermal resistance | Between TO-220 and SOT-223 this differs by roughly an order of magnitude |
+| Resistor power rating | An axial part from the kit carries 0.25 W |
+| Capacitor voltage rating and DC-bias loss | A radial ceramic loses less capacitance under bias than a small chip |
+| Semiconductor current rating and R_DS(on) | The rows of the named package, at the gate voltage the circuit actually applies |
+| Thermal resistance | A TO-220 without a heatsink is limited by its junction-to-ambient figure |
 
-A variant is not verified because the other one passed. An unchecked variant is reported as Unverifiable, naming the datasheet figure that would settle it.
+An SMD part is checked only where it exists in no through-hole package. The adapter it sits on is part of the check.
 
 ## 4. Report
 
