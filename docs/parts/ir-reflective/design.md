@@ -76,7 +76,7 @@ One transistor switches all emitters together, so a single Teensy pin controls t
 |---|---|
 | Supply | Pin 1 of every sensor board to the board's 3.3 V |
 | Signal, per channel | Pin 2 of each board to an analog input, with a 4.7 kΩ pull-down to GND at the sensor-side node. The pull-down converts the photocurrent into a voltage; without it the output carries no measurable signal |
-| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2 kΩ from the isolator's CLOCK output, with a 100 kΩ pull-down to GND at the gate |
+| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2.2 kΩ from the isolator's CLOCK output, with a 100 kΩ pull-down to GND at the gate |
 | Ground | No ground line runs to the sensor boards. The returns are Pin 2 through its pull-down and Pin 3 through its 220 Ω and the transistor |
 
 Every value here is derived in [the appendix](#appendix-derivations).
@@ -100,7 +100,7 @@ A swap has to pass two checks.
 
 | Resistor | Range | Set by |
 |---|---|---|
-| Emitter | <u>56 Ω</u> … 431 Ω | **Below:** the emitter burns out, past the 40 mA its I<sub>F</sub> absolute maximum leaves at the sensors' highest temperature, at V<sub>OUT</sub> max and V<sub>F</sub> min. Under 82 Ω that channel's emitter resistor passes half its own rated power and has to move to a larger case. **Above:** the emitter drops below the 4 mA the detector is characterized at, and the datasheet stops saying what comes back |
+| Emitter | <u>56 Ω</u> … 431 Ω | **Below:** the emitter burns out, past the 40 mA its I<sub>F</sub> absolute maximum leaves at the sensors' highest temperature, at V<sub>OUT</sub> max and V<sub>F</sub> min. **Above:** the emitter drops below the 4 mA the detector is characterized at, and the datasheet stops saying what comes back |
 | Pull-down | 1 kΩ … 5 kΩ | **Below:** the gap between a ball and a clear track shrinks into the noise, 36.6 µA giving about 11 steps of a ten-bit read at 1 kΩ. **Above:** the converter cannot read a source this large in the time it has and mixes one channel into the next; and the same room light makes more voltage, until it alone fills the range a ball would need |
 
 *The <u>underlined</u> bound destroys hardware when crossed; the others stop the channel from working and damage nothing.*
@@ -212,7 +212,7 @@ On the test bench the Teensy's 3V3 pin feeds J-PWR.
 Three parts sit on the board's supply path:
 
 - **C5, 22 µF** at the 3V3 entry. It halves the phase-start excursion on the rail and trims the pulse overshoot of the module's power-save ripple in the dark phase.
-- **R39, 47 Ω**, and **C6, 22 µF**, between 3V3 and 3V3_ADC, the branch that carries the two converters alone. They keep the module's ripple out of the rail the converters measure against.
+- **R39, 47 Ω**, and **C6, 22 µF**, between 3V3 and 3V3_ADC, the branch that carries the two converters alone. They keep the module's ripple out of the rail the converters measure against. C6 sits at the converters' VDD pins, where it also carries their conversion current, the bypass DS21295D asks for at the pin.
 
 The two rails differ by the 66 mV R39 drops. 3V3 feeds Pin 1 of every sensor connector, U3's VCC2 and R36; 3V3_ADC feeds nothing but VDD and VREF of U1 and U2.
 
@@ -265,13 +265,12 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 
 ## Notes for PCB building
 
-- **On a board Q1 should be the IRL540N in TO-220** ([datasheet](../../datasheets/IRL540N.PDF)), while this build stays through-hole. The AO3400A in SOT-23 is the SMD variant.
 - **C5 and C6 should be X5R or X7R, rated 10 V or more, and reach 11 µF at 3.3 V bias**, the figure every derivation uses. A Y5V loses too much of its nominal value to DC bias to reach it, an aluminum electrolytic fails on ESR.
 
 **Placement distances.** The figures are assumptions, no datasheet states one.
 
 - the 100 nF parts should sit within 3 mm of the supply pin they decouple, C3 at U3's VCC1 and C4 at its VCC2, which sit at opposite corners of the package
-- C5, R39 and C6 should stay within 10 mm of J-PWR
+- C5 and R39 should stay within 10 mm of J-PWR, C6 within 10 mm of U1's and U2's VDD pins, between the two converters
 - R33 and R35 should stay within 10 mm of Q1's gate
 - each channel's 4.7 kΩ should stay within 25 mm of its converter input, so the stub adds little to the source resistance the acquisition window is derived from
 
@@ -284,36 +283,36 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 
 ## Part list
 
-Additional to the Teensy 4.1 and the sensor boards, grouped by type and sorted by value. Where the type designation depends on the package, both are named.
+Additional to the Teensy 4.1 and the sensor boards, grouped by type and sorted by value.
 
-| Qty | Part | Through-hole | SMD | Use |
-|---|---|---|---|---|
-| 1 | Resistor 47 Ω | | | **R39.** With C6 the ripple filter in the supply branch of the two converters. At 1.4 mA it drops 66 mV and dissipates 92 µW |
-| up to 13 | Resistor 220 Ω | | | **R1 … R16.** LED current limit, one per channel. Mandatory, the sensor board has none |
-| 3 | Resistor 100 Ω | | | **R1 … R16**, the three channels the stock sensor boards sit on. Same position, brighter emitter |
-| 2 | Resistor 1 kΩ | | | **R37, R38** at each converter's DOUT pin, bounding the current should both converters drive that net at once |
-| 2 | Resistor 2 kΩ | | | **R33** limits the current into Q1's gate, **R34** the current in the MISO line should the Teensy pin and U3 ever drive against each other. Both hold U3's output inside its 2 mA figure |
-| up to 16 | Resistor 4.7 kΩ | | | **R17 … R32.** Signal pull-down, one per channel position, fitted whether or not a sensor is connected |
-| 1 | Resistor 10 kΩ | | | **R36.** Pulls ADC-DOUT to the board's rail, so U3's input has a defined level with both converters deselected |
-| 1 | Resistor 100 kΩ | | | **R35.** Gate pull-down at Q1, holds the LED bus off while the board's rail comes up |
-| 2 | Ten-bit 8-channel SPI converter | MCP3008, PDIP-16 | MCP3008, SOIC-16 | **U1, U2.** Sixteen channel positions onto one SPI bus |
-| 1 | Six-channel digital isolator | on an adapter | ISO7761F, SOIC-16 wide or SSOP-16 | **U3.** Five channels from the Teensy to the board and DOUT back, one supply pin per side |
-| 1 | Logic-level MOSFET, N-channel | IRL540N, TO-220 | AO3400A, SOT-23 | Shared LED switch **Q1** |
-| 4 | Ceramic 100 nF | | | **C1, C2** at each converter's VDD; **C3** at U3's VCC1, **C4** at its VCC2 |
-| 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | 1206 or larger | **C5.** Bulk at the 3V3 entry. Carries the 202 mA phase-start step until the regulator, which sits at the end of a cable, responds |
-| 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | 1206 or larger | **C6.** Behind R39, gives the regulator's ripple a path to ground, the power-save bursts at 9 kHz included |
-| 1 | Connector, 8-pin, keyed | | | **J-T** to the Teensy |
-| 1 | Connector, 2-pin, keyed | | | **J-PWR** to the power distribution |
-| up to 16 | Connector, 3-pin | | | **J-S1 … J-S16**, one per sensor board |
+| Qty | Part | Type | Use |
+|---|---|---|---|
+| 1 | Resistor 47 Ω | | **R39.** With C6 the ripple filter in the supply branch of the two converters. At 1.4 mA it drops 66 mV and dissipates 92 µW |
+| up to 13 | Resistor 220 Ω | | **R1 … R16.** LED current limit, one per channel. Mandatory, the sensor board has none |
+| 3 | Resistor 100 Ω | | **R1 … R16**, the three channels the stock sensor boards sit on. Same position, brighter emitter |
+| 2 | Resistor 1.2 kΩ | | **R37, R38** at each converter's DOUT pin, bounding the current should both converters drive that net at once |
+| 2 | Resistor 2.2 kΩ | | **R33** limits the current into Q1's gate, **R34** the current in the MISO line should the Teensy pin and U3 ever drive against each other. Both hold U3's output inside its 2 mA figure |
+| up to 16 | Resistor 4.7 kΩ | | **R17 … R32.** Signal pull-down, one per channel position, fitted whether or not a sensor is connected |
+| 1 | Resistor 10 kΩ | | **R36.** Pulls ADC-DOUT to the board's rail, so U3's input has a defined level with both converters deselected |
+| 1 | Resistor 100 kΩ | | **R35.** Gate pull-down at Q1, holds the LED bus off while the board's rail comes up |
+| 2 | Ten-bit 8-channel SPI converter | MCP3008, PDIP-16 | **U1, U2.** Sixteen channel positions onto one SPI bus |
+| 1 | Six-channel digital isolator | ISO7761F, SOIC-16 wide, on an adapter | **U3.** Five channels from the Teensy to the board and DOUT back, one supply pin per side |
+| 1 | Logic-level MOSFET, N-channel | IRL540N, TO-220 | Shared LED switch **Q1** |
+| 4 | Ceramic 100 nF | | **C1, C2** at each converter's VDD; **C3** at U3's VCC1, **C4** at its VCC2 |
+| 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | **C5.** Bulk at the 3V3 entry. Carries the 202 mA phase-start step until the regulator, which sits at the end of a cable, responds |
+| 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | **C6.** At the converters' VDD pins, behind R39: gives the regulator's ripple a path to ground, the power-save bursts at 9 kHz included, and is the bypass their sheet asks for at the pin |
+| 1 | Connector, 8-pin, keyed | | **J-T** to the Teensy |
+| 1 | Connector, 2-pin, keyed | | **J-PWR** to the power distribution |
+| up to 16 | Connector, 3-pin | | **J-S1 … J-S16**, one per sensor board |
 
 
 ### Rebuilt sensor boards
 
 The sensors beyond the three that come out of the stock machine sit on boards built for this modification, with the collector taken straight to the rail.
 
-| Qty | Part | Through-hole | SMD | Use |
-|---|---|---|---|---|
-| up to 13 | Reflective photointerrupter | not yet chosen | n/a | Emitter and detector |
+| Qty | Part | Type | Use |
+|---|---|---|---|
+| up to 13 | Reflective photointerrupter | not yet chosen | Emitter and detector |
 
 **The detector for these boards is not settled.** The stock GP2S700HCP is a leadless package which is hard to hand-solder. Thus, the modification favors through-hole sensors. The two candidates are the **OPB606A/OPB606C** and the **QRE1113**. The OPB606A and the OPB606C are sensitivity grades of one sensor. The A is the more sensitive one.
 
@@ -352,15 +351,15 @@ V_F       LED forward voltage, Figure 3 of the sensor datasheet,
           the stock board's diode-range reading of 1.082 V is
           the 25 °C curve at the meter's 0.86 mA
 V_DS      drop across Q1, a full bus of sixteen channels:
-          AO3400A, 48 mΩ max at V_GS = 2.5 V  =  9.7 mV
-          the same at T_J 125 °C              = 13.9 mV
+          IRL540N, 56 mΩ on the typical 3.0 V
+          curve                               = 11.3 mV
           IRL540N, 0.1 Ω estimated            =   20 mV
           each case below names the one it takes
 
 U_R       across the emitter resistor, three cases, V_DS and V_F at the
           extreme that hurts each, V_F at the current the case
           settles at:
-          3.300 − 1.24 − 0.010                = 2.050 V  nominal, the AO3400A,
+          3.300 − 1.24 − 0.011                = 2.049 V  nominal, Q1 typical,
                                                          25 °C curve at 9.3 mA
           3.449 − 1.18 − 0                    = 2.269 V  most current: V_OUT max,
                                                          75 °C curve at 10.3 mA, and
@@ -402,30 +401,27 @@ from the Teensy's 3V3 pin, both isolator sides out of it
 
 The Teensy case is the tighter by better than a factor of two, 222.6 mA left for the emitters against 482.9 mA. Thirteen channels at 220 Ω and three at 100 Ω spend 202 mA of that, which pays for four of them dropped to 150 Ω.
 
-**Dissipation, one line per part.** Ratings are the 25 °C free-air figures.
+**Dissipation, one line per part.** The resistors are held to the kit's 0.25 W, Q1 to its junction limit.
 
 ```
-Q1        (202 mA)² × 68.8 mΩ at T_J 125 °C        =  2.8 mW → 0.20 % of 1.4 W
-220 Ω     (10.3 mA)² × 220 Ω                       = 23.4 mW → 19 % of an 0805
-100 Ω     (22.7 mA)² × 100 Ω, the three stock channels = 51.5 mW → 41 % of an 0805
-4.7 kΩ    (3.449 V)² / 4.7 kΩ, node at its ceiling =  2.5 mW → 2.0 %
-R36       (0.31 mA)² × 10 kΩ, a DOUT held low      =  1.0 mW → 0.8 %
-R35       (3.382 V)² / 100 kΩ, gate at V_OUT max   =  114 µW
-R37, R38  (0.31 mA)² × 1 kΩ, the same current      =   98 µW
+Q1        (202 mA)² × 0.1 Ω, the estimate          =  4.1 mW → junction 40.3 °C
+          at 62 °C/W, of 175 °C
+220 Ω     (10.3 mA)² × 220 Ω                       = 23.4 mW → 9.4 % of 0.25 W
+100 Ω     (22.7 mA)² × 100 Ω, the three stock channels = 51.5 mW → 21 % of 0.25 W
+4.7 kΩ    (3.449 V)² / 4.7 kΩ, node at its ceiling =  2.5 mW → 1.0 %
+R36       (0.325 mA)² × 9.5 kΩ, a DOUT held low    =  1.0 mW → 0.40 %
+R35       (3.375 V)² / 100 kΩ, gate at V_OUT max   =  114 µW
+R37, R38  (0.325 mA)² × 1.26 kΩ, the same current  =  133 µW
 R39       (1.4 mA)² × 47 Ω                         =   92 µW
-R33       (33 µA)² × 2 kΩ, the gate's own draw     =  2.2 µW
+R33       (33 µA)² × 2.2 kΩ, the gate's own draw   =  2.4 µW
 R34       no DC current while MISO is an input     =     0
 ```
-
-Only the 220 Ω passes 10 % of a rating, and its lower knob bound is derived below.
 
 **220 Ω, LED series resistor.**
 
 ```
-P     = I_LED worst² × 220 Ω                  ≈ 23 mW  → 125 mW in an 0805 is 5.3× that
-        at the lower knob bound, 37 mA through 56 Ω ≈ 79 mW  → 63 % of an 0805
-        half of that 125 mW is reached at            73 Ω, so 82 Ω is the
-                                                     E12 value an 0805 carries
+P     = I_LED worst² × 220 Ω                  ≈ 23 mW  → the kit's 0.25 W is 10.7× that
+        at the lower knob bound, 37 mA through 56 Ω ≈ 79 mW  → 31 % of 0.25 W
         the lower bound of 53 Ω is derived under the knob bounds below
 ```
 
@@ -433,9 +429,7 @@ V<sub>F</sub> rises with the current. Figure 3 gives 1.25 V at 10 mA and 1.46 V 
 
 R<sub>min</sub> pairs the **lowest** published V<sub>F</sub> with the **highest** regulator output: both push the current up, and the LED is what must survive it. At 56 Ω the current settles at 37 mA on the 75 °C curve. The wall is the 40 mA the LED takes at 40 °C. It sits at 53 Ω.
 
-**Q1 is an AO3400A**, a 5.7 A part switching 202 mA. AOS gives R<sub>DS(on)</sub> as 48 mΩ maximum at V<sub>GS</sub> = 2.5 V and I<sub>D</sub> = 3 A, so the gate, `V_rail × 100 kΩ / 102 kΩ` across R33 and R35 and therefore 3.084 V at V_OUT min, is covered by a specified maximum, and 202 mA through it drops 9.7 mV. The 10 V row rises from 26.5 to 38 mΩ at T<sub>J</sub> = 125 °C, a factor of 1.43, which puts the same drop at 13.9 mV there. V<sub>GS(th)</sub> is 0.65 V min and 1.45 V max, so those 3.084 V clear the worst-case threshold by 1.63 V, against a V<sub>GS</sub> rating of ±12 V.
-
-**The IRL540N is the through-hole variant**, a 36 A part. It specifies R<sub>DS(on)</sub> at three gate voltages, all as maxima at I<sub>D</sub> = 15 to 18 A: 0.044 Ω at 10 V, 0.053 Ω at 5.0 V, 0.063 Ω at 4.0 V. Nothing is given at 3.3 V, and the curve steepens as V<sub>GS</sub> falls, so the last volt costs as much as the previous five. **0.1 Ω is an estimate above the 4.0 V figure, not a reading**, and the derivations are quoted at the 20 mV it gives because that bounds both parts. At 1 Ω instead, the drop would be 202 mV, 8.9 % of U<sub>R</sub>, which the per-channel calibration absorbs. V<sub>GS(th)</sub> is 1.0 V min and 2.0 V max, so 3.3 V turns the part on with 1.3 V over the worst-case threshold.
+**Q1 is an IRL540N** switching 202 mA. Its sheet specifies R<sub>DS(on)</sub> only from V<sub>GS</sub> = 4.0 V, all as maxima at I<sub>D</sub> = 15 to 18 A: 0.044 Ω at 10 V, 0.053 Ω at 5.0 V, 0.063 Ω at 4.0 V. The gate gets `V_rail × 100 kΩ / 102.2 kΩ` across R33 and R35, 3.078 V at V_OUT min. Fig. 1's typical 3.0 V curve gives 56 mΩ below that, a drop of 11.3 mV, which the nominal case takes. **0.1 Ω is an estimate above that curve, not a reading**, and the least-current case is quoted at the 20 mV it gives. At 1 Ω instead, the drop would be 202 mV, 8.9 % of U<sub>R</sub>, which the per-channel calibration absorbs. V<sub>GS(th)</sub> is 1.0 V min and 2.0 V max, so 3.3 V turns the part on with 1.3 V over the worst-case threshold.
 
 **Phase-start droop.**
 
@@ -515,11 +509,11 @@ The 6.9 τ_adc are what carries the channel change. The sample capacitor still h
 
 Changing chip costs nothing beyond that. `t_DIS` is 100 ns max, so the deselected converter releases DOUT before the other one is addressed, which is what lets both share one MISO conductor.
 
-**R37 and R38, 1 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound: `3.449 V / 2 kΩ` = 1.72 mA. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 puts its own drop across R37 on top: `0.4 V + (3.449 − 0.4) V × 1 kΩ / 11 kΩ` = 0.68 V, inside the 1.03 V that `0.3 × VCC2 max` leaves as a guaranteed low.
+**R37 and R38, 1.2 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound. At their low end they hold the two outputs to 1.52 mA, inside the 2 mA the design allows such a fight. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 puts its own drop across R37 on top. With R37 at its high end and R36 at its low end the low sits at 0.76 V, inside the 1.03 V that `0.3 × VCC2 max` leaves as a guaranteed low.
 
-**R36, 10 kΩ from ADC-DOUT to the board's rail.** Both converters release DOUT whenever neither is selected, and the level then comes from the isolator's internal 1.5 MΩ pull-down alone, an impedance the switching LED bus can move. The pull-up puts a defined high there instead, and settles both dark states as well: with the Teensy off it holds the net at the board's rail, which the barrier keeps away from the connector, and with the board off it holds INF near ground through the dead rail. A converter pulling DOUT low sinks `3.449 V / 11 kΩ` = 0.31 mA, against the 0.4 V its datasheet specifies at I<sub>OL</sub> = 1 mA and VDD = 4.5 V.
+**R36, 10 kΩ from ADC-DOUT to the board's rail.** Both converters release DOUT whenever neither is selected, and the level then comes from the isolator's internal 1.5 MΩ pull-down alone, an impedance the switching LED bus can move. The pull-up puts a defined high there instead, and settles both dark states as well: with the Teensy off it holds the net at the board's rail, which the barrier keeps away from the connector, and with the board off it holds INF near ground through the dead rail. A converter pulling DOUT low sinks 0.33 mA at most, against the 0.4 V its datasheet specifies at I<sub>OL</sub> = 1 mA and VDD = 4.5 V.
 
-**R34, 2 kΩ in the MISO line at U3's output.** Should firmware ever configure the MISO pin as an output, the Teensy and U3 drive against each other through R34 at 1.65 mA, inside the 2 mA the isolator's outputs are specified at, instead of shorting two outputs. R33 does the same at Q1's gate, where the charging current comes from an isolator output rather than a Teensy pin, and the gate-resistor block below derives it against the gate charge.
+**R34, 2.2 kΩ in the MISO line at U3's output.** Should firmware ever configure the MISO pin as an output, the Teensy and U3 drive against each other through R34 at 1.60 mA at most, inside the 2 mA the isolator's outputs are specified at, instead of shorting two outputs. R33 does the same at Q1's gate, where the charging current comes from an isolator output rather than a Teensy pin, and the gate-resistor block below derives it against the gate charge.
 
 **U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's.** Both are maximums of the 3.3 V DC row with every input at its own supply, the worse of the two DC rows. The AC rows bracket the 1.35 Mbps a conversion block runs at, 6.5 and 6.3 mA at 1 Mbps against 7.5 and 8.6 mA at 10 Mbps, which interpolates to 6.5 and 6.4 mA at this rate, under the DC figures on both sides.
 
@@ -528,10 +522,10 @@ Reading DOUT crosses the barrier twice.
 ```
 18.5 ns   U3, the Teensy's clock edge to the converter's CLK
  200 ns   converter t_DO at VDD = 2.7 V
-  15 ns   R37 into the ADC-DOUT net, 1 kΩ against 15 pF assumed
+  19 ns   R37 into the ADC-DOUT net, 1.26 kΩ against 15 pF assumed
 18.5 ns   U3, INF to OUTF
-  40 ns   R34 into the conductor and the pin, 2 kΩ against 20 pF assumed
- 292 ns   of the 370 ns half period at 1.35 MHz
+  46 ns   R34 into the conductor and the pin, 2.31 kΩ against 20 pF assumed
+ 302 ns   of the 370 ns half period at 1.35 MHz
 ```
 
 `t_pd` is 18.5 ns max at 3.3 V ± 10 % over the full temperature range, and channel-to-channel skew is 4.4 ns max, which leaves the converter's 50 ns setup and hold untouched.
@@ -559,16 +553,15 @@ first read      phase − budget − 10 µs of start jitter   =  270 µs at N = 
 
 The datasheet's throughput figures pair 3.6 MHz with 200 ksps and 1.35 MHz with 75 ksps, so 18 clocks per conversion. That is the converter's own ceiling with no clock wasted, and a byte-oriented port spends 24.
 
-**2 kΩ, gate resistor.** A MOSFET gate is a capacitor. No current flows through it while it is held on, but each switching edge has to charge it, and only this resistor limits that.
+**2.2 kΩ, gate resistor.** A MOSFET gate is a capacitor. No current flows through it while it is held on, but each switching edge has to charge it, and only this resistor limits that.
 
 ```
-I_peak = 3.3 V / 2 kΩ                               = 1.65 mA → inside U3's 2 mA figure
-t      ≈ Q_g / (I_peak / 2), AO3400A at  7 nC       ≈  8.5 µs
-                             IRL540N at 74 nC       ≈   90 µs  = 15 % of a 600 µs phase
+I_peak = 3.3 V / 2.2 kΩ                             = 1.50 mA → inside U3's 2 mA figure
+t      ≈ Q_g / (I_peak / 2), IRL540N at 74 nC       ≈   99 µs  = 16 % of a 600 µs phase
   with 100 Ω instead: 3.3 V / 100 Ω                 =   33 mA → 16× the 2 mA figure
 ```
 
-Q<sub>g</sub> is 7 nC max at V<sub>GS</sub> = 4.5 V and I<sub>D</sub> = 5.7 A for the AO3400A, and 74 nC max at V<sub>GS</sub> = 5.0 V and I<sub>D</sub> = 18 A for the IRL540N. The slower of the two costs nothing: the earliest channel is sampled 270 µs into its phase, by which time the LED has been at full current for 180 µs.
+Q<sub>g</sub> is 74 nC max at V<sub>GS</sub> = 5.0 V and I<sub>D</sub> = 18 A for the IRL540N. It costs nothing: the earliest channel is sampled 270 µs into its phase, by which time the LED has been at full current for 171 µs.
 
 **4.7 kΩ, signal pull-down.** The phototransistor delivers a current; the pull-down turns it into the measured voltage, `U = I_photo · R`. Four requirements set the value:
 
@@ -609,7 +602,7 @@ at T = 600 µs, τ = 70 µs, t = 270 µs:  x = 0.000189
 zero at e^(−t/τ) = (1 + x) / 2, so t     = τ · ln(2 / (1 + x))
 ```
 
-Below that instant the decaying dark trace still sits above the rising lit trace and the difference carries the opposite sign. The figures take the LED current as a step; the 90 µs gate edge of the slower variant is 1.28 τ, which makes them slightly optimistic.
+Below that instant the decaying dark trace still sits above the rising lit trace and the difference carries the opposite sign. The figures take the LED current as a step; the 99 µs gate edge of the slower variant is 1.41 τ, which makes them slightly optimistic.
 
 **Where the ball signal comes from.** It is measured: a stock sensor board at its installed position over the track, 100 Ω in the emitter line and the 4.7 kΩ pull-down, read with a ball on the track and with the track clear, each against its own dark reading. [The sensor board's notes](../../research/Rokr/2_ir-reflective-sensor-p33.md) hold the four readings. Leaving 172 mV across the pull-down, of which 165 mV stands at the first read.
 
@@ -642,7 +635,8 @@ The pull-down alone limits the phototransistor branch, on a rebuilt board where 
         Figure 3 for V_F, read at the current each case lands on:
                              U_R at 40 mA = 3.449 − 1.35           = 2.097 V
         lower, one channel   R = 2.097 V / 40 mA (I_F max at 40 °C) =  53 Ω
-                             56 Ω is the E12 value above it
+                             56 Ω is the E12 value above it, also
+                             at 5 % under its value
         lower, every channel N × I(R) + N × I_C + I_ADC + I_ISO ≤ I_supply,
                              I(R) solved with V_F from the curve.
                              The bench case governs, so the bound is the
@@ -668,16 +662,20 @@ The pull-down alone limits the phototransistor branch, on a rebuilt board where 
                              I_ISO side 2                          =  232 mA
                              so this knob alone cannot break the budget
 
-2 kΩ   lower                R = 3.3 V / 2 mA                       = 1.65 kΩ
-gate    upper                t = Q_g × 2R / 3.3 V ≤ 100 µs
-                             → R = 100 µs × 3.3 V / (2 × 74 nC)    = 2.2 kΩ
-                             the IRL540N sets it; at the AO3400A's
-                             7 nC the same limit lands at          = 23 kΩ
+R33    lower                R = 3.3 V / 2 mA                       = 1.65 kΩ
+gate    upper                t = Q_g × 2R / 3.3 V ≤ 221 µs, the first
+                             read less the τ · ln 2 a channel needs
+                             once the LED is on
+                             → R = 221 µs × 3.3 V / (2 × 74 nC)    = 4.9 kΩ
+                             R33 5 % off where it hurts and the rail
+                             at its ends, at least                 = 1.82 kΩ
+                             at most                               = 4.48 kΩ
+                             the kit's 2.2 kΩ sits inside that window
 
-100 kΩ lower                 gate voltage = 3.3 V × R / (R + 2 kΩ)
-                             must clear V_GS(th) max, 2.0 V at the
-                             IRL540N and 1.45 V at the AO3400A
-                             3 kΩ → 1.98 V, too close; 10 kΩ → 2.75 V
+100 kΩ lower                 gate voltage = 3.3 V × R / (R + 2.2 kΩ)
+                             must clear the IRL540N's V_GS(th) max,
+                             2.0 V
+                             3 kΩ → 1.90 V, too close; 10 kΩ → 2.70 V
         upper                gate leakage × R stays below the threshold:
                              100 nA × 1 MΩ = 100 mV
 
@@ -700,7 +698,7 @@ phase                        past the sign inversion, which τ · ln 2 caps
                              dwell carries one
 ```
 
-Both parts give I<sub>GSS</sub> as 100 nA maximum, the IRL540N at V<sub>GS</sub> = ±16 V and the AO3400A at ±12 V. It only sets the upper bound of a value that is already an order of magnitude away, so the conclusion does not rest on it.
+The IRL540N gives I<sub>GSS</sub> as 100 nA maximum at V<sub>GS</sub> = ±16 V. It only sets the upper bound of a value that is already an order of magnitude away, so the conclusion does not rest on it.
 
 One standard value inside each of those walls:
 
@@ -725,10 +723,9 @@ One standard value inside each of those walls:
 - [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md): the stock board's circuit, the measured 1.585 kΩ, the 333 Hz pulsing and the ambient-light reasoning behind it
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the 3.3 V input limit, the 4 mA per-pin recommendation, and what PJRC says about driving a pin while the board is unpowered
 - [Sharp GP2S700HCP datasheet](../../datasheets/IR-reflective-gp2s700hcp_e.pdf), Sheet D3-A02201EN: V<sub>F</sub>, I<sub>F</sub> and I<sub>C</sub> maximums, the I<sub>C</sub> transfer characteristic at I<sub>F</sub> = 4 mA, Figure 3 for V<sub>F</sub> against forward current at five temperatures, Figure 6 for response time against load resistance, optimal sensing distance
-- [Microchip MCP3004/3008 datasheet](../../datasheets/MCP3004-3008-Microchip.pdf), DS21295D: channel count, resolution, supply and reference range, throughput and clock limits, clocks per conversion, sample capacitor and switch resistance, operating current, the clock-to-data delay, the absence of any output current rating, absolute maximum ratings
+- [Microchip MCP3004/3008 datasheet](../../datasheets/MCP3004-3008-Microchip.pdf), DS21295D: channel count, resolution, supply and reference range, throughput and clock limits, clocks per conversion, sample capacitor and switch resistance, operating current, the clock-to-data delay, the absence of any output current rating, absolute maximum ratings, the bypass capacitor at the device pin in 6.4
 - [Pololu D24V5F3](https://www.pololu.com/product/2842): the 3.3 V output within 4 %, the 500 mA rating, the 3.4 V minimum input, the 500 kHz switching frequency with its reduction at light load; its [schematic](../../datasheets/D24V5Fx-Pololu-schematic.pdf) for the ISL85415, the 22 µH inductor, the two 10 µF output capacitors, and COMP and FS tied to VCC
 - [Renesas ISL85415 datasheet](../../datasheets/ISL85415-Renesas.pdf), FN8373.2: internal compensation with COMP at VCC, the loop-bandwidth guidance under 100 kHz with its 75 kHz worked example, the 50 % DC-bias derating advice for ceramic output capacitors, Figures 47 and 48 for the load transient
 - [TI ISO7761 datasheet](../../datasheets/ISO7761-TI.pdf), SLLSER1H: the channel directions of the ISO7761, supply and absolute maximum ratings, the F suffix and its default output state with `t_DO`, the undervoltage lockout thresholds and the undetermined band between them, V<sub>OH</sub> with I<sub>OH</sub>, the input thresholds, the 1.5 MΩ input pull-down of Figure 7-3, the supply current rows at 3.3 V, propagation delay and channel-to-channel skew
-- [AOS AO3400A datasheet](../../datasheets/AO3400A-AOS.pdf), Rev 3.1: R<sub>DS(on)</sub> at V<sub>GS</sub> = 2.5 V and its T<sub>J</sub> = 125 °C scaling, gate threshold voltage, total gate charge, and `I_GSS` of 100 nA at V<sub>GS</sub> = ±12 V
-- [IRL540N datasheet](../../datasheets/IRL540N.PDF): R<sub>DS(on)</sub> against gate voltage, gate threshold voltage, total gate charge, and `I_GSS` of ±100 nA at V<sub>GS</sub> = ±16 V
+- [IRL540N datasheet](../../datasheets/IRL540N.PDF), PD-9.1495: R<sub>DS(on)</sub> against gate voltage, the typical 3.0 V curve of Fig. 1, gate threshold voltage, total gate charge, `I_GSS` of ±100 nA at V<sub>GS</sub> = ±16 V, the junction limit and the thermal resistance
 - [NXP IMXRT1060CEC](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 7 for the `Vin/Vout` absolute maximum of `OVDD + 0.31 V`, Table 10 for the NVCC_GPIO range and Table 22 for V<sub>OH</sub> against I<sub>OH</sub>

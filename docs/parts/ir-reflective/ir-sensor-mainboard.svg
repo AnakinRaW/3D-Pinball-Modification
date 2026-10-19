@@ -66,7 +66,7 @@
   <text x="264" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#0a5a63">MISO</text>
   <line x1="302" y1="370" x2="314" y2="370" stroke="#0e7c86" stroke-width="2.5"/>
   <rect x="314" y="360" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text data-fig="r_gate" x="337" y="374" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">2 k&#937;</text>
+  <text data-fig="r_miso" x="337" y="374" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
   <text x="338" y="356" font-size="10" fill="#777">R34</text>
   <line x1="360" y1="370" x2="374" y2="370" stroke="#0e7c86" stroke-width="2.5"/>
   <line x1="200" y1="400" x2="226" y2="400" stroke="#c0392b" stroke-width="2.5"/>
@@ -204,7 +204,7 @@
   <text x="83" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#0a5a63">ADC-DOUT</text>
   <line x1="126" y1="680" x2="140" y2="680" stroke="#0e7c86" stroke-width="2.5"/>
   <rect x="140" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text data-fig="r_dout" x="163" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1 k&#937;</text>
+  <text data-fig="r_dout" x="163" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="142" y="662" font-size="10" fill="#777">R37</text>
   <line x1="186" y1="680" x2="200" y2="680" stroke="#0e7c86" stroke-width="2.5"/>
   <rect x="200" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
@@ -308,7 +308,7 @@
   <text x="563" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#0a5a63">ADC-DOUT</text>
   <line x1="606" y1="680" x2="620" y2="680" stroke="#0e7c86" stroke-width="2.5"/>
   <rect x="620" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text data-fig="r_dout" x="643" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1 k&#937;</text>
+  <text data-fig="r_dout" x="643" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="622" y="662" font-size="10" fill="#777">R38</text>
   <line x1="666" y1="680" x2="680" y2="680" stroke="#0e7c86" stroke-width="2.5"/>
   <rect x="680" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
@@ -450,7 +450,7 @@
   <text x="83" y="1296" text-anchor="middle" font-size="11" font-weight="700" fill="#4b3b78">CLOCK</text>
   <line x1="126" y1="1292" x2="150" y2="1292" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="150" y="1282" width="68" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text data-fig="r_gate" x="184" y="1296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">2 k&#937;</text>
+  <text data-fig="r_gate" x="184" y="1296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
   <text x="152" y="1276" font-size="10" fill="#777">R33</text>
   <line x1="218" y1="1292" x2="330" y2="1292" stroke="#8a2be2" stroke-width="2.5"/>
   <circle cx="255" cy="1292" r="4" fill="#8a2be2"/>
@@ -541,30 +541,25 @@
 
 
 
-  <!-- ===== package variants ===== -->
+  <!-- ===== parts ===== -->
   <line x1="30" y1="1746" x2="930" y2="1746" stroke="#bbb" stroke-width="1"/>
-  <text x="30" y="1770" font-size="13" font-weight="700" fill="#1a1a1a">Package variants</text>
+  <text x="30" y="1770" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
   <text x="30" y="1795" font-size="11" font-weight="700" fill="#666">Ref</text>
   <text x="120" y="1795" font-size="11" font-weight="700" fill="#666">Function</text>
-  <text x="400" y="1795" font-size="11" font-weight="700" fill="#666">Through-hole</text>
-  <text x="660" y="1795" font-size="11" font-weight="700" fill="#666">SMD</text>
+  <text x="400" y="1795" font-size="11" font-weight="700" fill="#666">Type</text>
   <line x1="30" y1="1803" x2="930" y2="1803" stroke="#ccc" stroke-width="1"/>
   <text x="30" y="1845" font-size="11" fill="#333">U1, U2</text>
   <text x="120" y="1845" font-size="11" fill="#333">Channel converter</text>
   <text x="400" y="1845" font-size="11" fill="#333">MCP3008 (PDIP-16)</text>
-  <text x="660" y="1845" font-size="11" fill="#333">MCP3008 (SOIC-16)</text>
   <text x="30" y="1865" font-size="11" fill="#333">U3</text>
   <text x="120" y="1865" font-size="11" fill="#333">Isolator across the rails</text>
-  <text x="400" y="1865" font-size="11" fill="#333">on a SOIC-16 adapter</text>
-  <text x="660" y="1865" font-size="11" fill="#333">ISO7761F (SOIC-16 wide)</text>
+  <text x="400" y="1865" font-size="11" fill="#333">ISO7761F (SOIC-16 wide), on an adapter</text>
   <text x="30" y="1885" font-size="11" fill="#333">Q1</text>
   <text x="120" y="1885" font-size="11" fill="#333">LED bus switch</text>
   <text x="400" y="1885" font-size="11" fill="#333">IRL540N (TO-220)</text>
-  <text x="660" y="1885" font-size="11" fill="#333">AO3400A (SOT-23)</text>
   <text x="30" y="1905" font-size="11" fill="#333">C5, C6</text>
   <text x="120" y="1905" font-size="11" fill="#333">Bulk and reference filter</text>
   <text x="400" y="1905" font-size="11" fill="#333">radial MLCC</text>
-  <text x="660" y="1905" font-size="11" fill="#333">1206 or larger</text>
 
   <text x="30" y="1955" font-size="11.5" fill="#666">Placement, the groups that stay together and how close: see mainboard-placement.svg</text>
 
