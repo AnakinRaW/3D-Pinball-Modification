@@ -4,8 +4,9 @@ The power board takes the 5 V of an external adapter and passes it to every subs
 
 ## Requirements
 
-- The machine runs from a 5 V adapter of 3 A up to 6 A.
+- The machine runs from a 5 V adapter of 3 A or of 6 A.
 - Every subsystem takes its 5 V and its ground over a separate pair from one point on the board.
+- With the optional switch fitted, plus and minus swapped at the input damage nothing, whether the adapter or the wiring to J-IN swaps them.
 - The rail stays inside the range every subsystem accepts, at power-up and at every load step.
 
 ## Adapter
@@ -17,14 +18,14 @@ The adapter needs short-circuit protection, since a short on any output is the a
 | Load | Current |
 |---|---|
 | The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 902 mA |
-| The lighting at its firmware cap, with the 3 A adapter | 2.0 A |
-| The lighting at its firmware cap, with the 6 A adapter | 3.3 A |
+| The lighting at its cap, with the 3 A adapter | 2.0 A |
+| The lighting at its cap, with the 6 A adapter | 3.3 A |
 | Two bumpers and the scoop pulling at once, for at most 30 ms | 2.16 A |
 | The servo stalled | 0.8 A |
 | The most that draws at once, with the 3 A adapter's cap | 5.07 A |
 | The most that draws at once, with the 6 A adapter's cap | 6.37 A |
 
-One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Two bumpers and the scoop are therefore the coil case. The servo moves only while no ball is in play.
+One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Two bumpers and the scoop are therefore the coil case. The servo moves only while no coil pulls, which the game holds to.
 
 ## Circuit
 
@@ -32,9 +33,9 @@ One ball triggers at most two bumpers within one pull-in, however fast it is, wh
 
 ### Input
 
-The adapter's plug goes into the machine's barrel jack. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
+The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
 
-C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics which keep the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 20 mm of J-IN.
+C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 20 mm of J-IN.
 
 ### Input protection
 
@@ -75,6 +76,14 @@ The adapter's negative reaches the machine through Q1 or its wire alone.
 J-MAIN carries 5 V to the [Teensy motherboard](../motherboard/design.md#supply). The Teensy's VIN takes it through D1. The amplifier module takes it ahead of D1.
 
 The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4.1.md#powering-from-something-other-than-usb) requires for an external supply. D2 bridges the cut, so the Teensy also runs on USB alone.
+
+### IR mainboard
+
+J-IR carries 5 V to the IR mainboard. The Pololu D24V5F3 that makes the mainboard's 3.3 V sits there at its J-PWR, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
+
+### Display
+
+J-DISP carries 5 V to the display module, whose own regulator makes its 3.3 V, as the [display design](../display/design.md#supply) describes. The end of the pair stays at 4.77 V with the 6 A adapter, far above the 3.49 V that regulator needs.
 
 ### Wiring
 
@@ -151,6 +160,9 @@ INPUT     the adapter at the jack, at least        5.0 V
           the air around it                        40 °C
           Q1's junction at 6 A                   = 53.3 °C
           Q1's leakage when it blocks              1 µA
+          its gate's leakage, at most              100 nA
+          the most R1 that still leaves the
+          gate 4.5 V on the bus at 6 A           = 3.68 MΩ
           the board's wiring, both conductors,
           estimated                                5 mΩ
           the bus at 3 A, at least               = 4.94 V
@@ -168,6 +180,9 @@ RAIL      the adapter with no load, assumed        5.25 V
           the cables at their longest            = 2.3 µH
           C1 and C2, each                          1000 µF
           together                               = 2000 µF
+          with the lighting boards', the
+          solenoid board's and the servo's bulk,
+          the whole rail                             = 4200 µF
           each, its impedance                      29 mΩ
           together                               = 14.5 mΩ
           the whole 3 A released at once         = 5.36 V
@@ -176,9 +191,8 @@ RAIL      the adapter with no load, assumed        5.25 V
           what the Teensy's VIN takes              5.5 V
           the cables at their shortest           = 54.8 mΩ
           the damping of a live plug-in          = 1.07
-          the charging current at plug-in        = 72.2 A
-          what Figure 12 plots Q1's body diode
-          to                                       80 A
+          the charging current at plug-in        = 79.7 A
+          what Q1's package carries, Table 2       120 A
           the gate voltage at which Q1 takes
           over from its body diode, at most        2.5 V
 ```
@@ -210,6 +224,8 @@ FLOORS    what the lighting's buffers need         4.5 V
           the servo's buffer while it stalls,
           at 3 A                                 = 4.69 V
           at 6 A                                 = 4.64 V
+          and at its start, while C1 alone
+          feeds the step                         = 4.58 V
           two bumpers and the scoop at once        2.16 A
           the solenoids' coil board while they pull,
           at 3 A                                 = 4.48 V
@@ -222,13 +238,27 @@ FLOORS    what the lighting's buffers need         4.5 V
           on USB alone, a high-power port gives
           at least                                 4.75 V
           and at most                              500 mA
-          D2 from VUSB to VIN, a 1N5819WS, at
-          most                                     0.58 V
-          the Teensy's VIN on USB alone          = 4.17 V
+          D2 from VUSB to VIN, the same 1N5819
+          the Teensy's VIN on USB alone          = 4.20 V
           the IR mainboard's module at 6 A       = 4.75 V
           what it needs                            3.4 V
           the display at 6 A                     = 4.77 V
           what its regulator needs, at least       3.49 V
+```
+
+### What a replacement part has to meet
+
+```
+ALLOW     the least bulk at J-IN that holds the
+          6 A release under VIN's maximum       = 1325 µF
+          the impedance at which the lighting's
+          buffers touch their floor at 6 A      = 45.5 mΩ
+          at which the solenoid board touches
+          the coils' floor                      = 51.2 mΩ
+          at which the servo's buffer touches
+          its floor                             = 568 mΩ
+          the least of them, the ceiling for a
+          replacement part's listed impedance   = 45.5 mΩ
 ```
 
 ## Sources

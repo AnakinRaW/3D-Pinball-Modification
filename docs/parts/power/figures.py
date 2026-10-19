@@ -33,6 +33,7 @@ INPUT = "Input path"
 RAIL = "Rail ceiling"
 FLOORS = "Supply floors"
 FUSE_SEC = "Fuse"
+ALLOW = "What a replacement part has to meet"
 
 # ===========================================================================
 # what the other subsystems draw and accept
@@ -69,6 +70,12 @@ MODEL.uses("v_f_diode", of="solenoid", group="FLOORS", section=FLOORS, stated=Tr
 MODEL.uses("i_f_av", of="solenoid")
 MODEL.uses("v_coil_min", of="solenoid", group="FLOORS", section=FLOORS, stated=True)
 MODEL.uses("t_a", of="ir-reflective", group="INPUT", section=INPUT, stated=True)
+# the bulk on the subsystem boards: C3 is this board's part, C91 and C1 a smaller one
+MODEL.uses("n_bulk_light", of="lighting")
+MODEL.uses("c_c91", of="solenoid")
+MODEL.uses("c_c1", of="servo")
+MODEL.uses("z_c1", of="servo")
+MODEL.uses("l_feed", of="solenoid")
 
 # ===========================================================================
 # the adapter and the cables
@@ -101,18 +108,13 @@ ds("i_awg16_max", 22, "A", src=f"{AMPS}, 16 AWG", stated=False)
 ds("i_awg22_max", 7, "A", src=f"{AMPS}, 22 AWG", stated=False)
 
 # ===========================================================================
-# the Teensy on USB alone: D2 across the cut VUSB-VIN trace, a 1N5819WS
+# the Teensy on USB alone: D2 across the cut VUSB-VIN trace, the same 1N5819 as D1
 # ===========================================================================
 USB = "Universal Serial Bus Specification Revision 2.0"
-D2_SHEET = "1N5819WS-Slkor.pdf"
 ds("v_usb_min", 4.75, "V", src=f"{USB}, Table 7-7: VBUS at a high-power port, minimum",
    group="FLOORS", section=FLOORS, stated=True)
 ds("i_usb_max", 500, "mA", src=f"{USB}, 7.2.1: the most a high-power port supplies, five "
    "unit loads", group="FLOORS", section=FLOORS, stated=True)
-ds("v_f_d2", 0.58, "V", sheet=D2_SHEET, src="Slkor 1N5819WS, Rev.1: maximum instantaneous "
-   "forward voltage at 1.0 A", group="FLOORS", section=FLOORS, stated=True)
-ds("i_f_av_d2", 1, "A", sheet=D2_SHEET, src="Slkor 1N5819WS, Rev.1: maximum average forward "
-   "rectified current", stated=False)
 
 # ===========================================================================
 # Q1, the reverse-polarity switch in the ground line. It is optional, and every figure takes it
@@ -128,9 +130,11 @@ ds("v_gs_th_max", 2.5, "V", sheet=Q1_SHEET, src=f"{Q1}, Table 4, V_GS(th) maximu
    group="RAIL", section=RAIL, stated=True)
 ds("v_ds_max_q1", 30, "V", sheet=Q1_SHEET, src=f"{Q1}, Table 2, drain-source voltage", stated=False)
 ds("v_gs_max_q1", 20, "V", sheet=Q1_SHEET, src=f"{Q1}, Table 2, gate-source voltage, ±20 V", stated=False)
-ds("i_sd_plot", 80, "A", sheet=Q1_SHEET, src=f"{Q1}, Figure 12, the highest source-drain current the body "
-   "diode's forward characteristic is plotted at; Table 7 tests V_SD at 60 A in 300 µs "
-   "pulses and gives the diode no pulse rating", group="RAIL", section=RAIL, stated=True)
+ds("i_d_pkg", 120, "A", sheet=Q1_SHEET, src=f"{Q1}, Table 2, drain current continuous at "
+   "T_case = 25 °C, which the sheet marks as limited by the package; the body diode's "
+   "current runs through the same package, and Table 7 tests the diode at 120 A, so the "
+   "figure bounds the plug-in current through the diode too", group="RAIL", section=RAIL,
+   stated=True)
 ds("i_dss_q1", 1, "µA", sheet=Q1_SHEET, src=f"{Q1}, Table 4, I_DSS maximum at V_DS = 30 V",
    group="INPUT", section=INPUT, stated=True)
 ds("rth_q1", 62.5, "°C/W", sheet=Q1_SHEET, src=f"{Q1}, Table 3, thermal resistance junction-ambient",
@@ -146,8 +150,12 @@ gr("k_hot", 1.4, "", src=f"{Q1}, Figure 10, the normalized R_DS(on) read at 95 �
 gr("t_fig10_c", 145, "°C", src=f"{Q1}, Figure 10, the gridline at 145 °C", stated=False)
 gr("k_fig10_c", 1.65, "", src=f"{Q1}, Figure 10, the normalized R_DS(on) read at 145 °C",
    stated=False)
-dec("r_gate", 10, "kΩ", src="R1, from Q1's gate to the 5 V bus; the gate draws only its "
-    "leakage, so the value sets nothing beyond a defined level", stated=False)
+ds("i_gss_q1", 100, "nA", sheet=Q1_SHEET, src=f"{Q1}, Table 4, I_GSS maximum at V_DS = 0 V "
+   "and V_GS = ±20 V", group="INPUT", section=INPUT, stated=True)
+dec("r_gate", 10, "kΩ", src="R1, from Q1's gate to the 5 V bus: the 10 kΩ of the resistor "
+    "kit. The gate draws only its leakage, so nothing bounds "
+    "R1 from below", stated=False)
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", stated=False)
 
 MODEL.curve(f"{Q1}, Figure 10, normalized R_DS(on) against junction temperature",
             [("t_fig10_a", "k_fig10_a"), ("t_hot", "k_hot"), ("t_fig10_c", "k_fig10_c")],
@@ -156,8 +164,10 @@ MODEL.curve(f"{Q1}, Figure 10, normalized R_DS(on) against junction temperature"
 # ===========================================================================
 # C1 and C2, the bulk at the input
 # ===========================================================================
-dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}, the part the C2 on each lighting "
-    "board already is", group="RAIL", section=RAIL, stated=True)
+dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}; the C2 on each lighting board is the "
+    "same part and takes its figures from here, while the solenoid board's C91 and the "
+    "servo's C1 are a smaller part of their own", group="RAIL", section=RAIL,
+    stated=True)
 dec("n_bulk", 2, "", src="C1 and C2 in parallel, the fewest of that part that hold the "
     "release under the Teensy's VIN maximum with the 6 A adapter", stated=False)
 ds("z_c", 29, "mΩ", sheet=BULK_SHEET, src=f"{BULK}, impedance maximum at 100 kHz as DigiKey lists it from "
@@ -238,6 +248,15 @@ def _(v_jack_min, i_supply_6a, r_dcin, r_q1, r_board):
     return v_jack_min - i_supply_6a * (r_dcin + r_q1 + r_board)
 
 
+# The gate's leakage flows through R1, so the most R1 is the one whose drop at its high end
+# still leaves the gate at the voltage the R_DS(on) row is specified at, on the bus at 6 A.
+@fig("r_gate_max", "MΩ", group="INPUT", section=INPUT, prints="down",
+     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "len_dcin", "r_awg16", "rdson_q1",
+                                            "r_board", "v_gs_spec", "i_gss_q1", "kit_tol"])
+def _(v_bus_6a, v_gs_spec, i_gss_q1, kit_tol):
+    return (v_bus_6a - v_gs_spec) / (i_gss_q1 * (1 + kit_tol))
+
+
 # ===========================================================================
 # derived: the loads
 # ===========================================================================
@@ -315,6 +334,14 @@ def _(c_one, n_bulk):
     return c_one * n_bulk
 
 
+# The subsystem boards' bulk sits on the rail too, behind their pairs, and charges
+# through Q1 at a live plug-in.
+@fig("c_rail", "µF", group="RAIL", section=RAIL,
+     rises_with=["c_one", "n_bulk", "n_bulk_light", "c_c91", "c_c1"])
+def _(c_one, n_bulk, n_bulk_light, c_c91, c_c1):
+    return c_one * (n_bulk + n_bulk_light) + c_c91 + c_c1
+
+
 @fig("esr_bus", "mΩ", group="RAIL", section=RAIL, rises_with=["z_c"], falls_with=["n_bulk"])
 def _(z_c, n_bulk):
     return z_c / n_bulk
@@ -371,15 +398,17 @@ def _(r_up_min, c_total, l_up_min):
     return r_up_min / 2 * (c_total / l_up_min) ** (1 / 2)
 
 
-# The bulk charges through Q1's body diode until the rail passes Q1's gate threshold,
-# and through its channel from there. The current of the overdamped RLC peaks where its
-# two exponentials cross; the diode's own drop, left out, would only lower it. Without
+# The bulk of the whole rail charges through Q1's body diode until the rail passes Q1's
+# gate threshold, and through its channel from there. The current of the overdamped RLC
+# peaks where its two exponentials cross, and more bulk moves that peak up toward V/R;
+# the diode's own drop and the boards' pairs, left out, would only lower it. Without
 # overdamping, the resistance alone bounds the current.
 @fig("i_inrush", "A", group="RAIL", section=RAIL, prints="up",
-     rises_with=["v_jack_max"], falls_with=["r_awg_adapter", "r_board", "l_per_m"])
-def _(v_jack_max, r_up_min, l_up_min, c_total):
+     rises_with=["v_jack_max", "c_one", "n_bulk", "n_bulk_light", "c_c91", "c_c1"],
+     falls_with=["r_awg_adapter", "r_board", "l_per_m"])
+def _(v_jack_max, r_up_min, l_up_min, c_rail):
     damp = r_up_min / (2 * l_up_min)
-    spread2 = damp * damp - 1 / (l_up_min * c_total)
+    spread2 = damp * damp - 1 / (l_up_min * c_rail)
     if spread2.v <= 0:
         return v_jack_max / r_up_min
     spread = spread2 ** (1 / 2)
@@ -480,6 +509,15 @@ def _(v_bus_6a, i_coils_at_once, r_lead, esr_bus):
     return v_bus_6a - 2 * i_coils_at_once * r_lead - i_coils_at_once * esr_bus
 
 
+# The servo's start: C1 alone carries the first microseconds of the 800 mA step, before
+# the current in the servo's pair follows, and U1 on the same board sees the dip.
+@fig("v_servo_start_6a", "V", group="FLOORS", section=FLOORS, prints="down",
+     rises_with=["v_jack_min", "c_c1"], falls_with=["i_supply_6a", "i_stall", "z_c1", "l_feed",
+                                                   "v_meas_f1"])
+def _(v_bus_6a, i_stall, z_c1, l_feed, c_c1, v_f1):
+    return v_bus_6a - v_f1 - i_stall * (z_c1 + (l_feed / c_c1) ** (1 / 2))
+
+
 # The Teensy's VIN sits behind D1 on the motherboard. J-MAIN's pair carries the
 # amplifier's current as well.
 @fig("v_teensy_6a", "V", group="FLOORS", section=FLOORS, prints="down",
@@ -491,9 +529,9 @@ def _(v_bus_6a, i_main, r_lead, v_f1, v_f_diode):
 
 # On USB alone, VIN takes the USB port's 5 V through D2 across the cut VUSB-VIN trace.
 @fig("v_teensy_usb", "V", group="FLOORS", section=FLOORS, prints="down",
-     rises_with=["v_usb_min"], falls_with=["v_f_d2"])
-def _(v_usb_min, v_f_d2):
-    return v_usb_min - v_f_d2
+     rises_with=["v_usb_min"], falls_with=["v_f_diode"])
+def _(v_usb_min, v_f_diode):
+    return v_usb_min - v_f_diode
 
 
 # U1 at the display sits at the end of J-DISP's pair
@@ -503,6 +541,67 @@ def _(v_usb_min, v_f_d2):
 def _(v_bus_6a, i_disp, r_lead, v_f1):
     return v_bus_6a - 2 * i_disp * r_lead - v_f1
 
+
+# The Display section restates that floor in prose.
+@fig("v_disp_in_prose", "V", group="Display", stated="loose", prints="down",
+     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "rdson_q1", "r_lead", "i_disp",
+                                           "v_meas_f1"])
+def _(v_disp_in):
+    return v_disp_in
+
+
+
+# ===========================================================================
+# derived: what a replacement bulk part has to meet
+# ===========================================================================
+# The least bulk at J-IN that holds the 6 A release under VIN's maximum: the energy
+# balance of the release, solved for C.
+# the room between the adapter's no-load voltage and VIN's maximum
+@fig("dv_release", "V", stated=False, rises_with=["v_in_max"], falls_with=["v_jack_max"])
+def _(v_in_max, v_jack_max):
+    return v_in_max - v_jack_max
+
+
+@fig("c_total_min", "µF", group="ALLOW", section=ALLOW, prints="up",
+     rises_with=["i_supply_6a", "len_adapter_max", "l_per_m"],
+     falls_with=["v_in_max", "dv_release"])
+def _(i_supply_6a, l_up_max, dv_release):
+    return l_up_max * (i_supply_6a / dv_release) ** 2
+
+
+# Each floor is linear in the part's impedance, which enters once at the board's own
+# bulk and once more, divided by the count, at J-IN. The allowance is the impedance at
+# which the floor touches its limit, taken with the 6 A adapter, where every floor is
+# lowest. The lighting's floor is rebuilt from a lossless part first, since the
+# lighting's own figure already carries the impedance.
+@fig("z_allow_light", "mΩ", group="ALLOW", section=ALLOW, prints="down",
+     rises_with=["v_jack_min", "n_bulk"],
+     falls_with=["i_budget_6a", "vcc_min", "i_supply_6a", "rdson_q1", "r_board"])
+def _(v_buffer_min_6a, z_c, i_budget_6a, v_rail, v_bus_6a, n_bulk, vcc_min):
+    v_lossless = v_buffer_min_6a + i_budget_6a * z_c
+    return (v_lossless - (v_rail - v_bus_6a) - vcc_min) * n_bulk / (i_budget_6a * (n_bulk + 1))
+
+
+@fig("z_allow_sol", "mΩ", group="ALLOW", section=ALLOW, prints="down",
+     rises_with=["v_jack_min", "n_bulk"],
+     falls_with=["i_supply_6a", "r_lead", "v_coil_min", "i_coils_at_once", "rdson_q1", "r_board"])
+def _(v_bus_6a, i_coils_at_once, r_lead, v_coil_min, n_bulk):
+    return (v_bus_6a - 2 * i_coils_at_once * r_lead - v_coil_min) * n_bulk / i_coils_at_once
+
+
+@fig("z_allow_servo", "mΩ", group="ALLOW", section=ALLOW, prints="down",
+     rises_with=["v_jack_min", "n_bulk"],
+     falls_with=["i_supply_6a", "r_lead", "vcc_u1_min", "i_stall", "rdson_q1", "r_board"])
+def _(v_bus_6a, i_stall, r_lead, vcc_u1_min, n_bulk):
+    return (v_bus_6a - 2 * i_stall * r_lead - vcc_u1_min) * n_bulk / i_stall
+
+
+# The least of the allowances is the ceiling a replacement part's listed impedance has
+# to stay under.
+@fig("z_allow", "mΩ", group="ALLOW", section=ALLOW, prints="down",
+     rises_with=["v_jack_min", "n_bulk"], falls_with=["i_supply_6a", "rdson_q1", "r_board"])
+def _(z_allow_light, z_allow_sol, z_allow_servo):
+    return min(z_allow_light, z_allow_sol, z_allow_servo)
 
 
 # ===========================================================================
@@ -517,12 +616,18 @@ _I("Q1's gate, which the bus drives, clears the voltage its R_DS(on) row is spec
    lambda v: v.v_bus_6a >= v.v_gs_spec)
 _I("Q1's junction stays under the temperature its R_DS(on) bound is read at",
    lambda v: v.t_j_6a < v.t_hot)
+_I("R1 stays under the most that still leaves Q1's gate at its specified drive",
+   lambda v: v.r_gate <= v.r_gate_max)
 _I("Q1's gate stays inside its rating at the highest rail",
    lambda v: v.v_release_6a < v.v_gs_max_q1)
 _I("swapped polarity at J-IN stays inside Q1's drain-source rating",
    lambda v: v.v_jack_max < v.v_ds_max_q1)
-_I("the plug-in current stays inside the range the sheet characterizes Q1's body diode over",
-   lambda v: v.i_inrush < v.i_sd_plot)
+_I("the plug-in current, with every bulk of the build on the rail, stays inside what "
+   "Q1's package carries", lambda v: v.i_inrush < v.i_d_pkg)
+_I("the bulk at J-IN is at least what the 6 A release needs",
+   lambda v: v.c_total >= v.c_total_min)
+_I("the part's impedance stays under what the floors allow",
+   lambda v: v.z_c <= v.z_allow)
 _I("a live plug-in leaves the rail without overshoot", lambda v: v.zeta >= 1)
 _I("a load release of the 3 A adapter's whole current stays under the Teensy's VIN maximum",
    lambda v: v.v_release_3a <= v.v_in_max)
@@ -540,12 +645,14 @@ _I("the servo's buffer stays inside its supply range while the servo stalls, wit
    "adapter", lambda v: min(v.v_servo_3a, v.v_servo_6a) >= v.vcc_u1_min)
 _I("the solenoids' coil board stays above what a stock coil kicks down to while two bumpers "
    "and the scoop pull, with either adapter", lambda v: min(v.v_sol_3a, v.v_sol_6a) >= v.v_coil_min)
+_I("U1 stays inside its supply range through the servo's start",
+   lambda v: v.v_servo_start_6a >= v.vcc_u1_min)
 _I("the Teensy's VIN stays inside its range", lambda v: v.v_teensy_6a >= v.v_in_min)
 _I("D1 carries the Teensy's current inside its rating", lambda v: v.i_teensy_vin < v.i_f_av)
 _I("on USB alone, the Teensy's VIN stays inside its range",
    lambda v: v.v_teensy_usb >= v.v_in_min)
 _I("on USB alone, D2 carries the Teensy's current inside its rating",
-   lambda v: v.i_teensy_vin < v.i_f_av_d2)
+   lambda v: v.i_teensy_vin < v.i_f_av)
 _I("on USB alone, a high-power port supplies the Teensy's whole current",
    lambda v: v.i_teensy_vin <= v.i_usb_max)
 _I("the D24V5F3 at the IR mainboard gets more than its lowest input",
