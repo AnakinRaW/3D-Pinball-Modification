@@ -16,13 +16,13 @@ The adapter needs short-circuit protection, since a short on any output is the a
 
 | Load | Current |
 |---|---|
-| The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 881 mA |
+| The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 877 mA |
 | The lighting at its firmware cap, with the 3 A adapter | 2.0 A |
 | The lighting at its firmware cap, with the 6 A adapter | 3.3 A |
 | Two bumpers and the scoop pulling at once, for at most 30 ms | 2.16 A |
 | The servo stalled | 0.8 A |
-| The most that draws at once, with the 3 A adapter's cap | 5.05 A |
-| The most that draws at once, with the 6 A adapter's cap | 6.35 A |
+| The most that draws at once, with the 3 A adapter's cap | 5.04 A |
+| The most that draws at once, with the 6 A adapter's cap | 6.34 A |
 
 One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Two bumpers and the scoop are therefore the coil case. The servo moves only while no ball is in play.
 
@@ -62,7 +62,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 | J-SERVO | the servo board | 0.8 A |
 | J-AMP | the amplifier board | 129 mA |
 | J-TEENSY | the Teensy motherboard | 350 mA |
-| J-IR | the D24V5F3 at the IR mainboard | 205 mA |
+| J-IR | the D24V5F3 at the IR mainboard | 201 mA |
 | J-DISP | the display board | 198 mA |
 
 ### Ground
@@ -86,7 +86,7 @@ For better performance, thicker wires can be used for DC-IN-to-board, the two J-
 For better convenience, thinner wires such as 26 AWG can be used for low current consumers.
 
 
-Both adapters deliver less than the machine draws at its peak. With the 3 A adapter, the lighting at its cap leaves no room for a coil. With the 6 A adapter, the lighting at its cap, two bumpers and the scoop together ask for 0.35 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops.
+Both adapters deliver less than the machine draws at its peak. With the 3 A adapter, the lighting at its cap leaves no room for a coil. With the 6 A adapter, the lighting at its cap, two bumpers and the scoop together ask for 0.34 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops.
 
 ## Part list
 
@@ -122,14 +122,14 @@ LOADS     the smaller adapter                      3 A
           the module's efficiency, assumed         80 %
           the module's input current at its
           lowest input, which bounds J-IR's drop = 281 mA
-          the module's input current             = 205 mA
+          the module's input current             = 201 mA
           the display                              198 mA
-          the permanent consumers                = 881 mA
+          the permanent consumers                = 877 mA
           the most that draws at once, with the
-          3 A adapter                            = 5.05 A
-          with the 6 A adapter                   = 6.35 A
+          3 A adapter                            = 5.04 A
+          with the 6 A adapter                   = 6.34 A
           the lighting at its 6 A cap with two
-          bumpers and the scoop, past the adapter= 0.35 A
+          bumpers and the scoop, past the adapter= 0.34 A
 ```
 
 ### Input path
@@ -187,10 +187,11 @@ RAIL      the adapter with no load, assumed        5.25 V
 FUSE      F1's rating                              2 A
           behind it at most, the servo stalled
           and the IR module at its lowest input  = 1.76 A
-          a T2A's voltage drop at its rating,
-          SIBA                                     190 mV
-          its resistance there, at most          = 95 mΩ
-          its drop behind the outputs, at most   = 167 mV
+          the current F1 was measured at           1.6 A
+          its drop there, measured                 55 mV
+          a margin on that                         10 mV
+          its resistance, at most                = 41 mΩ
+          its drop behind the outputs, at most   = 72 mV
           what opens it within                     120 s
           that multiple of its rating              2.1×
           the current that opens it              = 4.2 A
@@ -205,8 +206,8 @@ FLOORS    what the lighting's buffers need         4.5 V
           the lighting's buffers at 6 A          = 4.58 V
           one wire of a cable with its contacts    0.1 Ω
           the servo's buffer while it stalls,
-          at 3 A                                 = 4.60 V
-          at 6 A                                 = 4.54 V
+          at 3 A                                 = 4.70 V
+          at 6 A                                 = 4.64 V
           two bumpers and the scoop at once        2.16 A
           the solenoids' coil board while they pull,
           at 3 A                                 = 4.48 V
@@ -214,7 +215,7 @@ FLOORS    what the lighting's buffers need         4.5 V
           what a stock coil kicks down to          4.4 V
           D1 in front of the Teensy's VIN, a
           1N5819, at most                          0.55 V
-          the Teensy's VIN at 6 A                = 4.10 V
+          the Teensy's VIN at 6 A                = 4.19 V
           what it needs                            3.6 V
           on USB alone, a high-power port gives
           at least                                 4.75 V
@@ -222,15 +223,14 @@ FLOORS    what the lighting's buffers need         4.5 V
           D2 from VUSB to VIN, a 1N5819WS, at
           most                                     0.58 V
           the Teensy's VIN on USB alone          = 4.17 V
-          the IR mainboard's module at 6 A       = 4.66 V
+          the IR mainboard's module at 6 A       = 4.75 V
           what it needs                            3.4 V
-          the display at 6 A                     = 4.68 V
+          the display at 6 A                     = 4.77 V
           what its regulator needs, at least       3.49 V
 ```
 
 ## Sources
 
-- [SIBA L520TG](https://assets.hager.com/step-content/P/HA_22842854/Document/std.lang.all/L520TGXX-XXX_SIBA_MICRO-FUSE_P17-050_DE-EN_2017-04_TECHINFO.pdf), Lab.-No. P17-050: the voltage drop of L520TG02-000, a T2A to DIN 41571-3
 - [Schurter FST 5x20](https://www.schurter.com/en/datasheet/typ_FST_5x20.pdf): the pre-arcing time to IEC 60127-2/3
 - [ST STP160N3LL](../../datasheets/STP160N3LL-ST.pdf), DocID025073 Rev 3: the ratings in Table 2, the thermal resistance in Table 3, R_DS(on), the gate threshold and the leakage in Table 4, and Figure 10 for R_DS(on) against temperature
 - [Pololu D24V5F3](https://www.pololu.com/product/2842): the typical efficiency of the IR mainboard's module

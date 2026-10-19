@@ -18,6 +18,7 @@ ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 gr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="graph", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
 asm = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="assumed", **kw)
+msr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="measured", **kw)
 fig = MODEL.derived
 
 Q1 = "ST STP160N3LL, DocID025073 Rev 3"
@@ -178,13 +179,15 @@ asm("eta_u1", 80, "%", src="the D24V5F3's efficiency, the low end of the 80 % to
 # F1, the optional fuse in the 5 V of the outputs that draw little current
 # ===========================================================================
 FUSE = "a T2A fuse, 2 A time-lag, 5 x 20 mm"
-SIBA = "SIBA L520TG technical data sheet, Lab.-No. P17-050"
 FST = "Schurter FST 5x20 datasheet, schurter.com"
 dec("i_f1", 2, "A", src=f"F1, {FUSE}: the smallest standard time-lag rating above what the "
     "outputs behind it draw at most", group="FUSE", section=FUSE_SEC, stated=True)
-ds("v_drop_f1", 190, "mV", src=f"{SIBA}, voltage drop of L520TG02-000, a T2A to DIN 41571-3; "
-   "the Schurter FST sheet gives at most 150 mV for its T2A", group="FUSE", section=FUSE_SEC,
-   stated=True)
+msr("i_meas_f1", 1.6, "A", src="bench: the fuse fitted as F1 in series with a bench supply set "
+    "to 1 V, the current read off the supply", group="FUSE", section=FUSE_SEC, stated=True)
+msr("v_meas_f1", 55, "mV", src="bench: the voltage across that fuse at that current, read with "
+    "a multimeter", group="FUSE", section=FUSE_SEC, stated=True)
+dec("v_margin_f1", 10, "mV", src="added to the measured drop for the warming between the "
+    "measured current and the most behind F1", group="FUSE", section=FUSE_SEC, stated=True)
 ds("k_open", 2.1, "×", src=f"{FST}, Pre-Arcing Time to IEC 60127-2/3, the multiple of In with a "
    "maximum time for 0.125 to 6.3 A", group="FUSE", section=FUSE_SEC, stated=True)
 ds("t_open", 120, "s", src=f"{FST}, Pre-Arcing Time, the maximum at 2.1 × In for 0.125 to 6.3 A",
@@ -254,7 +257,7 @@ def _(i_tot, v_mod_max, eta_u1, v_mod_in_min):
 
 
 @fig("v_ir_end", "V", group="FLOORS", section=FLOORS, prints="down",
-     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "r_lead", "i_tot", "v_drop_f1"])
+     rises_with=["v_jack_min"], falls_with=["i_supply_6a", "r_lead", "i_tot", "v_meas_f1"])
 def _(v_bus_6a, i_ir_max, r_lead, v_f1):
     return v_bus_6a - 2 * i_ir_max * r_lead - v_f1
 
@@ -389,15 +392,15 @@ def _(i_teensy_vin, i_amp, i_ir_max, i_disp, i_stall):
     return i_teensy_vin + i_amp + i_ir_max + i_disp + i_stall
 
 
-# The drop at the rated current bounds the resistance at any current under it.
+# The measured drop with its margin bounds the resistance up to the most behind F1.
 @fig("r_f1", "mΩ", group="FUSE", section=FUSE_SEC, prints="up",
-     rises_with=["v_drop_f1"], falls_with=["i_f1"])
-def _(v_drop_f1, i_f1):
-    return v_drop_f1 / i_f1
+     rises_with=["v_meas_f1", "v_margin_f1"], falls_with=["i_meas_f1"])
+def _(v_meas_f1, v_margin_f1, i_meas_f1):
+    return (v_meas_f1 + v_margin_f1) / i_meas_f1
 
 
 @fig("v_f1", "mV", group="FUSE", section=FUSE_SEC, prints="up",
-     rises_with=["v_drop_f1", "i_stall", "i_disp"], falls_with=["i_f1"])
+     rises_with=["v_meas_f1", "v_margin_f1", "i_stall", "i_disp"], falls_with=["i_meas_f1"])
 def _(r_f1, i_small):
     return r_f1 * i_small
 
@@ -440,7 +443,7 @@ def _(v_buffer_min_6a, v_rail, v_bus_6a, i_budget_6a, esr_bus):
 @fig("v_servo_3a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min", "n_bulk"],
      falls_with=["i_supply_3a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c",
-                 "v_drop_f1"])
+                 "v_meas_f1"])
 def _(v_bus_3a, i_stall, r_lead, esr_bus, v_f1):
     return v_bus_3a - 2 * i_stall * r_lead - i_stall * esr_bus - v_f1
 
@@ -448,7 +451,7 @@ def _(v_bus_3a, i_stall, r_lead, esr_bus, v_f1):
 @fig("v_servo_6a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min", "n_bulk"],
      falls_with=["i_supply_6a", "rdson_q1", "r_board", "i_stall", "r_lead", "z_c",
-                 "v_drop_f1"])
+                 "v_meas_f1"])
 def _(v_bus_6a, i_stall, r_lead, esr_bus, v_f1):
     return v_bus_6a - 2 * i_stall * r_lead - i_stall * esr_bus - v_f1
 
@@ -471,7 +474,7 @@ def _(v_bus_6a, i_coils_at_once, r_lead, esr_bus):
 # The Teensy's VIN sits behind D1 on the motherboard.
 @fig("v_teensy_6a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min"],
-     falls_with=["i_supply_6a", "rdson_q1", "r_lead", "v_drop_f1", "v_f_diode"])
+     falls_with=["i_supply_6a", "rdson_q1", "r_lead", "v_meas_f1", "v_f_diode"])
 def _(v_bus_6a, i_teensy_vin, r_lead, v_f1, v_f_diode):
     return v_bus_6a - 2 * i_teensy_vin * r_lead - v_f1 - v_f_diode
 
@@ -486,7 +489,7 @@ def _(v_usb_min, v_f_d2):
 # U1 at the display sits at the end of J-DISP's pair
 @fig("v_disp_in", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min"], falls_with=["i_supply_6a", "rdson_q1", "r_lead", "i_disp",
-                                           "v_drop_f1"])
+                                           "v_meas_f1"])
 def _(v_bus_6a, i_disp, r_lead, v_f1):
     return v_bus_6a - 2 * i_disp * r_lead - v_f1
 
@@ -540,7 +543,5 @@ _I("the D24V5F3 at the IR mainboard gets more than its lowest input",
 _I("the display's regulator gets the input it needs at full load",
    lambda v: v.v_disp_in >= v.v_in_mod_min)
 _I("F1 carries the most the outputs behind it draw", lambda v: v.i_small <= v.i_f1)
-_I("the T2A the floors take drops less than the outputs behind F1 tolerate",
-   lambda v: v.v_drop_f1 <= v.v_drop_f1_max)
 _I("a fault the 6 A adapter feeds opens F1 within its maximum time",
    lambda v: v.i_f1_open <= v.i_supply_6a)
