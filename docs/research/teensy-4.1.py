@@ -136,6 +136,18 @@ def _(ram, ram1):
     return ram - ram1
 
 
+# The board's one regulator holds the 3.3 V within v_3v3_acc, so a bound that rests on the
+# rail takes it at the end that hurts it.
+@fig("v_3v3_min", "V", stated=False, rises_with=["v_3v3"], falls_with=["v_3v3_acc"])
+def _(v_3v3, v_3v3_acc):
+    return v_3v3 * (1 - v_3v3_acc.raw)
+
+
+@fig("v_3v3_max", "V", stated=False, rises_with=["v_3v3", "v_3v3_acc"])
+def _(v_3v3, v_3v3_acc):
+    return v_3v3 * (1 + v_3v3_acc.raw)
+
+
 MODEL.supplies("i_teensy_3v3", pool=TEENSY_RAIL)
 MODEL.draws("i_sd_card", pool=TEENSY_RAIL)   # the card in the on-board socket, fed from the same regulator
 MODEL.supplies("ram2", pool="RAM2")
