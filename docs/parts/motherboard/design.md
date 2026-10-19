@@ -10,7 +10,9 @@ The Teensy's edge headers offer two 3V3 pins and three GND pins. Five subsystems
 
 ### Supply
 
-J-PWR takes 5 V and GND from the power board's [J-TEENSY](../power/design.md#outputs). Its 5 V feeds the Teensy's VIN. Its GND joins the GND rail.
+J-PWR takes 5 V and GND from the power board's [J-TEENSY](../power/design.md#outputs). Its 5 V reaches the Teensy's VIN through D1, a 1N5819. Its GND joins the GND rail.
+
+The Teensy's trace between VUSB and VIN is cut. D2, a 1N5819WS, bridges the cut on the Teensy's underside, from VUSB to VIN. The Teensy therefore also runs on USB alone. D1 keeps USB from feeding the power board. D2 keeps the power board from feeding USB.
 
 ### 3V3 rail
 

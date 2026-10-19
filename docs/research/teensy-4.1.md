@@ -81,6 +81,8 @@ The 1 kΩ belongs to that one sample setting. A longer window admits a higher re
 
 The VUSB-VIN trace on the underside must be cut when an external supply is used. PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
 
+A Schottky diode across the cut, from VUSB to VIN, lets the board still run from USB alone, while the external supply cannot reach the USB host. PJRC's [external power page](https://www.pjrc.com/teensy/external_power.html), written for the earlier boards, solders a 1N5817 between the two pads for this.
+
 ### I²S1 spends three analog-capable pins
 
 `config_i2s()` muxes pins 23, 20 and 21 for I²S1:

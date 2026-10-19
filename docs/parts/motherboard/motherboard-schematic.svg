@@ -1,7 +1,7 @@
 <svg viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="1000" height="650" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Teensy motherboard</text>
-  <text x="30" y="56" font-size="13" fill="#666">The Teensy in its socket, its supply from the power board, its 3V3 and GND rails to the subsystems, and R1 of the toggle switch</text>
+  <text x="30" y="56" font-size="13" fill="#666">The Teensy in its socket, its supply from the power board through D1, its 3V3 and GND rails to the subsystems, and R1 of the toggle switch</text>
 
   <!-- ===== board outline ===== -->
   <rect x="200" y="90" width="600" height="520" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
@@ -28,7 +28,15 @@
   <circle cx="230" cy="230" r="6" fill="#1a1a1a"/>
   <circle cx="320" cy="230" r="6" fill="#1a1a1a"/>
   <text x="275" y="234" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="326" y1="190" x2="374" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+  <!-- D1 from J-PWR's 5 V to the Teensy's VIN -->
+  <line x1="326" y1="190" x2="335" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+  <polygon points="335,179 335,201 355,190" fill="#1a1a1a"/>
+  <line x1="356" y1="178" x2="356" y2="202" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="356" y1="178" x2="348" y2="178" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="356" y1="202" x2="364" y2="202" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="356" y1="190" x2="374" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="350" y="172" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">D1</text>
+  <text x="350" y="158" text-anchor="middle" font-size="11" fill="#666">1N5819</text>
 
   <!-- ===== Teensy ===== -->
   <rect x="380" y="140" width="180" height="240" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
@@ -37,6 +45,23 @@
   <circle cx="380" cy="190" r="6" fill="#c0392b"/>
   <text x="392" y="200" font-size="13" font-weight="700" fill="#c0392b">VIN</text>
   <circle cx="380" cy="300" r="6" fill="#1a1a1a"/>
+  <!-- D2 across the cut VUSB-VIN trace on the underside -->
+  <text x="480" y="232" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">D2</text>
+  <text x="480" y="246" text-anchor="middle" font-size="11" fill="#666">1N5819WS</text>
+  <line x1="440" y1="281" x2="440" y2="262" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="440" y1="262" x2="471" y2="262" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="471" y1="250" x2="471" y2="274" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="471" y1="250" x2="479" y2="250" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="471" y1="274" x2="463" y2="274" stroke="#1a1a1a" stroke-width="3"/>
+  <polygon points="472,262 492,251 492,273" fill="#1a1a1a"/>
+  <line x1="492" y1="262" x2="520" y2="262" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="520" y1="262" x2="520" y2="281" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="435" y="281" width="10" height="10" fill="#c0392b"/>
+  <rect x="515" y="281" width="10" height="10" fill="#c0392b"/>
+  <line x1="445" y1="286" x2="472" y2="286" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="488" y1="286" x2="515" y2="286" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="440" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#c0392b">VIN</text>
+  <text x="520" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#c0392b">VUSB</text>
   <text x="392" y="304" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
   <text x="392" y="320" font-size="11.5" fill="#777">all three pins</text>
   <circle cx="560" cy="190" r="6" fill="#c0392b"/>
