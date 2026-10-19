@@ -18,7 +18,7 @@ The Teensy's internal pull-up stays off, since together with R3 it would prevent
 
 ### Supply
 
-R2 with 220 Ω feeds the emitter from the supply behind D1. The Teensy's VIN sits on the same node. The emitter therefore also runs while the Teensy is on USB alone. The emitter carries 11.1 to 25.2 mA across the node's voltage range.
+R2 with 220 Ω feeds the emitter from the supply behind [D1](../motherboard/design.md#supply). The Teensy's VIN sits on the same node. The emitter therefore also runs while the Teensy is on USB alone. The emitter carries 11.1 to 25.2 mA across the node's voltage range.
 
 ## Teensy pins
 

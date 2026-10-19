@@ -102,12 +102,16 @@ _family(_A, [("A", 1.0), ("mA", 1e-3), ("µA", 1e-6), ("nA", 1e-9)])
 _family(_S, [("minutes", 60.0), ("s", 1.0), ("ms", 1e-3), ("µs", 1e-6), ("ns", 1e-9)])
 _family(_OHM, [("Ω", 1.0), ("mΩ", 1e-3), ("kΩ", 1e3), ("MΩ", 1e6)])
 _family(_WATT, [("W", 1.0), ("mW", 1e-3), ("µW", 1e-6)])
+# a source's radiant intensity, power per steradian; the steradian is a plain number
+_family(_WATT, [("mW/sr", 1e-3)])
+# an irradiance, the power falling on an area
+_family((1, 1, 0, 0, -2), [("W/m²", 1.0), ("mW/cm²", 10.0)])
 _family(_FARAD, [("F", 1.0), ("µF", 1e-6), ("nF", 1e-9), ("pF", 1e-12)])
 _family(_HENRY, [("H", 1.0), ("mH", 1e-3), ("µH", 1e-6)])
 _family(_HZ, [("Hz", 1.0), ("kHz", 1e3), ("MHz", 1e6)])
 _family(_COUL, [("C", 1.0), ("µC", 1e-6), ("nC", 1e-9)])
 _family(_K, [("°C", 1.0)])
-_family(_M, [("m", 1.0), ("cm", 1e-2), ("mm", 1e-3)])
+_family(_M, [("m", 1.0), ("cm", 1e-2), ("mm", 1e-3), ("nm", 1e-9)])
 _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
 # an input's longest edge, as a logic datasheet gives it: time per volt of swing
 _family((-1, 0, 1, 0, 0), [("ns/V", 1e-9)])
@@ -1059,6 +1063,19 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
 DATA_FIG_RE = re.compile(r'<(\w+)\b([^>]*\bdata-fig="([^"]+)"[^>]*)>([^<]*)<')
 
 
+def anchor_fig(model: "Model", key: str):
+    """The figure a drawing anchors: a key of the drawing's own model, or `model:key` of any
+    other. A drawing that carries the parts of several subsystems then needs no `uses`."""
+    if ":" not in key:
+        return model.figs.get(key)
+    name, k = key.split(":", 1)
+    try:
+        other = model_named(name)
+    except KeyError:
+        return None
+    return other.figure(k) if k in other.figs else None
+
+
 def pass_drawings(model: Model, rep: Report):
     """Check every figure a drawing anchors, and report the ones it does not.
 
@@ -1093,11 +1110,12 @@ def pass_drawings(model: Model, rep: Report):
             toks = scan_tokens(text, None, None, ln, strict=False)
             taken = []
             for key in m.group(3).split():
-                if key not in model.figs:
-                    rep.error(f"{path.name}:{ln} anchors {key!r}, which the model "
-                              f"does not declare")
+                f = anchor_fig(model, key)
+                if f is None:
+                    rep.error(f"{path.name}:{ln} anchors {key!r}, which "
+                              + (f"{key.split(':')[0]} does not declare" if ":" in key
+                                 else "the model does not declare"))
                     continue
-                f = model.figs[key]
                 same = sorted((t for t in toks
                                if t.unit == f.unit and id(t) not in taken),
                               key=lambda t: abs(t.value - f.value).v)
@@ -2218,9 +2236,9 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
             toks = scan_tokens(text, None, None, 0, False)
             taken = []
             for key in m.group(3).split():
-                if key not in model.figs:
+                f = anchor_fig(model, key)
+                if f is None:
                     continue
-                f = model.figs[key]
                 same = sorted((t for t in toks
                                if t.unit == f.unit and id(t) not in taken),
                               key=lambda t: abs(t.value - f.value).v)

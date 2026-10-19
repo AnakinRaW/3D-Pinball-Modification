@@ -48,6 +48,7 @@ MODEL.uses("i_stall", of="servo", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("i_amp", of="audio", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("i_teensy_40", of="teensy-4.1", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("i_teensy_3v3", of="teensy-4.1", group="LOADS", section=LOADS, stated=True)
+MODEL.uses("i_f_max", of="break-beam", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("i_tot", of="ir-reflective", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("i_disp", of="display", group="LOADS", section=LOADS, stated=True)
 MODEL.uses("v_in_mod_min", of="display", group="FLOORS", section=FLOORS, stated=True)
@@ -241,10 +242,18 @@ def _(v_jack_min, i_supply_6a, r_dcin, r_q1, r_board):
 # derived: the loads
 # ===========================================================================
 # The Teensy's regulator is linear, so whatever the 3V3 pin delivers comes out of VIN.
+# The break beam's emitter takes its current from VIN behind D1 as well.
 @fig("i_teensy_vin", "mA", group="LOADS", section=LOADS,
-     rises_with=["i_teensy_40", "i_teensy_3v3"])
-def _(i_teensy_40, i_teensy_3v3):
-    return i_teensy_40 + i_teensy_3v3
+     rises_with=["i_teensy_40", "i_teensy_3v3", "i_f_max"])
+def _(i_teensy_40, i_teensy_3v3, i_f_max):
+    return i_teensy_40 + i_teensy_3v3 + i_f_max
+
+
+# J-MAIN feeds the Teensy motherboard, where the amplifier module sits beside the Teensy.
+@fig("i_main", "mA", group="LOADS", section=LOADS, prints="up",
+     rises_with=["i_teensy_40", "i_teensy_3v3", "i_f_max", "i_amp"])
+def _(i_teensy_vin, i_amp):
+    return i_teensy_vin + i_amp
 
 
 # The D24V5F3 at the IR mainboard takes its input over J-IR's pair. Its input current
@@ -471,12 +480,13 @@ def _(v_bus_6a, i_coils_at_once, r_lead, esr_bus):
     return v_bus_6a - 2 * i_coils_at_once * r_lead - i_coils_at_once * esr_bus
 
 
-# The Teensy's VIN sits behind D1 on the motherboard.
+# The Teensy's VIN sits behind D1 on the motherboard. J-MAIN's pair carries the
+# amplifier's current as well.
 @fig("v_teensy_6a", "V", group="FLOORS", section=FLOORS, prints="down",
      rises_with=["v_jack_min"],
-     falls_with=["i_supply_6a", "rdson_q1", "r_lead", "v_meas_f1", "v_f_diode"])
-def _(v_bus_6a, i_teensy_vin, r_lead, v_f1, v_f_diode):
-    return v_bus_6a - 2 * i_teensy_vin * r_lead - v_f1 - v_f_diode
+     falls_with=["i_supply_6a", "rdson_q1", "r_lead", "v_meas_f1", "v_f_diode", "i_amp"])
+def _(v_bus_6a, i_main, r_lead, v_f1, v_f_diode):
+    return v_bus_6a - 2 * i_main * r_lead - v_f1 - v_f_diode
 
 
 # On USB alone, VIN takes the USB port's 5 V through D2 across the cut VUSB-VIN trace.

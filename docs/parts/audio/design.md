@@ -17,7 +17,7 @@ The amplifier drives one speaker. I²S always sends two channels. The module mix
 
 ## Circuit
 
-An amplifier board carries J-PWR, R1 and the DFR0954 as a daughter board. J-PWR takes 5 V and GND from the power board's J-AMP. The I²S cable from the Teensy ends on the board and brings the Teensy's ground beside the three lines. The speaker connects to the board.
+The DFR0954 sits in socket headers on the [Teensy motherboard](../motherboard/design.md), beside the Teensy. R4 sits on the motherboard as well.
 
 ![Audio schematic](audio-schematic.svg)
 
@@ -29,13 +29,13 @@ The speaker connects to the module's two outputs, SPK+ and SPK−.
 
 ### Level
 
-The amplifier's GAIN pin sets how strongly it amplifies. R1 between GAIN and VCC picks the weakest amplification. Left open, GAIN would give the small stock speaker too much power.
+The amplifier's GAIN pin sets how strongly it amplifies. R4 between GAIN and VCC picks the weakest amplification. Left open, GAIN would give the small stock speaker too much power.
 
-The speaker carries no marking. Its size suggests a rating of 0.5 W to 1 W. The driver keeps the overall volume low enough that even the loudest sound gives it at most 0.5 W. [Speaker level](#speaker-level) derives that volume from the amplifier's datasheet and the speaker's resistance. A firmware bug could still turn the volume all the way up. R1 then still keeps the speaker under 1 W.
+The speaker carries no marking. Its size suggests a rating of 0.5 W to 1 W. The driver keeps the overall volume low enough that even the loudest sound gives it at most 0.5 W. [Speaker level](#speaker-level) derives that volume from the amplifier's datasheet and the speaker's resistance. A firmware bug could still turn the volume all the way up. R4 then still keeps the speaker under 1 W.
 
 ### Supply
 
-The module runs on the machine's 5 V from the power board's J-AMP and decouples its own supply pin. Capped at 0.5 W, it draws at most 129 mA.
+The module takes the machine's 5 V from the motherboard's J-PWR ahead of [D1](../motherboard/design.md#supply) and decouples its own supply pin. It therefore stays off while the Teensy runs on USB alone. Capped at 0.5 W, it draws at most 129 mA.
 
 A 3.3 V supply from the Teensy was rejected, because the other subsystems already take nearly all of its 3V3 pin.
 
@@ -49,8 +49,8 @@ The Teensy drives the module's inputs directly, and the module's 5 V never reach
 
 | Qty | Part | Where |
 |---|---|---|
-| 1 | DFRobot DFR0954, MAX98357A amplifier module | on the amplifier board, between the Teensy and the speaker |
-| 1 | 100 kΩ resistor, 5 % or better | R1, on the amplifier board from GAIN to VCC |
+| 1 | DFRobot DFR0954, MAX98357A amplifier module | in socket headers on the Teensy motherboard, between the Teensy and the speaker |
+| 1 | 100 kΩ resistor, 5 % or better | R4, on the motherboard from GAIN to VCC |
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
