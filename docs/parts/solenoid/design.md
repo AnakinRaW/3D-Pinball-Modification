@@ -21,6 +21,8 @@ Two boards drive and sense them. The coil board carries the four drive channels.
 
 Each channel switches its coil on the low side with an N-channel MOSFET. The gate hangs on a Teensy pin through a series resistor that bounds what the pin drives at the switching moment. A pull-down resistor pulls the gate to ground whenever the Teensy does not drive the pin, and the coil is then off. This holds while the Teensy is unpowered and after a reset. After a reset, a weak circuit inside the Teensy pin, its keeper, still tries to hold the pin at its last level. The pull-down is strong enough to win against it, so a coil that was on at the reset turns off. A Schottky diode across the coil takes the winding current at switch-off, which holds the drain of the MOSFET a diode drop above the rail. For each solenoid the drive channels are built identical.
 
+The MOSFET is an IRL540N. Its sheet specifies R_DS(on) only from 4.0 V at the gate, more than a Teensy pin gives. The drop across it is taken from the sheet's typical curve at 2.5 V, which the gate clears.
+
 ## Sense
 
 The foil is one sheet on the playfield, fed from 3.3 V through R91. That resistor protects unlikely short circuits if anything other than the designed sense channels grounds the foil.
@@ -97,15 +99,15 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 
 ## Part list
 
-| Qty | Part | Through-hole | SMD | Where |
-|---|---|---|---|---|
-| 4 | Logic-level MOSFET, N-channel | IRL540N, TO-220 | AO3400A, SOT-23 | **Q1** to **Q4**, coil switches |
-| 4 | Schottky diode | 1N5819, DO-41 | 1N5819WS, SOD-323 | **D1** to **D4**, across each coil |
-| 10 | 10 kΩ resistor | | | **R21** to **R24** gate pull-down, **R31** to **R33** sense pull-down, **R41** to **R43** sense series |
-| 4 | 1.1 kΩ resistor | | | **R11** to **R14**, gate |
-| 3 | 10 nF capacitor | | | **C1** to **C3**, sense filter |
-| 1 | 330 Ω resistor | | | **R91**, foil feed |
-| 1 | 100 µF electrolytic, 10 V or more | | | **C91**, bulk at J-PWR |
+| Qty | Part | Where |
+|---|---|---|
+| 4 | IRL540N logic-level MOSFET, N-channel, TO-220 | **Q1** to **Q4**, coil switches |
+| 4 | 1N5819 Schottky diode, DO-41 | **D1** to **D4**, across each coil |
+| 10 | 10 kΩ resistor | **R21** to **R24** gate pull-down, **R31** to **R33** sense pull-down, **R41** to **R43** sense series |
+| 4 | 1.2 kΩ resistor | **R11** to **R14**, gate |
+| 3 | 100 nF ceramic capacitor | **C1** to **C3**, sense filter |
+| 1 | 330 Ω resistor | **R91**, foil feed |
+| 1 | KEMET ESL107M016AC3AA, 100 µF, 16 V | **C91**, bulk at J-PWR |
 
 ## Appendix: derivations
 
@@ -115,65 +117,73 @@ Every figure below is recomputed by [`figures.py`](figures.py) from the inputs i
 
 ```
 V_GATE    the Teensy's rail                       3.3 V
+          within                                  1 %
           R_gate to ground                        10 kΩ
-          the rail across R_gate and that one,
-          which is the gate while it is on      = 2.97 V
-          the gate threshold, worst case          1.45 V
-          the gate voltage R_DS(on) is specified
-          at, which the gate has to clear          2.5 V
+          each resistor of the channel within     5 %
+          the rail at its low end across R_gate
+          at its high end and R_gate to ground at
+          its low end, the gate while it is on  = 2.88 V
+          the gate threshold, worst case          2.0 V
+          the gate voltage of the curve R_DS(on)
+          is read off, which the gate clears       2.5 V
           what the gate clears it by, with no coil
-          current in the grounds                = 473 mV
-          the gate-source rating                  12 V
+          current in the grounds                = 384 mV
+          the gate-source rating                  16 V
           after a reset the pin's keeper holds the
           level the pin last drove, at its
           strongest through                       105 kΩ
-          the gate while it holds a high        = 0.29 V
-          the pin then                          = 0.32 V
-          the input's low level, 0.3 × the rail = 0.99 V
-I_PIN     R_gate                                  1.1 kΩ
-          the rail across it, at the switching
-          moment                                = 3.0 mA
-          the rail across both resistors, held  = 297 µA
+          the gate while it holds a high, the
+          rail at its high end                  = 0.31 V
+          the pin then                          = 0.34 V
+          the input's low level, 0.3 × the rail
+          at its low end                        = 0.98 V
+          the most R_gate to ground that holds
+          the gate under the lowest turn-on
+          threshold against the keeper          = 43.3 kΩ
+I_PIN     R_gate                                  1.2 kΩ
+          the rail at its high end across it at
+          its low end, at the switching moment  = 2.9 mA
+          the same across both resistors, held  = 313 µA
           what PJRC allows on one pin             4 mA
-          R_gate × 630 pF, the gate settling    = 0.69 µs
+          the least R_gate that holds the pin
+          there                                 = 0.88 kΩ
+          R_gate at its high end × 1800 pF, the
+          gate settling                         = 2.27 µs
 V_KICK    a step on the drain lifts the gate through
           the capacitive divider of the part itself,
           taken at the largest step the drain makes,
           which is the clamped switch-off:
-          input capacitance                       630 pF
-          reverse transfer capacitance            50 pF
-          5.55 V × 50 pF / 630 pF               = 0.440 V
-          the gate threshold, lowest              0.65 V
-          the IRL540N brings its own divider and
-          its own threshold to the same step:
           input capacitance                       1800 pF
           reverse transfer capacitance            170 pF
-          that step through them                = 0.524 V
-          its gate threshold, lowest              1.00 V
-          R_gate to ground × 630 pF, over which a
+          5.55 V × 170 pF / 1800 pF             = 0.524 V
+          the gate threshold, lowest              1.0 V
+          R_gate to ground × 1800 pF, over which a
           drain step has to be short for that
-          figure to hold                        = 6.30 µs
+          figure to hold                        = 18.0 µs
           which is the case at switch-off and not
           when the rail comes up behind C91
 V_DRAIN   the machine's rail, measured            5 V
           a stock coil kicks down to, measured   4.4 V
           the diode's forward drop at 1 A         0.55 V
           the drain at switch-off, clamped      = 5.55 V
-          the MOSFET's drain-source rating        30 V
+          the MOSFET's drain-source rating        100 V
           the diode's reverse rating              40 V
-P_Q       R_DS(on) max, at the lowest gate voltage
-          the sheet specifies                     48 mΩ
+P_Q       R_DS(on), typical, read off the 2.5 V
+          curve at 1 A                            120 mΩ
           the scoop's coil, the largest of the
           four and the worst case for a channel    0.8 A
-          that current × 48 mΩ, the drop
-          across Q                              = 38.4 mV
-          that current² × 48 mΩ, while energised = 30.7 mW
-          what the package dissipates             1.4 W
+          that current × 120 mΩ, the drop
+          across Q                              = 96.0 mV
+          that current² × 120 mΩ, while energised = 76.8 mW
+          its junction-to-ambient resistance      62 °C/W
+          the air inside the machine, at most     40 °C
+          the junction then                     = 44.8 °C
+          what the junction may reach             175 °C
 I_CH      the coil, measured                      0.68 A
           the scoop's coil                         0.8 A
           the diode's average forward current      1 A
           its surge rating                        25 A
-          the MOSFET's continuous drain current   5.7 A
+          the MOSFET's continuous drain current   21 A
 I_FEED    3 stock channels at 0.68 A plus the
           scoop's 0.8 A, the unarbitrated demand
           the protection interrupts             = 2.84 A
@@ -194,6 +204,10 @@ V_SENSE   the contact from foil to shell,
           loads R91 three ways                  = 2.99 V
           the pin with no ball                     0 V
           the input's high level, 0.7 × the rail = 2.31 V
+          the least R_pulldown that keeps all
+          three closed above it, each resistor
+          5 % off where it hurts                = 2.63 kΩ
+          the most R91 that does                = 1.28 kΩ
 R_S       between the node and the Teensy pin     10 kΩ
           how far a pin may go past its rail
           before its protection diode takes over  0.31 V
@@ -203,6 +217,10 @@ R_S       between the node and the Teensy pin     10 kΩ
           unpowered pin, whose ceiling is that
           0.31 V alone                          = 0.469 mA
           what PJRC calls unlikely to harm        1 mA
+          the adapter with no load, at most       5.25 V
+          the least series resistor that holds
+          the pin under 1 mA from that rail, 5 %
+          under its value                       = 5.20 kΩ
 I_FOIL    3.3 V through one closed branch       = 0.319 mA
           all three closed together             = 0.898 mA
           what the Teensy's 3V3 pin allows        250 mA
@@ -210,14 +228,19 @@ I_FOIL    3.3 V through one closed branch       = 0.319 mA
           the same fault inside R91             = 33 mW
           a foil meeting a coil wire instead,
           into an unpowered 3.3 V rail          = 14.2 mA
-          what an 0805 dissipates                 125 mW
-T_SENSE   C_filter at the terminal                10 nF
-          10 kΩ × 10 nF, the node falling       = 100 µs
+          the least R91 that keeps that fault
+          under half the 0.25 W the kit rates
+          it, the rail at its high end          = 93.6 Ω
+T_SENSE   C_filter at the terminal                100 nF
+          10 kΩ × 100 nF, the node falling      = 1000 µs
           R91 and the contact into the same
-          capacitor, the node rising            = 3.6 µs
+          capacitor, the node rising            = 36 µs
           the ball                                9 mm
           the fastest ball the build assumes      3 m/s
           9 mm / 3 m/s, how long a contact lasts = 3 ms
+          the largest filter whose node still
+          falls inside that                     = 300 nF
+          the most R_pulldown that does         = 28.5 kΩ
           the window in which further edges on
           the same channel are the same hit       10 ms
 ```
@@ -232,12 +255,13 @@ C_BULK    the most the Teensy's VIN takes         5.5 V
           the scoop's coil, the largest current
           the feed carries                         0.8 A
           the least bulk that holds the rise at
-          switch-off to that                    = 0.77 µF
+          switch-off to that                    = 1.93 µF
           C91                                     100 µF
-          bought at a working voltage of          10 V
+          rated at                                16 V
+          its impedance, from the listing         230 mΩ
           0.8 A across the feed into C91, the
-          rail lifted at switch-off             = 43.8 mV
-          the drain then                        = 5.59 V
+          rail lifted at switch-off             = 228 mV
+          the drain then                        = 5.78 V
           the board's own copper with C91
           unfitted, estimated                      2 nF
           the same charge into that instead     = 9.80 V
@@ -245,8 +269,8 @@ C_BULK    the most the Teensy's VIN takes         5.5 V
           the three stock coils it carries      = 2.04 A
 FAULT     a coil pair shorted in the loom,
           estimated from the conductor             0.2 Ω
-          5 V across it and the switch          = 20.2 A
-          that current through R_DS(on)         = 19.5 W
+          5 V across it and the switch          = 15.6 A
+          that current through R_DS(on)         = 29.3 W
           what practice leaves of a per-contact
           rating                                   80 %
 GND       one wire of a cable with its two
@@ -255,8 +279,10 @@ GND       one wire of a cable with its two
           all four coils at once                   2.84 A
           the power ground over the distribution,
           all of it on J-PWR's ground wire       = 284 mV
-          the gate with that rise against it     = 2.71 V
-          what it still clears 2.5 V by          = 217 mV
+          the gate with that rise against it     = 2.63 V
+          what it still clears 2.5 V by          = 133 mV
+          the most R_gate that still clears it   = 1.74 kΩ
+          the least R_gate to ground that does   = 6.87 kΩ
 ```
 
 **The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when the driver tick never releases it.
@@ -284,8 +310,7 @@ HOLD      the watchdog timeout, after which the
 - [`research/Rokr/3_bumper-control.md`](../../research/Rokr/3_bumper-control.md): the coil measurements, the contact resistance, the conductive-foil mechanism, the stock trigger circuit and the wiring that leaves the stock board
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): the machine's 5 V rail and the stock load inventory
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, the per-pin current, the 3.3 V rail available to external circuits, and what reaches an unpowered pin
-- [Alpha & Omega Semiconductor AO3400A](../../datasheets/AO3400A-AOS.pdf), Rev 3.1: the ratings, R_DS(on) at V_GS = 2.5 V, the gate threshold and the capacitances
-- [International Rectifier IRL540N](../../datasheets/IRL540N.PDF): the through-hole variant's ratings and gate threshold
+- [International Rectifier IRL540N](../../datasheets/IRL540N.PDF), PD-9.1495: the ratings, the gate threshold, the capacitances, the typical output curve at 2.5 V and the thermal resistance
 - [STMicroelectronics 1N5817, 1N5818, 1N5819](../../datasheets/1n5817.pdf), DocID 6262 Rev 5: the 1N5819 column of the ratings and static characteristics tables
 - [NXP i.MX RT1060 Crossover Processors for Consumer Products](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: the GPIO high-level input voltage, given as 0.7 × NVCC_XXXX
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V

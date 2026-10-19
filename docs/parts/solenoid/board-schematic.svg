@@ -40,7 +40,7 @@
 
   <rect x="430" y="410" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="465" y="404" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R11</text>
-  <text x="465" y="425" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_gate">1.1 k&#937;</text>
+  <text x="465" y="425" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_gate">1.2 k&#937;</text>
 
   <circle cx="620" cy="420" r="4" fill="#8a2be2"/>
   <line x1="620" y1="420" x2="620" y2="465" stroke="#8a2be2" stroke-width="2.5"/>
@@ -92,7 +92,7 @@
   <text x="1104" y="356" font-size="19" font-weight="700" fill="#1a1a1a">+</text>
   <line x1="1080" y1="362" x2="1080" y2="400" stroke="#1a1a1a" stroke-width="2.5"/>
   <text x="1054" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">C91</text>
-  <text x="1054" y="372" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_bulk">100 &#181;F</text>
+  <text x="1054" y="372" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_c91">100 &#181;F</text>
   <line x1="1080" y1="400" x2="1200" y2="400" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="1080" cy="400" r="4" fill="#1a1a1a"/>
   <circle cx="1200" cy="400" r="4" fill="#1a1a1a"/>
@@ -209,7 +209,7 @@
   <line x1="782" y1="979" x2="818" y2="979" stroke="#1a1a1a" stroke-width="3"/>
   <line x1="800" y1="979" x2="800" y2="1120" stroke="#1a1a1a" stroke-width="2.5"/>
   <text x="776" y="971" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">C1</text>
-  <text x="776" y="989" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_filter">10 nF</text>
+  <text x="776" y="989" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_filter">100 nF</text>
 
   <rect x="620" y="905" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="655" y="899" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R41</text>
@@ -236,21 +236,18 @@
   <text x="54" y="922" font-size="12" font-weight="700" fill="#5c4a00">Sense channels 2 and 3 identical</text>
   <text x="54" y="940" font-size="11.5" fill="#5c4a00">Channel 4 drives a solenoid and has no sense</text>
 
-  <!-- ===== Variants ===== -->
-  <text x="40" y="1210" font-size="13" font-weight="700" fill="#1a1a1a">Package variants</text>
+  <!-- ===== Parts ===== -->
+  <text x="40" y="1210" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
   <text x="40" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
   <text x="180" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Function</text>
-  <text x="380" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Through-hole</text>
-  <text x="580" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">SMD</text>
-  <line x1="40" y1="1242" x2="760" y2="1242" stroke="#ccc" stroke-width="1"/>
+  <text x="380" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Type</text>
+  <line x1="40" y1="1242" x2="560" y2="1242" stroke="#ccc" stroke-width="1"/>
   <text x="40" y="1262" font-size="11.5" fill="#444">Q1 to Q4</text>
   <text x="180" y="1262" font-size="11.5" fill="#444">Coil switch</text>
   <text x="380" y="1262" font-size="11.5" fill="#444">IRL540N, TO-220</text>
-  <text x="580" y="1262" font-size="11.5" fill="#444">AO3400A, SOT-23</text>
   <text x="40" y="1284" font-size="11.5" fill="#444">D1 to D4</text>
   <text x="180" y="1284" font-size="11.5" fill="#444">Flyback across the coil</text>
   <text x="380" y="1284" font-size="11.5" fill="#444">1N5819, DO-41</text>
-  <text x="580" y="1284" font-size="11.5" fill="#444">1N5819WS, SOD-323</text>
 
   <!-- ===== Placement ===== -->
   <text x="820" y="1210" font-size="13" font-weight="700" fill="#1a1a1a">Placement</text>
