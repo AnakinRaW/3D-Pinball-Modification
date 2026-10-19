@@ -33,3 +33,7 @@ The GND rail joins the Teensy's three GND pins and J-PWR's GND. These cables tak
 ### Toggle switch
 
 R1 sits on the motherboard in series between pin [32](../../pin-assignment.md "Toggle switch") and the toggle switch. The [controls design](../controls/design.md) sets its value.
+
+### Break beam
+
+R2 feeds the break beam's emitter from VIN behind D1. R3 pulls pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") up to the 3V3 rail. The [break-beam design](../break-beam/design.md) sets both values.

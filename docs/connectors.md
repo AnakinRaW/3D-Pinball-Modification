@@ -36,8 +36,8 @@
 | | display board to the module | 4 | soldered at both ends | The cable carries 5 V. Vin sits on the module's header beside the bus |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
 | | bus | 12 | Dupont, coded at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
-| Break beam | at the sensor | 3 | soldered | Emitter and receiver share 3V3 and GND |
-| | at the Teensy | 3 | Dupont, coded | 3V3, GND and the receiver's output |
+| Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
+| | at the Teensy motherboard | 2 each | Dupont, coded | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
 
 ## By pole count

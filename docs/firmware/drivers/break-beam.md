@@ -21,16 +21,16 @@ The break beam cannot tell apart two balls touching each. This most likely count
 
 ## Device faults
 
-The beam counts as failed once it has stayed broken for 5 s, which no passing ball does. A dead emitter, a receiver knocked out of line or a ball stuck in the gate cause it.
+The beam counts as failed once it has stayed broken for 5 s, which no passing ball does. A dead emitter, a broken cable, a receiver knocked out of line or a ball stuck in the gate cause it.
 
 ## Driver
 
 ```cpp
 class BreakBeamDriver : public Driver {
 public:
-    // attaches the queue, registers with the device monitor, sets the pin as an input with the
-    // Teensy's pull-up and arms the pin interrupt; false when the device monitor is full, and
-    // the driver then does nothing
+    // attaches the queue, registers with the device monitor, sets the pin as an input with
+    // hysteresis and without the Teensy's pull-up, and arms the pin interrupt; false when the
+    // device monitor is full, and the driver then does nothing
     bool begin() override;
 
     // the state the game logic may query between events
