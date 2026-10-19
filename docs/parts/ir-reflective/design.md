@@ -100,7 +100,7 @@ A swap has to pass two checks.
 
 | Resistor | Range | Set by |
 |---|---|---|
-| Emitter | <u>47 Ω</u> … 431 Ω | **Below:** the emitter burns out, past its 50 mA I<sub>F</sub> absolute maximum at V<sub>OUT</sub> max and V<sub>F</sub> min. Under 82 Ω that channel's emitter resistor passes half its own rated power and has to move to a larger case. **Above:** the emitter drops below the 4 mA the detector is characterized at, and the datasheet stops saying what comes back |
+| Emitter | <u>56 Ω</u> … 431 Ω | **Below:** the emitter burns out, past the 40 mA its I<sub>F</sub> absolute maximum leaves at the sensors' highest temperature, at V<sub>OUT</sub> max and V<sub>F</sub> min. Under 82 Ω that channel's emitter resistor passes half its own rated power and has to move to a larger case. **Above:** the emitter drops below the 4 mA the detector is characterized at, and the datasheet stops saying what comes back |
 | Pull-down | 1 kΩ … 5 kΩ | **Below:** the gap between a ball and a clear track shrinks into the noise, 36.6 µA giving about 11 steps of a ten-bit read at 1 kΩ. **Above:** the converter cannot read a source this large in the time it has and mixes one channel into the next; and the same room light makes more voltage, until it alone fills the range a ball would need |
 
 *The <u>underlined</u> bound destroys hardware when crossed; the others stop the channel from working and damage nothing.*
@@ -423,15 +423,15 @@ Only the 220 Ω passes 10 % of a rating, and its lower knob bound is derived bel
 
 ```
 P     = I_LED worst² × 220 Ω                  ≈ 23 mW  → 125 mW in an 0805 is 5.3× that
-        at the lower knob bound, 44 mA through 47 Ω ≈ 91 mW  → 73 % of an 0805
+        at the lower knob bound, 37 mA through 56 Ω ≈ 79 mW  → 63 % of an 0805
         half of that 125 mW is reached at            73 Ω, so 82 Ω is the
                                                      E12 value an 0805 carries
-        the lower bound of 42 Ω is derived under the knob bounds below
+        the lower bound of 53 Ω is derived under the knob bounds below
 ```
 
 V<sub>F</sub> rises with the current. Figure 3 gives 1.25 V at 10 mA and 1.46 V at 50 mA on the 25 °C curve, 1.18 and 1.38 V on the 75 °C curve, against the table's 1.2 V typical and 1.4 V maximum at 20 mA. The stock board's diode-range reading of 1.082 V sits on the 25 °C curve at the meter's 0.86 mA. I<sub>F</sub> absolute maximum is 50 mA up to 25 °C, and Figure 1 falls straight from there to 10 mA at 85 °C, so 40 mA is what stands at the 40 °C the sensors are bounded at. The worst case sits 3.9× inside that on the channels at 220 Ω and 1.8× on the three at 100 Ω.
 
-R<sub>min</sub> pairs the **lowest** published V<sub>F</sub> with the **highest** regulator output: both push the current up, and the LED is what must survive it. At 47 Ω the current settles at 44 mA on the 75 °C curve; the wall, 50 mA, sits at 42 Ω.
+R<sub>min</sub> pairs the **lowest** published V<sub>F</sub> with the **highest** regulator output: both push the current up, and the LED is what must survive it. At 56 Ω the current settles at 37 mA on the 75 °C curve. The wall is the 40 mA the LED takes at 40 °C. It sits at 53 Ω.
 
 **Q1 is an AO3400A**, a 5.7 A part switching 202 mA. AOS gives R<sub>DS(on)</sub> as 48 mΩ maximum at V<sub>GS</sub> = 2.5 V and I<sub>D</sub> = 3 A, so the gate, `V_rail × 100 kΩ / 102 kΩ` across R33 and R35 and therefore 3.084 V at V_OUT min, is covered by a specified maximum, and 202 mA through it drops 9.7 mV. The 10 V row rises from 26.5 to 38 mΩ at T<sub>J</sub> = 125 °C, a factor of 1.43, which puts the same drop at 13.9 mV there. V<sub>GS(th)</sub> is 0.65 V min and 1.45 V max, so those 3.084 V clear the worst-case threshold by 1.63 V, against a V<sub>GS</sub> rating of ±12 V.
 
@@ -468,7 +468,7 @@ At that length the contacts dominate, not the wire: four crimped 2.54 mm contact
 
 **What R39 and C6 take off the reference.** The rail is the converters' reference, so whatever the module puts on it enters the reading directly. Two disturbances sit there. In the lit phase the module switches at 500 kHz, where C6 is 0.03 Ω once DC bias halves it and the pair divides by 64 dB. In the dark phase the module runs in power-save at 8 to 17 mA, depending on how much ambient light the channels carry, and FN8373.2 has a comparator refill a 1 % band with bursts of pulses: about 44 mV peak to peak, recurring every 54 to 111 µs, 9 to 19 kHz, where a filter built for 500 kHz takes off almost nothing. The corner therefore sits at 310 Hz, 47 Ω against 11 µF derated, which leaves 1.5 mV of the 44 mV at the 9 kHz end. The reading follows V<sub>REF</sub>, so 1.5 mV of 3383 mV is 0.044 % of it: 0.45 step where ambient fills the channel's range, and under 0.1 step below 230 of the 1024. The branch draws the converters' 1.4 mA, so R39 costs 66 mV of constant offset, which the per-channel calibration absorbs, and the converters run 66 mV below the rail that U3 drives their inputs from, against the 0.6 V above VDD their inputs are rated for. R39 and C6 feed the two converters, so the branch carries their 1.4 mA and the reference sits behind the filter. The rest of the board takes the rail ahead of them: the sensor boards through Pin 1 of every channel connector, and U3's VCC2. The emitters starting to pulse shift the branch's mean, and the filter follows it over five time constants, 2.6 ms, which is what the driver's discarded start-up cycles cover.
 
-An inductor or a ferrite bead in place of R39 works at 500 kHz and does nothing at 9 kHz: 10 µH is 31 Ω at the switching frequency and 0.57 Ω at the burst rate, and a bead of the 600 Ω class sits near its DC resistance there. The dark-phase ripple is what sets the filter, so it is a resistor with a capacitance that puts the corner two decades under 9 kHz.
+An inductor or a ferrite bead in place of R39 works at 500 kHz and does nothing at 9 kHz: 10 µH is 31 Ω at the switching frequency and 0.57 Ω at the burst rate, and a bead of the 600 Ω class sits near its DC resistance there. The dark-phase ripple is what sets the filter, so it is a resistor with a capacitance that puts the corner well under 9 kHz.
 
 **Why the dark reading is subtracted as it stands.**
 
@@ -640,9 +640,9 @@ The pull-down alone limits the phototransistor branch, on a rebuilt board where 
 ```
 220 Ω  lower bounds take V_OUT max and the 75 °C curve of
         Figure 3 for V_F, read at the current each case lands on:
-                             U_R at 50 mA = 3.449 − 1.38           = 2.069 V
-        lower, one channel   R = 2.069 V / 50 mA (I_F max)         =   42 Ω
-                             47 Ω is the E12 value above it
+                             U_R at 40 mA = 3.449 − 1.35           = 2.097 V
+        lower, one channel   R = 2.097 V / 40 mA (I_F max at 40 °C) =  53 Ω
+                             56 Ω is the E12 value above it
         lower, every channel N × I(R) + N × I_C + I_ADC + I_ISO ≤ I_supply,
                              I(R) solved with V_F from the curve.
                              The bench case governs, so the bound is the
@@ -705,7 +705,7 @@ Both parts give I<sub>GSS</sub> as 100 nA maximum, the IRL540N at V<sub>GS</sub>
 One standard value inside each of those walls:
 
 ```
-100 Ω    above the 42 Ω single-channel bound  → 22 mA solving V_F on the LED's curve, 47 mW
+100 Ω    above the 53 Ω single-channel bound  → 22 mA solving V_F on the LED's curve, 47 mW
 390 Ω    below the 431 Ω characterizing point → 4.4 mA at the weakest corner
 2.2 kΩ   twice the 1 kΩ resolution floor      → 80 mV, 24 steps per 36.6 µA
 4.7 kΩ   under the 5.19 kΩ acquisition wall   → 7.6 τ of window, 501 µA of headroom
