@@ -170,7 +170,7 @@
   <!-- ===== R1, in series with the toggle switch ===== -->
   <line x1="726" y1="450" x2="920" y2="450" stroke="#2c3e50" stroke-width="2.5"/>
   <rect x="920" y="440" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text x="955" y="454" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.1 kΩ</text>
+  <text x="955" y="454" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.2 kΩ</text>
   <text x="955" y="432" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
   <line x1="990" y1="450" x2="1036" y2="450" stroke="#2c3e50" stroke-width="2.5"/>
   <circle cx="1040" cy="450" r="4" fill="#2c3e50"/>

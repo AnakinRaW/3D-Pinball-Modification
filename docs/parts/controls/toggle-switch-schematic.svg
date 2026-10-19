@@ -36,7 +36,7 @@
 
   <!-- R1, in series with the switch pin -->
   <rect x="355" y="160" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text x="390" y="175" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.1 kΩ</text>
+  <text x="390" y="175" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.2 kΩ</text>
   <text x="390" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
 
   <!-- wires -->
