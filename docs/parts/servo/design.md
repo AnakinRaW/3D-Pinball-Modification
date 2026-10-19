@@ -9,7 +9,7 @@ This build uses a DFRobot SER0049 9 g micro servo with a clutch. It's planned as
 - The servo moves only between them.
 - The servo moves only on command.
 
-## SER0049 Sservo Motor
+## SER0049 Servo Motor
 
 The SER0049 runs from 4.8 V to 6 V. A pulse of 500 µs turns it to 0°, and a pulse of 2500 µs turns it to 180°. The full sweep varies by up to 10° from servo to servo. A clutch in its gears slips under force from the ball or a hand. After 5 s of blocking, the servo switches its motor off.
 
@@ -31,13 +31,13 @@ A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-PWR. The serv
 
 The Teensy's pin [0](../../pin-assignment.md "Servo signal") drives the servo through the level shifter U1, which turns the 3.3 V pulse into a 5 V pulse. Because the SER0049's datasheet states no input level, a direct drive from the pin was rejected. U1 also protects the Teensy's pin against faults on the servo's cable.
 
-R1 pulls the pin to ground through 10 kΩ. The servo thus gets no pulse from a floating pin. R3 with 2.2 kΩ between the Teensy and U1 protects the Teensy's pin with the machine off and the Teensy on USB. The pin then delivers at most 1.83 mA. R2 with 1 kΩ between U1 and the servo protects U1 against a signal wire shorted to 5 V or ground.
+R1 pulls the pin to ground through 10 kΩ. The servo thus gets no pulse from a floating pin. R3 with 2.2 kΩ between the Teensy and U1 protects the Teensy's pin with the machine off and the Teensy on USB. The pin then delivers at most 1.83 mA. R2 with 1.2 kΩ between U1 and the servo protects U1 against a signal wire shorted to 5 V or ground.
 
 U1 has four buffers. The servo uses one of them. Its enable pin OE sits on ground. Its output is therefore always on. The other three buffers have their input and their enable pin on ground.
 
 ### Supply
 
-The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground at J-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 43.9 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
+The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground at J-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 228 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 
@@ -62,10 +62,10 @@ The driver ensures that the servo cannot be operated outside of the predefined a
 | 1 | DFRobot SER0049, 9 g micro servo with clutch | on the ball separator |
 | 1 | CD74HCT125E quad buffer, DIP-14 | U1, on the servo board |
 | 1 | 10 kΩ resistor | R1, from the pin to GND |
-| 1 | 1 kΩ resistor | R2, from U1's output to the servo's signal wire |
+| 1 | 1.2 kΩ resistor | R2, from U1's output to the servo's signal wire |
 | 1 | 2.2 kΩ resistor | R3, from the pin to U1's input |
 | 1 | 100 nF ceramic capacitor | C2, at U1's supply pin |
-| 1 | 100 µF electrolytic capacitor, 10 V or more | C1, across the servo's supply at the start of its cable |
+| 1 | KEMET ESL107M016AC3AA, 100 µF, 16 V | C1, across the servo's supply at the start of its cable |
 
 ## Appendix: derivations
 
@@ -99,9 +99,14 @@ LEVELS    the Teensy's rail                        3.3 V
           the margin of the low                  = 0.64 V
           R1, from the pin to ground               10 kΩ
           the pin's current into R1, high        = 0.33 mA
+          the least R1 that holds the pin inside
+          the current its levels are specified
+          at                                     = 3.52 kΩ
           the pin's keeper after a reset, at its
           strongest                                105 kΩ
           U1's input against the keeper          = 0.299 V
+          the most R1 that still holds U1's input
+          under its low level against the keeper = 30.2 kΩ
           the unpowered pin, with U1's input
           current through R1                     = 10 mV
           the limit on an unpowered pin            0.31 V
@@ -114,11 +119,14 @@ OFF       with the machine off, the pin's
           diode, at most                         = 1.5 mA
           the pin's whole current then           = 1.83 mA
           U1's clamp current, absolute maximum     20 mA
+          the least R3 that holds the pin inside
+          its 4 mA then                          = 0.97 kΩ
 EDGE      U1's input capacitance                   10 pF
           the wiring at U1's input, estimated      15 pF
           the edge through R3 into both, from
           10 % to 90 %                           = 121 ns
           U1's longest input edge allowed          400 ns
+          the most R3 whose edge stays inside it = 6.93 kΩ
 ```
 
 ### Output
@@ -128,11 +136,17 @@ OUTPUT    U1's supply, from                        4.5 V
           up to                                    5.5 V
           U1's high output at 20 µA, at its
           lowest supply, at least                  4.4 V
-          R2, in the servo's signal wire           1 kΩ
+          R2, in the servo's signal wire           1.2 kΩ
+          its tolerance                            5 %
           U1's output into a shorted signal
-          wire, at its highest supply            = 5.5 mA
+          wire, at its highest supply            = 4.83 mA
           U1's continuous output current,
           absolute maximum                         35 mA
+          the least R2 that holds it there       = 0.166 kΩ
+          the servo's signal wire with its
+          input, estimated                         100 pF
+          the most R2 whose edge there stays
+          inside one step of the pulse           = 21.1 kΩ
 ```
 
 ### Supply
@@ -148,8 +162,11 @@ SUPPLY    the machine's rail, measured             5.0 V
           the feed from the distribution,
           estimated                                0.3 µH
           C1                                       100 µF
-          its working voltage                      10 V
-          the rise at C1 at a sudden stop        = 43.9 mV
+          rated at                                 16 V
+          its impedance, from the listing          230 mΩ
+          the rise at C1 at a sudden stop        = 228 mV
+          the least C1 that keeps the servo
+          under its maximum at a stop            = 0.29 µF
           the rail's floor, where U1 still runs    4.5 V
           the shortfall under the servo's floor  = 0.3 V
           C2, at U1's supply pin                   100 nF
