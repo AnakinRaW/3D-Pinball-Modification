@@ -315,7 +315,7 @@ The sensors beyond the three that come out of the stock machine sit on boards bu
 |---|---|---|---|---|
 | up to 13 | Reflective photointerrupter | not yet chosen | n/a | Emitter and detector |
 
-**The detector for these boards is not settled.** The stock GP2S700HCP is a leadless package which is hard to hand-solder. Thus, the modification favors through-hole sensors. The **OPB606A** and the **QRE1113** are the two candidates.
+**The detector for these boards is not settled.** The stock GP2S700HCP is a leadless package which is hard to hand-solder. Thus, the modification favors through-hole sensors. The two candidates are the **OPB606A/OPB606C** and the **QRE1113**. The OPB606A and the OPB606C are sensitivity grades of one sensor. The A is the more sensitive one.
 
 **The new sensor boards get no collector resistor.** This design reads the node with a converter where the stock board drives a transistor base. This is a completely different design compared to the stock machine making 1.585 kΩ unnecessary. The three boards from the stock machine keep theirs, sacrificing roughly 25 % read performance but therefore keeping boards that already physically fit in the machine.
 

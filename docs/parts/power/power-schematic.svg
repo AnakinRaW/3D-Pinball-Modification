@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1690 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1690" height="780" fill="#ffffff"/>
+<svg viewBox="0 0 1606 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1606" height="780" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Power board</text>
   <text x="30" y="56" font-size="13" fill="#666" data-fig="v_rail">5 V from the adapter to every subsystem, with optional reverse-polarity protection, bulk at the input and an optional fuse for the outputs that draw little current</text>
   <!-- ===== adapter and barrel jack ===== -->
@@ -26,7 +26,7 @@
   <text x="290" y="196" text-anchor="middle" font-size="11.5" fill="#666">in the</text>
   <text x="290" y="230" text-anchor="middle" font-size="11.5" fill="#666">machine</text>
   <!-- ===== board outline ===== -->
-  <rect x="450" y="80" width="1220" height="580" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <rect x="450" y="80" width="1136" height="580" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
   <text x="466" y="104" font-size="15" font-weight="700" fill="#5c4a00">Power board</text>
   <line x1="346" y1="170" x2="484" y2="170" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="346" y1="210" x2="484" y2="210" stroke="#1a1a1a" stroke-width="2.5"/>
@@ -40,7 +40,7 @@
   <circle cx="574" cy="210" r="6" fill="#1a1a1a"/>
   <text x="532" y="174" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V</text>
   <text x="532" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="580" y1="170" x2="1592" y2="170" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="580" y1="170" x2="1508" y2="170" stroke="#c0392b" stroke-width="2.5"/>
   <text x="1016" y="158" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V bus</text>
   <!-- ===== F1, optional fuse in the 5 V of the outputs that draw little current ===== -->
   <rect x="1188" y="162" width="36" height="16" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="5 4"/>
@@ -148,9 +148,9 @@
   <rect x="1300" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="1340" cy="330" r="6" fill="#c0392b"/>
   <circle cx="1340" cy="430" r="6" fill="#1a1a1a"/>
-  <text x="1340" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-AMP</text>
-  <text x="1340" y="380" text-anchor="middle" font-size="11.5" fill="#666">amplifier</text>
-  <text x="1340" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
+  <text x="1340" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-MAIN</text>
+  <text x="1340" y="380" text-anchor="middle" font-size="11.5" fill="#666">Teensy</text>
+  <text x="1340" y="396" text-anchor="middle" font-size="11.5" fill="#666">motherboard</text>
   <line x1="1340" y1="436" x2="1340" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1340" y1="564" x2="836" y2="564" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="564" r="4" fill="#1a1a1a"/>
@@ -159,33 +159,22 @@
   <rect x="1384" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="1424" cy="330" r="6" fill="#c0392b"/>
   <circle cx="1424" cy="430" r="6" fill="#1a1a1a"/>
-  <text x="1424" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-TEENSY</text>
-  <text x="1424" y="380" text-anchor="middle" font-size="11.5" fill="#666">Teensy</text>
-  <text x="1424" y="396" text-anchor="middle" font-size="11.5" fill="#666">motherboard</text>
+  <text x="1424" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-IR</text>
+  <text x="1424" y="380" text-anchor="middle" font-size="11.5" fill="#666">IR main-</text>
+  <text x="1424" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
   <line x1="1424" y1="436" x2="1424" y2="580" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1424" y1="580" x2="836" y2="580" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="580" r="4" fill="#1a1a1a"/>
-  <circle cx="1508" cy="170" r="4" fill="#c0392b"/>
   <line x1="1508" y1="170" x2="1508" y2="324" stroke="#c0392b" stroke-width="2.5"/>
   <rect x="1468" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="1508" cy="330" r="6" fill="#c0392b"/>
   <circle cx="1508" cy="430" r="6" fill="#1a1a1a"/>
-  <text x="1508" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-IR</text>
-  <text x="1508" y="380" text-anchor="middle" font-size="11.5" fill="#666">IR main-</text>
+  <text x="1508" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-DISP</text>
+  <text x="1508" y="380" text-anchor="middle" font-size="11.5" fill="#666">display</text>
   <text x="1508" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
   <line x1="1508" y1="436" x2="1508" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1508" y1="596" x2="836" y2="596" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="836" cy="596" r="4" fill="#1a1a1a"/>
-  <line x1="1592" y1="170" x2="1592" y2="324" stroke="#c0392b" stroke-width="2.5"/>
-  <rect x="1552" y="330" width="80" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <circle cx="1592" cy="330" r="6" fill="#c0392b"/>
-  <circle cx="1592" cy="430" r="6" fill="#1a1a1a"/>
-  <text x="1592" y="360" text-anchor="middle" font-size="13.5" font-weight="700" fill="#333333">J-DISP</text>
-  <text x="1592" y="380" text-anchor="middle" font-size="11.5" fill="#666">display</text>
-  <text x="1592" y="396" text-anchor="middle" font-size="11.5" fill="#666">board</text>
-  <line x1="1592" y1="436" x2="1592" y2="612" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="1592" y1="612" x2="836" y2="612" stroke="#1a1a1a" stroke-width="2.5"/>
-  <circle cx="836" cy="612" r="4" fill="#1a1a1a"/>
   <!-- ===== GND star point ===== -->
   <rect x="824" y="470" width="12" height="170" fill="#1a1a1a"/>
   <circle cx="830" cy="250" r="4" fill="#1a1a1a"/>

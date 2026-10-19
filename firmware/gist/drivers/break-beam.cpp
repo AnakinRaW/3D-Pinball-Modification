@@ -6,13 +6,14 @@ public:
         out_  = &events.attach(queue_, kQueueDepth);
         self_ = this;
         if (!deviceMonitor.watch(Device::BreakBeam, *this)) return false;
-        pinMode(kPin, INPUT_PULLUP);
+        pinMode(kPin, INPUT);                              // R3 pulls the pin up
+        *portControlRegister(kPin) |= IOMUXC_PAD_HYS;      // hysteresis, which INPUT leaves off
         attachInterrupt(digitalPinToInterrupt(kPin), [] { self_->edge(); }, CHANGE);
         return true;
     }
 
     // the state the game logic may query between events
-    bool blocked() const { return digitalReadFast(kPin) == LOW; }
+    bool blocked() const { return digitalReadFast(kPin) == HIGH; }
 
     // gets which parts have failed: bit 0 once the beam has stayed broken for kFailMs
     Fault failed() const override { return {blocked() && elapsedMs(brokenAt_, kFailMs), 0}; }

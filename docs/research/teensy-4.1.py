@@ -100,6 +100,8 @@ ds("vih_frac", 0.7, "", sheet=MCU, src="Table 22, high-level input voltage V_IH 
 ds("r_keeper_min", 105, "kΩ", sheet=MCU, src="Table 22, keeper circuit resistance "
    "minimum, at V_I = 0.3 and 0.7 x NVCC_XXXX; Table 86 gives every edge pin a keeper "
    "on reset")
+ds("i_in_max", 1, "µA", sheet=MCU, src="Table 22, input current with no pull-up or "
+   "pull-down, I_IN, between -1 and 1 µA at V_I = 0 and at NVCC_XXXX")
 ds("i_pu_max", 212, "µA", sheet=MCU, src="Table 22, Pull-up resistor (22 kΩ PU), RPU_22K "
    "at Vin = 0 V, maximum")
 asm("r_pullup", 22, "kΩ", src="the pad pull-up IOMUXC_PAD_PUS(3) selects, which "
