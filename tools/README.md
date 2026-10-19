@@ -78,7 +78,7 @@ Each check reports on a separate line, and any of them can fail the run:
 
 | The run prints | What it checks |
 |---|---|
-| figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
+| figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A declared input agrees digit for digit, so a resistor left at 1.1 kΩ beside a model at 1.2 kΩ fails. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated. A figure of another model is anchored as `model:key`, such as `break-beam:r_e`, so a drawing that carries several subsystems' parts needs no `uses` in the model that owns it |

@@ -899,6 +899,11 @@ class Report:
 
 def tolerance(f: Fig, tok: Token | None) -> Q:
     grid = tok.precision if tok else 0.001
+    # An input is printed as it is typed, so its digits have to agree exactly. The slack of
+    # one unit of the last digit is for rounding a derived figure, and given to an input it
+    # passes a 1.1 kΩ left standing beside a model that moved to 1.2 kΩ.
+    if f.kind in KINDS[:-1] and f.tol_units == 1.0:
+        return Q.of(0, f.unit)
     return Q.of(f.tol_units * grid, f.unit)
 
 
@@ -2351,7 +2356,8 @@ def pass_mutate(model: Model, tokens: list[Token], rep: Report):
     for f in stated:
         for t, _ in saved:
             t.claimed_by = None
-        moved = {id(t): t.value + tolerance(f, t) * 2
+        moved = {id(t): t.value + (tolerance(f, t) * 2 if tolerance(f, t).v
+                                   else Q.of(t.precision, f.unit))
                  for _, _, t in _candidates(f, tokens, None)}
         for t, _ in saved:
             t.claimed_by = None
