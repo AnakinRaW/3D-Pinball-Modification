@@ -40,7 +40,7 @@ fig = MODEL.derived
 SENSOR = "IR-reflective-gp2s700hcp_e.pdf"
 ADC = "MCP3004-3008-Microchip.pdf"
 ISO = "ISO7761-TI.pdf"
-IRL = "IRL540N.PDF"
+IRL = "IRL540N-Infineon.pdf"
 REG = "ISL85415-Renesas.pdf"
 POLOLU = "D24V5Fx-Pololu-schematic.pdf"
 

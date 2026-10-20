@@ -23,8 +23,8 @@ msr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="measured", **kw)
 gr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="graph", **kw)
 fig = MODEL.derived
 
-DIODE = "1n5817.pdf"
-IRL = "IRL540N.PDF"
+DIODE = "1N5817-1N5819-TSC.pdf"
+IRL = "IRL540N-Infineon.pdf"
 
 DRIVE = "The drive channel"
 SENSE = "The sense channel"
@@ -175,9 +175,7 @@ asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contac
 MODEL.uses("v_ball", of="ir-reflective", group="T_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
-# IRL540N, International Rectifier, PD-9.1495. The local copy is an image scan
-# with no text layer, so --sheets cannot look these up and they are read from
-# the rendered page instead.
+# IRL540NPbF, Infineon, Rev. 2.1
 # ===========================================================================
 ds("v_ds_max", 100, "V", sheet=IRL, src="Electrical Characteristics, drain-to-source "
    "breakdown voltage minimum at V_GS = 0 V and I_D = 250 µA",
