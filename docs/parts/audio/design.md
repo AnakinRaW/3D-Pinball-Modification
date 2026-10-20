@@ -13,7 +13,7 @@ The audio subsystem plays the background music and the sound effects through the
 
 The DFR0954 carries a MAX98357A class D amplifier with a built-in DAC. It takes the sound as digital audio over I²S.
 
-The amplifier drives one speaker. I²S always sends two channels. The module mixes both channels into one, at half volume each. The firmware therefore sends the same signal on both, so the speaker gets it at full level.
+The amplifier drives one speaker. I²S always sends two channels. The module plays the left channel. The firmware therefore sends the same signal on both, so the speaker gets it at full level.
 
 ## Circuit
 
