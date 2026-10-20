@@ -322,7 +322,7 @@ The sensors beyond the three that come out of the stock machine sit on boards bu
 
 On the finished system:
 
-- Time the firmware's per-conversion overhead; the phase allows 16.6 µs per channel at sixteen channels.
+- Time the firmware's per-conversion overhead; the phase allows 16.5 µs per channel at sixteen channels.
 
 ## Appendix: derivations
 
@@ -727,5 +727,5 @@ One standard value inside each of those walls:
 - [Pololu D24V5F3](https://www.pololu.com/product/2842): the 3.3 V output within 4 %, the 500 mA rating, the 3.4 V minimum input, the 500 kHz switching frequency with its reduction at light load; its [schematic](../../datasheets/D24V5Fx-Pololu-schematic.pdf) for the ISL85415, the 22 µH inductor, the two 10 µF output capacitors, and COMP and FS tied to VCC
 - [Renesas ISL85415 datasheet](../../datasheets/ISL85415-Renesas.pdf), FN8373.2: internal compensation with COMP at VCC, the loop-bandwidth guidance under 100 kHz with its 75 kHz worked example, the 50 % DC-bias derating advice for ceramic output capacitors, Figures 47 and 48 for the load transient
 - [TI ISO7761 datasheet](../../datasheets/ISO7761-TI.pdf), SLLSER1H: the channel directions of the ISO7761, supply and absolute maximum ratings, the F suffix and its default output state with `t_DO`, the undervoltage lockout thresholds and the undetermined band between them, V<sub>OH</sub> with I<sub>OH</sub>, the input thresholds, the 1.5 MΩ input pull-down of Figure 7-3, the supply current rows at 3.3 V, propagation delay and channel-to-channel skew
-- [IRL540N datasheet](../../datasheets/IRL540N.PDF), PD-9.1495: R<sub>DS(on)</sub> against gate voltage, the typical 3.0 V curve of Fig. 1, gate threshold voltage, total gate charge, `I_GSS` of ±100 nA at V<sub>GS</sub> = ±16 V, the junction limit and the thermal resistance
+- [IRL540N datasheet](../../datasheets/IRL540N-Infineon.pdf), Infineon IRL540NPbF Rev. 2.1: R<sub>DS(on)</sub> against gate voltage, the typical 3.0 V curve of Fig. 1, gate threshold voltage, total gate charge, `I_GSS` of ±100 nA at V<sub>GS</sub> = ±16 V, the junction limit and the thermal resistance
 - [NXP IMXRT1060CEC](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 7 for the `Vin/Vout` absolute maximum of `OVDD + 0.31 V`, Table 10 for the NVCC_GPIO range and Table 22 for V<sub>OH</sub> against I<sub>OH</sub>

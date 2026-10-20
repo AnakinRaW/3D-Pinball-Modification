@@ -112,7 +112,7 @@ ds("i_awg22_max", 7, "A", src=f"{AMPS}, 22 AWG", stated=False)
 # ===========================================================================
 USB = "Universal Serial Bus Specification Revision 2.0"
 ds("v_usb_min", 4.75, "V", src=f"{USB}, Table 7-7: VBUS at a high-power port, minimum",
-   group="FLOORS", section=FLOORS, stated=True)
+   group="FLOORS", section=FLOORS, label="at least", stated=True)
 ds("i_usb_max", 500, "mA", src=f"{USB}, 7.2.1: the most a high-power port supplies, five "
    "unit loads", group="FLOORS", section=FLOORS, stated=True)
 
@@ -598,7 +598,7 @@ def _(v_bus_6a, i_stall, r_lead, vcc_u1_min, n_bulk):
 
 # The least of the allowances is the ceiling a replacement part's listed impedance has
 # to stay under.
-@fig("z_allow", "mΩ", group="ALLOW", section=ALLOW, prints="down",
+@fig("z_allow", "mΩ", group="ALLOW", section=ALLOW, label="listed impedance", prints="down",
      rises_with=["v_jack_min", "n_bulk"], falls_with=["i_supply_6a", "rdson_q1", "r_board"])
 def _(z_allow_light, z_allow_sol, z_allow_servo):
     return min(z_allow_light, z_allow_sol, z_allow_servo)

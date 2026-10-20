@@ -182,7 +182,7 @@ ds("v_ds_max", 100, "V", sheet=IRL, src="Electrical Characteristics, drain-to-so
    group="V_DRAIN", section=DRIVE, stated=True)
 ds("v_gs_max", 16, "V", sheet=IRL, src="Absolute Maximum Ratings, gate-to-source "
    "voltage, ±16 V", group="V_GATE", section=DRIVE, stated=True)
-ds("i_d_max", 21, "A", sheet=IRL, src="Absolute Maximum Ratings, continuous drain "
+ds("i_d_max", 26, "A", sheet=IRL, src="Absolute Maximum Ratings, continuous drain "
    "current at T_C = 100 °C", group="I_CH", section=DRIVE, stated=True)
 ds("v_gs_spec_min", 4.0, "V", sheet=IRL, src="Electrical Characteristics, the lowest "
    "gate voltage the sheet specifies R_DS(on) at, 0.063 Ω", group="Drive", stated="loose")
@@ -209,17 +209,16 @@ asm("t_amb", 40, "°C", src="the highest air temperature inside the machine, the
     "IR design assumes for its sensors", group="P_Q", section=DRIVE, stated=True)
 
 # ===========================================================================
-# 1N5819, STMicroelectronics, DocID 6262 Rev 5, the 1N5819 column
+# 1N5819, Taiwan Semiconductor, Version H2104, the 1N5819 column
 # ===========================================================================
-ds("v_rrm", 40, "V", sheet=DIODE, src="Table 2 absolute ratings, repetitive peak "
+ds("v_rrm", 40, "V", sheet=DIODE, src="Absolute Maximum Ratings, repetitive peak "
    "reverse voltage, 1N5819 column", group="V_DRAIN", section=DRIVE, stated=True)
-ds("i_f_av", 1, "A", sheet=DIODE, src="Table 2 absolute ratings, average forward "
-   "current at T_L = 125 °C", group="I_CH", section=DRIVE, stated=True)
-ds("i_fsm", 25, "A", sheet=DIODE, src="Table 2 absolute ratings, surge "
-   "non-repetitive forward current, t_p = 10 ms sinusoidal",
+ds("i_f_av", 1, "A", sheet=DIODE, src="Absolute Maximum Ratings, forward current", group="I_CH", section=DRIVE, stated=True)
+ds("i_fsm", 30, "A", sheet=DIODE, src="Absolute Maximum Ratings, surge peak "
+   "forward current, 8.3 ms single half sine wave",
    group="I_CH", section=DRIVE, stated=True)
-ds("v_f_diode", 0.55, "V", sheet=DIODE, src="Table 4 static electrical "
-   "characteristics, forward voltage drop at I_F = 1 A and T_j = 25 °C, "
+ds("v_f_diode", 0.60, "V", sheet=DIODE, src="Electrical Specifications, "
+   "forward voltage maximum at I_F = 1 A and T_J = 25 °C, "
    "1N5819 column", group="V_DRAIN", section=DRIVE, stated=True)
 
 

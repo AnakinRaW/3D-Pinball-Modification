@@ -155,7 +155,7 @@ V_KICK    a step on the drain lifts the gate through
           which is the clamped switch-off:
           input capacitance                       1800 pF
           reverse transfer capacitance            170 pF
-          5.55 V × 170 pF / 1800 pF             = 0.524 V
+          5.60 V × 170 pF / 1800 pF             = 0.529 V
           the gate threshold, lowest              1.0 V
           R_gate to ground × 1800 pF, over which a
           drain step has to be short for that
@@ -164,8 +164,8 @@ V_KICK    a step on the drain lifts the gate through
           when the rail comes up behind C91
 V_DRAIN   the machine's rail, measured            5 V
           a stock coil kicks down to, measured   4.4 V
-          the diode's forward drop at 1 A         0.55 V
-          the drain at switch-off, clamped      = 5.55 V
+          the diode's forward drop at 1 A         0.60 V
+          the drain at switch-off, clamped      = 5.60 V
           the MOSFET's drain-source rating        100 V
           the diode's reverse rating              40 V
 P_Q       R_DS(on), typical, read off the 2.5 V
@@ -182,8 +182,8 @@ P_Q       R_DS(on), typical, read off the 2.5 V
 I_CH      the coil, measured                      0.68 A
           the scoop's coil                         0.8 A
           the diode's average forward current      1 A
-          its surge rating                        25 A
-          the MOSFET's continuous drain current   21 A
+          its surge rating                        30 A
+          the MOSFET's continuous drain current   26 A
 I_FEED    3 stock channels at 0.68 A plus the
           scoop's 0.8 A, the unarbitrated demand
           the protection interrupts             = 2.84 A
@@ -261,7 +261,7 @@ C_BULK    the most the Teensy's VIN takes         5.5 V
           its impedance, from the listing         230 mΩ
           0.8 A across the feed into C91, the
           rail lifted at switch-off             = 228 mV
-          the drain then                        = 5.78 V
+          the drain then                        = 5.83 V
           the board's own copper with C91
           unfitted, estimated                      2 nF
           the same charge into that instead     = 9.80 V
@@ -310,8 +310,8 @@ HOLD      the watchdog timeout, after which the
 - [`research/Rokr/3_bumper-control.md`](../../research/Rokr/3_bumper-control.md): the coil measurements, the contact resistance, the conductive-foil mechanism, the stock trigger circuit and the wiring that leaves the stock board
 - [`research/Rokr/1_power-supply.md`](../../research/Rokr/1_power-supply.md): the machine's 5 V rail and the stock load inventory
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): 3.3 V logic, the per-pin current, the 3.3 V rail available to external circuits, and what reaches an unpowered pin
-- [International Rectifier IRL540N](../../datasheets/IRL540N.PDF), PD-9.1495: the ratings, the gate threshold, the capacitances, the typical output curve at 2.5 V and the thermal resistance
-- [STMicroelectronics 1N5817, 1N5818, 1N5819](../../datasheets/1n5817.pdf), DocID 6262 Rev 5: the 1N5819 column of the ratings and static characteristics tables
+- [Infineon IRL540NPbF](../../datasheets/IRL540N-Infineon.pdf), Rev. 2.1: the ratings, the gate threshold, the capacitances, the typical output curve at 2.5 V and the thermal resistance
+- [Taiwan Semiconductor 1N5817 to 1N5819](../../datasheets/1N5817-1N5819-TSC.pdf), Version H2104: the 1N5819 column of the absolute maximum ratings and the electrical specifications
 - [NXP i.MX RT1060 Crossover Processors for Consumer Products](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: the GPIO high-level input voltage, given as 0.7 × NVCC_XXXX
 - [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs

@@ -232,14 +232,14 @@ FLOORS    what the lighting's buffers need         4.5 V
           at 6 A                                 = 4.42 V
           what a stock coil kicks down to          4.4 V
           D1 in front of the Teensy's VIN, a
-          1N5819, at most                          0.55 V
-          the Teensy's VIN at 6 A                = 4.16 V
+          1N5819, at most                          0.60 V
+          the Teensy's VIN at 6 A                = 4.11 V
           what it needs                            3.6 V
           on USB alone, a high-power port gives
           at least                                 4.75 V
           and at most                              500 mA
           D2 from VUSB to VIN, the same 1N5819
-          the Teensy's VIN on USB alone          = 4.20 V
+          the Teensy's VIN on USB alone          = 4.15 V
           the IR mainboard's module at 6 A       = 4.75 V
           what it needs                            3.4 V
           the display at 6 A                     = 4.77 V
