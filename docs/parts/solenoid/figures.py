@@ -20,11 +20,11 @@ ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
 dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
 asm = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="assumed", **kw)
 msr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="measured", **kw)
+gr = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="graph", **kw)
 fig = MODEL.derived
 
-MOSFET = "AO3400A-AOS.pdf"
-DIODE = "1n5817.pdf"
-IRL = "IRL540N.PDF"
+DIODE = "1N5817-1N5819-TSC.pdf"
+IRL = "IRL540N-Infineon.pdf"
 
 DRIVE = "The drive channel"
 SENSE = "The sense channel"
@@ -59,6 +59,13 @@ msr("r_contact", 30, "Ω", src="the ball's path from foil to shell, measured at 
 # what the Teensy and the firmware bring
 # ===========================================================================
 MODEL.uses("v_3v3", of="teensy-4.1", group="V_GATE", section=DRIVE, stated=True)
+MODEL.uses("v_3v3_acc", of="teensy-4.1", group="V_GATE", section=DRIVE, stated=True)
+MODEL.uses("v_3v3_min", of="teensy-4.1")
+MODEL.uses("v_3v3_max", of="teensy-4.1")
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", group="V_GATE", section=DRIVE, stated=True)
+MODEL.input("p_kit", 0.25, "W", kind="datasheet", src="the same kit and page: power rating 0.25 W", group="I_FOIL", section=SENSE, stated=True)
+MODEL.input("p_derate", 50, "%", kind="decision", src="the derating target for resistor power in the design-review skill, at most half the rating", stated=False)
+MODEL.uses("v_jack_max", of="power", group="R_S", section=SENSE, stated=True)
 MODEL.uses("v_not_tolerant", of="teensy-4.1")
 MODEL.uses("i_pin_max", of="teensy-4.1", group="I_PIN", section=DRIVE, stated=True)
 MODEL.uses("i_teensy_3v3", of="teensy-4.1", group="I_FOIL", section=SENSE, stated=True)
@@ -82,33 +89,38 @@ MODEL.uses("ball_diameter", of="ir-reflective", group="T_SENSE", section=SENSE, 
 dec("n_drive", 4, "", stated=False,
     src="the three sensed solenoids plus the one unsensed solenoid")
 dec("n_sense", 3, "", stated=False, src="one sense line per sensed solenoid's shell")
-dec("r_gate", 1.1, "kΩ", src="chosen so the gate still clears the voltage R_DS(on) is "
-    "specified at against the power ground's rise, while the pin stays under its 4 mA at "
-    "the switching moment; 1.1 kΩ from inside that window because it is on hand",
+dec("r_gate", 1.2, "kΩ", src="chosen so the gate still clears the voltage R_DS(on) is "
+    "read at against the power ground's rise, while the pin stays under its 4 mA at "
+    "the switching moment: the 1.2 kΩ of the resistor kit",
     group="I_PIN", section=DRIVE, stated=True)
 dec("r_gate_pd", 10, "kΩ", src="chosen to hold the gate under the lowest turn-on "
     "threshold against the pin's keeper after a reset, while the divider it forms with "
     "R_gate still leaves the gate above the voltage R_DS(on) is specified at; it is "
     "the value R31 to R33 and R41 to R43 carry, so the board holds one resistor value "
-    "fewer", group="V_GATE", section=DRIVE, stated=True)
+    "fewer: the 10 kΩ of the resistor kit", group="V_GATE", section=DRIVE, stated=True)
 dec("r_pulldown", 10, "kΩ", src="chosen to hold the sense node at ground with no "
-    "ball on the shell, at a fraction of a milliamp when one is",
-    group="V_SENSE", section=SENSE, stated=True)
+    "ball on the shell, at a fraction of a milliamp when one is: the 10 kΩ of the "
+    "resistor kit", group="V_SENSE", section=SENSE, stated=True)
 dec("r_series", 10, "kΩ", src="chosen so a sense wire meeting a coil wire drives "
     "under a milliamp into the pin even with the Teensy unpowered, where the ceiling "
     "is 0.31 V rather than the rail plus that; the pin draws nothing, so the value "
-    "costs no sense level", group="R_S", section=SENSE, stated=True)
+    "costs no sense level and nothing bounds it from above: the 10 kΩ of the resistor kit",
+    group="R_S", section=SENSE, stated=True)
 dec("r_foil", 330, "Ω", src="chosen to bound what the foil can draw from the Teensy's "
     "3.3 V rail if it reaches ground, at a value whose own fault dissipation stays "
-    "well inside an 0805 and which still leaves level with all three contacts closed",
-    group="V_SENSE", section=SENSE, stated=True)
-dec("c_bulk", 100, "µF", src="chosen so the bulk per ampere of solenoid stays above "
-    "what the stock machine runs on, which is the one working instance of these "
-    "coils on this rail", group="C_BULK", section=SUPPLY, stated=True)
-dec("v_cap_rating", 10, "V", src="the working voltage C91 is bought at, twice the "
-    "rail it sits across", group="C_BULK", section=SUPPLY, stated=True)
-dec("c_filter", 10, "nF", src="chosen with r_pulldown for a settling time far under "
-    "how long a ball rests on a shell", group="T_SENSE", section=SENSE, stated=True)
+    "well inside half the kit's rating and which still leaves level with all three contacts closed: "
+    "the 330 Ω of the resistor kit", group="V_SENSE", section=SENSE, stated=True)
+C91 = "KEMET ESL107M016AC3AA"
+dec("c_c91", 100, "µF", src=f"C91, {C91}, 100 µF 16 V: the smallest standard value "
+    "above the 67 µF the stock ratio below asks for", group="C_BULK", section=SUPPLY,
+    stated=True)
+ds("z_c91", 230, "mΩ", src=f"{C91}, ESR at 100 kHz, as DigiKey lists it from the ESL "
+   "sheet", group="C_BULK", section=SUPPLY, stated=True)
+ds("v_c91_rating", 16, "V", src=f"{C91}, rated voltage", group="C_BULK", section=SUPPLY,
+   stated=True)
+dec("c_filter", 100, "nF", src="chosen with r_pulldown for a settling time under how "
+    "long a ball rests on a shell, at the value every other ceramic of the build has",
+    group="T_SENSE", section=SENSE, stated=True)
 dec("t_contact_fail", 2, "s", stated=False, src="how long a sensed solenoid's contact may stay closed before the driver "
     "reports DeviceFailed, far longer than a ball touches a shell")
 dec("t_on_max", 30, "ms", src="the ceiling the driver enforces on one pull-in, "
@@ -163,67 +175,56 @@ asm("r_lead", 0.1, "Ω", src="one wire of the build's cables with its two contac
 MODEL.uses("v_ball", of="ir-reflective", group="T_SENSE", section=SENSE, stated=True)
 
 # ===========================================================================
-# AO3400A, Alpha & Omega Semiconductor, Rev 3.1
+# IRL540NPbF, Infineon, Rev. 2.1
 # ===========================================================================
-ds("v_ds_max", 30, "V", sheet=MOSFET, src="absolute maximum ratings, drain-source "
-   "voltage", group="V_DRAIN", section=DRIVE, stated=True)
-ds("v_gs_max", 12, "V", sheet=MOSFET, src="absolute maximum ratings, gate-source "
-   "voltage, ±12 V", group="V_GATE", section=DRIVE, stated=True)
-ds("i_d_max", 5.7, "A", sheet=MOSFET, src="absolute maximum ratings, continuous "
-   "drain current at T_A = 25 °C", group="I_CH", section=DRIVE, stated=True)
-ds("rdson", 48, "mΩ", sheet=MOSFET, src="static parameters, R_DS(on) maximum at "
-   "V_GS = 2.5 V and I_D = 3 A, the lowest gate voltage the sheet specifies",
+ds("v_ds_max", 100, "V", sheet=IRL, src="Electrical Characteristics, drain-to-source "
+   "breakdown voltage minimum at V_GS = 0 V and I_D = 250 µA",
+   group="V_DRAIN", section=DRIVE, stated=True)
+ds("v_gs_max", 16, "V", sheet=IRL, src="Absolute Maximum Ratings, gate-to-source "
+   "voltage, ±16 V", group="V_GATE", section=DRIVE, stated=True)
+ds("i_d_max", 26, "A", sheet=IRL, src="Absolute Maximum Ratings, continuous drain "
+   "current at T_C = 100 °C", group="I_CH", section=DRIVE, stated=True)
+ds("v_gs_spec_min", 4.0, "V", sheet=IRL, src="Electrical Characteristics, the lowest "
+   "gate voltage the sheet specifies R_DS(on) at, 0.063 Ω", group="Drive", stated="loose")
+gr("v_gs_rdson", 2.5, "V", sheet=IRL, src="Fig. 1, typical output characteristics at "
+   "T_J = 25 °C, its lowest curve", group="V_GATE", section=DRIVE, stated=True)
+gr("rdson", 120, "mΩ", sheet=IRL, src="Fig. 1, the 2.5 V curve passes I_D = 1 A at "
+   "V_DS = 0.12 V; a typical figure, since the sheet guarantees none below 4.0 V",
    group="P_Q", section=DRIVE, stated=True)
-ds("v_gs_rdson", 2.5, "V", sheet=MOSFET, src="static parameters, the gate voltage "
-   "the 48 mΩ row is specified at; clearing V_GS(th) means conducting, clearing "
-   "this means conducting at a resistance the sheet guarantees",
+ds("vgsth_min", 1.0, "V", sheet=IRL, src="Electrical Characteristics, gate threshold "
+   "voltage minimum at V_DS = V_GS and I_D = 250 µA",
+   group="V_KICK", section=DRIVE, stated=True)
+ds("vgsth_max", 2.0, "V", sheet=IRL, src="the same row, maximum",
    group="V_GATE", section=DRIVE, stated=True)
-ds("vgsth_min", 0.65, "V", sheet=MOSFET, src="static parameters, gate threshold "
-   "voltage minimum", group="V_KICK", section=DRIVE, stated=True)
-ds("vgsth_max", 1.45, "V", sheet=MOSFET, src="static parameters, gate threshold "
-   "voltage maximum", group="V_GATE", section=DRIVE, stated=True)
-ds("c_iss", 630, "pF", sheet=MOSFET, src="dynamic parameters, input capacitance at "
-   "V_GS = 0 V, V_DS = 15 V, f = 1 MHz", group="V_KICK", section=DRIVE, stated=True)
-ds("c_rss", 50, "pF", sheet=MOSFET, src="dynamic parameters, reverse transfer "
-   "capacitance at the same condition", group="V_KICK", section=DRIVE, stated=True)
-# ---------------------------------------------------------------------------
-# IRL540N, International Rectifier, the through-hole variant. The local copy is
-# an image scan with no text layer, so --sheets cannot look these up and they
-# are read from the rendered page instead.
-# ---------------------------------------------------------------------------
-ds("c_iss_th", 1800, "pF", sheet=IRL, src="Electrical Characteristics, input "
-   "capacitance typical at V_GS = 0 V, V_DS = 25 V, f = 1.0 MHz",
+ds("c_iss", 1800, "pF", sheet=IRL, src="Electrical Characteristics, input capacitance "
+   "typical at V_GS = 0 V, V_DS = 25 V and f = 1.0 MHz",
    group="V_KICK", section=DRIVE, stated=True)
-ds("c_rss_th", 170, "pF", sheet=IRL, src="the same table, reverse transfer "
-   "capacitance", group="V_KICK", section=DRIVE, stated=True)
-ds("vgsth_min_th", 1.0, "V", sheet=IRL, src="the same table, gate threshold voltage "
-   "minimum at V_DS = V_GS, I_D = 250 µA",
+ds("c_rss", 170, "pF", sheet=IRL, src="the same table, reverse transfer capacitance",
    group="V_KICK", section=DRIVE, stated=True)
-
-ds("p_d_mosfet", 1.4, "W", sheet=MOSFET, src="thermal characteristics, power "
-   "dissipation at T_A = 25 °C", group="P_Q", section=DRIVE, stated=True)
+ds("t_j_max", 175, "°C", sheet=IRL, src="Absolute Maximum Ratings, operating junction "
+   "temperature, maximum", group="P_Q", section=DRIVE, stated=True)
+ds("r_th_ja", 62, "°C/W", sheet=IRL, src="Thermal Resistance, junction-to-ambient, maximum",
+   group="P_Q", section=DRIVE, stated=True)
+asm("t_amb", 40, "°C", src="the highest air temperature inside the machine, the 40 °C the "
+    "IR design assumes for its sensors", group="P_Q", section=DRIVE, stated=True)
 
 # ===========================================================================
-# 1N5819, STMicroelectronics, DocID 6262 Rev 5, the 1N5819 column
+# 1N5819, Taiwan Semiconductor, Version H2104, the 1N5819 column
 # ===========================================================================
-ds("v_rrm", 40, "V", sheet=DIODE, src="Table 2 absolute ratings, repetitive peak "
+ds("v_rrm", 40, "V", sheet=DIODE, src="Absolute Maximum Ratings, repetitive peak "
    "reverse voltage, 1N5819 column", group="V_DRAIN", section=DRIVE, stated=True)
-ds("i_f_av", 1, "A", sheet=DIODE, src="Table 2 absolute ratings, average forward "
-   "current at T_L = 125 °C", group="I_CH", section=DRIVE, stated=True)
-ds("i_fsm", 25, "A", sheet=DIODE, src="Table 2 absolute ratings, surge "
-   "non-repetitive forward current, t_p = 10 ms sinusoidal",
+ds("i_f_av", 1, "A", sheet=DIODE, src="Absolute Maximum Ratings, forward current", group="I_CH", section=DRIVE, stated=True)
+ds("i_fsm", 30, "A", sheet=DIODE, src="Absolute Maximum Ratings, surge peak "
+   "forward current, 8.3 ms single half sine wave",
    group="I_CH", section=DRIVE, stated=True)
-ds("v_f_diode", 0.55, "V", sheet=DIODE, src="Table 4 static electrical "
-   "characteristics, forward voltage drop at I_F = 1 A and T_j = 25 °C, "
+ds("v_f_diode", 0.60, "V", sheet=DIODE, src="Electrical Specifications, "
+   "forward voltage maximum at I_F = 1 A and T_J = 25 °C, "
    "1N5819 column", group="V_DRAIN", section=DRIVE, stated=True)
 
 
 # ===========================================================================
-# the sense channel's resistor package
+# the stock machine's bulk at its power entry
 # ===========================================================================
-ds("p_0805", 125, "mW", src="the 25 °C free-air rating of an 0805 thick-film resistor",
-   group="I_FOIL", section=SENSE, stated=True)
-
 msr("c_stock", 200, "µF", src="two radial electrolytics marked 100 10V VT in parallel "
     "at the stock power entry, read from their markings in research/Rokr/1_power-supply.md",
     group="C_BULK", section=SUPPLY, stated=True)
@@ -239,14 +240,37 @@ def _(r_gate, r_gate_pd):
     return r_gate + r_gate_pd
 
 
-@fig("v_gate", "V", group="V_GATE", section=DRIVE,
-     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate"])
-def _(v_3v3, r_gate_pd, r_gate):
-    return v_3v3 * r_gate_pd / (r_gate + r_gate_pd)
+# Each resistor at the end of its tolerance that hurts the figure it enters.
+@fig("r_gate_lo", "kΩ", stated=False, rises_with=["r_gate"], falls_with=["kit_tol"])
+def _(r_gate, kit_tol):
+    return r_gate * (1 - kit_tol)
 
 
-@fig("v_gate_margin", "mV", group="V_GATE", section=DRIVE,
-     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "v_gs_rdson"])
+@fig("r_gate_hi", "kΩ", stated=False, rises_with=["r_gate", "kit_tol"])
+def _(r_gate, kit_tol):
+    return r_gate * (1 + kit_tol)
+
+
+@fig("r_gate_pd_lo", "kΩ", stated=False, rises_with=["r_gate_pd"], falls_with=["kit_tol"])
+def _(r_gate_pd, kit_tol):
+    return r_gate_pd * (1 - kit_tol)
+
+
+@fig("r_gate_pd_hi", "kΩ", stated=False, rises_with=["r_gate_pd", "kit_tol"])
+def _(r_gate_pd, kit_tol):
+    return r_gate_pd * (1 + kit_tol)
+
+
+# The gate while it is on, at its lowest: the rail at its low end, R_gate at its high end and
+# R_gate to ground at its low end.
+@fig("v_gate", "V", group="V_GATE", section=DRIVE, prints="down",
+     rises_with=["v_3v3_min", "r_gate_pd"], falls_with=["r_gate", "kit_tol"])
+def _(v_3v3_min, r_gate_pd_lo, r_gate_hi):
+    return v_3v3_min * r_gate_pd_lo / (r_gate_hi + r_gate_pd_lo)
+
+
+@fig("v_gate_margin", "mV", group="V_GATE", section=DRIVE, prints="down",
+     rises_with=["v_3v3_min", "r_gate_pd"], falls_with=["r_gate", "kit_tol", "v_gs_rdson"])
 def _(v_gate, v_gs_rdson):
     return v_gate - v_gs_rdson
 
@@ -254,33 +278,48 @@ def _(v_gate, v_gs_rdson):
 # A reset during a pull-in leaves the keeper holding the pin high against the
 # two resistors to ground.
 @fig("v_pin_keeper", "V", group="V_GATE", section=DRIVE, prints="up",
-     rises_with=["v_3v3", "r_gate", "r_gate_pd"], falls_with=["r_keeper_min"])
-def _(v_3v3, r_gate, r_gate_pd, r_keeper_min):
-    return v_3v3 * (r_gate + r_gate_pd) / (r_keeper_min + r_gate + r_gate_pd)
+     rises_with=["v_3v3_max", "r_gate", "r_gate_pd", "kit_tol"], falls_with=["r_keeper_min"])
+def _(v_3v3_max, r_gate_hi, r_gate_pd_hi, r_keeper_min):
+    return v_3v3_max * (r_gate_hi + r_gate_pd_hi) / (r_keeper_min + r_gate_hi + r_gate_pd_hi)
 
 
 @fig("v_gate_keeper", "V", group="V_GATE", section=DRIVE, prints="up",
-     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_keeper_min", "r_gate"])
-def _(v_3v3, r_gate, r_gate_pd, r_keeper_min):
-    return v_3v3 * r_gate_pd / (r_keeper_min + r_gate + r_gate_pd)
+     rises_with=["v_3v3_max", "r_gate_pd"], falls_with=["r_keeper_min", "r_gate"])
+def _(v_3v3_max, r_gate_lo, r_gate_pd_hi, r_keeper_min):
+    return v_3v3_max * r_gate_pd_hi / (r_keeper_min + r_gate_lo + r_gate_pd_hi)
 
 
-@fig("v_il", "V", group="V_GATE", section=DRIVE,
-     rises_with=["v_3v3", "vil_frac"])
-def _(v_3v3, vil_frac):
-    return v_3v3 * vil_frac
+@fig("v_il", "V", group="V_GATE", section=DRIVE, prints="down",
+     rises_with=["v_3v3_min", "vil_frac"])
+def _(v_3v3_min, vil_frac):
+    return v_3v3_min * vil_frac
+
+
+# The most R_gate to ground whose high end still holds the gate under the lowest turn-on
+# threshold against the keeper, with R_gate at its low end.
+@fig("r_gate_pd_max", "kΩ", group="V_GATE", section=DRIVE, prints="down",
+     rises_with=["vgsth_min", "r_keeper_min", "r_gate"], falls_with=["v_3v3_max", "kit_tol"])
+def _(vgsth_min, r_keeper_min, r_gate_lo, v_3v3_max, kit_tol):
+    return vgsth_min * (r_keeper_min + r_gate_lo) / ((v_3v3_max - vgsth_min) * (1 + kit_tol))
 
 
 @fig("i_pin_peak", "mA", group="I_PIN", section=DRIVE,
-     rises_with=["v_3v3"], falls_with=["r_gate"])
-def _(v_3v3, r_gate):
-    return v_3v3 / r_gate
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["r_gate"])
+def _(v_3v3_max, r_gate_lo):
+    return v_3v3_max / r_gate_lo
 
 
 @fig("i_pin_hold", "µA", group="I_PIN", section=DRIVE,
-     rises_with=["v_3v3"], falls_with=["r_gate", "r_gate_pd"])
-def _(v_3v3, r_gate, r_gate_pd):
-    return v_3v3 / (r_gate + r_gate_pd)
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["r_gate", "r_gate_pd"])
+def _(v_3v3_max, r_gate_lo, r_gate_pd_lo):
+    return v_3v3_max / (r_gate_lo + r_gate_pd_lo)
+
+
+# The least R_gate whose low end holds the pin inside what PJRC allows at the switching moment.
+@fig("r_gate_min", "kΩ", group="I_PIN", section=DRIVE, prints="up",
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["i_pin_max"])
+def _(v_3v3_max, i_pin_max, kit_tol):
+    return v_3v3_max / (i_pin_max * (1 - kit_tol))
 
 
 @fig("v_kick", "V", group="V_KICK", section=DRIVE,
@@ -290,15 +329,9 @@ def _(v_drain_off, c_rss, c_iss):
 
 
 @fig("t_gate", "µs", group="I_PIN", section=DRIVE,
-     rises_with=["r_gate", "c_iss"])
-def _(r_gate, c_iss):
-    return r_gate * c_iss
-
-
-@fig("v_kick_th", "V", group="V_KICK", section=DRIVE,
-     rises_with=["v_5v", "v_f_diode", "c_rss_th"], falls_with=["c_iss_th"])
-def _(v_drain_off, c_rss_th, c_iss_th):
-    return v_drain_off * c_rss_th / c_iss_th
+     rises_with=["r_gate", "kit_tol", "c_iss"])
+def _(r_gate_hi, c_iss):
+    return r_gate_hi * c_iss
 
 
 @fig("t_gate_decay", "µs", group="V_KICK", section=DRIVE,
@@ -323,6 +356,12 @@ def _(i_coil_scoop, rdson):
      rises_with=["i_coil_scoop", "rdson"])
 def _(i_coil_scoop, rdson):
     return i_coil_scoop * i_coil_scoop * rdson
+
+
+@fig("t_j_q", "°C", group="P_Q", section=DRIVE, prints="up",
+     rises_with=["t_amb", "i_coil_scoop", "rdson", "r_th_ja"])
+def _(t_amb, p_mosfet, r_th_ja):
+    return t_amb + p_mosfet * r_th_ja
 
 
 # The most that pulls at once in play: two bumpers off one ball, and the scoop ejecting
@@ -422,6 +461,53 @@ def _(ball_diameter, v_ball):
     return ball_diameter / v_ball
 
 
+# The least R_pulldown whose low end keeps the pin above its high level with all three
+# contacts closed, R91 at its high end; the rail scales both sides and drops out.
+@fig("r_pulldown_min", "kΩ", group="V_SENSE", section=SENSE, prints="up",
+     rises_with=["vih_frac", "r_contact", "n_sense", "r_foil", "kit_tol"])
+def _(vih_frac, r_contact, n_sense, r_foil, kit_tol):
+    return (vih_frac * (r_contact + n_sense * r_foil * (1 + kit_tol))
+            / ((1 - vih_frac) * (1 - kit_tol)))
+
+
+# The most R91 whose high end still does that, with R_pulldown at its low end.
+@fig("r_foil_max", "kΩ", group="V_SENSE", section=SENSE, prints="down",
+     rises_with=["r_pulldown"], falls_with=["vih_frac", "r_contact", "n_sense", "kit_tol"])
+def _(r_pulldown, vih_frac, r_contact, n_sense, kit_tol):
+    return ((r_pulldown * (1 - kit_tol) * (1 - vih_frac) / vih_frac - r_contact)
+            / (n_sense * (1 + kit_tol)))
+
+
+# The least R91 whose low end keeps a foil held at ground, the rail at its high end, under
+# the share of the kit's rating every resistor is held to.
+@fig("r_foil_min", "Ω", group="I_FOIL", section=SENSE, prints="up",
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["p_kit", "p_derate"])
+def _(v_3v3_max, p_kit, p_derate, kit_tol):
+    return v_3v3_max * v_3v3_max / (p_kit * p_derate * (1 - kit_tol))
+
+
+# The least series resistor whose low end holds a sense wire on a coil wire under PJRC's
+# milliamp into an unpowered pin, with the rail where the adapter puts it with no load.
+@fig("r_series_min", "kΩ", group="R_S", section=SENSE, prints="up",
+     rises_with=["v_jack_max", "kit_tol"], falls_with=["v_clamp_over", "i_pin_fault_max"])
+def _(v_jack_max, v_clamp_over, i_pin_fault_max, kit_tol):
+    return (v_jack_max - v_clamp_over) / (i_pin_fault_max * (1 - kit_tol))
+
+
+# The most R_pulldown whose high end still lets the node fall inside one contact.
+@fig("r_pulldown_max", "kΩ", group="T_SENSE", section=SENSE, prints="down",
+     rises_with=["ball_diameter"], falls_with=["v_ball", "c_filter", "kit_tol"])
+def _(t_contact, c_filter, kit_tol):
+    return t_contact / (c_filter * (1 + kit_tol))
+
+
+# The largest filter whose node still falls inside one contact, the ceiling on C_filter.
+@fig("c_filter_max", "nF", group="T_SENSE", section=SENSE, prints="down",
+     rises_with=["ball_diameter"], falls_with=["v_ball", "r_pulldown"])
+def _(t_contact, r_pulldown):
+    return t_contact / r_pulldown
+
+
 # ===========================================================================
 # derived: the coil
 # ===========================================================================
@@ -490,17 +576,20 @@ def _(n_stock_coils, i_coil):
 # At switch-off the feed's inductance drives its current on into the bulk: half
 # L I squared into half C dV squared, solved for C.
 @fig("c_bulk_min", "µF", group="C_BULK", section=SUPPLY, prints="up",
-     rises_with=["l_feed", "i_coil_scoop", "v_5v"], falls_with=["v_in_max"])
-def _(l_feed, i_coil_scoop, dv_allowed):
-    if dv_allowed.v <= 0:              # a rail already at VIN's limit leaves no rise to absorb
+     rises_with=["l_feed", "i_coil_scoop", "v_5v", "z_c91"], falls_with=["v_in_max"])
+def _(l_feed, i_coil_scoop, dv_allowed, z_c91):
+    room = dv_allowed - i_coil_scoop * z_c91   # what the part's impedance leaves the capacitance
+    if room.v <= 0:                    # a rail already at VIN's limit leaves no rise to absorb
         return Q.of(inf, "µF")
-    return l_feed * (i_coil_scoop / dv_allowed) ** 2
+    return l_feed * (i_coil_scoop / room) ** 2
 
 
+# The rise C91 lets through: the feed's current into its capacitance, plus the same
+# current across its impedance.
 @fig("v_spike", "mV", group="C_BULK", section=SUPPLY,
-     rises_with=["i_coil_scoop", "l_feed"], falls_with=["c_bulk"])
-def _(i_coil_scoop, l_feed, c_bulk):
-    return i_coil_scoop * (l_feed / c_bulk) ** (1 / 2)
+     rises_with=["i_coil_scoop", "l_feed", "z_c91"], falls_with=["c_c91"])
+def _(i_coil_scoop, l_feed, c_c91, z_c91):
+    return i_coil_scoop * (l_feed / c_c91) ** (1 / 2) + i_coil_scoop * z_c91
 
 
 @fig("v_spike_bare", "V", group="C_BULK", section=SUPPLY,
@@ -510,7 +599,7 @@ def _(i_coil_scoop, l_feed, c_stray):
 
 
 @fig("v_drain_spike", "V", group="C_BULK", section=SUPPLY,
-     rises_with=["v_5v", "v_f_diode", "i_coil_scoop", "l_feed"], falls_with=["c_bulk"])
+     rises_with=["v_5v", "v_f_diode", "i_coil_scoop", "l_feed", "z_c91"], falls_with=["c_c91"])
 def _(v_drain_off, v_spike):
     return v_drain_off + v_spike
 
@@ -539,15 +628,33 @@ def _(i_feed_max, r_lead):
 # The gate is driven from the Teensy's ground and measured against the power
 # ground, so the rise comes off the pin's level before the divider.
 @fig("v_gate_shifted", "V", group="GND", section=SUPPLY, prints="down",
-     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "r_lead", "i_coil"])
-def _(v_3v3, v_power_rise, r_gate_pd, r_gate):
-    return (v_3v3 - v_power_rise) * r_gate_pd / (r_gate + r_gate_pd)
+     rises_with=["v_3v3_min", "r_gate_pd"], falls_with=["r_gate", "kit_tol", "r_lead", "i_coil"])
+def _(v_3v3_min, v_power_rise, r_gate_pd_lo, r_gate_hi):
+    return (v_3v3_min - v_power_rise) * r_gate_pd_lo / (r_gate_hi + r_gate_pd_lo)
 
 
 @fig("v_gate_margin_shifted", "mV", group="GND", section=SUPPLY, prints="down",
-     rises_with=["v_3v3", "r_gate_pd"], falls_with=["r_gate", "r_lead", "v_gs_rdson"])
+     rises_with=["v_3v3_min", "r_gate_pd"],
+     falls_with=["r_gate", "kit_tol", "r_lead", "v_gs_rdson"])
 def _(v_gate_shifted, v_gs_rdson):
     return v_gate_shifted - v_gs_rdson
+
+
+# The two ends of the gate divider's window: the most R_gate, and the least R_gate to ground,
+# that still leave the gate above the voltage R_DS(on) is read at, with the power
+# ground's rise against it and each at the end of its tolerance that hurts.
+@fig("r_gate_max", "kΩ", group="GND", section=SUPPLY, prints="down",
+     rises_with=["v_3v3_min", "r_gate_pd"],
+     falls_with=["kit_tol", "r_lead", "i_coil", "v_gs_rdson"])
+def _(v_3v3_min, v_power_rise, v_gs_rdson, r_gate_pd_lo, kit_tol):
+    return r_gate_pd_lo * ((v_3v3_min - v_power_rise) / v_gs_rdson - 1) / (1 + kit_tol)
+
+
+@fig("r_gate_pd_min", "kΩ", group="GND", section=SUPPLY, prints="up",
+     rises_with=["r_gate", "kit_tol", "r_lead", "i_coil", "v_gs_rdson"],
+     falls_with=["v_3v3_min"])
+def _(r_gate_hi, v_gs_rdson, v_3v3_min, v_power_rise, kit_tol):
+    return r_gate_hi * v_gs_rdson / ((v_3v3_min - v_power_rise - v_gs_rdson) * (1 - kit_tol))
 
 
 @fig("v_sense_margin", "mV", group="GND", section=SUPPLY, stated=False,
@@ -563,8 +670,8 @@ def _(v_sense_all, v_ih):
 # ===========================================================================
 _I = MODEL.invariant
 
-_I("the gate clears the voltage the sheet specifies R_DS(on) at, so the drop "
-   "across the switch rests on a guaranteed maximum rather than on conduction",
+_I("the gate clears the 2.5 V of the typical curve the drop across the switch is read "
+   "from",
    lambda v: v.v_gate > v.v_gs_rdson)
 _I("and clears the worst-case turn-on threshold well before that",
    lambda v: v.v_gate > v.vgsth_max)
@@ -574,8 +681,6 @@ _I("the Teensy pin is not loaded past what PJRC allows, transient included",
    lambda v: v.i_pin_peak < v.i_pin_max)
 _I("the drain step at power-up cannot turn the part on",
    lambda v: v.v_kick < v.vgsth_min)
-_I("nor the through-hole variant, whose divider and threshold are its own",
-   lambda v: v.v_kick_th < v.vgsth_min_th)
 _I("the clamped drain stays inside the MOSFET's drain-source rating",
    lambda v: v.v_drain_off < v.v_ds_max)
 _I("the clamped drain stays inside the diode's reverse rating",
@@ -587,13 +692,11 @@ _I("the channel ceiling the diode sets fits the MOSFET",
    lambda v: v.i_f_av < v.i_d_max)
 _I("switch-off is far inside the diode's surge rating",
    lambda v: v.i_coil_scoop < v.i_fsm)
-_I("the MOSFET stays inside its dissipation rating",
-   lambda v: v.p_mosfet < v.p_d_mosfet)
+_I("the MOSFET's junction stays under its rating while the scoop's coil is energised",
+   lambda v: v.t_j_q < v.t_j_max)
 _I("after a reset during a pull-in the keeper, at its strongest, holds the gate under "
    "the lowest turn-on threshold",
    lambda v: v.v_gate_keeper < v.vgsth_min)
-_I("and under the through-hole variant's",
-   lambda v: v.v_gate_keeper < v.vgsth_min_th)
 _I("and the pin then reads as a low",
    lambda v: v.v_pin_keeper < v.v_il)
 _I("a closed contact clears the input's high level, one at a time",
@@ -602,25 +705,26 @@ _I("and with all three closed at once, which shares the foil resistor",
    lambda v: v.v_sense_all > v.v_ih)
 _I("a sense wire meeting a coil wire drives under a milliamp into the pin's clamp",
    lambda v: v.i_pin_fault < v.i_pin_fault_max)
-_I("the foil resistor survives a foil held at ground inside an 0805",
-   lambda v: v.p_foil_short < v.p_0805)
+_I("the foil resistor holds a foil at ground inside half its rating",
+   lambda v: v.p_foil_short <= v.p_kit * v.p_derate)
 _I("the bulk per ampere of solenoid stays above the stock machine's, taken at the "
    "one coil the firmware allows; the unarbitrated case is not one a capacitor "
    "rescues, since its demand already exceeds the supply",
-   lambda v: v.c_bulk * v.i_stock > v.c_stock * v.i_coil)
+   lambda v: v.c_c91 * v.i_stock > v.c_stock * v.i_coil)
 _I("the bulk capacitor is bought at twice the rail it sits across",
-   lambda v: v.v_cap_rating >= 2 * v.v_5v)
-_I("the gate still clears the voltage R_DS(on) is specified at, with the power "
-   "ground's rise against it",
+   lambda v: v.v_c91_rating >= 2 * v.v_5v)
+_I("the gate still clears the curve's 2.5 V, with the power ground's rise against it",
    lambda v: v.v_gate_shifted > v.v_gs_rdson)
 _I("the drain stays inside its rating through the switch-off spike C91 leaves",
    lambda v: v.v_drain_spike < v.v_ds_max)
 _I("C91 holds the rise at switch-off under what the Teensy's VIN takes",
-   lambda v: v.c_bulk >= v.c_bulk_min)
+   lambda v: v.c_c91 >= v.c_bulk_min)
 _I("the foil fits the Teensy's 3V3 pin",
    lambda v: v.i_foil < v.i_teensy_3v3)
 _I("the sense filter settles well inside how long a ball rests on a shell",
    lambda v: v.t_open < v.t_contact and v.t_close < v.t_open)
+_I("the sense filter stays under the largest that still settles",
+   lambda v: v.c_filter <= v.c_filter_max)
 _I("the window a contact has to stay open outlasts the contact one hit makes",
    lambda v: v.t_rearm > v.t_contact)
 _I("the overdue margin sits far inside the pull-in it is added to",
@@ -630,6 +734,13 @@ _I("a coil the driver tick never releases is released by the restart inside the 
    lambda v: v.t_hold_fault < v.t_hold_max)
 _I("the gate settles far inside the shortest pull-in the driver can command",
    lambda v: v.t_gate < v.t_on_min)
+_I("R11 to R14 sit inside their window", lambda v: v.r_gate_min <= v.r_gate <= v.r_gate_max)
+_I("R21 to R24 sit inside their window",
+   lambda v: v.r_gate_pd_min <= v.r_gate_pd <= v.r_gate_pd_max)
+_I("R31 to R33 sit inside their window",
+   lambda v: v.r_pulldown_min <= v.r_pulldown <= v.r_pulldown_max)
+_I("R41 to R43 sit above their floor", lambda v: v.r_series_min <= v.r_series)
+_I("R91 sits inside its window", lambda v: v.r_foil_min <= v.r_foil <= v.r_foil_max)
 
 
 # the driver's constants, as docs/firmware/drivers/solenoid.md writes them

@@ -28,7 +28,7 @@ Any mismatch is reported as a finding against the diagram. The document is the a
 - **Orphan pins.** Every pin circle drawn on a module either has a wire or is labeled as unused.
 - **Net labels.** Every net is named somewhere along its run.
 - **Color consistency.** One net class, one color, throughout. The same color never appears on two unrelated nets.
-- **Package variants.** Every part whose type designation depends on its package appears in the variants table with both types named. Parts whose designation is package-independent are absent from it. Designators in the table match those on the drawn symbols.
+- **Through-hole types.** Every part whose type designation depends on its package is named by its through-hole type, and the drawing carries no variants table. An SMD type appears only for a part that exists in no through-hole package, together with its adapter.
 - **Placement constraints.** Every group the circuit document requires to sit close together is enclosed and labeled, with a distance and a reason. A group marked without a distance is a finding - "close" cannot be built to. The enclosure uses the `8 4` dash pattern, never the `5 4` reserved for unpopulated options.
 - **Overlap.** No text sits on a wire or another label.
 - **Wire endpoints.** Lines actually meet the pin circles - a gap of a few units reads as connected but is a drawing error worth fixing before it is copied.

@@ -75,9 +75,14 @@ MODEL.uses("v_oh_drop", of="teensy-4.1")
 MODEL.uses("v_ol_max", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
 MODEL.uses("i_oh_test", of="teensy-4.1")
 MODEL.uses("r_keeper_min", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
+MODEL.uses("v_3v3_max", of="teensy-4.1")
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", group="OUTPUT", section=OUTPUT, stated=True)
+MODEL.input("p_kit", 0.25, "W", kind="datasheet", src="the same kit and page: power rating 0.25 W", stated=False)
+MODEL.input("p_derate", 50, "%", kind="decision", src="the derating target for resistor power in the design-review skill, at most half the rating", stated=False)
 dec("r_pd", 10, "kΩ", src="R1, from the pin to ground, chosen to hold U1's input under its "
     "low level against the pin's keeper after a reset, at a third of a milliamp while the "
-    "pin drives high", group="LEVELS", section=LEVELS, stated=True)
+    "pin drives high: the 10 kΩ of the resistor kit",
+    group="LEVELS", section=LEVELS, stated=True)
 ds("vih_u1", 2, "V", src=f"{BUFFER}, 5.3 Recommended Operating Conditions, high-level input "
    "voltage VIH minimum at VCC = 4.5 V to 5.5 V", group="LEVELS", section=LEVELS, stated=True)
 ds("vil_u1", 0.8, "V", src=f"{BUFFER}, 5.3 Recommended Operating Conditions, low-level input "
@@ -86,7 +91,8 @@ ds("ii_u1", 1, "µA", src=f"{BUFFER}, 5.5 Electrical Characteristics, input leak
    "maximum at VI = VCC or GND and VCC = 5.5 V, over the whole temperature range",
    group="LEVELS", section=LEVELS, stated=True)
 dec("r_in", 2.2, "kΩ", src="R3, from the pin to U1's input, chosen so the pin's current into "
-    "U1's clamp diode stays far under its 4 mA while the machine's 5 V is off",
+    "U1's clamp diode stays far under its 4 mA while the machine's 5 V is off: the 2.2 kΩ "
+    "of the resistor kit",
     group="LEVELS", section=LEVELS, stated=True)
 MODEL.uses("i_pin_max", of="teensy-4.1")
 MODEL.uses("v_clamp_over", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
@@ -180,6 +186,42 @@ def _(r_in, c_in_u1, c_stray, edge_low, edge_high):
     return ln((1 - edge_low.raw) / (1 - edge_high.raw)) * r_in * (c_in_u1 + c_stray)
 
 
+# The windows of R1 and R3, each at its own tolerance and at the rail's high end.
+# R1 at its low end, and the pin's high, have to stay inside the current the pin's output
+# levels are specified at.
+@fig("r_pd_min", "kΩ", group="LEVELS", section=LEVELS, prints="up",
+     rises_with=["v_3v3_max", "kit_tol", "ii_u1"], falls_with=["i_oh_test"])
+def _(v_3v3_max, i_oh_test, ii_u1, kit_tol):
+    return v_3v3_max / ((i_oh_test - ii_u1) * (1 - kit_tol))
+
+
+# R1 at its high end against the keeper at its strongest still holds U1's input under its
+# low level: v R / (R + K) + i (R K / (R + K) + R3) < VIL, solved for R.
+@fig("r_pd_max", "kΩ", group="LEVELS", section=LEVELS, prints="down",
+     rises_with=["vil_u1", "r_keeper_min"],
+     falls_with=["v_3v3_max", "ii_u1", "r_in", "kit_tol"])
+def _(vil_u1, ii_u1, r_in, kit_tol, v_3v3_max, r_keeper_min):
+    room = vil_u1 - ii_u1 * r_in * (1 + kit_tol)
+    return room * r_keeper_min / ((v_3v3_max + ii_u1 * r_keeper_min - room) * (1 + kit_tol))
+
+
+# With the machine's 5 V off, R3 at its low end and R1 at its low end together still hold
+# the pin inside its 4 mA.
+@fig("r_in_min", "kΩ", group="OFF", section=LEVELS, prints="up",
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["i_pin_max", "r_pd"])
+def _(v_3v3_max, i_pin_max, r_pd, kit_tol):
+    return v_3v3_max / ((i_pin_max - v_3v3_max / (r_pd * (1 - kit_tol))) * (1 - kit_tol))
+
+
+# R3 at its high end still gives an edge inside the longest U1 allows.
+@fig("r_in_max", "kΩ", group="EDGE", section=LEVELS, prints="down",
+     rises_with=["t_tran_max", "edge_low"],
+     falls_with=["c_in_u1", "c_stray", "kit_tol", "edge_high"])
+def _(t_tran_max, c_in_u1, c_stray, edge_low, edge_high, kit_tol):
+    return t_tran_max / (ln((1 - edge_low.raw) / (1 - edge_high.raw)) * (c_in_u1 + c_stray)
+                         * (1 + kit_tol))
+
+
 # U1 takes its ground at J-PWR, so the servo's stall current through that one
 # wire lifts U1's ground over the distribution, and the Teensy's high arrives
 # that much lower.
@@ -201,17 +243,42 @@ ds("v_oh_u1", 4.4, "V", src=f"{BUFFER}, 5.5 Electrical Characteristics, VOH mini
    "IOH = -20 µA and VCC = 4.5 V", group="OUTPUT", section=OUTPUT, stated=True)
 ds("i_oh_light", 20, "µA", stated=False, src=f"{BUFFER}, 5.5 Electrical Characteristics, the "
    "light-load current the 4.4 V VOH is specified at")
-dec("r_series", 1, "kΩ", src="R2, chosen so a signal wire that meets 5 V or ground holds "
-    "U1's output inside its continuous output current",
+dec("r_series", 1.2, "kΩ", src="R2, chosen so a signal wire that meets 5 V or ground holds "
+    "U1's output inside its continuous output current: the 1.2 kΩ of the resistor kit", group="OUTPUT", section=OUTPUT, stated=True)
+asm("c_servo_in", 100, "pF", src="the servo's signal wire together with the servo's own input, "
+    "estimated generously and not measured; the SER0049 sheet states no input figure",
     group="OUTPUT", section=OUTPUT, stated=True)
 ds("i_out_u1", 35, "mA", src=f"{BUFFER}, 5.1 Absolute Maximum Ratings, continuous output "
    "current IO; 5.3 states no output current", group="OUTPUT", section=OUTPUT, stated=True)
 
 
 @fig("i_fault", "mA", group="OUTPUT", section=OUTPUT, prints="up",
-     rises_with=["vcc_u1_max"], falls_with=["r_series"])
-def _(vcc_u1_max, r_series):
-    return vcc_u1_max / r_series
+     rises_with=["vcc_u1_max", "kit_tol"], falls_with=["r_series"])
+def _(vcc_u1_max, r_series, kit_tol):
+    return vcc_u1_max / (r_series * (1 - kit_tol))
+
+
+@fig("p_r_series", "mW", stated=False,
+     rises_with=["vcc_u1_max", "kit_tol"], falls_with=["r_series"])
+def _(vcc_u1_max, i_fault):
+    return vcc_u1_max * i_fault
+
+
+# The least R2 whose low end still holds that fault inside U1's continuous output current.
+@fig("r_series_min", "kΩ", group="OUTPUT", section=OUTPUT, prints="up",
+     rises_with=["vcc_u1_max", "kit_tol"], falls_with=["i_out_u1"])
+def _(vcc_u1_max, i_out_u1, kit_tol):
+    return vcc_u1_max / (i_out_u1 * (1 - kit_tol))
+
+
+# R2 into the wire and the servo's input is a single pole. The most R2 is the one whose edge
+# at its high end still takes less than one step of the pulse, so R2 cannot move a pulse by
+# a step.
+@fig("r_series_max", "kΩ", group="OUTPUT", section=OUTPUT, prints="down",
+     rises_with=["t_frame", "edge_low"],
+     falls_with=["n_duty", "c_servo_in", "kit_tol", "edge_high"])
+def _(t_step, edge_low, edge_high, c_servo_in, kit_tol):
+    return t_step / (ln((1 - edge_low.raw) / (1 - edge_high.raw)) * c_servo_in * (1 + kit_tol))
 
 
 # ===========================================================================
@@ -237,10 +304,14 @@ ds("i_stall", 800, "mA", sheet=SERVO, src="SPECIFICATION list, stall current at 
 ds("t_block", 5, "s", sheet=SERVO, stated=False, src="Electronic Protection: after being "
    "blocked for 5 seconds the servo turns off its power")
 MODEL.uses("l_feed", of="solenoid", group="SUPPLY", section=SUPPLY, stated=True)
-dec("c_bulk", 100, "µF", src="C1, the 100 µF per servo that Adafruit's PCA9685 guide "
-    "starts from", group="SUPPLY", section=SUPPLY, stated=True)
-dec("v_cap_rating", 10, "V", src="the working voltage C1 is bought at, twice the rail it "
-    "sits across", group="SUPPLY", section=SUPPLY, stated=True)
+C1 = "KEMET ESL107M016AC3AA"
+dec("c_c1", 100, "µF", src=f"C1, {C1}, 100 µF 16 V, the 100 µF per servo that Adafruit's "
+    "PCA9685 guide starts from; the same part as the solenoid board's C91",
+    group="SUPPLY", section=SUPPLY, stated=True)
+ds("z_c1", 230, "mΩ", src=f"{C1}, ESR at 100 kHz, as DigiKey lists it from the ESL sheet",
+   group="SUPPLY", section=SUPPLY, stated=True)
+ds("v_c1_rating", 16, "V", src=f"{C1}, rated voltage", group="SUPPLY", section=SUPPLY,
+   stated=True)
 # the pull-in the solenoid driver commands
 MODEL.uses("t_on_max", of="solenoid")
 ds("c_bypass", 100, "nF", src=f"{BUFFER}, 8.3 Power Supply Recommendations, a 0.1 µF "
@@ -258,11 +329,20 @@ dec("t_load_timeout", 40, "ms", stated=False, src="how long begin() waits for th
 
 
 # The feed's inductance keeps its current flowing when the servo stops drawing,
-# and C1 takes it: half L I squared into half C dV squared.
+# and C1 takes it: half L I squared into half C dV squared, plus the same current
+# across C1's impedance.
 @fig("v_kick", "mV", group="SUPPLY", section=SUPPLY, prints="up",
-     rises_with=["i_stall", "l_feed"], falls_with=["c_bulk"])
-def _(i_stall, l_feed, c_bulk):
-    return i_stall * (l_feed / c_bulk) ** (1 / 2)
+     rises_with=["i_stall", "l_feed", "z_c1"], falls_with=["c_c1"])
+def _(i_stall, l_feed, c_c1, z_c1):
+    return i_stall * (l_feed / c_c1) ** (1 / 2) + i_stall * z_c1
+
+
+# The least C1 that keeps the servo under its maximum at a stop, once the part's
+# impedance has taken its share of the room.
+@fig("c_bulk_min", "µF", group="SUPPLY", section=SUPPLY, prints="up",
+     rises_with=["i_stall", "l_feed", "v_5v", "z_c1"], falls_with=["v_servo_max"])
+def _(i_stall, l_feed, v_servo_max, v_5v, z_c1):
+    return l_feed * (i_stall / (v_servo_max - v_5v - i_stall * z_c1)) ** 2
 
 
 # The rail may sag as far as U1 still runs; the servo then sits under its own floor.
@@ -302,16 +382,25 @@ _I("U1's ground, lifted by the servo's stall, leaves the Teensy's high clear of 
    lambda v: v.v_u1_rise < v.m_high)
 _I("a signal wire that meets 5 V or ground holds U1's output inside its rating",
    lambda v: v.i_fault <= v.i_out_u1)
+_I("R1 sits inside its window", lambda v: v.r_pd_min <= v.r_pd <= v.r_pd_max)
+_I("R2 sits inside its window", lambda v: v.r_series_min <= v.r_series <= v.r_series_max)
+_I("R3 sits inside its window", lambda v: v.r_in_min <= v.r_in <= v.r_in_max)
+_I("R2 carries a shorted signal wire at no more than half its rating",
+   lambda v: v.p_r_series <= v.p_kit * v.p_derate)
 _I("the machine's rail sits in U1's supply range",
    lambda v: v.vcc_u1_min <= v.v_5v <= v.vcc_u1_max)
 _I("the machine's rail sits in the servo's supply range",
    lambda v: v.v_servo_min <= v.v_5v <= v.v_servo_max)
 _I("the rise at C1 keeps the servo under its maximum",
    lambda v: v.v_5v + v.v_kick < v.v_servo_max)
+_I("the rise at C1 keeps U1 under its supply maximum",
+   lambda v: v.v_5v + v.v_kick < v.vcc_u1_max)
 _I("the stall current the design takes bounds the sheet's other figure",
    lambda v: v.i_stall >= v.i_stall_table)
 _I("C1 is bought at twice the rail",
-   lambda v: v.v_cap_rating >= 2 * v.v_5v)
+   lambda v: v.v_c1_rating >= 2 * v.v_5v)
+_I("C1 is at least what a stop needs",
+   lambda v: v.c_c1 >= v.c_bulk_min)
 
 
 

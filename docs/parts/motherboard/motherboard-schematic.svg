@@ -79,7 +79,7 @@
   <text x="630" y="476" text-anchor="middle" font-size="11.5" fill="#777" data-pin="BCLK to the DFR0954">pin 4</text>
   <!-- D2 across the cut VUSB-VIN trace on the underside -->
   <text x="630" y="228" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">D2</text>
-  <text x="630" y="242" text-anchor="middle" font-size="11" fill="#666">1N5819WS</text>
+  <text x="630" y="242" text-anchor="middle" font-size="11" fill="#666">1N5819</text>
   <line x1="590" y1="281" x2="590" y2="262" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="590" y1="262" x2="621" y2="262" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="621" y1="250" x2="621" y2="274" stroke="#1a1a1a" stroke-width="3"/>
@@ -170,7 +170,7 @@
   <!-- ===== R1, in series with the toggle switch ===== -->
   <line x1="726" y1="450" x2="920" y2="450" stroke="#2c3e50" stroke-width="2.5"/>
   <rect x="920" y="440" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
-  <text x="955" y="454" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.1 kΩ</text>
+  <text x="955" y="454" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.2 kΩ</text>
   <text x="955" y="432" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
   <line x1="990" y1="450" x2="1036" y2="450" stroke="#2c3e50" stroke-width="2.5"/>
   <circle cx="1040" cy="450" r="4" fill="#2c3e50"/>

@@ -40,7 +40,7 @@ fig = MODEL.derived
 SENSOR = "IR-reflective-gp2s700hcp_e.pdf"
 ADC = "MCP3004-3008-Microchip.pdf"
 ISO = "ISO7761-TI.pdf"
-MOSFET = "AO3400A-AOS.pdf"
+IRL = "IRL540N-Infineon.pdf"
 REG = "ISL85415-Renesas.pdf"
 POLOLU = "D24V5Fx-Pololu-schematic.pdf"
 
@@ -54,7 +54,7 @@ CONST = "Nothing scales the dark reading"
 CONV = "The converter, what the part has to do"
 ACQ = "Acquisition, and why no capacitor sits at a converter input"
 READ = "The read block and the phase"
-GATE = "2 kΩ, gate resistor"
+GATE = "2.2 kΩ, gate resistor"
 PD = "4.7 kΩ, signal pull-down"
 PCT96 = "The first read carries 96 % of the swing"
 PIN1 = "Why Pin 1 needs no external resistor"
@@ -84,18 +84,34 @@ dec("budget_grain", 10, "µs", src="the step the firmware rounds the read block 
 dec("n_contacts", 4, "", src="two connectors on the J-PWR cable, each with a contact on both conductors")
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the acquisition window is tested against")
 dec("k_confirm", 2, "", src="readings in a row a hit has to survive before a ball is reported")
-dec("r_led", 220, "Ω", src="E12 value inside the knob bounds derived below")
-dec("r_led_sharp", 100, "Ω", src="the three stock channels, set from the measured ball signal of 27 converter steps at 220 Ω, research/Rokr/2_ir-reflective-sensor-p33.md")
-dec("r_pd", 4.7, "kΩ", src="E12 value inside the knob bounds derived below")
-dec("r_gate", 2, "kΩ", src="R33, E12 value inside the gate bounds")
-dec("r_gate_pd", 100, "kΩ", src="R35, E12 value inside the gate bounds")
-dec("r_miso", 2, "kΩ", src="R34, the same value as R33")
-dec("r_dout", 1, "kΩ", src="R37 and R38")
-dec("r_dout_pu", 10, "kΩ", src="R36")
-dec("r_ref", 47, "Ω", src="R39, puts the filter corner two decades under the burst rate")
+dec("r_led", 220, "Ω", src="E12 value inside the knob bounds derived below: the 220 Ω of the "
+    "resistor kit")
+dec("r_led_sharp", 100, "Ω", src="the three stock channels, set from the measured ball signal of 27 converter steps at 220 Ω, research/Rokr/2_ir-reflective-sensor-p33.md: the 100 Ω of the resistor kit")
+dec("r_pd", 4.7, "kΩ", src="E12 value inside the knob bounds derived below: the 4.7 kΩ of the "
+    "resistor kit")
+dec("r_gate", 2.2, "kΩ", src="R33, E12 value inside the gate bounds: the 2.2 kΩ of the "
+    "resistor kit")
+dec("r_gate_pd", 100, "kΩ", src="R35, E12 value inside the gate bounds: the 100 kΩ of the "
+    "resistor kit")
+dec("r_miso", 2.2, "kΩ", src="R34: the 2.2 kΩ of the resistor kit")
+dec("r_dout", 1.2, "kΩ", src="R37 and R38: the 1.2 kΩ of the resistor kit")
+dec("r_dout_pu", 10, "kΩ", src="R36: the 10 kΩ of the resistor kit")
+dec("r_ref", 47, "Ω", src="R39, puts the filter corner under the burst rate: the 47 Ω of the "
+    "resistor kit")
+MODEL.input("kit_tol", 5, "%", kind="datasheet", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland product page: tolerance 5 %", stated=False)
+MODEL.uses("v_3v3_max", of="teensy-4.1")
+
+dec("i_dout_contention_max", 2, "mA", src="the current two converter outputs may drive into "
+    "each other until firmware raises a chip select: DS21295D rates none, and 2 mA keeps it "
+    "at the order of the 1 mA its V_OL is specified at, as the isolator's outputs are held to "
+    "their 2 mA", group="R37 and R38, 1.2 kΩ at each converter's DOUT pin", stated="loose")
+dec("ripple_steps_max", 0.5, "step", src="the reference ripple a full-scale reading may carry, "
+    "half a converter step, so it cannot move a reading by one", stated=False)
+dec("r_pd_floor", 1, "kΩ", src="the pull-down's lower end in the knob table, where a ball "
+    "still gives about 11 steps of a ten-bit read", stated=False)
 dec("c_ref", 22, "µF", src="C6, printed value")
 dec("c_entry", 22, "µF", src="C5, printed value")
-dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin")
+dec("c_decoupling", 100, "nF", src="C1 to C4, one at each supply pin: the 0.1 µF SLLSER1H asks for at VCC1 and VCC2; at the converters DS21295D 6.4 asks for 1 µF at the pin, which C6 at their VDD pins supplies")
 dec("t_phase", 600, "µs", src="the phase, sitting on the dwell bound derived below")
 dec("t_phase_fallback", 1.5, "ms", src="the phase the driver falls back to after two failed initializations, the stock machine's own half period")
 MODEL.uses("f_bus", of="teensy-4.1")
@@ -107,7 +123,8 @@ dec("working_margin", 0.5, "%", group="V_OUT", section=BASE,
     stated=True, src="carried on top of the module maximum as the working bound")
 dec("bits", 10, "", src="the MCP3008's resolution")
 MODEL.uses("i_teensy_3v3", of="teensy-4.1")
-dec("r_led_e12_below", 56, "Ω", src="the E12 value above the single-channel bound")
+dec("r_led_e12_below", 56, "Ω", src="the E12 value above the single-channel bound, also "
+    "at 5 % under its value")
 dec("r_led_alt_high", 390, "Ω", src="one standard value below the characterizing point")
 dec("r_pd_alt", 2.2, "kΩ", src="one standard value, twice the resolution floor")
 dec("r_pd_alt_high", 10, "kΩ", src="the pull-down one decade up, weighed in the "
@@ -117,7 +134,6 @@ dec("r_gate_pd_low", 3, "kΩ", src="the gate pull-down weighed and rejected on t
 dec("r_gate_pd_mid", 10, "kΩ", src="the next gate pull-down up, also weighed")
 dec("l_bead_alt", 10, "µH", src="the inductor weighed against R39")
 dec("phase_alt", 750, "µs", src="the next phase up, weighed against the dwell")
-dec("r_led_e12_0805", 82, "Ω", src="the E12 value an 0805 carries at half its rating")
 
 # ===========================================================================
 # assumptions: no datasheet gives these
@@ -125,8 +141,8 @@ dec("r_led_e12_0805", 82, "Ω", src="the E12 value an 0805 carries at half its r
 asm("t_a", 40, "°C", group="T_A", section=BASE, stated=True,
     src="an open frame with no heat source nearby, on a hot day")
 msr("i_photo", 36.6, "µA", src="bench, measurement B at the installed position with 100 Ω in the emitter line: 171.9 mV across the 4.7 kΩ, from 215 mV with a ball against 46.9 mV on a clear track, each minus its own dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
-asm("rds_irl_est", 0.1, "Ω", src="an estimate above the 4.0 V figure, since the "
-    "IRL540N specifies nothing at 3.3 V")
+asm("rds_irl_est", 0.1, "Ω", src="an estimate above Fig. 1's typical 3.0 V curve, since the "
+    "IRL540N specifies R_DS(on) only from V_GS = 4.0 V")
 asm("cable_r", 0.1, "Ω", src="the round build figure for the J-PWR cable; it costs "
     "0.2 mV more than the allowance, inside the millivolt the rail is printed at")
 dec("cable_drop_bound", 22, "mV", group="V_OUT", section=BASE, stated=True,
@@ -278,30 +294,22 @@ gr("fig6_10k_at", 10, "kΩ", src="GP2S700HCP D3-A02201EN Figure 6, the load axis
    sheet=SENSOR)
 
 # ===========================================================================
-# datasheet: AO3400A and IRL540N
+# datasheet: IRL540N
 # ===========================================================================
-ds("rds_ao", 48, "mΩ", src="AO3400A, R_DS(on) maximum at V_GS = 2.5 V and I_D = 3 A",
-   sheet=MOSFET)
-ds("v_gs_test", 2.5, "V", src="AO3400A, the gate voltage R_DS(on) is specified at",
-   sheet=MOSFET)
-ds("rds_ao_10v_25", 26.5, "mΩ", src="AO3400A, the 10 V row at 25 °C", sheet=MOSFET)
-ds("rds_ao_10v_125", 38, "mΩ", src="AO3400A, the same row at T_J = 125 °C", sheet=MOSFET)
-ds("t_j_hot", 125, "°C", src="AO3400A, the junction temperature of that row", sheet=MOSFET)
-ds("qg_ao", 7, "nC", src="AO3400A, Q_g maximum at V_GS = 4.5 V and I_D = 5.7 A",
-   sheet=MOSFET)
-ds("vgs_th_ao_max", 1.45, "V", src="AO3400A, V_GS(th) maximum", sheet=MOSFET)
-ds("vgs_th_ao_min", 0.65, "V", src="AO3400A, V_GS(th) minimum", sheet=MOSFET)
-ds("vgs_rating_ao", 12, "V", src="AO3400A, V_GS rating", sheet=MOSFET)
+gr("rds_irl_typ", 56, "mΩ", sheet=IRL, src="IRL540N, Fig. 1, typical output characteristics at "
+   "T_J = 25 °C: the 3.0 V curve passes 1.8 A at V_DS = 0.1 V, below the gate Q1 gets",
+   group="V_DS", section=BASE, stated=True)
 ds("qg_irl", 74, "nC", src="IRL540N, Q_g maximum at V_GS = 5.0 V and I_D = 18 A")
 ds("vgs_th_irl_max", 2.0, "V", src="IRL540N, V_GS(th) maximum")
 ds("vgs_th_irl_min", 1.0, "V", src="IRL540N, V_GS(th) minimum")
 ds("vgs_rating_irl", 16, "V", src="IRL540N, the V_GS I_GSS is specified at")
-ds("i_gss", 100, "nA", src="both parts give I_GSS as 100 nA maximum")
+ds("i_gss", 100, "nA", src="IRL540N, I_GSS maximum at V_GS = ±16 V")
 ds("r_leak_test", 1, "MΩ", src="the resistance the gate-leakage bound is taken at")
-ds("p_q1_rating", 1.4, "W", src="AO3400A, power dissipation at 25 °C free air",
-   sheet=MOSFET)
-ds("p_0805", 125, "mW", src="the 25 °C free-air rating of an 0805 thick-film resistor")
-ds("gate_charge_limit", 100, "µs", src="the gate edge the phase tolerates")
+ds("t_j_max", 175, "°C", sheet=IRL, src="IRL540N, Absolute Maximum Ratings, operating junction "
+   "temperature, maximum", group="Q1", section=DISS, stated=True)
+ds("r_th_ja", 62, "°C/W", sheet=IRL, src="IRL540N, Thermal Resistance, junction-to-ambient, "
+   "maximum", group="Q1", section=DISS, stated=True)
+MODEL.input("p_kit", 0.25, "W", kind="datasheet", src="the same kit and page: power rating 0.25 W", stated=False)
 
 # ===========================================================================
 # datasheet: MCP3008, DS21295D
@@ -353,6 +361,7 @@ ds("uvlo_lo", 1.7, "V", src="SLLSER1H, the lower undervoltage lockout threshold"
    sheet=ISO)
 ds("uvlo_hi", 2.25, "V", src="SLLSER1H, the upper threshold", sheet=ISO)
 ds("v_il_factor", 30, "%", src="SLLSER1H, V_IL guaranteed at 0.3 × VCC", sheet=ISO)
+ds("v_ih_factor", 70, "%", src="SLLSER1H, V_IH guaranteed at 0.7 × VCC", sheet=ISO)
 ds("iso_rate_lo", 1, "MHz", src="SLLSER1H, the lower AC row", sheet=ISO)
 ds("iso_rate_hi", 10, "MHz", src="SLLSER1H, the upper AC row", sheet=ISO)
 
@@ -394,24 +403,9 @@ def _(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max_at_t_a):
     return _vf75(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i_f_max_at_t_a)
 
 
-@fig("rds_ao_hot_factor", "×", stated=False)
-def _(rds_ao_10v_25, rds_ao_10v_125):
-    return rds_ao_10v_125 / rds_ao_10v_25
-
-
-@fig("rds_ao_hot", "mΩ", group="Q1", section=DISS)
-def _(rds_ao, rds_ao_hot_factor):
-    return rds_ao * rds_ao_hot_factor
-
-
-@fig("v_ds_ao", "mV", group="V_DS", section=BASE)
-def _(i_bus, rds_ao):
-    return i_bus * rds_ao
-
-
-@fig("v_ds_ao_hot", "mV", group="V_DS", section=BASE)
-def _(i_bus, rds_ao_hot):
-    return i_bus * rds_ao_hot
+@fig("v_ds_irl_typ", "mV", group="V_DS", section=BASE)
+def _(i_bus, rds_irl_typ):
+    return i_bus * rds_irl_typ
 
 
 @fig("v_ds_irl", "mV", group="V_DS", section=BASE)
@@ -422,9 +416,9 @@ def _(i_bus, rds_irl_est):
 @fig("u_r_nominal", "V", group="U_R", section=BASE,
      rises_with=["v_mod_nom"],
      falls_with=["vf_nominal_read"])
-def _(v_mod_nom, vf_nominal_read, v_ds_ao):
+def _(v_mod_nom, vf_nominal_read, v_ds_irl_typ):
     # the appendix carries V_DS at the tenth of a millivolt it prints
-    return v_mod_nom - vf_nominal_read - _to_printed(v_ds_ao, "mV", 1)
+    return v_mod_nom - vf_nominal_read - _to_printed(v_ds_irl_typ, "mV", 1)
 
 
 @fig("u_r_most", "V", group="U_R", section=BASE,
@@ -551,15 +545,16 @@ def _(i_module, i_fixed_module, n_channels, i_c):
 # dissipation, one line per part
 # ===========================================================================
 @fig("p_q1", "mW", group="Q1", section=DISS,
-     rises_with=["i_led_worst", "rds_ao"],
+     rises_with=["i_led_worst", "rds_irl_est"],
      falls_with=["r_led"])
-def _(i_bus, rds_ao_hot):
-    return i_bus ** 2 * rds_ao_hot
+def _(i_bus, rds_irl_est):
+    return i_bus ** 2 * rds_irl_est
 
 
-@fig("p_q1_pct", "%", group="Q1", section=DISS)
-def _(p_q1, p_q1_rating):
-    return p_q1 / p_q1_rating
+@fig("t_j_q1", "°C", group="Q1", section=DISS, prints="up",
+     rises_with=["t_a", "i_led_worst", "rds_irl_est", "r_th_ja"])
+def _(t_a, p_q1, r_th_ja):
+    return t_a + p_q1 * r_th_ja
 
 
 @fig("p_r_led", "mW", group="220 Ω", section=DISS,
@@ -570,8 +565,8 @@ def _(i_led_worst, r_led):
 
 
 @fig("p_r_led_pct", "%", group="220 Ω", section=DISS)
-def _(p_r_led, p_0805):
-    return p_r_led / p_0805
+def _(p_r_led, p_kit):
+    return p_r_led / p_kit
 
 
 @fig("p_r_led_sharp", "mW", group="100 Ω", section=DISS,
@@ -582,8 +577,8 @@ def _(i_led_worst_sharp, r_led_sharp):
 
 
 @fig("p_r_led_sharp_pct", "%", group="100 Ω", section=DISS)
-def _(p_r_led_sharp, p_0805):
-    return p_r_led_sharp / p_0805
+def _(p_r_led_sharp, p_kit):
+    return p_r_led_sharp / p_kit
 
 
 # A new board's node reaches the rail, a stock board's only the divider's share of it.
@@ -599,23 +594,47 @@ def _(u_node_max, r_pd):
 
 
 @fig("p_r_pd_pct", "%", group="4.7 kΩ", section=DISS)
-def _(p_r_pd, p_0805):
-    return p_r_pd / p_0805
+def _(p_r_pd, p_kit):
+    return p_r_pd / p_kit
 
 
-@fig("i_dout_low", "mA", stated=False)
-def _(v_out_max, r_dout, r_dout_pu):
-    return v_out_max / (r_dout + r_dout_pu)
+# Each resistor of the DOUT path at the end of its tolerance that hurts the figure it enters.
+@fig("r_dout_lo", "kΩ", stated=False, rises_with=["r_dout"], falls_with=["kit_tol"])
+def _(r_dout, kit_tol):
+    return r_dout * (1 - kit_tol)
 
 
+@fig("r_dout_hi", "kΩ", stated=False, rises_with=["r_dout", "kit_tol"])
+def _(r_dout, kit_tol):
+    return r_dout * (1 + kit_tol)
+
+
+@fig("r_dout_pu_lo", "kΩ", stated=False, rises_with=["r_dout_pu"], falls_with=["kit_tol"])
+def _(r_dout_pu, kit_tol):
+    return r_dout_pu * (1 - kit_tol)
+
+
+@fig("r_miso_hi", "kΩ", stated=False, rises_with=["r_miso", "kit_tol"])
+def _(r_miso, kit_tol):
+    return r_miso * (1 + kit_tol)
+
+
+# The most a converter sinks while it pulls DOUT low, both resistors at their low end.
+@fig("i_dout_low", "mA", stated=False, prints="up",
+     rises_with=["v_out_max", "kit_tol"], falls_with=["r_dout", "r_dout_pu"])
+def _(v_out_max, r_dout_lo, r_dout_pu_lo):
+    return v_out_max / (r_dout_lo + r_dout_pu_lo)
+
+
+# R36 dissipates most at that current with its own low end.
 @fig("p_r36", "mW", group="R36", section=DISS)
-def _(i_dout_low, r_dout_pu):
-    return i_dout_low ** 2 * r_dout_pu
+def _(i_dout_low, r_dout_pu_lo):
+    return i_dout_low ** 2 * r_dout_pu_lo
 
 
 @fig("p_r36_pct", "%", group="R36", section=DISS)
-def _(p_r36, p_0805):
-    return p_r36 / p_0805
+def _(p_r36, p_kit):
+    return p_r36 / p_kit
 
 
 @fig("v_gate_max", "V", group="R35", section=DISS,
@@ -630,9 +649,9 @@ def _(v_gate_max, r_gate_pd):
     return v_gate_max ** 2 / r_gate_pd
 
 
-@fig("p_r37", "µW", group="R37, R38", section=DISS)
-def _(i_dout_low, r_dout):
-    return i_dout_low ** 2 * r_dout
+@fig("p_r37", "µW", group="R37, R38", section=DISS, prints="up")
+def _(i_dout_low, r_dout_hi):
+    return i_dout_low ** 2 * r_dout_hi
 
 
 @fig("p_r39", "µW", group="R39", section=DISS)
@@ -658,9 +677,9 @@ def _(p_r_led):
     return p_r_led
 
 
-@fig("p_0805_over_p_r_led", "×", group="P", section=R220)
-def _(p_0805, p_r_led):
-    return p_0805 / p_r_led
+@fig("p_kit_over_p_r_led", "×", group="P", section=R220)
+def _(p_kit, p_r_led):
+    return p_kit / p_r_led
 
 
 @fig("i_at_e12_below", "mA", group="P", section=R220)
@@ -674,8 +693,8 @@ def _(i_at_e12_below, r_led_e12_below):
 
 
 @fig("p_at_e12_below_pct", "%", group="P", section=R220)
-def _(p_at_e12_below, p_0805):
-    return p_at_e12_below / p_0805
+def _(p_at_e12_below, p_kit):
+    return p_at_e12_below / p_kit
 
 
 def _i_led_at(r, v_rail, curve):
@@ -700,18 +719,6 @@ def _bisect_r(target_power, v_rail, curve, lo, hi):
     return (lo + hi) / 2
 
 
-@fig("r_at_half_0805", "Ω", group="P", section=R220,
-     rises_with=["v_out_max"], falls_with=["p_0805"],
-     prints="up")
-def _(v_out_max, vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, p_0805,
-      r_min_single, r_led_alt_high):
-    # The emitter branch reaches half an 0805's rating at this resistor. V_F
-    # moves with the current, so the resistance is bisected between the
-    # single-channel bound and the characterizing point.
-    curve = [(vf75_10ma_at, vf75_10ma), (vf75_50ma_at, vf75_50ma)]
-    return _bisect_r(p_0805 / 2, v_out_max, curve, r_min_single, r_led_alt_high)
-
-
 @fig("i_f_max_at_t_a", "mA", group=R220, stated="loose", prints="down",
      falls_with=["t_a"], rises_with=["i_f_knee"])
 def _(i_f_knee, i_f_end, i_f_knee_at, i_f_end_at, t_a):
@@ -733,18 +740,12 @@ def _(i_f_max_at_t_a, i_led_worst_sharp):
 # ===========================================================================
 # Q1 and the IRL540N
 # ===========================================================================
-_AO = "Q1 is an AO3400A"
-_IRL = "The IRL540N is the through-hole variant"
+_IRL = "Q1 is an IRL540N"
 
 
-@fig("v_gate_min", "V", group=_AO, stated="loose")
+@fig("v_gate_min", "V", group=_IRL, stated="loose")
 def _(v_out_min, r_gate_pd, r_gate):
     return v_out_min * r_gate_pd / (r_gate_pd + r_gate)
-
-
-@fig("gate_over_th_ao", "V", group=_AO, stated="loose")
-def _(v_gate_min, vgs_th_ao_max):
-    return v_gate_min - vgs_th_ao_max
 
 
 @fig("v_ds_at_1ohm", "mV", group=_IRL, stated="loose")
@@ -1067,22 +1068,23 @@ def _(window_in_tau, bits):
 # ===========================================================================
 # R37, R38, R36, R34, U3
 # ===========================================================================
-_R37 = "R37 and R38, 1 kΩ at each converter's DOUT pin"
+_R37 = "R37 and R38, 1.2 kΩ at each converter's DOUT pin"
 _R36 = "R36, 10 kΩ from ADC-DOUT to the board's rail"
-_R34 = "R34, 2 kΩ in the MISO line at U3's output"
+_R34 = "R34, 2.2 kΩ in the MISO line at U3's output"
 _U3 = "U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's"
 
 
-@fig("dout_contention", "mA", group=_R37, stated="loose")
-def _(v_out_max, r_dout):
-    return v_out_max / (2 * r_dout)
+@fig("dout_contention", "mA", group=_R37, stated="loose", prints="up",
+     rises_with=["v_out_max", "kit_tol"], falls_with=["r_dout"])
+def _(v_out_max, r_dout_lo):
+    return v_out_max / (2 * r_dout_lo)
 
 
-@fig("dout_low_level", "V", group=_R37, stated="loose",
-     rises_with=["v_out_max", "r_dout", "v_ol_adc"],
+@fig("dout_low_level", "V", group=_R37, stated="loose", prints="up",
+     rises_with=["v_out_max", "r_dout", "v_ol_adc", "kit_tol"],
      falls_with=["r_dout_pu"])
-def _(v_ol_adc, v_out_max, r_dout, r_dout_pu):
-    return v_ol_adc + (v_out_max - v_ol_adc) * r_dout / (r_dout + r_dout_pu)
+def _(v_ol_adc, v_out_max, r_dout_hi, r_dout_pu_lo):
+    return v_ol_adc + (v_out_max - v_ol_adc) * r_dout_hi / (r_dout_hi + r_dout_pu_lo)
 
 
 @fig("guaranteed_low", "V", group=_R37, stated="loose")
@@ -1090,18 +1092,19 @@ def _(v_il_factor, v_mod_max):
     return v_il_factor.raw * v_mod_max
 
 
-@fig("dout_sink", "mA", group=_R36, stated="loose",
-     rises_with=["v_out_max"],
+@fig("dout_sink", "mA", group=_R36, stated="loose", prints="up",
+     rises_with=["v_out_max", "kit_tol"],
      falls_with=["r_dout", "r_dout_pu"])
 def _(i_dout_low):
     return i_dout_low
 
 
-@fig("miso_contention", "mA", group=_R34, stated="loose",
-     rises_with=["v_mod_nom"],
+# MISO sits on side 1, which runs from the Teensy's own 3.3 V.
+@fig("miso_contention", "mA", group=_R34, stated="loose", prints="up",
+     rises_with=["v_3v3_max", "kit_tol"],
      falls_with=["r_miso"])
-def _(v_mod_nom, r_miso):
-    return v_mod_nom / r_miso
+def _(v_3v3_max, r_miso, kit_tol):
+    return v_3v3_max / (r_miso * (1 - kit_tol))
 
 
 @fig("i_iso_ac_s1", "mA", stated=False)
@@ -1117,13 +1120,13 @@ def _(i_iso_ac_s2_1m, i_iso_ac_s2_10m, f_clk, iso_rate_lo, iso_rate_hi):
 
 
 @fig("t_r37_net", "ns", group=_U3)
-def _(r_dout, stray_dout):
-    return r_dout * stray_dout
+def _(r_dout_hi, stray_dout):
+    return r_dout_hi * stray_dout
 
 
 @fig("t_r34_net", "ns", group=_U3)
-def _(r_miso, stray_miso):
-    return r_miso * stray_miso
+def _(r_miso_hi, stray_miso):
+    return r_miso_hi * stray_miso
 
 
 @fig("half_period", "ns", group=_U3,
@@ -1189,6 +1192,147 @@ def _(t_phase, t_conversion, t_ovh, tau_ln2, t_jitter, budget_grain):
 
 
 # ===========================================================================
+# every resistor's window: the least and the most a fitted value may be, its
+# tolerance and the rail's ends taken where they hurt
+# ===========================================================================
+# The emitter resistors between the single-channel bound and the characterizing point.
+@fig("r_led_min", "Ω", stated=False, prints="up",
+     rises_with=["v_out_max", "kit_tol", "t_a"], falls_with=["i_f_knee", "vf75_50ma"])
+def _(r_min_single, kit_tol):
+    return r_min_single / (1 - kit_tol)
+
+
+@fig("r_led_max", "Ω", stated=False, prints="down",
+     rises_with=["v_out_min"], falls_with=["i_f_char", "vf_table_max", "kit_tol"])
+def _(knob_r_upper, kit_tol):
+    return knob_r_upper / (1 + kit_tol)
+
+
+# The pull-down between its resolution floor and the acquisition wall.
+@fig("r_pd_min", "kΩ", stated=False, prints="up", rises_with=["r_pd_floor", "kit_tol"])
+def _(r_pd_floor, kit_tol):
+    return r_pd_floor / (1 - kit_tol)
+
+
+@fig("r_pd_max", "kΩ", stated=False, prints="down",
+     rises_with=["acq_clocks"], falls_with=["f_clk", "c_sample", "kit_tol"])
+def _(knob_pd_acq_wall, kit_tol):
+    return knob_pd_acq_wall / (1 + kit_tol)
+
+
+# The gate edge the phase tolerates. The LED bus has its current by the end of the edge, and
+# from there a channel needs the sign inversion's τ · ln 2 before it carries more of this
+# phase than of the last, so the edge may last until the first read less that.
+@fig("gate_charge_limit", "µs", group="gate", section=KNOB, prints="down",
+     rises_with=["t_phase", "f_clk"],
+     falls_with=["n_channels", "t_ovh", "t_jitter", "tau_sensor"])
+def _(first_read_16, sign_inversion):
+    return first_read_16 - sign_inversion
+
+
+# R33: at its low end the gate's charging current stays inside the isolator output's 2 mA on
+# the rail's high end, and at its high end the IRL540N's charge still lands within the gate
+# edge the phase tolerates on the rail's low end.
+@fig("r_gate_min", "kΩ", group="gate", section=KNOB, prints="up",
+     rises_with=["v_out_max", "kit_tol"], falls_with=["i_out_iso"])
+def _(v_out_max, i_out_iso, kit_tol):
+    return v_out_max / (i_out_iso * (1 - kit_tol))
+
+
+@fig("r_gate_max", "kΩ", group="gate", section=KNOB, prints="down",
+     rises_with=["gate_charge_limit", "v_out_min"], falls_with=["qg_irl", "kit_tol"])
+def _(gate_charge_limit, v_out_min, qg_irl, kit_tol):
+    return gate_charge_limit * v_out_min / (2 * qg_irl * (1 + kit_tol))
+
+
+# R34: at its low end the Teensy and U3 drive against each other inside the isolator's 2 mA,
+# and at its high end a DOUT bit still comes home inside the half period.
+@fig("r_miso_min", "kΩ", stated=False, prints="up",
+     rises_with=["v_3v3_max", "kit_tol"], falls_with=["i_out_iso"])
+def _(v_3v3_max, i_out_iso, kit_tol):
+    return v_3v3_max / (i_out_iso * (1 - kit_tol))
+
+
+@fig("r_miso_max", "kΩ", stated=False, prints="down",
+     falls_with=["f_clk", "t_pd_iso", "t_do_adc", "r_dout", "stray_dout", "stray_miso",
+                 "kit_tol"])
+def _(half_period, t_pd_iso, t_do_adc, t_r37_net, stray_miso, kit_tol):
+    return (half_period - 2 * t_pd_iso - t_do_adc - t_r37_net) / (stray_miso * (1 + kit_tol))
+
+
+# R35: at its low end it still leaves the gate above the IRL540N's highest threshold behind
+# R33 at its high end, and at its high end the gate's leakage still holds the IRL540N's
+# lowest threshold off.
+@fig("r_gate_pd_min", "kΩ", stated=False, prints="up",
+     rises_with=["r_gate", "kit_tol", "vgs_th_irl_max"], falls_with=["v_out_min"])
+def _(r_gate, kit_tol, vgs_th_irl_max, v_out_min):
+    return (r_gate * (1 + kit_tol) * vgs_th_irl_max
+            / ((v_out_min - vgs_th_irl_max) * (1 - kit_tol)))
+
+
+@fig("r_gate_pd_max", "kΩ", stated=False, prints="down",
+     rises_with=["vgs_th_irl_min"], falls_with=["i_gss", "kit_tol"])
+def _(vgs_th_irl_min, i_gss, kit_tol):
+    return vgs_th_irl_min / (i_gss * (1 + kit_tol))
+
+
+# The share of the rail R37 may take of the swing above V_OL and still leave a guaranteed low.
+# The pull-up and the threshold both follow the rail, and the margin shrinks with it, so the
+# rail's low end is the one that governs.
+@fig("dout_share_max", "", stated=False,
+     rises_with=["v_il_factor", "v_out_min"], falls_with=["v_ol_adc"])
+def _(v_il_factor, v_out_min, v_ol_adc):
+    return (v_il_factor * v_out_min - v_ol_adc) / (v_out_min - v_ol_adc)
+
+
+# R36: at its low end, against R37 at its high end, it still leaves that low; at its high end
+# it still holds a high against the isolator's own pull-down at the input.
+@fig("r_dout_pu_min", "kΩ", stated=False, prints="up",
+     rises_with=["r_dout", "kit_tol", "v_ol_adc"], falls_with=["v_il_factor", "v_out_min"])
+def _(r_dout_hi, dout_share_max, kit_tol):
+    return r_dout_hi * (1 - dout_share_max) / (dout_share_max * (1 - kit_tol))
+
+
+@fig("r_dout_pu_max", "kΩ", stated=False, prints="down",
+     rises_with=["r_in_iso"], falls_with=["v_ih_factor", "kit_tol"])
+def _(r_in_iso, v_ih_factor, kit_tol):
+    return r_in_iso * (1 - v_ih_factor) / (v_ih_factor * (1 + kit_tol))
+
+
+# R37 and R38: at their low end two converters fighting stay inside the current the design
+# allows them, and at their high end, against R36 at its low end, the low still holds.
+@fig("r_dout_min", "kΩ", stated=False, prints="up",
+     rises_with=["v_out_max", "kit_tol"], falls_with=["i_dout_contention_max"])
+def _(v_out_max, i_dout_contention_max, kit_tol):
+    return v_out_max / (2 * i_dout_contention_max * (1 - kit_tol))
+
+
+@fig("r_dout_max", "kΩ", stated=False, prints="down",
+     rises_with=["r_dout_pu", "v_il_factor", "v_out_min"], falls_with=["kit_tol", "v_ol_adc"])
+def _(r_dout_pu_lo, dout_share_max, kit_tol):
+    return r_dout_pu_lo * dout_share_max / ((1 - dout_share_max) * (1 + kit_tol))
+
+
+# R39: at its low end the reference ripple a full-scale reading carries stays under its
+# ceiling, and at its high end the converters behind it, with the phase-start droop, stay
+# above their floor.
+@fig("r_ref_min", "Ω", stated=False, prints="up",
+     rises_with=["psm_burst_ripple", "bits", "kit_tol"],
+     falls_with=["ripple_steps_max", "c_ref", "derate", "burst_freq_low"])
+def _(psm_burst_ripple, bits, ripple_steps_max, v_ref_max, c_ref, derate, burst_freq_low,
+      kit_tol):
+    return (psm_burst_ripple * Q(2 ** bits.raw)
+            / (ripple_steps_max.raw * v_ref_max * 2 * PI * c_ref * derate.raw * burst_freq_low
+               * (1 - kit_tol)))
+
+
+@fig("r_ref_max", "Ω", stated=False, prints="down",
+     rises_with=["v_mod_nom"], falls_with=["vdd_floor", "i_adc_idd", "kit_tol"])
+def _(v_out_min, droop_20k, vdd_floor, i_adc_both, kit_tol):
+    return (v_out_min - droop_20k - vdd_floor) / (i_adc_both * (1 + kit_tol))
+
+
+# ===========================================================================
 # the gate resistor
 # ===========================================================================
 @fig("gate_i_peak", "mA", group="I_peak", section=GATE,
@@ -1196,11 +1340,6 @@ def _(t_phase, t_conversion, t_ovh, tau_ln2, t_jitter, budget_grain):
      falls_with=["r_gate"])
 def _(v_mod_nom, r_gate):
     return v_mod_nom / r_gate
-
-
-@fig("gate_time_ao", "µs", group="t", section=GATE)
-def _(qg_ao, gate_i_peak):
-    return qg_ao / (gate_i_peak / 2)
 
 
 @fig("gate_time_irl", "µs", group="t", section=GATE,
@@ -1579,7 +1718,7 @@ def _(i_bus, n_channels, knob_pd_i_c_1k, i_adc_both, i_iso_s2):
     return i_bus + n_channels.raw * knob_pd_i_c_1k + i_adc_both + i_iso_s2
 
 
-@fig("knob_gate_lower", "kΩ", group="2 kΩ", section=KNOB,
+@fig("knob_gate_lower", "kΩ", group="R33", section=KNOB,
      prints="up")
 def _(v_mod_nom, i_out_iso):
     return v_mod_nom / i_out_iso
@@ -1589,12 +1728,6 @@ def _(v_mod_nom, i_out_iso):
      prints="down")
 def _(gate_charge_limit, v_mod_nom, qg_irl):
     return gate_charge_limit * v_mod_nom / (2 * qg_irl)
-
-
-@fig("knob_gate_upper_ao", "kΩ", group="gate", section=KNOB,
-     prints="down")
-def _(gate_charge_limit, v_mod_nom, qg_ao):
-    return gate_charge_limit * v_mod_nom / (2 * qg_ao)
 
 
 @fig("knob_gate_at_3k", "V", group="100 kΩ lower", section=KNOB)
@@ -1749,7 +1882,7 @@ _PLACE = "Placement distances"
 asm("place_decoupling", 3, "mm", group=_PLACE, stated="loose",
     src="how close a 100 nF sits to the pin it decouples; no datasheet states one")
 asm("place_local", 10, "mm", group=_PLACE, stated="loose",
-    src="how close a part sits to the node it serves, J-PWR and Q1's gate alike; no datasheet states one")
+    src="how close a part sits to the node it serves, J-PWR, Q1's gate and the converters' VDD pins alike; no datasheet states one")
 asm("place_channel", 25, "mm", group=_PLACE, stated="loose",
     src="how far a channel's pull-down may sit from its converter input, so the stub adds little to the source resistance")
 asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm; "
@@ -1866,10 +1999,10 @@ _I("both emitter resistors are above the single-channel bound",
    lambda v: v.r_min_single < v.r_led_sharp and v.r_min_single < v.r_led)
 _I("both emitter resistors are below the characterizing point",
    lambda v: v.r_led < v.knob_r_upper and v.r_led_sharp < v.knob_r_upper)
-_I("both emitter resistors stay inside an 0805",
-   lambda v: v.p_r_led < v.p_0805 and v.p_r_led_sharp < v.p_0805)
+_I("both emitter resistors stay inside the kit's rating",
+   lambda v: v.p_r_led < v.p_kit and v.p_r_led_sharp < v.p_kit)
 _I("Q1 stays inside its dissipation rating",
-   lambda v: v.p_q1 < v.p_q1_rating)
+   lambda v: v.t_j_q1 < v.t_j_max)
 _I("the gate draws no more than the isolator output gives",
    lambda v: v.gate_i_peak <= v.i_out_iso)
 _I("the gate clears the worse of the two thresholds",
@@ -1884,6 +2017,16 @@ _I("the module's input survives the worst solenoid sag",
    lambda v: v.sag_three_coils > v.v_mod_in_min)
 _I("the pull-down is under the acquisition wall",
    lambda v: v.r_pd < v.knob_pd_acq_wall)
+_I("R1 to R16 sit inside their window, at either value",
+   lambda v: v.r_led_min <= v.r_led_sharp <= v.r_led_max
+   and v.r_led_min <= v.r_led <= v.r_led_max)
+_I("R17 to R32 sit inside their window", lambda v: v.r_pd_min <= v.r_pd <= v.r_pd_max)
+_I("R33 sits inside its window", lambda v: v.r_gate_min <= v.r_gate <= v.r_gate_max)
+_I("R34 sits inside its window", lambda v: v.r_miso_min <= v.r_miso <= v.r_miso_max)
+_I("R35 sits inside its window", lambda v: v.r_gate_pd_min <= v.r_gate_pd <= v.r_gate_pd_max)
+_I("R36 sits inside its window", lambda v: v.r_dout_pu_min <= v.r_dout_pu <= v.r_dout_pu_max)
+_I("R37 and R38 sit inside their window", lambda v: v.r_dout_min <= v.r_dout <= v.r_dout_max)
+_I("R39 sits inside its window", lambda v: v.r_ref_min <= v.r_ref <= v.r_ref_max)
 
 _I("the hot forward-voltage curve sits under the cold one at 10 mA",
    lambda v: v.vf75_10ma < v.vf25_10ma)
@@ -1901,25 +2044,22 @@ _I("and at 50 mA",
 
 for _text, _why in [
     # quoted from a datasheet, at a condition this design does not run
-    ("5.7 A", "AO3400A continuous drain current, AOS sheet"),
-    ("3 A", "the drain current AOS specifies R_DS(on) at"),
-    ("102 kΩ", "R33 and R35 in series, the gate divider's total"),
-    ("36 A", "IRL540N continuous drain current"),
+    ("102.2 kΩ", "R33 and R35 in series, the gate divider's total"),
     ("18 A", "the IRL540N row at 25 °C"),
     ("15 A", "the IRL540N row at 100 °C"),
-    ("0.044 Ω", "IRL540N R_DS(on) typical at V_GS = 10 V"),
-    ("0.053 Ω", "IRL540N R_DS(on) maximum at V_GS = 10 V"),
-    ("0.063 Ω", "IRL540N R_DS(on) at V_GS = 5 V"),
+    ("0.044 Ω", "IRL540N R_DS(on) maximum at V_GS = 10 V"),
+    ("0.053 Ω", "IRL540N R_DS(on) maximum at V_GS = 5.0 V"),
+    ("0.063 Ω", "IRL540N R_DS(on) maximum at V_GS = 4.0 V"),
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
 
     # a package, a pitch, a count: not a measured quantity at all
-    ("0805", "the resistor package, a name rather than a value"),
     ("2.54 mm", "the connector pitch"),
     ("5 %", "the share of a phase the startup discards, a plain fraction"),
 
     # a figure the model holds at another unit or another rounding
     ("3.146", "V_OUT min, restated without its unit"),
     ("3.449", "V_OUT max, restated without its unit"),
+    ("0.020", "the IRL540N estimate's drop in volts, restated without its unit"),
     ("1.35", "V_F at 40 mA on the 75 °C curve, restated without its unit"),
     ("53 µs", "the τ reading before it was rounded up to the 70 µs the design runs"),
 

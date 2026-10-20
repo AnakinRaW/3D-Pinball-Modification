@@ -3,6 +3,7 @@
 | File | Contents |
 |---|---|
 | [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them. Checks every marked Teensy pin against the pin table |
+| [`figlib/`](figlib/) | The modules `figcheck.py` runs, as its [layout](#layout) lists them |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
 | [`picture.py`](picture.py) | Turns the PNGs of one screen layer, each at most 320 × 240 pixels, into picture files that share one palette of 255 colors with their opacity, dithered, as [`media.md`](../assets/media.md) describes |
@@ -48,6 +49,8 @@ python tools/figcheck.py --sheets                                  every model, 
 python tools/figcheck.py docs/parts/ir-reflective/figures.py       one model, and the pins its files mark
 ```
 
+A relative model path reads from the root of the checkout that holds this `figcheck.py`, so a run from another checkout's directory checks this checkout's model. A model outside this checkout's `docs/` is refused.
+
 A figure is declared in one model, and every other model that needs it takes it by name:
 
 ```python
@@ -64,7 +67,7 @@ MODEL.as_written("t_tick_us", of="t_tick", unit="µs")    # kPeriodUs = 5000
 
 Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and meter. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
 
-Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing anchoring it, so when the model moves under it nothing notices, which is how a bench current stayed at 192 mA after it had become 233 mA. What a document states and the model does not compute is declared as an aside, with the reason:
+Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing anchoring it, so when the model moves under it nothing notices, which is how a bench current stayed at 192 mA after it had become 233 mA. A prose figure that stands for a bound keeps to the side the bound is printed on, so a floor quoted one digit too high fails. What a document states and the model does not compute is declared as an aside, with the reason:
 
 ```python
 MODEL.aside("2.54 mm", "the connector pitch")
@@ -78,10 +81,10 @@ Each check reports on a separate line, and any of them can fail the run:
 
 | The run prints | What it checks |
 |---|---|
-| figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
+| figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A declared input agrees digit for digit, so a resistor left at 1.1 kΩ beside a model at 1.2 kΩ fails. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
-| figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and text elements holding an unanchored figure are listed. One element may carry several figures, and the attribute then names them space separated. A figure of another model is anchored as `model:key`, such as `break-beam:r_e`, so a drawing that carries several subsystems' parts needs no `uses` in the model that owns it |
+| figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and a figure in a text element that no `data-fig` names fails the run. One element may carry several figures, and the attribute then names them space separated. A figure of another model is anchored as `model:key`, such as `break-beam:r_e`, so a drawing that carries several subsystems' parts needs no `uses` in the model that owns it |
 | Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
 | what the pins can carry | The pin table's port, capability, timer and FlexIO rows are the ones the board's model gives. See [What the pins can carry](#what-the-pins-can-carry) |
 | what the allocation costs | Each of the two cost tables names every port, timer and FlexIO its part of the table takes and nothing else, lists every pin a taken port has no alternative for, and states the PWM pins and analog inputs it takes correctly |
@@ -105,13 +108,13 @@ Flags:
 
 | | |
 |---|---|
-| `--base <ref>` | The git ref the stale pass diffs against, `HEAD` by default |
+| `--base <ref>` | The git ref the stale pass diffs against and `--write` takes the old figures from, `HEAD` by default |
 | `--provenance` | Every input with its kind, its value and its source |
 | `--graph <key>` | One quantity in full: its value, its source, its formula, the value of each input to it, everything it rests on and everything that rests on it |
 | `--groups` | The block groups and value tokens the markdown parser found |
 | `--blind` | The brief for an independent derivation: each quantity, its unit and its inputs, with no formula and no value |
 | `--write-sums` | Records the checksums of the cited datasheets |
-| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing. A block in which any figure found no line is left unwritten, because a figure that moved far loses its own line and another figure of the block can take it. The far movers then go in by hand, and a second run writes the rest. A drawing is written by its `data-fig` keys and needs no such care. A pin that moved in the pin table is carried into every place that marks it |
+| `--write` | Writes the model's figures into the document and the drawings, so a figure is typed in one place only. Reports every edit, and reports the figure it could not place instead of guessing. A figure that moved far is found on the line that still reads its value at `--base`. Where figures that print different values could each take the same lines, those lines stay as they are until a `label` in the model tells the figures apart. A label is a phrase that only the figure's own line carries. A block in which a figure found no line of its own is left unwritten. Those figures go in by hand. A second run then writes the rest. A drawing is written by its `data-fig` keys and needs no such care. A pin that moved in the pin table is carried into every place that marks it |
 | `--sheets`, `--mutate`, `--no-stale` | Switch the named pass on, or off |
 
 A sheet comes back unusable in two ways, and both are reported as unread rather
@@ -119,8 +122,7 @@ than blamed on the readings in it. Fonts the extractor cannot map give noise,
 which the share of plausible characters catches. A scan of printed pages gives
 clean text that is not the sheet, a few navigation labels repeated, which scores
 full marks on plausibility and carries almost no vocabulary; the count of
-distinct words catches that one. `IRL540N.PDF` is the scan in this repository,
-and its readings are taken from the rendered page by eye.
+distinct words catches that one.
 
 A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
@@ -186,6 +188,24 @@ A signal lists the pins that can carry it, alternatives in the order the pin car
 `--write` writes the pin table's port rows, its PWM and analog rows, its timer rows and its FlexIO rows from the model, and the run fails on a row that differs from it. A port, a timer or a FlexIO row also names the subsystem that uses it, which the run takes from the allocation rows that name it. The allocation itself stays typed in the table. The two cost tables are typed by hand as well, since their rows carry the reasons, and the run checks them against what the pins take. A port is taken once a pin carrying a signal it needs is taken, or once a row names one of its signals. A timer is taken once a row names one of its channels, and a FlexIO once a row names one of its signals.
 
 An input carries a provenance kind: `datasheet` and `graph` for a sheet reading, from a table and from a plotted curve; `measured` for a bench result; `assumed` and `decision` for what was assumed or chosen. A formula may hold no number beyond 0, 1 and 2, which appear as algebra. Every other constant is a declared input with a source, so a factor like the ln(9) between a 10-to-90 % rise time and a time constant cannot sit unnamed inside a derivation.
+
+### Layout
+
+`figcheck.py` is the entry point and holds the names a model imports. The checker itself sits in [`figlib/`](figlib/), one module for each part of the run:
+
+| Module | Holds |
+|---|---|
+| `quantities.py` | Units, dimensions and the quantity type, with the functions a formula may call |
+| `model.py` | `Model` and what a model declares: inputs, formulas, requirements, curves, nets and the board's pins |
+| `repo.py` | The repository root, each model found and loaded once, and the figures every model had at a git revision |
+| `document.py` | A markdown file read as figure tokens, each in its group and section |
+| `report.py` | The errors and notes a run collects, and the lines it prints them in |
+| `checks.py` | The checks of one model, from the figures in its documents to `--mutate` |
+| `pins.py` | The pin table, the marked pins, the cost tables and the pins a diff moved |
+| `wiring.py` | The nets, the peripherals and the shared budgets, across every model |
+| `write.py` | What `--write` puts into the documents and the drawings |
+| `listings.py` | What `--graph`, `--blind`, `--provenance` and `--groups` print |
+| `cli.py` | The run itself: a block for each model, then the pins and the wiring |
 
 ## pdftext
 

@@ -80,7 +80,7 @@
   <line x1="1071" y1="180" x2="1089" y2="180" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1076" y1="186" x2="1084" y2="186" stroke="#1a1a1a" stroke-width="2"/>
   <text x="1040" y="154" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">C2</text>
-  <text x="1040" y="170" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_bulk">1000 &#181;F</text>
+  <text x="1040" y="170" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_one">1000 &#181;F</text>
   <rect x="980" y="120" width="160" height="74" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
   <text x="974" y="196" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bulk">keep together, under 20 mm:</text>
   <text x="974" y="212" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a">C2 at J-PWR</text>
@@ -103,7 +103,7 @@
   <line x1="606" y1="250" x2="676" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="676" y="240" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R4</text>
-  <text x="711" y="255" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">220 &#937;</text>
+  <text x="711" y="255" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
   <line x1="746" y1="250" x2="934" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="940" y="232" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="940" cy="250" r="6" fill="#8a2be2"/>
@@ -140,7 +140,7 @@
   <line x1="606" y1="320" x2="676" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="676" y="310" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R5</text>
-  <text x="711" y="325" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">220 &#937;</text>
+  <text x="711" y="325" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
   <line x1="746" y1="320" x2="934" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="940" y="302" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="940" cy="320" r="6" fill="#8a2be2"/>
@@ -177,7 +177,7 @@
   <line x1="606" y1="390" x2="676" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="676" y="380" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="374" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R6</text>
-  <text x="711" y="395" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">220 &#937;</text>
+  <text x="711" y="395" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
   <line x1="746" y1="390" x2="934" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
   <rect x="940" y="372" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <circle cx="940" cy="390" r="6" fill="#8a2be2"/>
@@ -198,7 +198,7 @@
   <!-- ===== signal levels and the output rating ===== -->
   <text x="162" y="238" font-size="11.5" fill="#666" data-fig="v_3v3">3.3 V data</text>
   <text x="676" y="278" font-size="11.5" fill="#666" data-fig="v_rail">5 V data</text>
-  <text x="676" y="434" font-size="11.5" fill="#666" data-fig="p_rating">R4 to R6 each rated 0.5 W</text>
+  <text x="676" y="434" font-size="11.5" fill="#666" data-fig="p_kit">R4 to R6 each rated 0.25 W</text>
 
   <!-- ===== R1 to R3 at their buffer inputs ===== -->
   <rect x="238" y="220" width="86" height="188" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
@@ -261,17 +261,4 @@
   <text x="250" y="823" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
   <text x="350" y="823" font-size="11.5" fill="#444">C2 carries each step of the LED current where the feed arrives</text>
 
-  <!-- ===== variants ===== -->
-  <text x="780" y="740" font-size="13" font-weight="700" fill="#1a1a1a">Package variants</text>
-  <text x="780" y="762" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
-  <text x="840" y="762" font-size="12" font-weight="700" fill="#1a1a1a">Function</text>
-  <text x="920" y="762" font-size="12" font-weight="700" fill="#1a1a1a">Through-hole</text>
-  <text x="1085" y="762" font-size="12" font-weight="700" fill="#1a1a1a">SMD</text>
-  <line x1="780" y1="769" x2="1240" y2="769" stroke="#ccc" stroke-width="1"/>
-  <text x="780" y="787" font-size="11.5" fill="#444">U1</text>
-  <text x="840" y="787" font-size="11.5" fill="#444">Buffer</text>
-  <text x="920" y="787" font-size="11.5" fill="#444">CD74HCT125E</text>
-  <text x="920" y="803" font-size="11.5" fill="#444">DIP-14</text>
-  <text x="1085" y="787" font-size="11.5" fill="#444">CD74HCT125M96</text>
-  <text x="1085" y="803" font-size="11.5" fill="#444">SOIC-14</text>
 </svg>

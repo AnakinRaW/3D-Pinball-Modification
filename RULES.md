@@ -91,9 +91,7 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 - **Sub-directory `README.md` files** — what a repository visitor finds in the folder. Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
 - **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
 - **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives, the pin number stands in this file alone, so a re-allocation costs no edit there either.
-- **Schematic SVGs in `docs/`** — where a part's type designation depends on its package, the diagram names both the through-hole and the SMD type in a variants table. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
-
-  Both variants describe **one** circuit: same topology, same values, same netlist. A build that would need a different value or a different topology is not a variant but a second design, and is documented separately. Package-dependent figures — power rating, thermal resistance, DC-bias capacitance loss, R_DS(on) — are verified for each named variant before it is listed.
+- **Schematic SVGs in `docs/`** — a part whose type designation depends on its package is named by its through-hole type. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
   Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
 
@@ -299,3 +297,7 @@ What a request touches:
 **When workarounds pile up, the model beneath them is questioned.** A design that needs a further fix for each problem it solves is re-derived from its requirements under rule 9 before the next fix goes in. The display's palettes, its dithering and its opacity in the palette each solved a problem that the layers of pixels had created.
 
 **An assumption that shapes a design is named as an assumption.** It constrains the design only once it is confirmed as a requirement. The display assumed a main loop that never waits for the bus, and that assumption alone ruled out drawing on demand.
+
+## 17. Through-hole build
+
+**The build is through-hole.** Every part is chosen, drawn, listed and computed in a through-hole package. No document, drawing or model carries an SMD variant of a part. A part that exists only in an SMD package is the exception. It sits on an adapter with through-hole pins.

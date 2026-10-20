@@ -77,10 +77,8 @@
   <text x="165" y="268" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">C5</text>
   <rect x="190" y="256" width="34" height="18" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="207" y="268" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">R39</text>
-  <rect x="232" y="256" width="34" height="18" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
-  <text x="249" y="268" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">C6</text>
-  <rect x="78" y="228" width="212" height="76" rx="8" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text data-fig="place_local" x="78" y="220" font-size="10.5" font-weight="700" fill="#0a8a6a">C5, R39, C6 within 10 mm of J-PWR</text>
+  <rect x="78" y="228" width="160" height="76" rx="8" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
+  <text data-fig="place_local" x="78" y="220" font-size="10.5" font-weight="700" fill="#0a8a6a">C5, R39 within 10 mm of J-PWR</text>
   <rect x="352" y="250" width="40" height="26" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="372" y="267" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">Q1</text>
   <rect x="404" y="246" width="28" height="13" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
@@ -123,6 +121,10 @@
   <rect x="870" y="368" width="22" height="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="881" y="376" text-anchor="middle" font-size="6.5" font-weight="700" fill="#1a1a1a">R38</text>
   <rect x="700" y="330" width="260" height="118" rx="8" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
+  <rect x="862" y="281" width="34" height="18" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="879" y="293" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">C6</text>
+  <rect x="852" y="270" width="54" height="40" rx="8" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
+  <text data-fig="place_local" x="842" y="294" text-anchor="end" font-size="10.5" font-weight="700" fill="#0a8a6a">C6 within 10 mm of U1 and U2</text>
   <text data-fig="place_channel" x="700" y="322" font-size="10.5" font-weight="700" fill="#0a8a6a">each 4.7 k&#937; within 25 mm of its input</text>
   <rect x="1050" y="220" width="80" height="130" rx="4" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="1.8"/>
   <text x="1090" y="289" text-anchor="middle" font-size="11" font-weight="700" fill="#5c4a00">U3</text>

@@ -12,13 +12,13 @@ R2 and R3 sit on the [Teensy motherboard](../motherboard/design.md).
 
 Pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") reads HIGH while a ball blocks the beam and LOW while the beam is clear. The receiver sits between the pin and GND and conducts while it is lit. Without light, R3 with 100 kΩ pulls the pin up to the Teensy's 3V3.
 
-The weakest receiver still pulls 2.8× the current a LOW needs. For a HIGH, the ball has to bring the receiver's current below 8.2 µA.
+The weakest receiver still pulls 2.7× the current a LOW needs. For a HIGH, the ball has to bring the receiver's current below 8.2 µA.
 
 The Teensy's internal pull-up stays off, since together with R3 it would prevent the pin from reading LOW. A broken cable or a dead emitter leaves the pin HIGH. The driver then reports the beam failed after 5 s.
 
 ### Supply
 
-R2 with 220 Ω feeds the emitter from the supply behind [D1](../motherboard/design.md#supply). The Teensy's VIN sits on the same node. The emitter therefore also runs while the Teensy is on USB alone. The emitter carries 11.1 to 25.2 mA across the node's voltage range.
+R2 with 220 Ω feeds the emitter from the supply behind [D1](../motherboard/design.md#supply). The Teensy's VIN sits on the same node. The emitter therefore also runs while the Teensy is on USB alone. The emitter carries 10.8 to 25.2 mA across the node's voltage range.
 
 ## Teensy pins
 
@@ -50,14 +50,14 @@ The emitter and the receiver sit 3.9 cm apart in the stock machine's niches on e
 ### Emitter
 
 ```
-EMITTER   VIN at 6 A, at least                   = 4.16 V
+EMITTER   VIN at 6 A, at least                   = 4.11 V
           the emitter's forward voltage at 20 mA,
           at most                                  1.6 V
-          across R2, at least                    = 2.56 V
+          across R2, at least                    = 2.51 V
           R2                                       220 Ω
           its tolerance                            5 %
           R2 at its most                         = 231 Ω
-          the emitter's current, at least        = 11.1 mA
+          the emitter's current, at least        = 10.8 mA
           VIN from the adapter or USB, at most     5.25 V
           R2 at its least                        = 209 Ω
           the emitter's current with no forward
@@ -76,10 +76,10 @@ RATINGS   R2's power, at most                    = 132 mW
 ```
 LIT       the emitter's intensity at 20 mA, at
           least                                    2 mW/sr
-          at its least current                   = 1.11 mW/sr
+          at its least current                   = 1.08 mW/sr
           the gap between the two niches           3.9 cm
           the irradiance at the receiver, at
-          least                                  = 0.072 mW/cm²
+          least                                  = 0.071 mW/cm²
           the receiver's light current at
           1 mW/cm² and 5 V, at least               2 mA
           and typically                            4 mA
@@ -90,7 +90,7 @@ LIT       the emitter's intensity at 20 mA, at
           0.1 mW/cm²                               0.21 mA
           and at 0.2 mW/cm²                        0.53 mA
           the light current at the irradiance
-          above and 1 V, at least                = 0.068 mA
+          above and 1 V, at least                = 0.067 mA
 LOW       the Teensy's 3V3                         3.3 V
           its accuracy                             1 %
           3V3 at its most                        = 3.333 V
@@ -98,8 +98,8 @@ LOW       the Teensy's 3V3                         3.3 V
           what R3 has to drop for a LOW          = 2.34 V
           R3                                       100 kΩ
           R3 at its least                        = 95 kΩ
-          the light current's drop across it     = 6.54 V
-          the margin                             = 2.8×
+          the light current's drop across it     = 6.37 V
+          the margin                             = 2.7×
 BLOCKED   the receiver's dark current, at most     100 nA
           the pin's input current, at most         1 µA
           R3 at its most                         = 105 kΩ

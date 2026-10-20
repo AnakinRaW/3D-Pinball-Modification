@@ -82,34 +82,11 @@ Rule 1 makes English the repository language, and that includes every label insi
 - Escape XML in text content: `&lt;` for `<`, `&amp;` for `&`. A bare `<` inside a `<text>` element makes the file invalid and it will not render.
 
 
-## Package variants
+## Packages
 
-The drawn symbol is package-agnostic - a resistor looks the same whether it is axial or 0805. Where the **type designation** changes with the package, both types are named in a variants table, so the diagram serves a perfboard build and an SMD board equally.
+The build is through-hole (RULES.md rule 17). Where the **type designation** changes with the package, the symbol carries the through-hole type, such as CD74HCT125E or IRL540N. A 220 Ohm resistor and a 100 nF ceramic carry their value alone. The diagram has no variants table and names no SMD type.
 
-Include a part only where its designation actually differs. A 220 Ohm resistor and a 100 nF ceramic are the same part in either package and carry their value alone.
-
-Where the difference does arise, and the pair is not already sourced in the circuit document, source it before writing it into a diagram. Do not invent an equivalent.
-
-| Typical case | Through-hole | SMD |
-|---|---|---|
-| Linear regulator | LD1117V33, TO-220 | AMS1117-3.3, SOT-223 |
-| Schottky diode | 1N5819, DO-41 | SS14, SMA |
-| Small-signal transistor | TO-92 type | SOT-23 type |
-| Logic-level MOSFET | TO-220 type | SOT-23 type |
-| Electrolytic | radial | SMD aluminum or tantalum |
-
-Rendering, placed clear of the circuit body:
-
-```
-<text font-size="13" font-weight="700" fill="#1a1a1a">Package variants</text>
-<line stroke="#ccc" stroke-width="1"/>          separator under the header row
-<text font-size="12" font-weight="700" fill="#1a1a1a">   column headings: Ref, Function, Through-hole, SMD
-<text font-size="11.5" fill="#444">             rows
-```
-
-The reference designator in the table matches the one on the drawn symbol.
-
-Listing a variant asserts it has been through `review-circuit` and `design-review` with that variant's figures. An alternative that has not been checked is named in the circuit document as an option, and stays out of the diagram's variants table.
+A part that exists only in an SMD package is the exception. Its label names the package and the adapter it sits on, such as ISO7761F, SOIC-16 wide, on an adapter.
 
 ## Placement constraints
 
@@ -136,7 +113,7 @@ Groups that usually carry one:
 | HF filter capacitor at a connector | at the entry point | It filters what arrives, so it belongs where it arrives |
 | Star ground point | single point | Return current from switching loads staying out of the analog reference |
 
-Where several groups exist, list them in a placement table beside the variants table: group, members, maximum distance, reason.
+Where several groups exist, list them in a placement table clear of the circuit body: group, members, maximum distance, reason.
 
 ## Known limitation
 

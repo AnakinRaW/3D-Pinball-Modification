@@ -100,7 +100,7 @@ The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slig
 
 ### Signal wiring
 
-**A series resistor sits in each data line** at the buffer's output. On a long cable it damps the ringing a steep edge would cause. If a data wire touches 5 V or ground, the 220 Ω resistor also limits the output's current to 25 mA, inside the 35 mA the output is rated for.
+**A series resistor sits in each data line** at the buffer's output. On a long cable it damps the ringing a steep edge would cause. If a data wire touches 5 V or ground, the 330 Ω resistor also limits the output's current to 18 mA, inside the 35 mA the output is rated for. It then carries under half of the 0.25 W the resistor kit rates it. The value lies above the 47 to 220 Ω PJRC names as probably best for matching the wire. With the wire and the first LED's input estimated at 150 pF, it shortens a high at that LED by 105 ns at most. With the 19 ns the input resistor costs, that stays inside the LED's 150 ns tolerance.
 
 ### Supply
 
@@ -129,7 +129,7 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 | 1 | SEZO WS2812B strip, 2.7 mm wide, 160 LEDs/m, 2 m | the perimeters, the ceiling and the playfield segments |
 | 2 | CD74HCT125E quad buffer, DIP-14 | U1 on each board, the level shifter |
 | 6 | 2.2 kΩ resistor | R1 to R3 on each board, from the Teensy pins to the buffer inputs |
-| 6 | 220 Ω resistor, 0.5 W | R4 to R6 on each board, in the data lines at the buffer outputs |
+| 6 | 330 Ω resistor | R4 to R6 on each board, in the data lines at the buffer outputs |
 | 2 | 100 nF ceramic capacitor | C1 on each board, at the buffer's supply pin |
 | 2 | Rubycon 16ZLH1000MEFC8X20, 1000 µF, 16 V | C2 on each board, at J-PWR |
 

@@ -492,7 +492,7 @@ def _(t_hold, t_ttick):
 # the supply: the module's own regulator makes VCC from the power board's 5 V
 # ===========================================================================
 MODEL.uses("v_not_tolerant", of="teensy-4.1")
-MODEL.uses("v_3v3_acc", of="teensy-4.1")
+MODEL.uses("v_3v3_min", of="teensy-4.1")
 MODEL.uses("v_rail", of="lighting", group="SUPPLY", section=SUPPLY, stated=True)
 MODEL.uses("v_jack_max", of="power", group="SUPPLY", section=SUPPLY, stated=True)
 MODEL.uses("v_release_6a", of="power", group="SUPPLY", section=SUPPLY, stated=True)
@@ -602,11 +602,6 @@ def _(t_a, p_ldo, rth_ldo):
 
 
 # the Teensy's rail at its lowest is what switches the converter's transistors on
-@fig("v_3v3_min", "V", stated=False, rises_with=["v_3v3"], falls_with=["v_3v3_acc"])
-def _(v_3v3, v_3v3_acc):
-    return v_3v3 * (1 - v_3v3_acc.raw)
-
-
 # ---------------------------------------------------------------------------
 # VCC: the module's regulator in dropout, between the ILI9341's range and the supervisor
 # ---------------------------------------------------------------------------
