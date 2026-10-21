@@ -183,7 +183,7 @@ MODEL.flexio("FlexIO3", (19, 0), (18, 1), (14, 2), (15, 3), ..., src=FLEXIO_RM)
 MODEL.analog(*range(14, 28), 38, 39, 40, 41, src=CARD_PINS)
 ```
 
-A signal lists the pins that can carry it, alternatives in the order the pin card gives them. `port_roles` sets how a pin carrying a signal drives its net, and which signals a port works without, as SPI does without its CS pins. Invariants in the model hold the data to PJRC's own counts of pins, PWM pins and analog inputs.
+A signal lists the pins that can carry it, alternatives in the order the pin card gives them. `port_roles` sets how a pin carrying a signal drives its net, and which signals a port works without, as SPI does without its CS pins. A signal the pin drives and reads in turn, such as a data line of FlexSPI2, is bidirectional and enters the wiring check as a tri-state output. Invariants in the model hold the data to PJRC's own counts of pins, PWM pins and analog inputs.
 
 `--write` writes the pin table's port rows, its PWM and analog rows, its timer rows and its FlexIO rows from the model, and the run fails on a row that differs from it. A port, a timer or a FlexIO row also names the subsystem that uses it, which the run takes from the allocation rows that name it. The allocation itself stays typed in the table. The two cost tables are typed by hand as well, since their rows carry the reasons, and the run checks them against what the pins take. A port is taken once a pin carrying a signal it needs is taken, or once a row names one of its signals. A timer is taken once a row names one of its channels, and a FlexIO once a row names one of its signals.
 

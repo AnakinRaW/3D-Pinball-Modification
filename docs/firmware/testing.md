@@ -111,6 +111,15 @@ The program `device-monitor` checks the [device monitor](error-handling.md#devic
 | `full-queue` | computer | Let parts fail while the monitor's queue is full, then empty it | Each part is reported at the first check after the queue has room |
 | `source` | computer | Pack the source of every device and part | `faultDevice()` and `faultPart()` give back what `faultSource()` packed |
 
+### PSRAM
+
+The program `psram` checks the [PSRAM](../parts/psram/design.md) on the Teensy's underside.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `found` | Teensy | Read `external_psram_size`, which Teensyduino sets at start-up | It equals the [chip's size](../parts/psram/design.md#chip) in MB |
+| `patterns` | Teensy | Write fixed patterns and a pseudo-random sequence into the whole PSRAM and read each back, as [PJRC's memory test](https://github.com/PaulStoffregen/teensy41_psram_memtest) does | Every byte reads back as written |
+
 ## Drivers
 
 ### Storage
