@@ -164,7 +164,9 @@ MODEL.pin_groups(edge=range(0, 42), sd=range(42, 48), pads=range(48, 55), src=CA
 # The roles set how a pin drives its net when it carries one, and a chip select can sit
 # on any digital pin, so the port works with its CS pins taken.
 MODEL.port_roles(inputs=("RX", "MISO", "data in", "in"), open_drain=("SDA", "SCL"),
-                 optional=("CS",), src="the direction of each signal on the Teensy as master")
+                 optional=("CS",), bidirectional=("DATA0", "DATA1", "DATA2", "DATA3"),
+                 src="the direction of each signal on the Teensy as master; FlexSPI2 drives "
+                 "its data lines while it sends and reads them while the memory answers")
 MODEL.port("Serial1", ("RX", 0), ("TX", 1), src=CARD_PINS)
 MODEL.port("Serial2", ("RX", 7), ("TX", 8), src=CARD_PINS)
 MODEL.port("Serial3", ("RX", 15), ("TX", 14), src=CARD_PINS)
@@ -188,6 +190,13 @@ MODEL.port("I²S1", ("MCLK", 23), ("BCLK", 21), ("LRCLK", 20), ("data out", 7, 3
 MODEL.port("I²S2", ("MCLK", 33), ("BCLK", 4), ("LRCLK", 3), ("data out", 2), ("data in", 5),
            src=CARD_PINS)
 MODEL.port("S/PDIF", ("out", 14), ("in", 15), src=CARD_PINS)
+# FlexSPI2 reaches the memory pads on the underside: the smaller footprint on SS0, the
+# larger one on SS1
+MODEL.port("FlexSPI2", ("SS0", 48), ("DATA1", 49), ("DATA2", 50), ("SS1", 51), ("DATA0", 52),
+           ("SCLK", 53), ("DATA3", 54), note="the memory pads on the underside",
+           src=f"{CORE}/core_pins.h, CORE_PIN48_CONFIG to CORE_PIN54_CONFIG, and "
+           f"{CORE}/startup.c, configure_external_ram(), which muxes GPIO_EMC_24, 27, 28, 22, "
+           "26, 25 and 29 to FLEXSPI2_A_SS0_B, DATA1, DATA2, SS1_B, DATA0, SCLK and DATA3")
 
 # A FlexPWM submodule drives its pins on channel A, B or X, a QuadTimer on channel 0 to 3.
 MODEL.timer("FlexPWM1.0", (1, "X"), (44, "B"), (45, "A"), src=PWM_C)

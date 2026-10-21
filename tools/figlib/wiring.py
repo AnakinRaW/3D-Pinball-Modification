@@ -32,7 +32,9 @@ def teensy_part(row: PinRow, data: PinData) -> Part:
     used, signal, _ = _function(row.peripheral, row.pin, data)
     kind = (data.kind(signal) if used in data.ports else
             "input" if row.peripheral == "plain digital input" else "push-pull")
-    return Part(f"Teensy pin {row.pin}", kind, TEENSY_RAIL if kind == "push-pull" else None,
+    powered = kind in ("push-pull", "tri-state")
+    return Part(f"Teensy pin {row.pin}", kind, TEENSY_RAIL if powered else None,
+                select=f"{used} driving {signal}" if kind == "tri-state" else None,
                 src=f"{rel(PIN_TABLE)}:{row.line}")
 
 

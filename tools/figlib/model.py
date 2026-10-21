@@ -119,6 +119,7 @@ class PinData:
     inputs: tuple = ()          # signals a pin reads
     open_drain: tuple = ()      # signals a pin drives open-drain
     optional: tuple = ()        # signals a port works without
+    bidirectional: tuple = ()   # signals a pin drives and reads in turn
     ports: dict = dataclasses.field(default_factory=dict)    # port: [(signal, pins), ...]
     notes: dict = dataclasses.field(default_factory=dict)    # port: what its row adds
     timers: dict = dataclasses.field(default_factory=dict)   # timer: [(pin, channel), ...]
@@ -128,7 +129,8 @@ class PinData:
     def kind(self, signal: str) -> str:
         """How a pin carrying `signal` drives its net, as a wiring part's role."""
         return ("input" if signal in self.inputs else
-                "open-drain" if signal in self.open_drain else "push-pull")
+                "open-drain" if signal in self.open_drain else
+                "tri-state" if signal in self.bidirectional else "push-pull")
 
     def pwm(self) -> list[int]:
         return sorted(p for pins in self.timers.values() for p, _ in pins)
@@ -191,10 +193,11 @@ class Model:
         self._pins().groups.update({g: list(p) for g, p in groups.items()})
         self.pin_data.sources.append(("the pin groups", src))
 
-    def port_roles(self, *, inputs, open_drain, optional, src):
+    def port_roles(self, *, inputs, open_drain, optional, src, bidirectional=()):
         """How a pin carrying a signal drives its net, and the signals a port works without."""
         d = self._pins()
         d.inputs, d.open_drain, d.optional = tuple(inputs), tuple(open_drain), tuple(optional)
+        d.bidirectional = tuple(bidirectional)
         d.sources.append(("the signals' directions", src))
 
     def port(self, name, *signals, note=None, src):

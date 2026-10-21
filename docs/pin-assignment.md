@@ -39,6 +39,12 @@
 | 39 | D5 to the display | FlexIO3 pin 13 | [Display](parts/display/design.md) |
 | 40 | Solenoid trigger 1 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 | 41 | Solenoid trigger 2 | plain digital output | [Solenoids](parts/solenoid/design.md) |
+| 48 | PSRAM chip select | FlexSPI2 SS0 | [PSRAM](parts/psram/design.md) |
+| 49 | PSRAM data 1 | FlexSPI2 DATA1 | [PSRAM](parts/psram/design.md) |
+| 50 | PSRAM data 2 | FlexSPI2 DATA2 | [PSRAM](parts/psram/design.md) |
+| 52 | PSRAM data 0 | FlexSPI2 DATA0 | [PSRAM](parts/psram/design.md) |
+| 53 | PSRAM clock | FlexSPI2 SCLK | [PSRAM](parts/psram/design.md) |
+| 54 | PSRAM data 3 | FlexSPI2 DATA3 | [PSRAM](parts/psram/design.md) |
 
 ### What this allocation costs
 
@@ -63,6 +69,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | CAN1 | Display, pins 22 and 23 |
 | Wire2 and Serial6 | Display, pins 24 and 25 |
 | Serial7 | Display, pins 28 and 29 |
+| FlexSPI2 | PSRAM, pins 48, 49, 50, 52, 53 and 54 |
 | 20 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
 | 18 of 18 analog inputs | A0, A1, A2 sensors; A3, A6 to A15 display; A4, A5 rotary sensor; A16, A17 solenoids |
 
@@ -76,16 +83,13 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
+| 1 | Interrupt from the targets' port expander | plain digital input | Targets |
 | 5 | LED chain A | plain digital output | [Lighting](parts/lighting/design.md) |
 | 6 | LED chain B | plain digital output | [Lighting](parts/lighting/design.md) |
 | 7 | LED chain C | plain digital output | [Lighting](parts/lighting/design.md) |
 | 8 | LED chain D | plain digital output | [Lighting](parts/lighting/design.md) |
 | 9 | LED chain E | plain digital output | [Lighting](parts/lighting/design.md) |
 | 10 | LED chain F | plain digital output | [Lighting](parts/lighting/design.md) |
-| 48 | Target sense 1 | plain digital input | Targets |
-| 49 | Target sense 2 | plain digital input | Targets |
-| 50 | Target sense 3 | plain digital input | Targets |
-| 51 | Target sense 4 | plain digital input | Targets |
 
 ### What the reserved pins cost
 
@@ -95,7 +99,7 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 
 A second AS5600 needs a TCA9548A multiplexer on pins 18 and 19, because the AS5600's address 0x36 is fixed. The multiplexer carries up to eight sensors and costs no further pin.
 
-One edge pin remains, pin 1. The targets take the QSPI memory pads on the underside, pins 48 to 51, which need soldering, and pins 52 to 54 remain there.
+No edge pin remains. On the underside, pin 51 remains, FlexSPI2's chip select for the larger memory pads.
 
 ## Signal names
 
@@ -110,6 +114,7 @@ One edge pin remains, pin 1. The targets take the QSPI memory pads on the unders
 | **Analog in** (A0–A17) | The pin reads a voltage between 0 and 3.3 V as a number instead of only high or low |
 | **S/PDIF** | Digital audio in and out |
 | **FlexIO** | A programmable I/O block of the i.MX RT that clocks a parallel bus out on signals in a row |
+| **FlexSPI** (SS, SCLK, DATA) | The i.MX RT's controller for external memory chips. SS selects a chip. SCLK clocks it. DATA0 to DATA3 carry four bits a clock in either direction |
 | **LED** | The orange LED soldered to the board, on pin 13, which also carries SPI SCK. It takes roughly 3 of the 4 mA recommended per pin whenever the pin is high |
 
 ## Shared resources
@@ -138,6 +143,7 @@ One edge pin remains, pin 1. The targets take the QSPI memory pads on the unders
 | I²S1 | MCLK 23, BCLK 21, LRCLK 20, data out 7 / 32 / 9 / 6, data in 8 / 38 (the Teensy Audio library's pin set) |  |
 | I²S2 | MCLK 33, BCLK 4, LRCLK 3, data out 2, data in 5 | Audio |
 | S/PDIF | out 14, in 15 |  |
+| FlexSPI2 | SS0 48, DATA1 49, DATA2 50, SS1 51, DATA0 52, SCLK 53, DATA3 54 (the memory pads on the underside) | PSRAM |
 
 ## Capabilities on the edge headers
 

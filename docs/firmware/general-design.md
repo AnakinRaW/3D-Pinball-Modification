@@ -83,6 +83,7 @@ Each peripheral below belongs to one driver, and no other code or library may us
 | FlexIO2 | Display | runs on FlexIO3's clock, which the driver sets |
 | Wire2 | Touch | drives the touch controller's bus after `begin()` |
 | GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
+| FlexSPI2 | PSRAM | Teensyduino's start-up code connects the PSRAM through it |
 
 The IR driver takes all four channels of QuadTimer3, because they share one interrupt ([i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3, interrupt 135).
 
