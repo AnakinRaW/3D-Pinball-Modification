@@ -1,10 +1,15 @@
 """What a model file declares: its figures, requirements and curves, its nets, the board's pins."""
 from __future__ import annotations
 
+import ast
+import builtins
+import contextlib
 import dataclasses
+import functools
 import inspect
 import pathlib
 import re
+import sys
 
 from .quantities import Q, as_q
 from .repo import model_named
@@ -12,6 +17,9 @@ from .repo import model_named
 
 # `graph` is a reading off a plotted curve, which the sheet's text never prints
 KINDS = ("datasheet", "graph", "measured", "assumed", "decision", "derived")
+
+# a keyword a declaration leaves to its block, or to its own default outside one
+_UNSET = object()
 
 
 @dataclasses.dataclass
@@ -40,10 +48,11 @@ class Fig:
     prints: str | None = None
     body: str | None = None           # the formula, as it is written
     origin: str | None = None         # the model a taken figure is declared in
+    free: frozenset = frozenset()     # the model file's own names an expression formula reads
 
 
 def _formula_text(src: str) -> str | None:
-    """The body of a formula, without its decorator or its signature."""
+    """The body of a function formula, without its signature."""
     if not src:
         return None
     lines = src.split("\n")
@@ -61,6 +70,52 @@ def _formula_text(src: str) -> str | None:
 # as algebra; any other constant is a declared input with a source.
 BODY_LITERAL_RE = re.compile(r"""(?<![\w.'"])\d+(?:\.\d+)?(?![\w.'"])""")
 LITERAL_ALLOWED = {"0", "1", "2"}
+
+
+def _literal_error(key, found):
+    return ValueError(f"{key}: a formula may not carry a bare number. {found!r} "
+                      f"belongs in the inputs, with the source it came from")
+
+
+def _moves(key, moves: str):
+    """The inputs a figure rises with, written +key, and falls with, written -key."""
+    rises, falls = [], []
+    for word in moves.split():
+        if word[:1] not in ("+", "-") or not word[1:].isidentifier():
+            raise ValueError(f"{key}: moves names each input as +key or -key, got {word!r}")
+        (rises if word[0] == "+" else falls).append(word[1:])
+    return tuple(rises), tuple(falls)
+
+
+def _expression(key, text: str, scope: dict, lint=True):
+    """The function an expression stands for, the keys it rests on, and the names of the
+    model file it reads.
+
+    A name the model file or Python itself defines is read from there, and every other
+    name is a figure, in the order the expression first names them. `lint` holds the
+    expression to the formulas' rule on bare numbers.
+    """
+    try:
+        tree = ast.parse(text, mode="eval")
+    except SyntaxError as e:
+        raise ValueError(f"{key}: the formula is no Python expression: {e.msg}") from None
+    names = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Lambda, ast.comprehension, ast.NamedExpr)):
+            raise ValueError(f"{key}: a formula that binds names of its own is written "
+                             f"as a function")
+        if (lint and isinstance(node, ast.Constant) and not isinstance(node.value, bool)
+                and isinstance(node.value, (int, float, complex))
+                and ast.get_source_segment(text, node) not in LITERAL_ALLOWED):
+            raise _literal_error(key, ast.get_source_segment(text, node))
+        if isinstance(node, ast.Name):
+            names.append(node)
+    names.sort(key=lambda n: (n.lineno, n.col_offset))
+    own = lambda name: name in scope or hasattr(builtins, name)
+    deps = tuple(dict.fromkeys(n.id for n in names if not own(n.id)))
+    free = frozenset(n.id for n in names if own(n.id))
+    fn = eval(f"lambda {', '.join(deps)}: ({text})", scope)
+    return fn, deps, free
 
 
 DRIVER_KINDS = ("push-pull", "tri-state", "open-drain")
@@ -154,6 +209,46 @@ class Model:
         self.supplied: list = []
         self.path: pathlib.Path | None = None
         self.pin_data: PinData | None = None
+        self._blocks: list[dict] = []
+
+    @classmethod
+    def at(cls, file, name, document="design.md", *, section=None, until="## Sources",
+           drawings=(), documents=()):
+        """The model a file declares, its documents and drawings named from the file's folder."""
+        here = pathlib.Path(file).resolve().parent
+        path = lambda p: (here / p).resolve()
+        return cls(name, path(document), section, until,
+                   [path(d) for d in drawings], [path(d) for d in documents])
+
+    def declarers(self):
+        """What a model file declares with: fig, then an input of each kind, in the order
+        ds, gr, msr, asm, dec for datasheet, graph, measured, assumed and decision."""
+        of = lambda kind: functools.partial(self.input, kind=kind)
+        return (self.fig, of("datasheet"), of("graph"), of("measured"), of("assumed"),
+                of("decision"))
+
+    @contextlib.contextmanager
+    def block(self, group=None, *, section=None, stated=True):
+        """Where the document states the figures declared inside: their group, their
+        section and how they are stated, unless a declaration names its own. A
+        declaration the document does not state takes no group and no section from it."""
+        self._blocks.append({"group": group, "section": section, "stated": stated})
+        try:
+            yield
+        finally:
+            self._blocks.pop()
+
+    def _placed(self, group, section, stated, default_stated):
+        """A declaration's group, section and stated: its own, else its block's."""
+        block = self._blocks[-1] if self._blocks else None
+        if stated is _UNSET:
+            stated = block["stated"] if block else default_stated
+        addressed = block is not None and stated is not False
+        if group is _UNSET:
+            group = block["group"] if addressed else None
+        if section is _UNSET:
+            section = block["section"] if addressed else None
+        return group, section, stated
 
     def net(self, name, *parts, teensy=None):
         """A net of the subsystem: every part on it, and the Teensy signal it reaches."""
@@ -172,9 +267,10 @@ class Model:
         """What the subsystem takes from a pool in the machine: the figure `key`, or one slot."""
         self.drawn.append((key, pool))
 
-    def uses(self, key, *, of, group=None, label=None, section=None, tol_units=1.0,
-             stated=False):
+    def uses(self, key, *, of, group=_UNSET, label=None, section=_UNSET, tol_units=1.0,
+             stated=_UNSET):
         """A figure the model `of` declares, addressed the way this model's documents state it."""
+        group, section, stated = self._placed(group, section, stated, False)
         return self._add(Fig(key, "", "taken", group, label, section, tol_units=tol_units,
                              stated=stated, origin=of))
 
@@ -235,8 +331,9 @@ class Model:
         self.figs[f.key] = f
         return f
 
-    def input(self, key, value, unit, *, kind, src=None, sheet=None, group=None,
-              label=None, section=None, tol_units=1.0, stated=False):
+    def input(self, key, value, unit, *, kind, src=None, sheet=None, group=_UNSET,
+              label=None, section=_UNSET, tol_units=1.0, stated=_UNSET):
+        group, section, stated = self._placed(group, section, stated, False)
         if kind not in KINDS or kind == "derived":
             raise ValueError(f"input kind must be one of {KINDS[:-1]}, got {kind!r}")
         if kind in ("datasheet", "graph") and not src:
@@ -245,41 +342,57 @@ class Model:
                 value=Q.of(value, unit), stated=stated)
         return self._add(f)
 
-    def derived(self, key, unit, *, group=None, label=None, section=None,
-                tol_units=1.0, stated=True, rises_with=(), falls_with=(),
-                prints=None):
-        def deco(fn):
-            # a keyword default names the dependency, so a generated row can
-            # bind its own input without writing the value into the formula
-            sig = inspect.signature(fn)
-            deps = tuple(pm.default if isinstance(pm.default, str) else name
-                         for name, pm in sig.parameters.items())
+    def fig(self, key, unit, formula, prints=None, *, moves="", group=_UNSET, label=None,
+            section=_UNSET, tol_units=1.0, stated=_UNSET):
+        """A derived figure.
+
+        formula  a Python expression over the keys it rests on, or, for a formula that
+                 needs statements, a function whose parameter names are those keys
+        prints   "down" for a bound the document prints at or below the value, "up" for
+                 one it prints at or above
+        moves    the inputs it rises with as +key and falls with as -key, "+r_pd -i_led"
+        """
+        group, section, stated = self._placed(group, section, stated, True)
+        rises, falls = _moves(key, moves)
+        if prints not in (None, "up", "down"):
+            raise ValueError(f"{key}: prints is 'up', 'down' or nothing")
+        free = frozenset()
+        if isinstance(formula, str):
+            # the names of the model file that calls fig(), which the expression may read
+            body = formula.strip()
+            fn, deps, free = _expression(key, body, sys._getframe(1).f_globals)
+        else:
+            fn, deps = formula, tuple(inspect.signature(formula).parameters)
             try:
-                src = inspect.getsource(fn)
+                body = _formula_text(inspect.getsource(formula))
             except OSError:
                 # a formula built by exec has no source file; the run says how
                 # many escaped the lint rather than passing them silently
                 self.unlinted.append(key)
-                src = ""
-            body = _formula_text(src)
+                body = None
             for found in BODY_LITERAL_RE.findall(
                     "".join(l.split("#")[0] for l in (body or "").split("\n"))):
-                if found in LITERAL_ALLOWED:
-                    continue
-                raise ValueError(
-                    f"{key}: a formula may not carry a bare number. {found!r} "
-                    f"belongs in the inputs, with the source it came from")
-            if prints not in (None, "up", "down"):
-                raise ValueError(f"{key}: prints is 'up', 'down' or nothing")
-            self._add(Fig(key, unit, "derived", group, label, section, None, None,
-                          tol_units, tuple(rises_with), tuple(falls_with),
-                          fn=fn, deps=deps, stated=stated, prints=prints, body=body))
-            return fn
-        return deco
+                if found not in LITERAL_ALLOWED:
+                    raise _literal_error(key, found)
+        return self._add(Fig(key, unit, "derived", group, label, section, None, None,
+                             tol_units, rises, falls, fn=fn, deps=deps, stated=stated,
+                             prints=prints, body=body, free=free))
 
-    def invariant(self, description, fn):
-        """A relation that has to hold whatever the formulas are."""
-        self.invariants.append((description, fn))
+    def invariant(self, description, check):
+        """A relation that has to hold whatever the formulas are: an expression over the
+        keys, or a function that reads them as attributes of its one argument."""
+        if isinstance(check, str):
+            fn, keys, free = _expression(description, check.strip(),
+                                         sys._getframe(1).f_globals, lint=False)
+
+            def holds(v):
+                clash = sorted(n for n in free if hasattr(v, n))
+                if clash:
+                    raise ValueError(f"the requirement reads {clash} from the model file, "
+                                     f"where a figure has the same name")
+                return fn(*(getattr(v, k) for k in keys))
+            check = holds
+        self.invariants.append((description, check))
 
     def curve(self, name, points, *, rises=True, on=(), bounded=()):
         """A plotted curve, as the points read off it, against which its readings are checked.
@@ -322,6 +435,9 @@ class Model:
         if here in _trail:
             raise ValueError("cycle: " + " -> ".join(f"{m}.{k}" for m, k in _trail + (here,)))
         trail = _trail + (here,)
+        if f.free & self.figs.keys():
+            raise ValueError(f"{key}: the formula reads {sorted(f.free & self.figs.keys())} "
+                             f"from the model file, where a figure has the same name")
         if f.origin is not None:
             source = model_named(f.origin)
             if key not in source.figs:

@@ -4,6 +4,21 @@
 
 A subsystem declares its inputs and its formulas in `docs/parts/<subsystem>/figures.py`, which names the documents and the drawings that model governs. Every subsystem that derives figures has one. Two further models hold what several subsystems share: [`docs/research/teensy-4.1.py`](../docs/research/teensy-4.1.py) the figures of the board and its chip, and [`docs/firmware/figures.py`](../docs/firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files.
 
+A model file opens with its model and the calls it declares with. Each derived figure is one call to `fig` with its key, its unit and its formula. A bound adds the side the document prints it on. The formula is a Python expression over the keys it rests on. A formula that needs statements is a function whose parameter names are those keys. `moves` names each input the figure rises with as `+key` and each input it falls with as `-key`. A requirement is an expression over the keys as well.
+
+```python
+MODEL = Model.at(__file__, "servo", drawings=["servo-schematic.svg"])
+fig, ds, gr, msr, asm, dec = MODEL.declarers()
+
+with MODEL.block("LEVELS", section=LEVELS):
+    ds("vil_u1", 0.8, "V", src=f"{BUFFER}, 5.3 Recommended Operating Conditions, VIL maximum")
+    fig("m_low", "V", "vil_u1 - v_ol_max - v_r_in", "down", moves="+vil_u1 -v_ol_max -ii_u1 -r_in")
+
+MODEL.invariant("R1 sits inside its window", "r_pd_min <= r_pd <= r_pd_max")
+```
+
+A block gives its group, its section and `stated` to every declaration inside it. A declaration names its own where it differs. A declaration the document does not state takes no group and no section from its block.
+
 A relative model path reads from the root of the checkout that holds this `figcheck.py`, so a run from another checkout's directory checks this checkout's model. A model outside this checkout's `docs/` is refused.
 
 A figure is declared in one model, and every other model that needs it takes it by name:
@@ -32,7 +47,7 @@ An aside is a quoted datasheet row, a package, a pitch or a plain count. A figur
 
 A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries. A table cell holding nothing but a bare number, such as an interrupt priority, can be the line a dimensionless figure states. Nothing requires such a cell to be claimed, since a pin or a count fills a table the same way.
 
-A figure that states a bound declares which way the document rounds it: `prints="down"` for a ceiling, `prints="up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
+A figure that states a bound declares which way the document rounds it: `"down"` for a ceiling, `"up"` for a floor. Nearest rounding turns a 23.571 kΩ ceiling into `≤ 24 kΩ`, which the design does not satisfy, and a symmetric tolerance accepts it.
 
 A model governs one markdown document plus its drawings, and `documents=[...]` adds further files the same figures have to agree with. `ir-reflective` names [`docs/firmware/drivers/ir-sensing.md`](../docs/firmware/drivers/ir-sensing.md) there. An added file is read whole rather than by section, so its numbers are checked by value and a stale one is reported with its line; the anchoring by group and section covers the primary document only.
 
@@ -51,7 +66,7 @@ Each check reports on a separate line, and any of them can fail the run:
 | Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
 | what the pins can carry | The pin table's port, capability, timer and FlexIO rows are the ones the board's model gives. See [What the pins can carry](#what-the-pins-can-carry) |
 | what the allocation costs | Each of the two cost tables names every port, timer and FlexIO its part of the table takes and nothing else, lists every pin a taken port has no alternative for, and states the PWM pins and analog inputs it takes correctly |
-| which way a figure moves | Perturbing a declared input moves the figure the way `rises_with` and `falls_with` claim, and a dependency that never moves the result is an error |
+| which way a figure moves | Perturbing a declared input moves the figure the way its `moves` claims, and a dependency that never moves the result is an error |
 | readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
 | what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
 | readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |

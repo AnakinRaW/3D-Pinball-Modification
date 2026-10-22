@@ -1,88 +1,52 @@
-"""The figures of the hit targets, in this build the stock machine's two bells, as inputs plus formulas.
+"""The figures of the hit targets, in this build the stock machine's two bells, as inputs plus
+formulas."""
+from figcheck import *
 
-Run with:  python tools/figcheck.py docs/parts/targets/figures.py
-
-Every input names where it comes from. Every derived quantity is a function
-whose parameter names are its dependencies, so `--graph <key>` answers what a
-value feeds and what it rests on.
-"""
-import pathlib
-
-from figcheck import Model, TEENSY_RAIL, contact, pull, reads
-
-HERE = pathlib.Path(__file__).resolve().parent
-MODEL = Model("targets", HERE / "design.md", section=None, until="## Sources",
-              drawings=[HERE / "targets-schematic.svg"],
-              documents=[HERE.parents[1] / "firmware" / "drivers" / "contacts.md"])
-
-ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
-dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
-fig = MODEL.derived
+MODEL = Model.at(__file__, "targets", drawings=["targets-schematic.svg"],
+                 documents=["../../firmware/drivers/contacts.md"])
+fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
 EXP = "MCP23008-MCP23S08-Microchip.pdf"
 LEVELS = "Levels"
 
-# ===========================================================================
-# U1's inputs, the rail behind them and the ball's contact
-# ===========================================================================
-MODEL.uses("v_3v3_min", of="teensy-4.1", group="LEVELS", section=LEVELS, stated=True)
-MODEL.uses("r_contact", of="solenoid", group="LEVELS", section=LEVELS, stated=True)
-MODEL.uses("i_pu_gp", of="port-expander", group="LEVELS", section=LEVELS, stated=True)
-ds("vil_frac_exp", 20, "%", sheet=EXP, src="DS20001919F, D031: GPIO input low voltage V_IL "
-   "maximum, 0.2 VDD, Schmitt trigger", group="LEVELS", section=LEVELS, stated=True)
+# -- U1's inputs, the rail behind them and the ball's contact -----------------
+with MODEL.block("LEVELS", section=LEVELS):
+    MODEL.uses("v_3v3_min", of="teensy-4.1")
+    MODEL.uses("r_contact", of="solenoid")
+    MODEL.uses("i_pu_gp", of="port-expander")
+    ds("vil_frac_exp", 20, "%", sheet=EXP, src="DS20001919F, D031: GPIO input low voltage V_IL "
+       "maximum, 0.2 VDD, Schmitt trigger")
 
+# -- derived: a touched bell's input ------------------------------------------
+with MODEL.block("LEVELS", section=LEVELS):
+    # U1's pull-up drives its whole current through the ball into the bells' foil at GND.
+    fig("v_touched", "mV", "i_pu_gp * r_contact", "up", moves="+i_pu_gp +r_contact")
+    fig("v_il_exp", "V", "v_3v3_min * vil_frac_exp.raw", "down", moves="+v_3v3_min +vil_frac_exp")
 
-# ===========================================================================
-# derived: a touched bell's input
-# ===========================================================================
-# U1's pull-up drives its whole current through the ball into the bells' foil at GND.
-@fig("v_touched", "mV", group="LEVELS", section=LEVELS, prints="up",
-     rises_with=["i_pu_gp", "r_contact"])
-def _(i_pu_gp, r_contact):
-    return i_pu_gp * r_contact
+    # The most the ball's contact with a bell may have before a touched bell stays over U1's
+    # low threshold.
+    fig("r_contact_max", "kΩ", "v_il_exp / i_pu_gp", "down",
+        moves="+v_3v3_min +vil_frac_exp -i_pu_gp")
 
-
-@fig("v_il_exp", "V", group="LEVELS", section=LEVELS, prints="down",
-     rises_with=["v_3v3_min", "vil_frac_exp"])
-def _(v_3v3_min, vil_frac_exp):
-    return v_3v3_min * vil_frac_exp.raw
-
-
-# The most the ball's contact with a bell may have before a touched bell stays over U1's
-# low threshold.
-@fig("r_contact_max", "kΩ", group="LEVELS", section=LEVELS, prints="down",
-     rises_with=["v_3v3_min", "vil_frac_exp"], falls_with=["i_pu_gp"])
-def _(v_il_exp, i_pu_gp):
-    return v_il_exp / i_pu_gp
-
-
-# ===========================================================================
-# the contact driver, docs/firmware/drivers/contacts.md
-# ===========================================================================
+# -- the contact driver, docs/firmware/drivers/contacts.md --------------------
 dec("t_quiet", 10, "ms", src="how long a contact has to have been open before the driver publishes "
     "its closure, decided: an estimate above the few milliseconds a contact bounces and far below "
-    "the time between two hits of one target", stated=False)
+    "the time between two hits of one target")
 dec("t_fail_contacts", 1, "s", src="how long no read of the port expander may work before the "
     "contacts count as failed: long enough for several of the driver tick's reads, short enough "
-    "for a game to react", stated=False)
+    "for a game to react")
 MODEL.uses("t_poll", of="port-expander")
 MODEL.draws(pool="device monitor")   # the contact driver watched by the device monitor
 
-
-# ===========================================================================
-# requirements
-# ===========================================================================
+# -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
-_I("a touched bell pulls its input under U1's low threshold", lambda v: v.v_touched <= v.v_il_exp)
+_I("a touched bell pulls its input under U1's low threshold", "v_touched <= v_il_exp")
 _I("the ball's contact, taken from the shells' measurement, stays under what a bell tolerates",
-   lambda v: v.r_contact <= v.r_contact_max)
+   "r_contact <= r_contact_max")
 _I("several of the driver tick's reads of the port expander fail before the contacts count as "
-   "failed", lambda v: v.t_fail_contacts > 2 * v.t_poll)
+   "failed", "t_fail_contacts > 2 * t_poll")
 
-
-# ===========================================================================
-# wiring
-# ===========================================================================
+# -- wiring -------------------------------------------------------------------
 for _n, _e in ((1, "E-1"), (2, "E-2")):
     MODEL.net(f"Bell {_n}",
               contact(f"the ball between bell {_n} and the bells' foil at GND",
