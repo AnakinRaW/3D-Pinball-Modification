@@ -1,8 +1,8 @@
 # Teensy motherboard
 
-The Teensy motherboard carries the Teensy and the DFR0954 amplifier module. It hands the Teensy's rails on to the subsystems.
+The Teensy motherboard carries the Teensy, the DFR0954 amplifier module and the port expander. It hands the Teensy's rails on to the subsystems.
 
-The Teensy's edge headers offer two 3V3 pins and three GND pins. Five subsystems run from the Teensy's 3V3. Eight cables carry the Teensy's ground. The board spreads both over a rail each.
+The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Eight cables and the hit targets carry the Teensy's ground. The board spreads both over a rail each.
 
 ## Circuit
 
@@ -30,10 +30,11 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 | [Break beam](../break-beam/design.md) | R3, the receiver's pull-up |
 | [Magnetic rotary sensor](../magnetic-rotary/design.md) | the module |
 | [Display](../display/design.md) | the touch converter's LV side, over the touch cable |
+| [Port expander](../port-expander/design.md) | U1 and the bus pull-ups R5 and R6 |
 
 ### GND rail
 
-The GND rail joins the Teensy's three GND pins, the DFR0954's GND and J-PWR's GND. These cables take their ground from it: the IR mainboard's J-T, the solenoid sense board's J-T, the lighting data cable, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver and the toggle switch.
+The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-PWR's GND. These cables take their ground from it: the IR mainboard's J-T, the solenoid sense board's J-T, the lighting data cable, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
 
 ### Toggle switch
 
@@ -46,3 +47,7 @@ R2 feeds the break beam's emitter from the supply behind D1. R3 pulls pin [31](.
 ### Audio
 
 The DFR0954 sits beside the Teensy. Pins [2](../../pin-assignment.md "DIN to the DFR0954"), [3](../../pin-assignment.md "LRC to the DFR0954") and [4](../../pin-assignment.md "BCLK to the DFR0954") drive it over I²S on the board. R4 sits between its GAIN and VCC pins. The [audio design](../audio/design.md) sets its value.
+
+### Port expander
+
+U1 reads the pins E-1 to E-8. It sits on `Wire` with SDA on pin [18](../../pin-assignment.md "SDA on Wire") and SCL on pin [19](../../pin-assignment.md "SCL on Wire"). Its INT goes to pin [1](../../pin-assignment.md "Interrupt from the port expander"). R5 and R6 pull SDA and SCL up to the 3V3 rail. C1 decouples U1's VDD. The [port expander design](../port-expander/design.md) sets their values.

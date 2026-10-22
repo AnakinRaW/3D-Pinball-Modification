@@ -29,7 +29,7 @@ The AS5600 faces the magnet closely at 0.5 mm to 3 mm. The datasheet allows the 
 
 ### Signal
 
-The module sits on `Wire`, the Teensy's first I²C port, with SDA on pin [18](../../pin-assignment.md "SDA to the rotary sensors") and SCL on pin [19](../../pin-assignment.md "SCL to the rotary sensors").
+The module sits on `Wire`, the Teensy's first I²C port, with SDA on pin [18](../../pin-assignment.md "SDA on Wire") and SCL on pin [19](../../pin-assignment.md "SCL on Wire"). The [port expander](../port-expander/design.md) shares the bus.
 
 The bus runs at 100 kHz, the Standard-mode rate `Wire` starts with.
 
@@ -58,11 +58,16 @@ Every figure below is recomputed by [`figures.py`](figures.py) from the inputs i
 
 ```
 BUS       the module's pull-up, R4 and R5          4.7 kΩ
-          each bus line, assumed                   200 pF
+          the cable to the module, at most         20 cm
+          each of its lines to its neighbors       42.98 pF/m
+          an I²C pin, at most                      10 pF
+          the module's traces and connector,
+          assumed                                  10 pF
+          each bus line on this side             = 29 pF
           the AS5600's low input level, of VDD   = 0.3
           and its high input level, of VDD       = 0.7
           a rising edge between the two, with
-          the module's pull-up                   = 797 ns
+          the module's pull-up                   = 114 ns
           what Standard-mode allows                1000 ns
 ```
 
@@ -73,11 +78,13 @@ READ      the bus clock                            100 kHz
           one byte on the bus                      9 bits
           one read, the address and two bytes
           with START and STOP                    = 290 µs
-          the tick that collects it                5 ms
+          the tick that requests it                5 ms
           the share of the bus that takes        = 5.8 %
+          a read of the port expander, which a
+          read may wait for                        570 µs
           a turn in                                4096 steps
           the fastest the rod may turn, half a
-          turn per tick                          = 100 Hz
+          turn between two reads                 = 89 Hz
 ```
 
 ### Supply
@@ -94,7 +101,8 @@ SUPPLY    the Teensy's rail                        3.3 V
 - [`datasheets/AS5600-ams.pdf`](../../datasheets/AS5600-ams.pdf): the supply modes and current, the input levels, the resolution, the magnet's displacement, and the pull-up it leaves to UM10204
 - [`datasheets/Grove-AS5600-Seeed-schematic.pdf`](../../datasheets/Grove-AS5600-Seeed-schematic.pdf): the module's regulator, pull-ups, test points and DIR switch
 - [Seeed wiki, Grove AS5600](https://wiki.seeedstudio.com/Grove-12-bit-Magnetic-Rotary-Position-Sensor-AS5600/): the module's supply voltage and the magnet's gap
-- [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the I²C specification, Rev. 7.0, with the Standard-mode rise time in Table 10
+- [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the I²C specification, Rev. 7.0, with the Standard-mode rise time and the capacitance of an I/O pin in Table 10
+- [3M TS-0342-E](https://www.farnell.com/datasheets/655678.pdf): the capacitance of a 26 AWG line to its neighbors
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
 - [`pin-assignment.md`](../../pin-assignment.md): `Wire`
 - [PJRC, `WireIMXRT.cpp`](https://github.com/PaulStoffregen/Wire/blob/master/WireIMXRT.cpp): the 100 kHz start

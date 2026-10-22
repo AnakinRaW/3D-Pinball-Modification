@@ -400,8 +400,7 @@ def _(b_frame, chunk, t_chunk_est, t_card_audio, t_movie):
 # ===========================================================================
 # the touch bus: Wire2 to the touch controller, read on the touch driver's tick
 # ===========================================================================
-dec("f_scl", 100, "kHz", src="the bus clock, Standard-mode, the rate Wire2's begin() sets",
-    group="TOUCH", section=TOUCH, stated=True)
+MODEL.uses("f_scl", of="firmware", group="TOUCH", section=TOUCH, stated=True)
 dec("t_ttick", 20, "ms", src="the period the touch driver attaches to the driver tick, one "
     "read of the touch controller each", group="TOUCH", section=TOUCH, stated=True)
 dec("n_touch_bytes", 8, "", src="the bytes on the bus in one read: the address to write, "
@@ -847,8 +846,6 @@ MODEL.net("MOSI",
 
 MODEL.owns("FlexIO3", "the driver programs its shifters and its timer to clock the bus, "
                       "docs/firmware/drivers/display.md")
-MODEL.owns("Wire2", "the touch driver runs the LPI2C4 controller itself after begin(), "
-                    "docs/firmware/drivers/touch.md")
 MODEL.draws("i_conv_lv", pool=TEENSY_RAIL)   # the converter's LV pull-ups, fed from the Teensy's 3V3
 MODEL.draws("ram_display", pool="RAM2")
 MODEL.draws(pool="driver tick")      # the display driver: the movie's frames, every 40 ms

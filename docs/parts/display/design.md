@@ -58,7 +58,7 @@ The module takes its 5 V from the power board's [J-DISP](../power/design.md#outp
 | D0 to D7 | Eight pins that FlexIO3 numbers in a row, since FlexIO3 puts out a byte on eight such pins at once. FlexIO3's pins 8 to 15 are such a run. No other subsystem needs them |
 | WR | A FlexIO3 pin outside that run, which FlexIO3's timer drives. Here FlexIO3's pin 6 |
 | CS, D/C | Plain digital outputs |
-| SDA, SCL | An I²C port other than `Wire`, which belongs to the rotary sensor's driver. Sharing `Wire` would save the two pins and cost that driver DMA or reads split across ticks |
+| SDA, SCL | An I²C port apart from `Wire`. A touch controller that hangs with a line held low then blocks no other device. Sharing `Wire` would save the two pins |
 
 [`pin-assignment.md`](../../pin-assignment.md) lists the pins and what they cost elsewhere in the build.
 

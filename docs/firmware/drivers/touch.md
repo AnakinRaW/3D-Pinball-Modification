@@ -4,11 +4,9 @@ The driver reads the touch panel of the [display](../../parts/display/design.md)
 
 ## Start-up
 
-The touch controller sits on `Wire2`.
+The touch controller sits on `Wire2`, which an [I²C bus](../io/i2c-bus.md) runs.
 
-`begin()` lets `Wire2` set up SDA and SCL, their pull-ups and a bus clock of 100 kHz. The controller answers no earlier than 580 ms after power-up, so `begin()` waits until then. It then checks once whether the controller answers at its address. `present()` reports the result. 
-
-From then on the driver programs the LPI2C4 I²C controller itself and no longer calls `Wire2`, because the `Wire` library blocks the caller. 
+The controller answers no earlier than 580 ms after power-up, so `begin()` waits until then. It then checks once through the bus whether the controller answers at its address. `present()` reports the result.
 
 Without a touch controller the driver publishes no touch.
 
@@ -18,7 +16,7 @@ The main task starts the driver after the display driver, so the black screen do
 
 A read asks the controller how many fingers touch the screen and where the first one touches. The answer is five bytes. 
 
-Every 20 ms the driver tick evaluates the last answer and starts the next read. During the read, a DMA channel writes the five bytes directly into the driver's read buffer. 
+Every 20 ms the driver tick requests a read from the bus. When the read has ended, the bus calls the driver back with the five bytes.
 
 The controller reports positions in the panel's portrait orientation. The driver turns them into the picture's landscape orientation, the same way the [display driver](display.md#start-up) turns the panel's memory at start-up. It publishes the four touch events below, and `finger()` gives the same position whenever a component asks.
 
@@ -31,7 +29,7 @@ The controller reports positions in the panel's portrait orientation. The driver
 | `TouchHeld` | The finger has rested within 10 pixels of where it touched down for 1 s | x and y |
 | `TouchUp` | The finger has left the screen | x and y, where it was last |
 
-A payload holds x in its lower 16 bits and y in its upper 16, 0 at the top left. The source is always `0` in this build. The timestamp is `nowUs()` in the driver tick that read the touch. A full queue drops the event.
+A payload holds x in its lower 16 bits and y in its upper 16, 0 at the top left. The source is always `0` in this build. The timestamp is `nowUs()` at the end of the read that saw the touch. A full queue drops the event.
 
 ## Device faults
 
@@ -39,11 +37,11 @@ A controller that did not answer at `begin()` means this machine does not use to
 
 A controller that answered at `begin()` counts as [failed](../error-handling.md#device-faults) once it has answered no read for 100 ms. A read gets an answer whether or not a finger touches the screen. The error code holds the LPI2C4 error flags of the last failed read. 
 
-A failed read is retried at once. When the controller blocks the bus, the driver sends clock pulses until the controller releases it.
+A failed read is dropped. The next tick requests a new one.
 
 ## Existing libraries
 
-The driver drives the I²C controller itself, since [Adafruit_FT6206](https://github.com/adafruit/Adafruit_FT6206_Library) waits in `Wire` until each read has ended. At 100 kHz its read costs 1.74 ms of waiting, 8.7 % of the processor's time at one read every 20 ms.
+The driver reads the controller through the I²C bus, since [Adafruit_FT6206](https://github.com/adafruit/Adafruit_FT6206_Library) waits in `Wire` until each read has ended. At 100 kHz its read costs 1.74 ms of waiting, 8.7 % of the processor's time at one read every 20 ms.
 
 ## Driver
 
@@ -57,8 +55,9 @@ struct Finger {
 
 class Touch : public Driver {
 public:
-    // sets up Wire2, checks once whether the touch controller answers, attaches to the driver tick
-    // and registers with the device monitor; false when one of the two is full
+    // attaches its transfer to the bus on Wire2, checks once whether the touch controller answers,
+    // attaches to the driver tick and registers with the device monitor; false when one of the two
+    // is full
     bool begin() override;
 
     bool   present() const;     // gets whether the machine has a touch controller, which begin() finds out once

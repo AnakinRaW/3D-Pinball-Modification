@@ -8,20 +8,21 @@ struct MagnetState {
 
 class MagneticRotaryDriver : public Driver {
 public:
-    // attaches the queue, sets up Wire, reads STATUS, AGC and the first angle, points
+    // attaches the queue and the transfers, reads STATUS, AGC and the first angle, points
     // the AS5600 at RAW ANGLE, attaches its read to the driver tick and registers with
     // the device monitor; false when the AS5600 does not answer or either of the two is full
     bool begin() override {
         out_ = &events.attach(queue_, kQueueDepth);
-        Wire.begin();                                        // the pins, their pull-ups and 100 kHz
+        io::wireBus.attach(setup_);
+        io::wireBus.attach(read_);
 
         // reads n bytes from the register reg, high byte first; -1 when the AS5600 does not answer
-        auto readRegister = [](uint8_t reg, uint8_t n) -> int32_t {
-            Wire.beginTransmission(kAddress);
-            Wire.write(reg);
-            if (Wire.endTransmission() != 0 || Wire.requestFrom(kAddress, n) != n) return -1;
+        auto readRegister = [this](uint8_t reg, uint8_t n) -> int32_t {
+            reg_ = reg;
+            setup_.inCount = n;
+            if (io::wireBus.requestAndWait(setup_) != 0) return -1;
             int32_t value = 0;
-            while (Wire.available()) value = (value << 8) | Wire.read();
+            for (uint8_t i = 0; i < n; i++) value = (value << 8) | bytes_[i];
             return value;
         };
         const int32_t status = readRegister(kStatus, 1);
@@ -34,9 +35,9 @@ public:
         magnet_.tooStrong = status & 0x08;                   // MH
         magnet_.agc       = agc;
         last_             = raw & 0x0FFF;                    // the 12 bits of RAW ANGLE
-        lastGood_       = nowUs();                        // the first working read
+        lastGood_         = nowUs();                         // the first working read
 
-        if (!driverTick.attach([this] { tick(); }, DriverTick::kPeriodUs)) return false;   // tick() every 5 ms from here on
+        if (!driverTick.attach([this] { io::wireBus.request(read_); }, DriverTick::kPeriodUs)) return false;   // a read every 5 ms from here on
         return deviceMonitor.watch(Device::RotarySensor, *this);
     }
 
@@ -57,74 +58,48 @@ private:
     static constexpr uint8_t  kRawAngle = 0x0C;
     static constexpr int32_t  kSteps    = 4096;
     static constexpr int32_t  kDeadband = 12;
-    static constexpr int32_t  kStill    = 4;      // ticks without a degree of movement
+    static constexpr int32_t  kStill    = 4;      // reads, one each tick, without a degree of movement
     static constexpr uint32_t kFailMs   = 1000;   // 1 s without a working read, and the sensor has failed
-    static constexpr uint8_t  kSda      = 18;   // pin-assignment.md: SDA to the rotary sensors
-    static constexpr uint8_t  kScl      = 19;   // pin-assignment.md: SCL to the rotary sensors
-    static constexpr uint32_t kErrors   = LPI2C_MSR_NDF | LPI2C_MSR_ALF | LPI2C_MSR_FEF | LPI2C_MSR_PLTF;
 
-    // the driver tick: collect the read the last tick started, start the next
-    void tick() {
-        const uint32_t msr = LPI2C1_MSR;
-        if (msr & kErrors) {                                 // no answer, lost bus, FIFO error, line low
-            lastError_ = msr & kErrors;
-            if (msr & LPI2C_MSR_PLTF) recover();
-            LPI2C1_MCR |= LPI2C_MCR_RTF | LPI2C_MCR_RRF;     // drop the read
-            LPI2C1_MSR  = 0x00007F00;                        // clear every flag, as Wire does
-        } else if (msr & LPI2C_MSR_MBF) {
-            return;                                          // the last read is still on the bus
-        } else if (((LPI2C1_MFSR >> 16) & 0x07) >= 2) {      // the two bytes of RAW ANGLE
-            const uint32_t high = LPI2C1_MRDR & 0x0F;
-            const uint32_t low  = LPI2C1_MRDR & 0xFF;
-            const int32_t  raw  = (high << 8) | low;
-            lastGood_ = nowUs();                          // the note failed() reads
-            const int32_t  step = (raw - last_ + kSteps + kSteps / 2) % kSteps - kSteps / 2;
-            last_      = raw;
-            position_ += (uint32_t)step;                   // wraps without harm
-            const int32_t moved = (int32_t)(position_ - published_);
-            if (moved >= kDeadband || moved <= -kDeadband) {
-                if (out_->publish(DriverEvent{nowUs(), DriverEventType::RotorMoved, 0, position_})) {
-                    published_ = position_;                 // a full queue: the next tick tries again
-                    moving_    = true;
-                    still_     = 0;
-                }
-            } else if (moving_ && ++still_ >= kStill) {     // the rod stands still
-                if (out_->publish(DriverEvent{nowUs(), DriverEventType::RotorStopped, 0, position_})) {
-                    published_ = position_;
-                    moving_    = false;
-                }
+    // the end of a read, in the bus's interrupt: adds the step since the last reading and publishes
+    void done(uint32_t errors) {
+        if (errors) {                                        // no answer, lost bus, FIFO error, line low
+            lastError_ = errors;                             // the next tick requests a new read
+            return;
+        }
+        const int32_t raw  = ((angle_[0] & 0x0F) << 8) | angle_[1];
+        lastGood_ = nowUs();                                 // the note failed() reads
+        const int32_t step = (raw - last_ + kSteps + kSteps / 2) % kSteps - kSteps / 2;
+        last_      = raw;
+        position_ += (uint32_t)step;                         // wraps without harm
+        const int32_t moved = (int32_t)(position_ - published_);
+        if (moved >= kDeadband || moved <= -kDeadband) {
+            if (out_->publish(DriverEvent{nowUs(), DriverEventType::RotorMoved, 0, position_})) {
+                published_ = position_;                       // a full queue: the next read tries again
+                moving_    = true;
+                still_     = 0;
+            }
+        } else if (moving_ && ++still_ >= kStill) {           // the rod stands still
+            if (out_->publish(DriverEvent{nowUs(), DriverEventType::RotorStopped, 0, position_})) {
+                published_ = position_;
+                moving_    = false;
             }
         }
-        LPI2C1_MTDR = LPI2C_MTDR_CMD_START | (kAddress << 1) | 1;   // the address, to read
-        LPI2C1_MTDR = LPI2C_MTDR_CMD_RECEIVE | (2 - 1);             // two bytes
-        LPI2C1_MTDR = LPI2C_MTDR_CMD_STOP;
     }
 
-    // clocks SCL until the device lets go of SDA, as Wire's force_clock() does
-    static void recover() {
-        for (const uint8_t pin : {kSda, kScl}) {
-            *portConfigRegister(pin) = 5 | 0x10;             // GPIO, released high
-            *portSetRegister(pin)    = digitalPinToBitMask(pin);
-            *portModeRegister(pin)  |= digitalPinToBitMask(pin);
-        }
-        delayMicroseconds(10);
-        for (int i = 0; i < 9 && !(digitalReadFast(kSda) && digitalReadFast(kScl)); i++) {
-            digitalWriteFast(kScl, LOW);
-            delayMicroseconds(5);
-            digitalWriteFast(kScl, HIGH);
-            delayMicroseconds(5);
-        }
-        for (const uint8_t pin : {kSda, kScl}) *portConfigRegister(pin) = 3 | 0x10;   // back to LPI2C1
-    }
-
-    DriverEvent                  queue_[kQueueDepth];
-    EventQueue::Producer*        out_       = nullptr;
-    int32_t                      last_      = 0;       // the first angle, set by begin()
-    volatile uint32_t            position_  = 0;
-    uint32_t                     published_ = 0;       // the position the last event carried
-    bool                         moving_    = false;   // a RotorMoved has come since the last RotorStopped
-    int32_t                      still_     = 0;       // ticks since the last RotorMoved
-    volatile uint32_t            lastGood_ = 0;      // when a read last worked
-    volatile uint32_t            lastError_  = 0;      // the error flags of the last failed read
-    MagnetState                  magnet_{};
+    DriverEvent           queue_[kQueueDepth];
+    EventQueue::Producer* out_       = nullptr;
+    uint8_t               reg_       = 0;                    // the register setup_ points the AS5600 at
+    uint8_t               bytes_[2]  = {};                   // what setup_ reads, RAW ANGLE's two bytes at most
+    uint8_t               angle_[2]  = {};                   // RAW ANGLE, high byte first
+    io::I2cTransfer       setup_{kAddress, &reg_, 1, bytes_, 1, {}};
+    io::I2cTransfer       read_{kAddress, nullptr, 0, angle_, 2, [this](uint32_t e) { done(e); }};   // the AS5600 keeps its pointer on RAW ANGLE
+    int32_t               last_      = 0;                    // the first angle, set by begin()
+    volatile uint32_t     position_  = 0;
+    uint32_t              published_ = 0;                    // the position the last event carried
+    bool                  moving_    = false;                // a RotorMoved has come since the last RotorStopped
+    int32_t               still_     = 0;                    // reads since the last RotorMoved
+    volatile uint32_t     lastGood_  = 0;                    // when a read last worked
+    volatile uint32_t     lastError_ = 0;                    // the error flags of the last failed read
+    MagnetState           magnet_{};
 };

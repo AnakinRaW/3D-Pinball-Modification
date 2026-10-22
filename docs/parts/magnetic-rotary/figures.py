@@ -32,9 +32,16 @@ dec("r_pu", 4.7, "kΩ", src="R4 and R5 on the Grove module, SDA and SCL to the m
     "from Seeed's Eagle schematic of the 101020692; the weakest pull-up on the bus, the "
     "Teensy's own being stronger in parallel", group="BUS", section=BUS, stated=True)
 MODEL.uses("r_pullup", of="teensy-4.1")
-asm("c_bus", 200, "pF", src="the capacitance of each bus line, taken for the module's cable with "
-    "margin; no measurement",
-    group="BUS", section=BUS, stated=True)
+dec("l_cable", 20, "cm", src="the cable from the motherboard to the module, at most 20 cm of "
+    "26 AWG jumper wire", group="BUS", section=BUS, stated=True)
+ds("c_cable_m", 42.98, "pF/m", src="each line of a 26 AWG cable to its neighbors: 3M TS-0342-E, "
+   "3770 series flat cable, 26 AWG on 0.050 inch, capacitance unbalanced, between a conductor "
+   "and its grounded neighbors on both sides, 13.1 pF/ft [42.98 pF/m]", group="BUS",
+   section=BUS, stated=True)
+ds("c_pin", 10, "pF", sheet="UM10204-NXP.pdf", src="UM10204 Rev. 7.0, Table 10: Ci, capacitance "
+   "for each I/O pin, maximum", group="BUS", section=BUS, stated=True)
+asm("c_module", 10, "pF", src="the Grove module's traces and connector between the cable and the "
+    "AS5600, taken generously; no measurement", group="BUS", section=BUS, stated=True)
 ds("vil_frac", 0.3, "", sheet=SENSOR, src="I²C electrical specification, logic low input "
    "voltage VIL, maximum 0.3 x VDD", group="BUS", section=BUS, stated=True)
 ds("vih_frac", 0.7, "", sheet=SENSOR, src="I²C electrical specification, logic high input "
@@ -44,10 +51,18 @@ ds("t_r_std", 1000, "ns", sheet="UM10204-NXP.pdf", src="Table 10, rise time of b
    "sizing the pull-up", group="BUS", section=BUS, stated=True)
 
 
+# Each bus line on the rotary sensor's side: the cable, the AS5600's pin and the module.
+@fig("c_bus", "pF", group="BUS", section=BUS, prints="up",
+     rises_with=["l_cable", "c_cable_m", "c_pin", "c_module"])
+def _(l_cable, c_cable_m, c_pin, c_module):
+    return l_cable * c_cable_m + c_pin + c_module
+
+
 # The rising edge between the input thresholds, with the module's pull-up alone:
 # the Teensy's own pull-up in parallel only makes it faster.
 @fig("t_r", "ns", group="BUS", section=BUS, prints="up",
-     rises_with=["r_pu", "c_bus", "vih_frac"], falls_with=["vil_frac"])
+     rises_with=["r_pu", "l_cable", "c_cable_m", "c_pin", "c_module", "vih_frac"],
+     falls_with=["vil_frac"])
 def _(r_pu, c_bus, vil_frac, vih_frac):
     return r_pu * c_bus * ln((1 - vil_frac) / (1 - vih_frac))
 
@@ -55,8 +70,7 @@ def _(r_pu, c_bus, vil_frac, vih_frac):
 # ===========================================================================
 # the read
 # ===========================================================================
-dec("f_scl", 100, "kHz", src="the bus clock, Standard-mode, the rate Wire's begin() sets "
-    "with setClock(100000)", group="READ", section=READ, stated=True)
+MODEL.uses("f_scl", of="firmware", group="READ", section=READ, stated=True)
 dec("n_bytes", 3, "", src="the bytes on the bus in one read: the address, and the two bytes "
     "of RAW ANGLE, whose pointer the AS5600 keeps between reads", stated=False)
 dec("n_bits_byte", 9, "bits", src="the clock periods one byte takes on the bus, eight data "
@@ -105,11 +119,16 @@ def _(t_lib_read, t_tick):
     return t_lib_read / t_tick
 
 
-# Two readings a tick apart are unwrapped modulo one turn, which holds while the
-# rod turns less than half a turn between them.
-@fig("f_turn_max", "Hz", group="READ", section=READ, prints="down", falls_with=["t_tick"])
-def _(t_tick):
-    return 1 / (2 * t_tick)
+MODEL.uses("t_read_exp", of="port-expander", group="READ", section=READ, stated=True)
+
+
+# Two readings are unwrapped modulo one turn, which holds while the rod turns less than half
+# a turn between them. A read of the port expander on the same bus can hold a read back, so
+# two readings lie at most a tick and one expander read apart.
+@fig("f_turn_max", "Hz", group="READ", section=READ, prints="down",
+     falls_with=["t_tick", "t_read_exp"])
+def _(t_tick, t_read_exp):
+    return 1 / (2 * (t_tick + t_read_exp))
 
 
 
@@ -173,20 +192,18 @@ for _text, _why in [
 # pull-ups sit at or below the Teensy's rail
 _PU = ("design.md, the module's pull-ups R4 and R5, 4.7 kΩ; the module runs from VCC alone, "
        "which comes from the Teensy's 3V3")
-_WIRE = "docs/firmware/drivers/magnetic-rotary.md, Wire.begin() sets up the pins and their pull-ups"
+_WIRE = "docs/firmware/io/i2c-bus.md, Wire.begin() sets up the pins and their pull-ups"
 MODEL.net("SDA",
           drives("AS5600 SDA", "open-drain", src="UM10204, every I²C device drives SDA open-drain"),
           pull("the module's pull-up on SDA", TEENSY_RAIL, src=_PU),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
-          teensy="SDA to the rotary sensors")
+          teensy="SDA on Wire")
 MODEL.net("SCL",
           reads("AS5600 SCL", src="design.md, the AS5600's input levels on the bus"),
           pull("the module's pull-up on SCL", TEENSY_RAIL, src=_PU),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
-          teensy="SCL to the rotary sensors")
+          teensy="SCL on Wire")
 
-MODEL.owns("Wire", "the driver runs the LPI2C1 controller itself after begin(), "
-                   "docs/firmware/drivers/magnetic-rotary.md")
 MODEL.draws("i_dd", pool=TEENSY_RAIL)   # the module, fed from the Teensy's 3V3
-MODEL.draws(pool="driver tick")      # one read collected and the next started on every tick
+MODEL.draws(pool="driver tick")      # one read requested on every tick
 MODEL.draws(pool="device monitor")
