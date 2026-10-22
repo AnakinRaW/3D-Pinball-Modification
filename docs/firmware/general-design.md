@@ -13,6 +13,7 @@ This document describes the general concepts of the firmware, which apply to all
 | I²C buses on `Wire` and `Wire2` | [`io/i2c-bus.md`](io/i2c-bus.md) |
 | Magnetic rotary sensor | [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) |
 | Port expander | [`io/port-expander.md`](io/port-expander.md) |
+| Contacts on the port expander | [`drivers/contacts.md`](drivers/contacts.md) |
 | Controls | [`drivers/controls.md`](drivers/controls.md) |
 | Servo | [`drivers/servo.md`](drivers/servo.md) |
 | Display | [`drivers/display.md`](drivers/display.md) |

@@ -49,6 +49,7 @@ enum class Device : uint8_t {
     Amplifier,
     LedChains,
     ToggleSwitch,
+    Contacts,
     Count,        // the number of devices
 };
 ```

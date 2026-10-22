@@ -33,6 +33,7 @@ Lighting         lighting;
 Display          display;
 Touch            touch;
 MagneticRotaryDriver rotary;
+ContactDriver    contacts;               // the contacts on the port expander's pins
 // other drivers
 
 // game components
@@ -119,6 +120,7 @@ static void machineTask(void*) {
     display.begin();
     touch.begin();                          // after the display, so the black screen does not wait for the controller
     rotary.begin();
+    contacts.begin();
 
     audio.begin();
 

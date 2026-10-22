@@ -145,7 +145,7 @@
   <line x1="255" y1="650" x2="204" y2="650" stroke="#1a1a1a" stroke-width="2.5"/>
   <circle cx="255" cy="650" r="4" fill="#1a1a1a"/>
   <circle cx="200" cy="650" r="4" fill="#1a1a1a"/>
-  <text x="188" y="654" text-anchor="end" font-size="11.5" fill="#333">hit targets</text>
+  <text x="188" y="654" text-anchor="end" font-size="11.5" fill="#333">bells' foil</text>
 
   <!-- ===== 3V3 rail ===== -->
   <line x1="726" y1="190" x2="840" y2="190" stroke="#c0392b" stroke-width="2.5"/>
@@ -376,10 +376,10 @@
   <!-- the inputs out to the pins E-1 to E-8 at the board's edge -->
   <line x1="806" y1="1060" x2="1034" y2="1060" stroke="#2c3e50" stroke-width="2.5"/>
   <circle cx="1040" cy="1060" r="6" fill="#2c3e50"/>
-  <text x="1052" y="1064" font-size="13" font-weight="700" fill="#2c3e50">pin E-1</text>
+  <text x="1052" y="1064" font-size="13" font-weight="700" fill="#2c3e50">bell 1, pin E-1</text>
   <line x1="806" y1="1094" x2="1034" y2="1094" stroke="#2c3e50" stroke-width="2.5"/>
   <circle cx="1040" cy="1094" r="6" fill="#2c3e50"/>
-  <text x="1052" y="1098" font-size="13" font-weight="700" fill="#2c3e50">pin E-2</text>
+  <text x="1052" y="1098" font-size="13" font-weight="700" fill="#2c3e50">bell 2, pin E-2</text>
   <line x1="806" y1="1128" x2="1034" y2="1128" stroke="#2c3e50" stroke-width="2.5"/>
   <circle cx="1040" cy="1128" r="6" fill="#2c3e50"/>
   <text x="1052" y="1132" font-size="13" font-weight="700" fill="#2c3e50">pin E-3</text>
