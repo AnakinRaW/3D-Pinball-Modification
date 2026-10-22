@@ -2,7 +2,7 @@
 """Recompute the figures a design document states, and check the document against them.
 
 A model file declares the inputs with their sources and the formulas that derive the
-figures. tools/README.md describes the checks, the flags and what a model declares.
+figures. tools/CLAUDE.md describes the checks and what a model declares, tools/README.md the flags.
 """
 import pathlib
 import sys
