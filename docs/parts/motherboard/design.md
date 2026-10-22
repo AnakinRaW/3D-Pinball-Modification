@@ -51,3 +51,7 @@ The DFR0954 sits beside the Teensy. Pins [2](../../pin-assignment.md "DIN to the
 ### Port expander
 
 U1 reads the pins E-1 to E-8. It sits on `Wire` with SDA on pin [18](../../pin-assignment.md "SDA on Wire") and SCL on pin [19](../../pin-assignment.md "SCL on Wire"). Its INT goes to pin [1](../../pin-assignment.md "Interrupt from the port expander"). R5 and R6 pull SDA and SCL up to the 3V3 rail. C1 decouples U1's VDD. The [port expander design](../port-expander/design.md) sets their values.
+
+### Hit targets
+
+The two bells come in at E-1 and E-2. They are [hit targets](../targets/design.md). Their foil takes its ground from the GND rail.

@@ -254,6 +254,16 @@ The program `port-expander` checks the [port expander](io/port-expander.md). A t
 | `restart` | bench | Restart the Teensy with a pin pulled low. Let it go while the Teensy starts | INT is high once the first `attach()` has returned. The next change arrives |
 | `taken` | Teensy | Attach a second listener to a pin the first one holds | `attach()` returns false. The first listener keeps getting its changes |
 
+### Contacts
+
+The program `contacts` checks the [contact driver](drivers/contacts.md). A contact on the bench is a wire from GND to its pin.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `inputs` | bench | Close the contact on E-1 for a moment, then the one on E-2 | Each closure gives one `ContactClosed` with its pin as the source. `closed()` shows the pin while it is closed |
+| `bounce` | bench | Tap a contact many times, slowly and as fast as possible | Each tap gives one `ContactClosed` |
+| `bus-lost` | bench | Hold SDA at GND with a wire for longer than the [fault time](drivers/contacts.md#device-faults), then let go | The contacts are reported failed with error flags as their code, and recovered once SDA is free |
+
 ### Controls
 
 The program `controls` checks the [controls driver](drivers/controls.md).

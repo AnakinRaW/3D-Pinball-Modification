@@ -82,7 +82,7 @@ MODEL.uses("t_hold_max", of="solenoid", group="Solenoid Driver", section="Watchd
 # ===========================================================================
 dec("n_tick_slots", 8, "", src="the callbacks the driver tick holds, kSlots in "
     "driver-design.md")
-dec("n_monitor_slots", 11, "", src="the drivers the device monitor can watch, one for each "
+dec("n_monitor_slots", 12, "", src="the drivers the device monitor can watch, one for each "
     "device of the machine, Device::Count in driver-design.md")
 dec("n_queue", 32, "", src="the depth of the device monitor's event queue, error-handling.md; "
     "a converter that stops answering fails eight parts at once")
