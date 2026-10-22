@@ -44,6 +44,8 @@ _family(_MPS, [("m/s", 1.0), ("mm/s", 1e-3)])
 _family((-1, 0, 1, 0, 0), [("ns/V", 1e-9)])
 # a wire's resistance per length, as a gauge table gives it
 _family((1, -1, 0, 0, -1), [("Ω/m", 1.0), ("mΩ/m", 1e-3)])
+# a cable's capacitance per length, as a cable datasheet gives it
+_family((-1, 1, 1, 0, -1), [("pF/m", 1e-12)])
 # a cable's loop inductance per length
 _family((1, -1, 1, 0, -1), [("µH/m", 1e-6)])
 # a package's thermal resistance, junction to ambient

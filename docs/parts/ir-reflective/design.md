@@ -269,7 +269,7 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 
 **Placement distances.** The figures are assumptions, no datasheet states one.
 
-- the 100 nF parts should sit within 3 mm of the supply pin they decouple, C3 at U3's VCC1 and C4 at its VCC2, which sit at opposite corners of the package
+- the 100 nF parts should sit within 10 mm of the supply pin they decouple, C3 at U3's VCC1 and C4 at its VCC2, which sit at opposite corners of the package
 - C5 and R39 should stay within 10 mm of J-PWR, C6 within 10 mm of U1's and U2's VDD pins, between the two converters
 - R33 and R35 should stay within 10 mm of Q1's gate
 - each channel's 4.7 kΩ should stay within 25 mm of its converter input, so the stub adds little to the source resistance the acquisition window is derived from

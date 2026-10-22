@@ -10,7 +10,9 @@ This document describes the general concepts of the firmware, which apply to all
 | Lighting | [`drivers/lighting.md`](drivers/lighting.md) |
 | Audio | [`drivers/audio.md`](drivers/audio.md) |
 | Storage, the SD card | [`drivers/storage.md`](drivers/storage.md) |
+| I²C buses on `Wire` and `Wire2` | [`io/i2c-bus.md`](io/i2c-bus.md) |
 | Magnetic rotary sensor | [`drivers/magnetic-rotary.md`](drivers/magnetic-rotary.md) |
+| Port expander | [`io/port-expander.md`](io/port-expander.md) |
 | Controls | [`drivers/controls.md`](drivers/controls.md) |
 | Servo | [`drivers/servo.md`](drivers/servo.md) |
 | Display | [`drivers/display.md`](drivers/display.md) |
@@ -22,7 +24,7 @@ The firmware keeps three layers apart.
 
 ![Firmware architecture](architecture.svg)
 
-The drivers work the hardware in their own interrupts and publish what they detect as driver events.
+The drivers work the hardware in their own interrupts and publish what they detect as driver events. A driver that shares a bus or takes its pins from the port expander goes through the I/O layer beneath the drivers, whose code sits in the namespace `io`. The I/O layer publishes no events and reports no faults.
 
 The main loop carries the whole game logic. It lays out the game rules and orchestrates most of the hardware in reaction to what happens on the playfield. Game components represent logical elements of the playfield, such as the top roll-over lanes, and may combine several hardware parts. They run in the main loop as well.
 
@@ -55,10 +57,11 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | Watchdog, warning before a restart | WDOG1's warning interrupt | none, the restart follows | no | 32 |
 | IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | no | 64 |
 | IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | no | 64 |
-| Solenoids, break beam and controls, reacting to a contact, the beam or the switch | the pin interrupt, one for every pin | milliseconds | no | 96 |
-| Rotary sensor, solenoids, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
+| Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT | the pin interrupt, one for every pin | milliseconds | no | 96 |
+| Rotary sensor, port expander, solenoids, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
 | Lighting, refilling the half of the LED bit buffer that has gone out | FastLED's DMA | the next half of the bit buffer | no | 128 |
+| I²C buses, running every transfer on Wire and Wire2 | LPI2C1 and LPI2C4 | none, a late start only delays the next transfer | no | 160 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
 | Display, refilling its bus | FlexIO3 | none, a late refill only pauses the bus | yes | 224 |
@@ -77,11 +80,11 @@ Each peripheral below belongs to one driver, and no other code or library may us
 | QuadTimer3, all four channels | IR ball sensing | counts the sensor phases and starts the read block |
 | QuadTimer4 | Lighting | FastLED's ObjectFLED driver times the LED data |
 | I²S2 | Audio | the Audio library hands every block to the amplifier |
-| Wire | Magnetic rotary sensor | runs the bus itself after `begin()` |
+| Wire | I²C bus | runs every transfer of the rotary sensor and the port expander |
 | FlexPWM1.1 | Servo | PWMServo repeats the servo pulse |
 | FlexIO3 | Display | clocks the 8-bit bus out to the display |
 | FlexIO2 | Display | runs on FlexIO3's clock, which the driver sets |
-| Wire2 | Touch | drives the touch controller's bus after `begin()` |
+| Wire2 | I²C bus | runs every transfer of the touch driver |
 | GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
 | FlexSPI2 | PSRAM | Teensyduino's start-up code connects the PSRAM through it |
 

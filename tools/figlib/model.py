@@ -159,9 +159,10 @@ class Model:
         """A net of the subsystem: every part on it, and the Teensy signal it reaches."""
         self.nets.append(Net(name, teensy, list(parts), self.name))
 
-    def owns(self, peripheral, why):
-        """A peripheral the subsystem's driver programs itself, which no other code may use."""
-        self.owned.append((peripheral, why))
+    def owns(self, peripheral, why, *, serves=()):
+        """A peripheral the subsystem's driver programs itself, which no other code may use. A
+        bus that runs it for the drivers of other subsystems names those in `serves`."""
+        self.owned.append((peripheral, why, tuple(serves)))
 
     def supplies(self, key, *, pool):
         """What a pool holds: the current a rail allows, a memory's size, a list's slots."""

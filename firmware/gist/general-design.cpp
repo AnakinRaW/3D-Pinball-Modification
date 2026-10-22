@@ -14,6 +14,15 @@ EventQueue       events;
 DriverTick       driverTick;             // the drivers attach to it in their begin()
 DeviceMonitor    deviceMonitor;          // the drivers register with it in their begin()
 
+// the I/O layer beneath the drivers: the I²C buses and the port expander, each set up at its first attach()
+namespace io {
+constexpr uint8_t kWireSda  = 18, kWireScl  = 19;   // pin-assignment.md: SDA on Wire, SCL on Wire
+constexpr uint8_t kWire2Sda = 25, kWire2Scl = 24;   // pin-assignment.md: SDA to the touch controller, SCL to the touch controller
+I2cBus           wireBus{Wire, IMXRT_LPI2C1, IRQ_LPI2C1, kWireSda, kWireScl, [] { wireBus.serve(); }};
+I2cBus           wire2Bus{Wire2, IMXRT_LPI2C4, IRQ_LPI2C4, kWire2Sda, kWire2Scl, [] { wire2Bus.serve(); }};
+PortExpander     expander;               // the pins E-1 to E-8, read on wireBus
+}
+
 // drivers
 IrSensing        ir;
 BreakBeam        drain;

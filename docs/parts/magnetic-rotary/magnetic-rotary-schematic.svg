@@ -18,11 +18,11 @@
 
   <circle cx="390" cy="190" r="6" fill="#2c3e50"/>
   <text x="390" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
-  <text x="390" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SDA to the rotary sensors">pin 18</text>
+  <text x="390" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SDA on Wire">pin 18</text>
 
   <circle cx="510" cy="190" r="6" fill="#8a2be2"/>
   <text x="510" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
-  <text x="510" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SCL to the rotary sensors">pin 19</text>
+  <text x="510" y="176" text-anchor="middle" font-size="11.5" fill="#777" data-pin="SCL on Wire">pin 19</text>
 
   <!-- wires -->
   <line x1="190" y1="190" x2="190" y2="330" stroke="#c0392b" stroke-width="2.5"/>

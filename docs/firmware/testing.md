@@ -218,6 +218,17 @@ The program `break-beam` checks the [break beam driver](drivers/break-beam.md).
 | `pass` | bench | Pass a ball through the beam many times, slowly and fast | Each pass gives one `BallDrained`, and `blocked()` is true only while the ball is in the beam |
 | `failed` | bench | Leave a ball in the beam for longer than the [fault time](drivers/break-beam.md#device-faults), then take it out | The beam is reported failed, and recovered once it is clear |
 
+### I²C bus
+
+The program `i2c-bus` checks the [I²C bus](io/i2c-bus.md) on `Wire`, with the rotary sensor and the port expander connected.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `turns` | Teensy | For a minute, request a read of the rotary sensor every tick and a new read of the port expander each time one ends | Every request is followed by one run and one call of its done function. A read of the rotary sensor never waits for more than one read of the port expander |
+| `no-answer` | Teensy | Run a transfer to an address no device answers at, then a read of the rotary sensor | The first ends with the missing answer as its error. The second works |
+| `probe` | Teensy | Run a transfer with neither part, once to the rotary sensor's address and once to an address no device answers at | The first ends without an error. The second ends with the missing answer |
+| `held-low` | bench | Hold SDA at GND with a wire for a moment while transfers run, then let go | The transfers end with the line held low as their error. Transfers work again once SDA is free |
+
 ### Magnetic rotary sensor
 
 The program `magnetic-rotary` checks the [rotary sensor driver](drivers/magnetic-rotary.md).
@@ -230,6 +241,18 @@ The program `magnetic-rotary` checks the [rotary sensor driver](drivers/magnetic
 | `dead-band` | bench | Rock the seal within the rod's play, then turn it by a few degrees | The rocking gives no event, and the turn gives `RotorMoved` and then one `RotorStopped` with the position it rests at |
 | `full-queue` | bench | Turn the rod while the main loop stops reading events, then let it read again | The last event carries the position `position()` gives |
 | `unplugged` | bench | Disconnect the sensor while the program runs, then connect it again | The sensor is reported failed with error flags as its code, and recovered once connected, while the program keeps running |
+
+### Port expander
+
+The program `port-expander` checks the [port expander](io/port-expander.md). A test listener attached to all eight pins records every change it gets. A pin is pulled low on the bench with a wire to GND.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `changes` | bench | Pull each pin from E-1 to E-8 low in turn, then let it go | Each pull and each release gives one change with its pin and its new level. `levels()` shows the pin low while it is pulled |
+| `together` | bench | Pull two pins low at the same moment | The listener gets the change of both pins |
+| `failed-read` | bench | Pull a pin low while the test build fails the read that follows | The change still arrives with the time INT fell, after the driver tick's next [read](io/port-expander.md#reading-the-pins) |
+| `restart` | bench | Restart the Teensy with a pin pulled low. Let it go while the Teensy starts | INT is high once the first `attach()` has returned. The next change arrives |
+| `taken` | Teensy | Attach a second listener to a pin the first one holds | `attach()` returns false. The first listener keeps getting its changes |
 
 ### Controls
 

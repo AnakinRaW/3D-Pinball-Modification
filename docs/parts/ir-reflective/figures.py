@@ -1879,8 +1879,8 @@ for _key, _row in (("r_switch", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
 # table and the connector tables. They are stated in prose, so each is located
 # by the section that holds it.
 _PLACE = "Placement distances"
-asm("place_decoupling", 3, "mm", group=_PLACE, stated="loose",
-    src="how close a 100 nF sits to the pin it decouples; no datasheet states one")
+asm("place_decoupling", 10, "mm", group=_PLACE, stated="loose",
+    src="how close a 100 nF sits to the pin it decouples, a distance perfboard allows; no datasheet states one")
 asm("place_local", 10, "mm", group=_PLACE, stated="loose",
     src="how close a part sits to the node it serves, J-PWR, Q1's gate and the converters' VDD pins alike; no datasheet states one")
 asm("place_channel", 25, "mm", group=_PLACE, stated="loose",
@@ -2051,6 +2051,7 @@ for _text, _why in [
     ("0.053 Ω", "IRL540N R_DS(on) maximum at V_GS = 5.0 V"),
     ("0.063 Ω", "IRL540N R_DS(on) maximum at V_GS = 4.0 V"),
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
+    ("4 mm", "the distance the GP2S700HCP datasheet characterizes I_C at, against a mirror"),
 
     # a package, a pitch, a count: not a measured quantity at all
     ("2.54 mm", "the connector pitch"),

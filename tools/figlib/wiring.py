@@ -38,6 +38,12 @@ def teensy_part(row: PinRow, data: PinData) -> Part:
                 src=f"{rel(PIN_TABLE)}:{row.line}")
 
 
+def _names(names) -> str:
+    """Names as a sentence lists them: a, a and b, a, b and c."""
+    names = list(names)
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} and {names[-1]}"
+
+
 def pass_wiring(models, rep: Report) -> int:
     """One driver at a time on every net, a defined level, and the Teensy's rail on its pins."""
     rows, data = {r.signal: r for r in pin_rows()}, pin_data()
@@ -56,9 +62,9 @@ def pass_wiring(models, rep: Report) -> int:
                 continue
             label += f", pin {row.pin}"
             for n in group:
-                if n.model != row.subsystem:
+                if n.model not in row.subsystems:
                     rep.error(f"{label}: {n.model} wires to a pin {rel(PIN_TABLE)}:{row.line} "
-                              f"gives to {row.subsystem}", kind="pins")
+                              f"gives to {_names(row.subsystems)}", kind="pins")
             parts = [teensy_part(row, data)] + parts
             for p in parts:
                 powered = (p.role in ("push-pull", "tri-state")
@@ -79,24 +85,28 @@ def pass_wiring(models, rep: Report) -> int:
         if not always and not any(p.role == "pull" for p in parts):
             rep.error(f"{label}: nothing holds the line while no output drives it, so it needs "
                       f"a pull-up or a pull-down", kind="level")
-    wired = set(merged)
+    # a row that links several subsystems gives the pin to each, so each of their models wires it
+    wired = {(key[1], n.model) for key, group in merged.items() if key[0] == "teensy"
+             for n in group}
+    names = {m.name for m in models}
     for r in rows.values():
-        if (r.subsystem in {m.name for m in models} and not r.reserved
-                and ("teensy", r.signal) not in wired):
-            rep.error(f"{rel(PIN_TABLE)}:{r.line} gives pin {r.pin} ({r.signal}) to "
-                      f"{r.subsystem}, whose model wires no net to it", kind="pins")
+        for s in r.subsystems:
+            if s in names and not r.reserved and (r.signal, s) not in wired:
+                rep.error(f"{rel(PIN_TABLE)}:{r.line} gives pin {r.pin} ({r.signal}) to "
+                          f"{s}, whose model wires no net to it", kind="pins")
     return len(merged)
 
 
 def pass_peripherals(models, rep: Report) -> int:
-    """Every pin function is one the board's model gives that pin, and an owned peripheral has one user."""
+    """Every pin function is one the board's model gives that pin, and an owned peripheral has one
+    user, or the users its bus serves."""
     data = pin_data()
     owner = {}
     for m in models:
-        for p, why in m.owned:
+        for p, why, serves in m.owned:
             if p in owner and owner[p][0] != m.name:
                 rep.error(f"{p} is owned by {owner[p][0]} and by {m.name}", kind="owner")
-            owner.setdefault(p, (m.name, why))
+            owner.setdefault(p, (m.name, why, serves))
     for r in pin_rows():
         where = f"{rel(PIN_TABLE)}:{r.line}"
         used, what, ok = _function(r.peripheral, r.pin, data)
@@ -108,9 +118,12 @@ def pass_peripherals(models, rep: Report) -> int:
             rep.error(f"{where} puts {r.peripheral} on pin {r.pin}, which "
                       f"{'that channel' if used in data.timers else 'that signal'} of {used} "
                       f"does not reach", kind="function")
-        if used in owner and owner[used][0] != r.subsystem:
-            rep.error(f"{where} gives {used} on pin {r.pin} to {r.subsystem}, and "
-                      f"{owner[used][0]} owns it: {owner[used][1]}", kind="owner")
+        if used in owner:
+            held, why, serves = owner[used]
+            others = [s for s in r.subsystems if s != held and s not in serves]
+            if others:
+                rep.error(f"{where} gives {used} on pin {r.pin} to {_names(others)}, and "
+                          f"{held} owns it: {why}", kind="owner")
     return len(owner)
 
 

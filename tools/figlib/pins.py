@@ -53,10 +53,10 @@ class PinRow:
     pin: int
     signal: str         # the Signal cell up to its first comma
     peripheral: str
-    subsystem: str      # the model the Subsystem cell links to, else the cell's text
+    subsystems: tuple   # the models the Subsystem cell links to, else the cell's text
     reserved: bool
     line: int
-    owner: str = ""     # the Subsystem cell as it reads, without its link
+    owner: str = ""     # the Subsystem cell as it reads, without its links
 
 
 def _md_tables(text: str):
@@ -88,9 +88,9 @@ def _pin_rows(text: str) -> list[PinRow]:
             if len(cells) < 3 or not cells[0].isdigit():
                 continue
             cell = cells[3] if len(cells) > 3 else ""
-            link = re.search(r"\(parts/([\w-]+)/", cell)
+            links = tuple(dict.fromkeys(re.findall(r"\(parts/([\w-]+)/", cell)))
             rows.append(PinRow(int(cells[0]), re.sub(r"[*`]", "", cells[1]).split(",")[0].strip(),
-                               cells[2], link.group(1) if link else cell, section == "Reserved",
+                               cells[2], links or (cell,), section == "Reserved",
                                line, re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", cell).strip()))
     return rows
 

@@ -7,8 +7,9 @@ struct Finger {
 
 class Touch : public Driver {
 public:
-    // sets up Wire2, checks once whether the touch controller answers, attaches to the driver tick
-    // and registers with the device monitor; false when one of the two is full
+    // attaches its transfer to the bus on Wire2, checks once whether the touch controller answers,
+    // attaches to the driver tick and registers with the device monitor; false when one of the two
+    // is full
     bool begin() override;
 
     bool   present() const;     // gets whether the machine has a touch controller, which begin() finds out once
@@ -27,60 +28,40 @@ private:
     static constexpr uint32_t kTouchReadyMs = 580;     // after power-up, docs/parts/display
     static constexpr uint8_t  kTouchAddress = 0x38;    // the CST026
     static constexpr uint8_t  kTdStatus     = 0x02;    // the number of touches, then the first touch point
-    static constexpr uint32_t kErrors   = LPI2C_MSR_NDF | LPI2C_MSR_ALF | LPI2C_MSR_FEF | LPI2C_MSR_PLTF;
+
+    // the end of a read, in the bus's interrupt: the touch events from the five bytes
+    void done(uint32_t errors);
 
     // publishes TouchDown, TouchMoved, TouchHeld and TouchUp from a read; turns the position from
     // the panel's portrait into the picture's landscape, as the display driver's MADCTL turns the
     // panel's memory
     void report(const uint8_t* read);
 
-    // ... the members the implementation below names
+    uint8_t     read_[kTouchBytes] = {};
+    io::I2cTransfer probe_{kTouchAddress, nullptr, 0, nullptr, 0, {}};   // the address alone
+    io::I2cTransfer touch_{kTouchAddress, &kTdStatus, 1, read_, kTouchBytes, [this](uint32_t e) { done(e); }};
+    // ... the other members the implementation below names
 };
 
 bool Touch::begin() {
-    touchOut_ = &events.attach(touchQueue_, kQueueDepth);        // the touch events, which the driver tick publishes
-    Wire2.begin();                                                       // the pins, their pull-ups and 100 kHz
+    touchOut_ = &events.attach(touchQueue_, kQueueDepth);        // the touch events, which the reads publish
+    io::wire2Bus.attach(probe_);
+    io::wire2Bus.attach(touch_);
     while (nowUs() < kTouchReadyMs * 1000) {}
-    Wire2.beginTransmission(kTouchAddress);
-    present_ = Wire2.endTransmission() == 0;
-    LPI2C4_MCR     = 0;                                                  // the master off while it is set up, as Wire does
-    LPI2C4_MCFGR1 |= LPI2C_MCFGR1_AUTOSTOP;                              // a STOP once the four commands are sent
-    LPI2C4_MFCR    = LPI2C_MFCR_RXWATER(0) | LPI2C_MFCR_TXWATER(1);      // every received byte asks, Wire leaves every second
-    LPI2C4_MCR     = LPI2C_MCR_MEN;
-    LPI2C4_MDER    = LPI2C_MDER_RDDE;                                    // each received byte asks the DMA channel
-    dma_.source((volatile uint8_t&)LPI2C4_MRDR);
-    dma_.destinationBuffer(read_, kTouchBytes);
-    dma_.triggerAtHardwareEvent(DMAMUX_SOURCE_LPI2C4);
-    dma_.disableOnCompletion();                                          // five bytes, then the next tick enables it
+    present_  = io::wire2Bus.requestAndWait(probe_) == 0;            // the controller acknowledges its address
     lastGood_ = nowUs();
 
-    if (!driverTick.attach([this] { tick(); }, kTickUs)) return false;
+    if (!driverTick.attach([this] { if (present_) io::wire2Bus.request(touch_); }, kTickUs)) return false;
     return deviceMonitor.watch(Device::Touch, *this);
 }
 
-// the driver tick, every kTickUs: collects the last read and starts the next
-void Touch::tick() {
-    if (!present_) return;
-    const uint32_t msr = LPI2C4_MSR;
-    if (msr & kErrors) {                                                 // no answer, lost bus, FIFO error, line low
-        lastError_ = msr & kErrors;
-        if (msr & LPI2C_MSR_PLTF) recover();                             // clocks SCL until SDA is free
-        LPI2C4_MCR |= LPI2C_MCR_RTF | LPI2C_MCR_RRF;
-        LPI2C4_MSR  = 0x00007F00;                                        // clears every flag, as Wire does
-    } else if (msr & LPI2C_MSR_MBF) {
-        return;                                                          // the last read is still on the bus
-    } else if (dma_.complete()) {
-        dma_.clearComplete();
-        lastGood_ = nowUs();
-        report(read_);                                                   // TouchDown, TouchMoved, TouchHeld, TouchUp
+void Touch::done(uint32_t errors) {
+    if (errors) {                                                // no answer, lost bus, FIFO error, line low
+        lastError_ = errors;                                     // the next tick requests a new read
+        return;
     }
-    dma_.disable();                                                      // a read that broke off leaves the channel part-way,
-    dma_.destinationBuffer(read_, kTouchBytes);                          // so every read starts again at the buffer's first byte
-    dma_.enable();                                                       // the next five bytes
-    LPI2C4_MTDR = LPI2C_MTDR_CMD_START | kTouchAddress << 1;             // the address, to write
-    LPI2C4_MTDR = LPI2C_MTDR_CMD_TRANSMIT | kTdStatus;                   // TD_STATUS, the first of the five
-    LPI2C4_MTDR = LPI2C_MTDR_CMD_START | kTouchAddress << 1 | 1;         // the address again, to read
-    LPI2C4_MTDR = LPI2C_MTDR_CMD_RECEIVE | (kTouchBytes - 1);            // five bytes, then AUTOSTOP
+    lastGood_ = nowUs();
+    report(read_);                                               // TouchDown, TouchMoved, TouchHeld, TouchUp
 }
 
 Fault Touch::failed() const {

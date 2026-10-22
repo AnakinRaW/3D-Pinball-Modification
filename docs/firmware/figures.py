@@ -15,7 +15,7 @@ from figcheck import Model, Q, floor_to
 HERE = pathlib.Path(__file__).resolve().parent
 MODEL = Model("firmware", HERE / "general-design.md", section=None, until="## Sources",
               documents=[HERE / "driver-design.md", HERE / "error-handling.md",
-                         HERE / "logging.md",
+                         HERE / "logging.md", HERE / "io" / "i2c-bus.md",
                          HERE / "components" / "file-system.md"])
 
 ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
@@ -30,8 +30,8 @@ IRQ = "Interrupts"
 # the periods
 # ===========================================================================
 dec("t_tick", 5, "ms", src="the driver tick's period, driver-design.md, on which the "
-    "rotary sensor's driver collects one read and starts the next; "
-    "docs/parts/magnetic-rotary/figures.py requires the read to fit inside it")
+    "rotary sensor's driver requests one read; docs/parts/magnetic-rotary/figures.py requires "
+    "the read to fit inside it")
 dec("t_monitor", 100, "ms", src="how often the device monitor of error-handling.md asks "
     "every driver which parts of its device have failed")
 dec("t_wdt", 2, "s", src="the watchdog timeout, error-handling.md; decided well inside the "
@@ -58,6 +58,17 @@ def _(n_clock_range, t_clock_step):
     return n_clock_range * t_clock_step
 
 MODEL.owns("GPT2", "nowUs() reads its counter, which setup() starts, general-design.md")
+
+# ===========================================================================
+# the I²C buses on Wire and Wire2, docs/firmware/io/i2c-bus.md
+# ===========================================================================
+dec("f_scl", 100, "kHz", src="the bus clock on Wire and on Wire2, Standard-mode, the rate a Wire "
+    "object's begin() sets with setClock(100000); each I²C bus calls it at its first attach()")
+
+MODEL.owns("Wire", "the I²C bus wireBus runs LPI2C1 and every transfer on the bus, "
+           "docs/firmware/io/i2c-bus.md", serves=("magnetic-rotary", "port-expander"))
+MODEL.owns("Wire2", "the I²C bus wire2Bus runs LPI2C4 and every transfer of the touch "
+           "driver, docs/firmware/io/i2c-bus.md", serves=("display",))
 
 
 # the one guard the watchdog keeps, as error-handling.md tabulates it
@@ -94,9 +105,13 @@ dec("prio_ir", 64, "", src="the IR driver's two interrupts, whose read block has
     "inside its phase", group="IR ball sensing, starting a sensor reading", section=IRQ,
     stated=True)
 dec("prio_pins", 96, "", src="the one IRQ every pin interrupt shares, which the main task sets "
-    "once", group="Solenoids, break beam and controls, reacting to a contact, the beam or the switch", section=IRQ, stated=True)
+    "once", group="Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT", section=IRQ, stated=True)
 dec("prio_tick", 96, "", src="the driver tick, kPriority in driver-design.md",
-    group="Rotary sensor, solenoids, device monitor, display and touch, their periodic work", section=IRQ, stated=True)
+    group="Rotary sensor, port expander, solenoids, device monitor, display and touch, their periodic work", section=IRQ, stated=True)
+dec("prio_i2c", 160, "", src="the I²C buses' LPI2C1 and LPI2C4 interrupts, which have no "
+    "deadline: below the DMA refills, which have one, and above FreeRTOS's limit, since they never "
+    "call the kernel; docs/firmware/io/i2c-bus.md",
+    group="I²C buses, running every transfer on Wire and Wire2", section=IRQ, stated=True)
 ds("prio_update", 208, "", src=f"{CORE}/AudioStream.cpp, NVIC_SET_PRIORITY(IRQ_SOFTWARE, "
    "208), the Audio library's update", group="Audio, computing the next block of samples",
    section=IRQ, stated=True)
@@ -225,21 +240,23 @@ _I("the Audio library's two interrupts sit below the IR, pin and driver-tick int
    lambda v: min(v.prio_dma, v.prio_update) > max(v.prio_ir, v.prio_pins, v.prio_tick))
 _I("the SD controller's interrupt sits beneath both, the lowest of all",
    lambda v: v.prio_card > max(v.prio_dma, v.prio_update, v.prio_ir, v.prio_pins,
-                               v.prio_tick, v.prio_display))
+                               v.prio_tick, v.prio_display, v.prio_i2c))
+_I("the I²C bus's interrupt, which has no deadline, sits below the DMA refills, which have one",
+   lambda v: v.prio_i2c > max(v.prio_dma, v.prio_led))
 _I("the display's FlexIO3 interrupt sits below the Audio library's two, so a refill never "
    "delays a block",
    lambda v: v.prio_display > max(v.prio_dma, v.prio_update))
 _I("the kernel never masks the IR driver's interrupts",
    lambda v: v.prio_ir < v.prio_kernel and v.prio_ir_spi < v.prio_kernel)
-_I("the kernel never masks an interrupt that does not call it: the pins, the driver tick and the "
-   "DMA interrupts",
-   lambda v: max(v.prio_pins, v.prio_tick, v.prio_dma, v.prio_led) < v.prio_kernel)
+_I("the kernel never masks an interrupt that does not call it: the pins, the driver tick, the "
+   "DMA interrupts and the I²C bus",
+   lambda v: max(v.prio_pins, v.prio_tick, v.prio_dma, v.prio_led, v.prio_i2c) < v.prio_kernel)
 _I("every interrupt that calls the kernel lies at its threshold or below it: the audio update and "
    "FlexIO3 start reads, and the SD controller wakes the storage task",
    lambda v: v.prio_kernel <= min(v.prio_update, v.prio_display, v.prio_card))
 _I("the kernel's tick and task switch wait for every other interrupt",
    lambda v: v.prio_kernel_irq >= max(v.prio_ir, v.prio_pins, v.prio_tick, v.prio_dma, v.prio_led,
-                                      v.prio_update, v.prio_display, v.prio_card))
+                                      v.prio_i2c, v.prio_update, v.prio_display, v.prio_card))
 _I("the device monitor checks on whole driver ticks",
    lambda v: (v.t_monitor / v.t_tick).raw.is_integer())
 _I("the device monitor's queue has a depth the event queue accepts, a power of two",
@@ -254,7 +271,8 @@ _I("SdFat's longest wait ends before the watchdog warns, so a wait the main loop
    lambda v: v.t_sdfat < v.t_wdt - v.t_wdt_warn)
 _I("the watchdog's warning preempts every driver interrupt, so a hang in any of them is noted",
    lambda v: v.prio_wdt_warn < min(v.prio_ir, v.prio_ir_spi, v.prio_pins, v.prio_tick, v.prio_dma,
-                                   v.prio_led, v.prio_update, v.prio_display, v.prio_card))
+                                   v.prio_led, v.prio_i2c, v.prio_update, v.prio_display,
+                                   v.prio_card))
 _I("FreeRTOS never masks the watchdog's warning, which does not call it",
    lambda v: v.prio_wdt_warn < v.prio_kernel)
 

@@ -5,6 +5,7 @@
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
 | 0 | Servo signal | FlexPWM1.1 channel X | [Servo](parts/servo/design.md) |
+| 1 | Interrupt from the port expander | plain digital input | [Port expander](parts/port-expander/design.md) |
 | 2 | DIN to the DFR0954 | I²S2 data out | [Audio](parts/audio/design.md) |
 | 3 | LRC to the DFR0954 | I²S2 LRCLK | [Audio](parts/audio/design.md) |
 | 4 | BCLK to the DFR0954 | I²S2 BCLK | [Audio](parts/audio/design.md) |
@@ -15,8 +16,8 @@
 | 15 | CS-A, converter for channels 1 to 8 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
 | 16 | CS-B, converter for channels 9 to 16 | plain digital output | [IR ball sensing](parts/ir-reflective/design.md) |
 | 17 | WR to the display | FlexIO3 pin 6 | [Display](parts/display/design.md) |
-| 18 | SDA to the rotary sensors | Wire SDA | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
-| 19 | SCL to the rotary sensors | Wire SCL | [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
+| 18 | SDA on Wire | Wire SDA | [Magnetic rotary sensor](parts/magnetic-rotary/design.md), [Port expander](parts/port-expander/design.md) |
+| 19 | SCL on Wire | Wire SCL | [Magnetic rotary sensor](parts/magnetic-rotary/design.md), [Port expander](parts/port-expander/design.md) |
 | 20 | D2 to the display | FlexIO3 pin 10 | [Display](parts/display/design.md) |
 | 21 | D3 to the display | FlexIO3 pin 11 | [Display](parts/display/design.md) |
 | 22 | D0 to the display | FlexIO3 pin 8 | [Display](parts/display/design.md) |
@@ -57,8 +58,8 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | QuadTimer3, all four channels | Sensors, pin 14. Channel 3 starts the read block and has no pin, and channels 0 and 1 stay unused because all four share one interrupt |
 | Serial3 and S/PDIF | Sensors, pins 14 and 15 |
 | Wire1 and Serial4 | Sensors, pin 16; display, pin 17 |
-| Wire | Rotary sensor, pins 18 and 19 |
-| Serial1 and CAN2 | Servo, pin 0 |
+| Wire | Rotary sensor and port expander, pins 18 and 19 |
+| Serial1 and CAN2 | Servo, pin 0; port expander, pin 1 |
 | FlexPWM1.1, at 50 Hz | Servo, pin 0. Pins 42 and 43 share its frequency and carry the SD card instead |
 | CAN3 | Break beam, pin 31; solenoids, pin 30 |
 | Serial8 | Solenoids, pins 34 and 35 |
@@ -70,7 +71,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | Wire2 and Serial6 | Display, pins 24 and 25 |
 | Serial7 | Display, pins 28 and 29 |
 | FlexSPI2 | PSRAM, pins 48, 49, 50, 52, 53 and 54 |
-| 20 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
+| 21 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; port expander 1; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
 | 18 of 18 analog inputs | A0, A1, A2 sensors; A3, A6 to A15 display; A4, A5 rotary sensor; A16, A17 solenoids |
 
 CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](firmware/general-design.md#exclusive-peripherals) sets out for the firmware.
@@ -83,7 +84,6 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
-| 1 | Interrupt from the targets' port expander | plain digital input | Targets |
 | 5 | LED chain A | plain digital output | [Lighting](parts/lighting/design.md) |
 | 6 | LED chain B | plain digital output | [Lighting](parts/lighting/design.md) |
 | 7 | LED chain C | plain digital output | [Lighting](parts/lighting/design.md) |
@@ -134,7 +134,7 @@ No edge pin remains. On the underside, pin 51 remains, FlexSPI2's chip select fo
 | SPI | MOSI 11, MISO 12, SCK 13, CS 10 / 36 / 37 | IR ball sensing |
 | SPI1 | MOSI 26, MISO 1 / 39, SCK 27, CS 0 / 38 |  |
 | SPI2 | MOSI 43 / 50, MISO 42 / 54, SCK 45 / 49, CS 44 (none on the edge headers) |  |
-| Wire | SDA 18, SCL 19 | Magnetic rotary sensor |
+| Wire | SDA 18, SCL 19 | Magnetic rotary sensor, Port expander |
 | Wire1 | SDA 17, SCL 16 |  |
 | Wire2 | SDA 25, SCL 24 | Display |
 | CAN1 | RX 23, TX 22 / 11 |  |

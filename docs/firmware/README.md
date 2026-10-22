@@ -14,6 +14,7 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`game-abstraction.md`](game-abstraction.md) | The host that runs the games, the game lifecycle, and the interface every game implements |
 | [`testing.md`](testing.md) | The tests of the firmware: where each one runs, the lines a test prints, the bench, the test card, and what each test checks |
 | [`drivers/`](drivers/) | One document per driver, the code that works a piece of hardware |
+| [`io/`](io/) | The I/O layer beneath the drivers: the I²C buses and the port expander's pins, which drivers share |
 | [`components/`](components/) | One document per component: the playfield elements and the services a game uses |
 | [`firmware/gist/`](../../firmware/gist/) | Code notes for the drivers and components, which the real firmware starts from |
 | [`figures.py`](figures.py) | The firmware's periods, watchdog timeout, interrupt priorities and slots, which `tools/figcheck.py` checks these documents against |
