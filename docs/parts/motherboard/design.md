@@ -2,7 +2,7 @@
 
 The Teensy motherboard carries the Teensy, the DFR0954 amplifier module and the port expander. It hands the Teensy's rails on to the subsystems.
 
-The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Eight cables and the hit targets carry the Teensy's ground. The board spreads both over a rail each.
+The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Nine cables and the hit targets carry the Teensy's ground. The board spreads both over a rail each.
 
 ## Circuit
 
@@ -34,7 +34,7 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 ### GND rail
 
-The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-PWR's GND. These cables take their ground from it: the IR mainboard's J-T, the solenoid sense board's J-T, the lighting data cable, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
+The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-PWR's GND. These cables take their ground from it: the IR mainboard's J-T, the solenoid sense board's J-T, the two lighting data cables, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
 
 ### Toggle switch
 
