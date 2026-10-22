@@ -25,14 +25,12 @@ Each check reports on one line. Any of them can fail the run. A failure names th
 |---|---|
 | `--sheets` | Looks every datasheet reading up in the PDF it cites |
 | `--mutate` | Moves every figure the documents state and requires the run to report it |
-| `--write` | Writes the model's figures into the documents and the drawings |
-| `--write-sums` | Records the checksums of the cited datasheets |
+| `--write` | Writes the model's figures into the documents and the drawings, and records the checksum of each cited datasheet that has none yet |
 | `--graph <key>` | One quantity in full: its value, its source, its formula, everything it rests on and everything it feeds |
 | `--provenance` | Every input with its kind, its value and its source |
 | `--groups` | The block groups and value tokens the markdown parser found |
 | `--blind` | Each quantity, its unit and its inputs, with no formula and no value |
-| `--base <ref>` | The git ref the stale pass diffs against, `HEAD` by default |
-| `--no-stale` | Switches the stale pass off |
+| `--base <ref>` | The git ref the stale pass diffs against, `HEAD` by default. `--mutate` and `--provenance` run no stale pass |
 
 ## svgcheck
 

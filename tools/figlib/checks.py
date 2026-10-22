@@ -488,33 +488,52 @@ def pass_datasheets(model: Model, rep: Report):
     return looked, missing
 
 
-def pass_sums(model: Model, rep: Report, write: bool):
-    named = sorted({f.sheet for f in model.figs.values() if f.sheet and f.origin is None})
-    if write:
-        lines = []
-        for name in sorted(p.name for p in DATASHEETS.glob("*") if p.is_file()
-                           and p.name != SUMS.name):
-            h = hashlib.sha256((DATASHEETS / name).read_bytes()).hexdigest()
-            lines.append(f"{h}  {name}")
-        SUMS.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        rep.note(f"wrote {SUMS.relative_to(ROOT).as_posix()}, {len(lines)} files")
-        return len(named)
+def _cited(model: Model) -> list[str]:
+    """The datasheets the model's own readings cite."""
+    return sorted({f.sheet for f in model.figs.values() if f.sheet and f.origin is None})
+
+
+def _recorded() -> dict[str, str]:
+    """The recorded checksums, by file name."""
+    recorded = {}
+    if SUMS.exists():
+        for line in SUMS.read_text(encoding="utf-8").split("\n"):
+            if line.strip():
+                h, name = line.split(None, 1)
+                recorded[name.strip()] = h
+    return recorded
+
+
+def write_sums(model: Model, rep: Report) -> int:
+    """--write: the checksum of each cited datasheet that has none yet. A recorded one stays,
+    so a sheet that changed under its checksum is still reported."""
+    recorded = _recorded()
+    new = {name: hashlib.sha256((DATASHEETS / name).read_bytes()).hexdigest()
+           for name in _cited(model)
+           if name not in recorded and (DATASHEETS / name).is_file()}
+    if new:
+        recorded.update(new)
+        SUMS.write_text("".join(f"{recorded[n]}  {n}\n" for n in sorted(recorded)),
+                        encoding="utf-8")
+        rep.note(f"recorded the checksum of {', '.join(sorted(new))} in "
+                 f"{SUMS.relative_to(ROOT).as_posix()}")
+    return len(new)
+
+
+def pass_sums(model: Model, rep: Report):
+    named = _cited(model)
     if not SUMS.exists():
         rep.error(f"{SUMS.relative_to(ROOT).as_posix()} missing; "
-                  f"run with --write-sums once", kind="sums")
+                  f"run with --write once", kind="sums")
         return len(named)
-    recorded = {}
-    for line in SUMS.read_text(encoding="utf-8").split("\n"):
-        if line.strip():
-            h, name = line.split(None, 1)
-            recorded[name.strip()] = h
+    recorded = _recorded()
     for name in named:
         p = DATASHEETS / name
         if not p.exists():
             rep.error(f"{name} named by the model is not in docs/datasheets/", kind="sums")
             continue
         if name not in recorded:
-            rep.error(f"{name} has no recorded checksum", kind="sums")
+            rep.error(f"{name} has no recorded checksum; --write records it", kind="sums")
             continue
         got = hashlib.sha256(p.read_bytes()).hexdigest()
         if got != recorded[name]:

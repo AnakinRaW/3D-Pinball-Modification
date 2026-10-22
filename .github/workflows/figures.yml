@@ -37,9 +37,4 @@ jobs:
         run: python tools/figcheck.py --sheets --base "$BASE"
 
       - name: Prove the check would catch a wrong figure
-        run: python tools/figcheck.py --mutate --no-stale
-
-      # Where every input value came from, readable in the log without a
-      # checkout of the repository.
-      - name: Record where every input value came from
-        run: python tools/figcheck.py --provenance --no-stale
+        run: python tools/figcheck.py --mutate

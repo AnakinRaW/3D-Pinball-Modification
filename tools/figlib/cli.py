@@ -8,7 +8,7 @@ import sys
 
 from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_direction,
                      pass_drawings, pass_invariants, pass_mutate, pass_orphans, pass_stale,
-                     pass_sums)
+                     pass_sums, write_sums)
 from .document import NEVER, parse_document
 from .listings import print_blind, print_groups, print_provenance, show_graph
 from .model import Model
@@ -95,6 +95,7 @@ def _write(run: Run) -> int:
     """--write: the figures into the files, then every edit and everything left unplaced."""
     rep = run.rep
     written = pass_write(run.model, run.tokens, rep)
+    write_sums(run.model, rep)
     if rep.count("unplaced") and run.model.name not in values_at(run.args.base):
         rep.note(f"{run.args.base} holds no {run.model.name} model this figcheck can "
                  f"evaluate, so each figure was looked for by its new value alone")
@@ -204,13 +205,12 @@ def _sheets(run: Run):
 
 
 def _sums(run: Run):
-    """The cited datasheets match their checksums, which --write-sums records instead."""
-    sheets = pass_sums(run.model, run.rep, run.args.write_sums)
-    if not run.args.write_sums:
-        status(not run.rep.count("sums"), "datasheet files",
-               f"{sheets} named by the model, "
-               + ("not every checksum matches" if run.rep.count("sums") else
-                  "every checksum matches"))
+    """The cited datasheets match their checksums, which --write records for a new sheet."""
+    sheets = pass_sums(run.model, run.rep)
+    status(not run.rep.count("sums"), "datasheet files",
+           f"{sheets} named by the model, "
+           + ("not every checksum matches" if run.rep.count("sums") else
+              "every checksum matches"))
 
 
 def _mutate(run: Run):
@@ -223,8 +223,9 @@ def _mutate(run: Run):
 
 
 def _stale(run: Run):
-    """The numbers and the pins a diff moved, unless the tree's own block looks for them."""
-    if not run.args.no_stale and not run.whole:
+    """The numbers and the pins a diff moved, unless the tree's own block looks for them.
+    --mutate has no use for them."""
+    if not run.args.mutate and not run.whole:
         pass_stale(run.args.base, run.rep)
         pass_moved_pins(run.args.base, run.rep, [*run.own, run.path])
 
@@ -265,11 +266,10 @@ def _parser() -> argparse.ArgumentParser:
     ap.add_argument("--mutate", action="store_true", help="run the mutation self-test")
     ap.add_argument("--provenance", action="store_true", help="list the inputs and their sources")
     ap.add_argument("--graph", metavar="KEY", help="what a quantity feeds, and what feeds it")
-    ap.add_argument("--write-sums", action="store_true", help="record the datasheet checksums")
-    ap.add_argument("--no-stale", action="store_true")
     ap.add_argument("--write", action="store_true",
                     help="write the model's figures into the document and the "
-                         "drawings, so a figure is typed in one place only")
+                         "drawings, so a figure is typed in one place only, and record "
+                         "the checksum of each cited datasheet that has none yet")
     ap.add_argument("--sheets", action="store_true",
                     help="look every datasheet reading up in the sheet it cites")
     ap.add_argument("--groups", action="store_true",
@@ -312,7 +312,7 @@ def main(argv=None):
     print()
     if run_wiring(paths):
         failed.append("the wiring")
-    if not args.no_stale and not args.write:
+    if not args.mutate and not args.write:
         rep = Report()
         pass_stale(args.base, rep)
         pass_moved_pins(args.base, rep)
