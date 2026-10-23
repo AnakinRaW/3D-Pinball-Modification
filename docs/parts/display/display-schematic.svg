@@ -13,82 +13,82 @@
   <text x="1036" y="128" text-anchor="end" font-size="16" font-weight="700" fill="#7a2556">Adafruit 2090</text>
 
 
-  <circle cx="270" cy="220" r="6" fill="#2c3e50"/>
-  <text x="258" y="219" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D0</text>
+  <circle cx="270" cy="220" r="6" fill="#1f4fd1"/>
+  <text x="258" y="219" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D0</text>
   <text x="258" y="234" text-anchor="end" font-size="11.5" fill="#777" data-pin="D0 to the display">pin 22</text>
-  <line x1="276" y1="220" x2="714" y2="220" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="220" r="6" fill="#2c3e50"/>
-  <text x="732" y="225" font-size="13" font-weight="700" fill="#2c3e50">D0</text>
+  <line x1="276" y1="220" x2="714" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="220" r="6" fill="#1f4fd1"/>
+  <text x="732" y="225" font-size="13" font-weight="700" fill="#1f4fd1">D0</text>
 
-  <circle cx="270" cy="256" r="6" fill="#2c3e50"/>
-  <text x="258" y="255" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D1</text>
+  <circle cx="270" cy="256" r="6" fill="#1f4fd1"/>
+  <text x="258" y="255" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D1</text>
   <text x="258" y="270" text-anchor="end" font-size="11.5" fill="#777" data-pin="D1 to the display">pin 23</text>
-  <line x1="276" y1="256" x2="714" y2="256" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="256" r="6" fill="#2c3e50"/>
-  <text x="732" y="261" font-size="13" font-weight="700" fill="#2c3e50">D1</text>
+  <line x1="276" y1="256" x2="714" y2="256" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="256" r="6" fill="#1f4fd1"/>
+  <text x="732" y="261" font-size="13" font-weight="700" fill="#1f4fd1">D1</text>
 
-  <circle cx="270" cy="292" r="6" fill="#2c3e50"/>
-  <text x="258" y="291" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D2</text>
+  <circle cx="270" cy="292" r="6" fill="#1f4fd1"/>
+  <text x="258" y="291" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D2</text>
   <text x="258" y="306" text-anchor="end" font-size="11.5" fill="#777" data-pin="D2 to the display">pin 20</text>
-  <line x1="276" y1="292" x2="714" y2="292" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="292" r="6" fill="#2c3e50"/>
-  <text x="732" y="297" font-size="13" font-weight="700" fill="#2c3e50">D2</text>
+  <line x1="276" y1="292" x2="714" y2="292" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="292" r="6" fill="#1f4fd1"/>
+  <text x="732" y="297" font-size="13" font-weight="700" fill="#1f4fd1">D2</text>
 
-  <circle cx="270" cy="328" r="6" fill="#2c3e50"/>
-  <text x="258" y="327" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D3</text>
+  <circle cx="270" cy="328" r="6" fill="#1f4fd1"/>
+  <text x="258" y="327" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D3</text>
   <text x="258" y="342" text-anchor="end" font-size="11.5" fill="#777" data-pin="D3 to the display">pin 21</text>
-  <line x1="276" y1="328" x2="714" y2="328" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="328" r="6" fill="#2c3e50"/>
-  <text x="732" y="333" font-size="13" font-weight="700" fill="#2c3e50">D3</text>
+  <line x1="276" y1="328" x2="714" y2="328" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="328" r="6" fill="#1f4fd1"/>
+  <text x="732" y="333" font-size="13" font-weight="700" fill="#1f4fd1">D3</text>
 
-  <circle cx="270" cy="364" r="6" fill="#2c3e50"/>
-  <text x="258" y="363" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D4</text>
+  <circle cx="270" cy="364" r="6" fill="#1f4fd1"/>
+  <text x="258" y="363" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D4</text>
   <text x="258" y="378" text-anchor="end" font-size="11.5" fill="#777" data-pin="D4 to the display">pin 38</text>
-  <line x1="276" y1="364" x2="714" y2="364" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="364" r="6" fill="#2c3e50"/>
-  <text x="732" y="369" font-size="13" font-weight="700" fill="#2c3e50">D4</text>
+  <line x1="276" y1="364" x2="714" y2="364" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="364" r="6" fill="#1f4fd1"/>
+  <text x="732" y="369" font-size="13" font-weight="700" fill="#1f4fd1">D4</text>
 
-  <circle cx="270" cy="400" r="6" fill="#2c3e50"/>
-  <text x="258" y="399" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D5</text>
+  <circle cx="270" cy="400" r="6" fill="#1f4fd1"/>
+  <text x="258" y="399" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D5</text>
   <text x="258" y="414" text-anchor="end" font-size="11.5" fill="#777" data-pin="D5 to the display">pin 39</text>
-  <line x1="276" y1="400" x2="714" y2="400" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="400" r="6" fill="#2c3e50"/>
-  <text x="732" y="405" font-size="13" font-weight="700" fill="#2c3e50">D5</text>
+  <line x1="276" y1="400" x2="714" y2="400" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="400" r="6" fill="#1f4fd1"/>
+  <text x="732" y="405" font-size="13" font-weight="700" fill="#1f4fd1">D5</text>
 
-  <circle cx="270" cy="436" r="6" fill="#2c3e50"/>
-  <text x="258" y="435" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D6</text>
+  <circle cx="270" cy="436" r="6" fill="#1f4fd1"/>
+  <text x="258" y="435" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D6</text>
   <text x="258" y="450" text-anchor="end" font-size="11.5" fill="#777" data-pin="D6 to the display">pin 26</text>
-  <line x1="276" y1="436" x2="714" y2="436" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="436" r="6" fill="#2c3e50"/>
-  <text x="732" y="441" font-size="13" font-weight="700" fill="#2c3e50">D6</text>
+  <line x1="276" y1="436" x2="714" y2="436" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="436" r="6" fill="#1f4fd1"/>
+  <text x="732" y="441" font-size="13" font-weight="700" fill="#1f4fd1">D6</text>
 
-  <circle cx="270" cy="472" r="6" fill="#2c3e50"/>
-  <text x="258" y="471" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">D7</text>
+  <circle cx="270" cy="472" r="6" fill="#1f4fd1"/>
+  <text x="258" y="471" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D7</text>
   <text x="258" y="486" text-anchor="end" font-size="11.5" fill="#777" data-pin="D7 to the display">pin 27</text>
-  <line x1="276" y1="472" x2="714" y2="472" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="720" cy="472" r="6" fill="#2c3e50"/>
-  <text x="732" y="477" font-size="13" font-weight="700" fill="#2c3e50">D7</text>
+  <line x1="276" y1="472" x2="714" y2="472" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="472" r="6" fill="#1f4fd1"/>
+  <text x="732" y="477" font-size="13" font-weight="700" fill="#1f4fd1">D7</text>
 
-  <circle cx="270" cy="524" r="6" fill="#8a2be2"/>
-  <text x="258" y="523" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">WR</text>
+  <circle cx="270" cy="524" r="6" fill="#1f4fd1"/>
+  <text x="258" y="523" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">WR</text>
   <text x="258" y="538" text-anchor="end" font-size="11.5" fill="#777" data-pin="WR to the display">pin 17</text>
-  <line x1="276" y1="524" x2="714" y2="524" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="720" cy="524" r="6" fill="#8a2be2"/>
-  <text x="732" y="529" font-size="13" font-weight="700" fill="#8a2be2">WR</text>
+  <line x1="276" y1="524" x2="714" y2="524" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="524" r="6" fill="#1f4fd1"/>
+  <text x="732" y="529" font-size="13" font-weight="700" fill="#1f4fd1">WR</text>
 
-  <circle cx="270" cy="560" r="6" fill="#8a2be2"/>
-  <text x="258" y="559" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">CS</text>
+  <circle cx="270" cy="560" r="6" fill="#1f4fd1"/>
+  <text x="258" y="559" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CS</text>
   <text x="258" y="574" text-anchor="end" font-size="11.5" fill="#777" data-pin="CS to the display controller">pin 28</text>
-  <line x1="276" y1="560" x2="714" y2="560" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="720" cy="560" r="6" fill="#8a2be2"/>
-  <text x="732" y="565" font-size="13" font-weight="700" fill="#8a2be2">CS</text>
+  <line x1="276" y1="560" x2="714" y2="560" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="560" r="6" fill="#1f4fd1"/>
+  <text x="732" y="565" font-size="13" font-weight="700" fill="#1f4fd1">CS</text>
 
-  <circle cx="270" cy="596" r="6" fill="#8a2be2"/>
-  <text x="258" y="595" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">D/C</text>
+  <circle cx="270" cy="596" r="6" fill="#1f4fd1"/>
+  <text x="258" y="595" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D/C</text>
   <text x="258" y="610" text-anchor="end" font-size="11.5" fill="#777" data-pin="D/C to the display">pin 29</text>
-  <line x1="276" y1="596" x2="714" y2="596" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="720" cy="596" r="6" fill="#8a2be2"/>
-  <text x="732" y="601" font-size="13" font-weight="700" fill="#8a2be2">C/D</text>
+  <line x1="276" y1="596" x2="714" y2="596" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="720" cy="596" r="6" fill="#1f4fd1"/>
+  <text x="732" y="601" font-size="13" font-weight="700" fill="#1f4fd1">C/D</text>
 
   <!-- the bus's ground, from the Teensy straight to the module -->
   <circle cx="270" cy="632" r="6" fill="#1a1a1a"/>
@@ -98,19 +98,19 @@
   <text x="732" y="637" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- the touch cable, from the Teensy to the display board -->
-  <circle cx="270" cy="712" r="6" fill="#2c3e50"/>
-  <text x="258" y="711" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
+  <text x="258" y="711" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
   <text x="258" y="726" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA to the touch controller">pin 25</text>
-  <line x1="276" y1="712" x2="424" y2="712" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="276" y1="712" x2="424" y2="712" stroke="#808080" stroke-width="5"/>
+  <line x1="276" y1="712" x2="424" y2="712" stroke="#ffffff" stroke-width="2.5"/>
 
-  <circle cx="270" cy="748" r="6" fill="#8a2be2"/>
-  <text x="258" y="747" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="258" y="747" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <text x="258" y="762" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL to the touch controller">pin 24</text>
-  <line x1="276" y1="748" x2="424" y2="748" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="276" y1="748" x2="424" y2="748" stroke="#808080" stroke-width="5"/>
+  <line x1="276" y1="748" x2="424" y2="748" stroke="#ffffff" stroke-width="2.5"/>
 
-  <circle cx="270" cy="784" r="6" fill="#c0392b"/>
-  <text x="258" y="789" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
-  <line x1="276" y1="784" x2="424" y2="784" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="258" y="789" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">3V3</text>
+  <line x1="276" y1="784" x2="424" y2="784" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="276" y1="784" x2="424" y2="784" stroke="#f1c40f" stroke-width="2.5"/>
 
   <!-- ===== display board ===== -->
   <rect x="330" y="650" width="350" height="270" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
@@ -120,12 +120,7 @@
   <rect x="430" y="684" width="160" height="116" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
   <text x="510" y="732" text-anchor="middle" font-size="13" font-weight="700" fill="#5c4a00">Adafruit 757</text>
   <text x="510" y="766" text-anchor="middle" font-size="10.5" fill="#666">a BSS138 per line</text>
-  <circle cx="430" cy="712" r="6" fill="#2c3e50"/>
-  <circle cx="430" cy="748" r="6" fill="#8a2be2"/>
-  <circle cx="430" cy="784" r="6" fill="#c0392b"/>
-  <text x="442" y="788" font-size="11" font-weight="700" fill="#c0392b">LV</text>
-  <circle cx="590" cy="712" r="6" fill="#2c3e50"/>
-  <circle cx="590" cy="748" r="6" fill="#8a2be2"/>
+  <text x="442" y="788" font-size="11" font-weight="700" fill="#8a6d0b">LV</text>
   <circle cx="590" cy="784" r="6" fill="#c0392b"/>
   <text x="578" y="788" text-anchor="end" font-size="11" font-weight="700" fill="#c0392b">HV</text>
   <circle cx="510" cy="800" r="6" fill="#1a1a1a"/>
@@ -135,8 +130,10 @@
   <line x1="501" y1="826" x2="519" y2="826" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="506" y1="832" x2="514" y2="832" stroke="#1a1a1a" stroke-width="2"/>
 
-  <line x1="596" y1="712" x2="714" y2="712" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="596" y1="748" x2="714" y2="748" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="596" y1="712" x2="714" y2="712" stroke="#808080" stroke-width="5"/>
+  <line x1="596" y1="748" x2="714" y2="748" stroke="#808080" stroke-width="5"/>
+  <line x1="596" y1="712" x2="714" y2="712" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="596" y1="748" x2="714" y2="748" stroke="#ffffff" stroke-width="2.5"/>
 
   <!-- HV onto the board's 5 V -->
   <line x1="596" y1="784" x2="630" y2="784" stroke="#c0392b" stroke-width="2.5"/>
@@ -179,10 +176,8 @@
   <text x="150" y="916" font-size="11.5" fill="#c0392b" data-fig="i_disp">at most 198 mA</text>
 
   <!-- the module's touch, supply and ground pins -->
-  <circle cx="720" cy="712" r="6" fill="#2c3e50"/>
-  <text x="732" y="717" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
-  <circle cx="720" cy="748" r="6" fill="#8a2be2"/>
-  <text x="732" y="753" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="732" y="717" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
+  <text x="732" y="753" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <circle cx="720" cy="846" r="6" fill="#c0392b"/>
   <text x="732" y="851" font-size="13" font-weight="700" fill="#c0392b">Vin</text>
   <circle cx="720" cy="880" r="6" fill="#1a1a1a"/>
@@ -196,25 +191,25 @@
   <text x="796" y="734" font-size="12.5" font-weight="700" fill="#666">touch</text>
 
   <!-- the header pins that stay on the module -->
-  <circle cx="1050" cy="330" r="6" fill="#c0392b"/>
-  <text x="1038" y="335" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">RD</text>
-  <circle cx="1050" cy="380" r="6" fill="#c0392b"/>
-  <text x="1038" y="385" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">CCS</text>
+  <text x="1038" y="335" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">RD</text>
+  <text x="1038" y="385" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">CCS</text>
   <circle cx="1050" cy="430" r="6" fill="#1a1a1a"/>
   <text x="1038" y="435" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">MOSI</text>
-  <circle cx="1050" cy="500" r="6" fill="#8a2be2"/>
-  <text x="1038" y="505" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">RST</text>
-  <circle cx="1050" cy="540" r="6" fill="#2c3e50"/>
-  <text x="1038" y="545" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">Lite</text>
-  <circle cx="1050" cy="580" r="6" fill="#2c3e50"/>
-  <text x="1038" y="585" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">IRQ</text>
-  <circle cx="1050" cy="280" r="6" fill="#c0392b"/>
-  <text x="1038" y="285" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3.3Vout</text>
-  <line x1="1056" y1="280" x2="1100" y2="280" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="1100" y1="280" x2="1100" y2="380" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="1056" y1="330" x2="1100" y2="330" stroke="#c0392b" stroke-width="2.5"/>
-  <circle cx="1100" cy="330" r="4" fill="#c0392b"/>
-  <line x1="1056" y1="380" x2="1100" y2="380" stroke="#c0392b" stroke-width="2.5"/>
+  <circle cx="1050" cy="500" r="6" fill="#9a9a9a"/>
+  <text x="1038" y="505" text-anchor="end" font-size="13" font-weight="700" fill="#8a8a8a">RST</text>
+  <circle cx="1050" cy="540" r="6" fill="#9a9a9a"/>
+  <text x="1038" y="545" text-anchor="end" font-size="13" font-weight="700" fill="#8a8a8a">Lite</text>
+  <circle cx="1050" cy="580" r="6" fill="#9a9a9a"/>
+  <text x="1038" y="585" text-anchor="end" font-size="13" font-weight="700" fill="#8a8a8a">IRQ</text>
+  <text x="1038" y="285" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">3.3Vout</text>
+  <line x1="1056" y1="280" x2="1102.5" y2="280" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="1100" y1="277.5" x2="1100" y2="382.5" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="1056" y1="330" x2="1100" y2="330" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="1056" y1="280" x2="1100" y2="280" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="1100" y1="280" x2="1100" y2="380" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="1056" y1="330" x2="1100" y2="330" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="1056" y1="380" x2="1102.5" y2="380" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="1056" y1="380" x2="1100" y2="380" stroke="#f1c40f" stroke-width="2.5"/>
   <line x1="1056" y1="430" x2="1100" y2="430" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1100" y1="430" x2="1100" y2="446" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="1086" y1="446" x2="1114" y2="446" stroke="#1a1a1a" stroke-width="3"/>
@@ -223,4 +218,19 @@
   <text x="1064" y="505" font-size="11.5" fill="#777">unconnected</text>
   <text x="1064" y="545" font-size="11.5" fill="#777">unconnected</text>
   <text x="1064" y="585" font-size="11.5" fill="#777">unconnected</text>
+  <!-- ===== pins and junctions of the light wires, on top ===== -->
+  <circle cx="270" cy="712" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="270" cy="748" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="270" cy="784" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="430" cy="712" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="430" cy="748" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="430" cy="784" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="590" cy="712" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="590" cy="748" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="720" cy="712" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="720" cy="748" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="1050" cy="330" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="1050" cy="380" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="1050" cy="280" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="1100" cy="330" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
 </svg>

@@ -86,28 +86,28 @@
   <text x="974" y="212" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a">C2 at J-PWR</text>
 
   <!-- ===== chain A: pin 5, U1 buffer, J-LA ===== -->
-  <circle cx="150" cy="250" r="6" fill="#8a2be2"/>
-  <text x="140" y="246" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">CHAIN A</text>
+  <circle cx="150" cy="250" r="6" fill="#1f4fd1"/>
+  <text x="140" y="246" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CHAIN A</text>
   <text x="140" y="262" text-anchor="end" font-size="11.5" fill="#777" data-pin="LED chain A">pin 5</text>
-  <line x1="156" y1="250" x2="246" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="156" y1="250" x2="246" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="246" y="240" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="281" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
   <text x="281" y="255" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_in">2.2 k&#937;</text>
-  <line x1="316" y1="250" x2="414" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="420" cy="250" r="6" fill="#8a2be2"/>
-  <text x="432" y="246" font-size="13" font-weight="700" fill="#8a2be2">A</text>
+  <line x1="316" y1="250" x2="414" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="420" cy="250" r="6" fill="#1f4fd1"/>
+  <text x="432" y="246" font-size="13" font-weight="700" fill="#1f4fd1">A</text>
   <text x="432" y="261" font-size="11.5" fill="#777">pin 2</text>
-  <circle cx="600" cy="250" r="6" fill="#8a2be2"/>
-  <text x="588" y="246" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">Y</text>
+  <text x="588" y="246" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">Y</text>
   <text x="588" y="261" text-anchor="end" font-size="11.5" fill="#777">pin 3</text>
-  <line x1="606" y1="250" x2="676" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="606" y1="250" x2="673.5" y2="250" stroke="#808080" stroke-width="5"/>
+  <line x1="606" y1="250" x2="676" y2="250" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="676" y="240" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R4</text>
   <text x="711" y="255" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
-  <line x1="746" y1="250" x2="934" y2="250" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="748.5" y1="250" x2="934" y2="250" stroke="#808080" stroke-width="5"/>
+  <line x1="746" y1="250" x2="934" y2="250" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="940" y="232" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <circle cx="940" cy="250" r="6" fill="#8a2be2"/>
-  <text x="952" y="254" font-size="12.5" font-weight="700" fill="#8a2be2">DATA</text>
+  <text x="952" y="254" font-size="12.5" font-weight="700" fill="#4d4d4d">DATA</text>
   <circle cx="940" cy="274" r="6" fill="#1a1a1a"/>
   <text x="952" y="278" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
   <text x="1030" y="254" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-LA</text>
@@ -123,28 +123,28 @@
   <line x1="906" y1="300" x2="914" y2="300" stroke="#1a1a1a" stroke-width="2"/>
 
   <!-- ===== chain B: pin 6, U1 buffer, J-LB ===== -->
-  <circle cx="150" cy="320" r="6" fill="#8a2be2"/>
-  <text x="140" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">CHAIN B</text>
+  <circle cx="150" cy="320" r="6" fill="#1f4fd1"/>
+  <text x="140" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CHAIN B</text>
   <text x="140" y="332" text-anchor="end" font-size="11.5" fill="#777" data-pin="LED chain B">pin 6</text>
-  <line x1="156" y1="320" x2="246" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="156" y1="320" x2="246" y2="320" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="246" y="310" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="281" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R2</text>
   <text x="281" y="325" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_in">2.2 k&#937;</text>
-  <line x1="316" y1="320" x2="414" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="420" cy="320" r="6" fill="#8a2be2"/>
-  <text x="432" y="316" font-size="13" font-weight="700" fill="#8a2be2">A</text>
+  <line x1="316" y1="320" x2="414" y2="320" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="420" cy="320" r="6" fill="#1f4fd1"/>
+  <text x="432" y="316" font-size="13" font-weight="700" fill="#1f4fd1">A</text>
   <text x="432" y="331" font-size="11.5" fill="#777">pin 5</text>
-  <circle cx="600" cy="320" r="6" fill="#8a2be2"/>
-  <text x="588" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">Y</text>
+  <text x="588" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">Y</text>
   <text x="588" y="331" text-anchor="end" font-size="11.5" fill="#777">pin 6</text>
-  <line x1="606" y1="320" x2="676" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="606" y1="320" x2="673.5" y2="320" stroke="#808080" stroke-width="5"/>
+  <line x1="606" y1="320" x2="676" y2="320" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="676" y="310" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R5</text>
   <text x="711" y="325" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
-  <line x1="746" y1="320" x2="934" y2="320" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="748.5" y1="320" x2="934" y2="320" stroke="#808080" stroke-width="5"/>
+  <line x1="746" y1="320" x2="934" y2="320" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="940" y="302" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <circle cx="940" cy="320" r="6" fill="#8a2be2"/>
-  <text x="952" y="324" font-size="12.5" font-weight="700" fill="#8a2be2">DATA</text>
+  <text x="952" y="324" font-size="12.5" font-weight="700" fill="#4d4d4d">DATA</text>
   <circle cx="940" cy="344" r="6" fill="#1a1a1a"/>
   <text x="952" y="348" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
   <text x="1030" y="324" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-LB</text>
@@ -160,28 +160,28 @@
   <line x1="906" y1="370" x2="914" y2="370" stroke="#1a1a1a" stroke-width="2"/>
 
   <!-- ===== chain C: pin 7, U1 buffer, J-LC ===== -->
-  <circle cx="150" cy="390" r="6" fill="#8a2be2"/>
-  <text x="140" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">CHAIN C</text>
+  <circle cx="150" cy="390" r="6" fill="#1f4fd1"/>
+  <text x="140" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CHAIN C</text>
   <text x="140" y="402" text-anchor="end" font-size="11.5" fill="#777" data-pin="LED chain C">pin 7</text>
-  <line x1="156" y1="390" x2="246" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="156" y1="390" x2="246" y2="390" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="246" y="380" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="281" y="374" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R3</text>
   <text x="281" y="395" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_in">2.2 k&#937;</text>
-  <line x1="316" y1="390" x2="414" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="420" cy="390" r="6" fill="#8a2be2"/>
-  <text x="432" y="386" font-size="13" font-weight="700" fill="#8a2be2">A</text>
+  <line x1="316" y1="390" x2="414" y2="390" stroke="#1f4fd1" stroke-width="2.5"/>
+  <circle cx="420" cy="390" r="6" fill="#1f4fd1"/>
+  <text x="432" y="386" font-size="13" font-weight="700" fill="#1f4fd1">A</text>
   <text x="432" y="401" font-size="11.5" fill="#777">pin 9</text>
-  <circle cx="600" cy="390" r="6" fill="#8a2be2"/>
-  <text x="588" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">Y</text>
+  <text x="588" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">Y</text>
   <text x="588" y="401" text-anchor="end" font-size="11.5" fill="#777">pin 8</text>
-  <line x1="606" y1="390" x2="676" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="606" y1="390" x2="673.5" y2="390" stroke="#808080" stroke-width="5"/>
+  <line x1="606" y1="390" x2="676" y2="390" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="676" y="380" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="711" y="374" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R6</text>
   <text x="711" y="395" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_out">330 &#937;</text>
-  <line x1="746" y1="390" x2="934" y2="390" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="748.5" y1="390" x2="934" y2="390" stroke="#808080" stroke-width="5"/>
+  <line x1="746" y1="390" x2="934" y2="390" stroke="#ffffff" stroke-width="2.5"/>
   <rect x="940" y="372" width="180" height="54" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <circle cx="940" cy="390" r="6" fill="#8a2be2"/>
-  <text x="952" y="394" font-size="12.5" font-weight="700" fill="#8a2be2">DATA</text>
+  <text x="952" y="394" font-size="12.5" font-weight="700" fill="#4d4d4d">DATA</text>
   <circle cx="940" cy="414" r="6" fill="#1a1a1a"/>
   <text x="952" y="418" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
   <text x="1030" y="394" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-LC</text>
@@ -261,4 +261,11 @@
   <text x="250" y="823" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
   <text x="350" y="823" font-size="11.5" fill="#444">C2 carries each step of the LED current where the feed arrives</text>
 
+  <!-- ===== pins and junctions of the light wires, on top ===== -->
+  <circle cx="600" cy="250" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="940" cy="250" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="600" cy="320" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="940" cy="320" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="600" cy="390" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="940" cy="390" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
 </svg>

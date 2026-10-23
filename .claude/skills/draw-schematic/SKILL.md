@@ -7,7 +7,7 @@ description: Use when drawing, generating or updating a wiring diagram or schema
 
 Diagrams in this repository are hand-authored SVG showing modules as labeled blocks and nets as colored wires between named pins. They exist to make a circuit followable by someone who cannot read a conventional symbol schematic. The EasyEDA project remains the design of record.
 
-Existing examples to match: `docs/parts/ir-reflective/pulsed-schematic.svg`, `docs/research/Rokr/2_IR-Reflective-Mainboard-Schematic.svg`.
+Existing examples to match: `docs/parts/servo/servo-schematic.svg`, `docs/parts/ir-reflective/pulsed-schematic.svg`.
 
 ## Before drawing
 
@@ -25,15 +25,33 @@ Subtitle beneath at `y="56"`, `font-size="13"`, `fill="#666"` - one line naming 
 
 ## Net colors
 
-One color per net class, used for the wire, the pin circle and the label. Never reuse a color for an unrelated net.
+A wire is drawn in the color of the physical wire that carries it, after the wire code in `docs/connectors.md`, section Wire colors. The pin circle, the junction dot and the label follow the wire.
 
-| Net | Color | Use |
+| Wire code | Wire | Edge | Label |
+|---|---|---|---|
+| Black, GND | `#1a1a1a` | | `#1a1a1a` |
+| Red, 5 V | `#c0392b` | | `#c0392b` |
+| Yellow, 3.3 V supply | `#f1c40f` | `#9a7d0a` | `#8a6d0b` |
+| Blue, 3.3 V logic going out | `#1f4fd1` | | `#1f4fd1` |
+| Green, 3.3 V signal coming in | `#3cbf4e` | `#23862f` | `#1f7a33` |
+| White, I2C and every line behind a level shifter or a driver | `#ffffff` | `#808080` | `#4d4d4d` |
+| A pin left unconnected | `#9a9a9a` | | `#8a8a8a` |
+
+A wire with an edge color is drawn twice. The edge goes first, 2.5 wider than the wire, then the wire on top. Where the segment joins another segment of its class, the edge reaches half its own width past the end and closes the corner. At any other end that a pin does not cover, it stops half its width short. A pin or a junction dot of such a class takes a rim of 1.5 in the edge color and is drawn after every wire.
+
+A pin where a stock or vendor cable lands shows that cable's color, and its label names it, as `Pin 2 (black)` at a J-S of the IR sensors does.
+
+A net flag, the small box naming a net that leaves the drawing, carries the label color on a tint of its wire's color:
+
+| Wire code | Flag fill | Flag stroke |
 |---|---|---|
-| Supply 3V3 / 5V | `#c0392b` | Wire, pin, label |
-| Signal / analog | `#2c3e50` | Wire, pin, label |
-| Ground | `#1a1a1a` | Wire, pin, label |
-| LED / drive | wire `#b7950b`, pin fill `#f1c40f` stroke `#b7950b`, label `#8a6d0b` | Emitter and load lines |
-| Clock / control | `#8a2be2` | Toggled digital lines |
+| Red | `#fdecea` | `#c0392b` |
+| Yellow | `#fdf5d3` | `#9a7d0a` |
+| Blue | `#e8eefb` | `#1f4fd1` |
+| Green | `#e6f4e6` | `#23862f` |
+| White | `#ffffff` | `#808080` |
+
+The drawings of the stock machine in `docs/research/` show the stock wiring and keep the colors they were drawn in, one per class of net: supply `#c0392b`, signal `#2c3e50`, ground `#1a1a1a`, LED and drive `#b7950b`, clock and control `#8a2be2`.
 
 ## Block colors
 

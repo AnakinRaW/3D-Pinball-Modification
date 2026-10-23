@@ -11,19 +11,15 @@
   <rect x="60" y="120" width="210" height="630" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="74" y="146" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
 
-  <circle cx="270" cy="160" r="6" fill="#c0392b"/>
-  <text x="258" y="164" text-anchor="end" font-size="13" font-weight="700" fill="#c0392b">3V3</text>
+  <text x="258" y="164" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">3V3</text>
 
-  <circle cx="270" cy="360" r="6" fill="#2c3e50"/>
-  <text x="258" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
+  <text x="258" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
   <text x="258" y="372" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA on Wire">pin 18</text>
 
-  <circle cx="270" cy="420" r="6" fill="#8a2be2"/>
-  <text x="258" y="416" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="258" y="416" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <text x="258" y="432" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL on Wire">pin 19</text>
 
-  <circle cx="270" cy="480" r="6" fill="#2c3e50"/>
-  <text x="258" y="476" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">INT</text>
+  <text x="258" y="476" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">INT</text>
   <text x="258" y="492" text-anchor="end" font-size="11.5" fill="#777" data-pin="Interrupt from the port expander">pin 1</text>
 
   <circle cx="270" cy="730" r="6" fill="#1a1a1a"/>
@@ -35,39 +31,45 @@
   <text x="200" y="402" text-anchor="end" font-size="11.5" fill="#666">the rotary sensor</text>
 
   <!-- ===== the 3V3 rail to R5, R6, RESET and VDD ===== -->
-  <line x1="276" y1="160" x2="740" y2="160" stroke="#c0392b" stroke-width="2.5"/>
-  <text x="300" y="150" font-size="12.5" font-weight="700" fill="#c0392b">3V3 rail</text>
-  <circle cx="400" cy="160" r="4" fill="#c0392b"/>
-  <circle cx="490" cy="160" r="4" fill="#c0392b"/>
-  <circle cx="665" cy="160" r="4" fill="#c0392b"/>
-  <line x1="665" y1="160" x2="665" y2="284" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="740" y1="160" x2="740" y2="284" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="276" y1="160" x2="742.5" y2="160" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="276" y1="160" x2="740" y2="160" stroke="#f1c40f" stroke-width="2.5"/>
+  <text x="300" y="150" font-size="12.5" font-weight="700" fill="#8a6d0b">3V3 rail</text>
+  <line x1="665" y1="160" x2="665" y2="284" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="740" y1="157.5" x2="740" y2="284" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="665" y1="160" x2="665" y2="284" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="740" y1="160" x2="740" y2="284" stroke="#f1c40f" stroke-width="2.5"/>
 
   <!-- ===== R5, SDA to 3V3 ===== -->
-  <line x1="400" y1="160" x2="400" y2="200" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="400" y1="160" x2="400" y2="197.5" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="400" y1="160" x2="400" y2="200" stroke="#f1c40f" stroke-width="2.5"/>
   <rect x="387" y="200" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="421" y="224" font-size="13" font-weight="700" fill="#1a1a1a">R5</text>
   <text x="421" y="242" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_pu_board">4.7 kΩ</text>
-  <line x1="400" y1="260" x2="400" y2="360" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="400" cy="360" r="4" fill="#2c3e50"/>
+  <line x1="400" y1="262.5" x2="400" y2="360" stroke="#808080" stroke-width="5"/>
+  <line x1="400" y1="260" x2="400" y2="360" stroke="#ffffff" stroke-width="2.5"/>
 
   <!-- ===== R6, SCL to 3V3, crossing SDA without a connection ===== -->
-  <line x1="490" y1="160" x2="490" y2="200" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="490" y1="160" x2="490" y2="197.5" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="490" y1="160" x2="490" y2="200" stroke="#f1c40f" stroke-width="2.5"/>
   <rect x="477" y="200" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <text x="511" y="224" font-size="13" font-weight="700" fill="#1a1a1a">R6</text>
   <text x="511" y="242" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_pu_board">4.7 kΩ</text>
-  <line x1="490" y1="260" x2="490" y2="420" stroke="#8a2be2" stroke-width="2.5"/>
-  <circle cx="490" cy="420" r="4" fill="#8a2be2"/>
+  <line x1="490" y1="262.5" x2="490" y2="420" stroke="#808080" stroke-width="5"/>
+  <line x1="490" y1="260" x2="490" y2="420" stroke="#ffffff" stroke-width="2.5"/>
 
   <!-- ===== the bus and INT between the Teensy and U1 ===== -->
-  <line x1="276" y1="360" x2="594" y2="360" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="276" y1="420" x2="594" y2="420" stroke="#8a2be2" stroke-width="2.5"/>
-  <line x1="276" y1="480" x2="594" y2="480" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="276" y1="360" x2="594" y2="360" stroke="#808080" stroke-width="5"/>
+  <line x1="276" y1="420" x2="594" y2="420" stroke="#808080" stroke-width="5"/>
+  <line x1="276" y1="360" x2="594" y2="360" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="276" y1="420" x2="594" y2="420" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="276" y1="480" x2="594" y2="480" stroke="#23862f" stroke-width="5"/>
+  <line x1="276" y1="480" x2="594" y2="480" stroke="#3cbf4e" stroke-width="2.5"/>
 
   <!-- ===== C1 at VDD ===== -->
-  <circle cx="740" cy="210" r="4" fill="#c0392b"/>
-  <line x1="740" y1="210" x2="780" y2="210" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="780" y1="210" x2="780" y2="224" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="740" y1="210" x2="782.5" y2="210" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="780" y1="207.5" x2="780" y2="221.5" stroke="#9a7d0a" stroke-width="5"/>
+  <line x1="740" y1="210" x2="780" y2="210" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="780" y1="210" x2="780" y2="224" stroke="#f1c40f" stroke-width="2.5"/>
   <line x1="762" y1="224" x2="798" y2="224" stroke="#1a1a1a" stroke-width="3"/>
   <line x1="762" y1="236" x2="798" y2="236" stroke="#1a1a1a" stroke-width="3"/>
   <line x1="780" y1="236" x2="780" y2="246" stroke="#1a1a1a" stroke-width="2.5"/>
@@ -89,46 +91,33 @@
   <text x="696" y="528" text-anchor="middle" font-size="11" fill="#666" data-fig="r_gppu">100 kΩ pull-up inside</text>
   <text x="696" y="542" text-anchor="middle" font-size="11" fill="#666">at each GP pin</text>
 
-  <circle cx="665" cy="290" r="6" fill="#c0392b"/>
-  <text x="665" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">RESET</text>
+  <text x="665" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#8a6d0b">RESET</text>
   <text x="665" y="324" text-anchor="middle" font-size="11.5" fill="#777">pin 6</text>
-  <circle cx="740" cy="290" r="6" fill="#c0392b"/>
-  <text x="740" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VDD</text>
+  <text x="740" y="310" text-anchor="middle" font-size="13" font-weight="700" fill="#8a6d0b">VDD</text>
   <text x="740" y="324" text-anchor="middle" font-size="11.5" fill="#777">pin 18</text>
 
-  <circle cx="600" cy="360" r="6" fill="#2c3e50"/>
-  <text x="612" y="356" font-size="13" font-weight="700" fill="#2c3e50">SDA</text>
+  <text x="612" y="356" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
   <text x="612" y="371" font-size="11.5" fill="#777">pin 2</text>
-  <circle cx="600" cy="420" r="6" fill="#8a2be2"/>
-  <text x="612" y="416" font-size="13" font-weight="700" fill="#8a2be2">SCL</text>
+  <text x="612" y="416" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <text x="612" y="431" font-size="11.5" fill="#777">pin 1</text>
-  <circle cx="600" cy="480" r="6" fill="#2c3e50"/>
-  <text x="612" y="476" font-size="13" font-weight="700" fill="#2c3e50">INT</text>
+  <text x="612" y="476" font-size="13" font-weight="700" fill="#1f7a33">INT</text>
   <text x="612" y="491" font-size="11.5" fill="#777">pin 8</text>
 
-  <circle cx="800" cy="360" r="6" fill="#2c3e50"/>
-  <text x="788" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP0</text>
+  <text x="788" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP0</text>
   <text x="788" y="371" text-anchor="end" font-size="11.5" fill="#777">pin 10</text>
-  <circle cx="800" cy="394" r="6" fill="#2c3e50"/>
-  <text x="788" y="390" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP1</text>
+  <text x="788" y="390" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP1</text>
   <text x="788" y="405" text-anchor="end" font-size="11.5" fill="#777">pin 11</text>
-  <circle cx="800" cy="428" r="6" fill="#2c3e50"/>
-  <text x="788" y="424" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP2</text>
+  <text x="788" y="424" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP2</text>
   <text x="788" y="439" text-anchor="end" font-size="11.5" fill="#777">pin 12</text>
-  <circle cx="800" cy="462" r="6" fill="#2c3e50"/>
-  <text x="788" y="458" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP3</text>
+  <text x="788" y="458" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP3</text>
   <text x="788" y="473" text-anchor="end" font-size="11.5" fill="#777">pin 13</text>
-  <circle cx="800" cy="496" r="6" fill="#2c3e50"/>
-  <text x="788" y="492" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP4</text>
+  <text x="788" y="492" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP4</text>
   <text x="788" y="507" text-anchor="end" font-size="11.5" fill="#777">pin 14</text>
-  <circle cx="800" cy="530" r="6" fill="#2c3e50"/>
-  <text x="788" y="526" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP5</text>
+  <text x="788" y="526" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP5</text>
   <text x="788" y="541" text-anchor="end" font-size="11.5" fill="#777">pin 15</text>
-  <circle cx="800" cy="564" r="6" fill="#2c3e50"/>
-  <text x="788" y="560" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP6</text>
+  <text x="788" y="560" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP6</text>
   <text x="788" y="575" text-anchor="end" font-size="11.5" fill="#777">pin 16</text>
-  <circle cx="800" cy="598" r="6" fill="#2c3e50"/>
-  <text x="788" y="594" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">GP7</text>
+  <text x="788" y="594" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP7</text>
   <text x="788" y="609" text-anchor="end" font-size="11.5" fill="#777">pin 17</text>
 
   <circle cx="620" cy="690" r="6" fill="#1a1a1a"/>
@@ -159,28 +148,60 @@
   <circle cx="690" cy="730" r="4" fill="#1a1a1a"/>
 
   <!-- ===== the inputs out to the pins E-1 to E-8 at the board's edge ===== -->
-  <line x1="806" y1="360" x2="1034" y2="360" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="394" x2="1034" y2="394" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="428" x2="1034" y2="428" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="462" x2="1034" y2="462" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="496" x2="1034" y2="496" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="530" x2="1034" y2="530" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="564" x2="1034" y2="564" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="806" y1="598" x2="1034" y2="598" stroke="#2c3e50" stroke-width="2.5"/>
-  <circle cx="1040" cy="360" r="6" fill="#2c3e50"/>
-  <text x="1052" y="364" font-size="13" font-weight="700" fill="#2c3e50">pin E-1</text>
-  <circle cx="1040" cy="394" r="6" fill="#2c3e50"/>
-  <text x="1052" y="398" font-size="13" font-weight="700" fill="#2c3e50">pin E-2</text>
-  <circle cx="1040" cy="428" r="6" fill="#2c3e50"/>
-  <text x="1052" y="432" font-size="13" font-weight="700" fill="#2c3e50">pin E-3</text>
-  <circle cx="1040" cy="462" r="6" fill="#2c3e50"/>
-  <text x="1052" y="466" font-size="13" font-weight="700" fill="#2c3e50">pin E-4</text>
-  <circle cx="1040" cy="496" r="6" fill="#2c3e50"/>
-  <text x="1052" y="500" font-size="13" font-weight="700" fill="#2c3e50">pin E-5</text>
-  <circle cx="1040" cy="530" r="6" fill="#2c3e50"/>
-  <text x="1052" y="534" font-size="13" font-weight="700" fill="#2c3e50">pin E-6</text>
-  <circle cx="1040" cy="564" r="6" fill="#2c3e50"/>
-  <text x="1052" y="568" font-size="13" font-weight="700" fill="#2c3e50">pin E-7</text>
-  <circle cx="1040" cy="598" r="6" fill="#2c3e50"/>
-  <text x="1052" y="602" font-size="13" font-weight="700" fill="#2c3e50">pin E-8</text>
+  <line x1="806" y1="360" x2="1034" y2="360" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="394" x2="1034" y2="394" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="428" x2="1034" y2="428" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="462" x2="1034" y2="462" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="496" x2="1034" y2="496" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="530" x2="1034" y2="530" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="564" x2="1034" y2="564" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="598" x2="1034" y2="598" stroke="#23862f" stroke-width="5"/>
+  <line x1="806" y1="360" x2="1034" y2="360" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="394" x2="1034" y2="394" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="428" x2="1034" y2="428" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="462" x2="1034" y2="462" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="496" x2="1034" y2="496" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="530" x2="1034" y2="530" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="564" x2="1034" y2="564" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="806" y1="598" x2="1034" y2="598" stroke="#3cbf4e" stroke-width="2.5"/>
+  <text x="1052" y="364" font-size="13" font-weight="700" fill="#1f7a33">pin E-1</text>
+  <text x="1052" y="398" font-size="13" font-weight="700" fill="#1f7a33">pin E-2</text>
+  <text x="1052" y="432" font-size="13" font-weight="700" fill="#1f7a33">pin E-3</text>
+  <text x="1052" y="466" font-size="13" font-weight="700" fill="#1f7a33">pin E-4</text>
+  <text x="1052" y="500" font-size="13" font-weight="700" fill="#1f7a33">pin E-5</text>
+  <text x="1052" y="534" font-size="13" font-weight="700" fill="#1f7a33">pin E-6</text>
+  <text x="1052" y="568" font-size="13" font-weight="700" fill="#1f7a33">pin E-7</text>
+  <text x="1052" y="602" font-size="13" font-weight="700" fill="#1f7a33">pin E-8</text>
+  <!-- ===== pins and junctions of the light wires, on top ===== -->
+  <circle cx="270" cy="160" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="270" cy="360" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="270" cy="420" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="270" cy="480" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="400" cy="160" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="490" cy="160" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="665" cy="160" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="400" cy="360" r="4" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="490" cy="420" r="4" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="740" cy="210" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="665" cy="290" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="740" cy="290" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="600" cy="360" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="600" cy="420" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="600" cy="480" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="360" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="394" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="428" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="462" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="496" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="530" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="564" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="800" cy="598" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="360" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="394" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="428" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="462" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="496" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="530" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="564" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="1040" cy="598" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
 </svg>

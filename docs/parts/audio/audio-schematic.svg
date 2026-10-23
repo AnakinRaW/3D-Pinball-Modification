@@ -55,7 +55,7 @@
   <text x="802" y="164" font-size="13" font-weight="700" fill="#1a1a1a">R4</text>
   <text x="802" y="180" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gain">100 kΩ</text>
   <text x="802" y="196" font-size="11.5" fill="#666" data-fig="gain">3 dB, the lowest gain</text>
-  <line x1="780" y1="202" x2="780" y2="206" stroke="#2c3e50" stroke-width="2.5"/>
+  <line x1="780" y1="202" x2="780" y2="206" stroke="#c0392b" stroke-width="2.5"/>
 
   <!-- Teensy -->
   <rect x="240" y="212" width="200" height="300" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
@@ -64,16 +64,16 @@
   <circle cx="380" cy="212" r="6" fill="#c0392b"/>
   <text x="380" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VIN</text>
 
-  <circle cx="440" cy="282" r="6" fill="#2c3e50"/>
-  <text x="430" y="286" text-anchor="end" font-size="13" font-weight="700" fill="#2c3e50">DIN</text>
+  <circle cx="440" cy="282" r="6" fill="#1f4fd1"/>
+  <text x="430" y="286" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">DIN</text>
   <text x="430" y="302" text-anchor="end" font-size="11.5" fill="#777" data-pin="DIN to the DFR0954">pin 2</text>
 
-  <circle cx="440" cy="332" r="6" fill="#8a2be2"/>
-  <text x="430" y="336" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">LRC</text>
+  <circle cx="440" cy="332" r="6" fill="#1f4fd1"/>
+  <text x="430" y="336" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">LRC</text>
   <text x="430" y="352" text-anchor="end" font-size="11.5" fill="#777" data-pin="LRC to the DFR0954">pin 3</text>
 
-  <circle cx="440" cy="382" r="6" fill="#8a2be2"/>
-  <text x="430" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#8a2be2">BCLK</text>
+  <circle cx="440" cy="382" r="6" fill="#1f4fd1"/>
+  <text x="430" y="386" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">BCLK</text>
   <text x="430" y="402" text-anchor="end" font-size="11.5" fill="#777" data-pin="BCLK to the DFR0954">pin 4</text>
 
   <circle cx="440" cy="492" r="6" fill="#1a1a1a"/>
@@ -88,31 +88,29 @@
   <circle cx="660" cy="212" r="6" fill="#c0392b"/>
   <text x="660" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VCC</text>
 
-  <circle cx="780" cy="212" r="6" fill="#2c3e50"/>
-  <text x="780" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#2c3e50">GAIN</text>
+  <circle cx="780" cy="212" r="6" fill="#c0392b"/>
+  <text x="780" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">GAIN</text>
 
-  <circle cx="620" cy="282" r="6" fill="#2c3e50"/>
-  <text x="632" y="286" font-size="13" font-weight="700" fill="#2c3e50">DIN</text>
+  <circle cx="620" cy="282" r="6" fill="#1f4fd1"/>
+  <text x="632" y="286" font-size="13" font-weight="700" fill="#1f4fd1">DIN</text>
 
-  <circle cx="620" cy="332" r="6" fill="#8a2be2"/>
-  <text x="632" y="336" font-size="13" font-weight="700" fill="#8a2be2">LRC</text>
+  <circle cx="620" cy="332" r="6" fill="#1f4fd1"/>
+  <text x="632" y="336" font-size="13" font-weight="700" fill="#1f4fd1">LRC</text>
 
-  <circle cx="620" cy="382" r="6" fill="#8a2be2"/>
-  <text x="632" y="386" font-size="13" font-weight="700" fill="#8a2be2">BCLK</text>
+  <circle cx="620" cy="382" r="6" fill="#1f4fd1"/>
+  <text x="632" y="386" font-size="13" font-weight="700" fill="#1f4fd1">BCLK</text>
 
   <circle cx="620" cy="492" r="6" fill="#1a1a1a"/>
   <text x="632" y="496" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
 
-  <circle cx="820" cy="312" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
-  <text x="808" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">SPK+</text>
+  <text x="808" y="316" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SPK+</text>
 
-  <circle cx="820" cy="372" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
-  <text x="808" y="376" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">SPK−</text>
+  <text x="808" y="376" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SPK−</text>
 
   <!-- I²S lines on the board -->
-  <line x1="446" y1="282" x2="614" y2="282" stroke="#2c3e50" stroke-width="2.5"/>
-  <line x1="446" y1="332" x2="614" y2="332" stroke="#8a2be2" stroke-width="2.5"/>
-  <line x1="446" y1="382" x2="614" y2="382" stroke="#8a2be2" stroke-width="2.5"/>
+  <line x1="446" y1="282" x2="614" y2="282" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="446" y1="332" x2="614" y2="332" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="446" y1="382" x2="614" y2="382" stroke="#1f4fd1" stroke-width="2.5"/>
 
   <!-- the Teensy's ground and the module's onto the board's ground -->
   <line x1="446" y1="492" x2="614" y2="492" stroke="#1a1a1a" stroke-width="2.5"/>
@@ -126,10 +124,15 @@
   <rect x="1080" y="272" width="120" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
   <text x="1100" y="336" font-size="16" font-weight="700" fill="#7a2556">Speaker</text>
   <text x="1100" y="354" font-size="11.5" fill="#666" data-fig="r_spk">8 Ω, stock</text>
-  <circle cx="1080" cy="312" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
-  <text x="1092" y="316" font-size="13" font-weight="700" fill="#8a6d0b">+</text>
-  <circle cx="1080" cy="372" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="1.5"/>
-  <text x="1092" y="376" font-size="13" font-weight="700" fill="#8a6d0b">−</text>
-  <line x1="826" y1="312" x2="1074" y2="312" stroke="#b7950b" stroke-width="2.5"/>
-  <line x1="826" y1="372" x2="1074" y2="372" stroke="#b7950b" stroke-width="2.5"/>
+  <text x="1092" y="316" font-size="13" font-weight="700" fill="#4d4d4d">+</text>
+  <text x="1092" y="376" font-size="13" font-weight="700" fill="#4d4d4d">−</text>
+  <line x1="826" y1="312" x2="1074" y2="312" stroke="#808080" stroke-width="5"/>
+  <line x1="826" y1="372" x2="1074" y2="372" stroke="#808080" stroke-width="5"/>
+  <line x1="826" y1="312" x2="1074" y2="312" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="826" y1="372" x2="1074" y2="372" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- ===== pins and junctions of the light wires, on top ===== -->
+  <circle cx="820" cy="312" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="820" cy="372" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="1080" cy="312" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="1080" cy="372" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
 </svg>

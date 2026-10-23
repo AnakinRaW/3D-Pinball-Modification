@@ -27,7 +27,7 @@ Any mismatch is reported as a finding against the diagram. The document is the a
 - **Junction dots.** Every place wires join carries `<circle r="4"/>` in the net color. Every crossing without a dot is genuinely not connected. This is the single most common way such a diagram misleads.
 - **Orphan pins.** Every pin circle drawn on a module either has a wire or is labeled as unused.
 - **Net labels.** Every net is named somewhere along its run.
-- **Color consistency.** One net class, one color, throughout. The same color never appears on two unrelated nets.
+- **Color consistency.** Every wire, pin and label of a drawing under `docs/parts/` carries the color the wire code in `docs/connectors.md` gives what it carries. The exception is a pin where a stock or vendor cable lands, which shows that cable's color. A drawing of the stock machine keeps one color per class of net.
 - **Through-hole types.** Every part whose type designation depends on its package is named by its through-hole type, and the drawing carries no variants table. An SMD type appears only for a part that exists in no through-hole package, together with its adapter.
 - **Placement constraints.** Every group the circuit document requires to sit close together is enclosed and labeled, with a distance and a reason. A group marked without a distance is a finding - "close" cannot be built to. The enclosure uses the `8 4` dash pattern, never the `5 4` reserved for unpopulated options.
 - **Overlap.** No text sits on a wire or another label.

@@ -50,3 +50,20 @@
 | 8 | | 2 (IR J-T) | |
 | 12 | | 1 (the display bus) | |
 | 24 | | 2 socket headers for the Teensy | |
+
+## Wire colors
+
+| Color | Carries | Ends at the Teensy on |
+|---|---|---|
+| Black | GND | GND |
+| Red | 5 V, also behind a diode or a resistor, as VIN behind D1, the emitter behind R2 and GAIN behind R4 | VIN only |
+| Yellow | 3.3 V supply, also behind a resistor, as the Teensy's 3V3, the IR mainboard's own rail and the foil behind R91 | 3V3 |
+| Blue | 3.3 V logic going out from the Teensy, also behind a series resistor or the isolator | an output |
+| Green | 3.3 V signals coming in, such as a sense, a contact, the receiver, an IR channel, MISO or INT | an input. Each one reads 0 V against GND with the supply on before the Teensy is first plugged in |
+| White | I²C at 3.3 V, and every line behind a level shifter or a driver, as the lighting data, the servo pulse, the display module's I²C, the coil drains, the LED bus and the speaker | the pins of `Wire` and `Wire2` only |
+
+| Where | Colors |
+|---|---|
+| A cable that comes with a part or from the stock machine, as the servo's, the speaker's and the coils' | its own. Black there can carry a signal |
+| J-S1 to J-S16, the stock sensors' cables and a new sensor board's alike | red 3.3 V, black signal, yellow LED cathode |
+| Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V, the cable to the module a red 5 V |
