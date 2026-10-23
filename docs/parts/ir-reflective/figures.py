@@ -58,8 +58,8 @@ dec("e_cal", 5, "%", src="the factor error the averaging may leave, well under t
 fig("clear_over_noise_min", "×", "1 / (e_cal * sqrt(n_cal))", "up", moves="-e_cal -n_cal")
 dec("budget_grain", 10, "µs", src="the step the firmware rounds the read block up to, so a phase "
     "holds whole tens")
-dec("n_contacts", 4, "", src="two connectors on the J-IR-PWR cable, each with a contact on both "
-    "conductors")
+dec("n_contacts", 2, "", src="the module's VOUT and GND pins, each in one contact of its socket "
+    "on the board")
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the "
     "acquisition window is tested against")
 dec("k_confirm", 2, "", src="readings in a row a hit has to survive before a ball is reported")
@@ -126,12 +126,7 @@ msr("i_photo", 36.6, "µA", src="bench, measurement B at the installed position 
     "track, each minus its own dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
 asm("rds_irl_est", 0.1, "Ω", src="an estimate above Fig. 1's typical 3.0 V curve, since the "
     "IRL540N specifies R_DS(on) only from V_GS = 4.0 V")
-asm("cable_r", 0.1, "Ω", src="the round build figure for the J-IR-PWR cable; it costs 0.2 mV more "
-    "than the allowance, inside the millivolt the rail is printed at")
-dec("cable_drop_bound", 22, "mV", group="V_OUT", section=BASE, stated=True, label="bounded at",
-    src="the drop the rail minimum leaves for the cable, from which the 0.1 Ω follows")
-asm("contact_r", 20, "mΩ", src="one crimped 2.54 mm contact")
-asm("awg28_per_m", 0.20, "Ω", src="round figure for 28 AWG per meter, one conductor")
+asm("contact_r", 20, "mΩ", src="one 2.54 mm pin in its socket contact")
 asm("f_c_pess", 20, "kHz", src="pessimistic reading of the module's crossover, against the 75 kHz "
     "of the FN8373.2 worked example")
 asm("f_c_worst", 10, "kHz", src="the crossover the module's own capacitance is quoted at")
@@ -143,9 +138,6 @@ asm("stray_miso", 20, "pF", src="stray at the MISO conductor and the Teensy pin"
 asm("derate", 50, "%", src="ceramic capacitance kept under DC bias, as FN8373.2 itself advises")
 asm("vcc2_overshoot", 70, "mV", src="load-release overshoot on VCC2, the order of the droop")
 asm("pulse_overshoot_module", 23, "mV", src="Q_pulse / C on the module's capacitance alone")
-asm("further_drop", 17, "mV", src="one step of further cable drop past the bound")
-asm("cable_length", 5, "cm", src="the run from the module to J-IR-PWR the bound is taken at")
-dec("one_meter", 1, "m", src="the length awg28_per_m is quoted per")
 asm("rds_hypothetical", 1, "Ω", src="the R_DS(on) the IRL540N estimate is tested against, an order "
     "of magnitude above it")
 asm("esr_electrolytic", 2, "Ω", src="the ESR an aluminum electrolytic would bring in place of C5")
@@ -335,8 +327,8 @@ dec("bits_per_clock", 2, "", src="the bits a square clock carries per period, wh
 with MODEL.block("V_OUT", section=BASE):
     fig("v_mod_min", "V", "v_mod_nom * (1 - mod_tol.raw)")
     fig("v_mod_max", "V", "v_mod_nom * (1 + mod_tol.raw)")
-    fig("cable_drop", "mV", "cable_r * i_tot", moves="+cable_r +i_led_worst")
-    fig("v_out_min", "V", "v_mod_min - cable_drop", moves="+v_mod_nom -mod_tol -cable_r")
+    fig("socket_drop", "mV", "n_contacts.raw * contact_r * i_tot", moves="+contact_r +i_led_worst")
+    fig("v_out_min", "V", "v_mod_min - socket_drop", moves="+v_mod_nom -mod_tol -contact_r")
     fig("v_out_max", "V", "v_mod_max * (1 + working_margin.raw)",
         moves="+v_mod_nom +mod_tol +working_margin")
 MODEL.range("v_mod_min", "v_mod_max", nominal="v_mod_nom")
@@ -360,6 +352,8 @@ with MODEL.block("U_R", section=BASE):
     # the appendix carries V_DS at the millivolt it prints
     fig("u_r_least", "V", "v_out_min - vf_table_max - _to_printed(v_ds_irl, 'mV', 0)",
         moves="+v_out_min -vf_table_max -rds_irl_est")
+# V_DS against U_R is what one more pass of the V_DS to I_bus loop would move the current by
+fig("v_ds_of_u_r_least", "%", "v_ds_irl / u_r_least", group=BASE, section=BASE, stated="loose")
 with MODEL.block("I_LED", section=BASE):
     fig("i_led_nominal", "mA", "u_r_nominal / r_led", moves="+v_mod_nom -vf_nominal_read -r_led")
     fig("i_led_worst", "mA", "u_r_most / r_led", moves="+v_out_max -vf75_10ma -r_led")
@@ -534,15 +528,8 @@ fig("t_ref_settle", "ms", "n_tau_settle.raw * tau_ref", stated=False)
 fig("vcc2_excursion", "V", "v_mod_max + vcc2_overshoot",
     group="Load release overshoots by the same order", stated="loose")
 
-# -- the supply cable ---------------------------------------------------------
+# -- the module's input -------------------------------------------------------
 fig("sag_margin", "V", "v_ir_end - v_mod_in_min", "down", stated=False)
-
-_CABLE = "How close the module has to sit to J-IR-PWR"
-with MODEL.block(_CABLE, stated="loose"):
-    fig("cable_bound_drop", "mV", "cable_r * i_tot")
-    fig("four_contacts", "mΩ", "n_contacts.raw * contact_r")
-    fig("wire_5cm", "mΩ", "2 * awg28_per_m * (cable_length / one_meter).raw")
-    fig("further_drop_of_least", "%", "further_drop / u_r_least")
 
 # -- R39 and C6 at the reference ----------------------------------------------
 _FILTER = "What R39 and C6 take off the reference"
@@ -962,7 +949,7 @@ _PLACE = "Placement distances"
 with MODEL.block(_PLACE, stated="loose"):
     asm("place_decoupling", 10, "mm", src="how close a 100 nF sits to the pin it decouples, a "
         "distance perfboard allows; no datasheet states one")
-    asm("place_local", 10, "mm", src="how close a part sits to the node it serves, J-IR-PWR, Q1's "
+    asm("place_local", 10, "mm", src="how close a part sits to the node it serves, the module's socket, Q1's "
         "gate and the converters' VDD pins alike; no datasheet states one")
     asm("place_channel", 25, "mm", src="how far a channel's pull-down may sit from its converter "
         "input, so the stub adds little to the source resistance")
@@ -1061,8 +1048,6 @@ _I("the gate clears the worse of the two thresholds", "v_gate_min > vgs_th_irl_m
 _I("a converter's low is inside the isolator's guaranteed low", "dout_low_level < guaranteed_low")
 _I("the rail with the bus on stays above the converter's floor",
    "v_out_min - droop_20k > vdd_floor")
-_I("the stated cable allowance is the drop it stands for, to the millivolt",
-   "abs(cable_drop - cable_drop_bound) <= Q.of(1, 'mV')")
 _I("the module's input stays above its minimum with every load drawing", "v_ir_end > v_mod_in_min")
 _I("the pull-down is under the acquisition wall", "r_pd < knob_pd_acq_wall")
 _I("R1 to R16 sit inside their window, at either value",
@@ -1094,12 +1079,11 @@ for _text, _why in [
     ("600 Ω", "the impedance class of a ferrite bead, as a part is specified"),
     ("4 mm", "the distance the GP2S700HCP datasheet characterizes I_C at, against a mirror"),
 
-    # a package, a pitch, a count: not a measured quantity at all
-    ("2.54 mm", "the connector pitch"),
+    # not a measured quantity at all
     ("5 %", "the share of a phase the startup discards, a plain fraction"),
 
     # a figure the model holds at another unit or another rounding
-    ("3.146", "V_OUT min, restated without its unit"),
+    ("3.159", "V_OUT min, restated without its unit"),
     ("3.449", "V_OUT max, restated without its unit"),
     ("0.020", "the IRL540N estimate's drop in volts, restated without its unit"),
     ("1.35", "V_F at 40 mA on the 75 °C curve, restated without its unit"),

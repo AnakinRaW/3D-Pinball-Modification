@@ -87,7 +87,7 @@ detector dissipation, worst case at half the rail, at V_OUT max
 What the resistor costs is range. The reading is ratiometric, so the divider's share of full scale is the node ceiling in converter steps whatever the rail does, and the rail enters only through V_CEsat, which is the largest share of it at V_OUT min:
 
 ```
-ceiling = 1024 · R_pd / (R_col + R_pd) · (1 − V_CEsat / V_OUT min), V_OUT min = 3.146 V
+ceiling = 1024 · R_pd / (R_col + R_pd) · (1 − V_CEsat / V_OUT min), V_OUT min = 3.159 V
   R_pd 4.7 kΩ, R_col 1.58 kΩ                           = 693 steps
   R_pd 2.2 kΩ, R_col 1.58 kΩ                           = 539 steps
   R_pd 1.5 kΩ, R_col 1.58 kΩ                           = 451 steps

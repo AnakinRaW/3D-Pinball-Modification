@@ -72,14 +72,14 @@
   <rect x="494" y="548" width="24" height="14" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="506" y="558" text-anchor="middle" font-size="8" font-weight="700" fill="#1a1a1a">R16</text>
   <rect x="90" y="240" width="44" height="50" rx="4" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="1.8"/>
-  <text x="112" y="262" text-anchor="middle" font-size="10" font-weight="700" fill="#333333">J-IR-</text>
-  <text x="112" y="275" text-anchor="middle" font-size="10" font-weight="700" fill="#333333">PWR</text>
+  <text x="112" y="262" text-anchor="middle" font-size="9" font-weight="700" fill="#333333">D24V5F3</text>
+  <text x="112" y="275" text-anchor="middle" font-size="9" font-weight="700" fill="#333333">socket</text>
   <rect x="148" y="256" width="34" height="18" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="165" y="268" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">C5</text>
   <rect x="190" y="256" width="34" height="18" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="207" y="268" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">R39</text>
   <rect x="78" y="228" width="160" height="76" rx="8" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text data-fig="place_local" x="78" y="220" font-size="10.5" font-weight="700" fill="#0a8a6a">C5, R39 within 10 mm of J-IR-PWR</text>
+  <text data-fig="place_local" x="78" y="220" font-size="10.5" font-weight="700" fill="#0a8a6a">C5, R39 within 10 mm of the module</text>
   <rect x="352" y="250" width="40" height="26" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
   <text x="372" y="267" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">Q1</text>
   <rect x="404" y="246" width="28" height="13" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>

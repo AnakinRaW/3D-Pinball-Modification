@@ -495,12 +495,14 @@
 
   <!-- ===== BAND 4: supply ===== -->
   <line x1="30" y1="1427" x2="930" y2="1427" stroke="#ddd" stroke-width="1.5"/>
-  <text data-fig="v_mod_nom" x="30" y="1451" font-size="14" font-weight="700" fill="#0a6ea8">Supply: 3.3 V from the D24V5F3, which sits off this board; on the bench the Teensy&#8217;s 3V3 pin feeds J-IR-PWR</text>
+  <text data-fig="v_mod_nom" x="30" y="1451" font-size="14" font-weight="700" fill="#0a6ea8">Supply: 3.3 V from the D24V5F3 in its socket on this board; on the bench the Teensy&#8217;s 3V3 pin feeds the socket</text>
 
-  <rect x="40" y="1496" width="150" height="76" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="52" y="1518" font-size="12.5" font-weight="700" fill="#333333">J-IR-PWR (2-pin)</text>
-  <text data-fig="v_mod_nom" x="52" y="1554" font-size="11" font-weight="700" fill="#8a6d0b">1: +3.3 V</text>
-  <text x="52" y="1568" font-size="11" font-weight="700" fill="#1a1a1a">2: GND</text>
+  <rect x="40" y="1470" width="150" height="136" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <text x="52" y="1490" font-size="12.5" font-weight="700" fill="#333333">D24V5F3 socket</text>
+  <text data-fig="v_mod_nom" x="52" y="1520" font-size="11" font-weight="700" fill="#8a6d0b">VOUT: +3.3 V</text>
+  <text x="52" y="1550" font-size="11" font-weight="700" fill="#1a1a1a">GND</text>
+  <text data-fig="v_in_machine" x="52" y="1576" font-size="11" font-weight="700" fill="#c0392b">VIN: 5 V from J-IR</text>
+  <text x="52" y="1594" font-size="11" font-weight="700" fill="#1a1a1a">SHDN: open</text>
   <circle cx="190" cy="1546" r="5" fill="#1a1a1a"/>
   <line x1="196" y1="1546" x2="215" y2="1546" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="215" y1="1546" x2="215" y2="1566" stroke="#1a1a1a" stroke-width="2.5"/>

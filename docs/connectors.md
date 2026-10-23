@@ -12,7 +12,7 @@
 | | J-MB-PWR, from J-MAIN | 2 | screw terminal | 5 V |
 | | the signal to the servo board | 1 | soldered | It comes apart at the servo board's J-SERVO-PWR |
 | IR sensing | input of the D24V5F3 | 2 | soldered | The module has no reverse-voltage protection. VIN, GND and VOUT sit in one row |
-| | J-IR-PWR | 2 | Dupont | 3.3 V and GND. On the bench it takes the Teensy's 3V3 |
+| | the D24V5F3 on the IR mainboard | 4 | socket header | The module stays pluggable. On the bench the Teensy's 3V3 feeds the socket in its place |
 | | J-IR-TEENSY, both ends | 8 | Dupont | The board's lines to the Teensy |
 | | J-S1 to J-S16 | 3 each | Dupont | 3.3 V, with no Teensy pin behind it. The stock sensors' cables end in Dupont plugs. A new sensor board's cable is soldered at the sensor |
 | Solenoids | J-COIL-PWR of the coil board | 2 | screw terminal | The coils' current |
@@ -29,7 +29,7 @@
 | Servo | J-SERVO-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
 | | servo plug | 3 | pin header | The servo's cable stays whole |
 | Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
-| Display | J-DISP-PWR of the display board | 2 | screw terminal | 5 V |
+| Display | J-DISP-PWR of the display board | 2 | Dupont | |
 | | touch cable, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
 | | display board to the module | 4 | soldered at both ends | The cable carries 5 V. Vin sits on the module's header beside the bus |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
@@ -42,9 +42,9 @@
 
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
-| 2 | 10 (six on the power board, J-MB-PWR, J-IR-PWR, J-COIL-PWR and J-DISP-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
+| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 8 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
 | 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, the servo plug | |
-| 4 | | 9 (4 lighting data, 2 rotary sensor, 2 J-COIL-TEENSY, J-M) | |
+| 4 | | 10 (4 lighting data, 2 rotary sensor, 2 J-COIL-TEENSY, J-M, the D24V5F3's socket) | |
 | 5 | | 2 (J-SENSE-TEENSY) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |
