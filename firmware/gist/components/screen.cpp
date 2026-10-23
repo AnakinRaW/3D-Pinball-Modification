@@ -1,320 +1,199 @@
-// a picture file starts with 256 palette entries of four bytes, RGB565 high byte first like a
-// movie's pixels, the opacity and an unused byte. Entry 0 holds the width and the height, each
-// high byte first, since index 0 stays transparent. Then come the pixels row by row from the top
-// left, one byte each with the pixel's palette index.
-// The pictures of one layer are converted together, so their files hold the same palette
-constexpr uint32_t kTable = 256 * 4;          // where the pixels start
-
-// a picture smaller than the screen, read once into a buffer the game gives and then drawn as
-// often as needed into a layer with the colors of its set
-class Picture {
+// the picture memory of the running game in the PSRAM: full-screen pictures and frames from the
+// top end, smaller pictures from the bottom end, so room a full-screen picture gives back is free
+// in one piece for a frame. Every room starts on a 32-byte boundary and is a whole number of 32 bytes,
+// so the storage driver reads straight into it rather than through its bounce buffer
+class PictureMemory {
 public:
-    template <size_t N>
-    explicit Picture(uint8_t (&pixels)[N]) : pixels_(pixels), room_(N) {}   // the buffer, with room for N pixels
-
-    void    load(const FileReader& picture); // reads a picture file into the buffer and returns at once; replaces one still on its way
-    bool    loading() const;                 // gets whether the picture still loads, and starts a load that waits for the one before
-    int16_t width() const { return width_; }     // gets the picture's width, 0 while it loads and when the file is missing, short or too large
-    int16_t height() const { return height_; }   // gets the picture's height, 0 as for width()
+    uint8_t* take(size_t bytes, bool large);   // gets room from its end, first fit in the holes there, nullptr when the ends would meet or no PSRAM was found
+    void     give(uint8_t* room);              // gives room back; holes next to each other merge, and the end closes over its last block
+    bool     empty() const;                    // gets whether every room has come back
 
 private:
-    friend class Canvas;
+    static constexpr size_t kBytes = 8 * 1024 * 1024;   // the whole PSRAM, docs/parts/psram
 
-    // loading() starts and finishes a load, so a game's const done() can wait for it
-    uint8_t*            pixels_;
-    size_t              room_;
-    mutable FileRequest sizeRead_;           // the read of entry 0, the width and the height
-    mutable FileRequest pixelsRead_;         // and of the pixels into the buffer
-    mutable uint8_t     size_[4];
-    FileReader          next_;               // the picture that waits for the reads on their way
-    mutable bool        waits_   = false;    // next_ waits
-    mutable bool        landing_ = false;    // the reads have started, and loading() has not taken the size yet
-    mutable int16_t     width_   = 0;
-    mutable int16_t     height_  = 0;
+    // ... the blocks of each end, in the order they lie
 };
 
-// a layer of the picture as an Adafruit_GFX canvas of palette indices, index 0 transparent
-class Canvas : public Adafruit_GFX {
+EXTMEM static uint8_t memory_[8 * 1024 * 1024] __attribute__((aligned(32)));   // the picture memory; take() hands out none of it while external_psram_size is below 8
+
+// a picture file in the screen's picture memory, shown in as many LVGL images as the game likes
+class Picture {
 public:
-    Canvas(Display& display, Display::Layer layer)
-        : Adafruit_GFX(kWidth, kHeight), display_(display), layer_(layer), pixels_(display.pixels(layer)) {}
+    explicit Picture(Screen& screen) : screen_(screen) {}
 
-    void drawPixel(int16_t x, int16_t y, uint16_t index) override;                  // sets one pixel's palette index
-    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t index) override;   // fills a rectangle row by row
-    void fillScreen(uint16_t index) override;                                        // fills the whole layer
-    void draw(const Picture& picture, int16_t x, int16_t y);                            // draws a picture with its top left corner at x, y; its transparent pixels leave the layer as it is
-    void palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity = 255);   // sets a color of the layer's palette, 255 opaque, and marks every row
-    void show();                                                                     // hands the rows drawn since the last show() to the driver
-
-    // reads a full-screen picture file into the layer with its colors and returns at once. The
-    // screen's update() shows the picture once it has landed; a newer picture replaces one still
-    // on its way
-    void load(const FileReader& picture);
-
-    // takes the palette of a picture file for the layer, without its pixels, and returns at once.
-    // It loads like a picture, and replaces one still on its way
-    void colors(const FileReader& picture);
-
-    bool    loading() const;                                                         // gets whether a picture or a palette still loads
-    uint8_t nearest(uint8_t r, uint8_t g, uint8_t b) const;                          // gets the index of the layer's opaque color closest to r, g, b, 0 when it has none
+    void      load(const FileReader& picture);   // reserves memory for the picture, starts reading the file into it and returns at once
+    lv_obj_t* show(lv_obj_t* parent);        // creates an image of the picture inside parent, to place like any LVGL object
+    void      release();                     // deletes every image of the picture and frees its memory, once the picture has loaded
+    bool      loading() const;               // gets whether the picture still loads
+    bool      failed() const;                // gets whether the last load found no file, a short one or a full picture memory
 
 private:
     friend class Screen;
 
-    static constexpr int16_t kWidth  = 320;
-    static constexpr int16_t kHeight = 240;
+    static void forget(lv_event_t* e);       // takes an image the game deleted itself off the picture's list
 
-    void drawn(int16_t top, int16_t bottom);   // widens the rows drawn since the last show()
-    void clear();                              // sets the layer back to 0 and shows it, once a picture still on its way has landed
-    void settle();                             // once the reads on their way have ended, starts what waits or shows the picture they brought
+    void settle();                           // once the header has landed, takes the room and reads the pixels; once they have, fills every image; gives back room a release() left waiting
 
-    Display&       display_;
-    Display::Layer layer_;
-    uint8_t*       pixels_;
-    int16_t        top_    = kHeight;          // no row drawn yet
-    int16_t        bottom_ = 0;
-    FileRequest    pixelsRead_;                // the read of a picture's pixels into the layer
-    FileRequest    colorsRead_;               // and of its palette into colors_
-    uint8_t        colors_[kTable];           // the palette of the picture that loads, four bytes an entry
-    FileReader     next_;                      // what waits for the reads on their way, a picture, a palette or a file with no name for a clear
-    bool           waits_         = false;     // next_ waits
-    bool           nextPixels_    = true;      // next_ brings its pixels, false for colors()
-    bool           landing_       = false;     // a picture's reads have started, and update() has not shown it yet
-    bool           landingPixels_ = true;      // the picture on its way brings its pixels
+    Screen&        screen_;
+    FileReader     file_;
+    FileRequest    read_;                    // the header first, then the pixels
+    uint8_t        header_[12];              // LVGL's image header: format, width, height, stride
+    lv_image_dsc_t image_ = {};              // what every image of the picture points at, 0 x 0 until the pixels land
+    uint8_t*       room_  = nullptr;
+    lv_obj_t*      images_   = nullptr;      // the first image of the picture; each image's user data points at the next
+    bool           failed_   = false;
+    bool           released_ = false;        // release() came while a read was on its way
+    Picture*       next_     = nullptr;      // the next picture the screen knows, set at the first load()
+    bool           known_    = false;        // load() registers the picture once, after every static object exists
 };
 
-// the controls of one layer, from the UI control library; a stub until the library exists
-class View {
-public:
-    bool modal = false;                          // takes every touch on its layer, as the host's menu does
-
-    bool press(int16_t x, int16_t y);            // takes the touch when a control lies under the finger, or when modal
-    void drag(int16_t x, int16_t y);             // the finger moved while this view keeps the touch
-    void release(int16_t x, int16_t y);          // the finger left; a control under it calls its handler
-    void update(Canvas& canvas);                 // redraws the controls that changed, then canvas.show() once
-    void clear();                                // drops every control
-};
-
-// the picture: the game's layer and background, and the host's layer over them
+// LVGL on the display: the game's layer and background, and the host's layer over them
 class Screen : public Component {
 public:
-    Screen(Display& display, Touch& touch)
-        : display_(display), touch_(touch), game_(display, Display::Layer::Middle),
-          back_(display, Display::Layer::Back), host_(display, Display::Layer::Front) {}
+    Screen(Display& display, Touch& touch) : display_(display), touch_(touch) {}
 
-    // takes every touch event; a touch sinks from the front layer to the back, and one that no
-    // layer takes becomes ScreenTapped or ScreenHeld
+    void begin();                            // starts LVGL on the display driver
+
+    // takes every touch event; hands a touch to LVGL when an object lies under the finger where
+    // it comes down, and makes one that none took into ScreenTapped or ScreenHeld
     bool translate(const DriverEvent& in, PinballEvents& out) override;
 
-    // shows a picture once it has landed, clears a layer once a picture still on its way has, and
-    // redraws the controls that changed; the main loop calls it in every pass
+    // runs LVGL: its timers, the handlers of its controls and the redraw, except while the display
+    // restarts; the main loop calls it in every pass
     void update();
 
-    Canvas& layer() { return game_; }        // gets the game's layer
-    Canvas& background() { return back_; }   // gets the game's background, which a playing video covers inside its viewport
-    void    showLayer(bool shown);           // shows or hides the game's layer; hidden, it keeps what is drawn
-    View&   view() { return gameView_; }     // gets the controls on the game's layer
-
-    Finger finger() const;                   // gets where a finger touches the screen
+    lv_obj_t* layer() { return lv_screen_active(); }   // gets the game's layer, the parent of the game's objects
+    lv_obj_t* background() { return back_; }           // gets the game's background, the parent of what lies behind everything else
+    void      showLayer(bool shown);         // shows or hides the game's layer; hidden, it keeps its objects
 
 private:
     friend class GameHost;
+    friend class Picture;
+    friend class VideoPlayer;
 
-    static constexpr uint32_t kTapMs = 500;  // the longest touch that counts as a tap
-    static constexpr uint8_t  kSlop  = 10;   // pixels a tap may move
+    static constexpr uint16_t kWidth = 320;           // a row, which is whole steps of the driver
+    static constexpr uint32_t kTapMs = 500;           // the longest touch that counts as a tap
+    static constexpr uint8_t  kSlop  = 10;            // pixels a tap may move
 
     enum class Gesture : uint8_t { None, Tap, Hold };
 
-    Canvas& hostLayer() { return host_; }    // gets the host's layer
-    View&   hostView() { return hostView_; } // gets the controls on the host's layer
-    bool    settled() const { return !game_.loading() && !back_.loading(); }   // gets whether the game's layer and background neither load nor wait for a clear
-    void    showHost(bool shown);            // shows or hides the host's layer
-    Gesture takeGesture(uint16_t& x, uint16_t& y);   // gets the host the last gesture once, None when there is none
-    void    reset();                         // clears the game's layer and background, and shows the game's layer
-    View*   take(int16_t x, int16_t y);      // gets the view of the front-most shown layer that takes a touch, nullptr when every layer lets it pass
-    void    gesture(Gesture g, const DriverEvent& in);   // keeps a gesture for the host and makes it the game's event
+    lv_obj_t* hostLayer() { return host_; }  // gets the parent of the host's objects
+    lv_obj_t* videos() { return videos_; }   // gets the parent of the video player's image, in front of the game's background
+    bool      settled() const { return pictures_.empty(); }   // gets whether the picture memory is empty
+    void      showHost(bool shown);          // shows or hides the host's layer
+    Gesture   takeGesture(uint16_t& x, uint16_t& y);   // gets the host the last gesture once, None when there is none
+    void      reset();                       // deletes the game's objects, releases its pictures and shows the game's layer
+    void      restart();                     // sets the display up again after a supervisor reset and sends the whole picture again once it is back; returns at once
+    bool      taken(int16_t x, int16_t y);   // gets whether an object under x, y takes a touch, searched as LVGL does
+    void      gesture(Gesture g, const DriverEvent& in);   // keeps a gesture for the host and makes it the game's event
     static bool near(uint32_t a, uint32_t b, uint8_t slop);   // gets whether two positions lie within slop pixels on both axes
 
-    Display&     display_;
-    Touch&       touch_;
-    Canvas       game_;
-    Canvas       back_;
-    Canvas       host_;
-    View         hostView_;
-    View         gameView_;
-    View*        held_      = nullptr;       // the view that took the touch on the screen, until the finger leaves
-    bool         hostShown_ = false;
-    bool         gameShown_ = true;
-    uint32_t     downAt_    = 0;             // nowUs() of the last TouchDown
-    uint32_t     downXy_    = 0;             // and its position
-    Gesture      gesture_   = Gesture::None; // the last gesture, until the host takes it
-    uint32_t     gestureXy_ = 0;
-    PinballEvent made_;                      // the event translate() points out at
+    static void flush(lv_display_t* d, const lv_area_t* area, uint8_t* pixels);   // hands a rendered piece to the driver
+    static void widen(lv_event_t* e);        // widens a changed area to whole rows
+    static void readTouch(lv_indev_t* indev, lv_indev_data_t* data);   // LVGL's own look at the finger, pressed only for a touch an object took
+
+    Display&      display_;
+    Touch&        touch_;
+    PictureMemory pictures_;
+    Picture*      first_     = nullptr;      // every Picture that has loaded once
+    lv_display_t* lv_        = nullptr;
+    lv_obj_t*     host_      = nullptr;      // a full-screen container on LVGL's system layer, above everything
+    lv_obj_t*     back_      = nullptr;      // a full-screen container on LVGL's bottom layer
+    lv_obj_t*     videos_    = nullptr;      // the same, created after back_, so it lies in front of it
+    bool          held_      = false;        // an object took the touch on the screen, until the finger leaves
+    bool          redraw_    = false;        // the whole screen goes out again once the display is back
+    uint32_t      downAt_    = 0;            // nowUs() of the last TouchDown
+    uint32_t      downXy_    = 0;            // and its position
+    Gesture       gesture_   = Gesture::None;
+    uint32_t      gestureXy_ = 0;
+    PinballEvent  made_;                     // the event translate() points out at
 };
 
-void Canvas::drawPixel(int16_t x, int16_t y, uint16_t index) {
-    if (x < 0 || y < 0 || x >= kWidth || y >= kHeight || loading()) return;   // a picture that loads keeps the layer
-    pixels_[y * kWidth + x] = index;
-    drawn(y, y + 1);
-}
+// LVGL's two buffers of the whole screen, RGB565 high byte first as the driver sends it, in RAM2:
+// LVGL draws into one while the driver's interrupt reads the other, both through the cache
+DMAMEM static uint8_t buffers_[2][320 * 240 * 2] __attribute__((aligned(32)));
 
-void Canvas::drawn(int16_t top, int16_t bottom) {
-    top_    = min(top_, top);
-    bottom_ = max(bottom_, bottom);
-}
+void Screen::begin() {
+    lv_init();
+    lv_tick_set_cb(xTaskGetTickCount);       // FreeRTOS's milliseconds, which wrap where LVGL expects; nowUs() / 1000 would not
+    lv_ = lv_display_create(320, 240);
+    lv_display_set_buffers(lv_, buffers_[0], buffers_[1], sizeof buffers_[0], LV_DISPLAY_RENDER_MODE_DIRECT);   // LVGL copies what changed into the other buffer
+    lv_display_set_flush_cb(lv_, flush);
+    lv_display_set_user_data(lv_, this);
+    lv_display_add_event_cb(lv_, widen, LV_EVENT_INVALIDATE_AREA, nullptr);
 
-void Canvas::show() {
-    if (top_ >= bottom_) return;             // nothing drawn
-    display_.show(top_, bottom_);
-    top_    = kHeight;
-    bottom_ = 0;
-}
-
-void Canvas::palette(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t opacity) {
-    if (index == 0) return;                  // 0 stays transparent
-    display_.palette(layer_, index, (r & 0xF8) << 8 | (g & 0xFC) << 3 | b >> 3, opacity);
-    drawn(0, kHeight);                       // any row may use the color
-}
-
-// weighs the channels as tools/picture.py does when it picks a picture's colors
-uint8_t Canvas::nearest(uint8_t r, uint8_t g, uint8_t b) const {
-    uint8_t  best    = 0;
-    uint32_t closest = UINT32_MAX;
-    for (int i = 1; i < 256; ++i) {
-        if (!display_.opaque(layer_, i)) continue;
-        const uint16_t c  = display_.color(layer_, i);
-        const int      dr = (c >> 8 & 0xF8) - r;
-        const int      dg = (c >> 3 & 0xFC) - g;
-        const int      db = (c << 3 & 0xF8) - b;
-        const uint32_t d  = 2 * dr * dr + 4 * dg * dg + 3 * db * db;
-        if (d < closest) {
-            closest = d;
-            best    = i;
-        }
+    // the game's layer is LVGL's screen itself, so LVGL's lists that open on the screen belong to
+    // it; LVGL's top layer takes the game's popups; the host sits on the system layer above both
+    lv_obj_t* screen = lv_screen_active();
+    lv_obj_set_style_bg_opa(screen, LV_OPA_TRANSP, 0);   // so the background on LVGL's bottom layer shows
+    host_   = lv_obj_create(lv_layer_sys());
+    back_   = lv_obj_create(lv_layer_bottom());
+    videos_ = lv_obj_create(lv_layer_bottom());
+    for (lv_obj_t* o : {host_, back_, videos_}) {
+        lv_obj_remove_style_all(o);                        // transparent, no border
+        lv_obj_set_size(o, 320, 240);
     }
-    return best;
-}
-
-void Canvas::draw(const Picture& picture, int16_t x, int16_t y) {
-    if (picture.loading() || loading()) return;              // a picture that loads into the layer keeps it
-    const int16_t w      = picture.width();
-    const int16_t left   = max(0, -x), right  = min<int16_t>(w, kWidth - x);   // the part inside the layer
-    const int16_t top    = max(0, -y), bottom = min<int16_t>(picture.height(), kHeight - y);
-    if (left >= right || top >= bottom) return;
-    for (int16_t r = top; r < bottom; ++r) {
-        const uint8_t* from = picture.pixels_ + r * w;
-        uint8_t*       to   = pixels_ + (y + r) * kWidth + x;
-        for (int16_t c = left; c < right; ++c)
-            if (from[c]) to[c] = from[c];                    // a transparent pixel leaves the layer as it is
+    for (lv_obj_t* o : {screen, lv_layer_top(), lv_layer_sys(), lv_layer_bottom(), host_, back_, videos_}) {
+        lv_obj_set_clickable(o, false);                    // a touch on no object passes through
     }
-    drawn(y + top, y + bottom);
+    showHost(false);
+
+    lv_indev_t* touch = lv_indev_create();
+    lv_indev_set_type(touch, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(touch, readTouch);                // LVGL looks at the finger itself, at its own pace
+    lv_indev_set_user_data(touch, this);
 }
 
-void Picture::load(const FileReader& picture) {
-    next_  = picture;
-    waits_ = true;
-    loading();                               // starts the reads at once where none is on its way
-}
-
-bool Picture::loading() const {
-    if (sizeRead_.status() == FileStatus::Pending || pixelsRead_.status() == FileStatus::Pending) return true;
-    if (waits_) {                            // the reads before have ended, so the next start
-        waits_   = false;
-        landing_ = true;
-        width_   = 0;
-        height_  = 0;
-        next_.read(0, size_, sizeof size_, sizeRead_);
-        next_.read(kTable, pixels_, room_, pixelsRead_);
-        return loading();
+// LVGL hands the whole buffer and the changed area apart; widen() has made the area whole rows, so
+// its pixels lie in one piece from its first row on. A refused area cannot come from LVGL; LVGL
+// still gets its flush_ready, so a wrong area costs a stale piece of screen rather than a main loop
+// that waits for ever
+void Screen::flush(lv_display_t* d, const lv_area_t* area, uint8_t* pixels) {
+    Screen* self = static_cast<Screen*>(lv_display_get_user_data(d));
+    const uint8_t* rows = pixels + (size_t)area->y1 * kWidth * 2;
+    if (!self->display_.send(0, area->y1, kWidth, lv_area_get_height(area), rows,
+                             [d] { lv_display_flush_ready(d); })) {
+        lv_display_flush_ready(d);
     }
-    if (landing_) {
-        landing_ = false;
-        const uint16_t w = size_[0] << 8 | size_[1];
-        const uint16_t h = size_[2] << 8 | size_[3];
-        if (sizeRead_.bytes() == sizeof size_ && w > 0 && h > 0 && (size_t)w * h <= pixelsRead_.bytes()) {
-            width_  = w;                     // a missing or short file and one too large for the buffer keep 0
-            height_ = h;
-        }
+}
+
+void Screen::widen(lv_event_t* e) {
+    lv_area_t* a = static_cast<lv_area_t*>(lv_event_get_param(e));
+    a->x1 = 0;
+    a->x2 = kWidth - 1;                                  // whole rows lie in one piece in the buffer and on the driver's steps
+}
+
+// LVGL sees a touch only when an object took it at TouchDown, so a finger that comes down beside a
+// button and slides onto it presses nothing, and its tap or hold stays the game's
+void Screen::readTouch(lv_indev_t* indev, lv_indev_data_t* data) {
+    Screen* self = static_cast<Screen*>(lv_indev_get_user_data(indev));
+    const Finger f = self->touch_.finger();
+    data->point.x = f.x;
+    data->point.y = f.y;
+    data->state   = f.down && self->held_ ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+}
+
+// the order LVGL's own search takes: the system layer, the top layer, the screen, the bottom layer
+bool Screen::taken(int16_t x, int16_t y) {
+    lv_point_t p = {x, y};
+    for (lv_obj_t* layer : {lv_layer_sys(), lv_layer_top(), lv_screen_active(), lv_layer_bottom()}) {
+        if (lv_indev_search_obj(layer, &p)) return true;  // a hidden object finds nothing
     }
     return false;
-}
-// fillRect() and fillScreen() write whole rows of the buffer with memset() and call drawn() once;
-// while a picture loads, they do nothing
-
-void Canvas::load(const FileReader& picture) {
-    next_       = picture;
-    nextPixels_ = true;
-    waits_      = true;
-    settle();                                // starts the reads at once where none is on its way
-}
-
-void Canvas::colors(const FileReader& picture) {
-    next_       = picture;
-    nextPixels_ = false;
-    waits_      = true;
-    settle();
-}
-
-void Canvas::clear() {
-    load(FileReader{});                      // a file with no name stands for the clear
-}
-
-bool Canvas::loading() const {
-    return waits_ || landing_;
-}
-
-// what waits replaces a picture that has landed, without showing it
-void Canvas::settle() {
-    if (pixelsRead_.status() == FileStatus::Pending || colorsRead_.status() == FileStatus::Pending) return;
-    if (waits_) {
-        waits_         = false;
-        landing_       = next_.name()[0] != 0;
-        landingPixels_ = nextPixels_;
-        if (!landing_) {
-            fillScreen(0);
-            show();
-            return;
-        }
-        next_.read(0, colors_, sizeof colors_, colorsRead_);
-        if (landingPixels_) next_.read(sizeof colors_, pixels_, kWidth * kHeight, pixelsRead_);   // straight into the layer, which is aligned in RAM2
-        return;
-    }
-    if (!landing_) return;
-    landing_ = false;
-    const bool read = colorsRead_.bytes() == sizeof colors_;
-    if (!landingPixels_) {                   // colors() takes the palette of a picture of any size
-        if (read) display_.palette(layer_, colors_);
-        drawn(0, kHeight);                   // any row may use the colors
-        show();
-        return;
-    }
-    const bool whole = read && (colors_[0] << 8 | colors_[1]) == kWidth && (colors_[2] << 8 | colors_[3]) == kHeight;
-    if (whole) display_.palette(layer_, colors_);
-    const size_t kept = whole ? pixelsRead_.bytes() : 0;
-    memset(pixels_ + kept, 0, kWidth * kHeight - kept);      // a missing, short or smaller file reads as empty
-    drawn(0, kHeight);                       // the picture's rows
-    show();
 }
 
 bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
     out = {};
-    const int16_t x = in.payload & 0xFFFF;
-    const int16_t y = in.payload >> 16;
     switch (in.type) {
         case DriverEventType::TouchDown:
-            held_   = take(x, y);                    // the touch sinks from the front layer to the back
+            held_   = taken(in.payload & 0xFFFF, in.payload >> 16);   // LVGL itself hands the touch to the object
             downAt_ = in.time;
             downXy_ = in.payload;
             return true;
         case DriverEventType::TouchMoved:
-            if (held_) held_->drag(x, y);
             return true;
         case DriverEventType::TouchUp:
-            if (held_) {                             // a layer took the touch and keeps it to the end
-                held_->release(x, y);
-                held_ = nullptr;
-                return true;
-            }
+            if (held_) { held_ = false; return true; }
             if (elapsedUs(downAt_, kTapMs * 1000) || !near(in.payload, downXy_, kSlop)) return true;
             gesture(Gesture::Tap, in);
             break;
@@ -329,50 +208,58 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
     return true;
 }
 
-View* Screen::take(int16_t x, int16_t y) {
-    if (hostShown_ && hostView_.press(x, y)) return &hostView_;   // a hidden layer lets the touch pass
-    if (gameShown_ && gameView_.press(x, y)) return &gameView_;
-    return nullptr;                                                  // the background has no controls
-}
-
-void Screen::gesture(Gesture g, const DriverEvent& in) {
-    gesture_   = g;
-    gestureXy_ = in.payload;
-    made_ = {in.time, g == Gesture::Tap ? EventType::ScreenTapped : EventType::ScreenHeld, 0, in.payload};
-}
-
-Screen::Gesture Screen::takeGesture(uint16_t& x, uint16_t& y) {
-    const Gesture g = gesture_;
-    gesture_ = Gesture::None;
-    x = gestureXy_ & 0xFFFF;
-    y = gestureXy_ >> 16;
-    return g;
-}
-
-Finger Screen::finger() const { return touch_.finger(); }
-
-void Screen::showHost(bool shown) {
-    hostShown_ = shown;
-    display_.shown(Display::Layer::Front, shown);
-}
-
 void Screen::showLayer(bool shown) {
-    gameShown_ = shown;
-    display_.shown(Display::Layer::Middle, shown);
+    lv_obj_set_hidden(lv_screen_active(), !shown);
 }
 
 void Screen::update() {
-    game_.settle();
-    back_.settle();
-    host_.settle();
-    hostView_.update(host_);
-    gameView_.update(game_);
+    for (Picture* p = first_; p; p = p->next_) p->settle();   // header and pixels landed, room left waiting
+    if (display_.restarting()) return;       // LVGL rests while the panel restarts, so it never waits for it
+    if (redraw_) {
+        lv_obj_invalidate(lv_screen_active());   // LVGL redraws every layer over the invalid area
+        redraw_ = false;
+    }
+    lv_timer_handler();                      // a refresh finds the last picture off the bus
 }
 
+// the panel's setup; update() redraws the whole screen once the panel is back
+void Screen::restart() {
+    display_.restart();
+    redraw_ = true;
+}
+
+// the game's objects on its layer, its popups on LVGL's top layer and its background; the video
+// player's image stays, which the video player's own reset() deletes
 void Screen::reset() {
-    game_.clear();                           // transparent, so the next game starts on black
-    back_.clear();
-    gameView_.clear();                       // the next game starts without the stopped game's controls
-    if (held_ == &gameView_) held_ = nullptr;
-    showLayer(true);                         // a stopped game may have left its layer hidden
+    lv_obj_clean(lv_screen_active());
+    lv_obj_clean(lv_layer_top());
+    lv_obj_clean(back_);
+    for (Picture* p = first_; p; p = p->next_) p->release();  // a game's Picture outlives its game, since games live as long as the firmware
+    showLayer(true);
+}
+
+void Picture::load(const FileReader& picture) {
+    if (!known_) {                           // not in the constructor: a game's Picture may be built before the screen
+        next_ = screen_.first_;
+        screen_.first_ = this;
+        known_ = true;
+    }
+    release();
+    // ... file_ = picture, failed_ = false, the read of header_; settle() goes on from there
+}
+
+lv_obj_t* Picture::show(lv_obj_t* parent) {
+    lv_obj_t* image = lv_image_create(parent);
+    lv_image_set_src(image, &image_);        // 0 x 0 until the pixels land, then settle() sets it again
+    lv_obj_add_event_cb(image, forget, LV_EVENT_DELETE, this);
+    // ... onto the picture's list of images
+    return image;
+}
+
+void Picture::release() {
+    // ... every image on the list: lv_obj_delete(), whose LV_EVENT_DELETE takes it off the list
+    if (read_.status() == FileStatus::Pending) { released_ = true; return; }   // settle() gives the room back once the read has landed
+    if (room_) screen_.pictures_.give(room_);
+    room_  = nullptr;
+    image_ = {};
 }

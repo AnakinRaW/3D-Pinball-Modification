@@ -4,19 +4,17 @@ A game's files lie in its directory `/games/<id>/` on the SD card. Media assets 
 
 ## Pictures
 
-A picture is at most 320 × 240 pixels. A pixel may be partly transparent. The display shows its opacity in 32 steps. A picture can lie anywhere in the game's directory.
-
-The pictures of one layer share one palette of 255 colors. The tool therefore converts them together and writes each file beside its PNG. Each `--color` puts a color into the palette exactly, such as the color of a text.
+A picture is in full color and at most 320 × 240 pixels, the size of the screen. Any picture may be partly transparent. A picture can lie anywhere in the game's directory.
 
 ```
-python tools/picture.py --color ffffff table.png lamp.png ball.png
+python tools/picture.py background.png lamp.png
 ```
 
-The tool reduces the set to 255 colors with their opacity and dithers each picture, so a picture with more colors keeps its look.
+The tool writes each picture beside its PNG in LVGL's image format. A picture without transparent pixels takes two bytes a pixel. LVGL copies it as it is. A picture with transparency takes three bytes a pixel. LVGL blends it with what lies behind it.
 
 ## Videos
 
-A video lies in `video/` and plays at 25 frames a second, in full color and without transparency. A fullscreen video is 320 × 240 pixels. A smaller one may have any height. Its width goes in steps of 16 pixels.
+A video lies in `video/` and plays at 25 frames a second, in full color and without transparency. A fullscreen video is 320 × 240 pixels. A smaller one may have any size.
 
 A video's sound is the sound file of the same name, so `video/clip.rgb` plays with `audio/clip.wav`. This command makes both files from one MP4:
 

@@ -8,12 +8,7 @@ public:
     // a ring of Chunks chunks of chunk bytes each at ring, which starts on a 32-byte boundary, read
     // with priority
     FileChannel(uint8_t* ring, uint32_t chunk, Storage::Priority priority = Storage::Priority::Normal)
-        : read_(priority, false, IRQ_NUMBER_t(0)), ring_(ring), chunk_(chunk) {}
-
-    // the same, and every read raises the interrupt wake when it ends
-    FileChannel(uint8_t* ring, uint32_t chunk, IRQ_NUMBER_t wake,
-              Storage::Priority priority = Storage::Priority::Normal)
-        : read_(priority, true, wake), ring_(ring), chunk_(chunk) {}
+        : read_(priority), ring_(ring), chunk_(chunk) {}
 
     // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
     // of the file read before are gone at once

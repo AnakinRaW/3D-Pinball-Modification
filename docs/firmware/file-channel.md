@@ -20,8 +20,6 @@ The file channel keeps the bytes it has read ahead in a ring buffer. The card fi
 
 Every call of `take()` or `available()` starts the next read when a chunk is free and no read is running. 
 
-The constructor can take an interrupt, which the channel raises whenever a read ends.
-
 `ended()` tells that the file has run out or a read has failed, and that every byte before has been taken. `ended()` is also true for a missing file, for a channel that was never started and after `stop()`.
 
 ## Interrupts and priority
@@ -47,10 +45,6 @@ public:
     // a ring of Chunks chunks of chunk bytes each at ring, which starts on a 32-byte boundary, read
     // with priority
     FileChannel(uint8_t* ring, uint32_t chunk, Storage::Priority priority = Storage::Priority::Normal);
-
-    // the same, and every read raises the interrupt wake when it ends
-    FileChannel(uint8_t* ring, uint32_t chunk, IRQ_NUMBER_t wake,
-              Storage::Priority priority = Storage::Priority::Normal);
 
     // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
     // of the file read before are gone at once

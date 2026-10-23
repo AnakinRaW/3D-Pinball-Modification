@@ -14,10 +14,10 @@ The firmware uses the card at start-up, while it runs and for the streams of sou
 |---|---|
 | Reads small files and single sectors at chosen places and may wait for them | drivers, the logger and the game host at start-up |
 | Reads and writes small files without waiting, and learns later whether a write worked. A further save waits until the previous one has ended | a game and the host after start-up |
-| Reads a picture into a layer without waiting | a game through the screen |
+| Reads a picture into the screen's picture memory without waiting | a game through the screen |
 | Writes once a second at a chosen place of the log without waiting | the logger |
 | Reads up to four files at once and restarts any of them at any moment, and no sound runs dry | the audio driver's interrupt |
-| Reads one file at 25 frames a second, once or in a loop, and every frame arrives in time | the display driver's interrupt |
+| Reads one file at 25 frames a second, once or in a loop, and every frame arrives in time | the video player |
 | Turns a name into a file without touching the card | the sounds and the screen components |
 
 ## Storage task
@@ -49,7 +49,7 @@ If a request is destroyed while still pending, its destructor waits until the op
 
 `wait()` waits until the request has ended and tells whether the waiting worked. `false` is retured immediately when trying to wait from an interrupt, or from a task whose priority is not below the storage task's. The request continues normally.
 
-A request can have `Priority::High`, which puts it ahead of every waiting request of normal priority. It can also name an interrupt, which it raises when it ends. These features are only available using a [file channel](../file-channel.md).
+A request can have `Priority::High`, which puts it ahead of every waiting request of normal priority. This is only available using a [file channel](../file-channel.md).
 
 An interrupt that starts requests has a priority number of 208 or more (higher value here means less priority), since only such an interrupt may call FreeRTOS. A request started from a more urgent interrupt fails at once.
 
@@ -169,7 +169,7 @@ public:
 // until it has ended
 class FileRequest {
 public:
-    FileRequest() = default;                 // a request of normal priority, which raises no interrupt
+    FileRequest() = default;                 // a request of normal priority
 
     // waits for the end of a request that has not ended, so the storage task never writes into
     // memory that has gone; an interrupt's requests live as long as the firmware

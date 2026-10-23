@@ -124,7 +124,7 @@ with MODEL.block(section=IRQ):
         group="FreeRTOS's limit, from which on an interrupt may call FreeRTOS")
     dec("prio_display", 224, "", src="the display driver's FlexIO3 interrupt, which refills the "
         "bus and has no deadline, since a late refill only pauses the write strobe; "
-        "docs/firmware/drivers/display.md", group="Display, refilling its bus")
+        "docs/firmware/drivers/display.md", group="Display, sending a rectangle")
     fig("prio_ir_spi", "", "prio_ir", group="IR ball sensing, taking each conversion's result")
 
     # output_i2s2.cpp attaches its DMA interrupt without a priority, so it keeps the default
@@ -148,7 +148,6 @@ dec("log_buffer", 2, "KB", src="the lines the logger collects in RAM between two
     "in docs/firmware/logging.md")
 MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
-MODEL.uses("b_layer", of="display")
 MODEL.uses("t_sdfat", of="audio")
 fig("n_log_lines", "", "log_size / log_line", moves="+log_size -log_line", stated=False)
 

@@ -43,6 +43,7 @@ with MODEL.block("PSRAM", section=CHIP):
         moves="+i_psram_cc +n_psram_lines +c_psram_line +v_3v3_max +f_psram")
 
 MODEL.draws("i_psram", pool=TEENSY_RAIL)   # the PSRAM on the underside, fed from the Teensy's 3V3
+MODEL.supplies("psram_size", pool="PSRAM")
 MODEL.invariant("FlexSPI2 clocks the PSRAM inside the rate its datasheet gives at 3.3 V",
                 "f_psram <= f_psram_max")
 

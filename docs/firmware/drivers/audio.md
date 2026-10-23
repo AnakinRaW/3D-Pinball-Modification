@@ -13,7 +13,7 @@ The driver plays up to four sounds at once, one on each of its four channels. Ea
 
 Both calls only leave a request for the channel, so they return at once.
 
-`position()` gets the sound on a channel and where it stands. A later `play()` from that position goes on there, also after the channel has played something else meanwhile. A free channel gives an empty position, which plays nothing.
+`position()` gets the sound on a channel and where it stands. A later `play()` from that position goes on there, also after the channel has played something else meanwhile. A free channel gives an empty position, which plays nothing. `played()` returns how many samples of a position's sound have played so far.
 
 `playing()` tells whether a channel plays a sound. It turns true with the call of `play()`.
 
@@ -91,7 +91,8 @@ public:
     // a sound and where it stands, which play() goes on from
     class Position {
     public:
-        bool empty() const;   // gets whether no sound stands at it
+        bool     empty() const;    // gets whether no sound stands at it
+        uint32_t played() const;   // gets how many samples of the sound have played
     };
 
     uint32_t play(uint8_t channel, const FileReader& file, bool loop = false);   // starts file on channel from its beginning, once or in a loop; returns its number at once

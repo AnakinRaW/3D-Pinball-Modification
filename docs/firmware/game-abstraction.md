@@ -21,7 +21,7 @@ The host performs the same sequence at every start of a game, machine power-up i
 1. It stops the running game and runs a clean-up procedure.
 2. It writes the id of the new game.
 3. It prepares the new game by initializing things such as audio, display or lighting.
-4. It starts the new game once the screen has cleared the stopped game's layers.
+4. It starts the new game once the screen has cleared the stopped game's objects and pictures.
 
 A ball still on the playfield carries on in the new game.
 

@@ -16,7 +16,7 @@ The chip runs from the Teensy's 3.3 V regulator, as the card socket does. Its cu
 
 ## Firmware
 
-Variables declared with `EXTMEM` and memory from `extmem_malloc()` lie in the PSRAM. The processor's cache serves it the way it serves RAM2.
+Variables declared with `EXTMEM` and memory from `extmem_malloc()` lie in the PSRAM. The processor's cache serves it the way it serves RAM2. The [screen component](../../firmware/components/screen.md#pictures) keeps its picture memory there.
 
 ## Part list
 

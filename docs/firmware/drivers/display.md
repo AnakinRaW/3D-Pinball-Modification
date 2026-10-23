@@ -1,34 +1,14 @@
 # Display driver
 
-The driver puts the picture on the display that [`docs/parts/display/design.md`](../../parts/display/design.md) describes. The [screen](../components/screen.md) and the [video player](../components/video-player.md) components build on it.
-
-## Picture composition
-
-The picture is 320 x 240 pixels. It is composed of three layers. From the front, they are `Front`, `Middle` and `Back`. Each pixel shows the front-most layer that has a color there. A layer can be hidden. Where no layer has a color, the pixel is black.
-
-Each layer keeps a table of 256 colors. This table is the layer's palette. An entry of the palette holds a 16-bit RGB565 color and an opacity in 32 steps. A pixel of the layer stores the number of its entry in the palette. This number is the pixel's index and takes one byte. Index 0 means transparent. Behind a partly opaque color, the layers further back shine through.
-
-Movies play inside a viewport on the back layer. The viewport is a rectangle that can be sized and placed. Outside the viewport, the back layer keeps showing its own pixels.
+The driver puts pictures on the display that [`docs/parts/display/design.md`](../../parts/display/design.md) describes. The [screen](../components/screen.md) component builds on it.
 
 ## Sending
 
-The driver combines the three layers and a playing movie into one picture while it sends it.
+`send()` sends a rectangle of pixels to the display and returns at once. The pixels lie row by row in the caller's buffer. Each pixel is two bytes of RGB565, high byte first. The display keeps showing what it received last, so a caller sends only what changed.
 
-The display keeps showing what it received last. The driver therefore sends only the rows that changed. A component marks its changed rows with `show()`. A row that changes again while it is being sent goes out a second time, so no change is lost.
+The rectangle's left edge and its width go in steps of 16 pixels, since the driver fills the bus 16 pixels at a time. `send()` refuses a rectangle off those steps or beyond the screen and returns false. It also refuses while a rectangle is still on its way.
 
-Changing a palette color does not update the pixels on the screen until `show()` sends the rows with that color again.
-
-## Movies
-
-A fullscreen movie's viewport is the whole screen. Hiding the back layer hides the movie as well. The viewport's left edge and its width go in steps of 16 pixels, since the driver fills the bus 16 pixels at a time.
-
-A movie is a file of raw frames, each as large as its viewport. Every pixel is two bytes of RGB565, high byte first. Every movie plays at 25 frames a second. [`media.md`](../../../assets/media.md) shows how FFmpeg makes such a file.
-
-`play()` takes the movie as a `FileReader` and copies it. The caller may drop its `FileReader` right after the call. The driver reads the movie through a [file channel](../file-channel.md) using normal priority. A movie that loops reads on from the start of its file. A movie ends at once when its file is missing.
-
-`play()` starts nothing and returns 0 when the left edge or the width of the viewport is no multiple of 16. The same holds for a viewport that reaches past the screen. A movie that is already playing goes on.
-
-When a movie ends or is stopped, the back layer shows its own pixels in the viewport again.
+The caller hands `send()` a function. The driver calls it from its interrupt once the last pixel has left the bus. Until then the buffer has to stay as it is.
 
 ## Start-up
 
@@ -36,53 +16,42 @@ When a movie ends or is stopped, the back layer shows its own pixels in the view
 
 ## Performance & Memory Usage
 
-Sending the whole combined picture once takes 12.8 ms.
+Sending the whole screen once takes 12.8 ms.
 
-While the driver sends, it takes an estimated 21.9 % of the processor. Partly opaque colors on the front and the middle layer raise this to 61.9 % at most. The sending keeps its speed even then.
+While the driver sends, it takes an estimated 9.4 % of the processor.
 
-The finished picture exists only on the display. No buffer in the Teensy holds it. The three layers take 75 KB each. The movie needs a buffer of 64 KB for the frames read ahead from the card. In all, the driver takes 289 KB of RAM2.
+The driver needs no memory for pixels. It sends straight from the two buffers LVGL draws into, which the [screen component](../components/screen.md#drawing) keeps in RAM2.
 
 ## Driver events
 
-| Type | When | Payload |
-|---|---|---|
-| `MovieEnded` | A movie's last row has gone out, its file is missing, or a read of it has failed | The number `play()` returned |
-
-The source is always `0`. The timestamp is the moment the movie ended. A full queue drops the event.
+The driver publishes no events.
 
 ## Device faults
 
 The panel never answers, since its read line RD is tied high. The driver therefore cannot tell whether the panel works and reports no fault.
 
-The panel shares the module's supervisor with the touch controller. If the module's 3.3 V falls below 3 V, the supervisor resets both. The panel then comes back asleep with its display off. The [touch driver](touch.md#device-faults) reports the controller failed while it is silent and recovered once it answers again. The host then calls `restart()`. The driver sends the panel the same setup as `begin()`. Afterwards it sends the whole picture again. While the panel waits during the setup, the processor goes on with other work.
+The panel shares the module's supervisor with the touch controller. If the module's 3.3 V falls below 3 V, the supervisor resets both. The panel then comes back asleep with its display off. The [touch driver](touch.md#device-faults) reports the controller failed while it is silent and recovered once it answers again. The host then calls the [screen](../components/screen.md)'s `restart()`, which calls the driver's. The driver sends the panel the same setup as `begin()`. Until the panel is back, `restarting()` is true. The screen runs no LVGL meanwhile. Then it sends the whole picture again. While the panel waits during the setup, the processor goes on with other work.
 
 ## Existing libraries
 
 [ILI9341_t3](https://github.com/PaulStoffregen/ILI9341_t3) and [ILI9341_T4](https://github.com/vindar/ILI9341_T4) drive the ILI9341 over SPI. This build wires the panel to the 8-bit bus.
-
-[ILI948x_t41_p](https://github.com/david-res/ILI948x_t41_p) drives a panel on the 8-bit bus over FlexIO3, but it is written for the ILI9488 and sends from a whole picture in RGB565. That picture takes 150 KB, which RAM2 does not have left.
 
 ## Driver
 
 ```cpp
 class Display : public Driver {
 public:
-    enum class Layer : uint8_t { Front, Middle, Back };   // from the front; Back shows a playing movie inside its viewport
+    using Sent = teensy::inplace_function<void(void), 16>;   // a lambda capturing a pointer fits
 
-    // sets up FlexIO3 and the panel and attaches to the driver tick; false when it is full
+    // sets up FlexIO3 and the panel, leaves the screen black and attaches to the driver tick;
+    // false when the tick is full
     bool begin() override;
-    void restart();                                          // sets the panel up again after a supervisor reset and marks every row; returns at once
+    void restart();                                          // sets the panel up again after a supervisor reset, holding rectangles back until it is; returns at once
+    bool restarting() const;                                 // gets whether a restart still holds the bus
 
-    uint8_t* pixels(Layer layer);                            // gets a layer's palette indices, row by row
-    void     palette(Layer layer, uint8_t index, uint16_t rgb565, uint8_t opacity);   // sets a color of a layer's palette, opacity 0 to 255 in 32 steps
-    void     palette(Layer layer, const uint8_t* entries);    // sets all 256 entries of a layer's palette from a picture file's table, entry 0 unused
-    uint16_t color(Layer layer, uint8_t index) const;       // gets the RGB565 color of a palette entry, the back layer's with its opacity folded in
-    bool     opaque(Layer layer, uint8_t index) const;       // gets whether a palette entry covers what lies behind it, every entry of the back layer
-    void     show(uint16_t top, uint16_t bottom);            // marks rows top to bottom - 1 as drawn; returns at once
-    void     shown(Layer layer, bool shown);                 // shows or hides a layer and marks every row
-
-    uint32_t play(const FileReader& movie, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool loop);   // starts a movie in the viewport at x, y on the back layer; returns its number at once, 0 for a viewport off the 16-pixel steps or beyond the screen
-    void     stopMovie();                                    // stops the movie; returns at once
-    bool     moviePlaying() const;                           // gets whether a movie plays
+    // sends the rectangle at x, y from pixels, RGB565 high byte first, and returns at once; calls
+    // sent from the interrupt once the last pixel is out; false for a rectangle off the 16-pixel
+    // steps, beyond the screen, or while one is on its way
+    bool send(uint16_t x, uint16_t y, uint16_t width, uint16_t height, const uint8_t* pixels, Sent sent);
 };
 ```

@@ -61,12 +61,12 @@ The card is of Class A1 or A2. It holds two games, `/games/a/` and `/games/b/`, 
 | `audio/ramp-chunks.wav` | the same samples behind extra chunks ahead of the data chunk |
 | `audio/full.wav` | a full-scale square wave |
 | `audio/sync.wav` | a click every second, as long as `video/sync.rgb` |
-| `video/loop.rgb` | a fullscreen movie in the [display's format](drivers/display.md#movies) |
+| `video/loop.rgb` | a fullscreen movie in the [video format](../../assets/media.md#videos) |
 | `video/viewport.rgb` | a movie for a viewport smaller than the screen, in the same format |
 | `video/sync.rgb` | a movie that flashes white every second |
 | `background.img` | a background picture in the [screen's format](components/screen.md#pictures) |
 | `short.img` | the same picture, cut off halfway through its pixels |
-| `icon.img` | a picture smaller than the screen with transparent pixels, converted together with `background.img` |
+| `icon.img` | a picture smaller than the screen with transparent pixels, in the same format |
 | `settings` | a small settings file one driver reads in its `begin()` |
 
 ## Core
@@ -118,6 +118,7 @@ The program `psram` checks the [PSRAM](../parts/psram/design.md) on the Teensy's
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `found` | Teensy | Read `external_psram_size`, which Teensyduino sets at start-up | It equals the [chip's size](../parts/psram/design.md#chip) in MB |
+| `card` | Teensy | Read `background.img` through the [storage driver](drivers/storage.md) into the PSRAM, once straight and once at an address off the 32-byte steps | Both copies equal the file |
 | `patterns` | Teensy | Write fixed patterns and a pseudo-random sequence into the whole PSRAM and read each back, as [PJRC's memory test](https://github.com/PaulStoffregen/teensy41_psram_memtest) does | Every byte reads back as written |
 
 ## Drivers
@@ -162,7 +163,6 @@ The program `file-channel` checks the [file channel](file-channel.md). Its compu
 | `skip` | computer | Take bytes with `to` set to `nullptr` | The bytes are skipped, and the next `take()` goes on behind them |
 | `nothing` | computer | Start a file the card does not hold, and leave another channel unstarted | `ended()` is true at once for both |
 | `high-first` | Teensy | Queue normal reads, then read through a channel of high priority | The channel's read ends before every normal read that had not started |
-| `wake` | Teensy | Read a file through a channel that names an interrupt | The interrupt fires once for every read that ends |
 
 ### Solenoids
 
@@ -307,17 +307,11 @@ The program `display` checks the [display driver](drivers/display.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `compose` | computer | Compose rows from every combination of the front, the middle and the back layer, each shown or hidden, opaque or partly opaque, with and without a movie, and from rows where no source has a pixel | Every pixel takes the color of the front-most layer in the [order](drivers/display.md#picture-composition) that has something there, blended in 32 steps with what lies behind where that color is partly opaque, with its high byte first |
 | `start` | bench | Start the Teensy from power-up, then restart it while the display is awake | The screen turns black both times, with no garbage and no white flash |
 | `restart` | bench | Disconnect the 5 V of J-DISP for half a second while a picture shows, then connect it again | The picture returns within two seconds, and the Teensy keeps running |
-| `picture` | bench | Show color bars, a ramp of every palette color and the words TOP LEFT in that corner | The colors are right, the ramp runs smoothly, and the words stand upright at the top left |
-| `layers` | bench | Draw an overlapping shape into each layer, play a movie behind them, then hide the front layer | The shapes lie over one another in the [order](drivers/display.md#picture-composition), index 0 shows what lies behind, and hiding the front layer changes nothing else |
-| `rows` | Teensy | Mark single rows and runs of rows as drawn, and draw into a row while it goes out | Exactly the marked rows go out, and the row drawn into goes out once more |
-| `refills` | Teensy | Send full screens for a minute while the main loop counts how often it runs, once opaque and once partly opaque on the front and the middle layer at every pixel | The refills take no more of the processor than the [estimates](drivers/display.md#performance--memory-usage), and the bus keeps its speed |
-| `frames` | Teensy | Play `loop.rgb` in a loop for ten minutes with a sound on every audio channel and a write to the card every second | Every frame starts on its tick, and no audio block plays silence for want of data |
-| `movie` | bench | Play `loop.rgb` once, then in a loop, with the music and an effect on every other channel | The movie runs without a stall, a single play ends with `MovieEnded`, and its rows then show the layers again |
-| `viewport` | bench | Play `viewport.rgb` in a viewport while the game's layer draws beside it and over it, then ask for a viewport off the 16-pixel steps | The movie fills only its viewport, the layers show beside it, and the game's layer stays in front. For the viewport off the steps, `play()` returns 0, no `MovieEnded` comes, and the movie playing goes on |
-| `missing-movie` | Teensy | Play a movie the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |
+| `picture` | bench | Send color bars, a ramp of every level of red, green and blue, and the words TOP LEFT in that corner | The colors are right, the ramps run smoothly, and the words stand upright at the top left |
+| `rectangles` | Teensy | Send rectangles of several sizes and places, then one off the 16-pixel steps, one beyond the screen and one while another is on its way | Each rectangle on the steps lands where it was sent, the function handed in runs once after its last pixel, and the three others are refused |
+| `refills` | Teensy | Send full screens for a minute while the main loop counts how often it runs | The refills take no more of the processor than the [estimate](drivers/display.md#performance--memory-usage), and the bus keeps its speed |
 
 ### Touch
 
@@ -390,30 +384,35 @@ The program `sounds` checks the [sounds component](components/sounds.md) on a fa
 
 ### Screen
 
-The program `screen` checks the [screen component](components/screen.md).
+The program `screen` checks the [screen component](components/screen.md). Its computer tests run LVGL with a fake display driver.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `show` | computer | Draw into some rows, call `show()`, then set a color with `palette()` | Each `show()` hands the driver exactly the rows drawn since the one before, and `palette()` marks every row |
-| `newer-load` | computer | Load a picture and, before it lands, another | Only the second shows |
-| `busy-layer` | computer | Draw into a layer while a picture loads into it | The drawing has no effect |
-| `gestures` | computer | Feed touch events of short and long touches, still and moving, onto a modal layer, onto a control and onto no control | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the layer that took a touch keeps it until the finger leaves, each tap and hold reaches the game only when no layer took the touch, and `takeGesture()` gives the host every gesture once |
-| `movie-end` | computer | Let an older movie end, then the one last started | Only the end of the one last started gives `MovieEnded` |
-| `hide-layer` | computer | Hide the game's layer, draw into it, show it again, then hide it and start a new game | The drawing shows once the layer is shown, and the new game starts with its layer shown |
-| `load` | Teensy | Load `background.img`, `short.img` and `icon.img` | `loading()` is true until `update()` shows each full-screen picture in its own colors, the rest of the short one stays at 0, and `icon.img` leaves the layer empty |
-| `picture` | Teensy | Take the colors of `icon.img` with `colors()`, load it into a `Picture` with room for it and into one with too little, then draw both partly off the layer over a drawing | The first shows in its own colors, cut off at the edge, with the drawing still visible through its transparent pixels, and the second draws nothing |
-| `nearest` | computer | Set opaque and partly opaque colors with `palette()`, then ask `nearest()` for colors near them | It gets the closest opaque color, and 0 for a layer without one |
+| `widen` | computer | Change objects that start and end at every column | Every rectangle the driver gets spans whole rows and covers the change |
+| `gestures` | computer | Feed touch events of short and long touches, still and moving, onto a modal object, onto a button, onto no object and from beside a button onto it | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the button gets the touch that comes down on it and none that slides onto it, each tap and hold reaches the game only when no object took the touch, and `takeGesture()` gives the host every gesture once |
+| `hide-layer` | computer | Hide the game's layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its layer shown |
+| `load` | Teensy | Load `background.img`, `short.img`, `icon.img` and a picture the card does not hold | `loading()` is true until each has loaded, the background and the icon show, and the short and the missing one make `failed()` true |
+| `memory` | computer | Load a full-screen picture and smaller ones, release the full-screen one, reserve memory for a full-screen frame, then load until the memory is full | The frame gets the memory the full-screen picture freed, and a picture that finds the memory full makes `failed()` true |
+| `show` | Teensy | Show `icon.img` in three images, delete the parent of one, then release the picture | The images show the same pixels, the other two stay when one is deleted, and `release()` deletes them |
+| `layers` | bench | Create an object on the host's layer, a message box and an object on the game's layer, and an object on the background over `background.img`, then play a video there | The objects lie over one another in the [order of the layers](components/screen.md#layers), the message box between the host's layer and the game's, the video in front of the background's objects, and the picture behind them |
+| `reset` | computer | Switch games while a picture and a frame of the stopped game still load | Every object and image of the stopped game is gone, and the new game starts only once both have loaded and the picture memory is empty |
+| `redraw` | Teensy | Change the whole screen in every refresh, once without a video and once beside a full-screen video, while the main loop measures its passes | No pass [waits](components/screen.md#drawing) for the driver, and the longest pass is the time LVGL renders |
 
 ### Video player
 
-The program `video-player` checks the [video player](components/video-player.md) on a fake display and fake sounds.
+The program `video-player` checks the [video player](components/video-player.md). Its computer tests run LVGL with a fake display driver, a fake card and fake sounds.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `play` | computer | Play a name with and without `sound` | The display gets `video/<name>.rgb` in the viewport, and with `sound` the sounds get `audio/<name>.wav` as an interlude in the same call |
-| `movie-ends` | computer | Let the movie end while its sound still plays | `translate()` ends the sound, and the music goes on |
-| `stop` | computer | Stop a movie and its sound | Both stop, and the music goes on |
-| `bad-viewport` | computer | Play a name in a viewport off the 16-pixel steps while another video plays | `play()` returns false, neither the display nor the sounds get a call, and the video playing goes on |
+| `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, and with `sound` the sounds get `audio/<name>.wav` as an interlude in the same call |
+| `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MovieEnded` with the video's number passes through the event queue to the game |
+| `stop` | computer | Stop a video and its sound | Both stop, the music goes on, and the memory of the frame is free again |
+| `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on |
+| `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
+| `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
+| `frames` | Teensy | Play `loop.rgb` in a loop for ten minutes with a sound on every audio channel and a write to the card every second | Every frame is on the screen within its 40 ms, and no audio block plays silence for want of data |
+| `viewport` | bench | Play `viewport.rgb` in a viewport beside a full-screen picture while the game draws beside it and over it | The video fills only its viewport, the picture shows around it, and the game's objects stay in front |
+| `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |
 
 ## Main program
@@ -462,13 +461,13 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `lifecycle` | computer | Run a test game whose `done()` turns true in each phase | The host calls `start()`, `play()`, `end()` and `stop()` in the order of the [lifecycle](game-abstraction.md#game-lifecycle), and starts the game anew after its post-game phase |
 | `stopped` | computer | Dispatch events and update while no game runs | No game gets a call |
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
-| `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the display's `restart()` |
+| `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
-| `launch` | computer | Launch game b while a picture of game a still lands | Game a stops, the id of b is written, and b starts only once the screen has settled |
+| `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, the id of b is written, and b starts only once the screen has settled |
 | `last-game` | Teensy | Start game b, then restart | Game b starts again |
 | `first-start` | Teensy | Start with no record of a last game | The first game of the list starts |
 | `saved-data` | Teensy | Let a test game write a file in `end()`, restart, and let it read the file in `start()` | The game reads what it wrote |
-| `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole and in its own colors, and no picture of the stopped game stays on the screen |
+| `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole, and no picture of the stopped game stays on the screen |
 | `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game's layer reappears with every change drawn meanwhile |
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |
 | `setting` | bench | Change a setting in the menu, change it again at once, then restart | No save starts while one is written, and after the restart the value saved last stands |

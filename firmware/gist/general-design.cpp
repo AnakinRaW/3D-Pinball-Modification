@@ -41,7 +41,7 @@ Lamps            lamps{lighting};        // the lamps in fixed groups and their 
 FileSystem       files{storage};         // the files of the games, the host, the logger, the sounds and the screen
 Sounds           sounds{audio, files};   // the running game's sounds
 Screen           screen{display, touch}; // the game's layer and background, and the host's layer
-VideoPlayer      videoPlayer{display, files, sounds};   // the videos on the background, with their sound
+VideoPlayer      videoPlayer{screen, files, sounds};    // the videos on the background, with their sound
 Logger           logger{files};          // the machine's log on the card
 // other game components
 
@@ -126,6 +126,9 @@ static void machineTask(void*) {
 
     // other drivers...
 
+    screen.begin();                         // LVGL, after the display driver it sends through
+    videoPlayer.begin();                    // its queue for MovieEnded
+
     // every component, so the host routes its parts' driver events through it
     host.add(topLanes);
     host.add(sounds);
@@ -146,7 +149,7 @@ static void machineTask(void*) {
         const uint32_t now = nowUs();
         host.update(now);
         logger.update(now);                 // writes the collected log lines once a second
-        screen.update();                    // shows a picture once it has landed
+        screen.update();                    // lands pictures and runs LVGL: the video player's timer and the redraw
         lamps.update(now);                  // advances every lamp's effect and hands on a frame once its period has passed
         yield();                            // serial events and EventResponder, which no Arduino loop() runs under FreeRTOS
 
