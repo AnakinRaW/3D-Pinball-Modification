@@ -104,16 +104,12 @@ public:
 
 private:
     friend class Storage;
-    template <uint8_t> friend class FileChannel;   // the one caller that sets a priority or an interrupt
+    template <uint8_t> friend class FileChannel;   // the one caller that sets a priority
 
-    // a file channel's request of priority, which raises the interrupt wake whenever it ends when
-    // wakes is set
-    FileRequest(Storage::Priority priority, bool wakes, IRQ_NUMBER_t wake)
-        : priority_(priority), wakes_(wakes), wake_(wake) {}
+    // a file channel's request of priority
+    explicit FileRequest(Storage::Priority priority) : priority_(priority) {}
 
     const Storage::Priority priority_ = Storage::Priority::Normal;
-    const bool          wakes_ = false;
-    const IRQ_NUMBER_t  wake_  = IRQ_NUMBER_t(0);
     FileRequest*        next_  = nullptr;    // the request behind it in its list
     char                path_[Storage::kPath];   // a copy of its file's path
     Storage::Kind       kind_;
@@ -419,16 +415,16 @@ bool Storage::recover() {
     return volume_.begin(&counted_);
 }
 
-// gets whether p lies in RAM2 or another memory the cache serves; RAM1 has no cache
+// gets whether p lies in RAM2, the PSRAM or another memory the cache serves; RAM1 has no cache
 static bool cached(const void* p) {
     return (uint32_t)p - 0x20000000u >= 0x80000u;   // RAM1 is the 512 KB from 0x20000000
 }
 
-// reads r through SdFat. A buffer in RAM2 takes the data straight when it starts on a 32-byte
-// boundary, the read starts at a sector of the file and its size is a multiple of 32; the cache
-// over the buffer is cleaned and invalidated before the read and after it, which drops what the
-// cache fetched meanwhile and keeps what SdFat copied. Every other read into RAM2 goes through
-// bounce_, kBounce bytes at a time
+// reads r through SdFat. A buffer the cache serves takes the data straight when it starts on a
+// 32-byte boundary, the read starts at a sector of the file and its size is a multiple of 32; the
+// cache over the buffer is cleaned and invalidated before the read and after it, which drops what
+// the cache fetched meanwhile and keeps what SdFat copied. Every other read into such a buffer
+// goes through bounce_, kBounce bytes at a time
 bool Storage::readAll(FileRequest& r, OpenFile& f) {
     FsFile& sd = f.sd;
     if (r.at_ >= sd.fileSize()) return true;        // at the end of the file or past it: 0 bytes
@@ -455,7 +451,7 @@ bool Storage::readAll(FileRequest& r, OpenFile& f) {
 }
 
 // writes r through SdFat in one call: a rewrite starts at 0 and has SdFat cut the file behind its
-// data. Data in RAM2 is cleaned out of the cache first, since SdFat's DMA reads the memory. SdFat
+// data. Data the cache serves is cleaned out of it first, since SdFat's DMA reads the memory. SdFat
 // then writes its cache and the file's entry to the card
 bool Storage::writeAll(FileRequest& r, OpenFile& f) {
     const uint8_t* data = r.buffer_;
@@ -467,11 +463,9 @@ bool Storage::writeAll(FileRequest& r, OpenFile& f) {
     return r.kind_ == Rewrite ? sd.truncate() : sd.sync();   // truncate() cuts at the position and syncs as well
 }
 
-// ends a request: takes it out of its list, reports to it and raises its interrupt. The request
-// belongs to its caller again once its status shows the end, so nothing touches it after
+// ends a request: takes it out of its list and reports to it. The request belongs to its caller
+// again once its status shows the end, so nothing touches it after
 void Storage::end(FileRequest& r, bool worked, OpenFile* f) {
-    const bool         wakes = r.wakes_;
-    const IRQ_NUMBER_t wake  = r.wake_;
     if (f) f->used = nowUs();
     r.fileSize_ = f ? f->sd.fileSize() : 0;         // 0 after a card error
     if (!worked) r.bytes_ = 0;
@@ -482,7 +476,6 @@ void Storage::end(FileRequest& r, bool worked, OpenFile* f) {
     asm volatile("dmb" ::: "memory");               // the results are in before the status shows the end
     r.status_ = worked && !r.dropped_ ? FileStatus::Succeeded : FileStatus::Failed;
     taskEXIT_CRITICAL_FROM_ISR(s);
-    if (wakes) NVIC_SET_PENDING(wake);
 }
 
 // after a card error: keeps its code, counts it and recovers. The third in a row, or a file system
@@ -550,7 +543,6 @@ void Storage::start(FileRequest& r, const FileReader& f, Kind kind, uint32_t at,
     r.dropped_  = false;
     if (!f.path_[0] || !storageTask_ || !mayCall()) {
         r.status_ = FileStatus::Failed;
-        if (r.wakes_) NVIC_SET_PENDING(r.wake_);    // the end of a request raises its interrupt, also this one
         return;
     }
     r.status_ = FileStatus::Pending;

@@ -80,7 +80,7 @@ private:
     void  prepare(Game* next);       // sets audio, display and lighting up for next
     Game* lastGame();                // gets the game that ran last from a file outside the games' directories, or the default game
     void  saveLastGame(Game* next);  // writes the id of next, which lastGame() reads at the next start-up
-    void  start();                   // starts the game launch() chose, once the screen has cleared the stopped game's layers
+    void  start();                   // starts the game launch() chose, once the screen has cleared the stopped game's objects and pictures
     bool  service(const DriverEvent& in, PinballEvent& out);   // copies a service's event into the pinball event of the same name; false for any other
 
     Machine* machine_ = nullptr;
@@ -107,7 +107,7 @@ void GameHost::dispatch(const DriverEvent& e) {
     if (e.type == DriverEventType::DeviceFailed)    { failed_.set(faultDevice(e.source), faultPart(e.source), e.payload); return; }     // the list the menu shows; no game sees it
     if (e.type == DriverEventType::DeviceRecovered) {
         failed_.clear(faultDevice(e.source), faultPart(e.source));
-        if (faultDevice(e.source) == Device::Touch) display.restart();   // the module's supervisor reset the panel with the touch controller
+        if (faultDevice(e.source) == Device::Touch) machine_->screen.restart();   // the module's supervisor reset the panel with the touch controller
         return;
     }
     PinballEvents t;
@@ -158,7 +158,7 @@ void GameHost::launch(Game* next) {
     phase_ = Stopped;
     machine_->files.use(next->id());        // makes next the running one
     machine_->sounds.reset();               // the stopped game's sounds end with it
-    machine_->screen.reset();               // and its layer and background
+    machine_->screen.reset();               // and its objects and pictures
     machine_->videoPlayer.reset();          // and its video
     saveLastGame(next);                     // 2. the id of next
     prepare(next);                          // 3. audio, display and lighting

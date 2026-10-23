@@ -65,7 +65,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | I²C buses, running every transfer on Wire and Wire2 | LPI2C1 and LPI2C4 | none, a late start only delays the next transfer | no | 160 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
-| Display, refilling its bus | FlexIO3 | none, a late refill only pauses the bus | yes | 224 |
+| Display, sending a rectangle | FlexIO3 | none, a late refill only pauses the bus | no | 224 |
 | Storage, waking the storage task at the end of a transfer | the SD controller's interrupt | none, the storage task waits for it | yes | 240 |
 | FreeRTOS, its tick and its task switch | SysTick and PendSV | its next tick, 1 ms | yes | 240 |
 
@@ -120,5 +120,6 @@ inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 3. the storage driver's `begin()`, so later drivers can read their settings from the card;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
-6. the game host's `begin()`;
-7. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lamps, calls `yield()` and feeds the watchdog.
+6. the `begin()` of the screen, which starts LVGL, and of the video player;
+7. the game host's `begin()`;
+8. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lamps, calls `yield()` and feeds the watchdog. The screen runs the video player through LVGL.

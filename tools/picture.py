@@ -1,17 +1,14 @@
-"""Turns the PNGs of one layer, each at most 320 x 240 pixels, into picture files for the screen component.
+"""Turns PNGs of at most 320 x 240 pixels into picture files for the screen component.
 
-The PNGs are converted together as one set and share one palette of 255 entries of
-color and opacity, which every file of the set holds. A file starts with 256 palette
-entries, as docs/firmware/components/screen.md describes. An entry is four bytes: the
-color in RGB565, high byte first, its opacity from 0 to 255, and an unused byte.
-Entry 0 holds the width and the height instead, each high byte first, since index 0
-stays transparent. Then come the pixels row by row from the top left, one byte each
-with the pixel's palette index. A pixel below the first of the display's 32 opacity steps becomes index 0.
-Each --color puts an opaque color into the palette as it is, such as the color of a
-text. Floyd-Steinberg dithering spreads the error of every pixel onto its neighbors,
-so a picture with more colors keeps its look. Each file lands beside its PNG.
+A picture file is in LVGL's image format, as docs/firmware/components/screen.md describes:
+a header of 12 bytes, then the pixels row by row in RGB565. An opaque picture holds each
+pixel high byte first, LVGL's RGB565_SWAPPED, which the display takes as it is, so LVGL
+copies it without converting a pixel. A picture with transparent pixels, of any size,
+is RGB565A8: its colors low byte first, then an alpha byte for each pixel.
+Floyd-Steinberg dithering spreads the error of every pixel onto its neighbors, so a
+gradient keeps its look in RGB565. Each file lands beside its PNG.
 
-    python tools/picture.py [--color ffffff ...] table.png lamp.png ...
+    python tools/picture.py background.png lamp.png ...
 """
 import pathlib
 import struct
@@ -19,8 +16,9 @@ import sys
 import zlib
 
 WIDTH, HEIGHT = 320, 240
-COLORS = 255                      # index 0 is transparent
 CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}   # PNG color type -> samples per pixel
+MAGIC = 0x19                       # LV_IMAGE_HEADER_MAGIC in LVGL's lv_image_dsc.h
+RGB565A8, RGB565_SWAPPED = 0x14, 0x1B   # lv_color_format_t in LVGL's lv_color.h
 
 
 def read_png(path: pathlib.Path):
@@ -84,136 +82,56 @@ def read_png(path: pathlib.Path):
     return width, height, rows
 
 
-def rgb565(c) -> int:
-    return (c[0] >> 3) << 11 | (c[1] >> 2) << 5 | c[2] >> 3
-
-
 def expand(v: int):
     """The color an RGB565 value shows, back in 8 bits a channel."""
     r, g, b = v >> 11, (v >> 5) & 0x3F, v & 0x1F
     return (r << 3 | r >> 2, g << 2 | g >> 4, b << 3 | b >> 2)
 
 
-def step(a: int) -> int:
-    """The display's opacity step, 0 to 31, of an 8-bit opacity."""
-    return a >> 3
-
-
-def shown(entry):
-    """What the display makes of an entry (RGB565, step), in 8 bits a channel."""
-    v, s = entry
-    return expand(v) + (s << 3 | s >> 2,)
-
-
-def median_cut(counts: dict, n: int) -> list:
-    """Up to n colors, each the weighted mean of one box the colors were cut into."""
-    dims = range(len(next(iter(counts))))
-    def box(entries):
-        lo = [min(c[k] for c, _ in entries) for k in dims]
-        hi = [max(c[k] for c, _ in entries) for k in dims]
-        axis = max(dims, key=lambda k: hi[k] - lo[k])
-        return hi[axis] - lo[axis], axis, entries
-
-    boxes = [box(list(counts.items()))]
-    while len(boxes) < n:
-        wide = [b for b in boxes if len(b[2]) > 1]
-        if not wide:
-            break
-        widest = max(wide, key=lambda b: b[0])
-        boxes.remove(widest)
-        _, axis, entries = widest
-        entries.sort(key=lambda e: e[0][axis])
-        half, seen = sum(w for _, w in entries) / 2, 0
-        for cut, (_, w) in enumerate(entries):             # the weighted median
-            seen += w
-            if seen >= half:
-                break
-        cut = min(cut, len(entries) - 2) + 1
-        boxes += [box(entries[:cut]), box(entries[cut:])]
-    out = []
-    for _, _, entries in boxes:
-        total = sum(w for _, w in entries)
-        out.append(tuple(round(sum(c[k] * w for c, w in entries) / total) for k in dims))
-    return out
-
-
-def palette(pictures: list, forced: list) -> list:
-    """One palette for every picture of the set, as entries (RGB565, step), the forced colors among them."""
-    fixed = sorted({(rgb565(c), step(255)) for c in forced})
-    counts = {}
-    for _, _, rows in pictures:
-        for row in rows:
-            for p in row:
-                if step(p[3]) > 0:
-                    c = shown((rgb565(p), step(p[3])))     # what the display can tell apart
-                    counts[c] = counts.get(c, 0) + 1
-    room = COLORS - len(fixed)
-    picked = {(rgb565(c), max(1, step(c[3]))) for c in median_cut(counts, room)} if counts and room else set()
-    return fixed + sorted(picked - set(fixed))
-
-
-def convert(src: pathlib.Path, picture, entries: list):
-    width, height, rows = picture
-    looks = [shown(e) for e in entries]
-    visible = [[step(p[3]) > 0 for p in row] for row in rows]
-
-    nearest = {}
-    def pick(r, g, b, a):
-        key = (r >> 3, g >> 2, b >> 3, a >> 3)
-        if key not in nearest:
-            nearest[key] = min(range(len(looks)), key=lambda i: (looks[i][0] - r) ** 2 * 2
-                               + (looks[i][1] - g) ** 2 * 4 + (looks[i][2] - b) ** 2 * 3
-                               + (looks[i][3] - a) ** 2 * 3)
-        return nearest[key]
-
-    work = [[list(p) for p in row] for row in rows]
-    index = bytearray(width * height)
+def dither(width: int, height: int, rows: list):
+    """The RGB565 value and the opacity of every pixel, dithered after Floyd-Steinberg."""
+    work = [[[float(v) for v in p] for p in row] for row in rows]
+    colors, alphas = [], []
     for y in range(height):
         for x in range(width):
-            if not visible[y][x]:
-                continue                                   # stays 0, transparent
             r, g, b, a = (min(255, max(0, round(v))) for v in work[y][x])
-            i = pick(r, g, b, a)
-            index[y * width + x] = i + 1
-            err = (r - looks[i][0], g - looks[i][1], b - looks[i][2], a - looks[i][3])
+            v = (r >> 3) << 11 | (g >> 2) << 5 | b >> 3
+            colors.append(v)
+            alphas.append(a)
+            if a == 0:
+                continue                               # a hidden pixel passes no error on
+            shown = expand(v)
+            err = (r - shown[0], g - shown[1], b - shown[2])
             for dx, dy, part in ((1, 0, 7), (-1, 1, 3), (0, 1, 5), (1, 1, 1)):
                 nx, ny = x + dx, y + dy
-                if 0 <= nx < width and ny < height and visible[ny][nx]:
-                    for k in range(4):
+                if 0 <= nx < width and ny < height and work[ny][nx][3] > 0:
+                    for k in range(3):
                         work[ny][nx][k] += err[k] * part / 16
+    return colors, alphas
 
-    table = entries + [(0, 0)] * (COLORS - len(entries))
-    out = struct.pack(">HH", width, height) + b"".join(struct.pack(">HBB", v, s << 3 | s >> 2, 0) for v, s in table)
+
+def convert(src: pathlib.Path):
+    width, height, rows = read_png(src)
+    if not (0 < width <= WIDTH and 0 < height <= HEIGHT):
+        sys.exit(f"{src} is {width} x {height}, a picture is at most {WIDTH} x {HEIGHT}")
+    colors, alphas = dither(width, height, rows)
+    alpha = any(a < 255 for a in alphas)
+    stride = width * 2
+    header = struct.pack("<BBHHHHH", MAGIC, RGB565A8 if alpha else RGB565_SWAPPED, 0, width, height, stride, 0)
+    if alpha:
+        body = struct.pack(f"<{len(colors)}H", *colors) + bytes(alphas)
+    else:
+        body = struct.pack(f">{len(colors)}H", *colors)
     dst = src.with_suffix(".img")
-    dst.write_bytes(out + bytes(index))
-    print(f"{dst}: {width} x {height}, {sum(1 for v in index if v == 0)} transparent pixels")
+    dst.write_bytes(header + body)
+    print(f"{dst}: {width} x {height}, {len(header + body)} bytes" + (", with opacity" if alpha else ""))
 
 
 def main(args: list):
-    forced, sources = [], []
-    while args:
-        a = args.pop(0)
-        if a == "--color":
-            if not args or len(args[0]) != 6:
-                sys.exit("--color takes a color as six hex digits, such as ffffff")
-            v = int(args.pop(0), 16)
-            forced.append((v >> 16, v >> 8 & 0xFF, v & 0xFF, 255))
-        else:
-            sources.append(pathlib.Path(a))
-    if not sources:
+    if not args:
         sys.exit(__doc__.strip().splitlines()[-1].strip())
-    if len(forced) > COLORS:
-        sys.exit(f"a palette holds {COLORS} colors")
-    pictures = []
-    for src in sources:
-        width, height, rows = read_png(src)
-        if not (0 < width <= WIDTH and 0 < height <= HEIGHT):
-            sys.exit(f"{src} is {width} x {height}, a picture is at most {WIDTH} x {HEIGHT}")
-        pictures.append((width, height, rows))
-    entries = palette(pictures, forced)
-    print(f"{len(entries)} palette entries for {len(sources)} pictures")
-    for src, picture in zip(sources, pictures):
-        convert(src, picture, entries)
+    for a in args:
+        convert(pathlib.Path(a))
 
 
 if __name__ == "__main__":

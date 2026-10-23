@@ -10,7 +10,6 @@ MODEL = Model.at(__file__, "display",
                             "../../firmware/components/video-player.md", "../../../assets/media.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.names("R13", "R14", why="the display module's own pull-ups on the touch lines")
-MODEL.aside("255", "the largest value a byte holds, which a palette entry's opacity takes for opaque")
 MODEL.names("D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", why="the data lines of the display bus")
 
 PANEL = "ILI9341-Ilitek.pdf"
@@ -102,28 +101,21 @@ with MODEL.block("LEVELS", section=BUS):
     fig("m_high", "V", "v_oh_min - vih_buf", "down", moves="+v_3v3_min -v_oh_drop -vih_buf")
     fig("m_low", "V", "vil_buf - v_ol_max", "down", moves="+vil_buf -v_ol_max")
 
-# -- the frame: three layers of palette indices and a movie, composited as they are sent
+# -- the frame: the rectangles LVGL draws in RGB565, sent as they come ------------
 with MODEL.block("FRAME", section=FRAME):
     ds("n_cols", 320, "", sheet=PANEL, src="the panel's 320 lines, which the landscape mounting "
        "makes its width; 240RGB x 320 in the title")
     ds("n_rows", 240, "", sheet=PANEL, src="the panel's 240 columns, the height in landscape")
     ds("b_pixel", 2, "bytes", sheet=PANEL, src="8-bit bus, 16 bits per pixel in RGB 5-6-5, two "
        "writes per pixel, p. 65")
-    dec("b_index", 1, "bytes", src="one palette index per pixel in a layer, 256 colors",
-        stated=False)
-    dec("n_layers", 3, "", src="the game's layer, the host's layer and the game's background",
-        stated=False)
-    dec("n_colors", 256, "", src="the colors of a layer's palette, every value of its byte, index "
-        "0 transparent", stated=False)
     ds("n_shifters", 8, "", src=f"{RM}, 50.6.1.3.3: FlexIO3 has eight shifters, chained into one "
        "buffer of a burst", stated=False)
     ds("b_shifter", 4, "bytes", src=f"{RM}: each shifter buffer holds 32 bits, four writes of "
        "8 bits", stated=False)
     MODEL.uses("f_cpu", of="teensy-4.1")
-    asm("n_isr", 350, "clocks", src="the processor clocks one refill takes: 16 pixels looked up in "
-        "two layers and in the movie or the background, eight writes to FlexIO3, whose registers "
-        "answer at its own clock, and the interrupt's entry and exit; an estimate, no measurement, "
-        "with the background's index and palette read for a pixel that falls through to it")
+    asm("n_isr", 150, "clocks", src="the processor clocks one refill takes: eight words read from "
+        "LVGL's buffer in RAM2, one cache line, eight writes to FlexIO3, whose registers answer at its own clock, and the "
+        "interrupt's entry and exit; an estimate, no measurement")
     fig("b_frame", "KB", "n_cols * n_rows * b_pixel", moves="+n_cols +n_rows +b_pixel")
     fig("t_frame_bus", "ms", "b_frame * t_wr", "up",
         moves="+n_cols +n_rows +b_pixel +n_div -f_flexio")
@@ -132,8 +124,8 @@ with MODEL.block("FRAME", section=FRAME):
     fig("n_burst_px", "", "n_burst / b_pixel", moves="+n_shifters +b_shifter -b_pixel",
         stated=False)
 
-    # a movie's viewport: its left edge and its width move in whole bursts, so no burst straddles its edge
-    fig("n_viewport_step", "", "n_burst_px", moves="+n_shifters +b_shifter -b_pixel", stated=False)
+    # a rectangle's left edge and its width move in whole bursts, so a row is whole bursts
+    fig("n_rect_step", "", "n_burst_px", moves="+n_shifters +b_shifter -b_pixel", stated=False)
     fig("t_burst", "µs", "n_burst * t_wr", moves="+n_shifters +b_shifter +n_div -f_flexio")
     dec("t_end_wait", 3, "µs", src="how long the FlexIO3 interrupt waits after the last burst of a "
         "run has started before it ends the run, a decision: one burst and a reserve for the "
@@ -143,44 +135,39 @@ with MODEL.block("FRAME", section=FRAME):
 
     fig("cpu_send", "%", "n_isr / (t_burst * f_cpu)", "up",
         moves="+n_isr +f_flexio -n_div -f_cpu -n_shifters")
-
-    # partly opaque colors: a palette entry carries an opacity, and the refill blends such a pixel
-    # with the color behind it
-    dec("n_alpha", 32, "", src="the opacity steps a palette entry holds, five bits, the steps the "
-        "RGB565 blend multiplies in", stated=False)
-    asm("n_blend", 20, "clocks", src="the processor clocks one refill adds to blend one pixel of a "
-        "partly opaque layer with the color behind it: the opacity test, the lookup of the layer "
-        "behind, the RGB565 blend in 32 steps and the branch misses where opaque and partly opaque "
-        "pixels alternate; an estimate from the instruction count, no measurement")
-    dec("n_blend_layers", 2, "", src="the layers that blend at one pixel at most, the front and "
-        "the middle layer; the back layer's opacity is folded into its palette color when it is "
-        "set, since only black lies behind it", stated=False)
-    fig("n_isr_blend", "clocks", "n_isr + n_burst_px * n_blend_layers * n_blend",
-        moves="+n_isr +n_blend +n_blend_layers +n_shifters -b_pixel")
-    fig("n_isr_budget", "clocks", "t_burst * f_cpu", moves="+f_cpu +n_div +n_shifters -f_flexio")
-    fig("cpu_send_blend", "%", "n_isr_blend / n_isr_budget", "up",
-        moves="+n_isr +n_blend +n_blend_layers +f_flexio -n_div -f_cpu")
-    fig("b_layer", "KB", "n_cols * n_rows * b_index", moves="+n_cols +n_rows +b_index")
-
-# -- the movie: RGB565 frames from the card, read in chunks into a ring -------
-with MODEL.block("MOVIE", section=MOVIE):
-    dec("f_movie", 25, "Hz", src="the frame rate of every movie, a whole number of the display's "
-        "ticks per frame")
-    dec("t_dtick", 40, "ms", src="the period the display driver attaches to the driver tick, one "
-        "tick for each of the movie's frames")
-    dec("ring", 64, "KB", src="the movie's ring buffer in RAM2, four chunks, which the card fills "
-        "between two runs, so a run starts with the ring full")
-    dec("movie_chunk", 16, "KB", src="what the movie's file channel reads from the card at a time, "
-        "kChunk in docs/firmware/drivers/display.md; four of the audio's chunks, so a frame takes "
-        "a quarter of the reads")
-    MODEL.as_written("movie_chunk_bytes", of="movie_chunk", unit="bytes")
-    MODEL.uses("chunk", of="audio", stated=False)
+    fig("n_isr_budget", "clocks", "t_burst * f_cpu", moves="+f_cpu +n_div +n_shifters -f_flexio",
+        stated=False)
+    dec("t_dtick", 40, "ms", src="the period the display driver attaches to the driver tick, which "
+        "raises its interrupt while a step of a restart waits")
     MODEL.uses("t_tick", of="firmware", stated=False)
     MODEL.as_written("t_dtick_us", of="t_dtick", unit="µs")
 
+# -- LVGL: two buffers of the whole screen, and the screen's picture memory -----
+# LVGL draws into one buffer while the driver sends the other; a refresh waits for the driver only
+# while the last picture is still on the bus
+with MODEL.block("LVGL", section=FRAME):
+    dec("n_draw_bufs", 2, "", src="LVGL's buffers in its direct mode, so it draws the next picture "
+        "while the driver sends the last", stated=False)
+    fig("b_draw", "KB", "n_cols * n_rows * b_pixel * n_draw_bufs",
+        moves="+n_cols +n_rows +b_pixel +n_draw_bufs")
+    dec("t_refr", 33, "ms", src="LV_DEF_REFR_PERIOD in firmware/gist/lv_conf.h, the period of LVGL's "
+        "display refresh, LVGL's default kept")
+
+    # the screen's picture memory takes the whole PSRAM; every frame and picture lies in it
+    MODEL.uses("psram_size", of="psram", stated=False)
+    fig("b_pictures", "MB", "psram_size", moves="+psram_size")
+    fig("n_full_pictures", "", "b_pictures / b_frame", "down",
+        moves="+psram_size -n_cols -n_rows -b_pixel")
+
+# -- the movie: RGB565 frames from the card, each read whole into its room in the picture memory
+with MODEL.block("MOVIE", section=MOVIE):
+    dec("f_movie", 25, "Hz", src="the frame rate of every movie")
+    dec("movie_chunk", 16, "KB", src="the piece of a frame the estimate charges one card access "
+        "for, four of the audio's chunks; the video player reads a frame in one request, which the "
+        "estimate counts as one access for every 16 KB")
+    MODEL.uses("chunk", of="audio", stated=False)
+
     fig("t_movie", "ms", "1 / f_movie", moves="-f_movie")
-    fig("n_frame_ticks", "", "t_movie / t_dtick", moves="-f_movie -t_dtick", stated=False)
-    fig("n_ring", "", "ring / movie_chunk", moves="+ring -movie_chunk", stated=False)
     fig("n_frame_chunks", "", "b_frame / movie_chunk",
         moves="+n_cols +n_rows +b_pixel -movie_chunk")
 
@@ -198,6 +185,7 @@ with MODEL.block("CARD", section=MOVIE):
     MODEL.uses("n_streams", of="audio", stated=False)
     MODEL.uses("f_s", of="audio", stated=False)
     MODEL.uses("b_sample", of="audio", stated=False)
+    MODEL.uses("buf", of="audio", stated=False)
     fig("t_a1", "ms", "1 / f_a1", moves="-f_a1")
 
     # The A1 rate is measured on a faster bus; the whole chunk's time on the Teensy's
@@ -419,10 +407,8 @@ with MODEL.block("START", section=RESET):
 MODEL.as_written("t_panel_ready_ms", of="t_panel_ready", unit="ms")
 MODEL.as_written("t_touch_ready_ms", of="t_touch_ready", unit="ms")
 
-# -- RAM2: the three layers and the movie's ring ------------------------------
+# -- LVGL's buffers and heap lie in RAM1, the picture memory in the PSRAM ------
 MODEL.uses("ram2", of="teensy-4.1")
-fig("ram_display", "KB", "n_layers * b_layer + ring", "up", moves="+n_layers +n_cols +n_rows +ring",
-    group="FRAME", section=FRAME)
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
@@ -442,14 +428,14 @@ _I("an edge from a bus pin stays inside the transition rate the module's buffers
    "dt_dv <= dt_dv_max")
 _I("the Teensy's high clears the buffers' high input level", "v_oh_min > vih_buf")
 _I("the Teensy's low stays under the buffers' low input level", "v_ol_max < vil_buf")
-_I("a refill that blends two layers at every pixel still ends inside its burst, so the bus never "
-   "waits", "n_isr_blend < n_isr_budget")
+_I("a refill ends inside its burst, so the bus never waits", "n_isr < n_isr_budget")
+_I("a full screen leaves the bus before LVGL's next refresh, so a refresh never waits for the "
+   "driver", "t_frame_bus < t_refr")
 _I("a burst is a whole number of pixels", "n_burst_px.raw.is_integer()")
-_I("the fullscreen viewport is a whole number of viewport steps wide",
-   "(n_cols / n_viewport_step).raw.is_integer()")
+_I("the full screen is a whole number of rectangle steps wide",
+   "(n_cols / n_rect_step).raw.is_integer()")
 _I("a row is a whole number of bursts, so a job never ends inside a burst",
    "(n_cols * b_pixel / n_burst).raw.is_integer()")
-_I("a movie frame lasts a whole number of the display's ticks", "n_frame_ticks.raw.is_integer()")
 _I("the display's tick is a whole number of driver ticks, which attach() requires",
    "(t_dtick / t_tick).raw.is_integer()")
 _I("the touch driver's tick is a whole number of driver ticks, which attach() requires",
@@ -457,8 +443,10 @@ _I("the touch driver's tick is a whole number of driver ticks, which attach() re
 _I("TouchHeld comes after a whole number of the touch driver's ticks",
    "n_hold_ticks.raw.is_integer()")
 _I("a full frame on the bus fits inside a movie frame", "t_frame_bus < t_movie")
-_I("the ring holds a whole number of chunks, and more than one",
-   "n_ring.raw.is_integer() and n_ring.raw > 1")
+_I("sending a full-screen frame and reading the next, one after the other, fit inside a movie "
+   "frame", "t_card_frame + t_frame_bus < t_movie")
+_I("a full-screen frame or picture, read whole at normal priority, ends before an audio stream's "
+   "ring runs dry, so a sound never waits for it", "t_card_frame < buf / (f_s * b_sample)")
 _I("the card carries a full-screen movie and the four audio streams, by the estimate",
    "card_load.raw < 1")
 _I("and by the A1 class alone, which guarantees random reads of 4 KB", "card_load_a1.raw < 1")
@@ -553,7 +541,8 @@ MODEL.net("MOSI",
 MODEL.owns("FlexIO3", "the driver programs its shifters and its timer to clock the bus, "
                       "docs/firmware/drivers/display.md")
 MODEL.draws("i_conv_lv", pool=TEENSY_RAIL)   # the converter's LV pull-ups, fed from the Teensy's 3V3
-MODEL.draws("ram_display", pool="RAM2")
-MODEL.draws(pool="driver tick")      # the display driver: the movie's frames, every 40 ms
+MODEL.draws("b_pictures", pool="PSRAM")
+MODEL.draws("b_draw", pool="RAM2")
+MODEL.draws(pool="driver tick")      # the display driver: the steps of a restart, every 40 ms
 MODEL.draws(pool="driver tick")      # the touch driver: the touch read, every 20 ms
 MODEL.draws(pool="device monitor")   # the touch driver: the touch controller

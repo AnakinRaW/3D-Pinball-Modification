@@ -45,7 +45,7 @@ Between the Teensy and the module both lines pass an Adafruit 757, a converter w
 
 ### Reset
 
-After power-up, the module holds the panel and the touch controller in reset for up to 280 ms. Until then, both ignore every command. If the module's 3.3 V falls below 3 V during play, the module resets both again. The panel then comes back with its display off. The [display driver](../../firmware/drivers/display.md) then sets it up again and redraws the picture.
+After power-up, the module holds the panel and the touch controller in reset for up to 280 ms. Until then, both ignore every command. If the module's 3.3 V falls below 3 V during play, the module resets both again. The panel then comes back with its display off. The [display driver](../../firmware/drivers/display.md) then sets it up again. The [screen component](../../firmware/components/screen.md) redraws the picture.
 
 ### Supply
 
@@ -64,11 +64,9 @@ The module takes its 5 V from the power board's [J-DISP](../power/design.md#outp
 
 ## Firmware
 
-The firmware builds the picture from three layers that lie on top of each other. From the front, they are the host's layer, the game's layer and the background. A video plays in a viewport on the background.
+The [screen component](../../firmware/components/screen.md) draws the picture using LVGL, from three layers that lie on top of each other. From the front, they are the host's layer, the game's layer and the background. The [video player](../../firmware/components/video-player.md) plays a video in a viewport on the background.
 
-The [display driver](../../firmware/drivers/display.md) combines them into the picture it sends over FlexIO3. The [touch driver](../../firmware/drivers/touch.md) reads the touch panel.
-
-The [screen component](../../firmware/components/screen.md) manages the game's layer, the background and the host's layer. The [video player](../../firmware/components/video-player.md) plays the videos.
+The [display driver](../../firmware/drivers/display.md) sends what LVGL draws over FlexIO3. The [touch driver](../../firmware/drivers/touch.md) reads the touch panel.
 
 ## Limitations
 
@@ -132,23 +130,21 @@ FRAME     the panel in landscape, pixels across  = 320
           bytes                                  = 32 bytes
           that burst on the bus                  = 2.67 µs
           the processor's clock                    600 MHz
-          its clocks for one refill, estimated     350 clocks
-          its share while the bus sends          = 21.9 %
-          blending one partly opaque pixel,
-          estimated                                20 clocks
-          a refill that blends the front and the
-          middle layer at every pixel            = 990 clocks
+          its clocks for one refill, estimated     150 clocks
+          its share while the bus sends          = 9.4 %
           the clocks one burst gives a refill    = 1600 clocks
-          the share while the bus sends then     = 61.9 %
-          one layer, one index a pixel           = 75 KB
-          the three layers and the movie's ring in
-          RAM2                                   = 289 KB
+          the display's tick, which steps a
+          restart                                  40 ms
+LVGL      its two buffers of the whole screen in
+          RAM2                                   = 300 KB
+          its refresh period                       33 ms
+          the picture memory, the whole PSRAM    = 8 MB
+          the opaque full-screen pictures it
+          holds                                  = 54
 MOVIE     the frame rate of every movie            25 Hz
           one frame                              = 40 ms
-          the display's tick                       40 ms
           the chunk the card is read in            16 KB
           a full-screen frame, in chunks         = 9.4
-          the movie's ring in RAM2                 64 KB
 CARD      one 4 KB read, at an estimated 1500 a
           second                                 = 0.667 ms
           the SD bus's High Speed clock            50 MHz

@@ -172,7 +172,7 @@ dec("t_land", 100, "ms", src="kLandMs in docs/firmware/drivers/storage.md: the l
 MODEL.as_written("t_pause_ms", of="t_pause", unit="ms")
 MODEL.as_written("t_land_ms", of="t_land", unit="ms")
 MODEL.uses("prio_kernel", of="firmware")
-MODEL.uses("b_layer", of="display")
+MODEL.uses("t_movie", of="display")      # a video frame, which the video player tests in testing.md name
 
 # the end of the path takes one byte of kPath
 fig("n_path_chars", "", "n_path / Q.of(1, 'bytes') - 1", moves="+n_path", stated=False)
