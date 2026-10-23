@@ -1,180 +1,119 @@
-"""The figures of the rotary sensor on the seal rod, as inputs plus formulas.
+"""The figures of the rotary sensor on the seal rod, as inputs plus formulas."""
+from figcheck import *
 
-Run with:  python tools/figcheck.py docs/parts/magnetic-rotary/figures.py
-
-Every input names where it comes from. Every derived quantity is a function
-whose parameter names are its dependencies, so `--graph <key>` answers what a
-value feeds and what it rests on.
-"""
-import pathlib
-
-from figcheck import Model, Q, TEENSY_RAIL, drives, ln, pull, reads
-
-HERE = pathlib.Path(__file__).resolve().parent
-MODEL = Model("magnetic-rotary", HERE / "design.md", section=None, until="## Sources",
-              drawings=[HERE / "magnetic-rotary-schematic.svg", HERE / "magnetic-rotary-assembly.svg"],
-              documents=[HERE.parents[1] / "firmware" / "drivers" / "magnetic-rotary.md"])
-
-ds = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="datasheet", **kw)
-dec = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="decision", **kw)
-asm = lambda k, v, u, **kw: MODEL.input(k, v, u, kind="assumed", **kw)
-fig = MODEL.derived
+MODEL = Model.at(__file__, "magnetic-rotary",
+                 drawings=["magnetic-rotary-schematic.svg", "magnetic-rotary-assembly.svg"],
+                 documents=["../../firmware/drivers/magnetic-rotary.md",
+                            "../../firmware/components/rotating-seal.md"])
+fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.names("R4", "R5", why="the Grove module's own pull-ups on SDA and SCL")
 
 SENSOR = "AS5600-ams.pdf"
 BUS = "Bus"
 READ = "Read"
 SUPPLY = "Supply"
 
-# ===========================================================================
-# the bus
-# ===========================================================================
-dec("r_pu", 4.7, "kΩ", src="R4 and R5 on the Grove module, SDA and SCL to the module's VCC, "
-    "from Seeed's Eagle schematic of the 101020692; the weakest pull-up on the bus, the "
-    "Teensy's own being stronger in parallel", group="BUS", section=BUS, stated=True)
-MODEL.uses("r_pullup", of="teensy-4.1")
-dec("l_cable", 20, "cm", src="the cable from the motherboard to the module, at most 20 cm of "
-    "26 AWG jumper wire", group="BUS", section=BUS, stated=True)
-ds("c_cable_m", 42.98, "pF/m", src="each line of a 26 AWG cable to its neighbors: 3M TS-0342-E, "
-   "3770 series flat cable, 26 AWG on 0.050 inch, capacitance unbalanced, between a conductor "
-   "and its grounded neighbors on both sides, 13.1 pF/ft [42.98 pF/m]", group="BUS",
-   section=BUS, stated=True)
-ds("c_pin", 10, "pF", sheet="UM10204-NXP.pdf", src="UM10204 Rev. 7.0, Table 10: Ci, capacitance "
-   "for each I/O pin, maximum", group="BUS", section=BUS, stated=True)
-asm("c_module", 10, "pF", src="the Grove module's traces and connector between the cable and the "
-    "AS5600, taken generously; no measurement", group="BUS", section=BUS, stated=True)
-ds("vil_frac", 0.3, "", sheet=SENSOR, src="I²C electrical specification, logic low input "
-   "voltage VIL, maximum 0.3 x VDD", group="BUS", section=BUS, stated=True)
-ds("vih_frac", 0.7, "", sheet=SENSOR, src="I²C electrical specification, logic high input "
-   "voltage VIH, minimum 0.7 x VDD", group="BUS", section=BUS, stated=True)
-ds("t_r_std", 1000, "ns", sheet="UM10204-NXP.pdf", src="Table 10, rise time of both SDA "
-   "and SCL signals, Standard-mode, maximum; the specification the AS5600 datasheet names for "
-   "sizing the pull-up", group="BUS", section=BUS, stated=True)
+# -- the bus ------------------------------------------------------------------
+with MODEL.block("BUS", section=BUS):
+    dec("r_pu", 4.7, "kΩ", src="R4 and R5 on the Grove module, SDA and SCL to the module's VCC, "
+        "from Seeed's Eagle schematic of the 101020692; the weakest pull-up on the bus, the "
+        "Teensy's own being stronger in parallel")
+    MODEL.uses("r_pullup", of="teensy-4.1", stated=False)
+    dec("l_cable", 20, "cm", src="the cable from the motherboard to the module, at most 20 cm of "
+        "26 AWG jumper wire")
+    ds("c_cable_m", 42.98, "pF/m", src="each line of a 26 AWG cable to its neighbors: 3M "
+       "TS-0342-E, 3770 series flat cable, 26 AWG on 0.050 inch, capacitance unbalanced, between a "
+       "conductor and its grounded neighbors on both sides, 13.1 pF/ft [42.98 pF/m]")
+    ds("c_pin", 10, "pF", sheet="UM10204-NXP.pdf", src="UM10204 Rev. 7.0, Table 10: Ci, "
+       "capacitance for each I/O pin, maximum")
+    asm("c_module", 10, "pF", src="the Grove module's traces and connector between the cable and "
+        "the AS5600, taken generously; no measurement")
+    ds("vil_frac", 0.3, "", sheet=SENSOR, src="I²C electrical specification, logic low input "
+       "voltage VIL, maximum 0.3 x VDD")
+    ds("vih_frac", 0.7, "", sheet=SENSOR, src="I²C electrical specification, logic high input "
+       "voltage VIH, minimum 0.7 x VDD")
+    ds("t_r_std", 1000, "ns", sheet="UM10204-NXP.pdf", src="Table 10, rise time of both SDA and "
+       "SCL signals, Standard-mode, maximum; the specification the AS5600 datasheet names for "
+       "sizing the pull-up")
 
+    # Each bus line: the cable, the pins at its two ends, the Teensy's and the AS5600's, and
+    # the module.
+    dec("n_bus_pins", 2, "", src="the I²C pins each bus line joins, the Teensy's and the AS5600's", stated=False)
+    fig("c_bus", "pF", "l_cable * c_cable_m + n_bus_pins.raw * c_pin + c_module", "up",
+        moves="+l_cable +c_cable_m +c_pin +c_module +n_bus_pins")
 
-# Each bus line on the rotary sensor's side: the cable, the AS5600's pin and the module.
-@fig("c_bus", "pF", group="BUS", section=BUS, prints="up",
-     rises_with=["l_cable", "c_cable_m", "c_pin", "c_module"])
-def _(l_cable, c_cable_m, c_pin, c_module):
-    return l_cable * c_cable_m + c_pin + c_module
+    # The rising edge between the input thresholds, with the module's pull-up alone:
+    # the Teensy's own pull-up in parallel only makes it faster.
+    fig("t_r", "ns", "r_pu * c_bus * ln((1 - vil_frac) / (1 - vih_frac))", "up",
+        moves="+r_pu +l_cable +c_cable_m +c_pin +c_module +vih_frac -vil_frac")
 
+# -- the read -----------------------------------------------------------------
+with MODEL.block("READ", section=READ):
+    MODEL.uses("f_scl", of="firmware")
+    dec("n_bytes", 3, "", src="the bytes on the bus in one read: the address, and the two bytes of "
+        "RAW ANGLE, whose pointer the AS5600 keeps between reads", stated=False)
+    dec("n_bits_byte", 9, "bits", src="the clock periods one byte takes on the bus, eight data "
+        "bits and the acknowledge, UM10204")
+    MODEL.uses("t_tick", of="firmware")
+    ds("n_steps", 4096, "steps", sheet=SENSOR, src="the 12-bit resolution, 4096 positions per turn")
+    dec("n_bytes_ptr", 2, "", src="the bytes a library puts on the bus to set the register pointer "
+        "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends "
+        "them", stated=False)
+    dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, long "
+        "enough for its own recovery attempts and short enough for a game to react", stated=False)
+    MODEL.uses("t_monitor", of="firmware", stated=False)
+    MODEL.as_written("t_fail_ms", of="t_fail", unit="ms")
+    dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
+        "before the driver reports the rod still, an estimate that keeps a seal coasting out of a "
+        "spin from counting as stopped", stated=False)
+    dec("n_dead", 12, "steps", src="how far the position has to lie from the last published one "
+        "before the driver reports again, chosen at about one degree to ride out the rod's play "
+        "and the machine's vibration, which nothing in the repository measures", stated=False)
 
-# The rising edge between the input thresholds, with the module's pull-up alone:
-# the Teensy's own pull-up in parallel only makes it faster.
-@fig("t_r", "ns", group="BUS", section=BUS, prints="up",
-     rises_with=["r_pu", "l_cable", "c_cable_m", "c_pin", "c_module", "vih_frac"],
-     falls_with=["vil_frac"])
-def _(r_pu, c_bus, vil_frac, vih_frac):
-    return r_pu * c_bus * ln((1 - vil_frac) / (1 - vih_frac))
+    # START and STOP take about one clock period each, hence the two.
+    fig("t_read", "µs", "(n_bytes * n_bits_byte + 2) / f_scl", "up",
+        moves="+n_bytes +n_bits_byte -f_scl")
+    fig("bus_share", "%", "t_read / t_tick", "up", moves="+n_bytes +n_bits_byte -f_scl -t_tick")
 
+    # A library read: the pointer write and then the read, each with its own START and STOP,
+    # with the processor waiting in Wire for both.
+    fig("t_lib_read", "µs", "(n_bytes_ptr * n_bits_byte + 2) / f_scl + t_read", "up",
+        moves="+n_bytes_ptr +n_bytes +n_bits_byte -f_scl", stated=False)
+    fig("lib_share", "%", "t_lib_read / t_tick", "up",
+        moves="+n_bytes_ptr +n_bytes +n_bits_byte -f_scl -t_tick", stated=False)
+    MODEL.uses("t_read_exp", of="port-expander")
 
-# ===========================================================================
-# the read
-# ===========================================================================
-MODEL.uses("f_scl", of="firmware", group="READ", section=READ, stated=True)
-dec("n_bytes", 3, "", src="the bytes on the bus in one read: the address, and the two bytes "
-    "of RAW ANGLE, whose pointer the AS5600 keeps between reads", stated=False)
-dec("n_bits_byte", 9, "bits", src="the clock periods one byte takes on the bus, eight data "
-    "bits and the acknowledge, UM10204", group="READ", section=READ, stated=True)
-MODEL.uses("t_tick", of="firmware", group="READ", section=READ, stated=True)
-ds("n_steps", 4096, "steps", sheet=SENSOR, src="the 12-bit resolution, 4096 positions per "
-   "turn", group="READ", section=READ, stated=True)
-dec("n_bytes_ptr", 2, "", src="the bytes a library puts on the bus to set the register pointer "
-    "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends them", stated=False)
-dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, "
-    "long enough for its own recovery attempts and short enough for a game to react", stated=False)
-MODEL.uses("t_monitor", of="firmware")
-MODEL.as_written("t_fail_ms", of="t_fail", unit="ms")
-dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
-    "before the driver reports the rod still, an estimate that keeps a seal coasting out of a "
-    "spin from counting as stopped", stated=False)
-dec("n_dead", 12, "steps", src="how far the position has to lie from the last published one "
-    "before the driver reports again, chosen at about one degree to ride out the rod's play "
-    "and the machine's vibration, which nothing in the repository measures", stated=False)
-
-
-# START and STOP take about one clock period each, hence the two.
-@fig("t_read", "µs", group="READ", section=READ, prints="up",
-     rises_with=["n_bytes", "n_bits_byte"], falls_with=["f_scl"])
-def _(n_bytes, n_bits_byte, f_scl):
-    return (n_bytes * n_bits_byte + 2) / f_scl
-
-
-@fig("bus_share", "%", group="READ", section=READ, prints="up",
-     rises_with=["n_bytes", "n_bits_byte"], falls_with=["f_scl", "t_tick"])
-def _(t_read, t_tick):
-    return t_read / t_tick
-
-
-# A library read: the pointer write and then the read, each with its own START and STOP,
-# with the processor waiting in Wire for both.
-@fig("t_lib_read", "µs", stated=False, prints="up",
-     rises_with=["n_bytes_ptr", "n_bytes", "n_bits_byte"], falls_with=["f_scl"])
-def _(n_bytes_ptr, n_bits_byte, f_scl, t_read):
-    return (n_bytes_ptr * n_bits_byte + 2) / f_scl + t_read
-
-
-@fig("lib_share", "%", stated=False, prints="up",
-     rises_with=["n_bytes_ptr", "n_bytes", "n_bits_byte"], falls_with=["f_scl", "t_tick"])
-def _(t_lib_read, t_tick):
-    return t_lib_read / t_tick
-
-
-MODEL.uses("t_read_exp", of="port-expander", group="READ", section=READ, stated=True)
-
-
-# Two readings are unwrapped modulo one turn, which holds while the rod turns less than half
-# a turn between them. A read of the port expander on the same bus can hold a read back, so
-# two readings lie at most a tick and one expander read apart.
-@fig("f_turn_max", "Hz", group="READ", section=READ, prints="down",
-     falls_with=["t_tick", "t_read_exp"])
-def _(t_tick, t_read_exp):
-    return 1 / (2 * (t_tick + t_read_exp))
-
-
-
+    # Two readings are unwrapped modulo one turn, which holds while the rod turns less than half
+    # a turn between them. A read of the port expander on the same bus can hold a read back, so
+    # two readings lie at most a tick and one expander read apart.
+    fig("f_turn_max", "Hz", "1 / (2 * (t_tick + t_read_exp))", "down", moves="-t_tick -t_read_exp")
 
 # How long the rod has to rest before the driver reports it still.
-@fig("t_still", "ms", stated=False, rises_with=["n_still", "t_tick"])
-def _(n_still, t_tick):
-    return n_still * t_tick
+fig("t_still", "ms", "n_still * t_tick", moves="+n_still +t_tick", stated=False)
 
-
-# ===========================================================================
-# the magnet
-# ===========================================================================
-dec("gap_min", 0.5, "mm", src="the near end of the gap between magnet and AS5600 that the "
-    "Seeed wiki gives for the 101020692, adopted", stated=False)
-dec("gap_max", 3, "mm", src="the far end of that gap, adopted from the Seeed wiki", stated=False)
+# -- the magnet ---------------------------------------------------------------
+dec("gap_min", 0.5, "mm", src="the near end of the gap between magnet and AS5600 that the Seeed "
+    "wiki gives for the 101020692, adopted")
+dec("gap_max", 3, "mm", src="the far end of that gap, adopted from the Seeed wiki")
 dec("d_magnet", 6, "mm", src="the magnet diameter the AS5600 datasheet quotes its axis "
-    "displacement for, adopted", stated=False)
+    "displacement for, adopted")
 
+# -- the supply ---------------------------------------------------------------
+with MODEL.block("SUPPLY", section=SUPPLY):
+    MODEL.uses("v_3v3", of="teensy-4.1")
+    dec("v_5v", 5, "V", src="the machine's 5 V, which must not feed the module's VCC because its "
+        "pull-ups follow VCC", stated=False)
+    ds("vdd_min", 3.0, "V", sheet=SENSOR, src="Operating conditions, VDD3V3 in 3.3 V mode, minimum")
+    ds("vdd_max", 3.6, "V", sheet=SENSOR, src="Operating conditions, VDD3V3 in 3.3 V mode, maximum")
+    ds("i_dd", 6.5, "mA", sheet=SENSOR, src="Operating conditions, supply current in NOM, PM = "
+       "00, always on")
 
-# ===========================================================================
-# the supply
-# ===========================================================================
-MODEL.uses("v_3v3", of="teensy-4.1", group="SUPPLY", section=SUPPLY, stated=True)
-dec("v_5v", 5, "V", src="the machine's 5 V, which must not feed the module's VCC because "
-    "its pull-ups follow VCC", stated=False)
-ds("vdd_min", 3.0, "V", sheet=SENSOR, src="Operating conditions, VDD3V3 in 3.3 V mode, "
-   "minimum", group="SUPPLY", section=SUPPLY, stated=True)
-ds("vdd_max", 3.6, "V", sheet=SENSOR, src="Operating conditions, VDD3V3 in 3.3 V mode, "
-   "maximum", group="SUPPLY", section=SUPPLY, stated=True)
-ds("i_dd", 6.5, "mA", sheet=SENSOR, src="Operating conditions, supply current in NOM, "
-   "PM = 00, always on", group="SUPPLY", section=SUPPLY, stated=True)
-
-
-# ===========================================================================
-# requirements
-# ===========================================================================
+# -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
-_I("a rising edge on the bus stays inside the Standard-mode limit",
-   lambda v: v.t_r < v.t_r_std)
-_I("a read ends well inside its tick",
-   lambda v: v.t_read < v.t_tick)
-_I("the Teensy's rail sits in the AS5600's 3.3 V window",
-   lambda v: v.vdd_min < v.v_3v3 < v.vdd_max)
-_I("the report threshold stays a small part of a turn",
-   lambda v: v.n_dead < v.n_steps)
+_I("a rising edge on the bus stays inside the Standard-mode limit", "t_r < t_r_std")
+_I("a read ends well inside its tick", "t_read < t_tick")
+_I("the Teensy's rail sits in the AS5600's 3.3 V window", "vdd_min < v_3v3 < vdd_max")
+_I("the report threshold stays a small part of a turn", "n_dead < n_steps")
 
 for _text, _why in [
     ("0.25 mm", "how far the rod's axis may sit from the package center with a 6 mm magnet, "
@@ -184,10 +123,7 @@ for _text, _why in [
 ]:
     MODEL.aside(_text, _why)
 
-
-# ===========================================================================
-# wiring
-# ===========================================================================
+# -- wiring -------------------------------------------------------------------
 # the module's only supply is VCC, which this build feeds from the Teensy's 3V3, so its
 # pull-ups sit at or below the Teensy's rail
 _PU = ("design.md, the module's pull-ups R4 and R5, 4.7 kΩ; the module runs from VCC alone, "

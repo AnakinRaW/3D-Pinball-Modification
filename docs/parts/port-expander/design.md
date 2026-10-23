@@ -44,13 +44,13 @@ Every figure below is recomputed by [`figures.py`](figures.py) from the inputs i
 BUS       the rotary module's pull-up              4.7 kΩ
           R5 and R6 on the motherboard             4.7 kΩ
           the two in parallel                    = 2.35 kΩ
-          the rotary sensor's side, each line      29 pF
+          the rotary sensor's side, each line      39 pF
           U1 and the motherboard, each line,
           assumed                                  100 pF
-          each bus line in all                   = 129 pF
+          each bus line in all                   = 139 pF
           what U1 allows on SDA                    400 pF
           a rising edge between the low and the
-          high input level                       = 257 ns
+          high input level                       = 276 ns
           the same with R5 and R6 alone, on the
           motherboard's load alone              = 399 ns
           what Standard-mode allows                1000 ns

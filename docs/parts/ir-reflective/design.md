@@ -203,11 +203,11 @@ A channel resolves to ten bits, one step of 3.3 mV at V<sub>REF</sub> max.
 
 ### Supply and input filter
 
-Populated with sixteen channels the board can draw up to 222 mA. The board takes all of it through J-PWR, from the module in the machine and from the Teensy's 3V3 pin on the bench. The 250 mA that pin allows is what the bench case is sized against, and it is shared with whatever else of this modification hangs on the Teensy.
+Populated with sixteen channels the board can draw up to 222 mA. The board takes all of it through J-IR-PWR, from the module in the machine and from the Teensy's 3V3 pin on the bench. The 250 mA that pin allows is what the bench case is sized against, and it is shared with whatever else of this modification hangs on the Teensy.
 
-In normal operation the board will be supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module at J-PWR, fed with the machine's 5 V from the [power board](../power/design.md). It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
+In normal operation the board will be supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module at J-IR-PWR, fed with the machine's 5 V from the [power board](../power/design.md). It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
 
-On the test bench the Teensy's 3V3 pin feeds J-PWR.
+On the test bench the Teensy's 3V3 pin feeds J-IR-PWR.
 
 Three parts sit on the board's supply path:
 
@@ -216,13 +216,13 @@ Three parts sit on the board's supply path:
 
 The two rails differ by the 66 mV R39 drops. 3V3 feeds Pin 1 of every sensor connector, U3's VCC2 and R36; 3V3_ADC feeds nothing but VDD and VREF of U1 and U2.
 
-The Pololu module should sit close to J-PWR, soldered or crimped with a latch.
+The Pololu module should sit close to J-IR-PWR, soldered or crimped with a latch.
 
 #### Separating power rails
 
 In the machine the board keeps its own rail, so either side can be live while the other is dark, in any order. [Teensy pins must not be driven while the controller is off](../../research/teensy-4.1.md#driving-a-pin-while-the-board-is-unpowered), and a converter input must not be driven while its own supply is off.
 
-**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3 over J-T pin 7, VCC2 from the board's rail. The grounds stay common, J-T pin 8 onto the board's pour, so what the part separates is the two supplies. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
+**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, VCC2 from the board's rail. The grounds stay common, J-IR-TEENSY pin 8 onto the board's pour, so what the part separates is the two supplies. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
 
 The four resistors around U3 keep the DOUT path defined: R37 and R38 bound the current if both converters drive it at once, R36 holds it at a level when neither does, and R34 bounds the current should the Teensy's MISO pin and U3's output ever drive against each other.
 
@@ -234,15 +234,15 @@ The stock machine gives every channel its own LED driver transistor; this board 
 
 #### To the power distribution
 
-J-PWR, two conductors, 3.3 V and GND
+J-IR-PWR, two conductors, 3.3 V and GND
 
-J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in the machine from the D24V5F3, on the bench from the Teensy's 3V3 pin. Side 1 takes the Teensy's 3.3 V over J-T pin 7 so that it can never drive MISO above the Teensy's own rail, which costs the Teensy up to 10.3 mA. On the bench both conductors leave that one pin, 233 mA at sixteen channels against the 250 mA it allows.
+J-IR-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in the machine from the D24V5F3, on the bench from the Teensy's 3V3 pin. Side 1 takes the Teensy's 3.3 V over J-IR-TEENSY pin 7 so that it can never drive MISO above the Teensy's own rail, which costs the Teensy up to 10.3 mA. On the bench both conductors leave that one pin, 233 mA at sixteen channels against the 250 mA it allows.
 
-**To the Teensy**, J-T, eight conductors on a connector that cannot be plugged in reversed. Teensy pin allocation is in [`pin-assignment.md`](../../pin-assignment.md). 
+**To the Teensy**, J-IR-TEENSY, eight conductors on a connector that cannot be plugged in reversed. Teensy pin allocation is in [`pin-assignment.md`](../../pin-assignment.md). 
 
->Before the Teensy is plugged in for the first time, every J-T pin should be measured against ground with the board powered from J-PWR. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy.
+>Before the Teensy is plugged in for the first time, every J-IR-TEENSY pin should be measured against ground with the board powered from J-IR-PWR. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy.
 
-| J-T pin | Signal | Direction |
+| J-IR-TEENSY pin | Signal | Direction |
 |---|---|---|
 | 1 | SCK | Teensy to the board |
 | 2 | MOSI | Teensy to the board |
@@ -270,13 +270,13 @@ J-PWR powers the board, U3's side 2 with it, and it is fitted in every case: in 
 **Placement distances.** The figures are assumptions, no datasheet states one.
 
 - the 100 nF parts should sit within 10 mm of the supply pin they decouple, C3 at U3's VCC1 and C4 at its VCC2, which sit at opposite corners of the package
-- C5 and R39 should stay within 10 mm of J-PWR, C6 within 10 mm of U1's and U2's VDD pins, between the two converters
+- C5 and R39 should stay within 10 mm of J-IR-PWR, C6 within 10 mm of U1's and U2's VDD pins, between the two converters
 - R33 and R35 should stay within 10 mm of Q1's gate
 - each channel's 4.7 kΩ should stay within 25 mm of its converter input, so the stub adds little to the source resistance the acquisition window is derived from
 
 - **The LED bus should return on one side of the board**, so its pulsing does not reach the measurement.
-  - J-PWR, all sixteen sensor connectors with their 220 Ω, and Q1 on that side
-  - the converters, U3, the channel resistors and J-T on the other
+  - J-IR-PWR, all sixteen sensor connectors with their 220 Ω, and Q1 on that side
+  - the converters, U3, the channel resistors and J-IR-TEENSY on the other
   - one ground pour over the whole board
 
   ![Placement sketch of the mainboard](mainboard-placement.svg)
@@ -301,8 +301,8 @@ Additional to the Teensy 4.1 and the sensor boards, grouped by type and sorted b
 | 4 | Ceramic 100 nF | | **C1, C2** at each converter's VDD; **C3** at U3's VCC1, **C4** at its VCC2 |
 | 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | **C5.** Bulk at the 3V3 entry. Carries the 202 mA phase-start step until the regulator, which sits at the end of a cable, responds |
 | 1 | Ceramic 22 µF, X5R or X7R, 10 V or more, ≥ 11 µF at 3.3 V bias | radial MLCC | **C6.** At the converters' VDD pins, behind R39: gives the regulator's ripple a path to ground, the power-save bursts at 9 kHz included, and is the bypass their sheet asks for at the pin |
-| 1 | Connector, 8-pin, keyed | | **J-T** to the Teensy |
-| 1 | Connector, 2-pin, keyed | | **J-PWR** to the power distribution |
+| 1 | Connector, 8-pin | | **J-IR-TEENSY** to the Teensy |
+| 1 | Connector, 2-pin | | **J-IR-PWR** to the power distribution |
 | up to 16 | Connector, 3-pin | | **J-S1 … J-S16**, one per sensor board |
 
 
@@ -322,7 +322,7 @@ The sensors beyond the three that come out of the stock machine sit on boards bu
 
 On the finished system:
 
-- Time the firmware's per-conversion overhead; the phase allows 16.5 µs per channel at sixteen channels.
+- Time the firmware's per-conversion overhead; the phase allows 15.9 µs per channel at sixteen channels.
 
 ## Appendix: derivations
 
@@ -336,7 +336,7 @@ T_A       at the sensors, an open frame with no heat
           the mainboard's parts are checked at their
           datasheet junction temperature instead
 V_OUT     the module holds 3.3 V within 4 %      3.168 … 3.432 V
-          the cable to J-PWR drops 22.2 mV at the
+          the cable to J-IR-PWR drops 22.2 mV at the
           board's 222 mA, bounded at              22 mV
           rail min with the bus on              = 3.146 V
           rail max, the module's 3.432 V carried
@@ -388,18 +388,18 @@ I_TOT     I_BUS + N × I_C + I_ADC per converter
 
 V<sub>DS</sub> is taken at the bus current it helps produce. The loop closes in one step because 17 mV is 1 % of U<sub>R</sub> at the bound it sets.
 
-**I_fixed, the board's draw beside the emitters and the channel nodes.** Which of the two cases applies follows from what J-PWR is fed from.
+**I_fixed, the board's draw beside the emitters and the channel nodes.** Which of the two cases applies follows from what J-IR-PWR is fed from.
 
 ```
 from the module, side 1 still on the Teensy
   I_ADC 1.4 + I_ISO side 2 6.9                     =   8.3 mA against 500 mA
-  what the emitters and the nodes may draw                480 mA
+  what the emitters may draw                               479 mA
 from the Teensy's 3V3 pin, both isolator sides out of it
   I_ADC 1.4 + I_ISO side 1 10.3 + side 2 6.9       =  18.6 mA against 250 mA
-  what the emitters and the nodes may draw                220 mA
+  what the emitters may draw                               219 mA
 ```
 
-The Teensy case is the tighter by better than a factor of two, 222.6 mA left for the emitters against 482.9 mA. Thirteen channels at 220 Ω and three at 100 Ω spend 202 mA of that, which pays for four of them dropped to 150 Ω.
+The Teensy case is the tighter by better than a factor of two, 219.6 mA left for the emitters against 479.9 mA. Thirteen channels at 220 Ω and three at 100 Ω spend 202 mA of that, which pays for three of them dropped to 150 Ω.
 
 **Dissipation, one line per part.** The resistors are held to the kit's 0.25 W, Q1 to its junction limit.
 
@@ -450,17 +450,17 @@ Droop         ΔI / (2π · f_c · C), C5 fitted, 21 µF:
 
 Figures 47 and 48 of FN8373.2 show the part's own load transient for a 500 mA step at 800 kHz, on an output capacitance the figures do not state: about 160 mV from power-save and about 95 mV from PWM, recovered within 200 µs. Scaled to 202 mA that is 38 to 65 mV, the order of the 77 mV above. The rail's minimum with the bus on is 3.146 V, so the converters' 2.7 V floor stands 369 mV below the droop with C5 fitted, and 124 mV below it on the module's capacitance alone at 10 kHz. What the droop costs the emitter is 77 mV against the 2269 mV across the emitter resistor, 3.4 % of the current, over the first tens of µs of the lit phase, and the first channel is read 270 µs into it.
 
-**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 77 mV droop; an aluminum electrolytic at 2 Ω would put 404 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 33 to 54 µs at the 17 mA the dark phase draws with every channel at its maximum.
+**What C5 does.** It halves the excursion R39 and C6 have to settle before the first read. Its ESR adds `ΔI × ESR` to the step, so it stays under 0.4 Ω to keep that inside the 77 mV droop; an aluminum electrolytic at 2 Ω would put 404 mV there. In the dark phase the module runs in power-save, where FN8373.2 has a comparator hold the output in a band of 1 %, 33 mV at 3.3 V, refilled by bursts of pulses of about 300 mA; Figure 45 shows about 40 mV peak to peak at 20 mA with a burst every 80 µs. That band is set by the comparator and C5 leaves it alone. What C5 trims is the overshoot of the last pulse of each burst, `Q_pulse / C`, from about 23 to 11 mV, and it stretches the burst period from about 28 to 46 µs at the 20 mA the dark phase draws with every channel at its maximum.
 
 **Load release overshoots by the same order**, and the reference overshoots with it, so the reading is unaffected and the channel node cannot leave the converter's input range. U3 sees the excursion on VCC2: 3.432 V plus at most about 70 mV is 3.50 V, inside the 5.5 V at which its recommended operating conditions end.
 
-**The 5 V the module runs from sags while the bumper solenoids fire.** Its input works down to 3.4 V, which matters because the machine's 5 V sags while the bumper solenoids fire. Two coils leave that 5 V near 4.4 V by calculation and three near 3.75 V with a poor supply cable; the coils are 7.35 Ω, so the sag limits itself, and the worst case keeps 0.35 V above the module's minimum.
+**The 5 V the module runs from.** Its input works down to 3.4 V. The [power design](../power/design.md) keeps it at 4.75 V or more with every load drawing at once, the solenoids included.
 
-**How close the module has to sit to J-PWR.** Every figure in this document is derived at a rail between V_OUT min 3.146 V and V_OUT max 3.449 V, and the module's own 4 % window, 3.168 to 3.432 V, sits inside that. What the cable takes off the bottom is the only way out of that window. The rail minimum leaves 22 mV for the cable, which the board's 222 mA reaches at 99.0 mΩ; 0.1 Ω is the round build figure and costs 0.2 mV more, inside the millivolt the rail is printed at.
+**How close the module has to sit to J-IR-PWR.** Every figure in this document is derived at a rail between V_OUT min 3.146 V and V_OUT max 3.449 V, and the module's own 4 % window, 3.168 to 3.432 V, sits inside that. What the cable takes off the bottom is the only way out of that window. The rail minimum takes 0.1 Ω of cable, 22 mV at the board's 222 mA.
 
 At that length the contacts dominate, not the wire: four crimped 2.54 mm contacts at 20 mΩ each come to 80 mΩ, and 5 cm of 28 AWG adds 20 mΩ. Crossing the bound is not a cliff, since 17 mV of further drop costs 1 % of the weakest-case LED current.
 
-**What R39 and C6 take off the reference.** The rail is the converters' reference, so whatever the module puts on it enters the reading directly. Two disturbances sit there. In the lit phase the module switches at 500 kHz, where C6 is 0.03 Ω once DC bias halves it and the pair divides by 64 dB. In the dark phase the module runs in power-save at 8 to 17 mA, depending on how much ambient light the channels carry, and FN8373.2 has a comparator refill a 1 % band with bursts of pulses: about 44 mV peak to peak, recurring every 54 to 111 µs, 9 to 19 kHz, where a filter built for 500 kHz takes off almost nothing. The corner therefore sits at 310 Hz, 47 Ω against 11 µF derated, which leaves 1.5 mV of the 44 mV at the 9 kHz end. The reading follows V<sub>REF</sub>, so 1.5 mV of 3383 mV is 0.044 % of it: 0.45 step where ambient fills the channel's range, and under 0.1 step below 230 of the 1024. The branch draws the converters' 1.4 mA, so R39 costs 66 mV of constant offset, which the per-channel calibration absorbs, and the converters run 66 mV below the rail that U3 drives their inputs from, against the 0.6 V above VDD their inputs are rated for. R39 and C6 feed the two converters, so the branch carries their 1.4 mA and the reference sits behind the filter. The rest of the board takes the rail ahead of them: the sensor boards through Pin 1 of every channel connector, and U3's VCC2. The emitters starting to pulse shift the branch's mean, and the filter follows it over five time constants, 2.6 ms, which is what the driver's discarded start-up cycles cover.
+**What R39 and C6 take off the reference.** The rail is the converters' reference, so whatever the module puts on it enters the reading directly. Two disturbances sit there. In the lit phase the module switches at 500 kHz, where C6 is 0.03 Ω once DC bias halves it and the pair divides by 64 dB. In the dark phase the module runs in power-save at 8 to 20 mA, depending on how much ambient light the channels carry, and FN8373.2 has a comparator refill a 1 % band with bursts of pulses: about 44 mV peak to peak, recurring every 46 to 111 µs, 9 to 22 kHz, where a filter built for 500 kHz takes off almost nothing. The corner therefore sits at 310 Hz, 47 Ω against 11 µF derated, which leaves 1.5 mV of the 44 mV at the 9 kHz end. The reading follows V<sub>REF</sub>, so 1.5 mV of 3383 mV is 0.044 % of it: 0.45 step where ambient fills the channel's range, and under 0.1 step below 230 of the 1024. The branch draws the converters' 1.4 mA, so R39 costs 66 mV of constant offset, which the per-channel calibration absorbs, and the converters run 66 mV below the rail that U3 drives their inputs from, against the 0.6 V above VDD their inputs are rated for. R39 and C6 feed the two converters, so the branch carries their 1.4 mA and the reference sits behind the filter. The rest of the board takes the rail ahead of them: the sensor boards through Pin 1 of every channel connector, and U3's VCC2. The emitters starting to pulse shift the branch's mean, and the filter follows it over five time constants, 2.6 ms, which is what the driver's discarded start-up cycles cover.
 
 An inductor or a ferrite bead in place of R39 works at 500 kHz and does nothing at 9 kHz: 10 µH is 31 Ω at the switching frequency and 0.57 Ω at the burst rate, and a bead of the 600 Ω class sits near its DC resistance there. The dark-phase ripple is what sets the filter, so it is a resistor with a capacitance that puts the corner well under 9 kHz.
 
@@ -509,13 +509,13 @@ The 6.9 τ_adc are what carries the channel change. The sample capacitor still h
 
 Changing chip costs nothing beyond that. `t_DIS` is 100 ns max, so the deselected converter releases DOUT before the other one is addressed, which is what lets both share one MISO conductor.
 
-**R37 and R38, 1.2 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound. At their low end they hold the two outputs to 1.52 mA, inside the 2 mA the design allows such a fight. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 puts its own drop across R37 on top. With R37 at its high end and R36 at its low end the low sits at 0.76 V, inside the 1.03 V that `0.3 × VCC2 max` leaves as a guaranteed low.
+**R37 and R38, 1.2 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound. At their low end they hold the two outputs to 1.52 mA, inside the 2 mA the design allows such a fight. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 puts its own drop across R37 on top. With R37 at its high end and R36 at its low end the low sits at 0.76 V, inside the 0.94 V that `0.3 × VCC2 max` leaves as a guaranteed low.
 
 **R36, 10 kΩ from ADC-DOUT to the board's rail.** Both converters release DOUT whenever neither is selected, and the level then comes from the isolator's internal 1.5 MΩ pull-down alone, an impedance the switching LED bus can move. The pull-up puts a defined high there instead, and settles both dark states as well: with the Teensy off it holds the net at the board's rail, which the barrier keeps away from the connector, and with the board off it holds INF near ground through the dead rail. A converter pulling DOUT low sinks 0.33 mA at most, against the 0.4 V its datasheet specifies at I<sub>OL</sub> = 1 mA and VDD = 4.5 V.
 
 **R34, 2.2 kΩ in the MISO line at U3's output.** Should firmware ever configure the MISO pin as an output, the Teensy and U3 drive against each other through R34 at 1.60 mA at most, inside the 2 mA the isolator's outputs are specified at, instead of shorting two outputs. R33 does the same at Q1's gate, where the charging current comes from an isolator output rather than a Teensy pin, and the gate-resistor block below derives it against the gate charge.
 
-**U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's.** Both are maximums of the 3.3 V DC row with every input at its own supply, the worse of the two DC rows. The AC rows bracket the 1.35 Mbps a conversion block runs at, 6.5 and 6.3 mA at 1 Mbps against 7.5 and 8.6 mA at 10 Mbps, which interpolates to 6.5 and 6.4 mA at this rate, under the DC figures on both sides.
+**U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's.** Both are maximums of the 3.3 V DC row with every input at its own supply, the worse of the two DC rows. The AC rows bracket the 2.7 Mbps that the 1.35 MHz clock carries, 6.5 and 6.3 mA at 1 Mbps against 7.5 and 8.6 mA at 10 Mbps, which interpolates to 6.7 and 6.7 mA at this rate, under the DC figures on both sides.
 
 Reading DOUT crosses the barrier twice.
 
@@ -662,11 +662,11 @@ The pull-down alone limits the phototransistor branch, on a rebuilt board where 
                              I_ISO side 2                          =  232 mA
                              so this knob alone cannot break the budget
 
-R33    lower                R = 3.3 V / 2 mA                       = 1.65 kΩ
+R33    lower                R = 3.3 V / 2 mA                       = 1.73 kΩ
 gate    upper                t = Q_g × 2R / 3.3 V ≤ 221 µs, the first
                              read less the τ · ln 2 a channel needs
                              once the LED is on
-                             → R = 221 µs × 3.3 V / (2 × 74 nC)    = 4.9 kΩ
+                             → R = 221 µs × 3.3 V / (2 × 74 nC)    = 4.7 kΩ
                              R33 5 % off where it hurts and the rail
                              at its ends, at least                 = 1.82 kΩ
                              at most                               = 4.48 kΩ
@@ -682,14 +682,14 @@ gate    upper                t = Q_g × 2R / 3.3 V ≤ 221 µs, the first
 600 µs lower                 the block has to end with the phase and start
 phase                        past the sign inversion, which τ · ln 2 caps
                              at                                           = 48.5 µs
-                             t_budget plus that, at N = 16                =  369 µs
+                             t_budget plus that, at N = 16                =  379 µs
                              t_budget rounds up to the next 10 µs, so the
-                             firmware holds while 16 · (17.78 + overhead) ≤ 550 µs:
-                             t_ovh                                        ≤ 16.5 µs
+                             firmware holds while 16 · (17.78 + overhead) ≤ 540 µs:
+                             t_ovh                                        ≤ 15.9 µs
         upper                a value spans three phases, the dark before
                              the lit and the dark of the cycle after, and
                              two consecutive values share the middle one,
-                             so m values span 2m + 1 phases.
+                             so m values span 2·m + 1 phases.
                              D ≥ 3 ms from the stock machine's sampling,
                              two values for the confirmation:
                              5 · T ≤ D, so T                             ≤ 600 µs
@@ -728,4 +728,4 @@ One standard value inside each of those walls:
 - [Renesas ISL85415 datasheet](../../datasheets/ISL85415-Renesas.pdf), FN8373.2: internal compensation with COMP at VCC, the loop-bandwidth guidance under 100 kHz with its 75 kHz worked example, the 50 % DC-bias derating advice for ceramic output capacitors, Figures 47 and 48 for the load transient
 - [TI ISO7761 datasheet](../../datasheets/ISO7761-TI.pdf), SLLSER1H: the channel directions of the ISO7761, supply and absolute maximum ratings, the F suffix and its default output state with `t_DO`, the undervoltage lockout thresholds and the undetermined band between them, V<sub>OH</sub> with I<sub>OH</sub>, the input thresholds, the 1.5 MΩ input pull-down of Figure 7-3, the supply current rows at 3.3 V, propagation delay and channel-to-channel skew
 - [IRL540N datasheet](../../datasheets/IRL540N-Infineon.pdf), Infineon IRL540NPbF Rev. 2.1: R<sub>DS(on)</sub> against gate voltage, the typical 3.0 V curve of Fig. 1, gate threshold voltage, total gate charge, `I_GSS` of ±100 nA at V<sub>GS</sub> = ±16 V, the junction limit and the thermal resistance
-- [NXP IMXRT1060CEC](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 7 for the `Vin/Vout` absolute maximum of `OVDD + 0.31 V`, Table 10 for the NVCC_GPIO range and Table 22 for V<sub>OH</sub> against I<sub>OH</sub>
+- [NXP IMXRT1060CEC](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 7 for the `Vin/Vout` absolute maximum of `OVDD + 0.3 V`, Table 10 for the NVCC_GPIO range and Table 22 for V<sub>OH</sub> against I<sub>OH</sub>

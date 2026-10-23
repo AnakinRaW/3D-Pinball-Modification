@@ -36,9 +36,9 @@
   <rect x="240" y="84" width="750" height="356" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
   <text x="256" y="106" font-size="15" font-weight="700" fill="#5c4a00">Servo board</text>
 
-  <!-- ===== J-PWR ===== -->
+  <!-- ===== J-SERVO-PWR ===== -->
   <rect x="270" y="118" width="80" height="186" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="310" y="140" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-PWR</text>
+  <text x="310" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-SERVO-PWR</text>
   <circle cx="270" cy="150" r="6" fill="#c0392b"/>
   <circle cx="350" cy="150" r="6" fill="#c0392b"/>
   <text x="310" y="154" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_5v">5 V</text>
@@ -49,7 +49,7 @@
   <circle cx="350" cy="280" r="6" fill="#1f4fd1"/>
   <text x="310" y="284" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">SIG</text>
 
-  <!-- ===== J-PWR's GND onto the board's ground ===== -->
+  <!-- ===== J-SERVO-PWR's GND onto the board's ground ===== -->
   <line x1="356" y1="200" x2="374" y2="200" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="374" y1="200" x2="374" y2="214" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="360" y1="214" x2="388" y2="214" stroke="#1a1a1a" stroke-width="3"/>
@@ -102,7 +102,7 @@
   <line x1="691" y1="368" x2="709" y2="368" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="696" y1="374" x2="704" y2="374" stroke="#1a1a1a" stroke-width="2"/>
 
-  <!-- ===== the 5 V rail from J-PWR to U1, C1 and the servo, and C2 at U1's supply pin ===== -->
+  <!-- ===== the 5 V rail from J-SERVO-PWR to U1, C1 and the servo, and C2 at U1's supply pin ===== -->
   <line x1="356" y1="150" x2="1024" y2="150" stroke="#c0392b" stroke-width="2.5"/>
   <circle cx="640" cy="150" r="4" fill="#c0392b"/>
   <line x1="640" y1="150" x2="640" y2="214" stroke="#c0392b" stroke-width="2.5"/>

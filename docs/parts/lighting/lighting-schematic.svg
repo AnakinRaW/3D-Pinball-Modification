@@ -39,9 +39,10 @@
   <line x1="551" y1="496" x2="569" y2="496" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="556" y1="502" x2="564" y2="502" stroke="#1a1a1a" stroke-width="2"/>
 
-  <!-- ===== 5 V from J-PWR to the buffer and to the chain outputs, with C1 and C2 ===== -->
+  <!-- ===== 5 V from the power input to the buffer and to the chain outputs, with C1 and C2 ===== -->
   <rect x="1180" y="90" width="120" height="100" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="1240" y="116" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-PWR</text>
+  <text x="1240" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-AMBIENT-PWR,</text>
+  <text x="1240" y="117" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-PLAYFIELD-PWR</text>
   <circle cx="1180" cy="130" r="6" fill="#c0392b"/>
   <text x="1192" y="134" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V</text>
   <circle cx="1240" cy="190" r="6" fill="#1a1a1a"/>
@@ -69,7 +70,7 @@
   <text x="640" y="154" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bypass">keep together, under 10 mm:</text>
   <text x="640" y="170" font-size="11.5" font-weight="700" fill="#0a8a6a">C1 at U1's supply pin</text>
 
-  <!-- ===== C2 at J-PWR ===== -->
+  <!-- ===== C2 at the power input ===== -->
   <circle cx="1080" cy="130" r="4" fill="#c0392b"/>
   <line x1="1080" y1="130" x2="1080" y2="144" stroke="#c0392b" stroke-width="2.5"/>
   <line x1="1062" y1="144" x2="1098" y2="144" stroke="#1a1a1a" stroke-width="3"/>
@@ -83,7 +84,7 @@
   <text x="1040" y="170" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_one">1000 &#181;F</text>
   <rect x="980" y="120" width="160" height="74" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
   <text x="974" y="196" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bulk">keep together, under 20 mm:</text>
-  <text x="974" y="212" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a">C2 at J-PWR</text>
+  <text x="974" y="212" text-anchor="end" font-size="11.5" font-weight="700" fill="#0a8a6a">C2 at the power input</text>
 
   <!-- ===== chain A: pin 5, U1 buffer, J-LA ===== -->
   <circle cx="150" cy="250" r="6" fill="#1f4fd1"/>
@@ -257,7 +258,7 @@
   <text x="20" y="805" font-size="11.5" fill="#444">C1 at its supply pin</text>
   <text x="250" y="805" font-size="11.5" fill="#444" data-fig="place_bypass">under 10 mm</text>
   <text x="350" y="805" font-size="11.5" fill="#444">the loop from the supply pin through the capacitor stays short</text>
-  <text x="20" y="823" font-size="11.5" fill="#444">C2 at J-PWR</text>
+  <text x="20" y="823" font-size="11.5" fill="#444">C2 at the power input</text>
   <text x="250" y="823" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
   <text x="350" y="823" font-size="11.5" fill="#444">C2 carries each step of the LED current where the feed arrives</text>
 

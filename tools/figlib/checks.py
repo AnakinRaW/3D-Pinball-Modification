@@ -185,12 +185,30 @@ def past_bound(model: Model, t: Token) -> list[Fig]:
     return near if near and all(past(f) for f in near) else []
 
 
+def prints_as(f: Fig, t: Token) -> bool:
+    """Whether the figure, printed on the token's grid, reads as the token: rounded to the
+    nearest digit, or toward the side a bound declares. One digit off is another number."""
+    if f.value is None or f.value.d != t.value.d:
+        return False
+    try:
+        x = f.value.to(t.unit)
+    except (TypeError, ValueError, KeyError):
+        return False
+    step = 10.0 ** -t.decimals
+    want = round(t.value.to(t.unit) / step)
+    got = {round(x / step)}
+    if f.prints == "down":
+        got.add(math.floor(x / step + 1e-9))
+    elif f.prints == "up":
+        got.add(math.ceil(x / step - 1e-9))
+    return want in got
+
+
 def pass_orphans(model: Model, tokens: list[Token], rep: Report):
-    values = [f.value for f in model.figs.values()]
+    figs = list(model.figs.values())
 
     def declared(t):
-        return any(v.d == t.value.d and abs(v - t.value) <= Q.of(t.precision, t.unit)
-                   for v in values)
+        return any(prints_as(f, t) for f in figs)
 
     refs = 0
     for t in tokens:
@@ -224,6 +242,9 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
                   f"the model is missing, or an aside the model has to name",
                   kind="prose")
     for text, why in model.asides:
+        if why.lower().startswith("derived in prose"):
+            rep.error(f"the aside {text!r} is {why}: a derived figure belongs in the model, "
+                      f"where its inputs move it", kind="debt")
         if text not in named:
             rep.error(f"the aside {text!r} ({why}) stands in none of the documents, so the "
                       f"number it names has left them", kind="aside")
@@ -463,11 +484,11 @@ def pass_datasheets(model: Model, rep: Report):
                      f"stay unchecked and want reading by eye")
             continue
         flat = pdftext.squeeze(text)
+        spaced = re.sub(r"\s+", " ", text)
         absent = []
         for f in figs:
-            printed = f"{f.value.to(f.unit):g}"
             looked += 1
-            if printed not in flat and printed.rstrip("0").rstrip(".") not in flat:
+            if not in_sheet(f.value.to(f.unit), spaced, flat):
                 absent.append(f)
         for f in absent:
             missing += 1
@@ -488,33 +509,81 @@ def pass_datasheets(model: Model, rep: Report):
     return looked, missing
 
 
-def pass_sums(model: Model, rep: Report, write: bool):
-    named = sorted({f.sheet for f in model.figs.values() if f.sheet and f.origin is None})
-    if write:
-        lines = []
-        for name in sorted(p.name for p in DATASHEETS.glob("*") if p.is_file()
-                           and p.name != SUMS.name):
-            h = hashlib.sha256((DATASHEETS / name).read_bytes()).hexdigest()
-            lines.append(f"{h}  {name}")
-        SUMS.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        rep.note(f"wrote {SUMS.relative_to(ROOT).as_posix()}, {len(lines)} files")
-        return len(named)
+def number_forms(x: float) -> list[str]:
+    """How a sheet may print a value: as it is, and with one trailing zero after a point."""
+    g = f"{x:g}"
+    forms = [g]
+    if "e" not in g:
+        forms.append(g + "0" if "." in g else g + ".0")
+    return forms
+
+
+def standalone(form: str, text: str) -> bool:
+    """Whether the number stands in the text as a number of its own, not inside a longer one."""
+    return re.search(rf"(?<![\d.]){re.escape(form)}(?!\d|\.\d)", text) is not None
+
+
+def in_sheet(x: float, spaced: str, flat: str) -> bool:
+    """Whether a sheet states the value. Kerning and table cells run numbers together in the
+    extracted text, so the squeezed text counts as well. A number of three digits or more is
+    rare enough to be taken there as it stands; a shorter one only where it ends, since 44
+    turns up in 440 and 16 in 160."""
+    for form in number_forms(x):
+        if standalone(form, spaced):
+            return True
+        if len(form.replace(".", "")) >= 3 and form in flat:
+            return True
+        if re.search(rf"{re.escape(form)}(?!\d|\.\d)", flat):
+            return True
+    return False
+
+
+def _cited(model: Model) -> list[str]:
+    """The datasheets the model's own readings cite."""
+    return sorted({f.sheet for f in model.figs.values() if f.sheet and f.origin is None})
+
+
+def _recorded() -> dict[str, str]:
+    """The recorded checksums, by file name."""
+    recorded = {}
+    if SUMS.exists():
+        for line in SUMS.read_text(encoding="utf-8").split("\n"):
+            if line.strip():
+                h, name = line.split(None, 1)
+                recorded[name.strip()] = h
+    return recorded
+
+
+def write_sums(model: Model, rep: Report) -> int:
+    """--write: the checksum of each cited datasheet that has none yet. A recorded one stays,
+    so a sheet that changed under its checksum is still reported."""
+    recorded = _recorded()
+    new = {name: hashlib.sha256((DATASHEETS / name).read_bytes()).hexdigest()
+           for name in _cited(model)
+           if name not in recorded and (DATASHEETS / name).is_file()}
+    if new:
+        recorded.update(new)
+        SUMS.write_text("".join(f"{recorded[n]}  {n}\n" for n in sorted(recorded)),
+                        encoding="utf-8")
+        rep.note(f"recorded the checksum of {', '.join(sorted(new))} in "
+                 f"{SUMS.relative_to(ROOT).as_posix()}")
+    return len(new)
+
+
+def pass_sums(model: Model, rep: Report):
+    named = _cited(model)
     if not SUMS.exists():
         rep.error(f"{SUMS.relative_to(ROOT).as_posix()} missing; "
-                  f"run with --write-sums once", kind="sums")
+                  f"run with --write once", kind="sums")
         return len(named)
-    recorded = {}
-    for line in SUMS.read_text(encoding="utf-8").split("\n"):
-        if line.strip():
-            h, name = line.split(None, 1)
-            recorded[name.strip()] = h
+    recorded = _recorded()
     for name in named:
         p = DATASHEETS / name
         if not p.exists():
             rep.error(f"{name} named by the model is not in docs/datasheets/", kind="sums")
             continue
         if name not in recorded:
-            rep.error(f"{name} has no recorded checksum", kind="sums")
+            rep.error(f"{name} has no recorded checksum; --write records it", kind="sums")
             continue
         got = hashlib.sha256(p.read_bytes()).hexdigest()
         if got != recorded[name]:
@@ -545,7 +614,8 @@ def pass_stale(base: str, rep: Report):
              if p.suffix in {".md", ".svg", ".py"} and p.is_file()}
     for num, unit in gone:
         tok = f"{num} {unit}"
-        where = sorted(p.relative_to(ROOT).as_posix() for p, t in files.items() if tok in t)
+        rx = re.compile(rf"(?<![\d.]){re.escape(num)}\s?{re.escape(unit)}(?![\w])")
+        where = sorted(p.relative_to(ROOT).as_posix() for p, t in files.items() if rx.search(t))
         if where:
             rep.note(f"{tok} left the model in this diff and still stands in "
                      + ", ".join(rel(w) for w in where))
@@ -578,3 +648,127 @@ def pass_mutate(model: Model, tokens: list[Token], rep: Report):
                  f"their section, which cannot tell two equal values apart. The "
                  f"rest are pinned to the line that states them.")
     return len(stated) - len(survived), len(stated)
+
+
+# a repository markdown file a source names, as "docs/research/x.md" or "research/x.md"
+SOURCE_FILE_RE = re.compile(r"(?<![\w/])((?:\.\./)*(?:docs/)?[\w.-]+(?:/[\w.-]+)*\.md)\b")
+# a reading a source has to state: what a bench gave, what a sheet prints
+CITED_KINDS = ("measured", "datasheet")
+
+
+def _source_files(model: Model, src: str) -> list:
+    here = model.document.parent
+    out = []
+    for name in SOURCE_FILE_RE.findall(src):
+        for c in (ROOT / name, ROOT / "docs" / name, here / name):
+            if c.is_file():
+                out.append(c)
+                break
+    return out
+
+
+def pass_sources(model: Model, rep: Report):
+    """A reading whose source is a file of this repository stands in that file. A bench result
+    no note records, or a figure the note gives differently, is a reading of nothing."""
+    looked = 0
+    for f in model.figs.values():
+        if f.origin or f.kind not in CITED_KINDS or not f.src:
+            continue
+        files = _source_files(model, f.src)
+        if not files:
+            continue
+        looked += 1
+        x = f.value.to(f.unit)
+        if not any(standalone(form, norm(p.read_text(encoding="utf-8")))
+                   for p in files for form in number_forms(x)):
+            rep.error(f"{f.key} is {f.kind} at {f.value.show(f.unit)}, and "
+                      f"{', '.join(rel(p) for p in files)}, which its source names, states "
+                      f"no such value", kind="source", key=f.key)
+    return looked
+
+
+# a reference designator, as a part list writes it
+DESIGNATOR_RE = re.compile(r"(?<![\w-])([RCDUQLF]\d{1,3})(?![\w-])")
+MD_LINK_RE = re.compile(r"\]\(([^)\s#]+\.md)(?:#[^)\s]*)?(?:\s+\"[^\"]*\")?\)")
+PART_LIST_RE = re.compile(r"(?ms)^## Part list[ \t]*$(.*?)(?=^## |\Z)")
+
+
+def part_list(path) -> set | None:
+    """The designators a design's part list holds, None for a document without one."""
+    try:
+        text = norm(path.read_text(encoding="utf-8"))
+    except OSError:
+        return None
+    m = PART_LIST_RE.search(text)
+    return set(DESIGNATOR_RE.findall(m.group(1))) if m else None
+
+
+def pass_designators(model: Model, rep: Report):
+    """Every part the document names by its designator is a part of its own part list, of
+    the design the same line links, or one the model names as another board's."""
+    text = norm(model.document.read_text(encoding="utf-8"))
+    own = part_list(model.document)
+    if own is None:
+        return 0
+    m = PART_LIST_RE.search(text)
+    skip = range(text.count("\n", 0, m.start()) + 1, text.count("\n", 0, m.end()) + 1)
+    seen = 0
+    for i, line in enumerate(text.split("\n"), 1):
+        if i in skip:
+            continue
+        for d in DESIGNATOR_RE.findall(line):
+            seen += 1
+            if d in own or d in model.named:
+                continue
+            linked = [part_list((model.document.parent / u).resolve())
+                      for u in MD_LINK_RE.findall(line)]
+            if any(lst is None or d in lst for lst in linked):
+                continue
+            rep.error(f"{rel(model.document)}:{i} names {d}, which its part list does not "
+                      f"hold, no design the line links holds, and the model does not name",
+                      kind="designator", key=d)
+    return seen
+
+
+def all_ranges() -> list:
+    """The ranges every model declares, since a bound may rest on a figure another declares."""
+    from .repo import find_models, load_model
+    return [r for p in find_models() for r in load_model(p).ranges]
+
+
+def _range_of(ranges, key: str):
+    for nominal, low, high in ranges:
+        if key in (nominal, low, high):
+            return nominal, low, high
+    return None
+
+
+def pass_extremes(model: Model, rep: Report):
+    """A bound that rests on a quantity which varies takes the extreme that keeps it on the
+    side it is printed on: the one that makes a ceiling smallest and a floor largest."""
+    checked, ranges = 0, all_ranges()
+    for f in model.figs.values():
+        if f.origin or f.fn is None or f.prints not in ("up", "down"):
+            continue
+        for d in f.deps:
+            r = _range_of(ranges, d)
+            if r is None or d not in model.figs:
+                continue
+            nominal, low, high = r
+            try:
+                got = model.recompute({d: model.figs[d].value * 1.01})[f.key]
+            except Exception:
+                continue
+            delta = (got - f.value).v
+            if delta == 0:
+                continue
+            checked += 1
+            rising = delta > 0
+            # printed down, a figure has to be at its smallest; printed up, at its largest
+            want = (low if rising else high) if f.prints == "down" else (high if rising else low)
+            if d == want or d in f.tracks:
+                continue
+            what = "the nominal" if d == nominal else "the other extreme,"
+            rep.error(f"{f.key} is printed {f.prints} and takes {what} {d}, where {want} "
+                      f"keeps it on that side", kind="extreme", key=f.key)
+    return checked

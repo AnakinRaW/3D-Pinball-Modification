@@ -13,7 +13,7 @@ The audio subsystem plays the background music and the sound effects through the
 
 The DFR0954 carries a MAX98357A class D amplifier with a built-in DAC. It takes the sound as digital audio over I²S.
 
-The amplifier drives one speaker. I²S always sends two channels. The module plays the left channel. The firmware therefore sends the same signal on both, so the speaker gets it at full level.
+The amplifier drives one speaker. I²S always sends two channels. The module plays the left channel, as its schematic shows. The firmware sends the same signal on both channels, so the speaker gets it at full level whichever channel the module plays.
 
 ## Circuit
 
@@ -35,7 +35,7 @@ The speaker carries no marking. Its size suggests a rating of 0.5 W to 1 W. The 
 
 ### Supply
 
-The module takes the machine's 5 V from the motherboard's J-PWR ahead of [D1](../motherboard/design.md#supply) and decouples its own supply pin. It therefore stays off while the Teensy runs on USB alone. Capped at 0.5 W, it draws at most 129 mA.
+The module takes the machine's 5 V from the motherboard's J-MB-PWR ahead of [D1](../motherboard/design.md#supply) and decouples its own supply pin. It therefore stays off while the Teensy runs on USB alone. Capped at 0.5 W, it draws at most 129 mA.
 
 A 3.3 V supply from the Teensy was rejected, because the other subsystems already take nearly all of its 3V3 pin.
 
@@ -78,7 +78,7 @@ LEVEL     the DAC's full scale, in dB above
 INPUTS    the Teensy's high level                  3.3 V
           where the amplifier's inputs switch      1.3 V
           what they are rated to, powered or not   6 V
-          GAIN through R1, at most               = 4.25 V
+          GAIN through R4, at most               = 4.25 V
 ```
 
 ### Supply
@@ -123,6 +123,6 @@ BUFFERS   RAM2 on the Teensy 4.1                   512 KB
 
 - [`research/Rokr/5_sound.md`](../../research/Rokr/5_sound.md): the stock speaker, its impedance and the estimate of its rating, and the stock sounds
 - [`datasheets/MAX98357A-MAX98357B-Maxim.pdf`](../../datasheets/MAX98357A-MAX98357B-Maxim.pdf): the gain steps, the full-scale output, the input levels and ratings, and the interference measurement with 30 cm of speaker cable
-- [`datasheets/DFR0954-DFRobot-schematic.pdf`](../../datasheets/DFR0954-DFRobot-schematic.pdf): the module's own parts
-- [DFRobot wiki, DFR0954](https://wiki.dfrobot.com/SKU_DFR0954_MAX98357_I2S_Amplifier_Module): what the module's SD and GAIN pins select
+- [`datasheets/DFR0954-DFRobot-schematic.pdf`](../../datasheets/DFR0954-DFRobot-schematic.pdf): the module's own parts and the channel it plays
+- [DFRobot wiki, DFR0954](https://wiki.dfrobot.com/SKU_DFR0954_MAX98357_I2S_Amplifier_Module): what the module's GAIN pin selects
 - [`pin-assignment.md`](../../pin-assignment.md): the I²S2 pins

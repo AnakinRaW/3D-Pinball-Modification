@@ -6,9 +6,10 @@ import dataclasses
 import pathlib
 import sys
 
-from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_direction,
-                     pass_drawings, pass_invariants, pass_mutate, pass_orphans, pass_stale,
-                     pass_sums)
+from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_designators,
+                     pass_direction, pass_drawings, pass_extremes, pass_invariants, pass_mutate,
+                     pass_orphans, pass_sources, pass_stale, pass_sums, write_sums)
+from .coverage import run_coverage
 from .document import NEVER, parse_document
 from .listings import print_blind, print_groups, print_provenance, show_graph
 from .model import Model
@@ -95,6 +96,7 @@ def _write(run: Run) -> int:
     """--write: the figures into the files, then every edit and everything left unplaced."""
     rep = run.rep
     written = pass_write(run.model, run.tokens, rep)
+    write_sums(run.model, rep)
     if rep.count("unplaced") and run.model.name not in values_at(run.args.base):
         rep.note(f"{run.args.base} holds no {run.model.name} model this figcheck can "
                  f"evaluate, so each figure was looked for by its new value alone")
@@ -132,9 +134,11 @@ def _numbers(run: Run):
     status(orphans == 0, "every number accounted for",
            f"{strict} in blocks and tables, {orphans} from nowhere")
     stray, dead, side = rep.count("prose"), rep.count("aside"), rep.count("side")
-    status(stray == 0 and dead == 0 and side == 0, "every number in prose too",
+    debt = rep.count("debt")
+    status(stray == 0 and dead == 0 and side == 0 and debt == 0, "every number in prose too",
            f"{loose_refs} carry a quantity, {len(model.asides) - dead} are named asides, "
            f"{stray} match nothing" + (f", {dead} asides no document states" if dead else "")
+           + (f", {debt} derived in prose" if debt else "")
            + (f", {side} past the bound they quote" if side else ""))
 
 
@@ -165,6 +169,32 @@ def _direction(run: Run):
         claimed = sum(len(f.rises_with) + len(f.falls_with) for f in figs)
         status(directed == claimed, "which way a figure moves",
                f"{directed} of {claimed} inputs move the result the way it claims")
+
+
+def _extremes(run: Run):
+    """Each bound takes the extreme of a varying input that keeps it on its printed side."""
+    checked = pass_extremes(run.model, run.rep)
+    if checked:
+        status(not run.rep.count("extreme"), "the extreme a bound takes",
+               f"{checked} inputs of a declared range checked, "
+               f"{run.rep.count('extreme')} on the wrong side")
+
+
+def _sources(run: Run):
+    """Each reading whose source is a file of this repository stands in that file."""
+    looked = pass_sources(run.model, run.rep)
+    if looked:
+        status(not run.rep.count("source"), "readings in the notes they cite",
+               f"{looked - run.rep.count('source')} of {looked} stand in the file their "
+               f"source names")
+
+
+def _designators(run: Run):
+    """Each part the document names is one its part list or a linked design holds."""
+    seen = pass_designators(run.model, run.rep)
+    if seen:
+        status(not run.rep.count("designator"), "parts named by designator",
+               f"{seen} mentions, {run.rep.count('designator')} of a part no list holds")
 
 
 def _curves(run: Run):
@@ -204,13 +234,12 @@ def _sheets(run: Run):
 
 
 def _sums(run: Run):
-    """The cited datasheets match their checksums, which --write-sums records instead."""
-    sheets = pass_sums(run.model, run.rep, run.args.write_sums)
-    if not run.args.write_sums:
-        status(not run.rep.count("sums"), "datasheet files",
-               f"{sheets} named by the model, "
-               + ("not every checksum matches" if run.rep.count("sums") else
-                  "every checksum matches"))
+    """The cited datasheets match their checksums, which --write records for a new sheet."""
+    sheets = pass_sums(run.model, run.rep)
+    status(not run.rep.count("sums"), "datasheet files",
+           f"{sheets} named by the model, "
+           + ("not every checksum matches" if run.rep.count("sums") else
+              "every checksum matches"))
 
 
 def _mutate(run: Run):
@@ -223,14 +252,15 @@ def _mutate(run: Run):
 
 
 def _stale(run: Run):
-    """The numbers and the pins a diff moved, unless the tree's own block looks for them."""
-    if not run.args.no_stale and not run.whole:
+    """The numbers and the pins a diff moved, unless the tree's own block looks for them.
+    --mutate has no use for them."""
+    if not run.args.mutate and not run.whole:
         pass_stale(run.args.base, run.rep)
         pass_moved_pins(run.args.base, run.rep, [*run.own, run.path])
 
 
-CHECKS = (_figures, _numbers, _drawings, _pins, _direction, _curves, _invariants, _unlinted,
-          _sheets, _sums, _mutate, _stale)
+CHECKS = (_figures, _numbers, _drawings, _pins, _direction, _extremes, _curves, _invariants,
+          _sources, _designators, _unlinted, _sheets, _sums, _mutate, _stale)
 
 
 def _verdict(rep: Report) -> int:
@@ -265,11 +295,10 @@ def _parser() -> argparse.ArgumentParser:
     ap.add_argument("--mutate", action="store_true", help="run the mutation self-test")
     ap.add_argument("--provenance", action="store_true", help="list the inputs and their sources")
     ap.add_argument("--graph", metavar="KEY", help="what a quantity feeds, and what feeds it")
-    ap.add_argument("--write-sums", action="store_true", help="record the datasheet checksums")
-    ap.add_argument("--no-stale", action="store_true")
     ap.add_argument("--write", action="store_true",
                     help="write the model's figures into the document and the "
-                         "drawings, so a figure is typed in one place only")
+                         "drawings, so a figure is typed in one place only, and record "
+                         "the checksum of each cited datasheet that has none yet")
     ap.add_argument("--sheets", action="store_true",
                     help="look every datasheet reading up in the sheet it cites")
     ap.add_argument("--groups", action="store_true",
@@ -312,7 +341,10 @@ def main(argv=None):
     print()
     if run_wiring(paths):
         failed.append("the wiring")
-    if not args.no_stale and not args.write:
+    print()
+    if run_coverage(paths):
+        failed.append("the files")
+    if not args.mutate and not args.write:
         rep = Report()
         pass_stale(args.base, rep)
         pass_moved_pins(args.base, rep)
@@ -322,5 +354,5 @@ def main(argv=None):
     if failed:
         print("Something to fix in " + ", ".join(failed) + ".")
         return 1
-    print(f"Nothing to fix in {len(paths)} models, the pin table and the wiring.")
+    print(f"Nothing to fix in {len(paths)} models, the pin table, the wiring and the files.")
     return 0

@@ -10,10 +10,10 @@
   <!-- ===== BAND 1: the crossing and the two converters ===== -->
   <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">SPI crossing and the two converters</text>
 
-  <!-- J-T, the connector to the Teensy -->
+  <!-- J-IR-TEENSY, the connector to the Teensy -->
   <rect x="40" y="130" width="160" height="310" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="54" y="154" font-size="13" font-weight="700" fill="#333333">J-T: to the Teensy</text>
-  <text x="54" y="170" font-size="11" fill="#777">8-pin, keyed</text>
+  <text x="54" y="154" font-size="13" font-weight="700" fill="#333333">J-IR-TEENSY</text>
+  <text x="54" y="170" font-size="11" fill="#777">8-pin</text>
   <text x="54" y="186" font-size="9.5" fill="#777">pins per pin-assignment.md</text>
   <circle cx="200" cy="220" r="6" fill="#1f4fd1"/>
   <text x="188" y="224" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">1: SCK</text>
@@ -38,26 +38,26 @@
   <text x="188" y="434" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">8: GND</text>
   <text x="54" y="434" font-size="10.5" fill="#777">Teensy GND</text>
 
-  <!-- the conductors, named where they leave J-T -->
+  <!-- the conductors, named where they leave J-IR-TEENSY -->
   <line x1="200" y1="220" x2="226" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="226" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="276" y="224" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK (J-T)</text>
+  <text x="276" y="224" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK</text>
   <line x1="326" y1="220" x2="374" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
   <line x1="200" y1="250" x2="226" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="226" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="276" y="254" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI (J-T)</text>
+  <text x="276" y="254" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI</text>
   <line x1="326" y1="250" x2="374" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
   <line x1="200" y1="280" x2="226" y2="280" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="226" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="276" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-A (J-T)</text>
+  <text x="276" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-A</text>
   <line x1="326" y1="280" x2="374" y2="280" stroke="#1f4fd1" stroke-width="2.5"/>
   <line x1="200" y1="310" x2="226" y2="310" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="226" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="276" y="314" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-B (J-T)</text>
+  <text x="276" y="314" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-B</text>
   <line x1="326" y1="310" x2="374" y2="310" stroke="#1f4fd1" stroke-width="2.5"/>
   <line x1="200" y1="340" x2="226" y2="340" stroke="#1f4fd1" stroke-width="2.5"/>
   <rect x="226" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="276" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CLOCK (J-T)</text>
+  <text x="276" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CLOCK</text>
   <line x1="326" y1="340" x2="374" y2="340" stroke="#1f4fd1" stroke-width="2.5"/>
   <line x1="200" y1="370" x2="223.5" y2="370" stroke="#23862f" stroke-width="5"/>
   <line x1="200" y1="370" x2="226" y2="370" stroke="#3cbf4e" stroke-width="2.5"/>
@@ -495,10 +495,10 @@
 
   <!-- ===== BAND 4: supply ===== -->
   <line x1="30" y1="1427" x2="930" y2="1427" stroke="#ddd" stroke-width="1.5"/>
-  <text data-fig="v_mod_nom" x="30" y="1451" font-size="14" font-weight="700" fill="#0a6ea8">Supply: 3.3 V from the D24V5F3, which sits off this board; on the bench the Teensy&#8217;s 3V3 pin feeds J-PWR</text>
+  <text data-fig="v_mod_nom" x="30" y="1451" font-size="14" font-weight="700" fill="#0a6ea8">Supply: 3.3 V from the D24V5F3, which sits off this board; on the bench the Teensy&#8217;s 3V3 pin feeds J-IR-PWR</text>
 
   <rect x="40" y="1496" width="150" height="76" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="52" y="1518" font-size="12.5" font-weight="700" fill="#333333">J-PWR (2-pin)</text>
+  <text x="52" y="1518" font-size="12.5" font-weight="700" fill="#333333">J-IR-PWR (2-pin)</text>
   <text data-fig="v_mod_nom" x="52" y="1554" font-size="11" font-weight="700" fill="#8a6d0b">1: +3.3 V</text>
   <text x="52" y="1568" font-size="11" font-weight="700" fill="#1a1a1a">2: GND</text>
   <circle cx="190" cy="1546" r="5" fill="#1a1a1a"/>

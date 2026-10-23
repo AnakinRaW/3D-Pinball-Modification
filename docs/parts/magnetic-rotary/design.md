@@ -60,14 +60,15 @@ Every figure below is recomputed by [`figures.py`](figures.py) from the inputs i
 BUS       the module's pull-up, R4 and R5          4.7 kΩ
           the cable to the module, at most         20 cm
           each of its lines to its neighbors       42.98 pF/m
-          an I²C pin, at most                      10 pF
+          an I²C pin, at most, one at each end
+          of the line                              10 pF
           the module's traces and connector,
           assumed                                  10 pF
-          each bus line on this side             = 29 pF
+          each bus line                          = 39 pF
           the AS5600's low input level, of VDD   = 0.3
           and its high input level, of VDD       = 0.7
           a rising edge between the two, with
-          the module's pull-up                   = 114 ns
+          the module's pull-up                   = 154 ns
           what Standard-mode allows                1000 ns
 ```
 

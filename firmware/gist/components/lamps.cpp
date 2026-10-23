@@ -259,8 +259,8 @@ struct LampGroups {
     Strip     perimeter;                                     // both perimeters as one: up the left, across the top, down the right
     Strip     ambient;                                       // the perimeters and the ceiling as one: up the left, across the ceiling, down the right
     LampRange playfield;
-    LampRange score, ballCount, track, bumpers, rollovers;   // placeholders for the named parts of playfield
-    Lamp      drain;
+    LampRange score, ballCount, track, bumpers, rollovers, targets, action;   // the named parts of playfield
+    Lamp      drain, scoop;
 };
 
 // the machine's lamps, each lamp and each strip with up to kMaxEffects effects at once
@@ -285,11 +285,15 @@ private:
     // the group sizes, from the light layout of docs/parts/lighting/design.md
     static constexpr uint16_t kScore     = 10;
     static constexpr uint16_t kBallCount = 6;
-    static constexpr uint16_t kTrack     = 8;
+    static constexpr uint16_t kTrack     = 7;    // the track arrows and the track lights
     static constexpr uint16_t kBumpers   = 4;
     static constexpr uint16_t kDrain     = 1;
-    static constexpr uint16_t kRollovers = 0;    // not yet counted in the lighting design
-    static constexpr uint16_t kPlayfield = kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers;
+    static constexpr uint16_t kRollovers = 3;
+    static constexpr uint16_t kScoop     = 1;
+    static constexpr uint16_t kTargets   = 4;    // TBD
+    static constexpr uint16_t kAction    = 20;   // TDB, the playfield action lights
+    static constexpr uint16_t kPlayfield = kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers
+                                         + kScoop + kTargets + kAction;
     static constexpr uint16_t kPerimeter = 40;   // the lit LEDs of a perimeter strip, every second of its 79
     static constexpr uint16_t kCeiling   = 26;
     static constexpr uint8_t  kMaxEffects = 5;    // the component, the game's base mode, two modes over it and a short flash
@@ -370,6 +374,11 @@ LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
     g.bumpers   = g.playfield.sub(kScore + kBallCount + kTrack, kBumpers);
     g.drain     = g.playfield[kScore + kBallCount + kTrack + kBumpers];
     g.rollovers = g.playfield.sub(kScore + kBallCount + kTrack + kBumpers + kDrain, kRollovers);
+    g.scoop     = g.playfield[kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers];
+    g.targets   = g.playfield.sub(kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers + kScoop,
+                                  kTargets);
+    g.action    = g.playfield.sub(kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers + kScoop
+                                  + kTargets, kAction);
     return g;
 }
 

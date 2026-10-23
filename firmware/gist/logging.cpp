@@ -90,7 +90,7 @@ void Logger::update(uint32_t now) {
     emptying_ = false;
     sent_     = 0;
     if (!known_ || used_ == 0 || now - written_ < kFlushUs) return;
-    if (size_ >= kSize) {                           // the file is full: it is emptied before the next lines go in
+    if (size_ + used_ > kSize) {                    // the next lines would pass the limit: the file is emptied first
         file_.rewrite(out_, 0, write_);
         emptying_ = true;
         return;

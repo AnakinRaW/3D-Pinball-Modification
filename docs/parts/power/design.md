@@ -79,7 +79,7 @@ The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4
 
 ### IR mainboard
 
-J-IR carries 5 V to the IR mainboard. The Pololu D24V5F3 that makes the mainboard's 3.3 V sits there at its J-PWR, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
+J-IR carries 5 V to the IR mainboard. The Pololu D24V5F3 that makes the mainboard's 3.3 V sits there at its J-IR-PWR, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
 
 ### Display
 

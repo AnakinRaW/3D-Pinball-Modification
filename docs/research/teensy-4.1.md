@@ -35,7 +35,7 @@ PJRC's answer is no. Paul Stoffregen, asked whether 3.3 V may be applied to a Te
 
 NXP says the same in [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4. Section 4.2.1.3 on page 31 forbids driving an I/O pin externally while that pin's supply NVCC_xxx is off, and names internal latch-up and malfunction from reverse current flows as the mechanism. Section 4.2.1.1 lists irreversible damage to the processor as the worst case of a sequencing violation.
 
-**The only quantified limit at a pin is a voltage.** Table 7 on page 24 gives `Vin/Vout` from −0.5 V to `OVDD + 0.31 V`, with OVDD the I/O supply voltage, so the ceiling falls to 0.31 V once that supply sits at zero. An injection-current rating, the per-pin milliamp allowance many microcontrollers publish, appears nowhere in the document.
+**The only quantified limit at a pin is a voltage.** Table 7 on page 24 gives `Vin/Vout` from −0.5 V to `OVDD + 0.3 V`, with OVDD the I/O supply voltage, so the ceiling falls to 0.3 V once that supply sits at zero. An injection-current rating, the per-pin milliamp allowance many microcontrollers publish, appears nowhere in the document.
 
 Remedies, in the order PJRC ranks them:
 

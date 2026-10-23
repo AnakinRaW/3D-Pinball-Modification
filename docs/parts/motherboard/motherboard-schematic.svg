@@ -169,7 +169,7 @@
   <circle cx="1520" cy="2272" r="6" fill="#9a9a9a"/>
   <text x="1506" y="2276" text-anchor="end" font-size="12" font-weight="700" fill="#8a8a8a" data-pin="MCLK">33</text>
   <rect x="140" y="150" width="230" height="120" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="152" y="172" font-size="13" font-weight="700" fill="#333333">J-PWR</text>
+  <text x="152" y="172" font-size="13" font-weight="700" fill="#333333">J-MB-PWR</text>
   <text x="152" y="188" font-size="11" fill="#666">from the power board&#x27;s J-MAIN</text>
   <circle cx="370" cy="205" r="6" fill="#1a1a1a"/>
   <text x="356" y="209" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">GND</text>
@@ -520,7 +520,7 @@
   <line x1="2380" y1="1175" x2="2660" y2="1175" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
   <circle cx="2660" cy="1175" r="4" fill="#1a1a1a"/>
   <rect x="2400" y="1400" width="220" height="284" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="2412" y="1422" font-size="13" font-weight="700" fill="#333333">J-T, IR mainboard</text>
+  <text x="2412" y="1422" font-size="13" font-weight="700" fill="#333333">J-IR-TEENSY</text>
   <circle cx="2400" cy="1440" r="6" fill="#1f4fd1"/>
   <text x="2414" y="1444" font-size="11" fill="#777">1</text>
   <text x="2432" y="1444" font-size="12" font-weight="700" fill="#1f4fd1">SCK</text>
@@ -577,7 +577,7 @@
   <line x1="2370" y1="1726" x2="2370" y2="1600" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square"/>
   <line x1="2370" y1="1600" x2="2394" y2="1600" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square"/>
   <rect x="2400" y="1740" width="220" height="150" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="2412" y="1762" font-size="13" font-weight="700" fill="#333333">J-T, coil board</text>
+  <text x="2412" y="1762" font-size="13" font-weight="700" fill="#333333">J-COIL-TEENSY</text>
   <circle cx="2400" cy="1790" r="6" fill="#1f4fd1"/>
   <text x="2414" y="1794" font-size="11" fill="#777">1</text>
   <text x="2432" y="1794" font-size="12" font-weight="700" fill="#1f4fd1">trigger 1</text>
@@ -615,7 +615,7 @@
   <line x1="1680" y1="1990" x2="2736" y2="1990" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square"/>
   <line x1="2736" y1="1990" x2="2736" y2="608" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square"/>
   <rect x="2400" y="2040" width="220" height="250" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="2412" y="2062" font-size="13" font-weight="700" fill="#333333">J-T, sense board</text>
+  <text x="2412" y="2062" font-size="13" font-weight="700" fill="#333333">J-SENSE-TEENSY</text>
   <circle cx="2400" cy="2080" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <text x="2414" y="2084" font-size="11" fill="#777">1</text>
   <text x="2432" y="2084" font-size="12" font-weight="700" fill="#1f7a33">sense 1</text>

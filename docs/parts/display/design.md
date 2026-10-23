@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board beside the module carries J-PWR and the Adafruit 757 as a daughter board. J-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, GND, SDA and SCL run from the board to the module. The bus and its ground run from the Teensy straight to the module.
+A display board beside the module carries J-DISP-PWR and the Adafruit 757 as a daughter board. J-DISP-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, GND, SDA and SCL run from the board to the module. The bus and its ground run from the Teensy straight to the module.
 
 ![Display schematic](display-schematic.svg)
 
@@ -108,12 +108,12 @@ EDGE      a bus pin at its weakest drive, typical  157 Ω
           one wire of the cable                    50 pF
           a buffer input on the module             5.5 pF
           an edge between 10 % and 90 %          = 19.2 ns
-          that edge per volt of the swing        = 7.26 ns/V
+          that edge per volt of the swing        = 7.33 ns/V
           what the buffers allow, at most          10 ns/V
 LEVELS    the Teensy's rail                        3.3 V
-          its high, at least                     = 3.15 V
+          its high, at least                     = 3.11 V
           the buffers' high input level            2 V
-          the margin of the high                 = 1.15 V
+          the margin of the high                 = 1.11 V
           the Teensy's low, at most                0.15 V
           the buffers' low input level             0.8 V
           the margin of the low                  = 0.65 V
@@ -176,7 +176,7 @@ TOUCH     the bus clock                            100 kHz
           its share of the bus at one read a tick= 3.75 %
           the converter's pull-up on SDA and SCL   10 kΩ
           the converter's pull-ups at the Teensy,
-          both lines low                         = 0.66 mA
+          both lines low                         = 0.67 mA
           the BSS138's gate threshold, at most     1.5 V
           each bus line, estimated                 100 pF
           a rising edge between 0.3 and 0.7 of

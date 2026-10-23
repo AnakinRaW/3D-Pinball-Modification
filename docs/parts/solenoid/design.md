@@ -32,15 +32,15 @@ Each sensed solenoid's shell reaches the sense board on a separate wire. A pull-
 
 ## Supply
 
-The four coils draw from the central 5 V power distribution, brought in at J-PWR. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
+The four coils draw from the central 5 V power distribution, brought in at J-COIL-PWR. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
 
-Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's J-T. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over J-PWR. The coil board's J-T carries no ground.
+Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's J-SENSE-TEENSY. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over J-COIL-PWR. J-COIL-TEENSY on the coil board carries no ground.
 
 > On the bench, with the Teensy on USB, the coil board's GND must be joined with the Teensy's GND.
 
-**C91, 100 µF at J-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
+**C91, 100 µF at J-COIL-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
 
-The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, J-PWR stays above the 4.4 V a stock coil needs for its kick.
+The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, J-COIL-PWR stays above the 4.4 V a stock coil needs for its kick.
 
 ## Boards
 
@@ -50,15 +50,15 @@ Both boards sit near the three bumpers.
 
 | Board | Connector | Poles | To |
 |---|---|---|---|
-| Coil board | **J-PWR** | 2 | 5 V and GND from the power distribution, keyed |
-| | **J-T** | 4 | The Teensy |
+| Coil board | **J-COIL-PWR** | 2 | 5 V and GND from the power distribution |
+| | **J-COIL-TEENSY** | 4 | The Teensy |
 | | **J-C1** to **J-C4** | 2 each | 5 V and the MOSFET's drain to the solenoids |
-| Sense board | **J-T** | 5 | The Teensy |
+| Sense board | **J-SENSE-TEENSY** | 5 | The Teensy |
 | | **J-M** | 4 | Open wires with eyelets. One 3V for the foil and the three eyelets unpowered to the solenoid shells. |
 
-The coil board's J-T carries trigger 1 to trigger 4 from the Teensy, in that order. The sense board's J-T carries the three senses, the Teensy's 3V3 and its ground.
+J-COIL-TEENSY on the coil board carries trigger 1 to trigger 4 from the Teensy, in that order. J-SENSE-TEENSY on the sense board carries the three senses, the Teensy's 3V3 and its ground.
 
-| J-T pin | Signal | Direction |
+| J-SENSE-TEENSY pin | Signal | Direction |
 |---|---|---|
 | 1 | Sense 1 | board to the Teensy |
 | 2 | Sense 2 | board to the Teensy |
@@ -66,7 +66,7 @@ The coil board's J-T carries trigger 1 to trigger 4 from the Teensy, in that ord
 | 4 | 3V3 | the Teensy's rail, feeding the foil through R91 |
 | 5 | GND | the Teensy's ground, beside the signals |
 
-> Before the Teensy is plugged in for the first time, every pin of both J-T should be measured against J-PWR's GND with J-PWR powered and both J-T open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
+> Before the Teensy is plugged in for the first time, every pin of J-COIL-TEENSY and J-SENSE-TEENSY should be measured against J-COIL-PWR's GND with J-COIL-PWR powered and both open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
 
 ### Layout
 
@@ -107,7 +107,7 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 | 4 | 1.2 kΩ resistor | **R11** to **R14**, gate |
 | 3 | 100 nF ceramic capacitor | **C1** to **C3**, sense filter |
 | 1 | 330 Ω resistor | **R91**, foil feed |
-| 1 | KEMET ESL107M016AC3AA, 100 µF, 16 V | **C91**, bulk at J-PWR |
+| 1 | KEMET ESL107M016AC3AA, 100 µF, 16 V | **C91**, bulk at J-COIL-PWR |
 
 ## Appendix: derivations
 
@@ -209,18 +209,18 @@ V_SENSE   the contact from foil to shell,
           5 % off where it hurts                = 2.63 kΩ
           the most R91 that does                = 1.28 kΩ
 R_S       between the node and the Teensy pin     10 kΩ
-          how far a pin may go past its rail
-          before its protection diode takes over  0.31 V
+          how far a pin may go past its rail,
+          its absolute maximum                    0.30 V
           the rail plus that, where a powered
-          pin clamps                            = 3.61 V
+          pin clamps                            = 3.60 V
           5 V through the series resistor into an
           unpowered pin, whose ceiling is that
-          0.31 V alone                          = 0.469 mA
+          0.30 V alone                          = 0.470 mA
           what PJRC calls unlikely to harm        1 mA
           the adapter with no load, at most       5.25 V
           the least series resistor that holds
           the pin under 1 mA from that rail, 5 %
-          under its value                       = 5.20 kΩ
+          under its value                       = 5.22 kΩ
 I_FOIL    3.3 V through one closed branch       = 0.319 mA
           all three closed together             = 0.898 mA
           what the Teensy's 3V3 pin allows        250 mA
@@ -278,7 +278,7 @@ GND       one wire of a cable with its two
           estimated                                0.1 Ω
           all four coils at once                   2.84 A
           the power ground over the distribution,
-          all of it on J-PWR's ground wire       = 284 mV
+          all of it on J-COIL-PWR's ground wire       = 284 mV
           the gate with that rise against it     = 2.63 V
           what it still clears 2.5 V by          = 133 mV
           the most R_gate that still clears it   = 1.74 kΩ

@@ -16,11 +16,11 @@
   <rect x="137.5" y="184.5" width="82.5" height="68.75" fill="#D9665E"/>
   <rect x="220" y="184.5" width="82.5" height="68.75" fill="#5FA87A"/>
   <rect x="137.5" y="184.5" width="165" height="68.75" fill="none" stroke="#1B1E22" stroke-width="1"/>
-  <text x="178.8" y="224.3" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">N</text>
-  <text x="261.3" y="224.3" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">S</text>
+  <text x="178.8" y="212.5" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">N</text>
+  <text x="261.3" y="212.5" fill="#ffffff" font-weight="700" text-anchor="middle" font-size="15.1">S</text>
   <rect x="192.5" y="102" width="55" height="82.5" fill="#C9CCCF" stroke="#6B7178" stroke-width="1"/>
   <path d="M188.4,102 q15.68,-6.05 31.62,0 t31.62,0" fill="none" stroke="#6B7178" stroke-width="1"/>
-  <rect x="129.3" y="218.9" width="255.75" height="68.75" fill="#5B52C9" fill-opacity="0.14"/>
+  <rect x="129.3" y="218.9" width="255.75" height="68.75" fill="#5B52C9" fill-opacity="0.14" data-svgcheck="the band the gap may span, which the magnet's face sits inside"/>
   <line x1="129.3" y1="287.6" x2="385" y2="287.6" fill="none" stroke="#5B52C9" stroke-width="1" stroke-dasharray="4.13 2.75"/>
   <line x1="129.3" y1="218.9" x2="385" y2="218.9" fill="none" stroke="#5B52C9" stroke-width="1" stroke-dasharray="4.13 2.75"/>
   <polyline points="247.5,143.3 400.1,143.3 409.2,143.3" fill="none" stroke="#999999" stroke-width="1"/>

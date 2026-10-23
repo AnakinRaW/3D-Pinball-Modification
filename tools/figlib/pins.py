@@ -34,6 +34,10 @@ PERIPHERAL_RE = re.compile(r"FlexPWM\d\.\d|FlexIO\d|QuadTimer\d|I²S\d|Serial\d|
                            r"\bWire\d?\b|\bSPI\d?\b")
 LOOSE_NUM_RE = re.compile(rf"(?<![\w.])(\d{{1,2}})(?!\w|\.\d)(?!\s?(?:{UNIT_ALT})(?![\wµ°]))")
 PIN_PHRASE_RE = re.compile(r"\b[Pp]ins? \d+")
+# "pin 13", "pins 2, 3 and 4", "pins 11 to 16": the numbers a pin phrase lists
+PIN_LIST_RE = re.compile(r"\b[Pp]ins?\s+\[?\d{1,2}\]?(?:(?:\s*,\s*|\s+(?:and|or|to)\s+)\[?\d{1,2}\]?)*")
+# a connector named right before the phrase owns the pin: "J-T pin 7"
+CONNECTOR_BEFORE_RE = re.compile(r"\bJ-[\w-]+\s*$")
 SVG_TEXT_RE = re.compile(r"<!--(.*?)-->|>([^<>]+)<")
 # files that describe the board and the stock machine rather than this build's allocation
 UNALLOCATED = (ROOT / "docs" / "research", ROOT / "docs" / "datasheets")
@@ -272,7 +276,11 @@ def pass_moved_pins(base: str, rep: Report, files=None):
             hits = [cells[0]] if pin_column and cells and cells[0].isdigit() else []
             if NAMED_PIN_RE.search(line) or (PIN_PHRASE_RE.search(line)
                                              and PIN_CONTEXT_RE.search(line)):
-                hits += [m.group(1) for m in LOOSE_NUM_RE.finditer(line)]
+                # the numbers the pin phrase itself gives, not every small number on the line,
+                # and not a connector's own pin
+                for m in PIN_LIST_RE.finditer(line):
+                    if not CONNECTOR_BEFORE_RE.search(line[:m.start()]):
+                        hits += LOOSE_NUM_RE.findall(m.group(0))
             if hits:
                 nums = [n for n in dict.fromkeys(hits) if int(n) in moved]
                 if nums:

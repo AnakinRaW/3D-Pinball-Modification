@@ -12,7 +12,7 @@ The processor reaches the chip through FlexSPI2, its controller for external mem
 
 ### Supply
 
-The chip runs from the Teensy's 3.3 V regulator, as the card socket does. Its current therefore comes out of the same 250 mA. It draws at most 17.6 mA. The datasheet gives 7 mA for the chip itself. Charging the four data lines adds at most 10.6 mA, with the most load the datasheet allows on each line.
+The chip runs from the Teensy's 3.3 V regulator, as the card socket does. Its current therefore comes out of the same 250 mA. It draws at most 22.9 mA. The datasheet gives 7 mA for the chip itself. Charging the four data lines adds at most 10.6 mA and charging the clock line 5.3 mA, with the most load the datasheet allows on each line.
 
 ## Firmware
 
@@ -42,7 +42,9 @@ PSRAM     the chip's size                          8 MB
           the Teensy's 3.3 V at most               3.333 V
           the current that charges them, each
           flipping on every clock                = 10.6 mA
-          the chip on the Teensy's 3.3 V rail    = 17.6 mA
+          the clock line at that load, flipping
+          twice a clock                          = 5.3 mA
+          the chip on the Teensy's 3.3 V rail    = 22.9 mA
 ```
 
 ## Sources
