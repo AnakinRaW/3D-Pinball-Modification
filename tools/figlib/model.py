@@ -49,6 +49,8 @@ class Fig:
     body: str | None = None           # the formula, as it is written
     origin: str | None = None         # the model a taken figure is declared in
     free: frozenset = frozenset()     # the model file's own names an expression formula reads
+    tracks: tuple = ()                # extremes a bound takes on purpose, because what it is
+                                      # compared with moves with the same input
 
 
 def _formula_text(src: str) -> str | None:
@@ -207,6 +209,9 @@ class Model:
         self.owned: list = []
         self.drawn: list = []
         self.supplied: list = []
+        self.ignored: list = []       # (path, why) of files in the model's folder it leaves out
+        self.named: dict = {}         # designators of other boards and modules, with why
+        self.ranges: list = []        # (nominal, low, high) of a quantity that varies
         self.path: pathlib.Path | None = None
         self.pin_data: PinData | None = None
         self._blocks: list[dict] = []
@@ -324,6 +329,22 @@ class Model:
         """A number the prose states that the model does not compute."""
         self.asides.append((text.strip(), why))
 
+    def ignores(self, path, why: str):
+        """A markdown file or drawing in the model's folder that no model governs, and why."""
+        here = self.path.parent if self.path else self.document.parent
+        self.ignored.append(((here / path).resolve(), why))
+
+    def names(self, *designators, why: str):
+        """Designators the document names that its own part list does not hold: a module's
+        own parts, a signal written like a part."""
+        for d in designators:
+            self.named[d] = why
+
+    def range(self, low: str, high: str, *, nominal: str | None = None):
+        """The extremes of a quantity that varies, and its nominal value where it has one. A
+        bound that rests on it takes the extreme that keeps it on its printed side."""
+        self.ranges.append((nominal, low, high))
+
     # -- declaration -----------------------------------------------------
     def _add(self, f: Fig):
         if f.key in self.figs:
@@ -343,7 +364,7 @@ class Model:
         return self._add(f)
 
     def fig(self, key, unit, formula, prints=None, *, moves="", group=_UNSET, label=None,
-            section=_UNSET, tol_units=1.0, stated=_UNSET):
+            section=_UNSET, tol_units=1.0, stated=_UNSET, tracks=""):
         """A derived figure.
 
         formula  a Python expression over the keys it rests on, or, for a formula that
@@ -351,6 +372,8 @@ class Model:
         prints   "down" for a bound the document prints at or below the value, "up" for
                  one it prints at or above
         moves    the inputs it rises with as +key and falls with as -key, "+r_pd -i_led"
+        tracks   extremes of a range a bound takes on purpose, "v_out_max", because the
+                 quantity it is compared with moves with the same input
         """
         group, section, stated = self._placed(group, section, stated, True)
         rises, falls = _moves(key, moves)
@@ -376,7 +399,8 @@ class Model:
                     raise _literal_error(key, found)
         return self._add(Fig(key, unit, "derived", group, label, section, None, None,
                              tol_units, rises, falls, fn=fn, deps=deps, stated=stated,
-                             prints=prints, body=body, free=free))
+                             prints=prints, body=body, free=free,
+                             tracks=tuple(tracks.split())))
 
     def invariant(self, description, check):
         """A relation that has to hold whatever the formulas are: an expression over the

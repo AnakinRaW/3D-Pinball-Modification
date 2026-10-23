@@ -17,6 +17,20 @@ with MODEL.block("LEVELS", section=LEVELS):
 MODEL.invariant("R1 sits inside its window", "r_pd_min <= r_pd <= r_pd_max")
 ```
 
+A quantity that varies declares its extremes, so a bound that rests on it is checked for the side it takes. A bound that takes the other extreme on purpose names it:
+
+```python
+MODEL.range("v_3v3_min", "v_3v3_max", nominal="v_3v3")
+fig("v_in_abs_max", "V", "v_out_max + v_in_over_vdd", "down", tracks="v_out_max")
+```
+
+A designator of a module's or another board's part, a file the model's folder holds that no model reads, each carries its reason:
+
+```python
+MODEL.names("R4", "R5", why="the Grove module's own pull-ups on SDA and SCL")
+MODEL.ignores("bench-measurement.de.md", "the bench record the measured inputs cite")
+```
+
 A block gives its group, its section and `stated` to every declaration inside it. A declaration names its own where it differs. A declaration the document does not state takes no group and no section from its block.
 
 A relative model path reads from the root of the checkout that holds this `figcheck.py`, so a run from another checkout's directory checks this checkout's model. A model outside this checkout's `docs/` is refused.
@@ -43,7 +57,9 @@ Every number in the prose is checked too, against every declared quantity and wi
 MODEL.aside("2.54 mm", "the connector pitch")
 ```
 
-An aside is a quoted datasheet row, a package, a pitch or a plain count. A figure the model holds at another unit is declared with `as_written` instead. Where the reason reads "derived in prose", the entry is a debt: rule 15 wants that figure in the model, and the list is where it is visible until it gets there. An aside whose number no document states any more fails the run, since the model then names a number that has left the documents.
+An aside is a quoted datasheet row, a package, a pitch or a plain count. A figure the model holds at another unit is declared with `as_written` instead. An aside whose reason reads "derived in prose" fails the run, since rule 15 wants a derived figure in the model, where its inputs move it. An aside whose number no document states any more fails the run, since the model then names a number that has left the documents.
+
+A number counts as declared only where a quantity prints as it: rounded to the nearest digit, or toward the side a bound declares. One digit off is another number, so a datasheet's 4 mm test distance does not pass on a 3 mm figure of the same model.
 
 A stated figure is located in the document **by the value it computes**, inside a named block group and a section. Rewording a line therefore costs nothing, while a changed number has nowhere to land and gets reported against whatever its group carries. A table cell holding nothing but a bare number, such as an interrupt priority, can be the line a dimensionless figure states. Nothing requires such a cell to be claimed, since a pin or a count fills a table the same way.
 
@@ -61,7 +77,7 @@ Each check reports on a separate line, and any of them can fail the run:
 |---|---|
 | figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A declared input agrees digit for digit, so a resistor left at 1.1 kΩ beside a model at 1.2 kΩ fails. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
-| every number accounted for | Every value inside a fenced block or a table, anywhere in the document, traces back to a formula or to a declared input |
+| every number accounted for | Every value inside a fenced block or a table, anywhere in the document, is a formula's result or a declared input as that quantity prints |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and a figure in a text element that no `data-fig` names fails the run. One element may carry several figures, and the attribute then names them space separated. A figure of another model is anchored as `model:key`, such as `break-beam:r_e`, so a drawing that carries several subsystems' parts needs no `uses` in the model that owns it |
 | Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
 | what the pins can carry | The pin table's port, capability, timer and FlexIO rows are the ones the board's model gives. See [What the pins can carry](#what-the-pins-can-carry) |
@@ -69,7 +85,10 @@ Each check reports on a separate line, and any of them can fail the run:
 | which way a figure moves | Perturbing a declared input moves the figure the way its `moves` claims, and a dependency that never moves the result is an error |
 | readings off a plotted curve | A plotted curve keeps its shape, each reading sits between the points around it, and where the sheet's table covers the same condition the reading sits inside it. This is the only check a curve reading can get, since the sheet never prints it |
 | what the design requires | The relations the design requires hold, stated over the quantities and independent of the formulas |
-| readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
+| readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites, as a number of its own. A number of one or two digits has to stand alone, since it turns up inside every longer one, and no trailing zero is dropped. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
+| readings in the notes they cite | A `measured` or `datasheet` reading whose source names a markdown file of this repository stands in that file. A bench result no note records is a reading of nothing |
+| the extreme a bound takes | A bound that rests on a quantity declared with `MODEL.range` takes the extreme that keeps it on the side it is printed on: the one that makes a ceiling smallest and a floor largest. The nominal value is never that extreme. A bound that takes the other extreme on purpose, because what it is compared with moves with the same input, names it in `tracks` |
+| parts named by designator | Every designator a design names is one its own part list holds, one a design the same line links holds, or one the model names with `MODEL.names` as a module's or another board's |
 | datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
 | the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
 | one driver at a time | No net carries two outputs at once: an output that always drives shares its net with no other output, and tri-state outputs on one net have a select each. See [Wiring](#wiring) |
@@ -79,6 +98,8 @@ Each check reports on a separate line, and any of them can fail the run:
 | pin functions | Every pin's Peripheral entry is a port signal, a timer channel or a FlexIO signal the board's model gives that pin, or a plain digital pin |
 | owned peripherals | A peripheral a model owns is used by no other subsystem's pin and owned by no other model. The pins of a port that one bus runs for several subsystems may also belong to the subsystems the bus serves |
 | shared budgets, one line each | What every model draws from a pool in the machine adds up under the one figure that supplies it: the current of the Teensy's 3V3 pin, RAM2, and the slots of the driver tick and of the device monitor. On the bench a subsystem runs alone, and its own model checks that case |
+| every file read or left out | Every document and drawing under `docs/parts` and `docs/firmware` is read by a model or left out by one with `MODEL.ignores(path, why)`, and a model reads the whole of its document |
+| every link reaches its target | Every relative link in the documents reaches a file, and every anchor a heading of that file |
 
 A number a diff removed from a document is reported under **Worth knowing** wherever it still stands elsewhere in `docs/`, together with what the run covers but cannot gate. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
 

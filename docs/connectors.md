@@ -9,45 +9,45 @@
 | | J-SOL | 2 | screw terminal | All four coils at once, more than a derated Dupont contact carries |
 | | J-SERVO, J-MAIN, J-IR, J-DISP | 2 each | screw terminal | 5 V. A reversed Dupont plug would reverse the supply |
 | Teensy motherboard | the Teensy | 2 × 24 | socket headers | The Teensy stays pluggable |
-| | J-PWR, from J-MAIN | 2 | screw terminal | 5 V |
-| | the signal to the servo board | 1 | soldered | It comes apart at the servo board's J-PWR |
+| | J-MB-PWR, from J-MAIN | 2 | screw terminal | 5 V |
+| | the signal to the servo board | 1 | soldered | It comes apart at the servo board's J-SERVO-PWR |
 | IR sensing | input of the D24V5F3 | 2 | soldered | The module has no reverse-voltage protection. VIN, GND and VOUT sit in one row |
-| | J-PWR | 2 | screw terminal | Reverse-proof, as the [IR design](parts/ir-reflective/design.md#connections) requires. On the bench it is clamped onto the Teensy's 3V3 |
-| | J-T, both ends | 8 | Dupont, coded | Reverse-proof, as the IR design requires |
+| | J-IR-PWR | 2 | Dupont | 3.3 V and GND. On the bench it takes the Teensy's 3V3 |
+| | J-IR-TEENSY, both ends | 8 | Dupont | The board's lines to the Teensy |
 | | J-S1 to J-S16 | 3 each | Dupont | 3.3 V, with no Teensy pin behind it. The stock sensors' cables end in Dupont plugs. A new sensor board's cable is soldered at the sensor |
-| Solenoids | J-PWR of the coil board | 2 | screw terminal | The coils' current. Reverse-proof, as the [solenoid design](parts/solenoid/design.md#connectors) requires |
-| | J-T of the coil board, both ends | 4 | Dupont, coded | Reverse-proof, as the solenoid design requires |
+| Solenoids | J-COIL-PWR of the coil board | 2 | screw terminal | The coils' current |
+| | J-COIL-TEENSY of the coil board, both ends | 4 | Dupont | The four triggers |
 | | J-C1 to J-C4 | 2 each | Dupont | A coil has no polarity. The stock coils' cables end in Dupont plugs |
-| | J-T of the sense board, both ends | 5 | Dupont, coded | Reverse-proof, as the solenoid design requires |
+| | J-SENSE-TEENSY of the sense board, both ends | 5 | Dupont | The three senses, the Teensy's 3V3 and GND |
 | | J-M | 4 | Dupont at the board, eyelets at the foil and the shells | 3.3 V. The series resistors sit between J-M and the Teensy |
-| Lighting, each of the two boards | J-PWR | 2 | soldered | The other end of J-LIGHT1 or J-LIGHT2 |
-| | data from the Teensy, both ends | 4 | Dupont, coded | The board's three chains and GND at 3.3 V |
+| Lighting, each of the two boards | J-AMBIENT-PWR, J-PLAYFIELD-PWR | 2 | soldered | The other end of J-LIGHT1 or J-LIGHT2 |
+| | data from the Teensy, both ends | 4 | Dupont | The board's three chains and GND at 3.3 V |
 | | J-LA to J-LC on the ambient board, J-LD to J-LF on the playfield board | 3 each | screw terminal | 5 V with a whole chain's current. A reversed plug would reverse the LEDs' supply |
 | | segment to segment | 3 each | soldered | |
 | Audio | the DFR0954 on the Teensy motherboard | 2 × 6 | socket headers | DFRobot includes no header |
 | | speaker | 2 | PH2.0 at the module, the stock plug at the speaker | Polarity does not matter |
-| Servo | J-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
+| Servo | J-SERVO-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
 | | servo plug | 3 | pin header | The servo's cable stays whole |
-| Magnetic rotary sensor | Teensy and module | 4 | Dupont, coded | 3.3 V and I²C |
-| Display | J-PWR of the display board | 2 | screw terminal | 5 V |
-| | touch cable, both ends | 3 | Dupont, coded | SDA, SCL and 3V3 of the Teensy |
+| Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
+| Display | J-DISP-PWR of the display board | 2 | screw terminal | 5 V |
+| | touch cable, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
 | | display board to the module | 4 | soldered at both ends | The cable carries 5 V. Vin sits on the module's header beside the bus |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
-| | bus | 12 | Dupont, coded at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
+| | bus | 12 | Dupont at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
-| | at the Teensy motherboard | 2 each | Dupont, coded | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
+| | at the Teensy motherboard | 2 each | Dupont | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
 
 ## By pole count
 
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
-| 2 | 10 (six on the power board, J-PWR on the Teensy motherboard, the IR mainboard, the coil board and the display board) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
-| 3 | 7 (the six lighting chains, J-PWR of the servo board) | up to 16 J-S, 2 touch, the servo plug | |
-| 4 | | 9 (4 lighting data, 2 rotary sensor, 2 J-T of the coil board, J-M) | |
-| 5 | | 2 (J-T of the sense board) | |
+| 2 | 10 (six on the power board, J-MB-PWR, J-IR-PWR, J-COIL-PWR and J-DISP-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
+| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, the servo plug | |
+| 4 | | 9 (4 lighting data, 2 rotary sensor, 2 J-COIL-TEENSY, J-M) | |
+| 5 | | 2 (J-SENSE-TEENSY) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
-| 8 | | 2 (IR J-T) | |
+| 8 | | 2 (J-IR-TEENSY) | |
 | 12 | | 1 (the display bus) | |
 | 24 | | 2 socket headers for the Teensy | |
 

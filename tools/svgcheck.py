@@ -16,6 +16,11 @@ What it reports, per file:
               drawn into another zone is the case; a filled box over a filled
               box is left alone, a sketch stacks parts on purpose
 
+An element that overlaps on purpose carries data-svgcheck with the reason, such
+as data-svgcheck="the gap's band, which the magnet's face sits inside". Every
+finding on that element, and every finding against it, is then left out. An
+empty reason is reported instead.
+
 Widths are estimated from the character classes of a sans-serif face, so the
 boxes are approximate. The tolerance below keeps that estimate from crying
 wolf on labels that merely touch.
@@ -325,7 +330,28 @@ def check(path, slack, margin=0.0):
             size = f"{a[3] - a[1]:.0f}x{a[4] - a[2]:.0f}"
             bad.append((a[5], "clips", f"box {size}",
                         f"{ox:.0f} x {oy:.0f} into the box on line {b[5]}"))
-    return sorted(bad)
+    return sorted(_waived(src, bad))
+
+
+WAIVER_RE = re.compile(r'<\w+\b[^>]*\bdata-svgcheck="([^"]*)"')
+
+
+def _waived(src, bad):
+    """The findings, less those on or against an element that overlaps on purpose and says
+    why. A waiver without a reason is a finding of its own."""
+    lines, out = set(), []
+    for m in WAIVER_RE.finditer(src):
+        line = src.count("\n", 0, m.start()) + 1
+        if m.group(1).strip():
+            lines.add(line)
+        else:
+            out.append((line, "waiver", "data-svgcheck", "gives no reason"))
+    for b in bad:
+        against = {int(n) for n in re.findall(r"line (\d+)", b[3])}
+        if b[0] in lines or against & lines:
+            continue
+        out.append(b)
+    return out
 
 
 def main():

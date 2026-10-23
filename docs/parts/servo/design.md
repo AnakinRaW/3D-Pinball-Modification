@@ -23,7 +23,7 @@ The mechanism has two end positions. The angle of each is set once on the assemb
 
 ## Circuit
 
-A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-PWR. The servo plugs into it. J-PWR takes 5 V and GND from the power board's J-SERVO and the signal from the Teensy's pin [0](../../pin-assignment.md "Servo signal"). The board's ground comes over J-SERVO from the power board's star point, so no ground wire runs from the Teensy.
+A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-SERVO-PWR. The servo plugs into it. J-SERVO-PWR takes 5 V and GND from the power board's J-SERVO and the signal from the Teensy's pin [0](../../pin-assignment.md "Servo signal"). The board's ground comes over J-SERVO from the power board's star point, so no ground wire runs from the Teensy.
 
 ![Servo schematic](servo-schematic.svg)
 
@@ -31,17 +31,17 @@ A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-PWR. The serv
 
 The Teensy's pin [0](../../pin-assignment.md "Servo signal") drives the servo through the level shifter U1, which turns the 3.3 V pulse into a 5 V pulse. Because the SER0049's datasheet states no input level, a direct drive from the pin was rejected. U1 also protects the Teensy's pin against faults on the servo's cable.
 
-R1 pulls the pin to ground through 10 kΩ. The servo thus gets no pulse from a floating pin. R3 with 2.2 kΩ between the Teensy and U1 protects the Teensy's pin with the machine off and the Teensy on USB. The pin then delivers at most 1.83 mA. R2 with 1.2 kΩ between U1 and the servo protects U1 against a signal wire shorted to 5 V or ground.
+R1 pulls the pin to ground through 10 kΩ. The servo thus gets no pulse from a floating pin. R3 with 2.2 kΩ between the Teensy and U1 protects the Teensy's pin with the machine off and the Teensy on USB. The pin then delivers at most 1.85 mA. R2 with 1.2 kΩ between U1 and the servo protects U1 against a signal wire shorted to 5 V or ground.
 
 U1 has four buffers. The servo uses one of them. Its enable pin OE sits on ground. Its output is therefore always on. The other three buffers have their input and their enable pin on ground.
 
 ### Supply
 
-The servo gets the machine's 5 V through J-PWR. U1 takes its 5 V and its ground at J-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 228 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
+The servo gets the machine's 5 V through J-SERVO-PWR. U1 takes its 5 V and its ground at J-SERVO-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 228 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 
-> Before the Teensy's wire is clamped into J-PWR for the first time, the signal terminal should be measured against J-PWR's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
+> Before the Teensy's wire is clamped into J-SERVO-PWR for the first time, the signal terminal should be measured against J-SERVO-PWR's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
 
 ## Teensy pins
 
@@ -87,12 +87,12 @@ PULSE     the frame of the Arduino Servo library   20 ms
 
 ```
 LEVELS    the Teensy's rail                        3.3 V
-          its high output at 1 mA, at least      = 3.15 V
+          its high output at 1 mA, at least      = 3.11 V
           U1's input current                       1 µA
           R3, from the pin to U1's input           2.2 kΩ
           that current across R3                 = 2.2 mV
           U1's high input threshold                2 V
-          the margin of the high                 = 1.14 V
+          the margin of the high                 = 1.11 V
           the Teensy's low output at 1 mA, at
           most                                     0.15 V
           U1's low input threshold                 0.8 V
@@ -104,20 +104,20 @@ LEVELS    the Teensy's rail                        3.3 V
           at                                     = 3.52 kΩ
           the pin's keeper after a reset, at its
           strongest                                105 kΩ
-          U1's input against the keeper          = 0.299 V
+          U1's input against the keeper          = 0.302 V
           the most R1 that still holds U1's input
           under its low level against the keeper = 30.2 kΩ
           the unpowered pin, with U1's input
           current through R1                     = 10 mV
-          the limit on an unpowered pin            0.31 V
+          the limit on an unpowered pin            0.30 V
           one wire of a cable with its two
           contacts, estimated                      0.1 Ω
           U1's ground over the distribution
           while the servo stalls                 = 80 mV
 OFF       with the machine off, the pin's
           current through R3 into U1's clamp
-          diode, at most                         = 1.5 mA
-          the pin's whole current then           = 1.83 mA
+          diode, at most                         = 1.6 mA
+          the pin's whole current then           = 1.85 mA
           U1's clamp current, absolute maximum     20 mA
           the least R3 that holds the pin inside
           its 4 mA then                          = 0.97 kΩ

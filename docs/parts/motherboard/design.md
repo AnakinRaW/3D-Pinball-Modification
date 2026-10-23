@@ -10,11 +10,11 @@ The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems 
 
 ### Supply
 
-J-PWR takes 5 V and GND from the power board's [J-MAIN](../power/design.md#outputs). Its GND joins the GND rail.
+J-MB-PWR takes 5 V and GND from the power board's [J-MAIN](../power/design.md#outputs). Its GND joins the GND rail.
 
 The Teensy runs from this 5 V or from USB alone. Its trace between VUSB and VIN is cut. Two diodes feed VIN from either source and keep the sources apart:
 
-- D1 is a 1N5819 between J-PWR's 5 V and VIN. While the machine is off, it keeps USB from feeding the power board.
+- D1 is a 1N5819 between J-MB-PWR's 5 V and VIN. While the machine is off, it keeps USB from feeding the power board.
 - D2 is a 1N5819 across the cut on the Teensy's underside. It keeps the power board from feeding USB.
 
 The DFR0954 takes its 5 V ahead of D1, so it stays off on USB alone. The node behind D1 feeds both the Teensy's VIN and R2 of the break beam.
@@ -25,8 +25,8 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 | Subsystem | What the 3V3 feeds |
 |---|---|
-| [IR sensing](../ir-reflective/design.md) | the isolator's Teensy side, over the mainboard's J-T |
-| [Solenoids](../solenoid/design.md) | the foil, over the sense board's J-T |
+| [IR sensing](../ir-reflective/design.md) | the isolator's Teensy side, over the IR mainboard's J-IR-TEENSY |
+| [Solenoids](../solenoid/design.md) | the foil, over the sense board's J-SENSE-TEENSY |
 | [Break beam](../break-beam/design.md) | R3, the receiver's pull-up |
 | [Magnetic rotary sensor](../magnetic-rotary/design.md) | the module |
 | [Display](../display/design.md) | the touch converter's LV side, over the touch cable |
@@ -34,7 +34,7 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 ### GND rail
 
-The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-PWR's GND. These cables take their ground from it: the IR mainboard's J-T, the solenoid sense board's J-T, the two lighting data cables, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
+The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-MB-PWR's GND. These cables take their ground from it: J-IR-TEENSY of the IR mainboard, J-SENSE-TEENSY of the solenoid sense board, the two lighting data cables, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
 
 ### Toggle switch
 

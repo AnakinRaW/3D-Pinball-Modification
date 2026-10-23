@@ -2,10 +2,16 @@
 formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "display", drawings=["display-schematic.svg"],
+MODEL = Model.at(__file__, "display",
+                 drawings=["display-schematic.svg",
+                           "../../firmware/components/screen-architecture.svg"],
                  documents=["../../firmware/drivers/display.md", "../../firmware/drivers/touch.md",
-                            "../../firmware/components/screen.md", "../../../assets/media.md"])
+                            "../../firmware/components/screen.md",
+                            "../../firmware/components/video-player.md", "../../../assets/media.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.names("R13", "R14", why="the display module's own pull-ups on the touch lines")
+MODEL.aside("255", "the largest value a byte holds, which a palette entry's opacity takes for opaque")
+MODEL.names("D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", why="the data lines of the display bus")
 
 PANEL = "ILI9341-Ilitek.pdf"
 GLASS = "CH280QV10-CT-ChengHao.pdf"
@@ -79,8 +85,8 @@ with MODEL.block(section=BUS):
     MODEL.uses("v_3v3", of="teensy-4.1", group="LEVELS")
     fig("t_edge", "ns", "ln((1 - edge_low.raw) / (1 - edge_high.raw)) * r_drv * (c_cable + c_io)",
         "up", moves="+r_drv +c_cable +c_io +edge_high -edge_low", group="EDGE")
-    fig("dt_dv", "ns/V", "t_edge / ((edge_high - edge_low) * v_3v3)", "up",
-        moves="+r_drv +c_cable +c_io -v_3v3", group="EDGE")
+    fig("dt_dv", "ns/V", "t_edge / ((edge_high - edge_low) * v_3v3_min)", "up",
+        moves="+r_drv +c_cable +c_io -v_3v3_min", group="EDGE")
 
 # ---------------------------------------------------------------------------
 # the levels: the Teensy's pins into the module's buffers
@@ -92,8 +98,8 @@ with MODEL.block("LEVELS", section=BUS):
        "VCC = 2.7 V to 3.6 V")
     ds("vil_buf", 0.8, "V", sheet=BUFFER, src="7.3 Recommended Operating Conditions, VIL maximum "
        "at VCC = 2.7 V to 3.6 V")
-    fig("v_oh_min", "V", "v_3v3 - v_oh_drop", "down", moves="+v_3v3 -v_oh_drop")
-    fig("m_high", "V", "v_oh_min - vih_buf", "down", moves="+v_3v3 -v_oh_drop -vih_buf")
+    fig("v_oh_min", "V", "v_3v3_min - v_oh_drop", "down", moves="+v_3v3_min -v_oh_drop")
+    fig("m_high", "V", "v_oh_min - vih_buf", "down", moves="+v_3v3_min -v_oh_drop -vih_buf")
     fig("m_low", "V", "vil_buf - v_ol_max", "down", moves="+vil_buf -v_ol_max")
 
 # -- the frame: three layers of palette indices and a movie, composited as they are sent
@@ -229,7 +235,7 @@ with MODEL.block("TOUCH", section=TOUCH):
     dec("n_touch_bytes", 8, "", src="the bytes on the bus in one read: the address to write, the "
         "register TD_STATUS, the address to read, and TD_STATUS with the four bytes of the first "
         "touch point", stated=False)
-    dec("n_touch_data", 5, "", src="the bytes that read brings, TD_STATUS and P1_XH to P1_YL, "
+    dec("n_touch_data", 5, "bytes", src="the bytes that read brings, TD_STATUS and P1_XH to P1_YL, "
         "registers 0x02 to 0x06 of the FT6x06 map the CST026 keeps", stated=False)
     dec("n_conditions", 3, "clocks", src="START, the repeated START and STOP, about one clock "
         "period each", stated=False)
@@ -283,11 +289,14 @@ fig("n_hold_ticks", "", "t_hold / t_ttick", moves="+t_hold -t_ttick", stated=Fal
 # -- the supply: the module's own regulator makes VCC from the power board's 5 V
 MODEL.uses("v_not_tolerant", of="teensy-4.1")
 MODEL.uses("v_3v3_min", of="teensy-4.1")
+MODEL.uses("v_3v3_max", of="teensy-4.1")
 with MODEL.block("SUPPLY", section=SUPPLY):
     MODEL.uses("v_rail", of="lighting")
     MODEL.uses("v_jack_max", of="power")
     MODEL.uses("v_release_6a", of="power")
     MODEL.uses("t_a", of="ir-reflective")
+ds("v_ldo_nom", 3.3, "V", sheet=LDO, src="Electrical Characteristics, the AP2112-3.3's output "
+   "voltage, typical")
 ds("v_ldo_acc", 1.5, "%", sheet=LDO, src="Electrical Characteristics, output voltage accuracy",
    group="VCC", section=SUPPLY, stated=True)
 with MODEL.block("SUPPLY", section=SUPPLY):
@@ -323,28 +332,29 @@ with MODEL.block("SUPPLY", section=SUPPLY):
 
     # VCC is the module regulator's output, which runs from the 5 V rail; each LED takes the
     # rest over its own resistor, and a forward voltage at its lowest takes the most
-    fig("v_vcc_max", "V", "v_3v3 * (1 + v_ldo_acc.raw)", "up", moves="+v_3v3 +v_ldo_acc")
+    fig("v_vcc_max", "V", "v_ldo_nom * (1 + v_ldo_acc.raw)", "up", moves="+v_ldo_nom +v_ldo_acc")
 
-fig("v_vcc_min", "V", "v_3v3 * (1 - v_ldo_acc.raw)", "down", moves="+v_3v3 -v_ldo_acc", group="VCC",
+fig("v_vcc_min", "V", "v_ldo_nom * (1 - v_ldo_acc.raw)", "down", moves="+v_ldo_nom -v_ldo_acc", group="VCC",
     section=SUPPLY)
+MODEL.range("v_vcc_min", "v_vcc_max")
 with MODEL.block("SUPPLY", section=SUPPLY):
     fig("i_led_max", "mA", "(v_vcc_max - vf_min) / r_led", "up",
-        moves="+v_3v3 +v_ldo_acc -vf_min -r_led")
-    fig("i_backlight", "mA", "n_led * i_led_max", "up", moves="+v_3v3 +n_led -vf_min -r_led")
+        moves="+v_ldo_nom +v_ldo_acc -vf_min -r_led")
+    fig("i_backlight", "mA", "n_led * i_led_max", "up", moves="+v_ldo_nom +n_led -vf_min -r_led")
     fig("i_module", "mA", "i_backlight + i_panel + i_touch + n_pulls * v_vcc_max / r_pull + 2 * "
         "i_buffer + i_sup + i_ldo_q", "up",
-        moves="+v_3v3 +n_led +i_panel +i_touch +n_pulls -vf_min -r_led -r_pull")
+        moves="+v_ldo_nom +n_led +i_panel +i_touch +n_pulls -vf_min -r_led -r_pull")
 
 # the converter's pull-ups, both lines held low: the LV side out of the Teensy's 3V3, the
 # HV side out of Vin
-fig("i_conv_lv", "mA", "2 * v_3v3 / r_pu_touch", "up", moves="+v_3v3 -r_pu_touch", group="TOUCH",
+fig("i_conv_lv", "mA", "2 * v_3v3_max / r_pu_touch", "up", moves="+v_3v3_max -r_pu_touch", group="TOUCH",
     section=TOUCH)
 with MODEL.block("SUPPLY", section=SUPPLY):
     fig("i_conv_hv", "mA", "2 * v_rail / r_pu_touch", "up", moves="+v_rail -r_pu_touch")
 
     # J-DISP carries the module and the converter's HV pull-ups
     fig("i_disp", "mA", "i_module + i_conv_hv", "up",
-        moves="+v_3v3 +n_led +v_rail -vf_min -r_led -r_pu_touch")
+        moves="+v_ldo_nom +n_led +v_rail -vf_min -r_led -r_pu_touch")
 
     # the module's regulator drops the rail to VCC; the adapter at its no-load maximum and VCC
     # at the bottom of its tolerance put the most across it
@@ -374,14 +384,14 @@ with MODEL.block("VCC", section=SUPPLY):
 
     # the dropout grows with the current through the regulator's pass transistor
     fig("v_dropout", "mV", "v_do_max * i_module / i_do", "up",
-        moves="+v_do_max +v_3v3 +n_led +i_panel -i_do -vf_min")
+        moves="+v_do_max +v_ldo_nom +n_led +i_panel -i_do -vf_min")
 
     # the least Vin the module's regulator keeps VCC at its top from
     fig("v_in_mod_min", "V", "v_vcc_max + v_dropout", "up",
-        moves="+v_3v3 +v_ldo_acc +v_do_max +n_led -i_do -vf_min")
+        moves="+v_ldo_nom +v_ldo_acc +v_do_max +n_led -i_do -vf_min")
 
     # at the top of the regulator's tolerance VCC passes the ILI9341's operating maximum by this
-    fig("v_over_vci", "mV", "v_vcc_max - vci_max", "up", moves="+v_3v3 +v_ldo_acc -vci_max")
+    fig("v_over_vci", "mV", "v_vcc_max - vci_max", "up", moves="+v_ldo_nom +v_ldo_acc -vci_max")
 
 # ---------------------------------------------------------------------------
 # start-up: the supervisor's reset, then the panel and the touch controller

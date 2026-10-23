@@ -3,8 +3,11 @@ from figcheck import *
 
 MODEL = Model.at(__file__, "controls",
                  drawings=["toggle-switch-schematic.svg",
-                           "../motherboard/motherboard-schematic.svg"])
+                           "../motherboard/motherboard-schematic.svg"],
+                 documents=["../../firmware/drivers/controls.md", "../motherboard/design.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.uses("v_rail", of="lighting")
+dec("t_bounce", 50, "ms", src="the time after a report in which the driver drops an edge as bounce, docs/firmware/drivers/controls.md")
 
 R1 = "Series resistor"
 

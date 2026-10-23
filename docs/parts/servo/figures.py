@@ -42,6 +42,7 @@ with MODEL.block("LEVELS", section=LEVELS):
     MODEL.uses("i_oh_test", of="teensy-4.1", stated=False)
     MODEL.uses("r_keeper_min", of="teensy-4.1")
 MODEL.uses("v_3v3_max", of="teensy-4.1")
+MODEL.uses("v_3v3_min", of="teensy-4.1")
 ds("kit_tol", 5, "%", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland "
    "product page: tolerance 5 %", group="OUTPUT", section=OUTPUT, stated=True)
 ds("p_kit", 0.25, "W", src="the same kit and page: power rating 0.25 W")
@@ -77,22 +78,22 @@ asm("edge_low", 10, "%", src="the lower mark TI's logic sheets time an edge from
     "its marks in a figure the text search cannot read")
 asm("edge_high", 90, "%", src="the upper mark, taken as edge_low is")
 with MODEL.block("LEVELS", section=LEVELS):
-    fig("v_oh_min", "V", "v_3v3 - v_oh_drop", "down", moves="+v_3v3 -v_oh_drop")
+    fig("v_oh_min", "V", "v_3v3_min - v_oh_drop", "down", moves="+v_3v3_min -v_oh_drop")
 
     # U1's input current runs through R3 in either direction, so U1's input sits
     # that far off the pin's level, against whichever margin it eats into.
     fig("v_r_in", "mV", "ii_u1 * r_in", "up", moves="+ii_u1 +r_in")
     fig("m_high", "V", "v_oh_min - v_r_in - vih_u1", "down",
-        moves="+v_3v3 -v_oh_drop -vih_u1 -ii_u1 -r_in")
+        moves="+v_3v3_min -v_oh_drop -vih_u1 -ii_u1 -r_in")
     fig("m_low", "V", "vil_u1 - v_ol_max - v_r_in", "down", moves="+vil_u1 -v_ol_max -ii_u1 -r_in")
-    fig("i_pd", "mA", "v_3v3 / r_pd", "up", moves="+v_3v3 -r_pd")
+    fig("i_pd", "mA", "v_3v3_max / r_pd", "up", moves="+v_3v3_max -r_pd")
 
     # After a reset the keeper holds the level the pin last drove, a high at worst,
     # and R1 pulls against it at the pin, so the pin sits at the divider between
     # the two. U1's input current adds its drop across the two in parallel and
     # across R3.
-    fig("v_keeper", "V", "v_3v3 * r_pd / (r_pd + r_keeper_min) + ii_u1 * (r_pd * r_keeper_min / "
-        "(r_pd + r_keeper_min) + r_in)", "up", moves="+v_3v3 +r_pd +ii_u1 +r_in -r_keeper_min")
+    fig("v_keeper", "V", "v_3v3_max * r_pd / (r_pd + r_keeper_min) + ii_u1 * (r_pd * r_keeper_min / "
+        "(r_pd + r_keeper_min) + r_in)", "up", moves="+v_3v3_max +r_pd +ii_u1 +r_in -r_keeper_min")
 
     # With the 5 V on and the Teensy unpowered nothing drives the pin: U1's input
     # current is all that reaches its net, and R1 carries it to ground.
@@ -102,8 +103,8 @@ with MODEL.block("OFF", section=LEVELS):
     # With the machine's 5 V off, U1's clamp diode holds its input at the dead
     # rail. The pin's high then drives R3 into that diode, both taken at 0 V, and
     # R1 beside it.
-    fig("i_clamp", "mA", "v_3v3 / r_in", "up", moves="+v_3v3 -r_in")
-    fig("i_pin_off5", "mA", "i_clamp + i_pd", "up", moves="+v_3v3 -r_in -r_pd")
+    fig("i_clamp", "mA", "v_3v3_max / r_in", "up", moves="+v_3v3_max -r_in")
+    fig("i_pin_off5", "mA", "i_clamp + i_pd", "up", moves="+v_3v3_max -r_in -r_pd")
 
 with MODEL.block(section=LEVELS):
     # R3 into U1's input and the wiring beside it is a single pole, whose step
@@ -137,7 +138,7 @@ with MODEL.block(section=LEVELS):
         "c_stray) * (1 + kit_tol))", "down",
         moves="+t_tran_max +edge_low -c_in_u1 -c_stray -kit_tol -edge_high", group="EDGE")
 
-    # U1 takes its ground at J-PWR, so the servo's stall current through that one
+    # U1 takes its ground at J-SERVO-PWR, so the servo's stall current through that one
     # wire lifts U1's ground over the distribution, and the Teensy's high arrives
     # that much lower.
     fig("v_u1_rise", "mV", "i_stall * r_lead", "up", moves="+i_stall +r_lead", group="LEVELS")
@@ -268,7 +269,7 @@ MODEL.net("Servo signal, Teensy side",
           teensy="Servo signal")
 MODEL.net("Servo signal, servo side",
           drives("U1 output Y", "push-pull", rail="the machine's 5 V",
-                 src="design.md, U1 takes its 5 V at J-PWR, and OE on ground keeps its output on"),
+                 src="design.md, U1 takes its 5 V at J-SERVO-PWR, and OE on ground keeps its output on"),
           reads("the SER0049's signal input through R2", src="design.md, R2 between U1 and the servo"))
 
 MODEL.owns("FlexPWM1.1", "PWMServo sets the submodule to a 20 ms frame, and the driver writes its "

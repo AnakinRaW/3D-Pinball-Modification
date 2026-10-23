@@ -58,9 +58,9 @@ dec("i_pin_fault_max", 1, "mA", src="PJRC calls under 1 mA into an out-of-range 
 # -- the pins, IMXRT1060CEC Rev. 4 --------------------------------------------
 ds("v_in_below", 0.5, "V", sheet=MCU, src="Table 7, Vin/Vout minimum given as -0.5 V, how far "
    "below ground a pin may be driven")
-ds("v_clamp_over", 0.31, "V", sheet=MCU, src="Table 7, Vin/Vout maximum given as OVDD + 0.31 V, "
-   "which leaves 0.31 V on a pin while the Teensy is unpowered and is where the pin's protection "
-   "diode takes over")
+ds("v_clamp_over", 0.3, "V", sheet=MCU, src="Table 7, Vin/Vout maximum given as OVDD + 0.3 V; "
+   "the 1 the extracted text shows after it is the mark of footnote 1. As an absolute maximum it "
+   "leaves 0.3 V on a pin while the Teensy is unpowered")
 ds("v_oh_drop", 0.15, "V", sheet=MCU, src="Table 22 single voltage GPIO DC parameters, high-level "
    "output voltage VOH minimum, NVCC_XXXX - 0.15 V at Ioh = -1 mA for ipp_dse 011 to 111; "
    "pinMode(OUTPUT) in PJRC's cores/teensy4/digital.c sets 7")
@@ -102,6 +102,7 @@ fig("ram2", "KB", "ram - ram1", moves="+ram -ram1", stated=False)
 # rail takes it at the end that hurts it.
 fig("v_3v3_min", "V", "v_3v3 * (1 - v_3v3_acc.raw)", moves="+v_3v3 -v_3v3_acc", stated=False)
 fig("v_3v3_max", "V", "v_3v3 * (1 + v_3v3_acc.raw)", moves="+v_3v3 +v_3v3_acc", stated=False)
+MODEL.range("v_3v3_min", "v_3v3_max", nominal="v_3v3")
 
 MODEL.supplies("i_teensy_3v3", pool=TEENSY_RAIL)
 MODEL.draws("i_sd_card", pool=TEENSY_RAIL)   # the card in the on-board socket, fed from the same regulator

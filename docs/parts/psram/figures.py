@@ -18,7 +18,10 @@ with MODEL.block("PSRAM", section=CHIP):
        "maximum, which its note 1 gives without the output load current; read from the rendered "
        "page")
     ds("f_psram_max", 109, "MHz", src=f"{PSRAM_SHEET}, Rev. 2.3, page 1: the clock rate for "
-       "32-byte wrapped bursts at VDD = 3.3 V ±10 %; read from the rendered page")
+       "32-byte wrapped bursts at VDD = 3.3 V ±10 %; read from the rendered page. Its lower "
+       "rate for a linear burst holds only for a burst that crosses a 1 KB page, and FlexSPI2 "
+       "sends none with the prefetch startup.c switches off: a cache line fills in one aligned "
+       "32-byte burst")
     ds("f_psram", 105.6, "MHz", src=f"{CORE}/startup.c, configure_external_ram(): "
        "CCM_CBCMR_FLEXSPI2_PODF(4) with CLK_SEL(3), the FlexSPI2 clock from Teensyduino 1.60 on")
     ds("n_psram_lines", 4, "", src=f"{CORE}/startup.c, configure_external_ram(): the read and the "
@@ -33,7 +36,10 @@ with MODEL.block("PSRAM", section=CHIP):
     # the line's load once. The datasheet's I_CC leaves this current out.
     fig("i_psram_lines", "mA", "n_psram_lines * c_psram_line * v_3v3_max * f_psram / 2", "up",
         moves="+n_psram_lines +c_psram_line +v_3v3_max +f_psram")
-    fig("i_psram", "mA", "i_psram_cc + i_psram_lines", "up",
+    # The clock line flips twice every period and charges its load once a period.
+    fig("i_psram_clk", "mA", "c_psram_line * v_3v3_max * f_psram", "up",
+        moves="+c_psram_line +v_3v3_max +f_psram")
+    fig("i_psram", "mA", "i_psram_cc + i_psram_lines + i_psram_clk", "up",
         moves="+i_psram_cc +n_psram_lines +c_psram_line +v_3v3_max +f_psram")
 
 MODEL.draws("i_psram", pool=TEENSY_RAIL)   # the PSRAM on the underside, fed from the Teensy's 3V3

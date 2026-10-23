@@ -111,7 +111,7 @@ public:
     }
 
 private:
-    static constexpr size_t kProducers = 10;     // the producers input-handling.md estimates at most
+    static constexpr size_t kProducers = 11;     // the producers input-handling.md estimates at most
 
     Producer producers_[kProducers];
     Producer refused_;                           // the queue attach() hands out when it refuses one

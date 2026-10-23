@@ -3,9 +3,11 @@ from figcheck import *
 
 MODEL = Model.at(__file__, "ir-reflective",
                  drawings=["ir-sensor-mainboard.svg", "pulsed-schematic.svg",
-                           "mainboard-placement.svg"],
+                           "mainboard-placement.svg", "continuous-schematic.svg"],
                  documents=["../../firmware/drivers/ir-sensing.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.ignores("bench-measurement.de.md", "the bench record the measured inputs cite, which the "
+              "source check reads")
 
 
 def _to_printed(q, unit, decimals):
@@ -56,7 +58,7 @@ dec("e_cal", 5, "%", src="the factor error the averaging may leave, well under t
 fig("clear_over_noise_min", "×", "1 / (e_cal * sqrt(n_cal))", "up", moves="-e_cal -n_cal")
 dec("budget_grain", 10, "µs", src="the step the firmware rounds the read block up to, so a phase "
     "holds whole tens")
-dec("n_contacts", 4, "", src="two connectors on the J-PWR cable, each with a contact on both "
+dec("n_contacts", 4, "", src="two connectors on the J-IR-PWR cable, each with a contact on both "
     "conductors")
 dec("switch_r_factor", 3, "", src="three times the converter's switch resistance, the what-if the "
     "acquisition window is tested against")
@@ -84,8 +86,9 @@ dec("i_dout_contention_max", 2, "mA", src="the current two converter outputs may
     "other until firmware raises a chip select: DS21295D rates none, and 2 mA keeps it at the "
     "order of the 1 mA its V_OL is specified at, as the isolator's outputs are held to their 2 mA",
     group="R37 and R38, 1.2 kΩ at each converter's DOUT pin", stated="loose")
-dec("ripple_steps_max", 0.5, "step", src="the reference ripple a full-scale reading may carry, "
-    "half a converter step, so it cannot move a reading by one")
+dec("ripple_steps_max", 1, "step", src="the reference ripple a full-scale reading may carry, one "
+    "converter step: a ball moves a reading by about 50 steps, so a step of ripple stays far "
+    "under any threshold")
 dec("r_pd_floor", 1, "kΩ", src="the pull-down's lower end in the knob table, where a ball still "
     "gives about 11 steps of a ten-bit read")
 dec("c_ref", 22, "µF", src="C6, printed value")
@@ -123,7 +126,7 @@ msr("i_photo", 36.6, "µA", src="bench, measurement B at the installed position 
     "track, each minus its own dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
 asm("rds_irl_est", 0.1, "Ω", src="an estimate above Fig. 1's typical 3.0 V curve, since the "
     "IRL540N specifies R_DS(on) only from V_GS = 4.0 V")
-asm("cable_r", 0.1, "Ω", src="the round build figure for the J-PWR cable; it costs 0.2 mV more "
+asm("cable_r", 0.1, "Ω", src="the round build figure for the J-IR-PWR cable; it costs 0.2 mV more "
     "than the allowance, inside the millivolt the rail is printed at")
 dec("cable_drop_bound", 22, "mV", group="V_OUT", section=BASE, stated=True, label="bounded at",
     src="the drop the rail minimum leaves for the cable, from which the 0.1 Ω follows")
@@ -140,29 +143,40 @@ asm("stray_miso", 20, "pF", src="stray at the MISO conductor and the Teensy pin"
 asm("derate", 50, "%", src="ceramic capacitance kept under DC bias, as FN8373.2 itself advises")
 asm("vcc2_overshoot", 70, "mV", src="load-release overshoot on VCC2, the order of the droop")
 asm("pulse_overshoot_module", 23, "mV", src="Q_pulse / C on the module's capacitance alone")
-asm("burst_freq_low", 9, "kHz", src="the low end of the power-save burst rate at the dark-phase "
-    "load")
 asm("further_drop", 17, "mV", src="one step of further cable drop past the bound")
-asm("cable_length", 5, "cm", src="the run from the module to J-PWR the bound is taken at")
+asm("cable_length", 5, "cm", src="the run from the module to J-IR-PWR the bound is taken at")
 dec("one_meter", 1, "m", src="the length awg28_per_m is quoted per")
 asm("rds_hypothetical", 1, "Ω", src="the R_DS(on) the IRL540N estimate is tested against, an order "
     "of magnitude above it")
 asm("esr_electrolytic", 2, "Ω", src="the ESR an aluminum electrolytic would bring in place of C5")
 
+# -- Design A, rejected: the emitter on the rail through 220 Ω, no switch -------
+fig("i_led_a_nominal", "mA", "(v_mod_nom - vf_nominal_read) / r_led", stated=False)
+fig("u_node_a_max", "V", "v_out_max * r_pd_alt_high / (r_pd_alt_high + r_col)", "up",
+    stated=False)
+dec("r_pd_alt_low", 1.5, "kΩ", src="the pull-down a channel gets whose node still saturates at "
+    "2.2 kΩ, the troubleshooting table")
+# how many channels the Teensy case affords at the brighter resistor, beside the rest at 220 Ω
+fig("n_brighter_fit", "", "floor_to((left_teensy - i_bus) / (i_led_worst_150 - i_led_worst), '', 1)",
+    stated=False)
+ds("fs_5v", 200, "kHz", src="DS21295D, the 200 ksps it pairs with the 3.6 MHz clock at VDD = 5 V",
+   sheet=ADC)
+fig("clocks_conversion_min", "clocks", "f_clk_5v / fs_5v", stated=False)
+
 # -- measured on the stock machine --------------------------------------------
 dec("r_col_new", 0, "kΩ", src="the new boards take the collector straight to the rail. The stock "
     "board's 1.585 kΩ limits the collector to 549 µA where the part allows 20 mA, so it limits "
-    "nothing any candidate needs limited, and it costs a third of the node's range")
+    "nothing any candidate needs limited, and it costs a quarter of the node's range")
 msr("r_col", 1.585, "kΩ", src="the collector load on the stock P33 sensor board, read with a "
     "meter, research/Rokr/2_ir-reflective-sensor-p33.md")
 msr("dark_reading", 3.8, "mV", src="bench, measurement B at the installed position with the "
     "emitter dark and the track clear, research/Rokr/2_ir-reflective-sensor-p33.md")
 msr("tau_sensor", 70, "µs", src="bench, falling edge at the 4.7 kΩ pull-down with a ball on the "
-    "track: 53 µs read, rounded up to the next ten because a larger τ is the safe side")
+    "track: 53 µs read, plus the 20 % the reading may be off by, rounded up to the next ten "
+    "because a larger τ is the safe side")
 asm("dwell", 3, "ms", src="estimated from the stock machine's measured emitter period: it needs "
     "both windows of that period, so a ball it catches dwells at least one full period")
-msr("sag_three_coils", 3.75, "V", src="the machine's 5 V with three bumper coils firing and a poor "
-    "supply cable, research/Rokr/3_bumper-control.md")
+MODEL.uses("v_ir_end", of="power")
 msr("vf_diode_range", 1.082, "V", src="the stock board read in a meter's diode range, which sits "
     "on the 25 °C curve at the meter's test current")
 msr("i_meter", 0.86, "mA", src="the meter's diode-range test current, from the 1.365 V it showed "
@@ -174,19 +188,20 @@ ds("mod_tol", 4, "%", group="V_OUT", section=BASE, stated=True, src="Pololu D24V
 ds("i_module", 500, "mA", src="Pololu D24V5F3, maximum output current")
 ds("v_mod_in_min", 3.4, "V", src="Pololu D24V5F3, minimum input voltage")
 ds("l_mod", 22, "µH", src="D24V5F3 inductor", sheet=POLOLU)
-ds("f_sw", 500, "kHz", src="D24V5F3 switching frequency", sheet=POLOLU)
+ds("f_sw", 500, "kHz", src="FN8373.2, the switching frequency with FS tied to VCC, as the "
+   "D24V5F3 schematic ties it", sheet=REG)
 ds("c_module_printed", 10, "µF", src="two 10 µF on VOUT", sheet=POLOLU)
 ds("psm_band", 1, "%", src="FN8373.2, the power-save comparator holds the output in a band of 1 %",
    sheet=REG)
 ds("psm_ripple", 40, "mV", src="FN8373.2 Figure 45, about 40 mV peak to peak at 20 mA", sheet=REG)
-ds("psm_burst_ripple", 44, "mV", src="FN8373.2, the burst band at the dark-phase load", sheet=REG)
 ds("psm_burst_current", 300, "mA", src="FN8373.2, the pulses a burst is made of", sheet=REG)
 ds("f_c_example", 75, "kHz", src="FN8373.2, the worked example for external compensation reaches "
    "75 kHz", sheet=REG)
 ds("f_c_ceiling", 100, "kHz", src="FN8373.2 keeps the crossover under 100 kHz", sheet=REG)
-ds("transient_psm", 160, "mV", src="FN8373.2 Figures 47 and 48, a 500 mA step from power-save",
-   sheet=REG)
-ds("transient_pwm", 95, "mV", src="FN8373.2 Figures 47 and 48, the same step from PWM", sheet=REG)
+gr("transient_psm", 160, "mV", src="FN8373.2 Figures 47 and 48, a 500 mA step from power-save, "
+   "read off the plot", sheet=REG)
+gr("transient_pwm", 95, "mV", src="FN8373.2 Figures 47 and 48, the same step from PWM, read off "
+   "the plot", sheet=REG)
 ds("transient_step", 500, "mA", src="FN8373.2 Figures 47 and 48, the step size", sheet=REG)
 ds("transient_freq", 800, "kHz", src="FN8373.2 Figures 47 and 48, the switching frequency of those "
    "figures", sheet=REG)
@@ -234,6 +249,8 @@ ds("i_c_ds_max", 410, "µA", src="GP2S700HCP D3-A02201EN, I_C maximum at the sam
    sheet=SENSOR)
 ds("v_ce_char", 2, "V", src="GP2S700HCP D3-A02201EN, the V_CE I_C is characterized at",
    sheet=SENSOR)
+ds("r_load_test", 1, "kΩ", src="GP2S700HCP D3-A02201EN, the load R_L the response time is "
+   "specified at", sheet=SENSOR)
 ds("t_rf_max_1k", 100, "µs", src="GP2S700HCP D3-A02201EN, t_r and t_f maximum at R_L = 1 kΩ",
    sheet=SENSOR)
 ds("t_rf_typ_1k", 20, "µs", src="GP2S700HCP D3-A02201EN, t_r and t_f typical at the same load",
@@ -309,8 +326,10 @@ ds("uvlo_lo", 1.7, "V", src="SLLSER1H, the lower undervoltage lockout threshold"
 ds("uvlo_hi", 2.25, "V", src="SLLSER1H, the upper threshold", sheet=ISO)
 ds("v_il_factor", 30, "%", src="SLLSER1H, V_IL guaranteed at 0.3 × VCC", sheet=ISO)
 ds("v_ih_factor", 70, "%", src="SLLSER1H, V_IH guaranteed at 0.7 × VCC", sheet=ISO)
-ds("iso_rate_lo", 1, "MHz", src="SLLSER1H, the lower AC row", sheet=ISO)
-ds("iso_rate_hi", 10, "MHz", src="SLLSER1H, the upper AC row", sheet=ISO)
+ds("iso_rate_lo", 1, "MHz", src="SLLSER1H, the lower AC row, a data rate of 1 Mbps", sheet=ISO)
+ds("iso_rate_hi", 10, "MHz", src="SLLSER1H, the upper AC row, a data rate of 10 Mbps", sheet=ISO)
+dec("bits_per_clock", 2, "", src="the bits a square clock carries per period, which is how "
+    "SLLSER1H states its data rates for a clock input")
 
 # -- base quantities ----------------------------------------------------------
 with MODEL.block("V_OUT", section=BASE):
@@ -320,6 +339,8 @@ with MODEL.block("V_OUT", section=BASE):
     fig("v_out_min", "V", "v_mod_min - cable_drop", moves="+v_mod_nom -mod_tol -cable_r")
     fig("v_out_max", "V", "v_mod_max * (1 + working_margin.raw)",
         moves="+v_mod_nom +mod_tol +working_margin")
+MODEL.range("v_mod_min", "v_mod_max", nominal="v_mod_nom")
+MODEL.range("v_out_min", "v_out_max")
 
 
 def _vf75(vf75_10ma, vf75_10ma_at, vf75_50ma, vf75_50ma_at, i):
@@ -370,8 +391,8 @@ fig("i_fixed_module", "mA", "i_adc_both + i_iso_s2",
 fig("i_fixed_teensy", "mA", "i_adc_both + i_iso_s1 + i_iso_s2",
     group="from the Teensy's 3V3 pin, both isolator sides out of it", section=IFIXED)
 with MODEL.block(IFIXED, stated="loose"):
-    fig("left_teensy", "mA", "i_teensy_3v3 - i_fixed_teensy - n_channels.raw * i_c")
-    fig("left_module", "mA", "i_module - i_fixed_module - n_channels.raw * i_c")
+    fig("left_teensy", "mA", "i_teensy_3v3 - i_fixed_teensy - n_channels.raw * i_c", "down")
+    fig("left_module", "mA", "i_module - i_fixed_module - n_channels.raw * i_c", "down")
 
 # -- dissipation, one line per part -------------------------------------------
 with MODEL.block("Q1", section=DISS):
@@ -494,14 +515,29 @@ with MODEL.block(_C5S, stated="loose"):
     fig("psm_band_mv", "mV", "psm_band.raw * v_mod_nom")
     fig("pulse_overshoot_c5", "mV", "pulse_overshoot_module * (c_module_derated / c_total_derated)")
 
+# The comparator lets the rail fall through its band before a burst refills it, and the
+# last pulse overshoots the top. The dark-phase load drains that span from the capacitance,
+# so a burst comes every C times the span over the load: soonest at the most the dark phase
+# draws, latest at the converters and the isolator alone.
+fig("psm_burst_ripple", "mV", "psm_band_mv + pulse_overshoot_c5", stated=False)
+fig("t_burst_module", "µs", "c_module_derated * (psm_band_mv + pulse_overshoot_module) / i_dark",
+    stated=False)
+fig("t_burst_fast", "µs", "c_total_derated * psm_burst_ripple / i_dark", stated=False)
+fig("t_burst_slow", "µs", "c_total_derated * psm_burst_ripple / i_fixed_module", stated=False)
+fig("burst_freq_high", "kHz", "1 / t_burst_fast", stated=False)
+fig("burst_freq_low", "kHz", "1 / t_burst_slow", stated=False)
+# R39 and C6 settle the reference to the mean of the branch's load in a few time constants.
+dec("n_tau_settle", 5, "", src="the time constants a first-order filter takes to settle within 1 %")
+fig("tau_ref", "µs", "r_ref * c_ref * derate.raw", stated=False)
+fig("t_ref_settle", "ms", "n_tau_settle.raw * tau_ref", stated=False)
+
 fig("vcc2_excursion", "V", "v_mod_max + vcc2_overshoot",
     group="Load release overshoots by the same order", stated="loose")
 
 # -- the supply cable ---------------------------------------------------------
-fig("sag_margin", "V", "sag_three_coils - v_mod_in_min",
-    group="The 5 V the module runs from sags while the bumper solenoids fire", stated="loose")
+fig("sag_margin", "V", "v_ir_end - v_mod_in_min", "down", stated=False)
 
-_CABLE = "How close the module has to sit to J-PWR"
+_CABLE = "How close the module has to sit to J-IR-PWR"
 with MODEL.block(_CABLE, stated="loose"):
     fig("cable_bound_drop", "mV", "cable_r * i_tot")
     fig("four_contacts", "mΩ", "n_contacts.raw * contact_r")
@@ -521,6 +557,7 @@ with MODEL.block(_FILTER, stated="loose"):
 with MODEL.block("Supply and reference", section=CONV):
     fig("v_ref_min", "V", "v_out_min - r39_offset")
     fig("v_ref_max", "V", "v_out_max - r39_offset", moves="+v_out_max -r_ref")
+MODEL.range("v_ref_min", "v_ref_max")
 with MODEL.block(_FILTER, stated="loose"):
     fig("ripple_of_v_ref", "%", "ripple_left / v_ref_max")
     fig("ripple_steps_full", "step", "Q(2 ** bits.raw) * ripple_of_v_ref.raw")
@@ -580,7 +617,7 @@ with MODEL.block(_R37, stated="loose"):
     fig("dout_low_level", "V",
         "v_ol_adc + (v_out_max - v_ol_adc) * r_dout_hi / (r_dout_hi + r_dout_pu_lo)", "up",
         moves="+v_out_max +r_dout +v_ol_adc +kit_tol -r_dout_pu")
-    fig("guaranteed_low", "V", "v_il_factor.raw * v_mod_max")
+    fig("guaranteed_low", "V", "v_il_factor.raw * v_out_min", "down")
 with MODEL.block(stated="loose"):
     fig("dout_sink", "mA", "i_dout_low", "up", moves="+v_out_max +kit_tol -r_dout -r_dout_pu",
         group=_R36)
@@ -589,13 +626,15 @@ with MODEL.block(stated="loose"):
     fig("miso_contention", "mA", "v_3v3_max / (r_miso * (1 - kit_tol))", "up",
         moves="+v_3v3_max +kit_tol -r_miso", group=_R34)
 
-    def _i_iso_ac_s1(i_iso_ac_s1_1m, i_iso_ac_s1_10m, f_clk, iso_rate_lo, iso_rate_hi):
-        f = (f_clk - iso_rate_lo) / (iso_rate_hi - iso_rate_lo)
+    def _i_iso_ac_s1(i_iso_ac_s1_1m, i_iso_ac_s1_10m, f_clk, iso_rate_lo, iso_rate_hi,
+                     bits_per_clock):
+        f = (bits_per_clock.raw * f_clk - iso_rate_lo) / (iso_rate_hi - iso_rate_lo)
         return i_iso_ac_s1_1m + (i_iso_ac_s1_10m - i_iso_ac_s1_1m) * f.raw
     fig("i_iso_ac_s1", "mA", _i_iso_ac_s1, stated=False)
 
-    def _i_iso_ac_s2(i_iso_ac_s2_1m, i_iso_ac_s2_10m, f_clk, iso_rate_lo, iso_rate_hi):
-        f = (f_clk - iso_rate_lo) / (iso_rate_hi - iso_rate_lo)
+    def _i_iso_ac_s2(i_iso_ac_s2_1m, i_iso_ac_s2_10m, f_clk, iso_rate_lo, iso_rate_hi,
+                     bits_per_clock):
+        f = (bits_per_clock.raw * f_clk - iso_rate_lo) / (iso_rate_hi - iso_rate_lo)
         return i_iso_ac_s2_1m + (i_iso_ac_s2_10m - i_iso_ac_s2_1m) * f.raw
     fig("i_iso_ac_s2", "mA", _i_iso_ac_s2, group=_U3)
 with MODEL.block(_U3):
@@ -696,7 +735,7 @@ fig("r_dout_max", "kΩ", "r_dout_pu_lo * dout_share_max / ((1 - dout_share_max) 
 # R39: at its low end the reference ripple a full-scale reading carries stays under its
 # ceiling, and at its high end the converters behind it, with the phase-start droop, stay
 # above their floor.
-fig("r_ref_min", "Ω", "psm_burst_ripple * Q(2 ** bits.raw) / (ripple_steps_max.raw * v_ref_max * "
+fig("r_ref_min", "Ω", "psm_burst_ripple * Q(2 ** bits.raw) / (ripple_steps_max.raw * v_ref_min * "
     "2 * PI * c_ref * derate.raw * burst_freq_low * (1 - kit_tol))", "up",
     moves="+psm_burst_ripple +bits +kit_tol -ripple_steps_max -c_ref -derate -burst_freq_low",
     stated=False)
@@ -721,7 +760,9 @@ with MODEL.block("Headroom", section=PD):
     # A new board's node reaches the rail, which is above VREF but far inside what the part tolerates:
     # a reading there clips at full scale, and a clipped channel is the flooded one the design rejects
     # anyway. What has to hold is the absolute maximum, and that is a different figure.
-    fig("v_in_abs_max", "V", "v_out_max + v_in_over_vdd", "down", moves="+v_out_max +v_in_over_vdd")
+    # The node it is compared with rides the same rail, so both take its top.
+    fig("v_in_abs_max", "V", "v_out_max + v_in_over_vdd", "down", moves="+v_out_max +v_in_over_vdd",
+        tracks="v_out_max")
 with MODEL.block("Resolution", section=PD):
     fig("signal_settled", "V", "i_photo * r_pd", moves="+i_photo +r_pd")
     fig("step_nominal", "mV", "(v_mod_nom - r39_offset) / Q(2 ** bits.raw)", stated=False)
@@ -748,10 +789,10 @@ with MODEL.block("Ambient headroom", section=PD):
     fig("ambient_headroom_10k", "µA", "v_out_min / (r_col + r_pd_alt_high)")
     fig("headroom_ratio", "×", "ambient_headroom / ambient_headroom_10k")
 with MODEL.block("Settling", section=PD):
-    fig("t_rf_scaled", "µs", "t_rf_max_1k * (r_pd / r_switch).raw")
-    fig("tau_from_max", "µs", "t_rf_max_1k * (r_pd / r_switch).raw / rise_to_tau.raw",
+    fig("t_rf_scaled", "µs", "t_rf_max_1k * (r_pd / r_load_test).raw")
+    fig("tau_from_max", "µs", "t_rf_max_1k * (r_pd / r_load_test).raw / rise_to_tau.raw",
         moves="+t_rf_max_1k +r_pd")
-    fig("tau_from_typ", "µs", "t_rf_typ_1k * (r_pd / r_switch).raw / rise_to_tau.raw")
+    fig("tau_from_typ", "µs", "t_rf_typ_1k * (r_pd / r_load_test).raw / rise_to_tau.raw")
     fig("tau_fig6", "µs", "t_rf_max_1k * (fig6_4k7 / fig6_1k).raw / rise_to_tau.raw")
 
 
@@ -849,25 +890,25 @@ with MODEL.block(KNOB, section=KNOB):
 
 _PDKNOB = "4.7 kΩ lower"
 with MODEL.block(_PDKNOB, section=KNOB):
-    fig("knob_pd_50mv", "mV", "i_photo * r_switch")
+    fig("knob_pd_50mv", "mV", "i_photo * r_pd_floor")
     fig("step_max", "mV", "v_ref_max / Q(2 ** bits.raw)")
     fig("knob_pd_steps_1k", "steps", "knob_pd_50mv / step_max")
     fig("t_switch_sample", "ns", "r_switch * c_sample")
     fig("knob_pd_acq_wall", "kΩ", "(acq_window / tau_needed.raw - t_switch_sample) / c_node",
         "down", moves="+acq_clocks -f_clk -c_sample")
     fig("knob_pd_ambient_at_wall", "µA", "v_out_min / (r_col + knob_pd_acq_wall)")
-    fig("knob_pd_i_c_1k", "mA", "v_out_max / (r_col + r_switch)")
+    fig("knob_pd_i_c_1k", "mA", "v_out_max / (r_col + r_pd_floor)")
     fig("knob_pd_i_tot_1k", "mA", "i_bus + n_channels.raw * knob_pd_i_c_1k + i_adc_both + i_iso_s2")
 
-fig("knob_gate_lower", "kΩ", "v_mod_nom / i_out_iso", "up", group="R33", section=KNOB)
-fig("knob_gate_upper_irl", "kΩ", "gate_charge_limit * v_mod_nom / (2 * qg_irl)", "down",
+fig("knob_gate_lower", "kΩ", "v_out_max / i_out_iso", "up", group="R33", section=KNOB)
+fig("knob_gate_upper_irl", "kΩ", "gate_charge_limit * v_out_min / (2 * qg_irl)", "down",
     group="gate", section=KNOB)
 with MODEL.block("100 kΩ lower", section=KNOB):
     fig("knob_gate_at_3k", "V", "v_mod_nom * r_gate_pd_low / (r_gate_pd_low + r_gate)")
     fig("knob_gate_at_10k", "V", "v_mod_nom * r_gate_pd_mid / (r_gate_pd_mid + r_gate)")
     fig("knob_gate_leakage", "mV", "i_gss * r_leak_test")
 with MODEL.block("phase", section=KNOB):
-    fig("knob_phase_lower", "µs", "budget_16 + tau_ln2", "up",
+    fig("knob_phase_lower", "µs", "budget_16 + tau_ln2 + t_jitter", "up",
         moves="+n_channels +t_ovh +tau_sensor -f_clk", label="t_budget plus")
     fig("phases_per_two_values", "", "2 * k_confirm.raw + 1", moves="+k_confirm", stated=False)
     fig("v_hit", "m/s", "ball_diameter / (phases_per_two_values * t_phase)",
@@ -878,7 +919,8 @@ with MODEL.block("phase", section=KNOB):
     # how long QuadTimer3 counts before its counter wraps, at the prescaler the driver sets
     fig("t_qt_span", "ms", "qt_range * qt_prescale / f_bus", "down",
         moves="+qt_range +qt_prescale -f_bus", stated=False)
-    fig("knob_firmware_bound", "µs", "floor_to(t_phase - tau_ln2, 'µs', budget_grain.to('µs'))",
+    fig("knob_firmware_bound", "µs",
+        "floor_to(t_phase - tau_ln2 - t_jitter, 'µs', budget_grain.to('µs'))",
         "down")
     fig("knob_t_ovh_ceiling", "µs", "knob_firmware_bound / n_channels.raw - t_conversion", "down",
         moves="+t_phase +f_clk -n_channels -tau_sensor", label="t_ovh")
@@ -903,7 +945,7 @@ fig("rise_to_tau", "", "ln((1 - rise_low.raw) / (1 - rise_high.raw))", stated=Fa
 
 # Each row names its resistor by the key of the input that declares it, so no
 # resistance is written into a formula.
-for _key, _row in (("r_switch", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
+for _key, _row in (("r_pd_floor", "1 kΩ"), ("r_pd_alt", "2.2 kΩ"),
                    ("r_pd", "4.7 kΩ"), ("r_pd_alt_high", "10 kΩ")):
     with MODEL.block(_row, section=SWEEP):
         fig(f"sweep_{_key}_tau", "µs", f"tau_sensor * ({_key} / r_pd).raw")
@@ -920,7 +962,7 @@ _PLACE = "Placement distances"
 with MODEL.block(_PLACE, stated="loose"):
     asm("place_decoupling", 10, "mm", src="how close a 100 nF sits to the pin it decouples, a "
         "distance perfboard allows; no datasheet states one")
-    asm("place_local", 10, "mm", src="how close a part sits to the node it serves, J-PWR, Q1's "
+    asm("place_local", 10, "mm", src="how close a part sits to the node it serves, J-IR-PWR, Q1's "
         "gate and the converters' VDD pins alike; no datasheet states one")
     asm("place_channel", 25, "mm", src="how far a channel's pull-down may sit from its converter "
         "input, so the stub adds little to the source resistance")
@@ -1021,7 +1063,7 @@ _I("the rail with the bus on stays above the converter's floor",
    "v_out_min - droop_20k > vdd_floor")
 _I("the stated cable allowance is the drop it stands for, to the millivolt",
    "abs(cable_drop - cable_drop_bound) <= Q.of(1, 'mV')")
-_I("the module's input survives the worst solenoid sag", "sag_three_coils > v_mod_in_min")
+_I("the module's input stays above its minimum with every load drawing", "v_ir_end > v_mod_in_min")
 _I("the pull-down is under the acquisition wall", "r_pd < knob_pd_acq_wall")
 _I("R1 to R16 sit inside their window, at either value",
    "r_led_min <= r_led_sharp <= r_led_max and r_led_min <= r_led <= r_led_max")
@@ -1063,23 +1105,14 @@ for _text, _why in [
     ("1.35", "V_F at 40 mA on the 75 °C curve, restated without its unit"),
     ("53 µs", "the τ reading before it was rounded up to the 70 µs the design runs"),
 
-    # derived in prose, which rule 15 says they should not be
-    ("222.6 mA", "derived in prose: what the Teensy case leaves for the emitters"),
-    ("482.9 mA", "derived in prose: what the module case leaves for them"),
-    ("99.0 mΩ", "derived in prose: the cable resistance the 22 mV allowance reaches"),
-    ("0.2 mV", "derived in prose: what 0.1 Ω costs beyond that allowance"),
-    ("54 µs", "derived in prose: the excursion C5 leaves R39 and C6 to settle"),
-    ("17 mA", "derived in prose: the dark-phase load the reference filter sees"),
-    ("111 µs", "derived in prose: the reference filter's time constant"),
-    ("7.35 Ω", "derived in prose: the source resistance behind the machine's 5 V"),
-    ("2.98 V", "derived in prose: the node ceiling of the rejected Design A"),
-    ("2.6 ms", "derived in prose: five time constants of the reference filter"),
+    # the gate voltage of the curve the typical R_DS(on) is read off
+    ("3.0 V", "the V_GS of the IRL540N's Figure 1 curve the 56 mΩ is read off"),
 ]:
     MODEL.aside(_text, _why)
 
 # -- wiring: every net at the Teensy, and the isolator's board-side nets ------
 _SVG = "ir-sensor-mainboard.svg"
-_ISO_S1 = "design.md, U3: VCC1 from the Teensy's 3V3 over J-T pin 7, so U3 never drives MISO above the Teensy's own rail"
+_ISO_S1 = "design.md, U3: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, so U3 never drives MISO above the Teensy's own rail"
 _ISO_S2 = "design.md, U3: VCC2 from the board's rail"
 
 # side 1 of U3 reads the five signals the Teensy drives

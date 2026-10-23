@@ -41,7 +41,7 @@ template <DriverEventType Tag> struct DriverPayloadOf;
 template <DriverEventType Tag> typename DriverPayloadOf<Tag>::type payload(const DriverEvent&);
 ```
 
-Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. A read searches the front of every queue for the oldest event and compares their times with [`before()`](general-design.md#time-measurement). At an estimated size of ten producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
+Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. A read searches the front of every queue for the oldest event and compares their times with [`before()`](general-design.md#time-measurement). At an estimated size of eleven producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
 
 > A real-time event is handled by the subsystem that detects it, and the message that it happened is reported afterwards. A sensed solenoid triggering is such an event.
 

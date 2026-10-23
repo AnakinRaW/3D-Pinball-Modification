@@ -44,6 +44,8 @@ python tools/svgcheck.py --margin 8            clearance a label is owed from a 
 python tools/svgcheck.py --margin 0            report only what actually touches
 ```
 
+An element that overlaps on purpose carries `data-svgcheck` with the reason, such as `data-svgcheck="the band the gap may span, which the magnet's face sits inside"`. The findings on that element and against it are then left out. A `data-svgcheck` without a reason is reported.
+
 The margin is clearance rather than tolerance. A label is grown by it before the
 overlap with a wire or a symbol is measured, so one that merely comes close is
 reported the same way one sitting on it is. It defaults to 4 and applies to the

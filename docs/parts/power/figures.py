@@ -3,6 +3,7 @@ from figcheck import *
 
 MODEL = Model.at(__file__, "power", drawings=["power-schematic.svg"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.names("D1", "D2", why="the Teensy motherboard's diodes, which feed VIN")
 
 Q1 = "ST STP160N3LL, DocID025073 Rev 3"
 BULK = "Rubycon 16ZLH1000MEFC8X20"
@@ -265,7 +266,7 @@ with MODEL.block("RAIL", section=RAIL):
     fig("r_up_min", "mΩ", "2 * len_adapter_min * r_awg_adapter + r_dcin + r_board", "down",
         moves="+len_adapter_min +r_awg_adapter +len_dcin +r_board")
     fig("zeta", "", "r_up_min / 2 * (c_total / l_up_min) ** (1 / 2)", "down",
-        moves="+r_awg_adapter +r_board +c_one -l_per_m")
+        moves="+r_awg_adapter +r_board +c_one -l_per_m", tracks="l_up_min")
 
     # The bulk of the whole rail charges through Q1's body diode until the rail passes Q1's
     # gate threshold, and through its channel from there. The current of the overdamped RLC
@@ -429,3 +430,6 @@ _I("the D24V5F3 at the IR mainboard gets more than its lowest input", "v_ir_end 
 _I("the display's regulator gets the input it needs at full load", "v_disp_in >= v_in_mod_min")
 _I("F1 carries the most the outputs behind it draw", "i_small <= i_f1")
 _I("a fault the 6 A adapter feeds opens F1 within its maximum time", "i_f1_open <= i_supply_6a")
+
+MODEL.range("l_up_min", "l_up_max")
+MODEL.range("v_jack_min", "v_jack_max")

@@ -3,8 +3,10 @@ from figcheck import *
 
 MODEL = Model.at(__file__, "magnetic-rotary",
                  drawings=["magnetic-rotary-schematic.svg", "magnetic-rotary-assembly.svg"],
-                 documents=["../../firmware/drivers/magnetic-rotary.md"])
+                 documents=["../../firmware/drivers/magnetic-rotary.md",
+                            "../../firmware/components/rotating-seal.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.names("R4", "R5", why="the Grove module's own pull-ups on SDA and SCL")
 
 SENSOR = "AS5600-ams.pdf"
 BUS = "Bus"
@@ -34,9 +36,11 @@ with MODEL.block("BUS", section=BUS):
        "SCL signals, Standard-mode, maximum; the specification the AS5600 datasheet names for "
        "sizing the pull-up")
 
-    # Each bus line on the rotary sensor's side: the cable, the AS5600's pin and the module.
-    fig("c_bus", "pF", "l_cable * c_cable_m + c_pin + c_module", "up",
-        moves="+l_cable +c_cable_m +c_pin +c_module")
+    # Each bus line: the cable, the pins at its two ends, the Teensy's and the AS5600's, and
+    # the module.
+    dec("n_bus_pins", 2, "", src="the I²C pins each bus line joins, the Teensy's and the AS5600's", stated=False)
+    fig("c_bus", "pF", "l_cable * c_cable_m + n_bus_pins.raw * c_pin + c_module", "up",
+        moves="+l_cable +c_cable_m +c_pin +c_module +n_bus_pins")
 
     # The rising edge between the input thresholds, with the module's pull-up alone:
     # the Teensy's own pull-up in parallel only makes it faster.

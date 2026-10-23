@@ -82,7 +82,7 @@ with MODEL.block(section=SENSE):
         "shell, at a fraction of a milliamp when one is: the 10 kΩ of the resistor kit",
         group="V_SENSE")
     dec("r_series", 10, "kΩ", src="chosen so a sense wire meeting a coil wire drives under a "
-        "milliamp into the pin even with the Teensy unpowered, where the ceiling is 0.31 V rather "
+        "milliamp into the pin even with the Teensy unpowered, where the ceiling is 0.3 V rather "
         "than the rail plus that; the pin draws nothing, so the value costs no sense level and "
         "nothing bounds it from above: the 10 kΩ of the resistor kit", group="R_S")
     dec("r_foil", 330, "Ω", src="chosen to bound what the foil can draw from the Teensy's 3.3 V "
@@ -348,7 +348,7 @@ with MODEL.block("FAULT", section=SUPPLY):
     fig("p_q_short", "W", "i_coil_short * i_coil_short * rdson", moves="+v_5v +rdson -r_wire_short")
 
 with MODEL.block("GND", section=SUPPLY):
-    # The power ground reaches the distribution over J-PWR alone, so all four coils
+    # The power ground reaches the distribution over J-COIL-PWR alone, so all four coils
     # at once lift it by their whole current across that one wire. The signal
     # ground and the Teensy carry none of it.
     fig("v_power_rise", "mV", "i_feed_max * r_lead", "up",

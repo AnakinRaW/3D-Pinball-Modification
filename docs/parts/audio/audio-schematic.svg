@@ -19,9 +19,9 @@
   <rect x="200" y="66" width="840" height="510" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
   <text x="216" y="88" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
 
-  <!-- J-PWR, fed from the power board's J-MAIN -->
+  <!-- J-MB-PWR, fed from the power board's J-MAIN -->
   <rect x="230" y="96" width="90" height="76" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
-  <text x="275" y="114" text-anchor="middle" font-size="14" font-weight="700" fill="#333333">J-PWR</text>
+  <text x="275" y="114" text-anchor="middle" font-size="14" font-weight="700" fill="#333333">J-MB-PWR</text>
   <circle cx="230" cy="132" r="6" fill="#c0392b"/>
   <circle cx="320" cy="132" r="6" fill="#c0392b"/>
   <text x="275" y="136" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_dd">5 V</text>
@@ -29,7 +29,7 @@
   <circle cx="320" cy="158" r="6" fill="#1a1a1a"/>
   <text x="275" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
 
-  <!-- J-PWR's GND onto the board's ground -->
+  <!-- J-MB-PWR's GND onto the board's ground -->
   <line x1="326" y1="158" x2="340" y2="158" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="340" y1="158" x2="340" y2="172" stroke="#1a1a1a" stroke-width="2.5"/>
   <line x1="326" y1="172" x2="354" y2="172" stroke="#1a1a1a" stroke-width="3"/>
@@ -83,7 +83,7 @@
   <rect x="620" y="212" width="200" height="300" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
   <text x="720" y="430" text-anchor="middle" font-size="16" font-weight="700" fill="#5c4a00">DFR0954</text>
   <text x="720" y="448" text-anchor="middle" font-size="11.5" fill="#666">MAX98357A, class D</text>
-  <text x="720" y="464" text-anchor="middle" font-size="11.5" fill="#666">SD set to mix both channels</text>
+  <text x="720" y="464" text-anchor="middle" font-size="11.5" fill="#666">SD pulled up: left channel</text>
 
   <circle cx="660" cy="212" r="6" fill="#c0392b"/>
   <text x="660" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">VCC</text>

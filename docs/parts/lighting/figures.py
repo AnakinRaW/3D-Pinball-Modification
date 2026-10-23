@@ -4,9 +4,11 @@ from math import inf
 
 from figcheck import *
 
-MODEL = Model.at(__file__, "lighting", section="### Level shifting", until="## Teensy pins",
-                 drawings=["lighting-schematic.svg"],
-                 documents=["../../firmware/components/lamps.md"])
+MODEL = Model.at(__file__, "lighting",
+                 drawings=["lighting-schematic.svg",
+                           "../../firmware/components/lamps-architecture.svg"],
+                 documents=["../../firmware/components/lamps.md",
+                            "../../firmware/drivers/lighting.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
@@ -16,12 +18,36 @@ BUFFERS = "One CD74HCT125E"
 SERIES = "A series resistor sits in each data line"
 SUPPLY = "Supply"
 
+# -- the strip, the layout and what the lights draw ---------------------------
+ds("strip_len", 2, "m", src="the SEZO WS2812B strip's listing, the reel's length")
+ds("strip_width", 2.7, "mm", src="the SEZO WS2812B strip's listing, its width")
+asm("len_sides_ceiling", 115.5, "cm", src="the strip the side panels and the diorama ceiling take")
+asm("len_other_stock", 45, "cm", src="the strip the other stock positions take, a rough length")
+dec("hole_min", 6, "mm", src="the narrowest hole a new playfield light gets")
+dec("hole_max", 10, "mm", src="the widest hole a new playfield light gets")
+dec("n_leds", 240, "", src="every LED the light layout table plans")
+dec("n_lit", 162, "", src="the LEDs the light layout table lights, the perimeters at every second")
+dec("n_perimeter", 158, "", src="the LEDs of the two perimeter chains, A and B, in the light layout table")
+dec("n_perimeter_lit", 80, "", src="the perimeter LEDs lit at every second, A and B in the light "
+    "layout table")
+dec("n_colors", 3, "", src="red, green and blue in each LED")
+asm("i_color", 20, "mA", src="what one color of a WS2812B draws at full brightness, the usual figure")
+asm("i_ctrl", 1, "mA", src="what the controller in each WS2812B draws even while dark, the usual figure")
+fig("i_full_white", "A", "n_lit.raw * n_colors.raw * i_color", "up", stated=False)
+fig("i_idle", "A", "n_leds.raw * i_ctrl", "up", stated=False)
+fig("i_perimeter_full", "A", "n_perimeter.raw * n_colors.raw * i_color", "up", stated=False)
+fig("i_perimeter_half", "A", "n_perimeter_lit.raw * n_colors.raw * i_color", "up", stated=False)
+MODEL.uses("i_permanent", of="power")
+MODEL.uses("v_c_rating", of="power")
+fig("i_light_left_3a", "A", "i_supply_3a - i_permanent", "down", stated=False)
+
 # -- the Teensy's pin and the buffer's supply ---------------------------------
 MODEL.uses("v_3v3", of="teensy-4.1", group=SHIFT, stated="loose")
 MODEL.uses("v_oh_drop", of="teensy-4.1")
 MODEL.uses("v_ol_max", of="teensy-4.1")
 MODEL.uses("i_pin_max", of="teensy-4.1")
 MODEL.uses("v_3v3_max", of="teensy-4.1")
+MODEL.uses("v_3v3_min", of="teensy-4.1")
 ds("kit_tol", 5, "%", src="the justPi resistor kit JUS-19729 every resistor comes from, Botland "
    "product page: tolerance 5 %")
 dec("v_rail", 5, "V", src="the machine's rail, which feeds the buffers and, through J-LA to J-LF, "
@@ -115,9 +141,9 @@ with MODEL.block("Used inputs", section=BUFFERS):
     # With the machine's 5 V off, the input's clamp diode holds the input at the
     # dead rail. The pin's high then drives the resistor into that diode, both
     # taken at 0 V.
-    fig("i_clamp", "mA", "v_3v3 / r_in", "up", moves="+v_3v3 -r_in")
+    fig("i_clamp", "mA", "v_3v3_max / r_in", "up", moves="+v_3v3_max -r_in")
 
-fig("v_oh_min", "V", "v_3v3 - v_oh_drop", moves="+v_3v3 -v_oh_drop", stated=False)
+fig("v_oh_min", "V", "v_3v3_min - v_oh_drop", "down", moves="+v_3v3_min -v_oh_drop", stated=False)
 
 # The resistor into the input and the wiring beside it is a single pole.
 fig("tau_in", "ns", "r_in * (c_in + c_stray)", moves="+r_in +c_in +c_stray", stated=False)
@@ -133,13 +159,13 @@ fig("t_edge", "ns", "ln((1 - edge_low.raw) / (1 - edge_high.raw)) * tau_in", "up
 # after the falling one, so the buffer's high lasts tau ln((H - T) / (T - L))
 # longer than the pin's. It grows most with the highest high, the lowest
 # threshold and the highest low.
-fig("t_longer", "ns", "tau_in * ln((v_3v3 - vil) / (vil - v_ol_max))", "up",
-    moves="+v_3v3 +v_ol_max +r_in +c_in +c_stray -vil", group=BUFFERS, stated=False)
+fig("t_longer", "ns", "tau_in * ln((v_3v3_max - vil) / (vil - v_ol_max))", "up",
+    moves="+v_3v3_max +v_ol_max +r_in +c_in +c_stray -vil", group=BUFFERS, stated=False)
 
 # It shrinks most with the lowest high, the highest threshold and a low at
 # ground.
 fig("t_shorter", "ns", "tau_in * ln(vih / (v_oh_min - vih))", "up",
-    moves="+vih +v_oh_drop +r_in +c_in +c_stray -v_3v3", group=BUFFERS, stated=False)
+    moves="+vih +v_oh_drop +r_in +c_in +c_stray -v_3v3_min", group=BUFFERS, stated=False)
 
 # R1 to R3's window. The least value whose low end holds the pin inside its 4 mA with the
 # 5 V off, the rail at its high end, and the most whose high end still stretches a high by
@@ -156,29 +182,34 @@ ds("vil_led_frac", 30, "%", src="XINGLIGHT XL-0807RGBC-WS2812B datasheet, electr
    "sheets state the same")
 fig("vil_led", "V", "vil_led_frac * v_rail", "down", moves="+vil_led_frac +v_rail", stated=False)
 
-# The resistor into the data wire and the first LED's input is a single pole too. The LED's
-# high starts where the edge crosses its high level and ends where it falls through its low
-# level, so the high arrives shorter by tau ln(VIL / (VOH - VIH)), taken at the buffer's lowest
-# high and with the resistor at its high end.
-def _t_out_shorter(r_out, kit_tol, c_data, vil_led, v_oh_out, vih_led):
-    if (v_oh_out - vih_led).v <= 0:    # a high that never reaches the LED's high level
+# The resistor into the data wire and the first LED's input is a single pole too. The LED
+# reads its input against one threshold, which its sheet bounds only by VIH, so a high
+# arrives shorter by tau ln(VIH / (VOH - VIH)) at most. The buffer and the first LED share the
+# board's rail, so VIH is taken at the supply the buffer's VOH minimum is specified at, with
+# the resistor at its high end.
+ds("vcc_voh", 4.5, "V", src=f"{BUFFER}, 5.5 Electrical Characteristics, the VCC the VOH minimum "
+   "is specified at")
+fig("vih_led_voh", "V", "vih_led_frac * vcc_voh", "up", moves="+vih_led_frac +vcc_voh",
+    stated=False)
+def _t_out_shorter(r_out, kit_tol, c_data, v_oh_out, vih_led_voh):
+    if (v_oh_out - vih_led_voh).v <= 0:    # a high that never reaches the LED's high level
         return Q.of(inf, "ns")
-    return r_out * (1 + kit_tol) * c_data * ln(vil_led / (v_oh_out - vih_led))
+    return r_out * (1 + kit_tol) * c_data * ln(vih_led_voh / (v_oh_out - vih_led_voh))
 fig("t_out_shorter", "ns", _t_out_shorter, "up",
-    moves="+r_out +kit_tol +c_data +vil_led_frac +vih_led_frac +v_rail -v_oh_out", group=SERIES,
+    moves="+r_out +kit_tol +c_data +vih_led_frac +vcc_voh -v_oh_out", group=SERIES,
     stated="loose")
 
 # The most the resistor may be: at its high end the two edges together still shorten a high
 # by less than the LED's timing tolerance.
-def _r_out_max(t_bit_tol, t_shorter, c_data, vil_led, v_oh_out, vih_led, kit_tol):
-    if (v_oh_out - vih_led).v <= 0:    # no resistor passes a high the LED cannot read
+def _r_out_max(t_bit_tol, t_shorter, c_data, v_oh_out, vih_led_voh, kit_tol):
+    if (v_oh_out - vih_led_voh).v <= 0:    # no resistor passes a high the LED cannot read
         return Q.of(0, "Ω")
     return ((t_bit_tol - t_shorter)
-            / (c_data * ln(vil_led / (v_oh_out - vih_led)) * (1 + kit_tol)))
+            / (c_data * ln(vih_led_voh / (v_oh_out - vih_led_voh)) * (1 + kit_tol)))
 fig("r_out_max", "Ω", _r_out_max, "down",
-    moves="+t_bit_tol +v_oh_out -c_data -vil_led_frac -kit_tol -r_in", stated=False)
+    moves="+t_bit_tol +v_oh_out -c_data -vih_led_frac -vcc_voh -kit_tol -r_in", stated=False)
 
-# -- the supply through J-PWR -------------------------------------------------
+# -- the supply through the boards' power input -------------------------------------------------
 with MODEL.block(SUPPLY, stated="loose"):
     dec("i_supply_3a", 3, "A", src="the smaller supply the machine is designed for; design.md, "
         "Current ceiling")
@@ -189,25 +220,26 @@ with MODEL.block(SUPPLY, stated="loose"):
         stated=False)
     dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply, kept at 3.3 A: with "
         "the permanent consumers of the power design and two bumpers with the scoop pulling at "
-        "once the sum passes the adapter by 0.34 A for at most one pull-in, which the design "
+        "once the sum passes the adapter for at most one pull-in, by what the power design's Adapter "
+        "section gives, which the design "
         "accepts as it accepts the 3 A adapter's overrun; design.md, Current ceiling, and the "
         "power design's Adapter section", stated=False)
-    dec("len_jpwr", 30, "cm", src="the longest J-PWR cable, the length the feed's inductance is "
+    dec("len_jpwr", 30, "cm", src="the longest the boards' power input cable, the length the feed's inductance is "
         "estimated for")
     ds("r_awg22", 52.96, "mΩ/m", src="ASTM B258, 22 AWG annealed copper at 20 °C", stated=False)
     MODEL.uses("l_feed", of="solenoid", stated=False)
     MODEL.uses("c_one", of="power")  # C2 on each board, the power board's bulk part
-    dec("n_bulk_light", 2, "", src="C2, one on each of the two lighting boards at J-PWR",
+    dec("n_bulk_light", 2, "", src="C2, one on each of the two lighting boards at the boards' power input",
         stated=False)
     MODEL.uses("z_c", of="power")
     ds("f_z_bulk", 100, "kHz", src="the frequency the listing states C2's impedance at")
-    asm("place_bulk", 20, "mm", src="how close C2 sits to J-PWR, where the feed arrives; no "
+    asm("place_bulk", 20, "mm", src="how close C2 sits to the boards' power input, where the feed arrives; no "
         "datasheet states one")
 
-    # One wire of J-PWR, soldered at both ends: its copper alone.
+    # One wire of the boards' power input, soldered at both ends: its copper alone.
     fig("r_jpwr", "mΩ", "len_jpwr * r_awg22", moves="+len_jpwr +r_awg22", stated=False)
 
-    # Both wires of J-PWR carry the lighting's whole current. The cap holds for all chains
+    # Both wires of the boards' power input carry the lighting's whole current. The cap holds for all chains
     # together, so either board can draw all of it, and each board's figures take the whole cap.
     fig("v_jpwr", "V", "2 * r_jpwr * i_budget", "up", moves="+i_budget +len_jpwr +r_awg22",
         stated=False)

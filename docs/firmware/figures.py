@@ -4,9 +4,14 @@ import math
 from figcheck import *
 
 MODEL = Model.at(__file__, "firmware", "general-design.md",
+                 drawings=["architecture.svg"],
                  documents=["driver-design.md", "error-handling.md", "logging.md", "io/i2c-bus.md",
-                            "components/file-system.md"])
+                            "components/file-system.md", "game-abstraction.md",
+                            "input-handling.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.ignores("README.md", "the index of the firmware documents for a visitor, which states no figure")
+dec("n_balls_example", 3, "", src="the balls the example game in game-abstraction.md starts with")
+dec("points_lane_example", 100, "", src="the points the example game gives for a lane it passes")
 
 CORE = "PJRC's cores/teensy4"
 IRQ = "Interrupts"
@@ -160,8 +165,10 @@ asm("b_fastled_led", 24, "bytes", src="an upper bound for FastLED's color buffer
 dec("n_chain_max", 79, "", src="the longest LED chain, a perimeter segment, in the light layout "
     "table of docs/parts/lighting/design.md; FastLED sizes its buffers by it")
 fig("ram_usb", "KB", "ram_usb_tx + ram_usb_rx", moves="+ram_usb_tx +ram_usb_rx", stated=False)
-fig("ram_fastled", "KB", "2 * n_chain_max * b_fastled_led", moves="+b_fastled_led +n_chain_max",
-    stated=False)
+dec("n_led_buffers", 2, "", src="FastLED's color buffers and ObjectFLED's frame buffer, each "
+    "b_fastled_led bytes per LED of the longest chain")
+fig("ram_fastled", "KB", "n_led_buffers.raw * n_chain_max * b_fastled_led",
+    moves="+b_fastled_led +n_chain_max +n_led_buffers", stated=False)
 
 MODEL.draws("ram_usb", pool="RAM2")
 MODEL.draws("ram_objectfled", pool="RAM2")
