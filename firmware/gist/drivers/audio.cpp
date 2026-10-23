@@ -5,7 +5,8 @@ public:
     // a sound and where it stands, which play() goes on from
     class Position {
     public:
-        bool empty() const { return !file.name()[0]; }   // gets whether no sound stands at it
+        bool     empty() const { return !file.name()[0]; }   // gets whether no sound stands at it
+        uint32_t played() const { return (data - left) / 2; }   // gets how many samples of the sound have played, two bytes each
 
     private:
         friend class AudioDriver;

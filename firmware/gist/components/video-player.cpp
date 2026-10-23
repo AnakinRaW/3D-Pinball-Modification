@@ -21,7 +21,8 @@ public:
 private:
     friend class GameHost;
 
-    static constexpr uint32_t kFrameUs = 40000;   // 25 frames a second, docs/parts/display
+    static constexpr uint32_t kFrameUs      = 40000;   // 25 frames a second, docs/parts/display
+    static constexpr uint32_t kFrameSamples = 1764;    // the samples of one frame, 44.1 kHz over 25 frames a second
     static constexpr size_t   kDepth   = 1;       // step() publishes at most one end in a pass, and the main loop empties the queue in every pass
 
     void reset() { stop(); }   // stops the video of the stopped game; the host calls it when it switches games
@@ -29,6 +30,7 @@ private:
     // draws a frame once it is due and reads the next, and publishes MovieEnded once the video
     // last started has run out; LVGL's timer calls it in every pass of the main loop
     void step(uint32_t now);
+    uint32_t due(uint32_t now) const;   // gets the frame due now, from how far the sound has played or, without one, from the start
     static void tick(lv_timer_t* t) { static_cast<VideoPlayer*>(lv_timer_get_user_data(t))->step(nowUs()); }
     void end();                // ends the sound and deletes the image; gives the room back at once, or once a read on its way has landed in it
 
@@ -82,8 +84,14 @@ bool VideoPlayer::play(const char* name, uint16_t x, uint16_t y, uint16_t width,
     return true;
 }
 
-// the frame due follows the time since the start, so a late frame is skipped rather than slowing
-// the video against its sound
+// a video with sound follows its sound, so a sound that stalls holds the video with it; one without
+// follows the time since its start
+uint32_t VideoPlayer::due(uint32_t now) const {
+    return sound_ ? sounds_.interludePlayed() / kFrameSamples : (now - startAt_) / kFrameUs;
+}
+
+// the frame due follows the clock due() takes, so a late frame is skipped rather than slowing the
+// video
 void VideoPlayer::step(uint32_t now) {
     if (leaving_ && reads_[which_ ^ 1].status() != FileStatus::Pending) {   // the stopped video's read has landed
         screen_.pictures_.give(leaving_);
@@ -93,18 +101,18 @@ void VideoPlayer::step(uint32_t now) {
     if (!room_ || read_.status() == FileStatus::Pending) return;
     if (!landed_) {
         if (read_.status() == FileStatus::Failed || read_.bytes() < frame_.data_size) {   // the file has run out or is missing
-            if (loop_ && frames_ > 0) { /* ... the read of frame 0 again, startAt_ = now */ return; }
+            if (loop_ && frames_ > 0) { /* ... the read of frame 0 again, next_ = 0 and startAt_ = now; a sound that loops starts over with it */ return; }
             out_->publish(DriverEvent{now, DriverEventType::MovieEnded, 0, 0});
             end();
             return;
         }
         landed_ = true;
     }
-    if (!elapsedUs(startAt_, next_ * kFrameUs)) return;   // not due yet
+    if (due(now) < next_) return;                         // not due yet
     lv_obj_invalidate(image_);
     lv_refr_now(nullptr);                                 // draws the screen now, with every other change; the room is free again once this returns
     landed_ = false;
-    next_   = (now - startAt_) / kFrameUs + 1;            // a late frame skips the ones whose time has passed
+    next_   = due(now) + 1;                               // a late frame skips the ones whose time has passed
     // ... the read of frame next_ into the room, whole, at next_ * frame_.data_size
 }
 

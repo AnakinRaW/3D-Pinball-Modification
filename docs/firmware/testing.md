@@ -408,7 +408,8 @@ The program `video-player` checks the [video player](components/video-player.md)
 | `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MovieEnded` with the video's number passes through the event queue to the game |
 | `stop` | computer | Stop a video and its sound | Both stop, the music goes on, and the memory of the frame is free again |
 | `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on |
-| `late-card` | computer | Hold a frame's read back past its 40 ms | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
+| `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
+| `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
 | `frames` | Teensy | Play `loop.rgb` in a loop for ten minutes with a sound on every audio channel and a write to the card every second | Every frame is on the screen within its 40 ms, and no audio block plays silence for want of data |
 | `viewport` | bench | Play `viewport.rgb` in a viewport beside a full-screen picture while the game draws beside it and over it | The video fills only its viewport, the picture shows around it, and the game's objects stay in front |
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |

@@ -58,6 +58,7 @@ public:
     void interlude(const char* name, bool loop = false);
 
     void stopInterlude();                  // ends the interlude early; the music goes on where it stopped
+    uint32_t interludePlayed() const;      // gets how many samples of the interlude have played, 0 while none plays
     void stopMusic();                      // silences the music, and an interlude with it
     bool musicPlaying() const;             // gets whether the track last started has neither ended nor been stopped
 

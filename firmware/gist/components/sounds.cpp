@@ -19,6 +19,7 @@ public:
     void interlude(const char* name, bool loop = false);
 
     void stopInterlude();                  // ends the interlude early; the music goes on where it stopped
+    uint32_t interludePlayed() const;      // gets how many samples of the interlude have played, 0 while none plays
     void stopMusic();                      // silences the music, and an interlude with it
     bool musicPlaying() const;             // gets whether the track last started has neither ended nor been stopped
 
@@ -50,6 +51,10 @@ private:
     float        effectsGain_ = gain(kEffectsStart);   // the driver's volume for the effects
     PinballEvent ended_;                   // the MusicEnded that translate() points out at
 };
+
+uint32_t Sounds::interludePlayed() const {
+    return interlude_ ? audio_.position(kMusic).played() : 0;   // the interlude plays on the music's channel
+}
 
 FileWriter Sounds::file(const char* name) {
     char path[Storage::kPath];
