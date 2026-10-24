@@ -10,12 +10,6 @@
   <!-- ===== Teensy ===== -->
   <rect x="20" y="200" width="130" height="270" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="34" y="226" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
-  <circle cx="85" cy="470" r="6" fill="#1a1a1a"/>
-  <text x="85" y="456" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="85" y1="476" x2="85" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="71" y1="490" x2="99" y2="490" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="76" y1="496" x2="94" y2="496" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="81" y1="502" x2="89" y2="502" stroke="#1a1a1a" stroke-width="2"/>
 
   <!-- ===== U1 ===== -->
   <rect x="420" y="200" width="180" height="270" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>

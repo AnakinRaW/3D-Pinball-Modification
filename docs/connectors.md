@@ -21,7 +21,7 @@
 | | J-SENSE-TEENSY of the sense board, both ends | 5 | Dupont | The three senses, the Teensy's 3V3 and GND |
 | | J-M | 4 | Dupont at the board, eyelets at the foil and the shells | 3.3 V. The series resistors sit between J-M and the Teensy |
 | Lighting, each of the two boards | J-AMBIENT-PWR, J-PLAYFIELD-PWR | 2 | soldered | The other end of J-LIGHT1 or J-LIGHT2 |
-| | data from the Teensy, both ends | 4 | Dupont | The board's three chains and GND at 3.3 V |
+| | data from the Teensy, both ends | 3 | Dupont | The board's three chains at 3.3 V. The board's ground comes over J-LIGHT1 or J-LIGHT2 |
 | | J-LA to J-LC on the ambient board, J-LD to J-LF on the playfield board | 3 each | screw terminal | 5 V with a whole chain's current. A reversed plug would reverse the LEDs' supply |
 | | segment to segment | 3 each | soldered | |
 | Audio | the DFR0954 on the Teensy motherboard | 2 × 6 | socket headers | DFRobot includes no header |
@@ -43,8 +43,8 @@
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
 | 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 8 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
-| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, the servo plug | |
-| 4 | | 10 (4 lighting data, 2 rotary sensor, 2 J-COIL-TEENSY, J-M, the D24V5F3's socket) | |
+| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, the servo plug | |
+| 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, J-M, the D24V5F3's socket) | |
 | 5 | | 2 (J-SENSE-TEENSY) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |

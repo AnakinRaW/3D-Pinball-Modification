@@ -104,7 +104,9 @@ The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slig
 
 ### Supply
 
-Each board takes the machine's 5 V through its own power input, J-AMBIENT-PWR or J-PLAYFIELD-PWR, and passes it on to its three chain outputs, J-LA to J-LC on the ambient board and J-LD to J-LF on the playfield board. The buffer also takes its 5 V at that input. The input is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends.
+Each board takes the machine's 5 V through its own power input, J-AMBIENT-PWR or J-PLAYFIELD-PWR, and passes it on to its three chain outputs, J-LA to J-LC on the ambient board and J-LD to J-LF on the playfield board. The buffer also takes its 5 V at that input. The input is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends. The board's ground comes over that pair from the power board's star point, so no ground wire runs from the Teensy.
+
+> On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 
 C1 sits at U1's supply pin. It delivers the short current peak the buffer draws each time it switches.
 

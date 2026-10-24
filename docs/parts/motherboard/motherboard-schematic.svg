@@ -213,7 +213,7 @@
   <circle cx="440" cy="800" r="4" fill="#1a1a1a"/>
   <line x1="1234" y1="1696" x2="440" y2="1696" stroke="#9a7d0a" stroke-width="5.0" stroke-linecap="square"/>
   <line x1="1234" y1="1696" x2="440" y2="1696" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="square"/>
-  <line x1="440" y1="110" x2="440" y2="1536" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
+  <line x1="440" y1="110" x2="440" y2="1140" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
   <circle cx="440" cy="110" r="4" fill="#1a1a1a"/>
   <line x1="440" y1="1696" x2="440" y2="2890" stroke="#9a7d0a" stroke-width="5.0" stroke-linecap="square"/>
   <line x1="440" y1="1696" x2="440" y2="2890" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="square"/>
@@ -254,7 +254,6 @@
   <circle cx="400" cy="1140" r="6" fill="#1a1a1a"/>
   <text x="386" y="1144" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">GND</text>
   <line x1="406" y1="1140" x2="440" y2="1140" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
-  <circle cx="440" cy="1140" r="4" fill="#1a1a1a"/>
   <circle cx="140" cy="1060" r="6" fill="#8a6d0b"/>
   <text x="154" y="1064" font-size="11.5" font-weight="700" fill="#8a6d0b">SPK+</text>
   <circle cx="140" cy="1096" r="6" fill="#8a6d0b"/>
@@ -275,10 +274,6 @@
   <text x="322" y="1316" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">chain C</text>
   <text x="368" y="1316" text-anchor="end" font-size="11" fill="#777" data-pin="LED chain C">pin 7</text>
   <line x1="1234" y1="1312" x2="386" y2="1312" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square"/>
-  <circle cx="380" cy="1344" r="6" fill="#1a1a1a"/>
-  <text x="366" y="1348" text-anchor="end" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="386" y1="1344" x2="440" y2="1344" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
-  <circle cx="440" cy="1344" r="4" fill="#1a1a1a"/>
   <rect x="140" y="1364" width="240" height="192" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <text x="152" y="1456.0" font-size="13" font-weight="700" fill="#333333">Lighting, playfield</text>
   <text x="152" y="1472.0" font-size="11" fill="#666">data to the board</text>
@@ -294,9 +289,6 @@
   <text x="322" y="1508" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">chain F</text>
   <text x="368" y="1508" text-anchor="end" font-size="11" fill="#777" data-pin="LED chain F">pin 10</text>
   <line x1="1234" y1="1504" x2="386" y2="1504" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square"/>
-  <circle cx="380" cy="1536" r="6" fill="#1a1a1a"/>
-  <text x="366" y="1540" text-anchor="end" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="386" y1="1536" x2="440" y2="1536" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square"/>
   <rect x="140" y="1736" width="240" height="144" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
   <text x="152" y="1804.0" font-size="13" font-weight="700" fill="#333333">Touch cable</text>
   <text x="152" y="1820.0" font-size="11" fill="#666">to the converter</text>

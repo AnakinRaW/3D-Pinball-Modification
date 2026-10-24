@@ -41,12 +41,13 @@ A computer test reports through its test framework, and its run fails when a sin
 
 ## Bench
 
-The bench is the Teensy on USB with the boards of the subsystems under test, the boards on a 5 V bench supply, and the [test card](#test-card) in. The coils stay disconnected, so a pull shows only on its trigger pin. Three boards are wired differently on the bench:
+The bench is the Teensy on USB with the boards of the subsystems under test, the boards on a 5 V bench supply, and the [test card](#test-card) in. The coils stay disconnected, so a pull shows only on its trigger pin. These boards are wired differently on the bench:
 
 | Board | On the bench |
 |---|---|
 | Solenoid coil board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
 | Servo board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/servo/design.md#supply) requires |
+| Lighting boards | The Teensy's GND is joined with each board's GND, as their [supply](../parts/lighting/design.md#supply) requires |
 | IR mainboard | It runs from its D24V5F3 on the bench supply, or from the Teensy's 3V3 pin while everything that pin feeds stays within the pin's [rating](../research/teensy-4.1.md#power) |
 
 ## Test card
