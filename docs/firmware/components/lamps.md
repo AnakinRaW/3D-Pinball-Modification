@@ -86,9 +86,13 @@ Every effect call returns its lamps, so `lasting(ms)` can follow it, as in `flas
 
 `Color::none` is the color for "leave this lamp to the effect below". `run()` takes it where a call leaves out `back`, and `blink()` shows it while off. `Color::black` covers the effect below instead.
 
+## Brightness
+
+A game sets how bright the playfield lights and the ambient lights are, each from 0 to 1. The value is a share of the most the [lighting driver](../drivers/lighting.md#adapter-profile)'s profile allows, so 0.5 gives half of it. Both start at 1. `clear()` sets them back to 1 between two games.
+
 ## Frames
 
-The main loop calls `update(now)` in every pass. Every 10 ms, `update()` works out what every effect shows at that moment, from the time since the effect began. The lamps change only when `update()` works out a new frame. For each lamp, it writes the color of its top effect into the lamp's chain. A lamp of the perimeters or the ceiling gets its color scaled to the ambient brightness of the driver's profile, a lamp of the playfield to the playfield brightness. `update()` then hands the frame to the lighting driver without waiting.
+The main loop calls `update(now)` in every pass. Every 10 ms, `update()` works out what every effect shows at that moment, from the time since the effect began. The lamps change only when `update()` works out a new frame. For each lamp, it writes the color of its top effect into the lamp's chain. A lamp of the perimeters or the ceiling gets its color scaled to the ambient brightness, a lamp of the playfield to the playfield brightness. `update()` then hands the frame to the lighting driver without waiting.
 
 10 ms were chosen so that every frame has been sent well before the next one starts. `show()` therefore never has to wait. Sending a frame takes at most 2.67 ms for the longest chain in the machine. 10 ms are also short enough for fades and runs to change smoothly. A shorter period would only take more time from the main loop.
 
@@ -204,7 +208,10 @@ public:
 
     void     remove(uint8_t key);   // removes every effect with key from every lamp and strip, so the ones below show
     uint32_t refused() const;       // gets how many effects a lamp or strip with five effects has refused
-    void     clear();               // removes every effect from every lamp and strip; the host calls it between two games
+    void     clear();               // removes every effect from every lamp and strip and sets both brightnesses to 1; the host calls it between two games
+
+    // sets how bright the playfield lights and the ambient lights are, each from 0 to 1 of the most the driver's profile allows
+    void brightness(float playfield, float ambient);
 
     // works out every effect and hands on a frame once a frame period has passed; the main loop calls it in every pass
     void update(uint32_t now);

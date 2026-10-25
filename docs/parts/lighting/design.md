@@ -76,7 +76,7 @@ The adapter's rating is set in the machine's config file. The [lighting driver](
 | Ambient lights, brightness at most | 78 | 117 |
 | Cap | 2 A | 2.93 A |
 
-The playfield lights run at full brightness, since they stand for the game. The ambient lights take what the cap leaves with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
+The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
 
 FastLED holds the cap with its `setMaxPowerInVoltsAndMilliamps` function. Before each `show()` it dims every light until the sum fits the set max current. It works out the sum from the measured currents, which the lighting driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap, so FastLED dims nothing in play.
 

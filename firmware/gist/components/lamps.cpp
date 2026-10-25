@@ -273,7 +273,10 @@ public:
 
     void     remove(uint8_t key);                    // removes every effect with key from every lamp and strip, so the ones below show
     uint32_t refused() const { return refused_; }    // gets how many effects a lamp or strip with kMaxEffects effects has refused
-    void     clear();                                // removes every effect from every lamp and strip; the host calls it between two games
+    void     clear();                                // removes every effect from every lamp and strip and sets both brightnesses to 1; the host calls it between two games
+
+    // sets how bright the playfield lights and the ambient lights are, each from 0 to 1 of the most the driver's profile allows
+    void brightness(float playfield, float ambient);
 
     // works out every effect and hands on a frame once kFrameUs has passed; the main loop calls it in every pass
     void update(uint32_t now);
@@ -336,7 +339,10 @@ private:
     Where    locate(uint8_t strip, uint16_t i) const;   // gets where lamp i of a strip sits and its position
     uint16_t stripLength(uint8_t strip) const;          // gets the position of a strip's last lamp
 
-    // gets the color the LED at p shows now, as it stood before the profile's limit max dimmed it
+    uint8_t  playfieldScale() const;                    // gets what a playfield lamp's color is scaled by: the game's brightness of the profile's most
+    uint8_t  ambientScale() const;                      // gets what an ambient lamp's color is scaled by: the game's brightness of the profile's most
+
+    // gets the color the LED at p shows now, as it stood before update() scaled it by max
     Color    colorAt(Place p, uint8_t max) const;
 
     // gets the color a paint gives: below for Color::none, and a palette's color at the place, the time
@@ -359,6 +365,8 @@ private:
     uint32_t  seq_     = 0;            // the last call's number, for Entry::seq
     uint32_t  refused_ = 0;
     uint32_t  shown_   = 0;            // nowUs() of the last frame
+    float     playfield_ = 1;          // the brightness the game set, 0 to 1
+    float     ambient_   = 1;
 };
 
 const Lamps::Place Lamps::kPlayfieldPlaces[Lamps::kPlayfield] = {};
@@ -390,7 +398,16 @@ LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
 void Lamps::clear() {
     for (auto& lamp : slots_)   for (Entry& e : lamp)  e.used = false;
     for (auto& strip : strips_) for (Entry& e : strip) e.used = false;
+    playfield_ = ambient_ = 1;
 }
+
+void Lamps::brightness(float playfield, float ambient) {
+    playfield_ = constrain(playfield, 0.0f, 1.0f);
+    ambient_   = constrain(ambient, 0.0f, 1.0f);
+}
+
+uint8_t Lamps::playfieldScale() const { return uint8_t(lighting_.profile().playfieldMax * playfield_ + 0.5f); }
+uint8_t Lamps::ambientScale() const   { return uint8_t(lighting_.profile().ambientMax * ambient_ + 0.5f); }
 
 void Lamps::remove(uint8_t key) {
     for (auto& lamp : slots_)   for (Entry& e : lamp) if (e.key == key) e.used = false;
@@ -497,7 +514,8 @@ void Lamps::update(uint32_t now) {
     if (now - shown_ < kFrameUs) return;
     shown_ = now;
     const uint32_t ms      = now / 1000;
-    const Profile& profile = lighting_.profile();
+    const uint8_t  playfield = playfieldScale();   // what the colors are scaled by in this frame
+    const uint8_t  ambient   = ambientScale();
 
     // the playfield's lamps: each lamp mixes its effects from the lowest priority up
     for (uint16_t lamp = 0; lamp < kPlayfield; ++lamp) {
@@ -513,7 +531,7 @@ void Lamps::update(uint32_t now) {
         CRGB c(0, 0, 0);                                 // a lamp without effects is dark
         for (uint8_t k = 0; k < n; ++k) c = mix(*order[k], ms, Spot{order[k]->index, order[k]->count}, c);
         const Place p = kPlayfieldPlaces[lamp];
-        lighting_.chain(p.chain)[p.led] = c.nscale8(profile.playfieldMax);
+        lighting_.chain(p.chain)[p.led] = c.nscale8(playfield);
     }
 
     // the strips: dark first, then every effect from the lowest up, so the top one paints last
@@ -546,11 +564,11 @@ void Lamps::update(uint32_t now) {
         }
     }
 
-    // the strips at the profile's ambient brightness, once every effect has painted
+    // the strips at their brightness, once every effect has painted
     for (uint8_t strip = kLeft; strip <= kCeilingStrip; ++strip) {
         for (uint16_t i = 0; i < stripSize(strip); ++i) {
             const Place p = locate(strip, i).place;
-            lighting_.chain(p.chain)[p.led].nscale8(profile.ambientMax);
+            lighting_.chain(p.chain)[p.led].nscale8(ambient);
         }
     }
 
@@ -574,7 +592,7 @@ LampRange& LampRange::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
 
 LampRange& LampRange::fade(Paint c, uint16_t ms) {
     for (uint16_t i = 0; i < count_; ++i) {   // each lamp fades from the color it shows now
-        const Color from = lamps_->colorAt(Lamps::kPlayfieldPlaces[first_ + i], lamps_->lighting_.profile().playfieldMax);
+        const Color from = lamps_->colorAt(Lamps::kPlayfieldPlaces[first_ + i], lamps_->playfieldScale());
         sub(i, 1).play(Fade(ms), from, c);
         for (Lamps::Entry& e : lamps_->slots_[first_ + i]) {   // keeps the lamp's place in this range, for a palette by position
             if (e.used && e.key == key_) { e.index = uint8_t(i); e.count = uint8_t(count_); }
@@ -616,7 +634,7 @@ Strip& Strip::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
 }
 
 Strip& Strip::fade(Paint c, uint16_t ms) {
-    const Color from = lamps_->colorAt(lamps_->locate(strip_, 0).place, lamps_->lighting_.profile().ambientMax);
+    const Color from = lamps_->colorAt(lamps_->locate(strip_, 0).place, lamps_->ambientScale());
     return play(Fade(ms), from, c);
 }
 
