@@ -8,6 +8,7 @@ Component specifications and the reasoning behind a part choice are recorded her
 |---|---|
 | [`teensy-4.1.md`](teensy-4.1.md) | Specifications of the selected controller and the electrical constraints it imposes |
 | [`teensy-4.1.py`](teensy-4.1.py) | The controller's figures and what each of its pins can carry, each with its source, which the subsystems' models take their Teensy figures from |
+| [`Components/sezo-ws2812b-strip.md`](Components/sezo-ws2812b-strip.md) | The LED strip the lighting is cut from: its current per color and while dark, measured on two LEDs |
 | [`Components/cny70.md`](Components/cny70.md) | The reflective sensor held for a bench trial: its ratings, what its datasheet leaves unspecified, and how it compares to the part in the stock boards |
 | [`Rokr/1_power-supply.md`](Rokr/1_power-supply.md) | The stock 5 V input: adapter rating, the protection and filtering parts at the power entry, the inventory of loads on the rail, and why an undersized supply resets the machine |
 | [`Rokr/2_ir-reflective-sensor-p33.md`](Rokr/2_ir-reflective-sensor-p33.md) | The stock ball sensor: measurements, reconstructed schematics of the sensor board and of its mainboard channel, and why the stock circuit is built that way |
