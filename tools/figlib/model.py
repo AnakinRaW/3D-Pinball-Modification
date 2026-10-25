@@ -210,6 +210,7 @@ class Model:
         self.drawn: list = []
         self.supplied: list = []
         self.ignored: list = []       # (path, why) of files in the model's folder it leaves out
+        self.skipped: list = []       # (path, heading, why) of sections of its documents it leaves out
         self.named: dict = {}         # designators of other boards and modules, with why
         self.ranges: list = []        # (nominal, low, high) of a quantity that varies
         self.path: pathlib.Path | None = None
@@ -333,6 +334,13 @@ class Model:
         """A markdown file or drawing in the model's folder that no model governs, and why."""
         here = self.path.parent if self.path else self.document.parent
         self.ignored.append(((here / path).resolve(), why))
+
+    def skips(self, path, heading: str, why: str):
+        """A section of one of the model's documents that states nothing of the design, such as
+        a bench sketch, and why. It runs from its heading to the next heading of its level or
+        a higher one."""
+        here = self.path.parent if self.path else self.document.parent
+        self.skipped.append(((here / path).resolve(), heading, why))
 
     def names(self, *designators, why: str):
         """Designators the document names that its own part list does not hold: a module's

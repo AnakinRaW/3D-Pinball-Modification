@@ -11,6 +11,8 @@ MODEL = Model.at(__file__, "lighting",
                             "../../firmware/drivers/lighting.md",
                             "../../research/Components/sezo-ws2812b-strip.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
+MODEL.skips("../../research/Components/sezo-ws2812b-strip.md", "Test Code",
+            "the bench sketch the strip's currents were measured with")
 
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
 

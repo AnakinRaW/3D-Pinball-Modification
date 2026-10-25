@@ -108,11 +108,24 @@ def scan_tokens(text: str, section: str | None, group: str | None,
 
 
 NEVER = chr(0x0a)   # no line starts with a newline, so an extra document is read whole
+HEADING_RE = re.compile(r"(#{2,5})\s+(.+?)\s*$")
+
+
+def headings(path: pathlib.Path) -> set[str]:
+    """The section headings of a document, outside its code blocks."""
+    found, infence = set(), False
+    for raw in norm(path.read_text(encoding="utf-8")).split("\n"):
+        if raw.strip().startswith("```"):
+            infence = not infence
+        elif not infence and (h := HEADING_RE.match(raw)):
+            found.add(h.group(2))
+    return found
 
 
 def parse_document(path: pathlib.Path, section_head: str | None,
-                   until: str) -> list[Token]:
-    """Every figure token in the document, with the group and section holding it."""
+                   until: str, skip=()) -> list[Token]:
+    """Every figure token in the document, with the group and section holding it. A section
+    whose heading `skip` names is left out, up to the next heading of its level or a higher one."""
     body = norm(path.read_text(encoding="utf-8"))
     lines = body.split("\n")
     start = 0 if section_head is None else next(
@@ -120,11 +133,17 @@ def parse_document(path: pathlib.Path, section_head: str | None,
     end = next((i for i, l in enumerate(lines) if i > start and l.startswith(until)),
                len(lines))
     tokens, section, group, infence = [], None, None, False
+    skipping = None     # the level of the heading whose section is left out
     for i in range(start, end):
         raw = lines[i]
+        h = None if infence else HEADING_RE.match(raw)
+        if h and (skipping is None or len(h.group(1)) <= skipping):
+            skipping = len(h.group(1)) if h.group(2) in skip else None
         if raw.strip().startswith("```"):
             infence = not infence
             group = None
+            continue
+        if skipping is not None:
             continue
         m = re.match(r"\*\*(.+?)\.?\*\*", raw) or re.match(r"#{2,5}\s+(.+?)\s*$", raw)
         if m and not infence:

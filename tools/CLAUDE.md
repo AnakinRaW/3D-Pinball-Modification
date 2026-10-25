@@ -24,12 +24,16 @@ MODEL.range("v_3v3_min", "v_3v3_max", nominal="v_3v3")
 fig("v_in_abs_max", "V", "v_out_max + v_in_over_vdd", "down", tracks="v_out_max")
 ```
 
-A designator of a module's or another board's part, a file the model's folder holds that no model reads, each carries its reason:
+A designator of a module's or another board's part, a file the model's folder holds that no model reads, and a section of a read document that states nothing of the design, each carries its reason:
 
 ```python
 MODEL.names("R4", "R5", why="the Grove module's own pull-ups on SDA and SCL")
 MODEL.ignores("bench-measurement.de.md", "the bench record the measured inputs cite")
+MODEL.skips("../../research/Components/sezo-ws2812b-strip.md", "Test Code",
+            "the bench sketch the strip's currents were measured with")
 ```
+
+A section left out runs from its heading to the next heading of its level or a higher one.
 
 A block gives its group, its section and `stated` to every declaration inside it. A declaration names its own where it differs. A declaration the document does not state takes no group and no section from its block.
 
@@ -78,6 +82,7 @@ Each check reports on a separate line, and any of them can fail the run:
 | figures in the document | Every figure the model marks as stated is found in its group, and the value there agrees to one unit of its last printed digit. A declared input agrees digit for digit, so a resistor left at 1.1 kΩ beside a model at 1.2 kΩ fails. A figure declared `prints` gets a one-sided tolerance, so a bound printed on the wrong side of the computed value fails |
 | figures named in prose | A figure the model marks as stated in prose appears somewhere in the section that mentions it |
 | every number accounted for | Every value inside a fenced block or a table, anywhere in the document, is a formula's result or a declared input as that quantity prints |
+| sections left out | Every section a model leaves out with `MODEL.skips` stands under its heading in a document the model reads |
 | figures in the drawings | A figure carried by an SVG `<text data-fig="...">` agrees with the model, and a figure in a text element that no `data-fig` names fails the run. One element may carry several figures, and the attribute then names them space separated. A figure of another model is anchored as `model:key`, such as `break-beam:r_e`, so a drawing that carries several subsystems' parts needs no `uses` in the model that owns it |
 | Teensy pins | Every marked pin agrees with [`docs/pin-assignment.md`](../docs/pin-assignment.md), the table gives no pin to two signals and no signal twice, and no number is called a Teensy pin without its marker |
 | what the pins can carry | The pin table's port, capability, timer and FlexIO rows are the ones the board's model gives. See [What the pins can carry](#what-the-pins-can-carry) |

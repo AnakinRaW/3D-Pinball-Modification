@@ -10,7 +10,7 @@ from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_designato
                      pass_direction, pass_drawings, pass_extremes, pass_invariants, pass_mutate,
                      pass_orphans, pass_sources, pass_stale, pass_sums, write_sums)
 from .coverage import run_coverage
-from .document import NEVER, parse_document
+from .document import NEVER, headings, parse_document
 from .listings import print_blind, print_groups, print_provenance, show_graph
 from .model import Model
 from .pins import PIN_TABLE, pass_moved_pins, pass_pins, run_pins, write_pins
@@ -44,9 +44,10 @@ def run_model(path: pathlib.Path, args, whole: bool) -> int:
         return print_blind(model)
     if args.provenance:
         return print_provenance(model)
-    tokens = parse_document(model.document, model.section, model.until)
+    skip = lambda doc: {h for p, h, _ in model.skipped if p == doc.resolve()}
+    tokens = parse_document(model.document, model.section, model.until, skip(model.document))
     for extra in model.documents:
-        tokens += parse_document(extra, None, NEVER)
+        tokens += parse_document(extra, None, NEVER, skip(extra))
     if args.groups:
         return print_groups(model, tokens)
 
@@ -140,6 +141,21 @@ def _numbers(run: Run):
            f"{stray} match nothing" + (f", {dead} asides no document states" if dead else "")
            + (f", {debt} derived in prose" if debt else "")
            + (f", {side} past the bound they quote" if side else ""))
+
+
+def _skipped(run: Run):
+    """Each section the model leaves out stands under its heading in a document the model reads."""
+    model = run.model
+    if model.skipped:
+        docs = {p.resolve() for p in (model.document, *model.documents)}
+        for path, heading, why in model.skipped:
+            if path not in docs or not path.exists() or heading not in headings(path):
+                run.rep.error(f"{model.name} leaves out the section {heading!r} of {rel(path)} "
+                              f"({why}), which is no heading of a document it reads",
+                              kind="skip")
+        status(not run.rep.count("skip"), "sections left out",
+               f"{len(model.skipped)} named with their reason, "
+               f"{run.rep.count('skip')} under no heading of that name")
 
 
 def _drawings(run: Run):
@@ -259,7 +275,7 @@ def _stale(run: Run):
         pass_moved_pins(run.args.base, run.rep, [*run.own, run.path])
 
 
-CHECKS = (_figures, _numbers, _drawings, _pins, _direction, _extremes, _curves, _invariants,
+CHECKS = (_figures, _numbers, _skipped, _drawings, _pins, _direction, _extremes, _curves, _invariants,
           _sources, _designators, _unlinted, _sheets, _sums, _mutate, _stale)
 
 
