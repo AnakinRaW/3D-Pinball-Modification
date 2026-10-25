@@ -1,6 +1,6 @@
 """The figures of the lighting's level shifter, data lines, supply and frames, as inputs plus
 formulas."""
-from math import inf
+from math import floor, inf
 
 from figcheck import *
 
@@ -20,6 +20,7 @@ SHIFT = "Level shifting"
 BUFFERS = "One CD74HCT125E"
 SERIES = "A series resistor sits in each data line"
 SUPPLY = "Supply"
+CEILING = "Current ceiling"
 
 # -- the strip, the layout and what the lights draw ---------------------------
 ds("strip_len", 2, "m", src="the SEZO WS2812B strip's listing, the reel's length")
@@ -29,19 +30,18 @@ asm("len_other_stock", 45, "cm", src="the strip the other stock positions take, 
 dec("hole_min", 6, "mm", src="the narrowest hole a new playfield light gets")
 dec("hole_max", 10, "mm", src="the widest hole a new playfield light gets")
 dec("n_leds", 240, "", src="every LED the light layout table plans")
-dec("n_lit", 162, "", src="the LEDs the light layout table lights, the perimeters at every second")
 dec("n_perimeter", 158, "", src="the LEDs of the two perimeter chains, A and B, in the light layout table")
-dec("n_perimeter_lit", 80, "", src="the perimeter LEDs lit at every second, A and B in the light "
-    "layout table")
+dec("n_perimeter_lit_3a", 80, "", src="the perimeter LEDs the 3 A adapter lights, every second of A and "
+    "B, 40 each in the light layout table")
+dec("n_ceiling", 26, "", src="the LEDs of the ceiling chain, C, in the light layout table", stated=False)
 # What the strip draws, measured on a piece cut from it. Each reading takes the whole piece, its
 # dark controllers included, so the dark reading comes off every other one.
-_BENCH = ("bench: a piece of two LEDs cut from the SEZO strip on a bench supply at 5.0 to 5.1 V, the "
+_BENCH = ("bench: a piece of two LEDs cut from the SEZO strip on a bench supply at 5.1 V, the "
           "multimeter's current range in series with the supply, FastLED at brightness 255 setting "
           "both LEDs to")
 dec("n_bench", 2, "", src="the LEDs of the piece the strip's currents were measured on", stated=False)
-msr("v_bench_min", 5.0, "V", src="bench: the bench supply's output the strip ran on, read with the "
-    "multimeter, at its low end", stated=False)
-msr("v_bench_max", 5.1, "V", src="bench: the same reading at its high end", stated=False)
+msr("v_bench", 5.1, "V", src="bench: the bench supply's output the strip ran on, read with the "
+    "multimeter", stated=False)
 msr("i_bench_green_half", 9.8, "mA", src=f"{_BENCH} CRGB(0, 128, 0), which is FastLED's "
     "CRGB::Green", stated=False)
 asm("i_color_usual", 20, "mA", src="the per-color current WS2812B strips are usually budgeted "
@@ -66,11 +66,13 @@ fig("i_led_white", "mA", "i_red + i_green + i_blue", "up",
     moves="+i_bench_red +i_bench_green +i_bench_blue -i_bench_dark", stated=False)
 fig("i_led_white_read", "mA", "(i_bench_white - i_bench_dark) / n_bench",
     moves="+i_bench_white -i_bench_dark -n_bench", stated=False)
-fig("i_full_white", "A", "n_lit.raw * i_led_white", "up", stated=False)
 fig("i_idle", "A", "n_leds.raw * i_ctrl", "up", stated=False)
-fig("i_all_white", "A", "i_full_white + i_idle", "up", stated=False)
-fig("i_perimeter_full", "A", "n_perimeter.raw * i_led_white", "up", stated=False)
-fig("i_perimeter_half", "A", "n_perimeter_lit.raw * i_led_white", "up", stated=False)
+
+# The ambient lights are the perimeters and the ceiling, the playfield lights the rest. The 3 A
+# adapter lights every second perimeter LED, the 6 A adapter all of them.
+fig("n_ambient", "", "n_perimeter + n_ceiling", stated=False)
+fig("n_playfield", "", "n_leds - n_ambient", stated=False)
+fig("n_ambient_lit_3a", "", "n_perimeter_lit_3a + n_ceiling", stated=False)
 
 # FastLED's power model takes whole milliwatts per color at full brightness. The rail's 5 V
 # turns the currents into them, rounded up so that the cap never lets more through than it states.
@@ -256,13 +258,14 @@ with MODEL.block(SUPPLY, stated="loose"):
         "Current ceiling")
     dec("i_budget", 2.0, "A", src="the lighting's cap with the 3 A supply, which the firmware "
         "holds with FastLED's setMaxPowerInVoltsAndMilliamps; design.md, Current ceiling",
-        stated=False)
-    dec("i_budget_6a", 3.3, "A", src="the lighting's cap with the 6 A supply, kept at 3.3 A: with "
-        "the permanent consumers of the power design and two bumpers with the scoop pulling at "
-        "once the sum passes the adapter for at most one pull-in, by what the power design's Adapter "
-        "section gives, which the design "
-        "accepts as it accepts the 3 A adapter's overrun; design.md, Current ceiling, and the "
-        "power design's Adapter section", stated=False)
+        group="Cap", section=CEILING, stated=True)
+    # With the 6 A supply the cap leaves room for the permanent consumers and the coil case, two
+    # bumpers and the scoop pulling at once.
+    MODEL.uses("i_coils_at_once", of="solenoid", stated=False)
+    dec("cap_grain", 0.01, "A", src="the step the lighting's cap is set in, 10 mA", stated=False)
+    fig("i_budget_6a", "A", "floor_to(i_supply_6a - i_permanent - i_coils_at_once, 'A', "
+        "cap_grain.to('A'))", "down", moves="+i_supply_6a -i_coils_at_once -i_permanent",
+        group="Cap", section=CEILING, stated=True)
     dec("len_jpwr", 30, "cm", src="the longest the boards' power input cable, the length the feed's inductance is "
         "estimated for")
     ds("r_awg22", 52.96, "mΩ/m", src="ASTM B258, 22 AWG annealed copper at 20 °C", stated=False)
@@ -299,7 +302,38 @@ with MODEL.block(SUPPLY, stated="loose"):
     fig("v_buffer_min_6a", "V", "v_rail - v_jpwr_6a - v_dip_6a", "down",
         moves="+v_rail -i_budget_6a -len_jpwr -r_awg22 -z_c -l_feed")
 
-# -- FastLED's power model and how far the cap dims the whole layout ----------
+# -- the two adapters' profiles: how bright each zone may be at full white everywhere --------------
+dec("scale_steps", 256, "", src="FastLED's scale8, which multiplies a value by (scale + 1) / 256 while "
+    "FASTLED_SCALE8_FIXED is 1, src/platforms/shared/scale8.h of FastLED 3.10.8", stated=False)
+dec("playfield_max", 255, "", src="the playfield lights' brightness at most, full, since they stand "
+    "for the game", group="Playfield lights, brightness at most", section=CEILING)
+dec("ambient_ceiling", 128, "", src="the most brightness the ambient lights need, a decision")
+fig("frac_playfield", "%", "(playfield_max + 1) / scale_steps", stated=False)
+
+
+# The ambient lights take what is left of the cap once the controllers and the playfield at its
+# brightness are paid, as the FastLED brightness value whose scale stays under it.
+def _ambient_max(budget, i_idle, n_playfield, i_led_white, frac_playfield, n_lit, scale_steps):
+    left = (budget - i_idle - n_playfield.raw * i_led_white * frac_playfield.raw) / (n_lit.raw * i_led_white)
+    return Q.of(floor(left.raw * scale_steps.raw) - 1, "")
+
+
+fig("ambient_max_3a", "", lambda i_budget, i_idle, n_playfield, i_led_white, frac_playfield,
+    n_ambient_lit_3a, scale_steps: _ambient_max(i_budget, i_idle, n_playfield, i_led_white,
+                                               frac_playfield, n_ambient_lit_3a, scale_steps), "down",
+    group="Ambient lights, brightness at most", section=CEILING)
+fig("ambient_max_6a", "", lambda i_budget_6a, i_idle, n_playfield, i_led_white, frac_playfield,
+    n_ambient, scale_steps: _ambient_max(i_budget_6a, i_idle, n_playfield, i_led_white,
+                                        frac_playfield, n_ambient, scale_steps), "down",
+    group="Ambient lights, brightness at most", section=CEILING)
+
+# what the whole layout draws at full white with each profile
+fig("i_white_3a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient_lit_3a.raw * (ambient_max_3a.raw + 1) / scale_steps.raw)", "up", stated=False)
+fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
+
+# -- FastLED's power model ------------------------------------------------------
 fig("pm_red", "mW", "ceil_to(i_red * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_red -i_bench_dark +v_rail", stated=False)
 fig("pm_green", "mW", "ceil_to(i_green * v_rail, 'mW', mw_grain.to('mW'))", "up",
@@ -308,12 +342,6 @@ fig("pm_blue", "mW", "ceil_to(i_blue * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_blue -i_bench_dark +v_rail", stated=False)
 fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_dark +v_rail", stated=False)
-
-# The controllers draw whatever the colors do, so the cap dims the colors into what they leave.
-fig("dim_3a", "%", "(i_budget - i_idle) / i_full_white", "down",
-    moves="+i_budget -i_bench_red -i_bench_green -i_bench_blue", stated=False)
-fig("dim_6a", "%", "(i_budget_6a - i_idle) / i_full_white", "down",
-    moves="+i_budget_6a -i_bench_red -i_bench_green -i_bench_blue", stated=False)
 
 # -- the frame ----------------------------------------------------------------
 OBJECTFLED = "ObjectFLED.h in FastLED"
@@ -371,6 +399,14 @@ _I("the three colors summed bound what an LED draws at full white",
    "i_led_white >= i_led_white_read")
 _I("the controllers alone stay inside the smaller cap, so the colors keep a share of it",
    "i_idle < i_budget")
+_I("with the 3 A adapter the whole layout at full white stays inside the cap", "i_white_3a <= i_budget")
+_I("with the 6 A adapter the whole layout at full white stays inside the cap",
+   "i_white_6a <= i_budget_6a")
+_I("the ambient lights stay at or under the brightness they need",
+   "ambient_max_3a <= ambient_ceiling and ambient_max_6a <= ambient_ceiling")
+_I("the ambient lights keep some brightness with either adapter", "ambient_max_3a > Q.of(0, '')")
+_I("the 6 A adapter carries the lighting at its cap, the permanent consumers and two bumpers with "
+   "the scoop", "i_budget_6a + i_coils_at_once + i_permanent <= i_supply_6a")
 _I("the strip draws less per color than the usual budget", "i_red < i_color_usual and "
    "i_green < i_color_usual and i_blue < i_color_usual")
 _I("green at half its value draws less than at full and more than nothing",

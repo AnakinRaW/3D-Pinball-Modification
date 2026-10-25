@@ -20,9 +20,9 @@ The ball count board P28 is taken out whole and kept intact. Six LEDs take its p
 
 Positions follow the stock inventory in [`research/Rokr/4_lighting.md`](../../research/Rokr/4_lighting.md), with the three stock strips replaced by strips with 160 LEDs/m.
 
-Due to power saving, the perimeter may [light only every second LED](#current-ceiling). The table below lists all LEDs currently planned in the project.
+With the 3 A adapter the perimeters light only every second LED, as the [current ceiling](#current-ceiling) sets out. The table lists every LED planned and the ones the 3 A adapter lights. The 6 A adapter lights them all.
 
-| Location | Chain | LEDs | Lit |
+| Location | Chain | LEDs | Lit with 3 A |
 |---|---|---|---|
 | Perimeter left | A | 79 | 40 |
 | Perimeter right | B | 79 | 40 |
@@ -63,15 +63,22 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 ## Current ceiling
 
-The strip's currents are [measured](../../research/Components/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark.
-
-At full white the 162 lit LEDs draw 2.89 A. The controllers of all 240 LEDs add 0.42 A, which makes 3.31 A.
+The strip's currents are [measured](../../research/Components/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark, 0.42 A for all 240 LEDs.
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
-The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current. It works out the sum from the measured currents, which the [lighting driver](../../firmware/drivers/lighting.md) hands it as its power model. With the 6 A supply the whole layout at full white is dimmed to 99.8 %, with the 3 A supply to 54.7 %.
+The adapter's rating is set in the machine's config file. The [lighting driver](../../firmware/drivers/lighting.md) picks the matching profile from that setting at start-up. A brightness is FastLED's value from 0 to 255. The 3 A config is the default and fallback setting for any error case.
 
-The perimeters may light only every second LED, which halves their current at full white from 2.82 A to 1.43 A. The perimeters and the ceiling also never run at full brightness.
+| | 3 A adapter | 6 A adapter |
+|---|---|---|
+| Perimeter LEDs lit | every second, 80 | all, 158 |
+| Playfield lights, brightness at most | 255 | 255 |
+| Ambient lights, brightness at most | 78 | 117 |
+| Cap | 2 A | 2.93 A |
+
+The playfield lights run at full brightness, since they stand for the game. The ambient lights take what the cap leaves with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
+
+FastLED holds the cap with its `setMaxPowerInVoltsAndMilliamps` function. Before each `show()` it dims every light until the sum fits the set max current. It works out the sum from the measured currents, which the lighting driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap, so FastLED dims nothing in play.
 
 ## Circuit
 
@@ -109,7 +116,7 @@ Each board takes the machine's 5 V through its own power input, J-AMBIENT-PWR or
 
 C1 sits at U1's supply pin. It delivers the short current peak the buffer draws each time it switches.
 
-C2 is a 1000 µF electrolytic within 20 mm of the board's power input. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 29 mΩ at 100 kHz. The cap holds for all chains together, so either board can draw all of it. Even if the whole cap switches on at once on one board, its buffer keeps at least 4.84 V with the 3 A supply and 4.74 V with the 6 A supply.
+C2 is a 1000 µF electrolytic within 20 mm of the board's power input. It carries the board's rail when the LED current steps, until the current in the feed follows. Its impedance is at most 29 mΩ at 100 kHz. The cap holds for all chains together, so either board can draw all of it. Even if the whole cap switches on at once on one board, its buffer keeps at least 4.84 V with the 3 A supply and 4.77 V with the 6 A supply.
 
 ## Teensy pins
 

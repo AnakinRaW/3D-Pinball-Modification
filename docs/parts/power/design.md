@@ -11,7 +11,7 @@ The power board takes the 5 V of an external adapter and passes it to every subs
 
 ## Adapter
 
-The adapter needs short-circuit protection, since a short on any output is the adapter's to interrupt. At its full current it has to deliver at least 5.0 V at the jack. With no load it may put out up to 5.25 V. The 5.0 V are the starting point of every subsystem's lowest supply voltage.
+The adapter needs short-circuit and overload protection. A short on any output is the adapter's to interrupt. The overload protection shuts the adapter down under a lasting load above its rating, which the lighting's 6 A profile puts on a smaller adapter. At its full current it has to deliver at least 5.0 V at the jack. With no load it may put out up to 5.25 V. The 5.0 V are the starting point of every subsystem's lowest supply voltage.
 
 ## Loads
 
@@ -19,13 +19,13 @@ The adapter needs short-circuit protection, since a short on any output is the a
 |---|---|
 | The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 902 mA |
 | The lighting at its cap, with the 3 A adapter | 2.0 A |
-| The lighting at its cap, with the 6 A adapter | 3.3 A |
-| Two bumpers and the scoop pulling at once, for at most 30 ms | 2.16 A |
+| The lighting at its cap, with the 6 A adapter | 2.93 A |
+| Three coils pulling at once, for at most 30 ms | 2.16 A |
 | The servo stalled | 0.8 A |
 | The most that draws at once, with the 3 A adapter's cap | 5.07 A |
-| The most that draws at once, with the 6 A adapter's cap | 6.37 A |
+| The most that draws at once, with the 6 A adapter's cap | 6.0 A |
 
-One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Two bumpers and the scoop are therefore the coil case. The servo moves only while no coil pulls, which the game holds to.
+One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Three coils are therefore the most that pull at once: two bumpers and the scoop. The servo moves only while no coil pulls, which the game holds to.
 
 ## Circuit
 
@@ -58,7 +58,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 
 | Output | To | Current at most |
 |---|---|---|
-| J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 3.3 A with the 6 A adapter, each |
+| J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 2.93 A with the 6 A adapter, each |
 | J-SOL | the solenoids' coil board | 2.84 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-MAIN | the Teensy motherboard, with the Teensy and the amplifier module | 504 mA |
@@ -94,7 +94,7 @@ For better performance, thicker wires can be used for DC-IN-to-board, the two J-
 For better convenience, thinner wires such as 26 AWG can be used for low current consumers.
 
 
-Both adapters deliver less than the machine draws at its peak. With the 3 A adapter, the lighting at its cap leaves no room for a coil. With the 6 A adapter, the lighting at its cap, two bumpers and the scoop together ask for 0.37 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops.
+The 3 A adapter delivers less than the machine draws at its peak. With it, the lighting at its cap leaves no room for a coil. The lighting at its cap and three coils together ask for 2.07 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops. With the 6 A adapter, the lighting's cap leaves room for three coils at once.
 
 ## Part list
 
@@ -115,7 +115,7 @@ Both adapters deliver less than the machine draws at its peak. With the 3 A adap
 LOADS     the smaller adapter                      3 A
           the larger adapter                       6 A
           the lighting's cap with the 3 A adapter  2.0 A
-          and with the 6 A adapter                 3.3 A
+          and with the 6 A adapter                 2.93 A
           all four coils at once                   2.84 A
           one bumper coil                          0.68 A
           one pull-in, at most                     30 ms
@@ -138,9 +138,9 @@ LOADS     the smaller adapter                      3 A
           the permanent consumers                = 902 mA
           the most that draws at once, with the
           3 A adapter                            = 5.07 A
-          with the 6 A adapter                   = 6.37 A
-          the lighting at its 6 A cap with two
-          bumpers and the scoop, past the adapter= 0.37 A
+          with the 6 A adapter                   = 6.0 A
+          the lighting at its 3 A cap with three
+          coils, past the adapter                = 2.07 A
 ```
 
 ### Input path
@@ -219,14 +219,14 @@ FUSE      F1's rating                              2 A
 ```
 FLOORS    what the lighting's buffers need         4.5 V
           the lighting's buffers at 3 A          = 4.75 V
-          the lighting's buffers at 6 A          = 4.58 V
+          the lighting's buffers at 6 A          = 4.61 V
           one wire of a cable with its contacts    0.1 Ω
           the servo's buffer while it stalls,
           at 3 A                                 = 4.69 V
           at 6 A                                 = 4.64 V
           and at its start, while C1 alone
           feeds the step                         = 4.58 V
-          two bumpers and the scoop at once        2.16 A
+          three coils at once                      2.16 A
           the solenoids' coil board while they pull,
           at 3 A                                 = 4.48 V
           at 6 A                                 = 4.42 V
@@ -252,13 +252,13 @@ FLOORS    what the lighting's buffers need         4.5 V
 ALLOW     the least bulk at J-IN that holds the
           6 A release under VIN's maximum       = 1325 µF
           the impedance at which the lighting's
-          buffers touch their floor at 6 A      = 45.5 mΩ
+          buffers touch their floor at 6 A      = 55.3 mΩ
           at which the solenoid board touches
           the coils' floor                      = 51.2 mΩ
           at which the servo's buffer touches
           its floor                             = 568 mΩ
           the least of them, the ceiling for a
-          replacement part's listed impedance   = 45.5 mΩ
+          replacement part's listed impedance   = 51.2 mΩ
 ```
 
 ## Sources

@@ -229,9 +229,9 @@ with MODEL.block("LOADS", section=LOADS):
     fig("i_most_6a", "A", "i_budget_6a + i_coils_at_once + i_permanent", "up",
         moves="+i_budget_6a +i_coils_at_once +i_amp")
 
-    # the lighting at its 6 A cap with two bumpers and the scoop pulling at once, past the adapter
-    fig("i_over_6a", "A", "i_budget_6a + i_coils_at_once + i_permanent - i_supply_6a", "up",
-        moves="+i_budget_6a +i_coils_at_once +i_amp +i_disp -i_supply_6a")
+    # the lighting at its 3 A cap with two bumpers and the scoop pulling at once, past the adapter
+    fig("i_over_3a", "A", "i_budget + i_coils_at_once + i_permanent - i_supply_3a", "up",
+        moves="+i_budget +i_coils_at_once +i_amp +i_disp -i_supply_3a")
 
 # -- derived: the bulk and the rail's ceiling ---------------------------------
 with MODEL.block("RAIL", section=RAIL):

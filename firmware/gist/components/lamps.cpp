@@ -39,12 +39,11 @@ enum class Pattern : uint8_t { Chase, Asteroid, Wipe };   // the patterns run() 
 enum class Direction : uint8_t { Up, Down };               // Up runs toward the higher lamp numbers
 enum class Off : uint8_t { Through, Dark };                // what a blink shows while off: the effect below, or a dark lamp
 
-// where the strips' lamps lie along their path, in quarters of a millimeter; placeholders until the
-// strips are mounted: 160 LEDs to the meter, every second LED lit on a perimeter, one pitch across a gap
-inline constexpr uint16_t kPerimeterPitchQ = 50;   // 12.5 mm
-inline constexpr uint16_t kCeilingPitchQ   = 25;   // 6.25 mm
-inline constexpr uint16_t kGapQ            = 50;   // 12.5 mm between two strips of a path
-inline constexpr uint32_t kMsPerQ          = 250;  // ms a speed of one millimeter a second takes for a quarter millimeter
+// where the strips' LEDs lie along their path, in quarters of a millimeter; placeholders until the
+// strips are mounted: 160 LEDs to the meter
+inline constexpr uint16_t kLedPitchQ = 25;    // 6.25 mm
+inline constexpr uint16_t kGapQ      = 50;    // 12.5 mm between two strips of a path
+inline constexpr uint32_t kMsPerQ    = 250;   // ms a speed of one millimeter a second takes for a quarter millimeter
 
 // where a lamp lies among the lamps an effect covers, for an effect that moves along them
 struct Spot {
@@ -52,6 +51,7 @@ struct Spot {
     uint16_t count   = 1;          // how many lamps the effect covers
     uint32_t mmQ     = 0;          // a strip lamp's position along its strip in quarter millimeters, 0 on the playfield
     uint32_t lengthQ = 0;          // the position of the strip's last lamp, 0 on the playfield
+    uint32_t pitchQ  = 0;          // the spacing of the perimeters' lamps, which a run's head covers, 0 on the playfield
 };
 
 // what every effect is: for a lamp at a moment, how far it stands between the effect's two paints;
@@ -126,8 +126,8 @@ uint8_t Run::value(uint32_t ms, const Spot& at) const {
     if (perMm_) {                          // a strip: a lamp's time follows its position, so the pace holds across spacing and gaps
         const uint32_t q = up_ ? at.mmQ : at.lengthQ - at.mmQ;
         offset = q * kMsPerQ / step_;
-        round  = (at.lengthQ + kPerimeterPitchQ) * kMsPerQ / step_;
-        head   = kPerimeterPitchQ * kMsPerQ / step_;
+        round  = (at.lengthQ + at.pitchQ) * kMsPerQ / step_;
+        head   = at.pitchQ * kMsPerQ / step_;
     } else {                               // a range: one lamp per step
         const uint32_t i = up_ ? at.index : uint32_t(at.count - 1 - at.index);
         offset = i * step_;
@@ -294,7 +294,7 @@ private:
     static constexpr uint16_t kAction    = 20;   // TDB, the playfield action lights
     static constexpr uint16_t kPlayfield = kScore + kBallCount + kTrack + kBumpers + kDrain + kRollovers
                                          + kScoop + kTargets + kAction;
-    static constexpr uint16_t kPerimeter = 40;   // the lit LEDs of a perimeter strip, every second of its 79
+    static constexpr uint16_t kPerimeterLeds = 79;   // a perimeter strip's LEDs, of which the profile picks the lamps
     static constexpr uint16_t kCeiling   = 26;
     static constexpr uint8_t  kMaxEffects = 5;    // the component, the game's base mode, two modes over it and a short flash
     static constexpr uint32_t kFrameUs   = 10000;   // 100 frames a second, which leaves a frame's 2.67 ms room
@@ -329,10 +329,15 @@ private:
     // are wired, docs/parts/lighting/design.md
     static const Place kPlayfieldPlaces[kPlayfield];
 
+    uint8_t  step() const;                              // gets the profile's perimeter step: 2 for every second LED, 1 for every one
+    uint16_t perimeter() const;                         // gets how many lamps a perimeter holds
+    uint16_t pitchQ() const;                            // gets the spacing of a perimeter's lamps
     uint16_t stripSize(uint8_t strip) const;            // gets how many lamps a strip holds
     Where    locate(uint8_t strip, uint16_t i) const;   // gets where lamp i of a strip sits and its position
     uint16_t stripLength(uint8_t strip) const;          // gets the position of a strip's last lamp
-    Color    colorAt(Place p) const;                    // gets the color the LED at p shows now
+
+    // gets the color the LED at p shows now, as it stood before the profile's limit max dimmed it
+    Color    colorAt(Place p, uint8_t max) const;
 
     // gets the color a paint gives: below for Color::none, and a palette's color at the place, the time
     // since the effect began or the value
@@ -392,24 +397,28 @@ void Lamps::remove(uint8_t key) {
     for (auto& strip : strips_) for (Entry& e : strip) if (e.key == key) e.used = false;
 }
 
+uint8_t  Lamps::step() const      { return lighting_.profile().perimeterStep; }
+uint16_t Lamps::perimeter() const { return (kPerimeterLeds + step() - 1) / step(); }
+uint16_t Lamps::pitchQ() const    { return kLedPitchQ * step(); }
+
 uint16_t Lamps::stripSize(uint8_t strip) const {
     switch (strip) {
         case kCeilingStrip: return kCeiling;
-        case kBoth:         return 2 * kPerimeter;
-        case kAmbient:      return 2 * kPerimeter + kCeiling;
-        default:            return kPerimeter;
+        case kBoth:         return 2 * perimeter();
+        case kAmbient:      return 2 * perimeter() + kCeiling;
+        default:            return perimeter();
     }
 }
 
 // the order of each strip's lamps and their positions are set when the strips are mounted; until then
-// lamp 0 of a perimeter is its first lit LED, and the lamps lie evenly
+// lamp 0 of a perimeter is its first LED, and the lamps lie evenly
 Lamps::Where Lamps::locate(uint8_t strip, uint16_t i) const {
     static constexpr Segment both[]    = {{kLeft, false}, {kRight, true}};
     static constexpr Segment ambient[] = {{kLeft, false}, {kCeilingStrip, false}, {kRight, true}};
     switch (strip) {
-        case kLeft:         return {{0, uint8_t(2 * i)}, uint16_t(i * kPerimeterPitchQ)};   // chain A, every second LED
-        case kRight:        return {{1, uint8_t(2 * i)}, uint16_t(i * kPerimeterPitchQ)};   // chain B, every second LED
-        case kCeilingStrip: return {{2, uint8_t(i)}, uint16_t(i * kCeilingPitchQ)};         // chain C
+        case kLeft:         return {{0, uint8_t(step() * i)}, uint16_t(i * pitchQ())};   // chain A, every step-th LED
+        case kRight:        return {{1, uint8_t(step() * i)}, uint16_t(i * pitchQ())};   // chain B, every step-th LED
+        case kCeilingStrip: return {{2, uint8_t(i)}, uint16_t(i * kLedPitchQ)};          // chain C
     }
     const Segment* path  = strip == kBoth ? both : ambient;
     const uint8_t  parts = strip == kBoth ? 2 : 3;
@@ -431,9 +440,10 @@ uint16_t Lamps::stripLength(uint8_t strip) const {
     return locate(strip, uint16_t(stripSize(strip) - 1)).q;
 }
 
-Color Lamps::colorAt(Place p) const {
-    const CRGB c = lighting_.chain(p.chain)[p.led];
-    return {c.r, c.g, c.b};
+Color Lamps::colorAt(Place p, uint8_t max) const {
+    const CRGB c  = lighting_.chain(p.chain)[p.led];
+    const auto up = [max](uint8_t v) { return uint8_t(min(255u, v * 256u / (max + 1u))); };   // undoes nscale8()
+    return {up(c.r), up(c.g), up(c.b)};
 }
 
 CRGB Lamps::paint(const Paint& p, CRGB below, uint8_t value, uint8_t place, uint32_t elapsedMs) {
@@ -486,7 +496,8 @@ bool Lamps::start(Entry (&entries)[kMaxEffects], uint8_t key, uint8_t priority, 
 void Lamps::update(uint32_t now) {
     if (now - shown_ < kFrameUs) return;
     shown_ = now;
-    const uint32_t ms = now / 1000;
+    const uint32_t ms      = now / 1000;
+    const Profile& profile = lighting_.profile();
 
     // the playfield's lamps: each lamp mixes its effects from the lowest priority up
     for (uint16_t lamp = 0; lamp < kPlayfield; ++lamp) {
@@ -502,7 +513,7 @@ void Lamps::update(uint32_t now) {
         CRGB c(0, 0, 0);                                 // a lamp without effects is dark
         for (uint8_t k = 0; k < n; ++k) c = mix(*order[k], ms, Spot{order[k]->index, order[k]->count}, c);
         const Place p = kPlayfieldPlaces[lamp];
-        lighting_.chain(p.chain)[p.led] = c;
+        lighting_.chain(p.chain)[p.led] = c.nscale8(profile.playfieldMax);
     }
 
     // the strips: dark first, then every effect from the lowest up, so the top one paints last
@@ -531,7 +542,15 @@ void Lamps::update(uint32_t now) {
         for (uint16_t i = 0; i < size; ++i) {
             const Where at  = locate(strip, i);
             CRGB&       led = lighting_.chain(at.place.chain)[at.place.led];   // holds the color the entries below painted
-            led = mix(*order[k].e, ms, Spot{i, size, at.q, length}, led);
+            led = mix(*order[k].e, ms, Spot{i, size, at.q, length, pitchQ()}, led);
+        }
+    }
+
+    // the strips at the profile's ambient brightness, once every effect has painted
+    for (uint8_t strip = kLeft; strip <= kCeilingStrip; ++strip) {
+        for (uint16_t i = 0; i < stripSize(strip); ++i) {
+            const Place p = locate(strip, i).place;
+            lighting_.chain(p.chain)[p.led].nscale8(profile.ambientMax);
         }
     }
 
@@ -555,7 +574,7 @@ LampRange& LampRange::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
 
 LampRange& LampRange::fade(Paint c, uint16_t ms) {
     for (uint16_t i = 0; i < count_; ++i) {   // each lamp fades from the color it shows now
-        const Color from = lamps_->colorAt(Lamps::kPlayfieldPlaces[first_ + i]);
+        const Color from = lamps_->colorAt(Lamps::kPlayfieldPlaces[first_ + i], lamps_->lighting_.profile().playfieldMax);
         sub(i, 1).play(Fade(ms), from, c);
         for (Lamps::Entry& e : lamps_->slots_[first_ + i]) {   // keeps the lamp's place in this range, for a palette by position
             if (e.used && e.key == key_) { e.index = uint8_t(i); e.count = uint8_t(count_); }
@@ -597,12 +616,12 @@ Strip& Strip::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
 }
 
 Strip& Strip::fade(Paint c, uint16_t ms) {
-    const Color from = lamps_->colorAt(lamps_->locate(strip_, 0).place);
+    const Color from = lamps_->colorAt(lamps_->locate(strip_, 0).place, lamps_->lighting_.profile().ambientMax);
     return play(Fade(ms), from, c);
 }
 
 Strip& Strip::run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back) {
-    const uint32_t round = (lamps_->stripLength(strip_) + kPerimeterPitchQ) * kMsPerQ;   // a round in ms at 1 mm a second
+    const uint32_t round = (lamps_->stripLength(strip_) + lamps_->pitchQ()) * kMsPerQ;   // a round in ms at 1 mm a second
     const uint32_t least = round / UINT16_MAX + 1;                                     // JLed times a round in 16 bits
     return play(Run(p, d, mmPerS < least ? uint16_t(least) : mmPerS, true), back, c);
 }

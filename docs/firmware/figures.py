@@ -149,6 +149,7 @@ dec("log_buffer", 2, "KB", src="the lines the logger collects in RAM between two
 MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
 MODEL.uses("t_sdfat", of="audio")
+MODEL.uses("i_supply_6a", of="lighting")   # the adapter rating the menu warns at
 fig("n_log_lines", "", "log_size / log_line", moves="+log_size -log_line", stated=False)
 
 # -- RAM2 that the libraries take, beside the buffers the drivers declare -----

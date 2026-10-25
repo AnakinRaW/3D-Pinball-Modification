@@ -8,12 +8,12 @@ The lamps component organizes the machine's lamps in fixed groups and runs the e
 
 The groups follow the [lighting design](../../parts/lighting/design.md#light-layout). Each lamp is one of the LEDs the light layout lists as lit. 
 
-On the perimeters, every second LED is treated as a controllable lamp.
+On the perimeters, the [lighting driver](../drivers/lighting.md)'s profile decides which LEDs are lamps: every second one with the 3 A adapter, every one with the 6 A adapter.
 
 | Group | Type | Lamps |
 |---|---|---|
-| `perimeterLeft` | `Strip` | 40 along the left of the playfield frame |
-| `perimeterRight` | `Strip` | 40 along the right of the playfield frame |
+| `perimeterLeft` | `Strip` | 40 or 79 along the left of the playfield frame, with the 3 A or the 6 A adapter |
+| `perimeterRight` | `Strip` | 40 or 79 along the right of the playfield frame, with the 3 A or the 6 A adapter |
 | `perimeter` | `Strip` | both perimeters as one, up the left, across the top and down the right |
 | `ceiling` | `Strip` | 26 over the diorama |
 | `ambient` | `Strip` | the perimeters and the ceiling as one, up the left, across the ceiling and down the right |
@@ -88,7 +88,7 @@ Every effect call returns its lamps, so `lasting(ms)` can follow it, as in `flas
 
 ## Frames
 
-The main loop calls `update(now)` in every pass. Every 10 ms, `update()` works out what every effect shows at that moment, from the time since the effect began. The lamps change only when `update()` works out a new frame. For each lamp, it writes the color of its top effect into the lamp's chain. `update()` then hands the frame to the lighting driver without waiting.
+The main loop calls `update(now)` in every pass. Every 10 ms, `update()` works out what every effect shows at that moment, from the time since the effect began. The lamps change only when `update()` works out a new frame. For each lamp, it writes the color of its top effect into the lamp's chain. A lamp of the perimeters or the ceiling gets its color scaled to the ambient brightness of the driver's profile, a lamp of the playfield to the playfield brightness. `update()` then hands the frame to the lighting driver without waiting.
 
 10 ms were chosen so that every frame has been sent well before the next one starts. `show()` therefore never has to wait. Sending a frame takes at most 2.67 ms for the longest chain in the machine. 10 ms are also short enough for fades and runs to change smoothly. A shorter period would only take more time from the main loop.
 
@@ -123,6 +123,7 @@ struct Spot {
     uint16_t count;     // how many lamps the effect covers
     uint32_t mmQ;       // a strip lamp's position along its strip in quarter millimeters, 0 on the playfield
     uint32_t lengthQ;   // the position of the strip's last lamp, 0 on the playfield
+    uint32_t pitchQ;    // the spacing of the perimeters' lamps, which a run's head covers, 0 on the playfield
 };
 
 // what every effect is; Steady, Blink, Pulse, Fade and Run are the built-in ones
