@@ -14,6 +14,8 @@ TODO: the build tool, the IDE setup, and the commands that build the firmware an
 
 The firmware builds with the newest Teensyduino release and the libraries it ships. On top of those it uses [freertos-teensy](https://github.com/tsandmann/freertos-teensy) v11.2.0_v4 with its pull request 43 and the settings in [`gist/freertos-config.h`](gist/freertos-config.h), and [WDT_T4](https://github.com/tonton81/WDT_T4) for the watchdog.
 
+FastLED comes from the Library Manager, in version 3.10.6 or newer. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, both of which the [lighting driver](../docs/firmware/drivers/lighting.md) uses. The driver selects ObjectFLED as `Bus::FLEX_IO` slot 0, the name FastLED gives it from 3.10.6 on.
+
 ## Testing
 
 TODO: how the firmware is tested, from the test code in `tests/` to the bench tests on the Teensy.

@@ -34,6 +34,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
 | Teensy core | Always the newest Teensyduino release | Chosen |
+| LED library | FastLED 3.10.6 or newer from the Library Manager. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
 | UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
 | RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/gist/freertos-config.h`](firmware/gist/freertos-config.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
