@@ -63,16 +63,15 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 ## Current ceiling
 
-> [!TODO]
-> Measure the strip's current per color and set FastLED's power model to it. Until then the cap lets more current through than it states.
+The strip's currents are [measured](../../research/Components/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark.
 
-At full white, the 162 lit LEDs would draw 9.72 A, with red, green and blue at about 20 mA each. The controller in each LED adds about 1 mA even while the LED is dark, 0.24 A for all 240. The supply cannot deliver that.
+At full white the 162 lit LEDs draw 2.89 A. The controllers of all 240 LEDs add 0.42 A, which makes 3.31 A.
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
-The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current.
+The firmware caps the lighting at 2 A for a 3 A power supply or at 3.3 A for a 6 A power supply using FastLED's `setMaxPowerInVoltsAndMilliamps` function. FastLED then dims every light before each `show()` until the sum fits the set max current. It works out the sum from the measured currents, which the [lighting driver](../../firmware/drivers/lighting.md) hands it as its power model. With the 6 A supply the whole layout at full white is dimmed to 99.8 %, with the 3 A supply to 54.7 %.
 
-The perimeters may light only every second LED, which halves their current at full white from 9.5 A to 4.8 A. The perimeters and the ceiling also never run at full brightness.
+The perimeters may light only every second LED, which halves their current at full white from 2.82 A to 1.43 A. The perimeters and the ceiling also never run at full brightness.
 
 ## Circuit
 

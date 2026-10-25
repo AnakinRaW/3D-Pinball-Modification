@@ -13,8 +13,6 @@ Figures from the [lighting design](../parts/lighting/design.md), the [audio desi
 | Varied | |
 |---|---|
 | Solenoids energised | 0 to 3, 0.68 A each |
-| Lit positions and their brightness | up to 162, 60 mA at full |
+| Lit positions and their brightness | up to 162, at the currents the [lighting design](../parts/lighting/design.md#current-ceiling) measured |
 
 Output: the sum against the supply rating, and the brightness at which the two meet.
-
-The 20 mA per die the lighting design works from is convention rather than measurement. Measuring a cut length of strip at a few brightness values replaces it, and until that happens the result carries an unknown factor.

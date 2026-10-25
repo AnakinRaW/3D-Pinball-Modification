@@ -8,7 +8,8 @@ MODEL = Model.at(__file__, "lighting",
                  drawings=["lighting-schematic.svg",
                            "../../firmware/components/lamps-architecture.svg"],
                  documents=["../../firmware/components/lamps.md",
-                            "../../firmware/drivers/lighting.md"])
+                            "../../firmware/drivers/lighting.md",
+                            "../../research/Components/sezo-ws2812b-strip.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
 BUFFER = "TI CD74HCT125 datasheet, SCHS415A"
@@ -30,13 +31,49 @@ dec("n_lit", 162, "", src="the LEDs the light layout table lights, the perimeter
 dec("n_perimeter", 158, "", src="the LEDs of the two perimeter chains, A and B, in the light layout table")
 dec("n_perimeter_lit", 80, "", src="the perimeter LEDs lit at every second, A and B in the light "
     "layout table")
-dec("n_colors", 3, "", src="red, green and blue in each LED")
-asm("i_color", 20, "mA", src="what one color of a WS2812B draws at full brightness, the usual figure")
-asm("i_ctrl", 1, "mA", src="what the controller in each WS2812B draws even while dark, the usual figure")
-fig("i_full_white", "A", "n_lit.raw * n_colors.raw * i_color", "up", stated=False)
+# What the strip draws, measured on a piece cut from it. Each reading takes the whole piece, its
+# dark controllers included, so the dark reading comes off every other one.
+_BENCH = ("bench: a piece of two LEDs cut from the SEZO strip on a bench supply at 5.0 to 5.1 V, the "
+          "multimeter's current range in series with the supply, FastLED at brightness 255 setting "
+          "both LEDs to")
+dec("n_bench", 2, "", src="the LEDs of the piece the strip's currents were measured on", stated=False)
+msr("v_bench_min", 5.0, "V", src="bench: the bench supply's output the strip ran on, read with the "
+    "multimeter, at its low end", stated=False)
+msr("v_bench_max", 5.1, "V", src="bench: the same reading at its high end", stated=False)
+msr("i_bench_green_half", 9.8, "mA", src=f"{_BENCH} CRGB(0, 128, 0), which is FastLED's "
+    "CRGB::Green", stated=False)
+asm("i_color_usual", 20, "mA", src="the per-color current WS2812B strips are usually budgeted "
+    "with, which the measurement replaces", stated=False)
+msr("i_bench_dark", 3.5, "mA", src=f"{_BENCH} black", stated=False)
+msr("i_bench_red", 14.6, "mA", src=f"{_BENCH} CRGB(255, 0, 0)", stated=False)
+msr("i_bench_green", 15.8, "mA", src=f"{_BENCH} CRGB(0, 255, 0)", stated=False)
+msr("i_bench_blue", 15.7, "mA", src=f"{_BENCH} CRGB(0, 0, 255)", stated=False)
+msr("i_bench_white", 37.5, "mA", src=f"{_BENCH} CRGB(255, 255, 255)", stated=False)
+fig("i_ctrl", "mA", "i_bench_dark / n_bench", moves="+i_bench_dark -n_bench", stated=False)
+fig("i_red", "mA", "(i_bench_red - i_bench_dark) / n_bench",
+    moves="+i_bench_red -i_bench_dark -n_bench", stated=False)
+fig("i_green", "mA", "(i_bench_green - i_bench_dark) / n_bench",
+    moves="+i_bench_green -i_bench_dark -n_bench", stated=False)
+fig("i_blue", "mA", "(i_bench_blue - i_bench_dark) / n_bench",
+    moves="+i_bench_blue -i_bench_dark -n_bench", stated=False)
+fig("i_green_half", "mA", "(i_bench_green_half - i_bench_dark) / n_bench",
+    moves="+i_bench_green_half -i_bench_dark -n_bench", stated=False)
+
+# Full white as the three colors summed, which lies above the white reading and so bounds it.
+fig("i_led_white", "mA", "i_red + i_green + i_blue", "up",
+    moves="+i_bench_red +i_bench_green +i_bench_blue -i_bench_dark", stated=False)
+fig("i_led_white_read", "mA", "(i_bench_white - i_bench_dark) / n_bench",
+    moves="+i_bench_white -i_bench_dark -n_bench", stated=False)
+fig("i_full_white", "A", "n_lit.raw * i_led_white", "up", stated=False)
 fig("i_idle", "A", "n_leds.raw * i_ctrl", "up", stated=False)
-fig("i_perimeter_full", "A", "n_perimeter.raw * n_colors.raw * i_color", "up", stated=False)
-fig("i_perimeter_half", "A", "n_perimeter_lit.raw * n_colors.raw * i_color", "up", stated=False)
+fig("i_all_white", "A", "i_full_white + i_idle", "up", stated=False)
+fig("i_perimeter_full", "A", "n_perimeter.raw * i_led_white", "up", stated=False)
+fig("i_perimeter_half", "A", "n_perimeter_lit.raw * i_led_white", "up", stated=False)
+
+# FastLED's power model takes whole milliwatts per color at full brightness. The rail's 5 V
+# turns the currents into them, rounded up so that the cap never lets more through than it states.
+dec("mw_grain", 1, "mW", src="FastLED's PowerModelRGB, which takes each color's draw in whole "
+    "milliwatts, FastLED 3.10.4 src/power_mgt.h", stated=False)
 MODEL.uses("i_permanent", of="power")
 MODEL.uses("v_c_rating", of="power")
 fig("i_light_left_3a", "A", "i_supply_3a - i_permanent", "down", stated=False)
@@ -260,6 +297,22 @@ with MODEL.block(SUPPLY, stated="loose"):
     fig("v_buffer_min_6a", "V", "v_rail - v_jpwr_6a - v_dip_6a", "down",
         moves="+v_rail -i_budget_6a -len_jpwr -r_awg22 -z_c -l_feed")
 
+# -- FastLED's power model and how far the cap dims the whole layout ----------
+fig("pm_red", "mW", "ceil_to(i_red * v_rail, 'mW', mw_grain.to('mW'))", "up",
+    moves="+i_bench_red -i_bench_dark +v_rail", stated=False)
+fig("pm_green", "mW", "ceil_to(i_green * v_rail, 'mW', mw_grain.to('mW'))", "up",
+    moves="+i_bench_green -i_bench_dark +v_rail", stated=False)
+fig("pm_blue", "mW", "ceil_to(i_blue * v_rail, 'mW', mw_grain.to('mW'))", "up",
+    moves="+i_bench_blue -i_bench_dark +v_rail", stated=False)
+fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
+    moves="+i_bench_dark +v_rail", stated=False)
+
+# The controllers draw whatever the colors do, so the cap dims the colors into what they leave.
+fig("dim_3a", "%", "(i_budget - i_idle) / i_full_white", "down",
+    moves="+i_budget -i_bench_red -i_bench_green -i_bench_blue", stated=False)
+fig("dim_6a", "%", "(i_budget_6a - i_idle) / i_full_white", "down",
+    moves="+i_budget_6a -i_bench_red -i_bench_green -i_bench_blue", stated=False)
+
 # -- the frame ----------------------------------------------------------------
 OBJECTFLED = "ObjectFLED.h in FastLED"
 MODEL.uses("n_chain_max", of="firmware")
@@ -312,6 +365,14 @@ _I("with the 3 A supply, a step of the whole cap leaves the buffers inside their
    "v_buffer_min >= vcc_min")
 _I("with the 6 A supply, a step of the whole cap leaves the buffers inside their supply range",
    "v_buffer_min_6a >= vcc_min")
+_I("the three colors summed bound what an LED draws at full white",
+   "i_led_white >= i_led_white_read")
+_I("the controllers alone stay inside the smaller cap, so the colors keep a share of it",
+   "i_idle < i_budget")
+_I("the strip draws less per color than the usual budget", "i_red < i_color_usual and "
+   "i_green < i_color_usual and i_blue < i_color_usual")
+_I("green at half its value draws less than at full and more than nothing",
+   "Q.of(0, 'mA') < i_green_half < i_green")
 _I("ObjectFLED holds the lines low long enough for the LEDs to take over a frame",
    "t_latch > t_reset")
 _I("a frame has gone out before the next one is handed on, so show() never waits",
