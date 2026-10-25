@@ -1,6 +1,6 @@
 # Break beam at the ball drain
 
-A break-beam gate across the drain reports the ball leaving play. Its emitter is a SunLED XTNI04W infrared LED. Its receiver is a Vishay TEKT5400S phototransistor with a daylight filter.
+A break-beam gate across the drain reports the ball leaving play. Its emitter is a Kingbright AM4457F3C infrared LED. Its receiver is a Vishay TEKT5400S phototransistor with a daylight filter.
 
 ## Circuit
 
@@ -38,7 +38,7 @@ The emitter and the receiver sit 3.9 cm apart in the stock machine's niches on e
 
 | Qty | Part | Where |
 |---|---|---|
-| 1 | SunLED XTNI04W, side-looking infrared LED, 940 nm | the emitter, in one niche |
+| 1 | Kingbright AM4457F3C, side-looking infrared LED, 940 nm | the emitter, in one niche |
 | 1 | Vishay TEKT5400S, side-looking phototransistor with daylight filter | the receiver, in the opposite niche |
 | 1 | 220 Ω resistor, 0.25 W, 5 % | R2, on the motherboard, from the supply behind D1 to the emitter |
 | 1 | 100 kΩ resistor, 5 % | R3, on the motherboard, from 3V3 to pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") |
@@ -122,7 +122,7 @@ BALL      the steel ball                           9 mm
 
 ## Sources
 
-- [`datasheets/XTNI04W-SunLED.pdf`](../../datasheets/XTNI04W-SunLED.pdf), XDSA2670 V8-X: the forward voltage and the radiant intensity at 20 mA, the intensity's rise with the current, the ratings and the derating curve
+- [`datasheets/AM4457F3C-Kingbright.pdf`](../../datasheets/AM4457F3C-Kingbright.pdf), DSAQ0403 Rev. V.3A: the forward voltage and the radiant intensity at 20 mA, the intensity's rise with the current, the ratings and the derating curve
 - [`datasheets/TEKT5400S-Vishay.pdf`](../../datasheets/TEKT5400S-Vishay.pdf), 81569 Rev. 1.6: the light current and its curves, the dark current, the spectral sensitivity, the daylight filter and the load the switching times are given at
 - [`datasheets/IMXRT1060CEC.pdf`](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 22, the input thresholds and the input current
 - [PJRC, Teensy 4.1](https://www.pjrc.com/store/teensy41.html): every digital pin detects changes with `attachInterrupt`

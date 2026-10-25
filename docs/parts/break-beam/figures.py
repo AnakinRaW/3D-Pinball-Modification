@@ -5,9 +5,9 @@ MODEL = Model.at(__file__, "break-beam", drawings=["break-beam-schematic.svg"],
                  documents=["../../firmware/drivers/break-beam.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
-EMITTER = "XTNI04W-SunLED.pdf"
+EMITTER = "AM4457F3C-Kingbright.pdf"
 RECEIVER = "TEKT5400S-Vishay.pdf"
-XT = "SunLED XTNI04W, XDSA2670 V8-X"
+AM = "Kingbright AM4457F3C, DSAQ0403 Rev. V.3A"
 TK = "Vishay TEKT5400S, 81569 Rev. 1.6"
 USB = "Universal Serial Bus Specification Revision 2.0"
 
@@ -26,23 +26,23 @@ with MODEL.block("EMITTER", section=EM):
     MODEL.uses("v_jack_max", of="power")
     ds("v_usb_max", 5.25, "V", src=f"{USB}, Table 7-7: VBUS at a high-power port, maximum",
        stated=False)
-    ds("vf_max", 1.6, "V", sheet=EMITTER, src=f"{XT}, page 1, Operating Characteristics, forward "
-       "voltage maximum at I_F = 20 mA")
-    ds("i_f_test", 20, "mA", sheet=EMITTER, src=f"{XT}, page 1, the forward current the forward "
-       "voltage and the radiant intensity are given at", stated=False)
+    ds("vf_max", 1.6, "V", sheet=EMITTER, src=f"{AM}, page 2, Electrical / Optical Characteristics, "
+       "forward voltage maximum at I_F = 20 mA")
+    ds("i_f_test", 20, "mA", sheet=EMITTER, src=f"{AM}, pages 1 and 2, the forward current the "
+       "radiant intensity and the forward voltage are given at", stated=False)
     dec("r_e", 220, "Ω", src="R2, from the supply behind D1 to the emitter's anode, the kit value "
         "that keeps the emitter inside its derating while the receiver keeps more than twice the "
         "current a LOW needs")
     dec("r_tol", 5, "%", src="the tolerance of R2 and R3, 5 % or better as the part list asks")
     MODEL.uses("t_a", of="ir-reflective")
-_DERATING = f"{XT}, page 2, Forward Current Derating Curve"
+_DERATING = f"{AM}, page 3, Forward Current Derating Curve"
 gr("i_f_knee", 50, "mA", sheet=EMITTER, src=f"{_DERATING}, the permissible current up to its knee")
 gr("t_knee", 25, "°C", sheet=EMITTER, src=f"{_DERATING}, the ambient at its knee")
 gr("i_f_end", 10, "mA", sheet=EMITTER, src=f"{_DERATING}, the permissible current where the slope "
    "ends")
 gr("t_end", 85, "°C", sheet=EMITTER, src=f"{_DERATING}, the ambient where the slope ends")
 with MODEL.block("RATINGS", section=EM):
-    ds("p_d_led", 90, "mW", sheet=EMITTER, src=f"{XT}, page 1, Absolute Maximum Ratings, power "
+    ds("p_d_led", 90, "mW", sheet=EMITTER, src=f"{AM}, page 2, Absolute Maximum Ratings, power "
        "dissipation")
     dec("p_r_e_rating", 0.25, "W", src="R2's power rating, a 0.25 W part from the kit")
 with MODEL.block("EMITTER", section=EM):
@@ -65,8 +65,8 @@ with MODEL.block("RATINGS", section=EM):
 
 # -- the light reaching the receiver, a Vishay TEKT5400S ----------------------
 with MODEL.block("LIT", section=RX):
-    ds("ie_min", 2, "mW/sr", sheet=EMITTER, src=f"{XT}, page 1, radiant intensity minimum at I_F = "
-       "20 mA, the value after CIE127-2007")
+    ds("ie_min", 2, "mW/sr", sheet=EMITTER, src=f"{AM}, page 1, Selection Guide, radiant intensity "
+       "minimum at I_F = 20 mA, the value after CIE127-2007")
     msr("d_gap", 3.9, "cm", src="the gap between the two niches across the drain, measured on the "
         "stock machine")
     ds("ica_min", 2, "mA", sheet=RECEIVER, src=f"{TK}, Basic Characteristics, collector light "
@@ -87,7 +87,7 @@ with MODEL.block("LIT", section=RX):
        "above it", stated=False)
     dec("v_ce_read", 1, "V", src="the collector-emitter voltage Figure 4 is read at, on the "
         "curves' flat part next to the 1.00 V the pin reads LOW at", stated=False)
-    ds("lam_p", 940, "nm", sheet=EMITTER, src=f"{XT}, page 1, wavelength of peak emission, typical")
+    ds("lam_p", 940, "nm", sheet=EMITTER, src=f"{AM}, page 2, wavelength of peak emission, typical")
     ds("lam_test", 950, "nm", sheet=RECEIVER, src=f"{TK}, Basic Characteristics, the wavelength "
        "the light current is given at")
     gr("s_940", 89, "%", sheet=RECEIVER, src=f"{TK}, Figure 7, relative spectral sensitivity at "

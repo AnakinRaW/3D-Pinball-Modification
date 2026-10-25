@@ -65,7 +65,7 @@
   <!-- ===== emitter ===== -->
   <rect x="700" y="120" width="200" height="110" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
   <text x="716" y="146" font-size="16" font-weight="700" fill="#7a2556">Emitter</text>
-  <text x="716" y="164" font-size="11.5" fill="#666">SunLED XTNI04W</text>
+  <text x="716" y="164" font-size="11.5" fill="#666">Kingbright AM4457F3C</text>
   <text x="716" y="180" font-size="11.5" fill="#666" data-fig="lam_p">infrared LED, 940 nm</text>
   <circle cx="700" cy="200" r="6" fill="#c0392b" stroke="#c0392b" stroke-width="1.5"/>
   <text x="712" y="204" font-size="13" font-weight="700" fill="#c0392b">anode</text>
