@@ -20,7 +20,7 @@ The adapter needs short-circuit protection, since a short on any output is the a
 | The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 902 mA |
 | The lighting at its cap, with the 3 A adapter | 2.0 A |
 | The lighting at its cap, with the 6 A adapter | 3.3 A |
-| Two bumpers and the scoop pulling at once, for at most 30 ms | 2.16 A |
+| Two bumpers and the scoop pulling at once, for at most 30 ms | 2.17 A |
 | The servo stalled | 0.8 A |
 | The most that draws at once, with the 3 A adapter's cap | 5.07 A |
 | The most that draws at once, with the 6 A adapter's cap | 6.37 A |
@@ -59,7 +59,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 | Output | To | Current at most |
 |---|---|---|
 | J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 3.3 A with the 6 A adapter, each |
-| J-SOL | the solenoids' coil board | 2.84 A |
+| J-SOL | the solenoids' coil board | 2.85 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-MAIN | the Teensy motherboard, with the Teensy and the amplifier module | 504 mA |
 | J-IR | the D24V5F3 at the IR mainboard | 201 mA |
@@ -116,7 +116,7 @@ LOADS     the smaller adapter                      3 A
           the larger adapter                       6 A
           the lighting's cap with the 3 A adapter  2.0 A
           and with the 6 A adapter                 3.3 A
-          all four coils at once                   2.84 A
+          all four coils at once                   2.85 A
           one bumper coil                          0.68 A
           one pull-in, at most                     30 ms
           the servo stalled                        800 mA
@@ -226,9 +226,9 @@ FLOORS    what the lighting's buffers need         4.5 V
           at 6 A                                 = 4.64 V
           and at its start, while C1 alone
           feeds the step                         = 4.58 V
-          two bumpers and the scoop at once        2.16 A
+          two bumpers and the scoop at once        2.17 A
           the solenoids' coil board while they pull,
-          at 3 A                                 = 4.48 V
+          at 3 A                                 = 4.47 V
           at 6 A                                 = 4.42 V
           what a stock coil kicks down to          4.4 V
           D1 in front of the Teensy's VIN, a
@@ -254,7 +254,7 @@ ALLOW     the least bulk at J-IN that holds the
           the impedance at which the lighting's
           buffers touch their floor at 6 A      = 45.5 mΩ
           at which the solenoid board touches
-          the coils' floor                      = 51.2 mΩ
+          the coils' floor                      = 49.8 mΩ
           at which the servo's buffer touches
           its floor                             = 568 mΩ
           the least of them, the ceiling for a
