@@ -10,6 +10,7 @@ MODEL = Model.at(__file__, "display",
                             "../../firmware/components/video-player.md", "../../../assets/media.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.names("R13", "R14", why="the display module's own pull-ups on the touch lines")
+MODEL.names("R12", why="the display module's own pull-down on RD")
 MODEL.names("D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", why="the data lines of the display bus")
 
 PANEL = "ILI9341-Ilitek.pdf"
@@ -282,6 +283,8 @@ with MODEL.block("SUPPLY", section=SUPPLY):
     MODEL.uses("v_rail", of="lighting")
     MODEL.uses("v_jack_max", of="power")
     MODEL.uses("v_release_6a", of="power")
+    ds("vi_max_buf", 5.5, "V", sheet=BUFFER, src="7.3 Recommended Operating Conditions, VI "
+       "maximum; RD enters U2 and the DIR pin of U3 on the module")
     MODEL.uses("t_a", of="ir-reflective")
 ds("v_ldo_nom", 3.3, "V", sheet=LDO, src="Electrical Characteristics, the AP2112-3.3's output "
    "voltage, typical")
@@ -309,8 +312,8 @@ with MODEL.block("SUPPLY", section=SUPPLY):
     ds("i_touch", 5, "mA", sheet=TOUCH_IC, src="IDD at VDD = 3.3 V, maximum, p. 8")
     ds("r_pull", 10, "kΩ", src=f"{SCH}: R12 from RD to GND, and R13 to R16, the bus pull-ups",
        stated=False)
-    dec("n_pulls", 5, "", src="R12, which RD holds at Vin all the time, and the four pull-ups of "
-        "the touch bus, counted as if their lines were low all the time", stated=False)
+    dec("n_pulls", 4, "", src="the four pull-ups of the touch bus at VCC, counted as if their "
+        "lines were low all the time", stated=False)
     ds("i_buffer", 10, "µA", sheet=BUFFER, src="7.5 Electrical Characteristics, ICC maximum from "
        "-40 °C to 85 °C", stated=False)
     ds("i_sup", 40, "µA", sheet=SUPERVISOR, src="Electrical Characteristics, ICC maximum, p. 4",
@@ -340,9 +343,12 @@ fig("i_conv_lv", "mA", "2 * v_3v3_max / r_pu_touch", "up", moves="+v_3v3_max -r_
 with MODEL.block("SUPPLY", section=SUPPLY):
     fig("i_conv_hv", "mA", "2 * v_rail / r_pu_touch", "up", moves="+v_rail -r_pu_touch")
 
-    # J-DISP carries the module and the converter's HV pull-ups
-    fig("i_disp", "mA", "i_module + i_conv_hv", "up",
-        moves="+v_ldo_nom +n_led +v_rail -vf_min -r_led -r_pu_touch")
+    # RD sits on the rail over its own wire, so R12 draws from J-DISP and not from the regulator
+    fig("i_rd", "mA", "v_jack_max / r_pull", "up", moves="+v_jack_max -r_pull")
+
+    # J-DISP carries the module, R12 at RD and the converter's HV pull-ups
+    fig("i_disp", "mA", "i_module + i_rd + i_conv_hv", "up",
+        moves="+v_ldo_nom +n_led +v_rail +v_jack_max -vf_min -r_led -r_pu_touch -r_pull")
 
     # the module's regulator drops the rail to VCC; the adapter at its no-load maximum and VCC
     # at the bottom of its tolerance put the most across it
@@ -418,6 +424,8 @@ _I("the shortest supervisor reset silences the touch controller longer than its 
 _I("a run ends only once its last burst has left the bus, however late the interrupt comes",
    "t_end_wait > t_burst")
 _I("FlexIO3 runs at a clock the reference manual allows", "f_flexio <= f_flexio_max")
+_I("RD, held at the rail, stays inside the buffers' input range at the rail's highest peak",
+   "v_release_6a <= vi_max_buf")
 _I("FlexIO3's clock is PLL3 divided by whole numbers", "(f_pll3 / f_flexio).raw.is_integer()")
 _I("the supervisor's shortest reset ends before its longest", "t_sup_min < t_sup_max")
 _I("a write on the bus lasts at least the ILI9341's write cycle", "t_wr >= t_wc_min")
@@ -524,8 +532,8 @@ MODEL.net("SCL at the module",
 
 # the module's own lines that reach no Teensy pin
 MODEL.net("RD",
-          drives("the wire from RD to 3.3Vout on the header", "push-pull", rail="module 3.3Vout",
-                 src="design.md, RD is tied to the module's 3.3Vout"),
+          drives("the wire from the display board's 5 V to RD", "push-pull", rail="display Vin",
+                 src="design.md, RD is held at 5 V over its own wire from the display board"),
           pull("R12 on the module", "gnd", src=f"{SCH}: R12 from RD to GND"),
           reads("the control buffer's input RD, and the data buffer's direction",
                 src=f"{SCH}: RD drives U3's DIR"))
@@ -535,7 +543,7 @@ MODEL.net("CCS",
           reads("the control buffer's input for the card's chip select", src=_LVC))
 MODEL.net("MOSI",
           drives("the wire from MOSI to GND on the header", "push-pull", rail="gnd",
-                 src="design.md, the unused buffer input MOSI is tied to GND"),
+                 src="design.md, the unused buffer input MOSI is tied to GND at pin 1 of the SPI header"),
           reads("the control buffer's input MOSI", src=_LVC))
 
 MODEL.owns("FlexIO3", "the driver programs its shifters and its timer to clock the bus, "

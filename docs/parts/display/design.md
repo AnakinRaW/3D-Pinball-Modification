@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board beside the module carries J-DISP-PWR and the Adafruit 757 as a daughter board. J-DISP-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, GND, SDA and SCL run from the board to the module. The bus and its ground run from the Teensy straight to the module.
+A display board beside the module carries J-DISP-PWR and the Adafruit 757 as a daughter board. J-DISP-PWR takes 5 V and GND from the power board's J-DISP. The touch cable from the Teensy ends on the board. Vin, RD, GND, SDA and SCL run from the board to the module's 8-bit header. Vin and RD both carry the board's 5 V. The bus and its ground run from the Teensy straight to the same header.
 
 ![Display schematic](display-schematic.svg)
 
@@ -35,13 +35,15 @@ FlexIO3 is a programmable I/O block of the i.MX RT. FlexIO3's timer drives WR on
 
 The driver sets the bus pins to their weakest drive and their slow slew rate. WR then rises too gently to ring, so the display takes each byte exactly once. That edge is still fast enough for FlexIO3's clock.
 
-The display only receives, so RD is wired to the module's 3.3Vout pin. CCS is tied to 3.3Vout too, which keeps the module's card socket off. MOSI is tied to GND. RST, Lite and the touch controller's IRQ stay unconnected.
+The display only receives, so RD is held at 5 V over its own wire from the display board. CCS is tied to 3.3Vout, which keeps the module's card socket off. MOSI is tied to GND at pin 1 of the SPI header. RST, Lite and the touch controller's IRQ stay unconnected.
+
+IM0 to IM3, MISO and CD stay unconnected as well. The module's jumpers set the 8-bit mode. Pins named alike on both headers are one line on the module. On the SPI header, CLK carries C/D and D/C carries WR. These two and that header's CS stay open.
 
 ### Touch
 
 The touch controller sits on `Wire2`, with SDA on pin [25](../../pin-assignment.md "SDA to the touch controller") and SCL on pin [24](../../pin-assignment.md "SCL to the touch controller"). The bus runs at the Standard-mode rate of 100 kHz.
 
-Between the Teensy and the module both lines pass an Adafruit 757, a converter with a BSS138 and a 10 kΩ pull-up per line on each side. Its LV side takes the Teensy's 3.3 V over a third wire of the touch cable, its HV side the module's Vin. The Teensy's pins therefore see only their own rail. Without the Teensy's 3.3 V the transistors are off, and their body diodes block toward the Teensy, so nothing reaches a Teensy that is off. On the module R13 and R14 pull the HV side to Vin as well.
+Between the Teensy and the module both lines pass an Adafruit 757, a converter with a BSS138 and a 10 kΩ pull-up per line on each side. Its LV side takes the Teensy's 3.3 V over a third wire of the touch cable, its HV side the board's 5 V. The Teensy's pins therefore see only their own rail. Without the Teensy's 3.3 V the transistors are off, and their body diodes block toward the Teensy, so nothing reaches a Teensy that is off. On the module R13 and R14 pull the HV side to Vin as well.
 
 ### Reset
 
@@ -193,6 +195,7 @@ SUPPLY    the power board's rail                   5 V
           the ILI9341, assumed                     10 mA
           the touch controller, at most            5 mA
           the module, at most                    = 197 mA
+          R12 at RD, from the rail, at most      = 0.53 mA
           the converter's pull-ups at Vin, both
           lines low                              = 1 mA
           J-DISP carries, at most                = 198 mA
@@ -205,10 +208,11 @@ SUPPLY    the power board's rail                   5 V
           its junction rating                      150 °C
           its input, at most                       6 V
           the rail's highest peak                  5.46 V
+          the buffers' input at RD, at most        5.5 V
 VCC       the regulator's accuracy                 1.5 %
           VCC, at least                          = 3.25 V
           the regulator's dropout at the module's
-          current, at most                       = 132 mV
+          current, at most                       = 131 mV
           Vin it needs, at least                 = 3.49 V
           the ILI9341's lowest supply              2.5 V
           the supervisor's threshold, below        3 V

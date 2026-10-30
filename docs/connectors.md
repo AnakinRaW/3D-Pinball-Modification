@@ -31,7 +31,7 @@
 | Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
 | Display | J-DISP-PWR of the display board | 2 | Dupont | |
 | | touch cable, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
-| | display board to the module | 4 | soldered at both ends | The cable carries 5 V. Vin sits on the module's header beside the bus |
+| | display board to the module | 5 | soldered at both ends | The cable carries 5 V on Vin and RD. Vin sits on the module's header beside the bus |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
 | | bus | 12 | Dupont at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
@@ -66,4 +66,4 @@
 |---|---|
 | A cable that comes with a part or from the stock machine, as the servo's, the speaker's and the coils' | its own. Black there can carry a signal |
 | J-S1 to J-S16, the stock sensors' cables and a new sensor board's alike | red 3.3 V, black signal, yellow LED cathode |
-| Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V, the cable to the module a red 5 V |
+| Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V, the cable to the module a red 5 V on Vin and on RD |
