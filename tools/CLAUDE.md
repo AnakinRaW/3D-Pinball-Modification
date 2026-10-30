@@ -29,7 +29,7 @@ A designator of a module's or another board's part, a file the model's folder ho
 ```python
 MODEL.names("R4", "R5", why="the Grove module's own pull-ups on SDA and SCL")
 MODEL.ignores("bench-measurement.de.md", "the bench record the measured inputs cite")
-MODEL.skips("../../research/Components/sezo-ws2812b-strip.md", "Test Code",
+MODEL.skips("../../research/Custom/sezo-ws2812b-strip.md", "Test Code",
             "the bench sketch the strip's currents were measured with")
 ```
 

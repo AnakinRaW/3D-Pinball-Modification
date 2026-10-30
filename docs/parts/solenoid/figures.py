@@ -23,9 +23,13 @@ with MODEL.block("V_DRAIN", section=DRIVE):
         "the stock machine as 4.3 to 4.4 V; the higher end is the floor")
 msr("i_coil", 0.68, "A", src="measured in series at the coil while running, and 5.0 V / 7.35 Ω "
     "gives the same", group="I_CH", section=DRIVE, stated=True)
-ds("i_coil_scoop", 0.8, "A", src="Adafruit 3992 product page, current draw at 5 V; the scoop's "
-   "coil, larger than the three stock coils and the one that sets the per-channel worst case, "
-   "since all four drive channels are built identical", group="I_CH", section=DRIVE, stated=True)
+msr("r_coil_scoop", 6.2, "Ω", src="the scoop's coil, an Adafruit 3992, measured from its red to "
+    "its black wire with a multimeter, the meter's own cables included, "
+    "docs/research/Custom/adafruit-3992.md", group="I_CH", section=DRIVE, stated=True)
+# The scoop's coil at the rail: larger than the three stock coils, and the one that sets the
+# per-channel worst case, since all four drive channels are built identical.
+fig("i_coil_scoop", "A", "v_5v / r_coil_scoop", moves="+v_5v -r_coil_scoop", group="I_CH",
+    section=DRIVE)
 dec("n_bumpers_at_once", 2, "", src="the most bumpers one ball can trigger within one pull-in, "
     "however fast it is; a second ball may sit in the scoop meanwhile")
 dec("n_stock_drive", 3, "", src="the three drive channels wired to stock coils, the fourth to the "

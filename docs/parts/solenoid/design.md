@@ -6,6 +6,8 @@ Driving the sensed solenoids follows the same principle as the stock machine's b
 
 A sensed solenoid fires when a ball closes a circuit between the conductive foil on the playfield and the metal shell of the solenoid itself. The firmware then energises the solenoid for a short moment and releases it.
 
+With its return spring, the scoop's solenoid does not pull upward at the machine's 5 V, as its [measurements](../../research/Custom/adafruit-3992.md#measurements) show. It is built in without the spring and mounted pulling upward. Gravity returns its armature.
+
 Two boards drive and sense them. The coil board carries the four drive channels. The sense board carries the three sense channels. Below the schematic of both boards. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
 
 ![Solenoid boards schematic](board-schematic.svg)
@@ -171,25 +173,26 @@ V_DRAIN   the machine's rail, measured            5 V
 P_Q       R_DS(on), typical, read off the 2.5 V
           curve at 1 A                            120 mΩ
           the scoop's coil, the largest of the
-          four and the worst case for a channel    0.8 A
+          four and the worst case for a channel   0.806 A
           that current × 120 mΩ, the drop
-          across Q                              = 96.0 mV
-          that current² × 120 mΩ, while energised = 76.8 mW
+          across Q                              = 96.8 mV
+          that current² × 120 mΩ, while energised = 78.0 mW
           its junction-to-ambient resistance      62 °C/W
           the air inside the machine, at most     40 °C
-          the junction then                     = 44.8 °C
+          the junction then                     = 44.9 °C
           what the junction may reach             175 °C
 I_CH      the coil, measured                      0.68 A
-          the scoop's coil                         0.8 A
+          the scoop's coil, measured              6.2 Ω
+          the machine's rail across it          = 0.806 A
           the diode's average forward current      1 A
           its surge rating                        30 A
           the MOSFET's continuous drain current   26 A
 I_FEED    3 stock channels at 0.68 A plus the
-          scoop's 0.8 A, the unarbitrated demand
-          the protection interrupts             = 2.84 A
+          scoop's 0.806 A, the unarbitrated demand
+          the protection interrupts             = 2.85 A
           two bumpers off one ball and the scoop
           ejecting the other, the most that pull
-          at once in play                       = 2.16 A
+          at once in play                       = 2.17 A
 ```
 
 **The sense channel.** What a closed contact puts on the pin, and how fast the node follows.
@@ -253,18 +256,18 @@ C_BULK    the most the Teensy's VIN takes         5.5 V
           the feed from the distribution,
           estimated from its length                0.3 µH
           the scoop's coil, the largest current
-          the feed carries                         0.8 A
+          the feed carries                        0.806 A
           the least bulk that holds the rise at
-          switch-off to that                    = 1.93 µF
+          switch-off to that                    = 1.98 µF
           C91                                     100 µF
           rated at                                16 V
           its impedance, from the listing         230 mΩ
-          0.8 A across the feed into C91, the
-          rail lifted at switch-off             = 228 mV
+          0.806 A across the feed into C91, the
+          rail lifted at switch-off             = 230 mV
           the drain then                        = 5.83 V
           the board's own copper with C91
           unfitted, estimated                      2 nF
-          the same charge into that instead     = 9.80 V
+          the same charge into that instead     = 9.88 V
           the stock machine's bulk                200 µF
           the three stock coils it carries      = 2.04 A
 FAULT     a coil pair shorted in the loom,
@@ -276,13 +279,13 @@ FAULT     a coil pair shorted in the loom,
 GND       one wire of a cable with its two
           contacts, every wire the same,
           estimated                                0.1 Ω
-          all four coils at once                   2.84 A
+          all four coils at once                  2.85 A
           the power ground over the distribution,
-          all of it on J-COIL-PWR's ground wire       = 284 mV
+          all of it on J-COIL-PWR's ground wire       = 285 mV
           the gate with that rise against it     = 2.63 V
           what it still clears 2.5 V by          = 133 mV
           the most R_gate that still clears it   = 1.74 kΩ
-          the least R_gate to ground that does   = 6.87 kΩ
+          the least R_gate to ground that does   = 6.88 kΩ
 ```
 
 **The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when the driver tick never releases it.
@@ -313,6 +316,6 @@ HOLD      the watchdog timeout, after which the
 - [Infineon IRL540NPbF](../../datasheets/IRL540N-Infineon.pdf), Rev. 2.1: the ratings, the gate threshold, the capacitances, the typical output curve at 2.5 V and the thermal resistance
 - [Taiwan Semiconductor 1N5817 to 1N5819](../../datasheets/1N5817-1N5819-TSC.pdf), Version H2104: the 1N5819 column of the absolute maximum ratings and the electrical specifications
 - [NXP i.MX RT1060 Crossover Processors for Consumer Products](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: the GPIO high-level input voltage, given as 0.7 × NVCC_XXXX
-- [Adafruit 3992](https://www.adafruit.com/product/3992) product page: the scoop's solenoid, its current draw at 5 V
+- [`research/Custom/adafruit-3992.md`](../../research/Custom/adafruit-3992.md): the scoop's solenoid, its coil resistance and how it pulls with and without its return spring
 - [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
 - [`docs/firmware/driver-design.md`](../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards

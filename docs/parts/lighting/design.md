@@ -63,7 +63,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 ## Current ceiling
 
-The strip's currents are [measured](../../research/Components/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark, 0.42 A for all 240 LEDs.
+The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark, 0.42 A for all 240 LEDs.
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 

@@ -71,7 +71,7 @@ Both reflective sensors are bought, since neither their performance nor their fi
 
 | Part | Qty | Description | Spec | Supplier |
 |---|---|---|---|---|
-| SEZO WS2812B strip | 1 | 2 m, 160 LEDs/m, 2.7 mm wide: the perimeters, the ceiling and the playfield lights | [`research/Components/sezo-ws2812b-strip.md`](research/Components/sezo-ws2812b-strip.md) | [Amazon](https://amzn.eu/d/0jcgB8mw) |
+| SEZO WS2812B strip | 1 | 2 m, 160 LEDs/m, 2.7 mm wide: the perimeters, the ceiling and the playfield lights | [`research/Custom/sezo-ws2812b-strip.md`](research/Custom/sezo-ws2812b-strip.md) | [Amazon](https://amzn.eu/d/0jcgB8mw) |
 | DFRobot SER0049 | 1 | 9 g micro servo, 180°, with clutch and stall protection | [`datasheets/SER0049-DFRobot.pdf`](datasheets/SER0049-DFRobot.pdf) | [DFRobot SER0049](https://www.dfrobot.com/product-2120.html) |
 | Adafruit 3992 | 1 | Push-pull solenoid, the scoop's coil | [`parts/solenoid/design.md`](parts/solenoid/design.md) | [Adafruit 3992](https://www.adafruit.com/product/3992) |
 | Adafruit 1207 | 1 | SOIC-16 to DIP adapter that carries U3, the ISO7761F, in the through-hole build | [`parts/ir-reflective/design.md`](parts/ir-reflective/design.md#part-list) | [Adafruit 1207](https://www.adafruit.com/product/1207) |
