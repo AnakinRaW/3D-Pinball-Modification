@@ -78,7 +78,7 @@ Both reflective sensors are bought, since neither their performance nor their fi
 | Eyelet terminal | 6 | Three for M2.5 or larger at the bumper shells, one for M3 or larger at the bumper foil, where a conductive screw holds it, two of any size at the bells | [`parts/solenoid/design.md`](parts/solenoid/design.md#connectors), [`parts/targets/design.md`](parts/targets/design.md#bells) | |
 | Fuse holder, 5 × 20 mm* | 1 | Holds F1 on the power board | [`parts/power/design.md`](parts/power/design.md#input-protection) | |
 | Disc magnet | 1 | 6 mm, diametrically magnetized, in the cap on the seal rod's end | [`parts/magnetic-rotary/design.md`](parts/magnetic-rotary/design.md#part-list) | |
-| 5 V adapter | 1 | 3 A or 6 A, short-circuit protected | [`parts/power/design.md`](parts/power/design.md#adapter) | |
+| 5 V adapter | 1 | 3 A or 6 A, short-circuit and overload protected | [`parts/power/design.md`](parts/power/design.md#adapter) | |
 | microSD card | 1 | Class A1 or A2, in the Teensy's slot | [`firmware/drivers/storage.md`](firmware/drivers/storage.md), [`parts/display/design.md`](parts/display/design.md#picture) | |
 
 ## Mechanical / 3D-printed
