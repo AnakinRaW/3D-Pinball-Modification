@@ -43,6 +43,7 @@ Sounds           sounds{audio, files};   // the running game's sounds
 Screen           screen{display, touch}; // the game's layer and background, and the host's layer
 VideoPlayer      videoPlayer{screen, files, sounds};    // the videos on the background, with their sound
 Logger           logger{files};          // the machine's log on the card
+Config           config{files};          // the machine's settings from /config.yml
 // other game components
 
 GameHost         host;
@@ -111,6 +112,8 @@ static void machineTask(void*) {
     storage.begin();                        // starts the storage task and waits for the mount
     logger.begin();                         // finds where the log goes on, which needs the card
     watchdog.report(logger);                // the cause of the last restart, which needs the log
+    config.begin();                         // the machine's settings, which every later driver starts with
+    solenoids.configure();                  // the pull times, which the solenoids' begin() came too early for
 
     // light ahead of ir for better calibration
     lighting.begin();

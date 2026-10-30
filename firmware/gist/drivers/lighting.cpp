@@ -10,10 +10,10 @@ struct Profile {
 
 class Lighting : public Driver {
 public:
-    // reads the adapter's rating from the card, adds the six chains to FastLED on their pins and sets the
-    // power model and the cap
+    // selects the profile for the config's adapter, adds the six chains to FastLED on their pins and
+    // sets the power model and the cap
     bool begin() override {
-        profile_ = readAdapter() == 6 ? k6A : k3A;
+        profile_ = config.get(ConfigKey::kAdapterA, kAdapterMinA, kAdapterMinA, kAdapterMaxA) >= kAdapterMaxA ? k6A : k3A;
         FastLED.setExclusiveDriver<fl::Bus::FLEX_IO, 0>();   // ObjectFLED on QuadTimer4; slot 1 is FlexIO2, which the display owns
         FastLED.addLeds<WS2812B, kPinA, GRB>(a_, kLedsA);
         FastLED.addLeds<WS2812B, kPinB, GRB>(b_, kLedsB);
@@ -36,23 +36,12 @@ public:
     void show() { FastLED.show(); }
 
 private:
-    // the adapter's rated current in amperes from /adapter.txt, capped at 6; 3 for a lower rating,
-    // a missing file, an unreadable card or content that is no whole number
-    static uint8_t readAdapter() {
-        char text[8] = {};
-        FileRequest r;
-        storage.open("/adapter.txt").read(0, text, sizeof(text) - 1, r);
-        if (!r.wait() || r.bytes() == 0) return 3;
-        char*      end;
-        const long amps = strtol(text, &end, 10);
-        if (end == text || (*end && !isspace(*end))) return 3;
-        return amps >= 6 ? 6 : 3;
-    }
-
     // the two profiles of the lighting design's current ceiling: the playfield at full brightness,
     // the ambient lights at what the cap leaves with the whole layout at full white
     static constexpr Profile k3A = {2, 78, 255, 2000};
     static constexpr Profile k6A = {1, 117, 255, 2930};
+    static constexpr uint8_t kAdapterMinA = 3;   // lighting.adapter_a's range, the two adapters the design derives
+    static constexpr uint8_t kAdapterMaxA = 6;
 
     static constexpr uint8_t kPinA = 5;    // pin-assignment.md: LED chain A
     static constexpr uint8_t kPinB = 6;    // pin-assignment.md: LED chain B

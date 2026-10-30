@@ -29,6 +29,15 @@ public:
         return true;
     }
 
+    // takes each coil's pull time from the config, held between the tick's period and kOnUs; the
+    // main task, right after the config's begin(). Until then every coil pulls for kOnUs
+    void configure() {
+        for (uint8_t c = 0; c < kCoils; ++c) {
+            char key[48];
+            pullUs_[c] = uint32_t(config.get(ConfigKey::entry(key, ConfigKey::kPullMs, c), kOnUs / 1000, DriverTick::kPeriodUs / 1000, kOnUs / 1000)) * 1000;
+        }
+    }
+
     // the game logic's own path, and the only one the unsensed solenoid has. The
     // pin interrupts start pulls as well, so every interrupt, the IR driver's
     // included, waits the few instructions start() takes
@@ -73,7 +82,6 @@ private:
     static constexpr uint8_t  kTrigger[kCoils] = {40, 41, 30, 37};  // pin-assignment.md: Solenoid trigger 1 to 4
     static constexpr uint8_t  kSense[kSenses]  = {36, 35, 34};      // pin-assignment.md: Solenoid sense 1 to 3
     static constexpr uint32_t kOnUs     = 30000;  // the longest pull-in, docs/parts/solenoid
-    static constexpr uint32_t kReleaseUs = kOnUs - DriverTick::kPeriodUs;   // 25 ms, from here the tick ends a pull
     static constexpr uint32_t kCoolUs   = 10000;  // the cool-down, and how long a contact stays open
     static constexpr uint32_t kLateUs   = 1000;   // past the pull-in, a coil counts as overdue
     static constexpr uint32_t kFailMs   = 2000;   // 2 s, a contact closed this long has failed
@@ -113,12 +121,18 @@ private:
         digitalWriteFast(kTrigger[coil], LOW);
     }
 
-    // the driver tick, every 5 ms: stops every coil that has pulled for kReleaseUs,
-    // so a pull lasts from kReleaseUs up to kOnUs
+    // the driver tick, every 5 ms: stops every coil that has pulled for its pull time less one
+    // tick period, so a pull lasts up to its pull time and never longer than kOnUs
     void release() {
         for (uint8_t c = 0; c < kCoils; ++c) {
-            if (pulling(c) && elapsedUs(since_[c], kReleaseUs)) stop(c, nowUs());
+            if (pulling(c) && elapsedUs(since_[c], releaseUs(c))) stop(c, nowUs());
         }
+    }
+
+    // gets when the tick stops coil c: its pull time, held under kOnUs, less one tick period
+    uint32_t releaseUs(uint8_t c) const {
+        const uint32_t pullUs = min(pullUs_[c], kOnUs);
+        return pullUs > DriverTick::kPeriodUs ? pullUs - DriverTick::kPeriodUs : 0;
     }
 
     static SolenoidDriver* self_;
@@ -130,4 +144,5 @@ private:
     volatile uint32_t      released_[kCoils]    = {};
     volatile uint32_t      opened_[kSenses]     = {};
     volatile uint32_t      closedAt_[kSenses] = {};   // when the contact last closed
+    volatile uint32_t      pullUs_[kCoils] = {kOnUs, kOnUs, kOnUs, kOnUs};   // each coil's pull time, set by configure()
 };

@@ -7,7 +7,7 @@ MODEL = Model.at(__file__, "firmware", "general-design.md",
                  drawings=["architecture.svg"],
                  documents=["driver-design.md", "error-handling.md", "logging.md", "io/i2c-bus.md",
                             "components/file-system.md", "game-abstraction.md",
-                            "input-handling.md"])
+                            "input-handling.md", "components/config.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.ignores("README.md", "the index of the firmware documents for a visitor, which states no figure")
 dec("n_balls_example", 3, "", src="the balls the example game in game-abstraction.md starts with")
@@ -149,7 +149,10 @@ dec("log_buffer", 2, "KB", src="the lines the logger collects in RAM between two
 MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
 MODEL.uses("t_sdfat", of="audio")
-MODEL.uses("i_supply_6a", of="lighting")   # the adapter rating the menu warns at
+MODEL.uses("i_supply_6a", of="lighting")
+dec("config_max", 4, "KB", src="the longest /config.yml the config component reads, kFileMax in "
+    "firmware/gist/components/config.cpp, a decision: the whole file with every IR channel is "
+    "well under it")
 fig("n_log_lines", "", "log_size / log_line", moves="+log_size -log_line", stated=False)
 
 # -- RAM2 that the libraries take, beside the buffers the drivers declare -----

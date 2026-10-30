@@ -11,6 +11,7 @@ public:
 private:
     friend class GameHost;
     friend class Logger;
+    friend class Config;
 
     FileWriter openFull(const char* path);                 // gets a file by its full path, such as "/log.txt"
     void use(const char* game);                      // sets the game in whose directory open() opens files

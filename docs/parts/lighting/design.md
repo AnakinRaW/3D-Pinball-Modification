@@ -67,7 +67,7 @@ The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md)
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
-The adapter's rating is set in the machine's config file. The [lighting driver](../../firmware/drivers/lighting.md) picks the matching profile from that setting at start-up. A brightness is FastLED's value from 0 to 255. The 3 A config is the default and fallback setting for any error case.
+The adapter's rating is set in the [machine config](../../firmware/components/config.md). The [lighting driver](../../firmware/drivers/lighting.md) picks the matching profile from that setting at start-up. A brightness is FastLED's value from 0 to 255. The 3 A config is the default and fallback setting for any error case.
 
 | | 3 A adapter | 6 A adapter |
 |---|---|---|

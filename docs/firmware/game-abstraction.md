@@ -136,7 +136,7 @@ extern const size_t kGameCount;
 class GameHost {
 public:
     void add(Component& component);            // routes the driver events of the component's parts through it
-    void begin(Machine& machine, bool touch);   // reads which game ran last, or the default game; the first update() launches it
+    void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes and reads which game ran last, or the default game; the first update() launches it
     void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
     void update(uint32_t now);                 // updates the running game, and moves it on once its phase is done
     void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well

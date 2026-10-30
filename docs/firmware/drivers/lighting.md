@@ -18,9 +18,17 @@ FastLED also holds the color of every LED. It keeps the current within the budge
 
 ## Adapter profile
 
-How much current the lighting may draw depends on the machine's adapter. `begin()` reads the adapter's rated current in amperes from the file `/adapter.txt` on the memory card, as a whole number such as `6`. The driver caps the rating at 6 A, so any larger adapter gets the 6 A profile. A rating below 6 A, a missing file, an unreadable card or any other content gets the 3 A profile.
+How much current the lighting may draw depends on the machine's adapter. `begin()` selects the 6 A profile for an adapter rated at 6 A in the [config](#config) and the 3 A profile for anything less.
 
 A profile sets which perimeter LEDs are lamps, how bright the ambient and the playfield lights may be, and the cap the driver hands FastLED. The [lighting design](../../parts/lighting/design.md#current-ceiling) derives the two profiles. The [lamps component](../components/lamps.md) gets the profile with `profile()`. From it, the component takes which perimeter LEDs it uses as lamps and how bright each lamp may be.
+
+## Config
+
+The adapter's rated current stands in the [machine config](../components/config.md):
+
+| Key | Default | Range |
+|---|---|---|
+| `lighting.adapter_a` | 3 | 3 to 6 A |
 
 ## Device faults
 
@@ -39,8 +47,8 @@ struct Profile {
 
 class Lighting : public Driver {
 public:
-    // reads the adapter's rating from the card, adds the six chains to FastLED on their pins and sets the
-    // power model and the cap
+    // selects the profile for the config's adapter, adds the six chains to FastLED on their pins and
+    // sets the power model and the cap
     bool begin() override;
 
     const Profile& profile() const;   // gets the profile the lighting runs with

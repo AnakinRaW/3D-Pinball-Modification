@@ -1,6 +1,6 @@
 # File system component
 
-The file system component gives the games, the host, the logger, the sounds and the screen the files they read and write on the SD card. 
+The file system component gives the games, the host, the logger, the config, the sounds and the screen the files they read and write on the SD card. 
 
 Each file is a [`FileWriter`](../drivers/storage.md#files) of the [storage driver](../drivers/storage.md).
 
@@ -28,8 +28,9 @@ public:
 private:
     friend class GameHost;
     friend class Logger;
+    friend class Config;
 
-    // gets a file by its full path, such as "/log.txt"; the host and the logger only. No card access
+    // gets a file by its full path, such as "/log.txt"; the host, the logger and the config only. No card access
     FileWriter openFull(const char* path);
 
     // sets the game in whose directory open() opens files; the host only

@@ -98,22 +98,13 @@ The driver keeps starting conversions while `t_conv + t_ovh` still fits in what 
 
 ### Build step
 
-The build step is performed once with the sensors already in the playfield, and the driver has its results from then on. It is repeated whenever the playfield changes under a sensor.
+The build step is performed once with the sensors already in the playfield. It is repeated whenever the playfield changes under a sensor.
 
 The build step records two figures per channel. The detector's collector current spreads from 60 µA to 410 µA under identical conditions, so a pair that fits one channel misses another by several times over. [`docs/parts/ir-reflective/design.md`](../../parts/ir-reflective/design.md#driver) holds what a channel is expected to deliver.
 
 The pair also depends on where a channel sits in the read order as the sensors are still rising when the read block starts. A channel read early returns a smaller difference for the same ball. Both effects are fixed per channel, so the build step settles the pair and the read order together. Adding a channel or moving one voids them and needs the build step run again. The ranking puts the weakest sensor last, where the swing is largest.
 
-One row per sensor:
-
-| Field | |
-|---|---|
-| channel | the number the game uses for that sensor |
-| `clear_build` | the channel's value over a clear track, in converter steps |
-| `ball_build` | the same with a ball on it |
-| read order index | the index of the read order for that channel |
-
-The installation has to give every channel a clear-track difference of at least 1.5× its noise, because the start-up calibration scales each channel by that difference. Averaged over two hundred readings, the factor then stays within 5 %. The build step measures the noise the way the start-up calibration does and checks this for every channel.
+The installation has to give every channel a clear-track difference of at least 1.5× its noise, because the start-up calibration scales each channel by that difference. Averaged over two hundred readings, the factor then stays within 5 %.
 
 ### At start-up
 
@@ -142,6 +133,19 @@ The startup calibration also reads the noise floor. The same two hundred reading
 > The σ in [`channel-model`](../../parts/ir-reflective/channel-model/index.html) is an estimate, so the phase and the margin condition rest on one. The start-up calibration measures σ on every boot, but only to set `release`, and nothing carries it back. Run it once on the finished board with the lighting subsystem running and the room lit by a flickering LED lamp rather than by daylight, and put the σ it reports into `channel-model`.
 
 A ball lying on a channel at power-up needs no special handling. That channel reads about five times its clear value, while drift moves a reading only by tens of per cent, so the calibration tells the two cases apart and scales against `ball_build`.
+
+## Config
+
+The build step's results stand in the [machine config](../components/config.md) as the list `ir.channels`, which is empty by default. Each entry holds one channel:
+
+| Field | What it holds | Range |
+|---|---|---|
+| `channel` | the number the game uses for that sensor | 0 to 15, each channel once |
+| `clear_build` | the channel's value over a clear track, in converter steps | 0 to 1023 |
+| `ball_build` | the same with a ball on it | above `clear_build`, up to 1023 |
+| `order` | the channel's place in the read order | 0 to 15 |
+
+`begin()` leaves out an entry that breaks one of these rules and writes a line to the log. A channel without an entry fails its calibration at start-up, and so does every channel until the build step has run once.
 
 ## Start-up
 

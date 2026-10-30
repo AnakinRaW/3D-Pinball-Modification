@@ -9,13 +9,23 @@ begin():
     planPhase(n)                   # T and t_first from the channel count, or refuse to run
     startPhaseCounter()            # QuadTimer3 channels 2 and 3, free-running from here
     discard(SETTLING_CYCLES)       # sensors and the converters' reference settle
+    readEntries()
     calibrate()
     deviceMonitor.watch(IrSensing, self)     # asks failed() every 100 ms from here on
+
+readEntries():                     # ir.channels, the build step's results
+    for i in 0 .. config.count(ConfigKey::kIrChannels) - 1:
+        e = config.get(entry(kIrChannels, i, kIrChannel), 0, 15), ... clear_build and ball_build 0 to 1023, order 0 to 15
+        if any field unset or e.channel taken or e.ball_build <= e.clear_build:
+            log("ir.channels.i breaks the rules and is left out");  continue
+        entries[e.channel] = e
 
 calibrate():
     v, sigma = averages()          # every channel's mean and one clear channel's σ, from the same readings
 
     for c in channels:
+        b = entries[c]                 # the build step's clear_build, ball_build and read order
+        if   b missing:             c.calFailed = true;  continue
         if   v[c] near c.clear_build:  c.scale = v[c] / c.clear_build
         elif v[c] near c.ball_build:   c.scale = v[c] / c.ball_build
         else:                          c.scale = 1;  c.calFailed = true
@@ -28,6 +38,24 @@ calibrate():
     if not marginHolds():          # (ball - clear) / 2 >= (m_r + 2) * sigma
         raisePhase() or fallBackToStockPhase() or report(Degraded)
         restart()
+*/
+
+/*
+build():                           # the program ir-build, with the serial monitor open
+    ask("clear the track, then Enter")
+    clear, sigma = averages()
+    for c in channels:
+        ask("ball on channel c, then Enter")
+        ball[c] = averages()[c]
+    kept = [c for c in channels if clear[c] >= 1.5 * sigma and ball[c] > clear[c]]
+    print(channels not in kept)
+    order = kept ranked by ball - clear, the weakest last
+
+    config.remove(ConfigKey::kIrChannels)
+    for i, c in kept:
+        config.set(entry(kIrChannels, i, kIrChannel), c), likewise clear_build, ball_build and order
+    config.save()                  # the game firmware takes the entries at its next start
+    print(the entries)
 */
 
 /*

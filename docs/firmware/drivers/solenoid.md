@@ -29,16 +29,26 @@ A rising edge on a sense line pulls its coil once, even when the contact stays c
 
 | Rule | Value |
 |---|---|
-| Duration of a solenoid pull | ~30 ms |
+| Duration of a solenoid pull | ~30 ms, shorter per coil in the [config](#config) |
 | Duration of the cool-down phase after a solenoid pull | ~10 ms |
 
-When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](../driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off after 25 ms, so a pull lasts 25 to 30 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
+When a coil switches on, the driver notes the time. Every 5 ms the [driver tick](../driver-design.md#driver-intervaltimer) checks how long each coil has been on and switches it off one tick period before its pull time. With the default of 30 ms it switches a coil off after 25 ms, so a pull lasts 25 to 30 ms. The tick also notes when it switched the coil off, and the cool-down counts from that time. 
 
 The driver always writes the time first and switches the coil second. Whoever looks at a coil then finds the time that belongs to its state.
 
 If the firmware itself fails, the [watchdog](../error-handling.md#watchdog) resets the Teensy. The main loop feeds it only while `overdue()` reports that no coil has been on for longer than 31 ms.
 
 At a firmware reset, the Teensy no longer drives the trigger pins, and the pull-down resistors on the coil board switch every coil off.
+
+## Config
+
+Each coil's pull time stands in the [machine config](../components/config.md), one entry per coil in the order of the trigger pins:
+
+| Key | Default | Range |
+|---|---|---|
+| `solenoid.pull_ms.0` to `solenoid.pull_ms.3` | 30 | 5 to 30 ms |
+
+`configure()` takes the pull times right after the config's `begin()`, so the pulls of the driver's own `begin()` run at 30 ms.
 
 ## Device faults
 
@@ -53,6 +63,10 @@ public:
     // device monitor; false when the driver tick or the device monitor is full, and the
     // driver then never energises a coil
     bool begin() override;
+
+    // takes each coil's pull time from the config, held between the tick's period and 30 ms; the
+    // main task, right after the config's begin(). Until then every coil pulls for 30 ms
+    void configure();
 
     // starts a pull of the coil; false while it is still on or cooling down
     bool fire(uint8_t coil);

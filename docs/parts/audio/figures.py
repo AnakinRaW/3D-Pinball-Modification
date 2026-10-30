@@ -209,9 +209,9 @@ for _sig, _pin in (("DIN to the DFR0954", "DIN"), ("LRC to the DFR0954", "LRC"),
     MODEL.net(_pin, reads(f"DFR0954 {_pin}", src=_MOD), teensy=_sig)
 MODEL.net("MCLK", teensy="MCLK")   # the port drives it, and nothing connects to it, docs/pin-assignment.md
 
-dec("vol_music", 50, "%", src="the music's starting volume in docs/firmware/components/sounds.md, "
+dec("vol_music", 50, "%", src="the music's starting volume, audio.music_volume's default in docs/firmware/components/sounds.md, "
     "a decision: under the effects")
-dec("vol_effects", 70, "%", src="the effects' starting volume in "
+dec("vol_effects", 70, "%", src="the effects' starting volume, audio.effects_volume's default in "
     "docs/firmware/components/sounds.md, a decision")
 _I("music and one effect at their starting volumes, squared by the component's curve, never "
    "overdrive the output together", "vol_music.raw ** 2 + vol_effects.raw ** 2 <= 1")

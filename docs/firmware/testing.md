@@ -197,6 +197,7 @@ The program `ir-sensing` checks the [IR driver](drivers/ir-sensing.md).
 |---|---|---|---|
 | `phase-plan` | computer | Plan the phase for every channel count from one up | Every plan keeps the bounds of the [phase length](drivers/ir-sensing.md#phase-length), a count that does not fit is refused, and the count worked through there gives its figures |
 | `calibration` | computer | Calibrate on fake averages near `clear_build`, near `ball_build` and near neither | Each channel gets the scale, `clear`, `ball`, `threshold` and `release` of the [start-up rules](drivers/ir-sensing.md#at-start-up), and the third counts as failed |
+| `entries` | computer | Start with `ir.channels` entries that keep the [rules](drivers/ir-sensing.md#config), one whose ball value lies under its clear value and two of the same channel | The good entries are taken, the others are left out with a log line each, and their channels fail calibration |
 | `margin` | computer | Calibrate on fake readings whose noise misses the margin condition at every phase | The driver restarts once with a longer phase, then falls back to the stock phase, and reports the channel that still fails |
 | `hysteresis` | computer | Feed differences that cross `threshold` once, cross it twice in a row, and hover between `release` and `threshold` | Only two readings in a row over `threshold` report a ball, only two in a row under `release` release it, and hovering gives nothing |
 | `read-window` | Teensy | Note when each conversion runs in its phase for ten minutes, while the lights send frames and the display plays a movie | No channel is read before `t_inv` or after its phase, and the driver logs no miss |
@@ -283,6 +284,7 @@ The program `servo` checks the [servo driver](drivers/servo.md). A wire from the
 | `first-pulse` | Teensy | Time every pulse from before `begin()` until the servo stands at its start position | No pulse lies outside the [SER0049's range](drivers/servo.md#pwmservo), the first one included |
 | `pulses` | Teensy | Move to each end position and time the pulses | Each pulse has the width of its end position's angle, once every frame |
 | `ends` | bench | Move between the two end positions several times | The seesaw reaches each extreme, and the servo does not strain or hum against it |
+| `unset` | Teensy | Start with `servo.start_deg: ~` | The servo gets no pulse, and `moveTo()` changes nothing |
 
 ### Audio
 
@@ -344,6 +346,19 @@ The program `file-system` checks the [file system component](components/file-sys
 | `paths` | computer | Open a path inside a game's directory, an empty path, one from the root, one with `..`, one too long, and one before any game is named | The first gives the file in `/games/<id>/`, and every other gives a file whose requests fail |
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
 
+### Config
+
+The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys of its own making.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `defaults` | computer | Start without a file and read several keys with and without a default, then start with a file that does not parse | Every read gets its default or no value, and no file is written. With the broken file, the log names the line that broke, and the file stays as it is |
+| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries | Every read gets the file's value, `count()` gets the length of each list, and the log stays empty |
+| `clamp` | computer | Read a value above its range and one below | Each gets the nearer end of its range, with one log line each |
+| `wrong` | computer | Read a value that is text, with a default and without one | The read with a default gets the default, the other gets no value, and each writes a log line |
+| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list |
+| `save-busy` | computer | Save, and save again before the first write has ended | The second save is refused, and the file holds the first |
+
 ### Lamps
 
 The program `lamps` checks the [lamps component](components/lamps.md).
@@ -379,6 +394,7 @@ The program `sounds` checks the [sounds component](components/sounds.md) on a fa
 | `interlude-ends` | computer | End interludes by a new track, by `stopMusic()` and by `stopInterlude()`, and start one with the music off | A new track and `stopMusic()` leave nothing to go on, `stopInterlude()` lets the music go on, and music that was off stays off |
 | `music-ended` | computer | Let a track end, a looping track run, an older track's end arrive late, and an effect end | Only the track last started gives `MusicEnded`, once |
 | `volume` | computer | Set both volumes across 0 to 1 and outside | The driver gets the square of each percentage, and a value outside counts as the nearer end |
+| `start-volumes` | computer | Start with both starting volumes at 1 | The music starts at 1 and the effects at 0, with one log line |
 | `names` | computer | Play names in the game's audio directory, and one too long | Each plays `/games/<id>/audio/<name>`, and the long one finds no file |
 | `reset` | computer | Play on every channel, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back |
 | `resume` | bench | Play music, an interlude in the middle of it, and let the interlude end | The music goes on where it stopped, without a click |

@@ -26,6 +26,19 @@ A sound is named by its file name in the game's audio directory, such as `bumper
 
 `musicVolume()` and `effectsVolume()` take a percentage from 0 to 1. The component squares it, so half the range sounds about half as loud.
 
+`begin()` sets both to their starting volumes from the [config](#config). The host calls it before the first game.
+
+## Config
+
+The starting volumes stand in the [machine config](config.md):
+
+| Key | Default | Range |
+|---|---|---|
+| `audio.music_volume` | 0.5 | 0 to 1 |
+| `audio.effects_volume` | 0.7 | 0 to 1 |
+
+The two starting volumes squared add up to at most 1, so music and an effect together never overdrive the output. Where they add up to more, `begin()` lowers the effects volume until they add up to 1 and writes a line to the log.
+
 ## End of the music
 
 `musicPlaying()` tells whether the music on channel 0 still plays. Interlude also counts as playing. When a track has played to its end, the component sends `MusicEnded`. A track that loops does not send the event. The end of an effect sends nothing.
@@ -42,6 +55,10 @@ A sound is named by its file name in the game's audio directory, such as `bumper
 class Sounds : public Component {
 public:
     Sounds(AudioDriver& audio, FileSystem& files);
+
+    // sets both volumes to their starting volumes from the config, the effects lowered where the two
+    // squared add up to more than 1; the host calls it before the first game
+    void begin();
 
     // turns the end of a track into MusicEnded, lets the music go on after an interlude and ignores the end of an effect
     bool translate(const DriverEvent& in, PinballEvents& out) override;

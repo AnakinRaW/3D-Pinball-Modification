@@ -4,6 +4,10 @@ class Sounds : public Component {
 public:
     Sounds(AudioDriver& audio, FileSystem& files) : audio_(audio), files_(files) {}
 
+    // sets both volumes to their starting volumes from the config, the effects lowered where the two
+    // squared add up to more than 1; the host calls it before the first game
+    void begin();
+
     // turns the end of a track into MusicEnded, lets the music go on after an interlude and ignores the end of an effect
     bool translate(const DriverEvent& in, PinballEvents& out) override;
 
@@ -30,8 +34,8 @@ private:
     friend class GameHost;
 
     static constexpr uint8_t kMusic = 0;   // the music's channel, as SoundEnded names it
-    static constexpr float   kMusicStart   = 0.5f;   // the music's starting percentage, a decision: under the effects
-    static constexpr float   kEffectsStart = 0.7f;   // the effects' starting percentage, a decision
+    static constexpr float   kMusicStart   = 0.5f;   // audio.music_volume's default
+    static constexpr float   kEffectsStart = 0.7f;   // audio.effects_volume's default
 
     // gets the driver's volume for a percentage along a square curve, so the middle of the range
     // sounds about half as loud as the top
@@ -47,10 +51,22 @@ private:
     uint32_t     interlude_ = 0;           // the number of the interlude playing, 0 while none plays
     AudioDriver::Position musicAt_;        // where the music stood when the interlude began, empty when none played
     uint32_t     started_[AudioDriver::kChannels] = {};   // when the effect on each channel started
-    float        musicGain_   = gain(kMusicStart);     // the driver's volume for the music and an interlude
-    float        effectsGain_ = gain(kEffectsStart);   // the driver's volume for the effects
+    float        musicGain_   = 0;   // the driver's volume for the music and an interlude; begin() sets the config's
+    float        effectsGain_ = 0;   // the driver's volume for the effects
     PinballEvent ended_;                   // the MusicEnded that translate() points out at
 };
+
+void Sounds::begin() {
+    const float music   = config.get(ConfigKey::kMusicVolume, kMusicStart, 0, 1);
+    float       effects = config.get(ConfigKey::kEffectsVolume, kEffectsStart, 0, 1);
+    const float left    = sqrtf(1 - music * music);   // the most the effects may take, so music and an effect never overdrive the output
+    if (effects > left) {
+        logger.write("sounds", "audio.effects_volume: %g -> %g, so music and an effect never overdrive the output", effects, left);
+        effects = left;
+    }
+    musicVolume(music);
+    effectsVolume(effects);
+}
 
 uint32_t Sounds::interludePlayed() const {
     return interlude_ ? audio_.position(kMusic).played() : 0;   // the interlude plays on the music's channel

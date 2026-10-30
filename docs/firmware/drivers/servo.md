@@ -6,7 +6,18 @@ The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../..
 
 The servo is used in the ball drain as part of the ball separator. It moves a small seesaw. It therefore has two well-known positions. The start position and the end position put the seesaw at its two extremes.
 
-The driver knows the mechanism's two end positions, and `moveTo()` takes the servo to one of them. Their angles are set once on the assembled machine, in whole degrees.
+The driver knows the mechanism's two end positions, and `moveTo()` takes the servo to one of them. Their angles are set once on the assembled machine, in the [config](#config). While either angle is unset, the servo gets no pulse.
+
+## Config
+
+The two angles stand in the [machine config](../components/config.md) in whole degrees:
+
+| Key | Default | Range |
+|---|---|---|
+| `servo.start_deg` | unset | 0 to 180 |
+| `servo.end_deg` | unset | 0 to 180 |
+
+The range is the SER0049's travel.
 
 ## Driver events
 
@@ -34,11 +45,12 @@ public:
     enum class Position : uint8_t { Start, End };
 
     // registers with the device monitor, attaches the pin with the SER0049's range, 500 µs to
-    // 2500 µs, parks the pulse and moves the servo to its start position; false when the device
-    // monitor is full or the timer has not taken the parked pulse after two frames
+    // 2500 µs, parks the pulse and, once the config sets both angles, moves the servo to its start
+    // position; false when the device monitor is full or the timer has not taken the parked pulse
+    // after two frames
     bool begin() override;
 
-    // moves the servo to one of its two end positions
+    // moves the servo to one of its two end positions; nothing while an angle is unset
     void moveTo(Position target);
 
     // gets the end position last moved to
