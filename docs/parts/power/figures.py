@@ -87,7 +87,7 @@ with MODEL.block("INPUT", section=INPUT):
 ds("i_awg16_max", 22, "A", src=f"{AMPS}, 16 AWG")
 ds("i_awg22_max", 7, "A", src=f"{AMPS}, 22 AWG")
 
-# -- the Teensy on USB alone: D2 across the cut VUSB-VIN trace, the same 1N5819 as D1
+# -- the Teensy on USB alone: D2 from the VUSB hole to the VIN pin, the same 1N5819 as D1
 USB = "Universal Serial Bus Specification Revision 2.0"
 ds("v_usb_min", 4.75, "V", src=f"{USB}, Table 7-7: VBUS at a high-power port, minimum",
    group="FLOORS", section=FLOORS, label="at least", stated=True)
@@ -343,7 +343,7 @@ with MODEL.block("FLOORS", section=FLOORS):
     fig("v_teensy_6a", "V", "v_bus_6a - 2 * i_main * r_lead - v_f1 - v_f_diode", "down",
         moves="+v_jack_min -i_supply_6a -rdson_q1 -r_lead -v_meas_f1 -v_f_diode -i_amp")
 
-    # On USB alone, VIN takes the USB port's 5 V through D2 across the cut VUSB-VIN trace.
+    # On USB alone, VIN takes the USB port's 5 V through D2 from the VUSB hole.
     fig("v_teensy_usb", "V", "v_usb_min - v_f_diode", "down", moves="+v_usb_min -v_f_diode")
 
     # U1 at the display sits at the end of J-DISP's pair

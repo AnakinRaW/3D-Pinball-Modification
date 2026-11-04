@@ -19,14 +19,18 @@
   <rect x="1240" y="660" width="280" height="1660" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <rect x="1340" y="630" width="80" height="30" rx="4" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="1380" y="650" text-anchor="middle" font-size="11" font-weight="700" fill="#2c3e50">USB</text>
-  <text x="1336" y="712" text-anchor="end" font-size="11" font-weight="700" fill="#c0392b">VUSB</text>
-  <line x1="1340" y1="708" x2="1352" y2="708" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
-  <polygon points="1352,697 1352,719 1374,708" fill="#fff" stroke="#c0392b" stroke-width="2"/>
-  <line x1="1375" y1="696" x2="1375" y2="720" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
-  <line x1="1376" y1="708" x2="1388" y2="708" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
-  <text x="1392" y="712" font-size="11" font-weight="700" fill="#c0392b">VIN</text>
-  <text x="1380" y="740" text-anchor="middle" font-size="11" fill="#666">D2, 1N5819, across the cut</text>
-  <text x="1380" y="754" text-anchor="middle" font-size="11" fill="#666">trace on the underside</text>
+  <text x="1336" y="712" text-anchor="end" font-size="11" font-weight="700" fill="#c0392b">VUSB hole</text>
+  <circle cx="1346" cy="708" r="5" fill="#fff" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="1351" y1="708" x2="1400" y2="708" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
+  <polygon points="1400,697 1400,719 1422,708" fill="#1a1a1a"/>
+  <line x1="1423" y1="696" x2="1423" y2="720" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="1423" y1="720" x2="1415" y2="720" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="1423" y1="696" x2="1431" y2="696" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="1424" y1="708" x2="1534" y2="708" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
+  <circle cx="1534" cy="708" r="4" fill="#c0392b"/>
+  <text x="1411" y="690" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1a1a1a">D2, 1N5819</text>
+  <text x="1380" y="740" text-anchor="middle" font-size="11" fill="#666">from the VUSB hole to the VIN pin,</text>
+  <text x="1380" y="754" text-anchor="middle" font-size="11" fill="#666">the VUSB-VIN trace on the underside cut</text>
   <text x="1380" y="1530" text-anchor="middle" font-size="18" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
   <text x="1380" y="1552" text-anchor="middle" font-size="12" fill="#666">in two socket headers,</text>
   <text x="1380" y="1568" text-anchor="middle" font-size="12" fill="#666">the PSRAM on its underside</text>
@@ -181,8 +185,10 @@
   <line x1="376" y1="245" x2="420" y2="245" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
   <line x1="420" y1="245" x2="420" y2="380" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
   <line x1="420" y1="380" x2="860" y2="380" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
-  <polygon points="860,369 860,391 882,380" fill="#fff" stroke="#c0392b" stroke-width="2"/>
-  <line x1="883" y1="368" x2="883" y2="392" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
+  <polygon points="860,369 860,391 882,380" fill="#1a1a1a"/>
+  <line x1="883" y1="368" x2="883" y2="392" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="883" y1="392" x2="875" y2="392" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="883" y1="368" x2="891" y2="368" stroke="#1a1a1a" stroke-width="3"/>
   <text x="872" y="360" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1a1a1a">D1, 1N5819</text>
   <line x1="884" y1="380" x2="1534" y2="380" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>
   <line x1="1534" y1="380" x2="1534" y2="800" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square"/>

@@ -15,7 +15,7 @@ J-MB-PWR takes 5 V and GND from the power board's [J-MAIN](../power/design.md#ou
 The Teensy runs from this 5 V or from USB alone. Its trace between VUSB and VIN is cut. Two diodes feed VIN from either source and keep the sources apart:
 
 - D1 is a 1N5819 between J-MB-PWR's 5 V and VIN. While the machine is off, it keeps USB from feeding the power board.
-- D2 is a 1N5819 across the cut on the Teensy's underside. It keeps the power board from feeding USB.
+- D2 is a 1N5819 from the VUSB hole beside the Teensy's USB socket to its VIN pin. It prevents the power board feeding the USB.
 
 The DFR0954 takes its 5 V ahead of D1, so it stays off on USB alone. The node behind D1 feeds both the Teensy's VIN and R2 of the break beam.
 

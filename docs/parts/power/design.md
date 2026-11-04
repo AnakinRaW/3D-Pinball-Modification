@@ -75,7 +75,7 @@ The adapter's negative reaches the machine through Q1 or its wire alone.
 
 J-MAIN carries 5 V to the [Teensy motherboard](../motherboard/design.md#supply). The Teensy's VIN takes it through D1. The amplifier module takes it ahead of D1.
 
-The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4.1.md#powering-from-something-other-than-usb) requires for an external supply. D2 bridges the cut, so the Teensy also runs on USB alone.
+The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4.1.md#powering-from-something-other-than-usb) requires for an external supply. D2 runs from the VUSB hole to the VIN pin, so the Teensy also runs on USB alone.
 
 ### IR mainboard
 

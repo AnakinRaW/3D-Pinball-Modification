@@ -79,7 +79,7 @@ The 1 kΩ belongs to that one sample setting. A longer window admits a higher re
 
 ### Powering from something other than USB
 
-The VUSB-VIN trace on the underside must be cut when an external supply is used. PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail.
+The VUSB-VIN trace on the underside must be cut when an external supply is used. PJRC's pinout card labels it "cut to separate VIN from VUSB, if using external power." Left intact, the external supply is tied to the USB host's 5 V rail. VUSB is also a plated hole beside the USB socket.
 
 ### I²S1 spends three analog-capable pins
 
