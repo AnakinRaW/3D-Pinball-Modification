@@ -83,7 +83,7 @@ with MODEL.block(section=IRQ):
         "once",
         group="Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT")
     dec("prio_tick", 96, "", src="the driver tick, kPriority in driver-design.md",
-        group="Rotary sensor, port expander, solenoids, device monitor, display and touch, their periodic work")
+        group="Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work")
     dec("prio_i2c", 160, "", src="the I²C buses' LPI2C1 and LPI2C4 interrupts, which have no "
         "deadline: below the DMA refills, which have one, and above FreeRTOS's limit, since they "
         "never call the kernel; docs/firmware/io/i2c-bus.md",

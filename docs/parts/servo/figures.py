@@ -206,9 +206,13 @@ with MODEL.block("SUPPLY", section=SUPPLY):
         "sheet asks for it as close as the layout allows and states no figure")
     asm("place_bulk", 20, "mm", stated=False, src="how close C1 sits to where the feed meets the "
         "servo's cable; no datasheet states one")
-    dec("t_load_timeout", 40, "ms", stated=False, src="how long begin() waits for the timer to "
-        "take the parked pulse before it fails: two frames, while the next reload after attach() "
-        "comes within one")
+    dec("t_load_timeout", 40, "ms", stated=False, src="how long PWMServoT4's attach() waits for the "
+        "timer to take the no-pulse setting before it fails: two frames, while the next reload comes "
+        "within one")
+    dec("t_hold_mid", 500, "ms", stated=False, src="how long the first pulse after power-up stays "
+        "at the middle between the end positions before the slow move to the start position; "
+        "the SER0049 sheet states no speed, and a servo still moving when the hold ends only "
+        "meets the moving pulse early, docs/firmware/drivers/servo.md")
 
     # The feed's inductance keeps its current flowing when the servo stops drawing,
     # and C1 takes it: half L I squared into half C dV squared, plus the same current
@@ -226,7 +230,7 @@ with MODEL.block("SUPPLY", section=SUPPLY):
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
-_I("begin() waits longer than the one frame the timer's next reload can take",
+_I("attach() waits longer than the one frame the timer's next reload can take",
    "t_load_timeout > t_frame")
 _I("PWMServo's default range sits inside the SER0049's, so attach() takes the servo's own",
    "t_min < t_min_default and t_max_default < t_max")
@@ -272,6 +276,7 @@ MODEL.net("Servo signal, servo side",
                  src="design.md, U1 takes its 5 V at J-SERVO-PWR, and OE on ground keeps its output on"),
           reads("the SER0049's signal input through R2", src="design.md, R2 between U1 and the servo"))
 
-MODEL.owns("FlexPWM1.1", "PWMServo sets the submodule to a 20 ms frame, and the driver writes its "
-                         "VAL0 itself, docs/firmware/drivers/servo.md")
-MODEL.draws(pool="device monitor")   # a timer that has not taken the parked pulse in begin()
+MODEL.owns("FlexPWM1.1", "PWMServoT4, this repository's copy of PWMServo, sets the submodule to a 20 ms frame and "
+                         "sets no pulse through its VAL0, docs/firmware/drivers/servo.md")
+MODEL.draws(pool="device monitor")   # a timer that has not taken the no-pulse setting in attach()
+MODEL.draws(pool="driver tick")      # the step that moves the pulse at the config's speed

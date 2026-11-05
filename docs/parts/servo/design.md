@@ -8,6 +8,7 @@ This build uses a DFRobot SER0049 9 g micro servo with a clutch. It's planned as
 - The servo holds each of them.
 - The servo moves only between them.
 - The servo moves only on command.
+- The servo moves at a limited speed.
 
 ## SER0049 Servo Motor
 
@@ -19,7 +20,9 @@ The SER0049 has no end stop and turns all the way round by hand. The mechanism's
 
 ## End positions
 
-The mechanism has two end positions. The angle of each is set once on the assembled machine. One end is the start position. At power-up, the servo stands at its last position. The driver's first move takes it to the start position in a fixed direction.
+The mechanism has two end positions. The angle of each is set once on the assembled machine. One end is the start position.
+
+At power-up, the servo's position is unknown, and its first move runs at full speed whatever the pulse. The driver's first pulse therefore points at the middle between the two end positions, so the fast move covers at most half the distance between them. From the middle, the servo moves to the start position at limited speed.
 
 ## Circuit
 

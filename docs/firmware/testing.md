@@ -284,7 +284,8 @@ The program `servo` checks the [servo driver](drivers/servo.md). A wire from the
 | `first-pulse` | Teensy | Time every pulse from before `begin()` until the servo stands at its start position | No pulse lies outside the [SER0049's range](drivers/servo.md#pwmservo), the first one included |
 | `pulses` | Teensy | Move to each end position and time the pulses | Each pulse has the width of its end position's angle, once every frame |
 | `ends` | bench | Move between the two end positions several times | The seesaw reaches each extreme, and the servo does not strain or hum against it |
-| `unset` | Teensy | Start with `servo.start_deg: ~` | The servo gets no pulse, and `moveTo()` changes nothing |
+| `defaults` | Teensy | Start with neither angle in the config, move to each end position and time the pulses | The pulses name the two defaults of the [config](drivers/servo.md#config) |
+| `speed` | Teensy | Set `servo.speed_deg_s` below and above one degree per frame, move between the end positions and time the pulses | The pulse's angle changes at the set speed and stops on the end position |
 
 ### Audio
 
