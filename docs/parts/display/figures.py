@@ -532,8 +532,8 @@ MODEL.net("SCL at the module",
 
 # the module's own lines that reach no Teensy pin
 MODEL.net("RD",
-          drives("the wire from the display board's 5 V to RD", "push-pull", rail="display Vin",
-                 src="design.md, RD is held at 5 V over its own wire from the display board"),
+          drives("the wire from Vin to RD on the header", "push-pull", rail="display Vin",
+                 src="design.md, RD is held at 5 V by a wire from Vin on the header"),
           pull("R12 on the module", "gnd", src=f"{SCH}: R12 from RD to GND"),
           reads("the control buffer's input RD, and the data buffer's direction",
                 src=f"{SCH}: RD drives U3's DIR"))

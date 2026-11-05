@@ -29,9 +29,9 @@
 | Servo | J-SERVO-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
 | | servo plug | 3 | pin header | The servo's cable stays whole |
 | Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
-| Display | J-DISP-PWR of the display board | 2 | Dupont | |
+| Display | the cable from J-DISP, at the display board | 2 | soldered | The board comes off at J-DISP-MOD |
 | | touch cable, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
-| | display board to the module | 5 | soldered at both ends | The cable carries 5 V on Vin and RD. Vin sits on the module's header beside the bus |
+| | J-DISP-MOD, display board to the module | 4 | Dupont at the board, soldered at the module | Pin order SDA, SCL, 5 V, GND, so a reversed plug never swaps 5 V and GND. Vin sits on the module's header beside the bus |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
 | | bus | 12 | Dupont at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
@@ -42,9 +42,9 @@
 
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
-| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 8 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
+| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
 | 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, the servo plug | |
-| 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, J-M, the D24V5F3's socket) | |
+| 4 | | 7 (2 rotary sensor, 2 J-COIL-TEENSY, J-M, the D24V5F3's socket, J-DISP-MOD) | |
 | 5 | | 2 (J-SENSE-TEENSY) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |
