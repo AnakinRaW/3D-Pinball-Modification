@@ -93,6 +93,8 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 - **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives, the pin number stands in this file alone, so a re-allocation costs no edit there either.
 - **Schematic SVGs in `docs/`** — a part whose type designation depends on its package is named by its through-hole type. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
+  Every pin of an IC carries its pin number beside its name, taken from the datasheet's pinout for the package the build uses.
+
   Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
 
 ## 8. Design artifacts require explicit instruction
