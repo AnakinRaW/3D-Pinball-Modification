@@ -30,6 +30,14 @@ U1 copies its inputs at every change, so a closure reaches the Teensy however sh
 
 The [contact driver](../../firmware/drivers/contacts.md) publishes each hit as `ContactClosed` from source `0` or `1`.
 
+## Part list
+
+| Qty | Part | Where |
+|---|---|---|
+| 2 | stock bell, paint removed with sandpaper | bell 1 on E-1, bell 2 on E-2 |
+| 1 | conductive foil from the spare parts of the stock machine | glued onto the playfield under the bells, wired to the GND rail |
+| shared | Microchip MCP23008-E/P | U1, listed and counted in the [port expander](../port-expander/design.md#part-list) |
+
 ## Appendix: derivations
 
 [`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` compares each one against the line that states it.

@@ -1,5 +1,5 @@
-<svg viewBox="0 0 960 1990" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="960" height="2201" fill="#ffffff"/>
+<svg viewBox="0 0 960 2244" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="960" height="2244" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR sensor mainboard schematic</text>
   <text x="30" y="56" font-size="12.5" fill="#666">Up to sixteen reflective IR channels on a shared pulsed LED bus, digitized on the board and read over SPI.</text>
 
@@ -596,24 +596,63 @@
   <!-- ===== parts ===== -->
   <line x1="30" y1="1746" x2="930" y2="1746" stroke="#bbb" stroke-width="1"/>
   <text x="30" y="1770" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
-  <text x="30" y="1795" font-size="11" font-weight="700" fill="#666">Ref</text>
-  <text x="120" y="1795" font-size="11" font-weight="700" fill="#666">Function</text>
-  <text x="400" y="1795" font-size="11" font-weight="700" fill="#666">Type</text>
-  <line x1="30" y1="1803" x2="930" y2="1803" stroke="#ccc" stroke-width="1"/>
-  <text x="30" y="1845" font-size="11" fill="#333">U1, U2</text>
-  <text x="120" y="1845" font-size="11" fill="#333">Channel converter</text>
-  <text x="400" y="1845" font-size="11" fill="#333">MCP3008 (PDIP-16)</text>
-  <text x="30" y="1865" font-size="11" fill="#333">U3</text>
-  <text x="120" y="1865" font-size="11" fill="#333">Isolator across the rails</text>
-  <text x="400" y="1865" font-size="11" fill="#333">ISO7761F (SOIC-16 wide), on an adapter</text>
-  <text x="30" y="1885" font-size="11" fill="#333">Q1</text>
-  <text x="120" y="1885" font-size="11" fill="#333">LED bus switch</text>
-  <text x="400" y="1885" font-size="11" fill="#333">IRL540N (TO-220)</text>
-  <text x="30" y="1905" font-size="11" fill="#333">C5, C6</text>
-  <text x="120" y="1905" font-size="11" fill="#333">Bulk and reference filter</text>
-  <text x="400" y="1905" font-size="11" fill="#333">radial MLCC</text>
+  <text x="30" y="1794" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="150" y="1794" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="600" y="1794" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="30" y1="1802" x2="660" y2="1802" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="1822" font-size="11.5" fill="#444">R39</text>
+  <text x="150" y="1822" font-size="11.5" fill="#444" data-fig="r_ref">Resistor 47 &#937;</text>
+  <text x="600" y="1822" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="1844" font-size="11.5" fill="#444">R1 to R16</text>
+  <text x="150" y="1844" font-size="11.5" fill="#444" data-fig="r_led">Resistor 220 &#937;</text>
+  <text x="600" y="1844" font-size="11.5" fill="#444">up to 13</text>
+  <text x="30" y="1866" font-size="11.5" fill="#444">R1 to R16</text>
+  <text x="150" y="1866" font-size="11.5" fill="#444" data-fig="r_led_sharp">Resistor 100 &#937;</text>
+  <text x="600" y="1866" font-size="11.5" fill="#444">3</text>
+  <text x="30" y="1888" font-size="11.5" fill="#444">R37, R38</text>
+  <text x="150" y="1888" font-size="11.5" fill="#444" data-fig="r_dout">Resistor 1.2 k&#937;</text>
+  <text x="600" y="1888" font-size="11.5" fill="#444">2</text>
+  <text x="30" y="1910" font-size="11.5" fill="#444">R33, R34</text>
+  <text x="150" y="1910" font-size="11.5" fill="#444" data-fig="r_gate">Resistor 2.2 k&#937;</text>
+  <text x="600" y="1910" font-size="11.5" fill="#444">2</text>
+  <text x="30" y="1932" font-size="11.5" fill="#444">R17 to R32</text>
+  <text x="150" y="1932" font-size="11.5" fill="#444" data-fig="r_pd">Resistor 4.7 k&#937;</text>
+  <text x="600" y="1932" font-size="11.5" fill="#444">up to 16</text>
+  <text x="30" y="1954" font-size="11.5" fill="#444">R36</text>
+  <text x="150" y="1954" font-size="11.5" fill="#444" data-fig="r_dout_pu">Resistor 10 k&#937;</text>
+  <text x="600" y="1954" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="1976" font-size="11.5" fill="#444">R35</text>
+  <text x="150" y="1976" font-size="11.5" fill="#444" data-fig="r_gate_pd">Resistor 100 k&#937;</text>
+  <text x="600" y="1976" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="1998" font-size="11.5" fill="#444">U1, U2</text>
+  <text x="150" y="1998" font-size="11.5" fill="#444">Ten-bit 8-channel SPI converter, MCP3008, PDIP-16</text>
+  <text x="600" y="1998" font-size="11.5" fill="#444">2</text>
+  <text x="30" y="2020" font-size="11.5" fill="#444">U3</text>
+  <text x="150" y="2020" font-size="11.5" fill="#444">Six-channel digital isolator, ISO7761F, SOIC-16 wide, on an adapter</text>
+  <text x="600" y="2020" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2042" font-size="11.5" fill="#444">Q1</text>
+  <text x="150" y="2042" font-size="11.5" fill="#444">Logic-level MOSFET, N-channel, IRL540N, TO-220</text>
+  <text x="600" y="2042" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2064" font-size="11.5" fill="#444">C1 to C4</text>
+  <text x="150" y="2064" font-size="11.5" fill="#444" data-fig="c_decoupling">Ceramic 100 nF</text>
+  <text x="600" y="2064" font-size="11.5" fill="#444">4</text>
+  <text x="30" y="2086" font-size="11.5" fill="#444">C5</text>
+  <text x="150" y="2086" font-size="11.5" fill="#444" data-fig="c_entry c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
+  <text x="600" y="2086" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2108" font-size="11.5" fill="#444">C6</text>
+  <text x="150" y="2108" font-size="11.5" fill="#444" data-fig="c_ref c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
+  <text x="600" y="2108" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2130" font-size="11.5" fill="#444">J-IR-TEENSY</text>
+  <text x="150" y="2130" font-size="11.5" fill="#444">Connector, 8-pin</text>
+  <text x="600" y="2130" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2152" font-size="11.5" fill="#444">D24V5F3 socket</text>
+  <text x="150" y="2152" font-size="11.5" fill="#444">Socket header, 4-pin</text>
+  <text x="600" y="2152" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2174" font-size="11.5" fill="#444">J-S1 to J-S16</text>
+  <text x="150" y="2174" font-size="11.5" fill="#444">Connector, 3-pin</text>
+  <text x="600" y="2174" font-size="11.5" fill="#444">up to 16</text>
 
-  <text x="30" y="1955" font-size="11.5" fill="#666">Placement, the groups that stay together and how close: see mainboard-placement.svg</text>
+  <text x="30" y="2214" font-size="11.5" fill="#666">Placement, the groups that stay together and how close: see mainboard-placement.svg</text>
 
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="200" cy="370" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>

@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1000 540" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1000" height="540" fill="#ffffff"/>
+<svg viewBox="0 0 1000 703" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1000" height="703" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Ball drain break beam</text>
   <text x="30" y="56" font-size="13" fill="#666">An IR emitter and a phototransistor face each other across the drain, with R2 and R3 on the Teensy motherboard</text>
 
@@ -90,4 +90,22 @@
   <circle cx="230" cy="360" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="440" cy="360" r="4" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="700" cy="400" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <!-- ===== Parts ===== -->
+  <text x="30" y="555" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="30" y="579" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="170" y="579" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="620" y="579" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="30" y1="587" x2="650" y2="587" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="607" font-size="11.5" fill="#444">Emitter</text>
+  <text x="170" y="607" font-size="11.5" fill="#444" data-fig="lam_p">Kingbright AM4457F3C, side-looking infrared LED, 940 nm</text>
+  <text x="620" y="607" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="629" font-size="11.5" fill="#444">Receiver</text>
+  <text x="170" y="629" font-size="11.5" fill="#444">Vishay TEKT5400S, side-looking phototransistor with daylight filter</text>
+  <text x="620" y="629" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="651" font-size="11.5" fill="#444">R2</text>
+  <text x="170" y="651" font-size="11.5" fill="#444" data-fig="r_e p_r_e_rating r_tol">220 Ω resistor, 0.25 W, 5 %</text>
+  <text x="620" y="651" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="673" font-size="11.5" fill="#444">R3</text>
+  <text x="170" y="673" font-size="11.5" fill="#444" data-fig="r_pu r_tol">100 kΩ resistor, 5 %</text>
+  <text x="620" y="673" font-size="11.5" fill="#444">1</text>
 </svg>

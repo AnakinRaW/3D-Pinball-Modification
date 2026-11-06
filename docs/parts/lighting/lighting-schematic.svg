@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1320 840" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1320" height="840" fill="#ffffff"/>
+<svg viewBox="0 0 1320 1060" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1320" height="1060" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Lighting board</text>
   <text x="30" y="56" font-size="13" fill="#666">Three LED chains from the Teensy through one level shifter to the segments, built twice</text>
 
@@ -256,6 +256,30 @@
   <text x="250" y="823" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
   <text x="350" y="823" font-size="11.5" fill="#444">C2 carries each step of the LED current where the feed arrives</text>
 
+  <!-- ===== Parts ===== -->
+  <text x="20" y="866" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="20" y="890" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="200" y="890" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="560" y="890" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="20" y1="898" x2="600" y2="898" stroke="#ccc" stroke-width="1"/>
+  <text x="20" y="918" font-size="11.5" fill="#444">LED strip</text>
+  <text x="200" y="918" font-size="11.5" fill="#444" data-fig="strip_width strip_len">SEZO WS2812B strip, 2.7 mm wide, 160 LEDs/m, 2 m</text>
+  <text x="560" y="918" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="940" font-size="11.5" fill="#444">U1 on each board</text>
+  <text x="200" y="940" font-size="11.5" fill="#444">CD74HCT125E quad buffer, DIP-14</text>
+  <text x="560" y="940" font-size="11.5" fill="#444">2</text>
+  <text x="20" y="962" font-size="11.5" fill="#444">R1 to R3 on each board</text>
+  <text x="200" y="962" font-size="11.5" fill="#444" data-fig="r_in">2.2 k&#937; resistor</text>
+  <text x="560" y="962" font-size="11.5" fill="#444">6</text>
+  <text x="20" y="984" font-size="11.5" fill="#444">R4 to R6 on each board</text>
+  <text x="200" y="984" font-size="11.5" fill="#444" data-fig="r_out">330 &#937; resistor</text>
+  <text x="560" y="984" font-size="11.5" fill="#444">6</text>
+  <text x="20" y="1006" font-size="11.5" fill="#444">C1 on each board</text>
+  <text x="200" y="1006" font-size="11.5" fill="#444" data-fig="c_bypass">100 nF ceramic capacitor</text>
+  <text x="560" y="1006" font-size="11.5" fill="#444">2</text>
+  <text x="20" y="1028" font-size="11.5" fill="#444">C2 on each board</text>
+  <text x="200" y="1028" font-size="11.5" fill="#444" data-fig="c_one">Rubycon 16ZLH1000MEFC8X20, 1000 &#181;F, 16 V</text>
+  <text x="560" y="1028" font-size="11.5" fill="#444">2</text>
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="600" cy="250" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="940" cy="250" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>

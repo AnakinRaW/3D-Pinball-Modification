@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1360 1330" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1360" height="1330" fill="#ffffff"/>
+<svg viewBox="0 0 1360 1430" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1360" height="1430" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Solenoid boards</text>
   <text x="30" y="56" font-size="13" fill="#666">One drive channel and one sense channel drawn in full; the repeats are identical</text>
   <text x="30" y="76" font-size="13" fill="#666">The last digit of a designator is the channel</text>
@@ -240,15 +240,30 @@
   <!-- ===== Parts ===== -->
   <text x="40" y="1210" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
   <text x="40" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
-  <text x="180" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Function</text>
-  <text x="380" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Type</text>
-  <line x1="40" y1="1242" x2="560" y2="1242" stroke="#ccc" stroke-width="1"/>
+  <text x="270" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="590" y="1234" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="40" y1="1242" x2="620" y2="1242" stroke="#ccc" stroke-width="1"/>
   <text x="40" y="1262" font-size="11.5" fill="#444">Q1 to Q4</text>
-  <text x="180" y="1262" font-size="11.5" fill="#444">Coil switch</text>
-  <text x="380" y="1262" font-size="11.5" fill="#444">IRL540N, TO-220</text>
+  <text x="270" y="1262" font-size="11.5" fill="#444">IRL540N logic-level MOSFET, N-channel, TO-220</text>
+  <text x="590" y="1262" font-size="11.5" fill="#444">4</text>
   <text x="40" y="1284" font-size="11.5" fill="#444">D1 to D4</text>
-  <text x="180" y="1284" font-size="11.5" fill="#444">Flyback across the coil</text>
-  <text x="380" y="1284" font-size="11.5" fill="#444">1N5819, DO-41</text>
+  <text x="270" y="1284" font-size="11.5" fill="#444">1N5819 Schottky diode, DO-41</text>
+  <text x="590" y="1284" font-size="11.5" fill="#444">4</text>
+  <text x="40" y="1306" font-size="11.5" fill="#444">R21 to R24, R31 to R33, R41 to R43</text>
+  <text x="270" y="1306" font-size="11.5" fill="#444" data-fig="r_gate_pd">10 k&#937; resistor</text>
+  <text x="590" y="1306" font-size="11.5" fill="#444">10</text>
+  <text x="40" y="1328" font-size="11.5" fill="#444">R11 to R14</text>
+  <text x="270" y="1328" font-size="11.5" fill="#444" data-fig="r_gate">1.2 k&#937; resistor</text>
+  <text x="590" y="1328" font-size="11.5" fill="#444">4</text>
+  <text x="40" y="1350" font-size="11.5" fill="#444">C1 to C3</text>
+  <text x="270" y="1350" font-size="11.5" fill="#444" data-fig="c_filter">100 nF ceramic capacitor</text>
+  <text x="590" y="1350" font-size="11.5" fill="#444">3</text>
+  <text x="40" y="1372" font-size="11.5" fill="#444">R91</text>
+  <text x="270" y="1372" font-size="11.5" fill="#444" data-fig="r_foil">330 &#937; resistor</text>
+  <text x="590" y="1372" font-size="11.5" fill="#444">1</text>
+  <text x="40" y="1394" font-size="11.5" fill="#444">C91</text>
+  <text x="270" y="1394" font-size="11.5" fill="#444" data-fig="c_c91 v_c91_rating">KEMET ESL107M016AC3AA, 100 &#181;F, 16 V</text>
+  <text x="590" y="1394" font-size="11.5" fill="#444">1</text>
 
   <!-- ===== Placement ===== -->
   <text x="820" y="1210" font-size="13" font-weight="700" fill="#1a1a1a">Placement</text>

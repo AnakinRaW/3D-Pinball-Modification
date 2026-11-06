@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1200 1345" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1200" height="1345" fill="#ffffff"/>
+<svg viewBox="0 0 1200 1464" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1200" height="1464" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Display</text>
   <text x="30" y="56" font-size="13" fill="#666">The Teensy writes the Adafruit 2090 over an 8-bit bus and reads its touch controller over I²C through a level converter. The module runs from the power board</text>
 
@@ -311,4 +311,16 @@
   <circle cx="600" cy="1015" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="624" cy="965" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="624" cy="1015" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <!-- ===== Parts ===== -->
+  <text x="30" y="1360" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="30" y="1384" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="170" y="1384" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="620" y="1384" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="30" y1="1392" x2="650" y2="1392" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="1412" font-size="11.5" fill="#444">Display module</text>
+  <text x="170" y="1412" font-size="11.5" fill="#444">Adafruit 2090, 2.8" TFT with capacitive touch, ILI9341 and CST026</text>
+  <text x="620" y="1412" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="1434" font-size="11.5" fill="#444">Level converter</text>
+  <text x="170" y="1434" font-size="11.5" fill="#444">Adafruit 757, bidirectional logic level converter, BSS138</text>
+  <text x="620" y="1434" font-size="11.5" fill="#444">1</text>
 </svg>

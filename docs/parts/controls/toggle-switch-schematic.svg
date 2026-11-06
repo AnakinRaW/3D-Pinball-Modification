@@ -1,5 +1,5 @@
-<svg viewBox="0 0 820 330" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="820" height="330" fill="#ffffff"/>
+<svg viewBox="0 0 820 456" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="820" height="456" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Toggle switch</text>
   <text x="30" y="56" font-size="13" fill="#666" data-pin="Toggle switch">The stock toggle switch closes pin 32 to ground, and each game decides what it does</text>
 
@@ -48,4 +48,16 @@
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="240" cy="170" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="540" cy="170" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <!-- ===== Parts ===== -->
+  <text x="30" y="352" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="30" y="376" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="170" y="376" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="620" y="376" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="30" y1="384" x2="650" y2="384" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="404" font-size="11.5" fill="#444">Toggle switch</text>
+  <text x="170" y="404" font-size="11.5" fill="#444">Stock toggle switch (P26)</text>
+  <text x="620" y="404" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="426" font-size="11.5" fill="#444">R1</text>
+  <text x="170" y="426" font-size="11.5" fill="#444" data-fig="r_s kit_tol">1.2 kΩ resistor, 5 % or better</text>
+  <text x="620" y="426" font-size="11.5" fill="#444">1</text>
 </svg>

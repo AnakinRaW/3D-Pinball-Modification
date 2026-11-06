@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1180 640" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1180" height="640" fill="#ffffff"/>
+<svg viewBox="0 0 1180 890" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1180" height="890" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Servo</text>
   <text x="30" y="56" font-size="13" fill="#666">The servo board shifts the Teensy's pulse to the servo's level and feeds the servo from the power board</text>
 
@@ -179,6 +179,34 @@
   <text x="20" y="625" font-size="11.5" fill="#444">C1 at the servo's cable</text>
   <text x="200" y="625" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
   <text x="300" y="625" font-size="11.5" fill="#444">C1 takes the supply cable's current at a sudden stop</text>
+
+  <!-- ===== Parts ===== -->
+  <text x="20" y="670" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="20" y="694" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="180" y="694" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="480" y="694" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="20" y1="702" x2="520" y2="702" stroke="#ccc" stroke-width="1"/>
+  <text x="20" y="722" font-size="11.5" fill="#444">Ball separator servo</text>
+  <text x="180" y="722" font-size="11.5" fill="#444">DFRobot SER0049, 9 g micro servo with clutch</text>
+  <text x="480" y="722" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="744" font-size="11.5" fill="#444">U1</text>
+  <text x="180" y="744" font-size="11.5" fill="#444">CD74HCT125E quad buffer, DIP-14</text>
+  <text x="480" y="744" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="766" font-size="11.5" fill="#444">R1</text>
+  <text x="180" y="766" font-size="11.5" fill="#444" data-fig="r_pd">10 k&#937; resistor</text>
+  <text x="480" y="766" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="788" font-size="11.5" fill="#444">R2</text>
+  <text x="180" y="788" font-size="11.5" fill="#444" data-fig="r_series">1.2 k&#937; resistor</text>
+  <text x="480" y="788" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="810" font-size="11.5" fill="#444">R3</text>
+  <text x="180" y="810" font-size="11.5" fill="#444" data-fig="r_in">2.2 k&#937; resistor</text>
+  <text x="480" y="810" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="832" font-size="11.5" fill="#444">C2</text>
+  <text x="180" y="832" font-size="11.5" fill="#444" data-fig="c_bypass">100 nF ceramic capacitor</text>
+  <text x="480" y="832" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="854" font-size="11.5" fill="#444">C1</text>
+  <text x="180" y="854" font-size="11.5" fill="#444" data-fig="c_c1 v_c1_rating">KEMET ESL107M016AC3AA, 100 &#181;F, 16 V</text>
+  <text x="480" y="854" font-size="11.5" fill="#444">1</text>
 
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="730" cy="280" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>

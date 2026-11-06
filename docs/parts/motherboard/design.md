@@ -55,3 +55,20 @@ U1 reads the pins E-1 to E-8. It sits on `Wire` with SDA on pin [18](../../pin-a
 ### Hit targets
 
 The two bells come in at E-1 and E-2. They are [hit targets](../targets/design.md). Their foil takes its ground from the GND rail.
+
+## Part list
+
+Each part on the board is listed and counted by the subsystem it serves.
+
+| Qty | Part | Where | Listed in |
+|---|---|---|---|
+| 1 | Teensy 4.1 | in socket headers in the middle of the board | [`research/teensy-4.1.md`](../../research/teensy-4.1.md) |
+| 1 | DFRobot DFR0954, MAX98357A amplifier module | in socket headers beside the Teensy | [audio](../audio/design.md#part-list) |
+| 1 | Microchip MCP23008-E/P, PDIP-18 | U1 | [port expander](../port-expander/design.md#part-list) |
+| 2 | 1N5819 Schottky diode, DO-41 | D1, D2 | [power](../power/design.md) |
+| 1 | 1.2 kΩ resistor | R1 | [controls](../controls/design.md#part-list) |
+| 1 | 220 Ω resistor | R2 | [break beam](../break-beam/design.md#part-list) |
+| 1 | 100 kΩ resistor | R3 | [break beam](../break-beam/design.md#part-list) |
+| 1 | 100 kΩ resistor | R4 | [audio](../audio/design.md#part-list) |
+| 2 | 4.7 kΩ resistor | R5, R6 | [port expander](../port-expander/design.md#part-list) |
+| 1 | 100 nF ceramic capacitor | C1 | [port expander](../port-expander/design.md#part-list) |

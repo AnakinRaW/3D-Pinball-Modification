@@ -133,6 +133,10 @@ Groups that usually carry one:
 
 Where several groups exist, list them in a placement table clear of the circuit body: group, members, maximum distance, reason.
 
+## Parts table
+
+Every schematic under `docs/parts/` ends with a table headed Parts, at the bottom left: Ref, Part, Qty, one row for each row of the subsystem's part list, copied from it. Heading 13 bold, header row 12 bold `#1a1a1a`, a `#ccc` rule under it, rows 11.5 `#444` at 22 apart.
+
 ## Known limitation
 
 The white background is fixed, so these render as a bright panel against a dark GitHub theme. Changing it means reworking every existing diagram's contrast, so it stays until that is decided.

@@ -1,10 +1,10 @@
-<svg viewBox="0 0 2900 2960" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg viewBox="0 0 2900 3260" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <defs>
     <pattern id="holes" width="24" height="24" patternUnits="userSpaceOnUse">
       <circle cx="12" cy="12" r="2.4" fill="#dcd7cb"/>
     </pattern>
   </defs>
-  <rect x="0" y="0" width="2900" height="2960" fill="#ffffff"/>
+  <rect x="0" y="0" width="2900" height="3260" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Teensy motherboard on a perfboard</text>
   <text x="30" y="56" font-size="13" fill="#666">The GND rail along the top edge, the 3V3 rail along the bottom edge, every connector at the board edge with its pins on one side</text>
   <rect x="30" y="70" width="2840" height="2860" rx="10" fill="#f4f2ec" stroke="#1a1a1a" stroke-width="2.5"/>
@@ -767,4 +767,51 @@
   <line x1="154" y1="2512" x2="194" y2="2512" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square"/>
   <text x="204" y="2516" font-size="12" font-weight="700" fill="#4d4d4d">I2C, and a signal on the</text>
   <text x="204" y="2532" font-size="12" font-weight="700" fill="#4d4d4d" data-fig="lighting:v_rail">5 V side of a shifter or load</text>
+  <!-- ===== Parts ===== -->
+  <text x="30" y="2976" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="30" y="3000" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="230" y="3000" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="560" y="3000" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <text x="620" y="3000" font-size="12" font-weight="700" fill="#1a1a1a">Listed in</text>
+  <line x1="30" y1="3008" x2="820" y2="3008" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="3028" font-size="11.5" fill="#444">Controller</text>
+  <text x="230" y="3028" font-size="11.5" fill="#444">Teensy 4.1</text>
+  <text x="560" y="3028" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3028" font-size="11.5" fill="#444">research, teensy-4.1.md</text>
+  <text x="30" y="3050" font-size="11.5" fill="#444">Amplifier module</text>
+  <text x="230" y="3050" font-size="11.5" fill="#444">DFRobot DFR0954, MAX98357A amplifier module</text>
+  <text x="560" y="3050" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3050" font-size="11.5" fill="#444">audio</text>
+  <text x="30" y="3072" font-size="11.5" fill="#444">U1</text>
+  <text x="230" y="3072" font-size="11.5" fill="#444">Microchip MCP23008-E/P, PDIP-18</text>
+  <text x="560" y="3072" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3072" font-size="11.5" fill="#444">port expander</text>
+  <text x="30" y="3094" font-size="11.5" fill="#444">D1 and D2</text>
+  <text x="230" y="3094" font-size="11.5" fill="#444">1N5819 Schottky diode, DO-41</text>
+  <text x="560" y="3094" font-size="11.5" fill="#444">2</text>
+  <text x="620" y="3094" font-size="11.5" fill="#444">power</text>
+  <text x="30" y="3116" font-size="11.5" fill="#444">R1</text>
+  <text x="230" y="3116" font-size="11.5" fill="#444" data-fig="r_s">1.2 kΩ resistor</text>
+  <text x="560" y="3116" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3116" font-size="11.5" fill="#444">controls</text>
+  <text x="30" y="3138" font-size="11.5" fill="#444">R2</text>
+  <text x="230" y="3138" font-size="11.5" fill="#444" data-fig="break-beam:r_e">220 Ω resistor</text>
+  <text x="560" y="3138" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3138" font-size="11.5" fill="#444">break beam</text>
+  <text x="30" y="3160" font-size="11.5" fill="#444">R3</text>
+  <text x="230" y="3160" font-size="11.5" fill="#444" data-fig="break-beam:r_pu">100 kΩ resistor</text>
+  <text x="560" y="3160" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3160" font-size="11.5" fill="#444">break beam</text>
+  <text x="30" y="3182" font-size="11.5" fill="#444">R4</text>
+  <text x="230" y="3182" font-size="11.5" fill="#444" data-fig="audio:r_gain">100 kΩ resistor</text>
+  <text x="560" y="3182" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3182" font-size="11.5" fill="#444">audio</text>
+  <text x="30" y="3204" font-size="11.5" fill="#444">R5 and R6</text>
+  <text x="230" y="3204" font-size="11.5" fill="#444" data-fig="port-expander:r_pu_board">4.7 kΩ resistor</text>
+  <text x="560" y="3204" font-size="11.5" fill="#444">2</text>
+  <text x="620" y="3204" font-size="11.5" fill="#444">port expander</text>
+  <text x="30" y="3226" font-size="11.5" fill="#444">C1</text>
+  <text x="230" y="3226" font-size="11.5" fill="#444" data-fig="port-expander:c1">100 nF ceramic capacitor</text>
+  <text x="560" y="3226" font-size="11.5" fill="#444">1</text>
+  <text x="620" y="3226" font-size="11.5" fill="#444">port expander</text>
 </svg>

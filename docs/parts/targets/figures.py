@@ -36,6 +36,7 @@ dec("t_fail_contacts", 1, "s", src="how long no read of the port expander may wo
     "contacts count as failed: long enough for several of the driver tick's reads, short enough "
     "for a game to react")
 MODEL.uses("t_poll", of="port-expander")
+MODEL.names("D031", "D070", why="the MCP23008 datasheet's parameter numbers for the low threshold and the weak pull-up current, which the Sources cite")
 MODEL.draws(pool="device monitor")   # the contact driver watched by the device monitor
 
 # -- requirements -------------------------------------------------------------

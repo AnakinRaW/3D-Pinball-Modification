@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1606 780" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1606" height="780" fill="#ffffff"/>
+<svg viewBox="0 0 1606 940" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1606" height="940" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Power board</text>
   <text x="30" y="56" font-size="13" fill="#666" data-fig="v_rail">5 V from the adapter to every subsystem, with optional reverse-polarity protection, bulk at the input and an optional fuse for the outputs that draw little current</text>
   <!-- ===== adapter and barrel jack ===== -->
@@ -198,4 +198,22 @@
   <text x="20" y="745" font-size="11.5" fill="#444">the GND star point</text>
   <text x="220" y="745" font-size="11.5" fill="#444">one point</text>
   <text x="320" y="745" font-size="11.5" fill="#444">no coil, LED or servo current crosses another output's ground</text>
+  <!-- ===== Parts ===== -->
+  <text x="20" y="790" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="20" y="814" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="200" y="814" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="600" y="814" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="20" y1="822" x2="640" y2="822" stroke="#ccc" stroke-width="1"/>
+  <text x="20" y="842" font-size="11.5" fill="#444">Q1</text>
+  <text x="200" y="842" font-size="11.5" fill="#444">STP160N3LL, N-channel MOSFET, TO-220</text>
+  <text x="600" y="842" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="864" font-size="11.5" fill="#444">R1</text>
+  <text x="200" y="864" font-size="11.5" fill="#444" data-fig="r_gate">10 k&#937; resistor</text>
+  <text x="600" y="864" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="886" font-size="11.5" fill="#444">F1</text>
+  <text x="200" y="886" font-size="11.5" fill="#444" data-fig="i_f1">T2A fuse, 2 A time-lag, 5 &#215; 20 mm, in a 5 &#215; 20 mm holder</text>
+  <text x="600" y="886" font-size="11.5" fill="#444">1</text>
+  <text x="20" y="908" font-size="11.5" fill="#444">C1 and C2</text>
+  <text x="200" y="908" font-size="11.5" fill="#444" data-fig="c_one v_c_rating">Rubycon 16ZLH1000MEFC8X20, 1000 &#181;F, 16 V</text>
+  <text x="600" y="908" font-size="11.5" fill="#444">2</text>
 </svg>

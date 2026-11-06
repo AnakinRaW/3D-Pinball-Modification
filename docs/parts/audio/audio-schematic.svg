@@ -1,5 +1,5 @@
-<svg viewBox="0 0 1230 600" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="1230" height="600" fill="#ffffff"/>
+<svg viewBox="0 0 1230 714" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1230" height="714" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Audio output</text>
   <text x="30" y="56" font-size="13" fill="#666" data-fig="r_spk v_dd">The Teensy sends I²S to a MAX98357A module beside it on the motherboard, which drives the stock 8 Ω speaker from the machine's 5 V</text>
 
@@ -135,4 +135,16 @@
   <circle cx="820" cy="372" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="1080" cy="312" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="1080" cy="372" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <!-- ===== Parts ===== -->
+  <text x="30" y="610" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
+  <text x="30" y="634" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
+  <text x="170" y="634" font-size="12" font-weight="700" fill="#1a1a1a">Part</text>
+  <text x="620" y="634" font-size="12" font-weight="700" fill="#1a1a1a">Qty</text>
+  <line x1="30" y1="642" x2="650" y2="642" stroke="#ccc" stroke-width="1"/>
+  <text x="30" y="662" font-size="11.5" fill="#444">Amplifier module</text>
+  <text x="170" y="662" font-size="11.5" fill="#444">DFRobot DFR0954, MAX98357A amplifier module</text>
+  <text x="620" y="662" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="684" font-size="11.5" fill="#444">R4</text>
+  <text x="170" y="684" font-size="11.5" fill="#444" data-fig="r_gain r_gain_tol">100 kΩ resistor, 5 % or better</text>
+  <text x="620" y="684" font-size="11.5" fill="#444">1</text>
 </svg>
