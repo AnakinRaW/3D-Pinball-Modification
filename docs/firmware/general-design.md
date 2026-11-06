@@ -111,6 +111,12 @@ inline bool elapsedMs(uint32_t t, uint32_t span) { return nowUs() - t >= span * 
 inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
 ```
 
+## Priority lists
+
+A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. [`firmware/gist/priority-list.h`](../../firmware/gist/priority-list.h) holds it as `PriorityList`.
+
+Two parts of the firmware are built on it. The [lamps component](components/lamps.md#overlapping-effects) keeps each lamp's effects in one, and a game's [mode stack](game-abstraction.md#modes) keeps the running modes in one.
+
 ## Main program
 
 `setup()` starts the [clock](#time-measurement), creates the main task and starts FreeRTOS. The main task then runs, in this order:

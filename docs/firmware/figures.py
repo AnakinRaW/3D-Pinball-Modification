@@ -12,6 +12,7 @@ fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.ignores("README.md", "the index of the firmware documents for a visitor, which states no figure")
 dec("n_balls_example", 3, "", src="the balls the example game in game-abstraction.md starts with")
 dec("points_lane_example", 100, "", src="the points the example game gives for a lane it passes")
+dec("t_ball_save_example", 10000, "", src="kSaveMs, the milliseconds the example game's ball save holds after a launch")
 
 CORE = "PJRC's cores/teensy4"
 IRQ = "Interrupts"
