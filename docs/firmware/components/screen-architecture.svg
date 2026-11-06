@@ -53,7 +53,7 @@
   <text x="54" y="302" font-size="11.5" fill="#333">translate(): an object under</text>
   <text x="54" y="318" font-size="11.5" fill="#333">the finger takes the touch,</text>
   <text x="54" y="334" font-size="11.5" fill="#333">else a tap or a hold</text>
-  <text x="54" y="354" font-size="11.5" fill="#333">update(): lv_timer_handler()</text>
+  <text x="54" y="354" font-size="11.5" fill="#333">render(): lv_timer_handler()</text>
   <text x="54" y="374" font-size="11.5" fill="#333">widen(): whole rows</text>
   <text x="54" y="394" font-size="11.5" fill="#333">flush(): the rows to the driver</text>
   <text x="54" y="414" font-size="11.5" fill="#333">reset(): the game's objects</text>

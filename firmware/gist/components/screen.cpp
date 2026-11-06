@@ -60,7 +60,7 @@ public:
 
     // runs LVGL: its timers, the handlers of its controls and the redraw, except while the display
     // restarts; the main loop calls it in every pass
-    void update();
+    void render();
 
     lv_obj_t* layer() { return lv_screen_active(); }   // gets the game's layer, the parent of the game's objects
     lv_obj_t* background() { return back_; }           // gets the game's background, the parent of what lies behind everything else
@@ -212,7 +212,7 @@ void Screen::showLayer(bool shown) {
     lv_obj_set_hidden(lv_screen_active(), !shown);
 }
 
-void Screen::update() {
+void Screen::render() {
     for (Picture* p = first_; p; p = p->next_) p->settle();   // header and pixels landed, room left waiting
     if (display_.restarting()) return;       // LVGL rests while the panel restarts, so it never waits for it
     if (redraw_) {
@@ -222,7 +222,7 @@ void Screen::update() {
     lv_timer_handler();                      // a refresh finds the last picture off the bus
 }
 
-// the panel's setup; update() redraws the whole screen once the panel is back
+// the panel's setup; render() redraws the whole screen once the panel is back
 void Screen::restart() {
     display_.restart();
     redraw_ = true;

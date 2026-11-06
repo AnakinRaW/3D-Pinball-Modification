@@ -15,9 +15,9 @@ When the host switches games, the component deletes the stopped game's objects a
 
 The game and the host place and update labels, images, buttons, lines and other LVGL objects on their layers. LVGL redraws only the parts of the screen that changed. It draws in RGB565 with smooth edges. Every object may be partly transparent.
 
-LVGL draws in the main loop, in `update()`. It keeps two buffers of the whole screen in RAM2 and draws the next picture into one while the driver sends the other. LVGL copies what changed into the other buffer itself. The component hands the full-width of the affected rows to the driver. LVGL never waits for the driver, because even a whole screen has left the bus before the next refresh. A whole screen takes 12.8 ms on the bus. LVGL refreshes the screen every 33 ms.
+LVGL draws in the main loop, in `render()`. It keeps two buffers of the whole screen in RAM2 and draws the next picture into one while the driver sends the other. LVGL copies what changed into the other buffer itself. The component hands the full-width of the affected rows to the driver. LVGL never waits for the driver, because even a whole screen has left the bus before the next refresh. A whole screen takes 12.8 ms on the bus. LVGL refreshes the screen every 33 ms.
 
-When the player presses a button, LVGL calls the function the game or the host gave that button. LVGL calls it from `update()`, so it runs in the main task like every other call into the game.
+When the player presses a button, LVGL calls the function the game or the host gave that button. LVGL calls it from `render()`, so it runs in the main task like every other call into the game.
 
 ## Pictures
 
@@ -67,7 +67,7 @@ public:
 
     // runs LVGL: its timers, the handlers of its controls and the redraw, except while the display
     // restarts; the main loop calls it in every pass
-    void update();
+    void render();
 
     lv_obj_t* layer();                       // gets the game's layer, the parent of the game's objects
     lv_obj_t* background();                  // gets the game's background, the parent of what lies behind everything else

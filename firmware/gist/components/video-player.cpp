@@ -57,7 +57,7 @@ private:
 
 void VideoPlayer::begin() {
     out_ = &events.attach(queue_, kDepth);
-    lv_timer_create(tick, 0, this);          // a period of 0: every lv_timer_handler() runs it, inside the screen's update()
+    lv_timer_create(tick, 0, this);          // a period of 0: every lv_timer_handler() runs it, inside the screen's render()
 }
 
 bool VideoPlayer::play(const char* name, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool loop, bool sound) {

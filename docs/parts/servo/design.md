@@ -1,6 +1,6 @@
 # Servo
 
-This build uses a DFRobot SER0049 9 g micro servo with a clutch. It's planned as the driver for a ball-separating mechanism in the ball drain lane.
+This build uses a DFRobot SER0049 9 g micro servo with a clutch. It's planned as the driver for a ball-separating mechanism in the ball drain lane. The [drain component](../../firmware/components/drain.md#ball-store) sketches that mechanism.
 
 ## Requirements
 

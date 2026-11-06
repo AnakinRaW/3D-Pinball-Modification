@@ -152,7 +152,7 @@ static void machineTask(void*) {
         const uint32_t now = nowUs();
         host.update(now);
         logger.update(now);                 // writes the collected log lines once a second
-        screen.update();                    // lands pictures and runs LVGL: the video player's timer and the redraw
+        screen.render();                    // lands pictures and runs LVGL: the video player's timer and the redraw
         lamps.update(now);                  // advances every lamp's effect and hands on a frame once its period has passed
         yield();                            // serial events and EventResponder, which no Arduino loop() runs under FreeRTOS
 

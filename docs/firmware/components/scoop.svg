@@ -1,0 +1,41 @@
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="420" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Scoop, side view</text>
+  <!-- ===== Ball in the scoop ===== -->
+  <text x="40" y="70" font-size="14" font-weight="700" fill="#1a1a1a">Ball in the scoop</text>
+  <rect x="40" y="150" width="156" height="26" fill="#efe4cf" stroke="#a08850" stroke-width="1.5"/>
+  <rect x="224" y="150" width="196" height="26" fill="#efe4cf" stroke="#a08850" stroke-width="1.5"/>
+  <text x="50" y="167" font-size="11.5" fill="#7a6a4a">playfield</text>
+  <rect x="169" y="196" width="68" height="80" rx="4" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="249" y="234" font-size="12.5" font-weight="700" fill="#7a2556">coil</text>
+  <text x="249" y="251" font-size="11.5" fill="#666">no return spring</text>
+  <rect x="198" y="158" width="10" height="148" fill="#d9d9d9" stroke="#666" stroke-width="1.5"/>
+  <text x="157" y="304" font-size="11.5" fill="#666" text-anchor="end">armature, down by gravity</text>
+  <circle cx="210" cy="135.7" r="20" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <polygon points="144,138.0 204.0,105.7 204.0,149.7" fill="#2e7d32" fill-opacity="0.15" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="114" y="126" width="30" height="24" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="129.0" y="118" font-size="11.5" fill="#2e7d32" text-anchor="middle">IR</text>
+  <circle cx="300" cy="136" r="9" fill="#fff4c2" stroke="#c99a06" stroke-width="2"/>
+  <text x="316" y="140" font-size="11.5" fill="#8a6d0b">scoop lamp</text>
+  <text x="40" y="341" font-size="12" fill="#444">ball resting on the rim of the hole, IR reports it</text>
+  <!-- ===== Coil fired ===== -->
+  <text x="480" y="70" font-size="14" font-weight="700" fill="#1a1a1a">Coil fired</text>
+  <rect x="480" y="150" width="156" height="26" fill="#efe4cf" stroke="#a08850" stroke-width="1.5"/>
+  <rect x="664" y="150" width="196" height="26" fill="#efe4cf" stroke="#a08850" stroke-width="1.5"/>
+  <text x="490" y="167" font-size="11.5" fill="#7a6a4a">playfield</text>
+  <rect x="609" y="196" width="68" height="80" rx="4" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="689" y="234" font-size="12.5" font-weight="700" fill="#7a2556">coil</text>
+  <text x="689" y="251" font-size="11.5" fill="#666">no return spring</text>
+  <rect x="638" y="138" width="10" height="168" fill="#d9d9d9" stroke="#666" stroke-width="1.5"/>
+  <text x="597" y="304" font-size="11.5" fill="#666" text-anchor="end">armature</text>
+  <circle cx="760" cy="129" r="20" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <line x1="788" y1="129" x2="820" y2="129" stroke="#666" stroke-width="2"/>
+  <polygon points="820,123 830,129 820,135" fill="#666"/>
+  <text x="760" y="99" font-size="11.5" fill="#444" text-anchor="middle">rolls back out</text>
+  <polygon points="593,236 599,218 605,236" fill="#a8437a"/>
+  <line x1="599" y1="236" x2="599" y2="276" stroke="#a8437a" stroke-width="2"/>
+  <text x="589" y="232" font-size="11.5" fill="#a8437a" text-anchor="end">pulls up</text>
+  <text x="480" y="341" font-size="12" fill="#444">coil pulled: the armature lifts the ball off center, and it rolls back out</text>
+  <line x1="445" y1="56" x2="445" y2="360" stroke="#ddd" stroke-width="1"/>
+  <text x="30" y="396" font-size="11.5" fill="#666">Where the IR sensor and the lamp sit at the scoop is not decided. The drawing shows only that the IR channel sees the resting ball.</text>
+</svg>

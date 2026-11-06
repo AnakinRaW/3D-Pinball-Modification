@@ -1,8 +1,10 @@
 """The figures of the servo, its buffer and its supply, as inputs plus formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "servo", drawings=["servo-schematic.svg"],
-                 documents=["../../firmware/drivers/servo.md"])
+MODEL = Model.at(__file__, "servo", drawings=["servo-schematic.svg",
+                                             "../../firmware/components/drain-ball-store.svg"],
+                 documents=["../../firmware/drivers/servo.md",
+                            "../../firmware/components/drain.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
 SERVO = "SER0049-DFRobot.pdf"
@@ -209,6 +211,11 @@ with MODEL.block("SUPPLY", section=SUPPLY):
     dec("t_load_timeout", 40, "ms", stated=False, src="how long PWMServoT4's attach() waits for the "
         "timer to take the no-pulse setting before it fails: two frames, while the next reload comes "
         "within one")
+    asm("t_rollup", 2, "s", stated=False, src="how long the second ball in the store takes to roll "
+        "from back up to front over the track's slight slope, estimated on the mechanism, docs/firmware/components/drain.md")
+    asm("t_roll", 2, "s", stated=False, src="how long the drain component waits past the servo's "
+        "travel for a released ball to reach the exit channel; the seesaw and the lane are not "
+        "built yet, docs/firmware/components/drain.md")
     dec("t_hold_mid", 500, "ms", stated=False, src="how long the first pulse after power-up stays "
         "at the middle between the end positions before the slow move to the start position; "
         "the SER0049 sheet states no speed, and a servo still moving when the hold ends only "

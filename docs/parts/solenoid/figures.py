@@ -3,8 +3,10 @@ from math import inf
 
 from figcheck import *
 
-MODEL = Model.at(__file__, "solenoid", drawings=["board-schematic.svg"],
-                 documents=["../../firmware/drivers/solenoid.md"])
+MODEL = Model.at(__file__, "solenoid", drawings=["board-schematic.svg",
+                                                 "../../firmware/components/scoop.svg"],
+                 documents=["../../firmware/drivers/solenoid.md",
+                            "../../firmware/components/scoop.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
 DIODE = "1N5817-1N5819-TSC.pdf"

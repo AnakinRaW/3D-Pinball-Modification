@@ -55,6 +55,8 @@ The component however is not required to convert every driver event to a pinball
 
 A component may make several pinball events of one driver event. It keeps them in an array that is big enough for the most it can make at once. The `out` parameter contains the pointer and size to that array.
 
+A component with timed work, such as the [drain](components/drain.md)'s wait for a released ball, does it in `update()`. The host calls `update()` of every component once per pass of the main loop, before the game's `update()`, and in every phase of the game. A component without timed work keeps the empty default.
+
 Components are described under [`components/`](components/).
 
 ## Saved data
@@ -101,6 +103,9 @@ public:
 
     // takes a driver event of the component's parts and points out at the pinball events it made of it, if any; false for any other
     virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
+
+    // runs the component's timed work; the host calls it once per pass of the loop, before the game's update()
+    virtual void update(uint32_t now) {}
 };
 
 // the three top roll-over lanes, each with its IR channel
@@ -138,7 +143,7 @@ public:
     void add(Component& component);            // routes the driver events of the component's parts through it
     void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes and reads which game ran last, or the default game; the first update() launches it
     void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
-    void update(uint32_t now);                 // updates the running game, and moves it on once its phase is done
+    void update(uint32_t now);                 // updates every component, then the running game, and moves the game on once its phase is done
     void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
 };
 ```

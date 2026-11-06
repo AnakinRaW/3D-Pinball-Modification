@@ -1,0 +1,78 @@
+<svg viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1100" height="420" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Ball store, side view</text>
+  <!-- ===== Start position ===== -->
+  <text x="40" y="70" font-size="14" font-weight="700" fill="#1a1a1a">Start position</text>
+  <line x1="40" y1="210" x2="299" y2="210" stroke="#a08850" stroke-width="5"/>
+  <line x1="309" y1="210" x2="347" y2="210" stroke="#a08850" stroke-width="5"/>
+  <line x1="357" y1="210" x2="520" y2="210" stroke="#a08850" stroke-width="5"/>
+  <polygon points="520,203 535,210 520,217" fill="#a08850"/>
+  <text x="535" y="234" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
+  <text x="40" y="234" font-size="11.5" fill="#7a6a4a">from the drain</text>
+  <circle cx="90" cy="188" r="7" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <line x1="85" y1="183" x2="95" y2="193" stroke="#c0392b" stroke-width="2"/>
+  <line x1="85" y1="193" x2="95" y2="183" stroke="#c0392b" stroke-width="2"/>
+  <text x="90" y="172" font-size="11.5" fill="#c0392b" text-anchor="middle">break beam</text>
+  <line x1="304" y1="256" x2="352" y2="226" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <line x1="304" y1="256" x2="304" y2="212" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <line x1="352" y1="226" x2="352" y2="182" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="328,241.0 319,257.0 337,257.0" fill="#dbe7f5" stroke="#2b6cb0" stroke-width="1.5"/>
+  <circle cx="328" cy="241.0" r="3" fill="#2b6cb0"/>
+  <text x="312" y="292" font-size="11.5" fill="#2b6cb0" text-anchor="end">seesaw</text>
+  <rect x="410" y="290" width="96" height="40" rx="5" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="458" y="315" font-size="12.5" font-weight="700" fill="#7a2556" text-anchor="middle">servo</text>
+  <circle cx="424" cy="290" r="4" fill="#a8437a"/>
+  <line x1="424" y1="290" x2="352" y2="226" stroke="#666" stroke-width="2"/>
+  <text x="450" y="280" font-size="11.5" fill="#666">pushrod</text>
+  <rect x="262" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="282" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">back</text>
+  <line x1="282" y1="120" x2="282" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="310" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="330" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">front</text>
+  <line x1="330" y1="120" x2="330" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="440" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="460" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">exit</text>
+  <line x1="460" y1="120" x2="460" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <circle cx="282" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <circle cx="330" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <text x="40" y="360" font-size="12" fill="#444">front finger up holds the front ball</text>
+  <!-- ===== End position ===== -->
+  <text x="590" y="70" font-size="14" font-weight="700" fill="#1a1a1a">End position</text>
+  <line x1="590" y1="210" x2="849" y2="210" stroke="#a08850" stroke-width="5"/>
+  <line x1="859" y1="210" x2="897" y2="210" stroke="#a08850" stroke-width="5"/>
+  <line x1="907" y1="210" x2="1070" y2="210" stroke="#a08850" stroke-width="5"/>
+  <polygon points="1070,203 1085,210 1070,217" fill="#a08850"/>
+  <text x="1085" y="234" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
+  <text x="590" y="234" font-size="11.5" fill="#7a6a4a">from the drain</text>
+  <circle cx="640" cy="188" r="7" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <line x1="635" y1="183" x2="645" y2="193" stroke="#c0392b" stroke-width="2"/>
+  <line x1="635" y1="193" x2="645" y2="183" stroke="#c0392b" stroke-width="2"/>
+  <text x="640" y="172" font-size="11.5" fill="#c0392b" text-anchor="middle">break beam</text>
+  <line x1="854" y1="226" x2="902" y2="256" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <line x1="854" y1="226" x2="854" y2="182" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <line x1="902" y1="256" x2="902" y2="212" stroke="#2b6cb0" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="878,241.0 869,257.0 887,257.0" fill="#dbe7f5" stroke="#2b6cb0" stroke-width="1.5"/>
+  <circle cx="878" cy="241.0" r="3" fill="#2b6cb0"/>
+  <text x="862" y="292" font-size="11.5" fill="#2b6cb0" text-anchor="end">seesaw</text>
+  <rect x="960" y="290" width="96" height="40" rx="5" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <text x="1008" y="315" font-size="12.5" font-weight="700" fill="#7a2556" text-anchor="middle">servo</text>
+  <circle cx="974" cy="290" r="4" fill="#a8437a"/>
+  <line x1="974" y1="290" x2="902" y2="256" stroke="#666" stroke-width="2"/>
+  <text x="1000" y="280" font-size="11.5" fill="#666">pushrod</text>
+  <rect x="812" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="832" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">back</text>
+  <line x1="832" y1="120" x2="832" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="860" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="880" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">front</text>
+  <line x1="880" y1="120" x2="880" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="990" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="1010" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">exit</text>
+  <line x1="1010" y1="120" x2="1010" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <circle cx="832" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <circle cx="1010" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
+  <line x1="1040" y1="185.5" x2="1066" y2="185.5" stroke="#666" stroke-width="2"/>
+  <polygon points="1066,179.5 1076,185.5 1066,191.5" fill="#666"/>
+  <text x="590" y="360" font-size="12" fill="#444">rear finger up holds the back ball</text>
+  <line x1="550" y1="56" x2="550" y2="370" stroke="#ddd" stroke-width="1"/>
+  <text x="30" y="400" font-size="11.5" fill="#666">IR channels are drawn above the track to show where along it they sit. The track slopes toward the plunger lane.</text>
+</svg>

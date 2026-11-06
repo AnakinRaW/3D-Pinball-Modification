@@ -33,6 +33,9 @@ public:
 
     // takes a driver event of the component's parts and points out at the pinball events it made of it, if any; false for any other
     virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
+
+    // runs the component's timed work; the host calls it once per pass of the loop, before the game's update()
+    virtual void update(uint32_t now) {}
 };
 
 // the three top roll-over lanes, each with its IR channel
@@ -70,7 +73,7 @@ public:
     void add(Component& component);            // routes the driver events of the component's parts through it
     void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes and reads which game ran last, or the default game; the first update() launches it
     void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
-    void update(uint32_t now);                 // updates the running game, and moves it on once its phase is done
+    void update(uint32_t now);                 // updates every component, then the running game, and moves the game on once its phase is done
     void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
 
 private:
@@ -131,6 +134,7 @@ bool GameHost::service(const DriverEvent& in, PinballEvent& out) {
 }
 
 void GameHost::update(uint32_t now) {
+    for (size_t i = 0; i < componentCount_; ++i) components_[i]->update(now);   // in every phase, before the game
     if (first_) {                               // the game begin() read
         launch(first_);
         first_ = nullptr;

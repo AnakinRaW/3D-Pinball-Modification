@@ -1,6 +1,6 @@
 # Rotating seal component
 
-The component turns the rod's movements into the event a game uses of the rotating seal. The [magnetic rotary sensor driver](../drivers/magnetic-rotary.md) reports where the rod stands and when it comes to rest, and the host hands those events to this component alone, as [`game-abstraction.md`](../game-abstraction.md#playfield-components) describes.
+The rotating seal component gives a game access to the rotating seal. It reports a shot that turns the seal. The [magnetic rotary sensor driver](../drivers/magnetic-rotary.md) reports where the rod stands and when it comes to rest, and the host hands those events to this component alone, as [`game-abstraction.md`](../game-abstraction.md#playfield-components) describes.
 
 ## Requirements
 
