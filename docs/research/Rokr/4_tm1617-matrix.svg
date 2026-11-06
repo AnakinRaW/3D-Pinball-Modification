@@ -16,6 +16,7 @@
   <path d="M 300 433 A 7 7 0 0 1 300 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="300" y1="447" x2="300" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="307" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG5</text>
+  <text x="307" y="229" font-size="10" fill="#777">pin 6</text>
   <circle cx="360" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="360" y1="196" x2="360" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 360 313 A 7 7 0 0 1 360 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -25,6 +26,7 @@
   <path d="M 360 433 A 7 7 0 0 1 360 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="360" y1="447" x2="360" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="367" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG6</text>
+  <text x="367" y="229" font-size="10" fill="#777">pin 7</text>
   <circle cx="420" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="420" y1="196" x2="420" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 420 313 A 7 7 0 0 1 420 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -34,6 +36,7 @@
   <path d="M 420 433 A 7 7 0 0 1 420 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="420" y1="447" x2="420" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="427" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG7</text>
+  <text x="427" y="229" font-size="10" fill="#777">pin 8</text>
   <circle cx="480" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="480" y1="196" x2="480" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 480 313 A 7 7 0 0 1 480 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -43,6 +46,7 @@
   <path d="M 480 433 A 7 7 0 0 1 480 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="480" y1="447" x2="480" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="487" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG8</text>
+  <text x="487" y="229" font-size="10" fill="#777">pin 9</text>
   <circle cx="540" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="540" y1="196" x2="540" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 540 313 A 7 7 0 0 1 540 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -52,6 +56,7 @@
   <path d="M 540 433 A 7 7 0 0 1 540 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="540" y1="447" x2="540" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="547" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG9</text>
+  <text x="547" y="229" font-size="10" fill="#777">pin 10</text>
   <circle cx="600" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="600" y1="196" x2="600" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 600 313 A 7 7 0 0 1 600 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -61,6 +66,7 @@
   <path d="M 600 433 A 7 7 0 0 1 600 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="600" y1="447" x2="600" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="607" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG10</text>
+  <text x="607" y="229" font-size="10" fill="#777">pin 11</text>
   <circle cx="660" cy="190" r="6" fill="#f1c40f" stroke="#b7950b" stroke-width="2"/>
   <line x1="660" y1="196" x2="660" y2="313" stroke="#b7950b" stroke-width="2.5"/>
   <path d="M 660 313 A 7 7 0 0 1 660 327" fill="none" stroke="#b7950b" stroke-width="2.5"/>
@@ -70,6 +76,7 @@
   <path d="M 660 433 A 7 7 0 0 1 660 447" fill="none" stroke="#b7950b" stroke-width="2.5"/>
   <line x1="660" y1="447" x2="660" y2="470" stroke="#b7950b" stroke-width="2.5"/>
   <text x="667" y="216" font-size="11" font-weight="700" fill="#8a6d0b">SEG11</text>
+  <text x="667" y="229" font-size="10" fill="#777">pin 12</text>
   <circle cx="280" cy="180" r="6" fill="#8a2be2"/>
   <line x1="274" y1="180" x2="200" y2="180" stroke="#8a2be2" stroke-width="2.5"/>
   <line x1="200" y1="180" x2="200" y2="320" stroke="#8a2be2" stroke-width="2.5"/>

@@ -18,6 +18,7 @@ The SVG, and the markdown describing the circuit it depicts. Reviewing an SVG wi
 - Every component in the document appears in the diagram, and nothing appears that the document does not name.
 - Every component **value** matches: resistors, capacitors, voltages, currents.
 - Every pin number and pin name matches, including the connector pinouts.
+- Every pin of an IC shows its number beside its name, as the datasheet's pinout for the through-hole package gives it.
 - Every net in the document is drawn, with the same endpoints.
 
 Any mismatch is reported as a finding against the diagram. The document is the authority.

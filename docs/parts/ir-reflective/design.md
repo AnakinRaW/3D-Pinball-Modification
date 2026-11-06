@@ -221,7 +221,7 @@ The two rails differ by the 66 mV R39 drops. 3V3 feeds Pin 1 of every sensor con
 
 In the machine the board keeps its own rail, so either side can be live while the other is dark, in any order. [Teensy pins must not be driven while the controller is off](../../research/teensy-4.1.md#driving-a-pin-while-the-board-is-unpowered), and a converter input must not be driven while its own supply is off.
 
-**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, VCC2 from the board's rail. The grounds stay common, J-IR-TEENSY pin 8 onto the board's pour, so what the part separates is the two supplies. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
+**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, VCC2 from the board's rail. Each side also has its own ground. GND1 takes the Teensy's ground over J-IR-TEENSY pin 8 and returns side 1 and C3 alone. GND2 sits on the board's pour, which takes its ground from J-IR alone. The board thus reaches the star point on one path, and the LED bus returns its current without crossing the Teensy's ground. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
 
 The four resistors around U3 keep the DOUT path defined: R37 and R38 bound the current if both converters drive it at once, R36 holds it at a level when neither does, and R34 bounds the current should the Teensy's MISO pin and U3's output ever drive against each other.
 
@@ -239,7 +239,7 @@ VOUT powers the board, U3's side 2 with it: in the machine from the D24V5F3, on 
 
 **To the Teensy**, J-IR-TEENSY, eight conductors on a connector that cannot be plugged in reversed. Teensy pin allocation is in [`pin-assignment.md`](../../pin-assignment.md). 
 
->Before the Teensy is plugged in for the first time, every J-IR-TEENSY pin should be measured against ground with the board powered through the module's socket. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy.
+>Before the Teensy is plugged in for the first time, every J-IR-TEENSY pin should be measured against the board's ground with the board powered through the module's socket. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy. Pin 8 must show no connection to the board's ground, or the two grounds have met on the board.
 
 | J-IR-TEENSY pin | Signal | Direction |
 |---|---|---|
@@ -250,7 +250,7 @@ VOUT powers the board, U3's side 2 with it: in the machine from the D24V5F3, on 
 | 5 | CLOCK | Teensy to the board |
 | 6 | MISO | board to the Teensy, through U3 |
 | 7 | 3V3 | the Teensy's rail, supplying U3's side 1 |
-| 8 | GND | the Teensy's ground, beside the signals |
+| 8 | GND | the Teensy's ground, to U3's GND1 and C3 alone |
 
 **To each sensor board**, three conductors, identically wired:
 
@@ -276,7 +276,7 @@ VOUT powers the board, U3's side 2 with it: in the machine from the D24V5F3, on 
 - **The LED bus should return on one side of the board**, so its pulsing does not reach the measurement.
   - the module's socket, all sixteen sensor connectors with their 220 Ω, and Q1 on that side
   - the converters, U3, the channel resistors and J-IR-TEENSY on the other
-  - one ground pour over the whole board
+  - one ground pour over the whole board, apart from U3's side 1, where GND1, C3 and J-IR-TEENSY pin 8 share their own copper
 
   ![Placement sketch of the mainboard](mainboard-placement.svg)
 
