@@ -31,7 +31,7 @@ Three IR channels watch the store.
 
 ## Release
 
-`release()` releases one ball. It moves the servo to its end position and waits for the `exit` channel to report the ball. The servo then returns to its start position, which ends the release.
+`release()` releases one ball. It moves the servo to its end position and waits for the `exit` channel to report the ball. The servo then returns to its start position, and the release ends once it has arrived there.
 
 The release fails when `exit` reports no ball within the servo's travel time at the config's speed plus 2 s for the ball to roll. The servo then returns to its start position, and the component reports `ReleaseFailed`. Whether to try again is the game's decision. `stored()` still tells where the balls are.
 
@@ -43,7 +43,7 @@ The component checks in its `update()` whether the time is up. The [host](../gam
 
 ## Drain lamp
 
-`lamp()` hands the game the lamps component's `drain` lamp, with all its [effects](lamps.md#effects).
+`lamp(key, priority)` gives the game the drain lamp, as the [lamps component](lamps.md#overlapping-effects) hands out every lamp.
 
 ## Pinball events
 
@@ -66,12 +66,13 @@ public:
     // IR event during a release into BallReleased
     bool    translate(const DriverEvent& in, PinballEvents& out) override;
 
-    // checks whether a release's time is up and reports ReleaseFailed then
-    void    update(uint32_t now) override;
+    // sets the counted number in the first pass of the main loop, ends a release once the servo is
+    // back, and makes ReleaseFailed once exit has reported no ball in time
+    bool    update(uint32_t now, PinballEvents& out) override;
 
     uint8_t stored() const;       // gets the balls the store holds, read from front and back
     bool    release();            // releases one ball; false while a release runs or the store is empty
-    bool    releasing() const;    // gets whether a release is running
-    Lamp&   lamp();               // gets the drain lamp
+    bool    releasing() const;    // gets whether a release runs, the servo's return to its start position included
+    Lamp    lamp(uint8_t key, uint8_t priority);   // gets the drain lamp for the key and priority of the game's mode
 };
 ```

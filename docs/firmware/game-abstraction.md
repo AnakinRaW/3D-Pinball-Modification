@@ -55,7 +55,7 @@ The component however is not required to convert every driver event to a pinball
 
 A component may make several pinball events of one driver event. It keeps them in an array that is big enough for the most it can make at once. The `out` parameter contains the pointer and size to that array.
 
-A component with timed work, such as the [drain](components/drain.md)'s wait for a released ball, does it in `update()`. The host calls `update()` of every component once per pass of the main loop, before the game's `update()`, and in every phase of the game. A component without timed work keeps the empty default.
+A component with timed work, such as the [drain](components/drain.md)'s wait for a released ball, does it in `update()`. The host calls `update()` of every component once per pass of the main loop, before the game's `update()`, and in every phase of the game. The host passes the pinball events of both `translate()` and `update()` to the game. A component without timed work keeps the default, which makes none.
 
 Components are described under [`components/`](components/).
 
@@ -104,8 +104,9 @@ public:
     // takes a driver event of the component's parts and points out at the pinball events it made of it, if any; false for any other
     virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
 
-    // runs the component's timed work; the host calls it once per pass of the loop, before the game's update()
-    virtual void update(uint32_t now) {}
+    // runs the component's timed work and points out at the pinball events it made, if any; false
+    // when it made none. The host calls it once per pass of the loop, before the game's update()
+    virtual bool update(uint32_t now, PinballEvents& out) { return false; }
 };
 
 // the three top roll-over lanes, each with its IR channel

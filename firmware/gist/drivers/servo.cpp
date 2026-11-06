@@ -41,6 +41,12 @@ public:
     // gets the end position last moved to
     Position position() const { return position_; }
 
+    // gets how long a move from one end position to the other takes at the config's speed, in ms
+    uint32_t travelMs() const {
+        const uint32_t span = startDeg_ > endDeg_ ? startDeg_ - endDeg_ : endDeg_ - startDeg_;
+        return stepMdeg_ ? (span * 1000 + stepMdeg_ - 1) / stepMdeg_ * kFrameMs : 0;   // whole frames, rounded up
+    }
+
     // gets the servo as failed once its timer has not taken the no-pulse setting in attach()
     Fault failed() const override { return {stuck_, 0}; }
 

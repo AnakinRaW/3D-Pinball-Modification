@@ -64,6 +64,9 @@ public:
     // gets the end position last moved to
     Position position() const;
 
+    // gets how long a move from one end position to the other takes at the config's speed, in ms
+    uint32_t travelMs() const;
+
     // gets the servo as failed once its timer has not taken the no-pulse setting in attach()
     Fault failed() const override;
 };
