@@ -10,6 +10,7 @@ This repository hosts everything for the project:
 | Firmware design, one document per driver and component | [`docs/firmware/`](docs/firmware/) |
 | PCB designs (schematics & layout) | [`hardware/pcb/`](hardware/pcb/) |
 | 3D CAD files | [`hardware/cad/`](hardware/cad/) |
+| Features of the modified machine | [`docs/features.md`](docs/features.md) |
 | Documentation | [`docs/`](docs/) |
 | Design, one directory per subsystem | [`docs/parts/`](docs/parts/) |
 | Datasheets | [`docs/datasheets/`](docs/datasheets/) |
