@@ -138,7 +138,7 @@
 | Use case | Realized in |
 |---|---|
 | A device that fails leaves the game running without it. | [Device faults](firmware/error-handling.md#device-faults) |
-| The machine plays without an SD card, a display, a touch controller or the PSRAM. A card pulled during a game stops only the sounds, pictures and videos. | [Driver design](firmware/driver-design.md), [storage](firmware/drivers/storage.md#device-faults), [touch driver](firmware/drivers/touch.md#device-faults), [pictures](firmware/components/screen.md#pictures) |
+| The machine plays without an SD card, without the display module or without the PSRAM. A card pulled during a game stops only the sounds, pictures and videos. | [Driver design](firmware/driver-design.md), [storage](firmware/drivers/storage.md#device-faults), [pictures](firmware/components/screen.md#pictures) |
 | A covered or dead sensor, a ball stuck in the drain's beam, a ball resting against a bumper and a lost sensor bus are each reported. | [IR driver](firmware/drivers/ir-sensing.md#device-faults), [break beam driver](firmware/drivers/break-beam.md#device-faults), [solenoid driver](firmware/drivers/solenoid.md#device-faults), [contact driver](firmware/drivers/contacts.md#device-faults), [rotary sensor driver](firmware/drivers/magnetic-rotary.md#device-faults) |
 | The machine lists its failed devices on the display, also over a running game. | **Not covered.** The host keeps the list. No document designs how it is shown. |
 | The log records each device that fails and each that recovers. | **Not covered.** The host keeps the list for the menu. Nothing writes it to the log. |
