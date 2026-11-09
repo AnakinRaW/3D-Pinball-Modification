@@ -1,5 +1,6 @@
 | Document | Contents |
 |---|---|
+| [`use-cases.md`](use-cases.md) | What the machine does for the player and the operator, each with the document that realizes it |
 | [`parts-list.md`](parts-list.md) | Bill of materials |
 | [`pin-assignment.md`](pin-assignment.md) | Which Teensy 4.1 pins the modification uses, and which peripherals they lock out |
 | [`firmware/`](firmware/) | Design of the firmware: one document per driver and component, the shared timings and priorities, and the `figures.py` that computes them |
