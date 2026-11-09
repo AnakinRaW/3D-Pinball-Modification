@@ -1,3 +1,4 @@
+#include "../priority-list.h"
 #include <new>          // placement new, which puts an effect into its entry
 #include <jled_base.h>  // JLed 4.15, https://github.com/jandelgado/jled; only its curves
 
@@ -309,11 +310,10 @@ private:
     struct Entry {
         uint8_t  key      = 0;
         uint8_t  priority = 0;
-        bool     used     = false;
         bool     ends     = false;     // whether lasting() set an end
         uint8_t  index    = 0;         // a playfield lamp's place in the range of the call
         uint8_t  count    = 1;         // how many lamps that range held
-        uint32_t seq      = 0;         // the order of the calls, so between equal priorities the later one shows
+        uint32_t seq      = 0;         // the order of the calls, so between equal priorities of two strips the later one shows
         uint32_t endMs    = 0;         // nowUs() / 1000 at which lasting() removes the effect
         uint32_t startMs  = 0;         // nowUs() / 1000 when the effect began
         Paint    from, to;
@@ -322,7 +322,9 @@ private:
         const Effect& fx() const { return *reinterpret_cast<const Effect*>(effect); }
         bool above(const Entry& o) const { return priority != o.priority ? priority > o.priority : int32_t(seq - o.seq) > 0; }
         bool over(uint32_t ms) const     { return ends && int32_t(ms - endMs) >= 0; }   // gets whether lasting() has run out
+        friend uint8_t priorityOf(const Entry& e) { return e.priority; }
     };
+    using Effects = PriorityList<Entry, kMaxEffects>;   // a lamp's or a strip's effects, the top one first
 
     struct Place { uint8_t chain; uint8_t led; };   // where a lamp sits: its chain, 0 to 5 for A to F, and its LED in the chain
     struct Where { Place place; uint16_t q = 0; };   // where a strip's lamp sits, and its position along the strip in quarter millimeters
@@ -352,16 +354,17 @@ private:
     // gets the color an entry gives at ms over the color below, for a lamp at a spot
     static CRGB mix(const Entry& e, uint32_t ms, const Spot& at, CRGB below);
 
-    // gets the entry for key among a lamp's entries: the key's own entry, else a free one, else none, which counts as refused
-    Entry* claim(Entry (&entries)[kMaxEffects], uint8_t key, uint8_t priority);
+    // puts a new entry for key at its priority, in place of the key's own entry; nullptr when the
+    // lamp holds kMaxEffects effects of other keys, which counts as refused
+    Entry* claim(Effects& effects, uint8_t key, uint8_t priority);
 
-    // gives an entry with key and priority the paints from and to and a copy of effect
+    // gives a new entry with key and priority the paints from and to and a copy of effect; nullptr when refused
     template <typename E>
-    bool start(Entry (&entries)[kMaxEffects], uint8_t key, uint8_t priority, Paint from, Paint to, const E& effect);
+    Entry* start(Effects& effects, uint8_t key, uint8_t priority, Paint from, Paint to, const E& effect);
 
     Lighting& lighting_;
-    Entry     slots_[kPlayfield][kMaxEffects];
-    Entry     strips_[kStrips][kMaxEffects];
+    Effects   slots_[kPlayfield];
+    Effects   strips_[kStrips];
     uint32_t  seq_     = 0;            // the last call's number, for Entry::seq
     uint32_t  refused_ = 0;
     uint32_t  shown_   = 0;            // nowUs() of the last frame
@@ -396,8 +399,8 @@ LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
 }
 
 void Lamps::clear() {
-    for (auto& lamp : slots_)   for (Entry& e : lamp)  e.used = false;
-    for (auto& strip : strips_) for (Entry& e : strip) e.used = false;
+    for (Effects& lamp : slots_)   lamp.clear();
+    for (Effects& strip : strips_) strip.clear();
     playfield_ = ambient_ = 1;
 }
 
@@ -410,8 +413,9 @@ uint8_t Lamps::playfieldScale() const { return uint8_t(lighting_.profile().playf
 uint8_t Lamps::ambientScale() const   { return uint8_t(lighting_.profile().ambientMax * ambient_ + 0.5f); }
 
 void Lamps::remove(uint8_t key) {
-    for (auto& lamp : slots_)   for (Entry& e : lamp) if (e.key == key) e.used = false;
-    for (auto& strip : strips_) for (Entry& e : strip) if (e.key == key) e.used = false;
+    const auto ofKey = [key](const Entry& e) { return e.key == key; };
+    for (Effects& lamp : slots_)   lamp.removeIf(ofKey);
+    for (Effects& strip : strips_) strip.removeIf(ofKey);
 }
 
 uint8_t  Lamps::step() const      { return lighting_.profile().perimeterStep; }
@@ -481,33 +485,27 @@ CRGB Lamps::mix(const Entry& e, uint32_t ms, const Spot& at, CRGB below) {
     return blend(paint(e.from, below, value, place, elapsed), paint(e.to, below, value, place, elapsed), value);
 }
 
-Lamps::Entry* Lamps::claim(Entry (&entries)[kMaxEffects], uint8_t key, uint8_t priority) {
-    Entry* e = nullptr;
-    for (Entry& x : entries) {
-        if (x.used && x.key == key) { e = &x; break; }   // the key's own entry is replaced
-        if (!x.used && !e) e = &x;
-    }
-    if (!e) { ++refused_; return nullptr; }              // a lamp that holds kMaxEffects effects keeps them
-    e->key      = key;
-    e->priority = priority;
-    e->used     = true;
-    e->ends     = false;
-    e->index    = 0;
-    e->count    = 1;
-    e->seq      = ++seq_;
-    e->startMs  = nowUs() / 1000;
-    return e;
+Lamps::Entry* Lamps::claim(Effects& effects, uint8_t key, uint8_t priority) {
+    effects.removeIf([key](const Entry& e) { return e.key == key; });   // the key's own entry is replaced
+    Entry e;
+    e.key      = key;
+    e.priority = priority;
+    e.seq      = ++seq_;
+    e.startMs  = nowUs() / 1000;
+    Entry* placed = effects.insert(e);                  // above the entries of equal priority
+    if (!placed) ++refused_;                            // a lamp that holds kMaxEffects effects keeps them
+    return placed;
 }
 
 template <typename E>
-bool Lamps::start(Entry (&entries)[kMaxEffects], uint8_t key, uint8_t priority, Paint from, Paint to, const E& effect) {
+Lamps::Entry* Lamps::start(Effects& effects, uint8_t key, uint8_t priority, Paint from, Paint to, const E& effect) {
     static_assert(sizeof(E) <= kEffectSize && alignof(E) <= alignof(Effect), "an effect has to fit an entry");
-    Entry* e = claim(entries, key, priority);
-    if (!e) return false;
+    Entry* e = claim(effects, key, priority);
+    if (!e) return nullptr;
     e->from = from;
     e->to   = to;
-    new (e->effect) E(effect);
-    return true;
+    new (e->effect) E(effect);                          // the entry stays where it is, so the effect is built in place
+    return e;
 }
 
 void Lamps::update(uint32_t now) {
@@ -519,17 +517,13 @@ void Lamps::update(uint32_t now) {
 
     // the playfield's lamps: each lamp mixes its effects from the lowest priority up
     for (uint16_t lamp = 0; lamp < kPlayfield; ++lamp) {
-        const Entry* order[kMaxEffects];
-        uint8_t      n = 0;
-        for (Entry& e : slots_[lamp]) {
-            if (e.used && e.over(ms)) e.used = false;
-            if (!e.used) continue;
-            uint8_t at = n++;
-            while (at > 0 && order[at - 1]->above(e)) { order[at] = order[at - 1]; --at; }
-            order[at] = &e;
-        }
+        Effects& effects = slots_[lamp];
+        effects.removeIf([ms](const Entry& e) { return e.over(ms); });   // what lasting() has ended
         CRGB c(0, 0, 0);                                 // a lamp without effects is dark
-        for (uint8_t k = 0; k < n; ++k) c = mix(*order[k], ms, Spot{order[k]->index, order[k]->count}, c);
+        for (size_t k = effects.size(); k-- > 0;) {      // from the lowest up, so the top one mixes last
+            const Entry& e = effects[k];
+            c = mix(e, ms, Spot{e.index, e.count}, c);
+        }
         const Place p = kPlayfieldPlaces[lamp];
         lighting_.chain(p.chain)[p.led] = c.nscale8(playfield);
     }
@@ -545,9 +539,9 @@ void Lamps::update(uint32_t now) {
     Layer   order[kStrips * kMaxEffects];
     uint8_t n = 0;
     for (uint8_t strip = 0; strip < kStrips; ++strip) {
-        for (Entry& e : strips_[strip]) {
-            if (e.used && e.over(ms)) e.used = false;
-            if (!e.used) continue;
+        strips_[strip].removeIf([ms](const Entry& e) { return e.over(ms); });
+        for (size_t k = 0; k < strips_[strip].size(); ++k) {   // the strips' effects merged, the lowest first
+            const Entry& e = strips_[strip][k];
             uint8_t at = n++;
             while (at > 0 && order[at - 1].e->above(e)) { order[at] = order[at - 1]; --at; }
             order[at] = {strip, &e};
@@ -578,10 +572,8 @@ void Lamps::update(uint32_t now) {
 template <typename E>
 LampRange& LampRange::play(const E& effect, Paint from, Paint to) {
     for (uint16_t i = 0; i < count_; ++i) {
-        if (!lamps_->start(lamps_->slots_[first_ + i], key_, priority_, from, to, effect)) continue;
-        for (Lamps::Entry& e : lamps_->slots_[first_ + i]) {
-            if (e.used && e.key == key_) { e.index = uint8_t(i); e.count = uint8_t(count_); }
-        }
+        Lamps::Entry* e = lamps_->start(lamps_->slots_[first_ + i], key_, priority_, from, to, effect);
+        if (e) { e->index = uint8_t(i); e->count = uint8_t(count_); }   // the lamp's place in this range, for a palette by position
     }
     return *this;
 }
@@ -594,9 +586,8 @@ LampRange& LampRange::fade(Paint c, uint16_t ms) {
     for (uint16_t i = 0; i < count_; ++i) {   // each lamp fades from the color it shows now
         const Color from = lamps_->colorAt(Lamps::kPlayfieldPlaces[first_ + i], lamps_->playfieldScale());
         sub(i, 1).play(Fade(ms), from, c);
-        for (Lamps::Entry& e : lamps_->slots_[first_ + i]) {   // keeps the lamp's place in this range, for a palette by position
-            if (e.used && e.key == key_) { e.index = uint8_t(i); e.count = uint8_t(count_); }
-        }
+        Lamps::Entry* e = lamps_->slots_[first_ + i].find([this](const Lamps::Entry& x) { return x.key == key_; });
+        if (e) { e->index = uint8_t(i); e->count = uint8_t(count_); }   // keeps the lamp's place in this range, for a palette by position
     }
     return *this;
 }
@@ -609,15 +600,14 @@ LampRange& LampRange::run(Pattern p, Direction d, Paint c, uint16_t stepMs, Pain
 void LampRange::lasting(uint16_t ms) {
     const uint32_t end = nowUs() / 1000 + ms;
     for (uint16_t i = 0; i < count_; ++i) {
-        for (Lamps::Entry& e : lamps_->slots_[first_ + i]) {
-            if (e.used && e.key == key_) { e.ends = true; e.endMs = end; }
-        }
+        Lamps::Entry* e = lamps_->slots_[first_ + i].find([this](const Lamps::Entry& x) { return x.key == key_; });
+        if (e) { e->ends = true; e->endMs = end; }
     }
 }
 
 void LampRange::clear() {
     for (uint16_t i = 0; i < count_; ++i) {
-        for (Lamps::Entry& e : lamps_->slots_[first_ + i]) if (e.key == key_) e.used = false;
+        lamps_->slots_[first_ + i].removeIf([this](const Lamps::Entry& x) { return x.key == key_; });
     }
 }
 
@@ -645,11 +635,10 @@ Strip& Strip::run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back) 
 }
 
 void Strip::lasting(uint16_t ms) {
-    for (Lamps::Entry& e : lamps_->strips_[strip_]) {
-        if (e.used && e.key == key_) { e.ends = true; e.endMs = nowUs() / 1000 + ms; }
-    }
+    Lamps::Entry* e = lamps_->strips_[strip_].find([this](const Lamps::Entry& x) { return x.key == key_; });
+    if (e) { e->ends = true; e->endMs = nowUs() / 1000 + ms; }
 }
 
 void Strip::clear() {
-    for (Lamps::Entry& e : lamps_->strips_[strip_]) if (e.key == key_) e.used = false;
+    lamps_->strips_[strip_].removeIf([this](const Lamps::Entry& x) { return x.key == key_; });
 }
