@@ -367,8 +367,8 @@ The program `lamps` checks the [lamps component](components/lamps.md).
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `effects` | computer | Start every effect on a fake lighting driver and step the clock through it | Each lamp shows the color its [effect](components/lamps.md#effects) gives at every moment, and `run()` moves its pattern one lamp per step in its direction |
-| `overlap` | computer | Blink a lamp with one key, lay two effects of higher priority over it, then remove their keys one by one | Each removal shows the effect below, and the blink goes on in its old rhythm |
-| `six-keys` | computer | Set one lamp with six keys | The sixth effect is refused and counted, and the five before it stay |
+| `overlap` | computer | Blink a lamp for one mode, lay effects of two modes of higher priority over it, then remove those modes one by one | Each removal shows the effect below, and the blink goes on in its old rhythm |
+| `six-modes` | computer | Set one lamp for six modes | The sixth effect is refused and counted, and the five before it stay |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 
@@ -391,14 +391,15 @@ The program `sounds` checks the [sounds component](components/sounds.md) on a fa
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `channels` | computer | Play effects until every effect channel is busy, then one more | The music keeps its channel, each effect takes a free channel, and the extra one replaces the effect that started first |
-| `interlude` | computer | Play music, then an interlude, and let the interlude end | The interlude takes the music's place, and the music goes on from where it stood |
-| `interlude-ends` | computer | End interludes by a new track, by `stopMusic()` and by `stopInterlude()`, and start one with the music off | A new track and `stopMusic()` leave nothing to go on, `stopInterlude()` lets the music go on, and music that was off stays off |
-| `music-ended` | computer | Let a track end, a looping track run, an older track's end arrive late, and an effect end | Only the track last started gives `MusicEnded`, once |
+| `video-sound` | computer | Play music, then a video's sound, and let it end | The video's sound takes the music's place, the music goes on from where it stood, and no `MusicEnded` comes for the video's sound |
+| `video-sound-top` | computer | Start a mode's track at the highest priority and stop the track below while a video's sound plays, then let the video's sound end, and play a video's sound with no track | The video's sound plays on, the mode's track starts from its beginning once the video's sound has ended, and with no track the music stays off |
+| `tracks` | computer | Start tracks for three modes, two of them at equal priority, start a second track for one mode, then stop the track on top and let the next one end | Only the track of the highest priority plays, between the equal ones the later, a covered track is paused and resumes where it was paused, a second track of a mode replaces the mode's first, and a track below that is stopped leaves the track on top playing |
+| `music-ended` | computer | Let a track end, a looping track run, a covered track's and an older track's end arrive late, and an effect end | Only the track that plays gives `MusicEnded` with the key of its mode as the source, once |
 | `volume` | computer | Set both volumes across 0 to 1 and outside | The driver gets the square of each percentage, and a value outside counts as the nearer end |
 | `start-volumes` | computer | Start with both starting volumes at 1 | The music starts at 1 and the effects at 0, with one log line |
 | `names` | computer | Play names in the game's audio directory, and one too long | Each plays `/games/<id>/audio/<name>`, and the long one finds no file |
-| `reset` | computer | Play on every channel, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back |
-| `resume` | bench | Play music, an interlude in the middle of it, and let the interlude end | The music goes on where it stopped, without a click |
+| `reset` | computer | Play on every channel with tracks waiting below, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back, and no track goes on |
+| `resume` | bench | Play music, a video's sound in the middle of it, and let the video's sound end | The music goes on where it stopped, without a click |
 
 ### Screen
 
@@ -408,12 +409,13 @@ The program `screen` checks the [screen component](components/screen.md). Its co
 |---|---|---|---|
 | `widen` | computer | Change objects that start and end at every column | Every rectangle the driver gets spans whole rows and covers the change |
 | `gestures` | computer | Feed touch events of short and long touches, still and moving, onto a modal object, onto a button, onto no object and from beside a button onto it | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the button gets the touch that comes down on it and none that slides onto it, each tap and hold reaches the game only when no object took the touch, and `takeGesture()` gives the host every gesture once |
-| `hide-layer` | computer | Hide the game's layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its layer shown |
+| `slides` | computer | Take slides for three modes, two of them at equal priority, ask again for one mode, then remove the slide on top, while a button and an animation lie on each slide, and start an animation on a covered slide | Only the slide of the highest priority shows, between the equal ones the later, the second call gets the same slide, only the button of the slide that shows takes a touch, the animations of covered slides stand still, and the next slide shows once the top one is removed, its animation going on where it stood |
+| `hide-overlay` | computer | Hide the game overlay layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its overlay layer shown |
 | `load` | Teensy | Load `background.img`, `short.img`, `icon.img` and a picture the card does not hold | `loading()` is true until each has loaded, the background and the icon show, and the short and the missing one make `failed()` true |
 | `memory` | computer | Load a full-screen picture and smaller ones, release the full-screen one, reserve memory for a full-screen frame, then load until the memory is full | The frame gets the memory the full-screen picture freed, and a picture that finds the memory full makes `failed()` true |
 | `show` | Teensy | Show `icon.img` in three images, delete the parent of one, then release the picture | The images show the same pixels, the other two stay when one is deleted, and `release()` deletes them |
-| `layers` | bench | Create an object on the host's layer, a message box and an object on the game's layer, and an object on the background over `background.img`, then play a video there | The objects lie over one another in the [order of the layers](components/screen.md#layers), the message box between the host's layer and the game's, the video in front of the background's objects, and the picture behind them |
-| `reset` | computer | Switch games while a picture and a frame of the stopped game still load | Every object and image of the stopped game is gone, and the new game starts only once both have loaded and the picture memory is empty |
+| `layers` | bench | Create an object on the host's layer, a message box and an object on the game overlay layer, an object on a slide and an object on the background over `background.img`, then play a video on the slide | The objects lie over one another in the [order of the layers](components/screen.md#layers), the message box between the host's layer and the game overlay layer, the video and the slide's object in front of the background's objects, and the picture behind them |
+| `reset` | computer | Switch games while a picture and a frame of the stopped game still load | Every object, slide and image of the stopped game is gone, and the new game starts only once both have loaded and the picture memory is empty |
 | `redraw` | Teensy | Change the whole screen in every refresh, once without a video and once beside a full-screen video, while the main loop measures its passes | No pass [waits](components/screen.md#drawing) for the driver, and the longest pass is the time LVGL renders |
 
 ### Video player
@@ -422,14 +424,17 @@ The program `video-player` checks the [video player](components/video-player.md)
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, and with `sound` the sounds get `audio/<name>.wav` as an interlude in the same call |
-| `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MovieEnded` with the video's number passes through the event queue to the game |
+| `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, and with `sound` the sounds get `audio/<name>.wav` as the video's track in the same call |
+| `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MovieEnded` with the key of the mode that holds the video's slide reaches the game from the video player's next `update()` |
 | `stop` | computer | Stop a video and its sound | Both stop, the music goes on, and the memory of the frame is free again |
 | `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on |
+| `owner` | computer | Play a video on the slide that shows, then one in a viewport on a hidden slide and one on no slide, then a second one on the slide that shows | `play()` returns false for the hidden slide and for no slide while the first video goes on, and the second video on the slide that shows replaces the first |
+| `hidden` | computer | Show a slide of higher priority over a playing video's slide, then one of equal priority, then remove a playing video's slide, and lay an object over the whole viewport of a playing video | The video and its sound stop each of the first three times, the music goes on, and no `MovieEnded` comes, while the video under the object plays on |
 | `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
+| `short-sound` | computer | Play a video whose sound ends before its last frame, and one whose sound file is missing | Each video plays on by the clock from the frame it stands at, the screen keeps refreshing, and each ends with `MovieEnded` |
 | `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
 | `frames` | Teensy | Play `loop.rgb` in a loop for ten minutes with a sound on every audio channel and a write to the card every second | Every frame is on the screen within its 40 ms, and no audio block plays silence for want of data |
-| `viewport` | bench | Play `viewport.rgb` in a viewport beside a full-screen picture while the game draws beside it and over it | The video fills only its viewport, the picture shows around it, and the game's objects stay in front |
+| `viewport` | bench | Play `viewport.rgb` in a viewport on a slide over a full-screen picture on the same slide, with a caption created after the viewport | The video fills only its viewport, the picture shows around it, and the caption lies in front of the video |
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |
 
@@ -478,6 +483,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 |---|---|---|---|
 | `lifecycle` | computer | Run a test game whose `done()` turns true in each phase | The host calls `start()`, `play()`, `end()` and `stop()` in the order of the [lifecycle](game-abstraction.md#game-lifecycle), and starts the game anew after its post-game phase |
 | `stopped` | computer | Dispatch events and update while no game runs | No game gets a call |
+| `mode-end` | computer | Start two test modes whose `stop()` is empty, each lighting a lamp, taking a slide with a video and playing a track, then let one end itself and stop the other | Each time, the lamp shows the effect below, the slide below shows, the video stops and the track below goes on |
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
 | `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
@@ -486,7 +492,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `first-start` | Teensy | Start with no record of a last game | The first game of the list starts |
 | `saved-data` | Teensy | Let a test game write a file in `end()`, restart, and let it read the file in `start()` | The game reads what it wrote |
 | `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole, and no picture of the stopped game stays on the screen |
-| `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game's layer reappears with every change drawn meanwhile |
+| `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game overlay layer reappears with every change drawn meanwhile |
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |
 | `setting` | bench | Change a setting in the menu, change it again at once, then restart | No save starts while one is written, and after the restart the value saved last stands |
 | `fault-list` | bench | Disconnect the rotary sensor during a game, then connect it again | The menu lists the sensor as failed and later as working, and the game goes on throughout |

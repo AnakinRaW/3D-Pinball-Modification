@@ -46,9 +46,11 @@ A game is organized into phases and the host is responsible for their transition
 
 ## Modes
 
-A game splits its rules into modes. A mode is a part of the rules that runs for a while, such as a skill shot after the launch, a ball save or a multiball. The game starts it. It ends when the game stops it or when it has done its part. A base mode holds the rules that last the whole of Play, such as the score and the next ball.
+A game splits its rules into modes. A mode is a part of the rules that runs for a while, such as a skill shot after the launch, a ball save or a multiball. The game starts it. It ends when the game stops it or when it has done its part. A base mode runs at the lowest priority from the game's start to its stop. It holds the rules that last the whole game, such as the score and the next ball. The game plays its intro and end music through it.
 
-The game keeps the modes that run in a mode stack. All modes in the stack run at the same time. Each mode has a priority, which sets its place in the stack. The place matters only where two modes want the same event: the higher one decides first whether it takes it. Between equal priorities the mode started later lies higher. The stack is a [priority list](general-design.md#priority-lists). A mode cleans up after itself: its `stop()` removes what it started.
+The game keeps the modes that run in a mode stack. All modes in the stack run at the same time. Each mode has a priority, which sets its place in the stack. The place matters only where two modes want the same event: the higher one decides first whether it takes it. Between equal priorities the mode started later lies higher. The stack is a [priority list](general-design.md#priority-lists).
+
+The mode stack gives each mode a key when it starts the mode. No two running modes share a key. A mode that lights [lamps](components/lamps.md#overlapping-effects), shows a [slide](components/screen.md#slides) or plays a [track](components/sounds.md#music) hands itself to the component, which takes the mode's key and priority. When the mode ends, the stack hands the mode to each of those components again, and each removes what the mode holds there. The mode's `stop()` ends whatever else it started.
 
 The game hands every event to its modes from the highest priority down. A mode that takes an event returns true from `event()`, and the modes below it never see that event. The game's `update()` reaches every mode.
 
@@ -153,9 +155,10 @@ public:
     virtual ~Mode() = default;
 
     virtual uint8_t priority() const = 0;           // its place in the stack
+    uint8_t key() const;                            // the key the mode stack gave it at its start; no other running mode has it
 
     virtual void start(Machine& machine) = 0;       // sets the mode up
-    virtual void stop() {}                          // ends the mode and removes what it started
+    virtual void stop() {}                          // ends what the mode started beyond its lamps, slide and track
     virtual bool event(const PinballEvent& e) = 0;  // handles an event; true takes it, and the modes below never see it
     virtual void update(uint32_t now) {}            // once per pass of the loop
     virtual bool done() const { return false; }     // true once the mode has ended itself
@@ -165,8 +168,9 @@ public:
 class ModeStack {
 public:
     void start(Mode& mode, Machine& machine);   // starts a mode and puts it at its priority; nothing when it already runs
-    void stop(Mode& mode);                      // ends a mode
+    void stop(Mode& mode);                      // ends a mode, then has the lamps, the screen and the sounds remove what it holds
     void stopAll();                             // ends every mode, the game's stop() calls it
+    void stopAllBut(Mode& kept);                // ends every mode but kept, such as the base mode at the end of Play
     bool running(const Mode& mode) const;       // gets whether a mode runs
 
     void event(const PinballEvent& e);          // hands an event down from the highest priority until a mode takes it, then stops those whose done() is true
@@ -189,138 +193,4 @@ public:
 
 ## An example game
 
-```cpp
-// an example game: three balls, 100 points a lane, and a ball save after each launch
-class Classic : public Game {
-public:
-    const char* id() const override    { return "classic"; }
-    const char* title() const override { return "Classic"; }
-
-    // Stopped to Intro
-    void start(Machine& m) override {
-        m_ = &m; phase_ = Intro; done_ = false; score_ = 0; balls_ = 3; saveDue_ = false;
-        bestFile_ = m.files.open("best");
-        if (load_.status() != FileStatus::Pending) bestFile_.read(0, &best_, sizeof best_, load_);   // the high score, there before the intro ends; a read still on its way after a quick restart brings the same file
-        m.sounds.music("intro.wav");            // play the intro
-    }
-
-    // Intro to Play: starts the base mode and the ball save, and launches the first ball
-    void play() override {
-        phase_ = Play; done_ = false;
-        modes_.start(base_, *m_);
-        modes_.start(ballSave_, *m_);
-        m_->drain.release();
-    }
-
-    // Play to Post-game: ends every mode, keeps the high score
-    void end() override {
-        phase_ = PostGame; done_ = false;
-        modes_.stopAll();
-        const bool known = load_.status() == FileStatus::Succeeded;   // a failed read leaves the high score on the card unknown
-        if (known && score_ > best_) {
-            best_ = score_;
-            bestFile_.rewrite(&best_, sizeof best_, save_);   // best_ stays unchanged until save_ has ended
-        }
-    }
-
-    void stop() override { modes_.stopAll(); }
-
-    // hands the events of Play to the modes, then starts the ball save the base mode asked for
-    void event(const PinballEvent& e) override {
-        if (phase_ != Play) return;
-        modes_.event(e);
-        if (saveDue_) { saveDue_ = false; modes_.start(ballSave_, *m_); }
-    }
-
-    // carries the intro and the post-game phase on, and runs the modes during Play
-    void update(uint32_t now) override {
-        if (phase_ == Intro) {
-            if (!m_->sounds.musicPlaying() && load_.status() != FileStatus::Pending) {
-                done_ = true;                                           // the intro is done
-            }
-        } else if (phase_ == Play) {
-            modes_.update(now);
-        } else if (phase_ == PostGame) {
-            if (save_.status() != FileStatus::Pending) {
-                done_ = true;                                           // the write has ended
-            }
-        }
-    }
-
-    bool done() const override { return done_; }
-
-private:
-    // the rules of all of Play: 100 points a lane, and the next ball once one drains
-    class Base : public Mode {
-    public:
-        explicit Base(Classic& game) : game_(game) {}
-        uint8_t priority() const override { return 1; }
-        void start(Machine& m) override   { m_ = &m; waiting_ = false; }
-        bool event(const PinballEvent& e) override {
-            if (e.type == EventType::LanePassed) { game_.score_ += 100; return true; }
-            if (e.type == EventType::Drained) {
-                if (--game_.balls_ == 0) game_.done_ = true;               // the last ball: Play is done
-                else waiting_ = true;                                       // the next ball, once it is in the store
-                return true;
-            }
-            if (e.type == EventType::BallStored && waiting_ && m_->drain.release()) {
-                waiting_ = false;
-                game_.saveDue_ = true;                                      // a new ball gets a new ball save
-                return true;
-            }
-            return false;
-        }
-    private:
-        Classic& game_;
-        Machine* m_       = nullptr;
-        bool     waiting_ = false;                       // a ball has drained and the next waits for the store
-    };
-
-    // the ball save: for a while after a launch, a drained ball comes back
-    class BallSave : public Mode {
-    public:
-        uint8_t priority() const override { return 2; }
-        void start(Machine& m) override {
-            m_ = &m; started_ = false; over_ = false; waiting_ = false;
-            m.drain.lamp(priority(), priority()).set(Color::green);               // lit while the save holds; its priority serves as its key
-        }
-        void stop() override { m_->lamps.remove(priority()); }                    // the lamp shows what the modes below set
-        bool event(const PinballEvent& e) override {
-            if (e.type == EventType::Drained) { waiting_ = true; return true; }   // the base mode never sees this ball
-            if (e.type == EventType::BallStored && waiting_ && m_->drain.release()) {
-                waiting_ = false; over_ = true;                             // one save per launch
-                return true;
-            }
-            return false;
-        }
-        void update(uint32_t now) override {
-            if (!started_) { since_ = now; started_ = true; }
-            if (!waiting_ && now - since_ >= kSaveMs * 1000) over_ = true;
-        }
-        bool done() const override { return over_; }
-    private:
-        static constexpr uint32_t kSaveMs = 10000;       // how long after a launch the save holds
-        Machine* m_       = nullptr;
-        uint32_t since_   = 0;                           // nowUs() at the first update
-        bool     started_ = false;
-        bool     waiting_ = false;                       // a saved ball waits for the store
-        bool     over_    = false;
-    };
-
-    enum Phase { Intro, Play, PostGame };
-
-    Machine* m_      = nullptr;
-    Phase    phase_  = Intro;
-    bool     done_   = false;                       // the current phase is done
-    uint32_t score_  = 0;
-    uint32_t best_   = 0;                           // the high score, read from the card
-    FileWriter  bestFile_;                          // the high score's file on the card
-    FileRequest load_;                              // the read of the high score
-    FileRequest save_;                              // the write of a new high score
-    uint8_t  balls_  = 0;
-    bool     saveDue_ = false;                      // the base mode launched a ball, so a ball save starts after the walk
-    Base      base_{*this};
-    BallSave  ballSave_;
-    ModeStack modes_;                               // the modes of this game that run
-};
-```
+[`firmware/gist/game-abstraction.cpp`](../../firmware/gist/game-abstraction.cpp) holds an example game: three balls, 100 points a lane, a base mode that runs the whole game and a ball save after each launch.

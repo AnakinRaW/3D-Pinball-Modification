@@ -73,12 +73,17 @@ public:
     virtual ~Mode() = default;
 
     virtual uint8_t priority() const = 0;           // its place in the stack
+    uint8_t key() const { return key_; }            // the key the mode stack gave it at its start; no other running mode has it
 
     virtual void start(Machine& machine) = 0;       // sets the mode up
-    virtual void stop() {}                          // ends the mode and removes what it started
+    virtual void stop() {}                          // ends what the mode started beyond its lamps, slide and track
     virtual bool event(const PinballEvent& e) = 0;  // handles an event; true takes it, and the modes below never see it
     virtual void update(uint32_t now) {}            // once per pass of the loop
     virtual bool done() const { return false; }     // true once the mode has ended itself
+
+private:
+    friend class ModeStack;
+    uint8_t key_ = 0;
 };
 
 // the priority a PriorityList orders the running modes by
@@ -90,19 +95,30 @@ public:
     // starts a mode and puts it at its priority, above the modes of equal priority; nothing when
     // it already runs or the stack is full
     void start(Mode& mode, Machine& machine) {
-        if (running(mode) || !modes_.insert(&mode)) return;
+        if (running(mode) || modes_.full()) return;
+        machine_  = &machine;
+        mode.key_ = freeKey();
+        modes_.insert(&mode);
         mode.start(machine);
     }
 
-    // ends a mode
+    // ends a mode, then has the lamps, the screen and the sounds remove what it holds, so no mode has to
     void stop(Mode& mode) {
         if (!running(mode)) return;
         mode.stop();
+        machine_->lamps.remove(mode);           // the effects below show again
+        machine_->screen.remove(mode);          // the slide below shows, and a video on the mode's slide stops
+        machine_->sounds.stopMusic(mode);       // the track below goes on
         modes_.removeIf([&](Mode* m) { return m == &mode; });
     }
 
     // ends every mode, the game's stop() calls it
     void stopAll() { while (modes_.size()) stop(*modes_[0]); }
+
+    // ends every mode but kept, such as the base mode at the end of Play
+    void stopAllBut(Mode& kept) {
+        for (size_t i = modes_.size(); i-- > 0;) if (modes_[i] != &kept) stop(*modes_[i]);
+    }
 
     bool running(const Mode& mode) const {
         for (size_t i = 0; i < modes_.size(); ++i) if (modes_[i] == &mode) return true;
@@ -125,12 +141,22 @@ public:
 private:
     static constexpr size_t kMax = 8;           // modes that run at once
 
+    // gets the lowest key no running mode has; the stack has room, so one below kMax is free
+    uint8_t freeKey() const {
+        for (uint8_t k = 0;; ++k) {
+            bool taken = false;
+            for (size_t i = 0; i < modes_.size(); ++i) if (modes_[i]->key() == k) taken = true;
+            if (!taken) return k;
+        }
+    }
+
     // stops the modes that ended themselves, after the walk, so none leaves the stack while it is walked
     void sweep() {
         for (size_t i = modes_.size(); i-- > 0;) if (modes_[i]->done()) stop(*modes_[i]);
     }
 
     PriorityList<Mode*, kMax> modes_;
+    Machine* machine_ = nullptr;                // the machine the modes run on, from start()
 };
 
 // the games this firmware carries; the first one is the default
@@ -266,32 +292,32 @@ public:
         if (load_.status() != FileStatus::Pending) bestFile_.read(0, &best_, sizeof best_, load_);   // the high score, there before the intro ends; a read still on its way after a quick restart brings the same file
         m.scoop.fire();                         // empty the scoop
         kicked_ = nowUs();
-        m.sounds.music("intro.wav");            // play the intro
+        modes_.start(base_, m);                 // the base mode runs until the game stops
+        m.sounds.music(base_, "intro.wav");     // play the intro
     }
 
-    // Intro to Play: starts the base mode and the ball save, and launches the first ball
+    // Intro to Play: starts the ball save and launches the first ball
     void play() override {
         phase_ = Play; done_ = false;
-        m_->sounds.music("background.wav", true);   // the background music, over and over
-        modes_.start(base_, *m_);
+        m_->sounds.music(base_, "background.wav", true);   // the background music, over and over
         modes_.start(ballSave_, *m_);
         m_->drain.release();
     }
 
-    // Play to Post-game: ends every mode, plays the end music, keeps the high score, shows the score
+    // Play to Post-game: ends every mode but the base mode, plays the end music, keeps the high score, shows the score
     void end() override {
         phase_ = PostGame; done_ = false;
-        modes_.stopAll();
-        m_->sounds.music("outro.wav");
+        modes_.stopAllBut(base_);
+        m_->sounds.music(base_, "outro.wav");
         const bool known = load_.status() == FileStatus::Succeeded;   // a failed read leaves the high score on the card unknown
         if (known && score_ > best_) {
             best_ = score_;
             bestFile_.rewrite(&best_, sizeof best_, save_);   // best_ stays unchanged until save_ has ended
         }
-        // ... draws score_ into the game's layer
+        // ... draws score_ into the game overlay layer
     }
 
-    void stop() override { modes_.stopAll(); }
+    void stop() override { modes_.stopAll(); }      // the base mode with the others
 
     // hands the events of Play to the modes, then starts the ball save the base mode asked for
     void event(const PinballEvent& e) override {
@@ -305,13 +331,13 @@ public:
         if (phase_ == Intro) {
             if (m_->scoop.holding()) {                                  // a ball still inside
                 if (now - kicked_ >= kKickGapUs) { m_->scoop.fire(); kicked_ = now; }
-            } else if (!m_->sounds.musicPlaying() && load_.status() != FileStatus::Pending) {
+            } else if (m_->sounds.musicEnded(base_) && load_.status() != FileStatus::Pending) {
                 done_ = true;                                           // the intro is done
             }
         } else if (phase_ == Play) {
             modes_.update(now);
         } else if (phase_ == PostGame) {
-            if (save_.status() != FileStatus::Pending && !m_->sounds.musicPlaying()) {
+            if (save_.status() != FileStatus::Pending && m_->sounds.musicEnded(base_)) {
                 done_ = true;                                           // the end music has played and the write has ended
             }
         }
@@ -320,11 +346,12 @@ public:
     bool done() const override { return done_; }
 
 private:
-    // the rules of all of Play: 100 points a lane, and the next ball once one drains
+    // the rules of the whole game at the lowest priority: 100 points a lane, the next ball once one
+    // drains, and the game's music
     class Base : public Mode {
     public:
         explicit Base(Classic& game) : game_(game) {}
-        uint8_t priority() const override { return 1; }
+        uint8_t priority() const override { return 0; }
         void start(Machine& m) override   { m_ = &m; waiting_ = false; }
         bool event(const PinballEvent& e) override {
             if (e.type == EventType::LanePassed) { game_.score_ += 100; return true; }
@@ -352,9 +379,8 @@ private:
         uint8_t priority() const override { return 2; }
         void start(Machine& m) override {
             m_ = &m; started_ = false; over_ = false; waiting_ = false;
-            m.drain.lamp(priority(), priority()).set(Color::green);               // lit while the save holds; its priority serves as its key
+            m.drain.lamp(*this).set(Color::green);                                // lit while the save holds
         }
-        void stop() override { m_->lamps.remove(priority()); }                    // the lamp shows what the modes below set
         bool event(const PinballEvent& e) override {
             if (e.type == EventType::Drained) { waiting_ = true; return true; }   // the base mode never sees this ball
             if (e.type == EventType::BallStored && waiting_ && m_->drain.release()) {

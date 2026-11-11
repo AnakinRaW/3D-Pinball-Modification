@@ -63,15 +63,15 @@ Every effect is a class derived from `Effect`. For each moment, an effect says h
 
 ## Overlapping effects
 
-Every lamp and every strip holds up to five effects at once, one for each key. A key names the mode of the game that set the effect. If a lamp already holds an effect with the same key, a new effect replaces it.
+Every lamp and every strip holds up to five effects at once, one for each mode of the game. If a lamp already holds an effect of the same mode, a new effect replaces it.
 
-Each effect also has a priority. The effect with the highest priority shows. Between equal priorities, the later call shows. The other effects lie below it and keep running while covered. When the effect on top ends, the next one shows.
+Each effect has the priority of its mode. The effect with the highest priority shows. Between equal priorities, the later call shows. The other effects lie below it and keep running while covered. When the effect on top ends, the next one shows.
 
-The game gives each of its modes its own key and priority and uses the lamps in three steps.
+A mode uses the lamps in three steps.
 
-1. When a mode starts, the game takes the groups for the mode's key and priority from `lamps.groups(key, priority)`.
-2. While the mode runs, the game starts effects on those groups.
-3. When the mode ends, the game calls `lamps.remove(key)`. Every effect of the mode leaves every lamp, and the effects below show again.
+1. When the mode starts, it takes its groups from `lamps.groups(*this)`.
+2. While the mode runs, it starts effects on those groups.
+3. When the mode ends, the [mode stack](../game-abstraction.md#modes) calls `lamps.remove(mode)`. Every effect of the mode leaves every lamp, and the effects below show again.
 
 A lamp that already holds five effects refuses a sixth and counts it.
 
@@ -79,7 +79,7 @@ Two calls remove an effect before its mode ends.
 
 | Call | Effect |
 |---|---|
-| `clear()` | removes the effect its key set, so the effect below shows |
+| `clear()` | removes the effect its mode set, so the effect below shows |
 | `lasting(ms)` | removes the effect `ms` after the call, so a short show needs no second call to end |
 
 Every effect call returns its lamps, so `lasting(ms)` can follow it, as in `flash.perimeter.pulse(a, b, periodMs).lasting(ms)`.
@@ -148,7 +148,7 @@ public:
     Lamp& pulse(Paint a, Paint b, uint16_t periodMs);       // fades from a to b and back once per period
     Lamp& fade(Paint c, uint16_t ms);                       // fades from the current color to c within ms
     void  lasting(uint16_t ms);                             // removes the effect ms from now
-    void  clear();                                          // removes the effect its key set, so the one below shows
+    void  clear();                                          // removes the effect its mode set, so the one below shows
 };
 
 // some lamps of one group, to which effects go with one key and priority
@@ -168,7 +168,7 @@ public:
     LampRange& fade(Paint c, uint16_t ms);                  // fades from the current color to c within ms
     LampRange& run(Pattern p, Direction d, Paint c, uint16_t stepMs, Paint back = Color::none);   // moves the pattern in c over back by one lamp per step
     void       lasting(uint16_t ms);                        // removes the effects ms from now
-    void       clear();                                     // removes the effects its key set, so the ones below show
+    void       clear();                                     // removes the effects its mode set, so the ones below show
 };
 
 // a strip of lamps that an effect runs along as a whole
@@ -186,7 +186,7 @@ public:
     Strip& fade(Paint c, uint16_t ms);                      // fades from the current color to c within ms
     Strip& run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back = Color::none);   // moves the pattern in c over back along the strip at mmPerS millimeters a second
     void   lasting(uint16_t ms);                            // removes the effect ms from now
-    void   clear();                                         // removes the effect its key set, so the one below shows
+    void   clear();                                         // removes the effect its mode set, so the one below shows
 };
 
 // the lamp groups, to which effects go with one key and priority
@@ -203,10 +203,10 @@ class Lamps {
 public:
     explicit Lamps(Lighting& lighting);
 
-    // gets the groups to which effects go with key and priority
-    LampGroups groups(uint8_t key, uint8_t priority);
+    // gets the groups to which effects go with the key and the priority of mode
+    LampGroups groups(const Mode& mode);
 
-    void     remove(uint8_t key);   // removes every effect with key from every lamp and strip, so the ones below show
+    void     remove(const Mode& mode);   // removes every effect of mode from every lamp and strip, so the ones below show
     uint32_t refused() const;       // gets how many effects a lamp or strip with five effects has refused
     void     clear();               // removes every effect from every lamp and strip and sets both brightnesses to 1; the host calls it between two games
 

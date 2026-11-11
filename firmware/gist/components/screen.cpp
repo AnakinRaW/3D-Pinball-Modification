@@ -1,3 +1,5 @@
+#include "lvgl/src/lvgl_private.h"   // LVGL's list of animations, which no public call walks; LVGL 9.6
+
 // the picture memory of the running game in the PSRAM: full-screen pictures and frames from the
 // top end, smaller pictures from the bottom end, so room a full-screen picture gives back is free
 // in one piece for a frame. Every room starts on a 32-byte boundary and is a whole number of 32 bytes,
@@ -47,7 +49,7 @@ private:
     bool           known_    = false;        // load() registers the picture once, after every static object exists
 };
 
-// LVGL on the display: the game's layer and background, and the host's layer over them
+// LVGL on the display: the game's overlay, slides and background, and the host's layer over them
 class Screen : public Component {
 public:
     Screen(Display& display, Touch& touch) : display_(display), touch_(touch) {}
@@ -62,9 +64,14 @@ public:
     // restarts; the main loop calls it in every pass
     void render();
 
-    lv_obj_t* layer() { return lv_screen_active(); }   // gets the game's layer, the parent of the game's objects
+    lv_obj_t* overlay() { return lv_screen_active(); }   // gets the game overlay layer, the parent of what stays in front of every slide
     lv_obj_t* background() { return back_; }           // gets the game's background, the parent of what lies behind everything else
-    void      showLayer(bool shown);         // shows or hides the game's layer; hidden, it keeps its objects
+    void      showOverlay(bool shown);       // shows or hides the game overlay layer; hidden, it keeps its objects
+
+    // gets the slide of mode, the parent of its objects; a new slide lies at the mode's priority,
+    // above the slides of equal priority
+    lv_obj_t* slide(const Mode& mode);
+    void      remove(const Mode& mode);      // deletes the slide of mode with its objects, so the slide below shows
 
 private:
     friend class GameHost;
@@ -74,15 +81,30 @@ private:
     static constexpr uint16_t kWidth = 320;           // a row, which is whole steps of the driver
     static constexpr uint32_t kTapMs = 500;           // the longest touch that counts as a tap
     static constexpr uint8_t  kSlop  = 10;            // pixels a tap may move
+    static constexpr size_t   kSlides = 8;            // as many as the mode stack runs modes, one slide for each
+
+    // one mode's slide: a full-screen container in the deck, under the mode's key
+    struct Slide {
+        uint8_t   key      = 0;
+        uint8_t   priority = 0;
+        lv_obj_t* box      = nullptr;
+        friend uint8_t priorityOf(const Slide& s) { return s.priority; }
+    };
 
     enum class Gesture : uint8_t { None, Tap, Hold };
 
     lv_obj_t* hostLayer() { return host_; }  // gets the parent of the host's objects
-    lv_obj_t* videos() { return videos_; }   // gets the parent of the video player's image, in front of the game's background
     bool      settled() const { return pictures_.empty(); }   // gets whether the picture memory is empty
     void      showHost(bool shown);          // shows or hides the host's layer
     Gesture   takeGesture(uint16_t& x, uint16_t& y);   // gets the host the last gesture once, None when there is none
-    void      reset();                       // deletes the game's objects, releases its pictures and shows the game's layer
+    void      reset();                       // deletes the game's objects and slides, releases its pictures and shows the game overlay layer
+    lv_obj_t* slideOf(lv_obj_t* obj);        // gets the slide obj lies on, nullptr for an object on no slide
+    lv_obj_t* top() { return slides_.size() ? slides_[0].box : nullptr; }   // gets the slide that shows, nullptr when there is none
+    uint8_t   keyOf(lv_obj_t* slide);        // gets the key of a slide
+    void      restack();                     // shows the slide on top and hides every other; pauses the animations of the hidden ones
+    template <typename Fn> void eachAnim(Fn fn);   // calls fn(animation, slide) for every animation of an object on a slide
+    void      pauseCovered();                // pauses every animation on a hidden slide
+    void      resumeTop();                   // lets the animations on the slide that shows go on
     void      restart();                     // sets the display up again after a supervisor reset and sends the whole picture again once it is back; returns at once
     bool      taken(int16_t x, int16_t y);   // gets whether an object under x, y takes a touch, searched as LVGL does
     void      gesture(Gesture g, const DriverEvent& in);   // keeps a gesture for the host and makes it the game's event
@@ -99,9 +121,11 @@ private:
     lv_display_t* lv_        = nullptr;
     lv_obj_t*     host_      = nullptr;      // a full-screen container on LVGL's system layer, above everything
     lv_obj_t*     back_      = nullptr;      // a full-screen container on LVGL's bottom layer
-    lv_obj_t*     videos_    = nullptr;      // the same, created after back_, so it lies in front of it
+    lv_obj_t*     deck_      = nullptr;      // the same, created after back_, so it lies in front of it; the parent of the slides
+    PriorityList<Slide, kSlides> slides_;    // the game's slides, the one that shows first
     bool          held_      = false;        // an object took the touch on the screen, until the finger leaves
     bool          redraw_    = false;        // the whole screen goes out again once the display is back
+    uint32_t      anims_     = 0;            // the animations LVGL held at the last look, so render() finds new ones
     uint32_t      downAt_    = 0;            // nowUs() of the last TouchDown
     uint32_t      downXy_    = 0;            // and its position
     Gesture       gesture_   = Gesture::None;
@@ -122,18 +146,18 @@ void Screen::begin() {
     lv_display_set_user_data(lv_, this);
     lv_display_add_event_cb(lv_, widen, LV_EVENT_INVALIDATE_AREA, nullptr);
 
-    // the game's layer is LVGL's screen itself, so LVGL's lists that open on the screen belong to
+    // the game overlay layer is LVGL's screen itself, so LVGL's lists that open on the screen belong to
     // it; LVGL's top layer takes the game's popups; the host sits on the system layer above both
     lv_obj_t* screen = lv_screen_active();
     lv_obj_set_style_bg_opa(screen, LV_OPA_TRANSP, 0);   // so the background on LVGL's bottom layer shows
     host_   = lv_obj_create(lv_layer_sys());
     back_   = lv_obj_create(lv_layer_bottom());
-    videos_ = lv_obj_create(lv_layer_bottom());
-    for (lv_obj_t* o : {host_, back_, videos_}) {
+    deck_   = lv_obj_create(lv_layer_bottom());
+    for (lv_obj_t* o : {host_, back_, deck_}) {
         lv_obj_remove_style_all(o);                        // transparent, no border
         lv_obj_set_size(o, 320, 240);
     }
-    for (lv_obj_t* o : {screen, lv_layer_top(), lv_layer_sys(), lv_layer_bottom(), host_, back_, videos_}) {
+    for (lv_obj_t* o : {screen, lv_layer_top(), lv_layer_sys(), lv_layer_bottom(), host_, back_, deck_}) {
         lv_obj_set_clickable(o, false);                    // a touch on no object passes through
     }
     showHost(false);
@@ -194,7 +218,7 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
             return true;
         case DriverEventType::TouchUp:
             if (held_) { held_ = false; return true; }
-            if (elapsedUs(downAt_, kTapMs * 1000) || !near(in.payload, downXy_, kSlop)) return true;
+            if (in.time - downAt_ >= kTapMs * 1000 || !near(in.payload, downXy_, kSlop)) return true;   // timed at the events, so a slow pass loses no tap
             gesture(Gesture::Tap, in);
             break;
         case DriverEventType::TouchHeld:
@@ -208,8 +232,9 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
     return true;
 }
 
-void Screen::showLayer(bool shown) {
-    lv_obj_set_hidden(lv_screen_active(), !shown);
+void Screen::showOverlay(bool shown) {
+    if (shown) lv_obj_remove_flag(lv_screen_active(), LV_OBJ_FLAG_HIDDEN);
+    else       lv_obj_add_flag(lv_screen_active(), LV_OBJ_FLAG_HIDDEN);
 }
 
 void Screen::render() {
@@ -218,6 +243,11 @@ void Screen::render() {
     if (redraw_) {
         lv_obj_invalidate(lv_screen_active());   // LVGL redraws every layer over the invalid area
         redraw_ = false;
+    }
+    const uint32_t anims = lv_anim_count_running();   // every animation in LVGL's list, paused ones too
+    if (anims != anims_) {                   // the game started or ended one; one it started on a hidden slide pauses before it runs
+        pauseCovered();
+        anims_ = anims;
     }
     lv_timer_handler();                      // a refresh finds the last picture off the bus
 }
@@ -228,14 +258,85 @@ void Screen::restart() {
     redraw_ = true;
 }
 
-// the game's objects on its layer, its popups on LVGL's top layer and its background; the video
-// player's image stays, which the video player's own reset() deletes
+// the game's objects on its overlay layer, its popups on LVGL's top layer, its slides and its background;
+// the video player's image goes with its slide, and the video player hears of it
 void Screen::reset() {
     lv_obj_clean(lv_screen_active());
     lv_obj_clean(lv_layer_top());
+    lv_obj_clean(deck_);
+    slides_.clear();
     lv_obj_clean(back_);
     for (Picture* p = first_; p; p = p->next_) p->release();  // a game's Picture outlives its game, since games live as long as the firmware
-    showLayer(true);
+    showOverlay(true);
+}
+
+// a key already on the list keeps its slide and its place, so a mode that asks again gets the
+// objects it put there; a slide for each mode the stack runs, so the insert always finds room
+lv_obj_t* Screen::slide(const Mode& mode) {
+    const uint8_t key = mode.key(), priority = mode.priority();
+    if (Slide* s = slides_.find([&](const Slide& s) { return s.key == key; })) return s->box;
+    lv_obj_t* box = lv_obj_create(deck_);
+    lv_obj_remove_style_all(box);                        // transparent, no border
+    lv_obj_set_size(box, 320, 240);
+    lv_obj_set_clickable(box, false);                    // a touch on no object passes through
+    slides_.insert(Slide{key, priority, box});
+    restack();
+    return box;
+}
+
+// deleting the box deletes its objects; an image of a Picture leaves the picture's list, and the
+// video player's image ends its video
+void Screen::remove(const Mode& mode) {
+    const uint8_t key = mode.key();
+    Slide* s = slides_.find([&](const Slide& s) { return s.key == key; });
+    if (!s) return;
+    lv_obj_delete(s->box);
+    slides_.removeIf([&](const Slide& s) { return s.key == key; });
+    restack();
+}
+
+// LVGL draws no hidden object and finds none under a finger, so a covered slide neither shows nor
+// takes a touch; its objects and pictures stay
+void Screen::restack() {
+    for (size_t i = 0; i < slides_.size(); ++i) {
+        if (i == 0) lv_obj_remove_flag(slides_[i].box, LV_OBJ_FLAG_HIDDEN);
+        else        lv_obj_add_flag(slides_[i].box, LV_OBJ_FLAG_HIDDEN);
+    }
+    resumeTop();                             // they go on where they stood when the slide was covered
+    pauseCovered();
+}
+
+// an animation's var need not be an object, so lv_obj_is_valid() looks it up among the objects
+// before slideOf() climbs its parents; pausing and resuming leave the list as it is
+template <typename Fn>
+void Screen::eachAnim(Fn fn) {
+    lv_ll_t* list = &LV_GLOBAL_DEFAULT()->anim_state.anim_ll;
+    for (auto* a = static_cast<lv_anim_t*>(lv_ll_get_head(list)); a; a = static_cast<lv_anim_t*>(lv_ll_get_next(list, a))) {
+        lv_obj_t* obj = static_cast<lv_obj_t*>(a->var);
+        if (!lv_obj_is_valid(obj)) continue;
+        if (lv_obj_t* slide = slideOf(obj)) fn(a, slide);
+    }
+}
+
+void Screen::pauseCovered() {
+    lv_obj_t* shown = top();
+    eachAnim([&](lv_anim_t* a, lv_obj_t* slide) { if (slide != shown && !lv_anim_is_paused(a)) lv_anim_pause(a); });
+}
+
+// an animation the game paused on that slide itself goes on as well
+void Screen::resumeTop() {
+    lv_obj_t* shown = top();
+    eachAnim([&](lv_anim_t* a, lv_obj_t* slide) { if (slide == shown && lv_anim_is_paused(a)) lv_anim_resume(a); });
+}
+
+lv_obj_t* Screen::slideOf(lv_obj_t* obj) {
+    while (obj && lv_obj_get_parent(obj) != deck_) obj = lv_obj_get_parent(obj);
+    return obj;
+}
+
+uint8_t Screen::keyOf(lv_obj_t* slide) {
+    Slide* s = slides_.find([&](const Slide& s) { return s.box == slide; });
+    return s ? s->key : 0;
 }
 
 void Picture::load(const FileReader& picture) {

@@ -10,17 +10,21 @@ The host hands every `SoundEnded` event of the driver to this component.
 |---|---|---|
 | Music, such as the background music or the win and the loss music | channel `0` | `music()` |
 | Effects, such as a bumper hit or the drain | channels `1` to `3` | `play()` |
-| Interlude, such as the sound of a movie | channel `0`, in place of the music | `interlude()` |
-
-The music plays one track at a time. A new track replaces the one playing. A track started with `loop` repeats.
+| A video's sound | channel `0`, over every track of the music | the [video player](video-player.md) |
 
 Effects play on top of music, up to three at once. When all three channels are busy, a new effect replaces the oldest.
-
-An interlude interrupts the music currently playing. Once it has ended, the music goes on where it stopped. Music that was off stays off. A new track or `stopMusic()` ends the interlude. `stopInterlude()` ends it early, after which the music goes on where it stopped.
 
 A sound is named by its file name in the game's audio directory, such as `bumper.wav`. 
 
 `reset()` is available to the host and stops all channels.
+
+## Music
+
+The music plays one track at a time. Several modes can each start a track. Only the track of the mode with the highest [priority](../game-abstraction.md#modes) plays. Between equal priorities, the later track plays. The other tracks are paused. When the track on top ends or is stopped, the next one resumes where it was paused. A track started with `loop` repeats.
+
+A mode starts a track with `music(*this, name)`. A new track of the same mode replaces the one before, so a mode plays its tracks one after another. `stopMusic(*this)` ends the track while the mode runs on. When the mode ends, [`ModeStack::stop()`](../game-abstraction.md#modes) calls `stopMusic(mode)`, and the paused track below resumes.
+
+A video's sound is a track as well. It lies over every track of the game, whatever their priorities. A track started while the video's sound plays stays paused under it. Once the video's sound has ended, the track on top resumes, or starts from its beginning when it has not played yet.
 
 ## Volume
 
@@ -41,11 +45,11 @@ The two starting volumes squared add up to at most 1, so music and an effect tog
 
 ## End of the music
 
-`musicPlaying()` tells whether the music on channel 0 still plays. Interlude also counts as playing. When a track has played to its end, the component sends `MusicEnded`. A track that loops does not send the event. The end of an effect sends nothing.
+`musicEnded(mode)` tells whether the track of a mode has played to its end or was stopped. A paused track has not ended. When a track has played to its end, the component sends `MusicEnded`. A track that loops does not send the event. A track that is stopped or replaced sends none either. The end of a video's sound and the end of an effect send nothing.
 
 | Event | When | Payload |
 |---|---|---|
-| `MusicEnded` | A track has played to its end | The number the driver gave the track |
+| `MusicEnded` | A track has played to its end. Its source is the key of the track's mode | The number the driver gave the track |
 
 ## Interface
 
@@ -60,31 +64,34 @@ public:
     // squared add up to more than 1; the host calls it before the first game
     void begin();
 
-    // turns the end of a track into MusicEnded, lets the music go on after an interlude and ignores the end of an effect
+    // turns the end of a track into MusicEnded and lets the track below go on; ignores the end of an
+    // effect, and sends nothing for the end of a video's sound
     bool translate(const DriverEvent& in, PinballEvents& out) override;
 
     // plays an effect of the running game by its file name in its audio directory, such as "bumper.wav"
     void play(const char* name);
 
-    // plays a track of the running game by its file name from its beginning, over and over with loop;
-    // it ends an interlude
-    void music(const char* name, bool loop = false);
+    // plays a track of the running game by its file name for mode at the mode's priority, from its
+    // beginning, over and over with loop; it replaces the mode's track, and on top it pauses the track
+    // below
+    void music(const Mode& mode, const char* name, bool loop = false);
 
-    // plays a sound of the running game in place of the music, over and over with loop; the music
-    // goes on where it stopped once the sound has ended
-    void interlude(const char* name, bool loop = false);
+    // ends the mode's track, and the mode stack calls it when the mode ends; on top, the paused track
+    // below resumes
+    void stopMusic(const Mode& mode);
+    bool musicEnded(const Mode& mode) const;   // gets whether the mode holds no track that plays or is paused
 
-    void stopInterlude();                  // ends the interlude early; the music goes on where it stopped
-    uint32_t interludePlayed() const;      // gets how many samples of the interlude have played, 0 while none plays
-    void stopMusic();                      // silences the music, and an interlude with it
-    bool musicPlaying() const;             // gets whether the track last started has neither ended nor been stopped
-
-    void musicVolume(float percent);       // sets the volume of the music and of an interlude, 0 to 1 as a percentage
+    void musicVolume(float percent);       // sets the volume of the music and of a video's sound, 0 to 1 as a percentage
     void effectsVolume(float percent);     // sets the volume of the effects, 0 to 1 as a percentage
 
 private:
     friend class GameHost;
+    friend class VideoPlayer;
 
-    void reset();                          // silences every channel and sets the volumes again; the host calls it when it switches games
+    void     videoSound(const char* name, bool loop);   // plays a video's sound over every track of the game, which is paused meanwhile
+    void     stopVideoSound();                         // ends the video's sound; the paused track on top resumes
+    bool     videoSounding() const;                    // gets whether the video's sound plays, neither ended nor stopped
+    uint32_t videoPlayed() const;                      // gets how many samples of the video's sound have played, 0 before it has
+    void reset();                          // silences every channel, forgets every track and sets the volumes again; the host calls it when it switches games
 };
 ```

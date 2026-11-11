@@ -1,37 +1,38 @@
-// the videos of the running game on the background, with their sound in place of the music;
+// the videos of the running game on its slides, with their sound over the music;
 // every call returns at once
 class VideoPlayer : public Component {
 public:
     VideoPlayer(Screen& screen, FileSystem& files, Sounds& sounds)
         : screen_(screen), files_(files), sounds_(sounds) {}
 
-    void begin();           // attaches its queue to the event queue and its timer to LVGL, after the screen's begin()
+    void begin();           // attaches its timer to LVGL, after the screen's begin()
 
-    // hands the MovieEnded it published to the game
-    bool translate(const DriverEvent& in, PinballEvents& out) override;
+    // hands the game the MovieEnded that step() found, once
+    bool update(uint32_t now, PinballEvents& out) override;
 
-    // plays video/<name>.rgb in the viewport at x, y on the background, over and over with loop,
-    // with sound audio/<name>.wav in place of the music; false and nothing played for a viewport
-    // beyond the screen or without room for its frame in the picture memory
-    bool play(const char* name, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool loop, bool sound);
+    // plays video/<name>.rgb in viewport, an LVGL object on the slide that shows, at the viewport's
+    // size and place, over and over with loop, with sound audio/<name>.wav over the music;
+    // false and nothing played for a viewport on a hidden slide, on no slide or beyond the screen,
+    // or without room for its frame in the picture memory
+    bool play(lv_obj_t* viewport, const char* name, bool loop, bool sound);
 
-    void stop();            // stops the video and its sound; the music goes on where it stopped
-    bool playing() const { return room_ != nullptr; }   // gets whether the video last started has neither ended nor been stopped
+    void stop(const lv_obj_t* viewport);            // stops the video in viewport and its sound; the paused music resumes
+    bool playing(const lv_obj_t* viewport) const { return room_ && viewport_ == viewport; }   // gets whether a video plays in viewport, neither ended nor stopped
 
 private:
     friend class GameHost;
 
     static constexpr uint32_t kFrameUs      = 40000;   // 25 frames a second, docs/parts/display
     static constexpr uint32_t kFrameSamples = 1764;    // the samples of one frame, 44.1 kHz over 25 frames a second
-    static constexpr size_t   kDepth   = 1;       // step() publishes at most one end in a pass, and the main loop empties the queue in every pass
 
-    void reset() { stop(); }   // stops the video of the stopped game; the host calls it when it switches games
+    void reset() { if (room_) end(); endedDue_ = false; }   // stops the video of the stopped game, whose end reaches no game; the host calls it when it switches games
 
-    // draws a frame once it is due and reads the next, and publishes MovieEnded once the video
-    // last started has run out; LVGL's timer calls it in every pass of the main loop
+    // draws a frame once it is due and reads the next, and keeps MovieEnded for update() once the
+    // video last started has run out; LVGL's timer calls it in every pass of the main loop
     void step(uint32_t now);
-    uint32_t due(uint32_t now) const;   // gets the frame due now, from how far the sound has played or, without one, from the start
+    uint32_t due(uint32_t now);   // gets the frame due now, from how far the sound has played or, without one or once it has run out, from the clock
     static void tick(lv_timer_t* t) { static_cast<VideoPlayer*>(lv_timer_get_user_data(t))->step(nowUs()); }
+    static void gone(lv_event_t* e);   // ends the video once its image is deleted with its viewport or its slide
     void end();                // ends the sound and deletes the image; gives the room back at once, or once a read on its way has landed in it
 
     Screen&        screen_;
@@ -43,27 +44,35 @@ private:
     uint8_t*       leaving_ = nullptr;   // a stopped video's room, given back once its read has landed
     uint8_t*       room_    = nullptr;   // one frame in the screen's picture memory
     lv_image_dsc_t frame_   = {};        // RGB565 high byte first, LVGL's RGB565_SWAPPED, so LVGL copies it as it is
-    lv_obj_t*      image_   = nullptr;   // in the screen's container in front of the game's background
+    lv_obj_t*      image_   = nullptr;   // inside the viewport, filling it
+    lv_obj_t*      viewport_ = nullptr;  // the game's object the video plays in
+    lv_obj_t*      slide_   = nullptr;   // the slide the viewport lies on, which owns the video
     uint32_t       startAt_ = 0;         // nowUs() as the first frame was due
     uint32_t       frames_  = 0;         // the frames in the file
     uint32_t       next_    = 0;         // the frame in the room, or on its way into it
     bool           landed_  = false;     // the frame in the room has landed and waits to be drawn
     bool           loop_    = false;
     bool           sound_   = false;
-    DriverEvent    queue_[kDepth];
-    EventQueue::Producer* out_ = nullptr;
-    PinballEvent   ended_;               // the MovieEnded that translate() points out at
+    bool           endedDue_ = false;    // step() found the end, and update() has not handed it out yet
+    PinballEvent   ended_;               // the MovieEnded that update() points out at
 };
 
 void VideoPlayer::begin() {
-    out_ = &events.attach(queue_, kDepth);
     lv_timer_create(tick, 0, this);          // a period of 0: every lv_timer_handler() runs it, inside the screen's render()
 }
 
-bool VideoPlayer::play(const char* name, uint16_t x, uint16_t y, uint16_t width, uint16_t height, bool loop, bool sound) {
-    if (width == 0 || height == 0 || x + width > 320 || y + height > 240) return false;
+// only the slide that shows plays a video, so a video playing belongs to the same slide and is
+// replaced; a hidden slide gets false and leaves it playing
+bool VideoPlayer::play(lv_obj_t* viewport, const char* name, bool loop, bool sound) {
+    lv_obj_t* slide = screen_.slideOf(viewport);
+    if (!slide || slide != screen_.top()) return false;
+    lv_obj_update_layout(viewport);                       // its place and size as the game has set them
+    lv_area_t a;
+    lv_obj_get_content_coords(viewport, &a);
+    if (a.x2 < a.x1 || a.y2 < a.y1 || a.x1 < 0 || a.y1 < 0 || a.x2 >= 320 || a.y2 >= 240) return false;   // empty, or beyond the screen
+    const uint16_t width = lv_area_get_width(&a), height = lv_area_get_height(&a);
     if (leaving_ && room_ && reads_[which_].status() == FileStatus::Pending) return false;   // both requests still land in stopped videos' rooms, for a few ms at most
-    stop();                                               // the room of the video it replaces is free again, unless a read still lands in it
+    if (room_) end();                                     // the room of the video it replaces is free again, unless a read still lands in it
     uint8_t* room = screen_.pictures_.take((size_t)width * height * 2, width == 320 && height == 240);
     if (!room) return false;                              // the picture memory is full
     room_  = room;
@@ -72,22 +81,32 @@ bool VideoPlayer::play(const char* name, uint16_t x, uint16_t y, uint16_t width,
     frame_.data_size = (uint32_t)width * height * 2;
     frame_.data = room_;
     lv_timer_pause(lv_display_get_refr_timer(lv_display_get_default()));   // the frames refresh the screen meanwhile
-    image_ = lv_image_create(screen_.videos());
-    lv_obj_set_pos(image_, x, y);
+    image_ = lv_image_create(viewport);                   // at the viewport's top left, inside its padding
     lv_image_set_src(image_, &frame_);
+    lv_obj_add_event_cb(image_, gone, LV_EVENT_DELETE, this);
+    viewport_ = viewport;
+    slide_    = slide;
     // ... file_ = files_.open("video/<name>.rgb"), frames_ from its size; the read of frame 0
     next_    = 0;
     landed_  = false;
     loop_    = loop;
     startAt_ = nowUs();
-    // ... the sound as an interlude, as before
+    char wav[Storage::kPath];
+    snprintf(wav, sizeof wav, "%s.wav", name);
+    sound_ = sound;
+    if (sound) sounds_.videoSound(wav, loop);            // over every track of the game, which is paused meanwhile
     return true;
 }
 
-// a video with sound follows its sound, so a sound that stalls holds the video with it; one without
-// follows the time since its start
-uint32_t VideoPlayer::due(uint32_t now) const {
-    return sound_ ? sounds_.interludePlayed() / kFrameSamples : (now - startAt_) / kFrameUs;
+// a video with sound follows its sound, so a sound that stalls holds the video with it; one whose
+// sound has run out, or one without, follows the clock from the frame it stands at
+uint32_t VideoPlayer::due(uint32_t now) {
+    if (sound_ && sounds_.videoSounding()) {
+        const uint32_t frame = sounds_.videoPlayed() / kFrameSamples;
+        startAt_ = now - frame * kFrameUs;               // where the clock takes over once the sound has run out
+        return frame;
+    }
+    return (now - startAt_) / kFrameUs;
 }
 
 // the frame due follows the clock due() takes, so a late frame is skipped rather than slowing the
@@ -97,12 +116,14 @@ void VideoPlayer::step(uint32_t now) {
         screen_.pictures_.give(leaving_);
         leaving_ = nullptr;
     }
+    if (room_ && screen_.top() != slide_) { end(); return; }   // another slide covers the video's own
     const FileRequest& read_ = reads_[which_];
     if (!room_ || read_.status() == FileStatus::Pending) return;
     if (!landed_) {
         if (read_.status() == FileStatus::Failed || read_.bytes() < frame_.data_size) {   // the file has run out or is missing
             if (loop_ && frames_ > 0) { /* ... the read of frame 0 again, next_ = 0 and startAt_ = now; a sound that loops starts over with it */ return; }
-            out_->publish(DriverEvent{now, DriverEventType::MovieEnded, 0, 0});
+            ended_    = {now, EventType::MovieEnded, screen_.keyOf(slide_), 0};   // the key of the video's slide
+            endedDue_ = true;
             end();
             return;
         }
@@ -116,22 +137,34 @@ void VideoPlayer::step(uint32_t now) {
     // ... the read of frame next_ into the room, whole, at next_ * frame_.data_size
 }
 
-bool VideoPlayer::translate(const DriverEvent& in, PinballEvents& out) {
-    if (in.type != DriverEventType::MovieEnded) return false;
-    ended_ = {in.time, EventType::MovieEnded, 0, 0};
-    out    = {&ended_, 1};
+bool VideoPlayer::update(uint32_t now, PinballEvents& out) {
+    out = {};
+    if (!endedDue_) return false;
+    endedDue_ = false;
+    out       = {&ended_, 1};
     return true;
 }
 
-void VideoPlayer::stop() {
-    if (room_) end();
+void VideoPlayer::stop(const lv_obj_t* viewport) {
+    if (playing(viewport)) end();
+}
+
+// LVGL deletes the image itself when the game deletes the viewport or removes the slide
+void VideoPlayer::gone(lv_event_t* e) {
+    VideoPlayer* self = static_cast<VideoPlayer*>(lv_event_get_user_data(e));
+    if (self->image_ != lv_event_get_target(e)) return;  // end() deletes it itself and has let go of it
+    self->image_ = nullptr;
+    self->end();
 }
 
 void VideoPlayer::end() {
-    if (sound_) sounds_.stopInterlude();
+    if (sound_) sounds_.stopVideoSound();                // the track it covered goes on
     sound_ = false;
-    if (image_) lv_obj_delete(image_);
-    image_ = nullptr;
+    lv_obj_t* image = image_;
+    image_ = nullptr;                                     // so gone() leaves the image end() deletes alone
+    if (image) lv_obj_delete(image);
+    viewport_ = nullptr;
+    slide_    = nullptr;
     lv_timer_resume(lv_display_get_refr_timer(lv_display_get_default()));   // LVGL refreshes on its own again
     if (reads_[which_].status() == FileStatus::Pending) {   // step() gives the room back once the read has landed
         leaving_ = room_;

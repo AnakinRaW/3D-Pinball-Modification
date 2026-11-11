@@ -66,7 +66,7 @@ The module takes its 5 V from the power board's [J-DISP](../power/design.md#outp
 
 ## Firmware
 
-The [screen component](../../firmware/components/screen.md) draws the picture using LVGL, from three layers that lie on top of each other. From the front, they are the host's layer, the game's layer and the background. The [video player](../../firmware/components/video-player.md) plays a video in a viewport on the background.
+The [screen component](../../firmware/components/screen.md) draws the picture using LVGL, from layers that lie on top of each other. From the front, they are the host's layer, the game overlay layer, the game content layer and the background. The game content layer shows one [slide](../../firmware/components/screen.md#slides) at a time. The [video player](../../firmware/components/video-player.md) plays a video in a viewport on a slide.
 
 The [display driver](../../firmware/drivers/display.md) sends what LVGL draws over FlexIO3. The [touch driver](../../firmware/drivers/touch.md) reads the touch panel.
 

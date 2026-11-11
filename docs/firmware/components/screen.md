@@ -6,10 +6,25 @@ The screen component runs [LVGL](https://lvgl.io) on the display. LVGL is a libr
 
 ## Layers
 
-A layer is an area the size of the screen that holds objects. It is transparent where it has no object, so the layer behind it shows through there. The screen has three layers. From the front, they are the host's layer, the game's layer and the game's background. A [video](video-player.md) plays between the game's background and the game's layer.
-`layer()` and `background()` give the game its two layers. `hostLayer()` gives the host its own. `showLayer()` and `showHost()` show or hide a layer without losing its objects. LVGL's popups lie between the game's layer and the host's. 
+A layer is an area the size of the screen that holds objects. It is transparent where it has no object, so the layer behind it shows through there. From the front, the screen shows the host's layer, the game overlay layer, the game content layer and the game's background.
 
-When the host switches games, the component deletes the stopped game's objects and releases its pictures, so a game cleans up nothing itself.
+`hostLayer()` gives the host its layer for the menu. `overlay()` gives the game the overlay layer, for what stays visible over every slide, such as the score. `slide(mode)` gives the game a [slide](#slides) on the content layer, which shows one slide at a time. `background()` gives the game the layer behind everything else.
+
+`showOverlay()` and `showHost()` show or hide a layer without losing its objects. LVGL's popups lie between the game overlay layer and the host's layer.
+
+When the host switches games, the component deletes the stopped game's objects and slides and releases its pictures, so a game cleans up nothing itself.
+
+## Slides
+
+A slide is a page of objects that one mode of the game fills, such as the screen of a multiball. Every slide lies in the game content layer. Several modes can hold a slide at once. Only one slide shows. The game overlay layer lies in front of it, so what the game puts there stays visible over every slide, such as the score.
+
+The screen keeps the slides in a [priority list](../general-design.md#priority-lists). The slide of the mode with the highest [priority](../game-abstraction.md#modes) shows. Between equal priorities, the later slide shows. The other slides lie hidden below it. They keep their objects and their pictures. Their controls take no touch. Their animations pause and go on once the slide shows again. When the slide on top is removed, the next one shows.
+
+A mode uses its slide in three steps.
+
+1. When the mode starts, it takes its slide from `slide(*this)`. A second call for the same mode gets the same slide.
+2. While the mode runs, it puts its objects on that slide. A [video](video-player.md) plays in a viewport on it.
+3. When the mode ends, the [mode stack](../game-abstraction.md#modes) calls `remove(mode)`. The slide leaves with its objects. The slide below then shows.
 
 ## Drawing
 
@@ -54,7 +69,7 @@ public:
     bool      failed() const;                // gets whether the last load found no file, a short one or a full picture memory
 };
 
-// LVGL on the display: the game's layer and background, and the host's layer over them
+// LVGL on the display: the game's overlay, slides and background, and the host's layer over them
 class Screen : public Component {
 public:
     Screen(Display& display, Touch& touch);
@@ -69,12 +84,18 @@ public:
     // restarts; the main loop calls it in every pass
     void render();
 
-    lv_obj_t* layer();                       // gets the game's layer, the parent of the game's objects
+    lv_obj_t* overlay();                     // gets the game overlay layer, the parent of what stays in front of every slide
     lv_obj_t* background();                  // gets the game's background, the parent of what lies behind everything else
-    void      showLayer(bool shown);         // shows or hides the game's layer; hidden, it keeps its objects
+    void      showOverlay(bool shown);       // shows or hides the game overlay layer; hidden, it keeps its objects
+
+    // gets the slide of mode, the parent of its objects; a new slide lies at the mode's priority,
+    // above the slides of equal priority
+    lv_obj_t* slide(const Mode& mode);
+    void      remove(const Mode& mode);      // deletes the slide of mode with its objects, so the slide below shows
 
 private:
     friend class GameHost;
+    friend class VideoPlayer;
 
     enum class Gesture : uint8_t { None, Tap, Hold };
 
@@ -82,7 +103,10 @@ private:
     bool      settled() const;               // gets whether the picture memory is empty
     void      showHost(bool shown);          // shows or hides the host's layer
     Gesture   takeGesture(uint16_t& x, uint16_t& y);   // gets the host the last gesture once, None when there is none
-    void      reset();                       // deletes the game's objects, releases its pictures and shows the game's layer
+    void      reset();                       // deletes the game's objects and slides, releases its pictures and shows the game overlay layer
+    lv_obj_t* slideOf(lv_obj_t* obj);        // gets the slide obj lies on, nullptr for an object on no slide
+    lv_obj_t* top();                         // gets the slide that shows, nullptr when there is none
+    uint8_t   keyOf(lv_obj_t* slide);        // gets the key of a slide
     void      restart();                     // sets the display up again after a supervisor reset and sends the whole picture again once it is back; returns at once
 };
 ```

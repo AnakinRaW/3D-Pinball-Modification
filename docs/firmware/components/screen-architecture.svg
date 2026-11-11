@@ -29,22 +29,24 @@
 
   <rect x="290" y="96" width="470" height="100" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="304" y="120" font-size="15" font-weight="700" fill="#2c3e50">Game</text>
-  <text x="304" y="140" font-size="12" fill="#333">creates LVGL objects in layer() and background()</text>
+  <text x="304" y="140" font-size="12" fill="#333">creates LVGL objects in overlay(), slide() and background()</text>
   <text x="304" y="156" font-size="12" fill="#333">loads its pictures and shows them</text>
   <text x="304" y="172" font-size="12" fill="#333">plays videos and gets MovieEnded when one ends</text>
+  <text x="304" y="188" font-size="12" fill="#333">one slide per mode: slide(mode), remove(mode)</text>
 
-  <rect x="790" y="96" width="190" height="120" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
+  <rect x="790" y="96" width="190" height="132" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="804" y="120" font-size="15" font-weight="700" fill="#2c3e50">VideoPlayer</text>
-  <text x="804" y="140" font-size="12" fill="#333">play(name, viewport,</text>
+  <text x="804" y="140" font-size="12" fill="#333">play(viewport, name,</text>
   <text x="804" y="156" font-size="12" fill="#333">loop, sound)</text>
   <text x="804" y="172" font-size="12" fill="#333">refreshes with each frame</text>
-  <text x="804" y="188" font-size="12" fill="#333">publishes MovieEnded</text>
+  <text x="804" y="188" font-size="12" fill="#333">update(): MovieEnded</text>
   <text x="804" y="204" font-size="12" fill="#333">step() on an LVGL timer</text>
+  <text x="804" y="220" font-size="12" fill="#333">stops when its slide hides</text>
 
   <rect x="1010" y="96" width="190" height="80" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="1024" y="120" font-size="15" font-weight="700" fill="#2c3e50">Sounds</text>
-  <text x="1024" y="140" font-size="12" fill="#333">interlude(name)</text>
-  <text x="1024" y="156" font-size="12" fill="#333">in place of the music</text>
+  <text x="1024" y="140" font-size="12" fill="#333">music(): the video's sound</text>
+  <text x="1024" y="156" font-size="12" fill="#333">over every track</text>
 
   <!-- screen -->
   <rect x="40" y="236" width="220" height="260" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
@@ -56,8 +58,8 @@
   <text x="54" y="354" font-size="11.5" fill="#333">render(): lv_timer_handler()</text>
   <text x="54" y="374" font-size="11.5" fill="#333">widen(): whole rows</text>
   <text x="54" y="394" font-size="11.5" fill="#333">flush(): the rows to the driver</text>
-  <text x="54" y="414" font-size="11.5" fill="#333">reset(): the game's objects</text>
-  <text x="54" y="430" font-size="11.5" fill="#333">and pictures</text>
+  <text x="54" y="414" font-size="11.5" fill="#333">reset(): the game's objects,</text>
+  <text x="54" y="430" font-size="11.5" fill="#333">slides and pictures</text>
   <text x="54" y="450" font-size="11.5" fill="#333">restart(): the display's, then</text>
   <text x="54" y="466" font-size="11.5" fill="#333">no LVGL until the panel is</text>
   <text x="54" y="482" font-size="11.5" fill="#333">back, and a full redraw</text>
@@ -65,17 +67,22 @@
   <!-- LVGL -->
   <rect x="290" y="236" width="470" height="260" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="304" y="260" font-size="15" font-weight="700" fill="#2c3e50">LVGL</text>
-  <rect x="304" y="272" width="262" height="30" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="292" font-size="12" fill="#333">System layer: the host's layer</text>
-  <rect x="304" y="308" width="262" height="30" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="328" font-size="12" fill="#333">Top layer: the game's popups</text>
-  <rect x="304" y="344" width="262" height="30" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="364" font-size="12" fill="#333">Screen: the game's layer</text>
-  <rect x="304" y="380" width="262" height="30" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="400" font-size="12" fill="#333">Bottom layer: the video's image</text>
-  <rect x="304" y="416" width="262" height="30" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="436" font-size="12" fill="#333">Bottom layer: the background</text>
-  <text x="304" y="474" font-size="11.5" fill="#555">from the front to the back</text>
+  <text x="352" y="260" font-size="11.5" fill="#555">layers from the front to the back</text>
+  <rect x="304" y="268" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="286" font-size="12" fill="#333">System layer: the host's layer</text>
+  <rect x="304" y="298" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="316" font-size="12" fill="#333">Top layer: the game's popups</text>
+  <rect x="304" y="328" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="346" font-size="12" fill="#333">Screen: the game overlay layer</text>
+  <rect x="304" y="358" width="262" height="94" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="374" font-size="12" fill="#333">Bottom layer: game content layer</text>
+  <rect x="316" y="380" width="238" height="38" rx="4" fill="#eef3f8" stroke="#4a6785" stroke-width="1"/>
+  <text x="326" y="395" font-size="11" fill="#333">Multiball, priority 5: shows</text>
+  <text x="326" y="410" font-size="11" fill="#333">its video in a viewport, a caption</text>
+  <rect x="316" y="424" width="238" height="22" rx="4" fill="#eef3f8" stroke="#4a6785" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="326" y="439" font-size="11" fill="#555">Base mode, priority 1: hidden</text>
+  <rect x="304" y="458" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
+  <text x="316" y="476" font-size="12" fill="#333">Bottom layer: the background</text>
   <text x="584" y="292" font-size="11.5" fill="#333">renders what changed into</text>
   <text x="584" y="308" font-size="11.5" fill="#333">one of two buffers of the</text>
   <text x="584" y="324" font-size="11.5" fill="#333">whole screen in RAM2</text>
@@ -104,8 +111,7 @@
   <text x="54" y="596" font-size="12" fill="#333">TouchDown,</text>
   <text x="54" y="612" font-size="12" fill="#333">TouchMoved,</text>
   <text x="54" y="628" font-size="12" fill="#333">TouchHeld,</text>
-  <text x="54" y="644" font-size="12" fill="#333">TouchUp,</text>
-  <text x="54" y="660" font-size="12" fill="#333">MovieEnded</text>
+  <text x="54" y="644" font-size="12" fill="#333">TouchUp</text>
 
   <rect x="790" y="536" width="190" height="150" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
   <text x="804" y="560" font-size="15" font-weight="700" fill="#2c3e50">Picture memory</text>

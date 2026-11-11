@@ -37,8 +37,8 @@ public:
     // or cooling down
     bool fire() { return solenoids_.fire(kCoil); }
 
-    // gets the scoop lamp for the key and priority of the game's mode
-    Lamp lamp(uint8_t key, uint8_t priority) { return lamps_.groups(key, priority).scoop; }
+    // gets the scoop lamp for the key and priority of mode
+    Lamp lamp(const Mode& mode) { return lamps_.groups(mode).scoop; }
 
 private:
     static constexpr uint8_t kCoil = 3;   // the unsensed solenoid, the fourth trigger pin

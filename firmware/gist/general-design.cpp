@@ -40,8 +40,8 @@ ContactDriver    contacts;               // the contacts on the port expander's 
 Lamps            lamps{lighting};        // the lamps in fixed groups and their effects
 FileSystem       files{storage};         // the files of the games, the host, the logger, the sounds and the screen
 Sounds           sounds{audio, files};   // the running game's sounds
-Screen           screen{display, touch}; // the game's layer and background, and the host's layer
-VideoPlayer      videoPlayer{screen, files, sounds};    // the videos on the background, with their sound
+Screen           screen{display, touch}; // the game's overlay, slides and background, and the host's layer
+VideoPlayer      videoPlayer{screen, files, sounds};    // the videos on the slides, with their sound
 Logger           logger{files};          // the machine's log on the card
 Config           config{files};          // the machine's settings from /config.yml
 // other game components
@@ -130,7 +130,7 @@ static void machineTask(void*) {
     // other drivers...
 
     screen.begin();                         // LVGL, after the display driver it sends through
-    videoPlayer.begin();                    // its queue for MovieEnded
+    videoPlayer.begin();                    // its timer on LVGL
 
     // every component, so the host routes its parts' driver events through it
     host.add(topLanes);

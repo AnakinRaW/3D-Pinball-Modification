@@ -68,8 +68,8 @@ public:
     // gets whether a release runs, the servo's return to its start position included
     bool releasing() const { return phase_ != Phase::Idle; }
 
-    // gets the drain lamp for the key and priority of the game's mode
-    Lamp lamp(uint8_t key, uint8_t priority) { return lamps_.groups(key, priority).drain; }
+    // gets the drain lamp for the key and priority of mode
+    Lamp lamp(const Mode& mode) { return lamps_.groups(mode).drain; }
 
 private:
     enum class Phase : uint8_t { Idle, Opening, Closing };

@@ -27,7 +27,7 @@ A ball that leaves the scoop raises `BallLeftScoop`. A ball still resting after 
 
 ## Scoop lamp
 
-`lamp(key, priority)` gives the game the scoop lamp, as the [lamps component](lamps.md#overlapping-effects) hands out every lamp.
+`lamp(mode)` gives the game the scoop lamp, as the [lamps component](lamps.md#overlapping-effects) hands out every lamp.
 
 ## Pinball events
 
@@ -48,6 +48,6 @@ public:
     bool     holding() const;     // gets whether a ball rests in the scoop
     uint32_t heldMs() const;      // gets how long the ball has rested there, in milliseconds; 0 without one
     bool     fire();              // pulls the coil once; false while it is still on or cooling down
-    Lamp     lamp(uint8_t key, uint8_t priority);   // gets the scoop lamp for the key and priority of the game's mode
+    Lamp     lamp(const Mode& mode);   // gets the scoop lamp for the key and priority of mode
 };
 ```

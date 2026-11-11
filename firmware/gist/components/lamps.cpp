@@ -269,10 +269,10 @@ class Lamps {
 public:
     explicit Lamps(Lighting& lighting);
 
-    // gets the groups to which effects go with key and priority
-    LampGroups groups(uint8_t key, uint8_t priority);
+    // gets the groups to which effects go with the key and the priority of mode
+    LampGroups groups(const Mode& mode);
 
-    void     remove(uint8_t key);                    // removes every effect with key from every lamp and strip, so the ones below show
+    void     remove(const Mode& mode);               // removes every effect of mode from every lamp and strip, so the ones below show
     uint32_t refused() const { return refused_; }    // gets how many effects a lamp or strip with kMaxEffects effects has refused
     void     clear();                                // removes every effect from every lamp and strip and sets both brightnesses to 1; the host calls it between two games
 
@@ -376,7 +376,8 @@ const Lamps::Place Lamps::kPlayfieldPlaces[Lamps::kPlayfield] = {};
 
 Lamps::Lamps(Lighting& lighting) : lighting_(lighting) {}
 
-LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
+LampGroups Lamps::groups(const Mode& mode) {
+    const uint8_t key = mode.key(), priority = mode.priority();
     LampGroups g;
     g.perimeterLeft  = {this, kLeft, key, priority};
     g.perimeterRight = {this, kRight, key, priority};
@@ -412,7 +413,8 @@ void Lamps::brightness(float playfield, float ambient) {
 uint8_t Lamps::playfieldScale() const { return uint8_t(lighting_.profile().playfieldMax * playfield_ + 0.5f); }
 uint8_t Lamps::ambientScale() const   { return uint8_t(lighting_.profile().ambientMax * ambient_ + 0.5f); }
 
-void Lamps::remove(uint8_t key) {
+void Lamps::remove(const Mode& mode) {
+    const uint8_t key = mode.key();
     const auto ofKey = [key](const Entry& e) { return e.key == key; };
     for (Effects& lamp : slots_)   lamp.removeIf(ofKey);
     for (Effects& strip : strips_) strip.removeIf(ofKey);
