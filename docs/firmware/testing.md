@@ -262,7 +262,7 @@ The program `contacts` checks the [contact driver](drivers/contacts.md). A conta
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `inputs` | bench | Close the contact on E-1 for a moment, then the one on E-2 | Each closure gives one `ContactClosed` with its pin as the source. `closed()` shows the pin while it is closed |
+| `inputs` | bench | Close the contact on each pin from E-1 to E-4 for a moment, one after the other | Each closure gives one `ContactClosed` with its pin as the source. `closed()` shows the pin while it is closed |
 | `bounce` | bench | Tap a contact many times, slowly and as fast as possible | Each tap gives one `ContactClosed` |
 | `bus-lost` | bench | Hold SDA at GND with a wire for longer than the [fault time](drivers/contacts.md#device-faults), then let go | The contacts are reported failed with error flags as their code, and recovered once SDA is free |
 

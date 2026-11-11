@@ -16,7 +16,7 @@ U1 and the Teensy only pull SDA and SCL low. R5 and R6 pull the lines back up to
 
 INT goes to pin [1](../../pin-assignment.md "Interrupt from the port expander"). U1 pulls INT low when an input changes. RESET sits at VDD.
 
-U1's inputs GP0 to GP7 are the pins E-1 to E-8. Each takes a target's contact that closes to GND. U1's internal pull-up of 100 kΩ holds an open input high. The firmware switches the pull-up on at every input, so an input without a target stays high as well.
+U1's inputs GP0 to GP7 are the pins E-1 to E-8. Each takes a contact that closes to GND, such as a hit target or a foil of the ball store. U1's internal pull-up of 100 kΩ holds an open input high. The firmware switches the pull-up on at every input, so an input without a target stays high as well.
 
 ### Supply
 

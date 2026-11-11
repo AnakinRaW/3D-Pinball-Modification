@@ -19,11 +19,11 @@ The modification keeps every feature of the stock machine and builds on it.
 |---|---|---|
 | **Scoop** | None. | **A scoop catches the ball** and holds it until the game **throws it out with a coil**. [Scoop](firmware/components/scoop.md) |
 | **Rotating seal** | The seal in the middle of the playfield turns when the ball hits it. | **A shot that turns the seal scores**, by how far and in which direction it turns. [Magnetic rotary sensor](parts/magnetic-rotary/design.md) |
-| **Stand-up targets** | None. | The playfield gets **stand-up targets**, and the game sees every hit on one. [Hit targets](parts/targets/design.md#stand-up-targets) |
+| **Stand-up targets** | None. | The playfield gets **stand-up targets**, and the game sees every hit on one. [Hit targets](parts/contacts/design.md#stand-up-targets) |
 | **Tracks** | Three of the four tracks see the ball and score it. | **All four tracks see the ball.** [IR ball sensing](parts/ir-reflective/design.md) |
 | **Top lanes** | None. | **Three top lanes** each have their own sensor and their own light. The game sees every ball that rolls through one. [Light layout](parts/lighting/design.md#light-layout) |
 | **Inlanes** | Two inlanes run beside the flippers on each side. | **Each of the four inlanes gets a light and a sensor**, so the game sees every ball that rolls through one. |
-| Bells | The ball rings two bells. | Each bell becomes **a hit target**, and the game sees every hit on it. [Hit targets](parts/targets/design.md) |
+| Bells | The ball rings two bells. | Each bell becomes **a hit target**, and the game sees every hit on it. [Hit targets](parts/contacts/design.md#hit-targets) |
 
 ## Display
 

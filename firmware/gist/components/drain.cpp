@@ -1,21 +1,19 @@
 // the drain with its break beam, the ball store, the ball separator and the drain lamp
 class Drain : public Component {
 public:
-    // the store's three IR channels, as ir.channels in the config numbers them
-    struct Channels { uint8_t front, back, exit; };
+    // exit: the IR channel past the seesaw, as ir.channels in the config numbers it
+    Drain(ServoDriver& servo, ContactDriver& contacts, Lamps& lamps, uint8_t exit)
+        : servo_(servo), contacts_(contacts), lamps_(lamps), exit_(exit) {}
 
-    Drain(ServoDriver& servo, IrSensing& ir, Lamps& lamps, Channels channels)
-        : servo_(servo), ir_(ir), lamps_(lamps), ch_(channels) {}
-
-    // turns BallDrained into Drained, a store channel's change into BallStored once stored() rises
+    // turns BallDrained into Drained, a store foil's closure into BallStored once stored() rises
     // above the counted number, and the exit channel's ball during a release into BallReleased
     bool translate(const DriverEvent& in, PinballEvents& out) override {
         out = {};
         if (in.type == DriverEventType::BallDrained) {
             return emit(out, {in.time, EventType::Drained, 0, 0});
         }
-        if (in.type != DriverEventType::Detected && in.type != DriverEventType::Released) return false;
-        if (in.source == ch_.front || in.source == ch_.back) {
+        if (in.type == DriverEventType::ContactClosed) {
+            if (in.source != kFront && in.source != kBack) return false;   // a hit target's contact
             if (!counting_) return true;                   // the first update() sets the counted number
             const uint8_t n = stored();
             uint8_t made = 0;
@@ -25,7 +23,8 @@ public:
             out = {events_, made};
             return true;
         }
-        if (in.source == ch_.exit) {
+        if (in.type != DriverEventType::Detected && in.type != DriverEventType::Released) return false;
+        if (in.source == exit_) {
             if (in.type != DriverEventType::Detected || phase_ != Phase::Opening) return true;   // no release waits for it
             if (counted_ > 0) --counted_;
             close(in.time);
@@ -52,7 +51,8 @@ public:
 
     // gets the balls front and back hold at this moment
     uint8_t stored() const {
-        return uint8_t(ballOn(ch_.front)) + uint8_t(ballOn(ch_.back));
+        const uint8_t closed = contacts_.closed();
+        return uint8_t((closed >> kFront) & 1) + uint8_t((closed >> kBack) & 1);
     }
 
     // releases one ball: the servo to its end position, and back once exit reports the ball;
@@ -76,11 +76,8 @@ private:
 
     static constexpr uint32_t kRollMs    = 2000;   // past the servo's travel, for the ball to reach exit
     static constexpr uint8_t  kMaxEvents = 2;      // two balls arriving together
-
-    bool ballOn(uint8_t channel) const {
-        uint32_t ms;
-        return ir_.getState(channel, ms) == IrSensing::State::Ball;
-    }
+    static constexpr uint8_t  kFront     = 0;      // the front foil on E-1, the contact driver's source 0
+    static constexpr uint8_t  kBack      = 1;      // the back foil on E-2, the contact driver's source 1
 
     void close(uint32_t now) {
         servo_.moveTo(ServoDriver::Position::Start);
@@ -94,14 +91,14 @@ private:
         return true;
     }
 
-    ServoDriver& servo_;
-    IrSensing&   ir_;
-    Lamps&       lamps_;
-    Channels     ch_;
+    ServoDriver&   servo_;
+    ContactDriver& contacts_;
+    Lamps&         lamps_;
+    uint8_t        exit_;
 
-    Phase        phase_    = Phase::Idle;
-    uint32_t     since_    = 0;        // nowUs() when the servo last set off
-    uint8_t      counted_  = 0;        // the balls counted into the store, less those released
-    bool         counting_ = false;    // the first update() has set counted_
-    PinballEvent events_[kMaxEvents];
+    Phase          phase_    = Phase::Idle;
+    uint32_t       since_    = 0;        // nowUs() when the servo last set off
+    uint8_t        counted_  = 0;        // the balls counted into the store, less those released
+    bool           counting_ = false;    // the first update() has set counted_
+    PinballEvent   events_[kMaxEvents];
 };

@@ -7,7 +7,13 @@
   <line x1="309" y1="210" x2="347" y2="210" stroke="#a08850" stroke-width="5"/>
   <line x1="357" y1="210" x2="520" y2="210" stroke="#a08850" stroke-width="5"/>
   <polygon points="520,203 535,210 520,217" fill="#a08850"/>
-  <text x="535" y="234" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
+  <!-- the wall foil behind the balls and the two floor foils -->
+  <rect x="200" y="174" width="147" height="23" fill="#f3dcc4"/>
+  <line x1="200" y1="205" x2="299" y2="205" stroke="#b5651d" stroke-width="3"/>
+  <line x1="309" y1="205" x2="347" y2="205" stroke="#b5651d" stroke-width="3"/>
+  <text x="150" y="150" font-size="11.5" fill="#8a4b12">wall foil at GND</text>
+  <line x1="200" y1="154" x2="212" y2="174" stroke="#b5651d" stroke-width="1"/>
+  <text x="535" y="150" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
   <text x="40" y="234" font-size="11.5" fill="#7a6a4a">from the drain</text>
   <circle cx="90" cy="188" r="7" fill="none" stroke="#c0392b" stroke-width="2"/>
   <line x1="85" y1="183" x2="95" y2="193" stroke="#c0392b" stroke-width="2"/>
@@ -24,15 +30,15 @@
   <circle cx="424" cy="290" r="4" fill="#a8437a"/>
   <line x1="424" y1="290" x2="352" y2="226" stroke="#666" stroke-width="2"/>
   <text x="450" y="280" font-size="11.5" fill="#666">pushrod</text>
-  <rect x="262" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="282" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">back</text>
-  <line x1="282" y1="120" x2="282" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <rect x="310" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="330" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">front</text>
-  <line x1="330" y1="120" x2="330" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <rect x="440" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="460" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">exit</text>
-  <line x1="460" y1="120" x2="460" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="262" y="98" width="40" height="22" rx="3" fill="#fbf0e4" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="282" y="114" font-size="11.5" fill="#8a4b12" text-anchor="middle">back</text>
+  <line x1="282" y1="120" x2="282" y2="162" stroke="#b5651d" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="310" y="98" width="40" height="22" rx="3" fill="#fbf0e4" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="330" y="114" font-size="11.5" fill="#8a4b12" text-anchor="middle">front</text>
+  <line x1="330" y1="120" x2="330" y2="162" stroke="#b5651d" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="460,232 447,203 473,203" fill="#2e7d32" fill-opacity="0.15" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="445" y="232" width="30" height="24" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="481" y="248" font-size="11.5" fill="#2e7d32">exit</text>
   <circle cx="282" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
   <circle cx="330" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
   <text x="40" y="360" font-size="12" fill="#444">front finger up holds the front ball</text>
@@ -42,7 +48,13 @@
   <line x1="859" y1="210" x2="897" y2="210" stroke="#a08850" stroke-width="5"/>
   <line x1="907" y1="210" x2="1070" y2="210" stroke="#a08850" stroke-width="5"/>
   <polygon points="1070,203 1085,210 1070,217" fill="#a08850"/>
-  <text x="1085" y="234" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
+  <!-- the wall foil behind the balls and the two floor foils -->
+  <rect x="750" y="174" width="147" height="23" fill="#f3dcc4"/>
+  <line x1="750" y1="205" x2="849" y2="205" stroke="#b5651d" stroke-width="3"/>
+  <line x1="859" y1="205" x2="897" y2="205" stroke="#b5651d" stroke-width="3"/>
+  <text x="700" y="150" font-size="11.5" fill="#8a4b12">wall foil at GND</text>
+  <line x1="750" y1="154" x2="762" y2="174" stroke="#b5651d" stroke-width="1"/>
+  <text x="1085" y="150" font-size="11.5" fill="#7a6a4a" text-anchor="end">to the plunger lane</text>
   <text x="590" y="234" font-size="11.5" fill="#7a6a4a">from the drain</text>
   <circle cx="640" cy="188" r="7" fill="none" stroke="#c0392b" stroke-width="2"/>
   <line x1="635" y1="183" x2="645" y2="193" stroke="#c0392b" stroke-width="2"/>
@@ -59,20 +71,21 @@
   <circle cx="974" cy="290" r="4" fill="#a8437a"/>
   <line x1="974" y1="290" x2="902" y2="256" stroke="#666" stroke-width="2"/>
   <text x="1000" y="280" font-size="11.5" fill="#666">pushrod</text>
-  <rect x="812" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="832" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">back</text>
-  <line x1="832" y1="120" x2="832" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <rect x="860" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="880" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">front</text>
-  <line x1="880" y1="120" x2="880" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <rect x="990" y="98" width="40" height="22" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="1010" y="114" font-size="11.5" fill="#2e7d32" text-anchor="middle">exit</text>
-  <line x1="1010" y1="120" x2="1010" y2="162" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="812" y="98" width="40" height="22" rx="3" fill="#fbf0e4" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="832" y="114" font-size="11.5" fill="#8a4b12" text-anchor="middle">back</text>
+  <line x1="832" y1="120" x2="832" y2="162" stroke="#b5651d" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="860" y="98" width="40" height="22" rx="3" fill="#fbf0e4" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="880" y="114" font-size="11.5" fill="#8a4b12" text-anchor="middle">front</text>
+  <line x1="880" y1="120" x2="880" y2="162" stroke="#b5651d" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="1010,232 997,203 1023,203" fill="#2e7d32" fill-opacity="0.15" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="995" y="232" width="30" height="24" rx="3" fill="#eef6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="1031" y="248" font-size="11.5" fill="#2e7d32">exit</text>
   <circle cx="832" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
   <circle cx="1010" cy="185.5" r="22" fill="#e8e8e8" stroke="#666" stroke-width="2"/>
   <line x1="1040" y1="185.5" x2="1066" y2="185.5" stroke="#666" stroke-width="2"/>
   <polygon points="1066,179.5 1076,185.5 1066,191.5" fill="#666"/>
   <text x="590" y="360" font-size="12" fill="#444">rear finger up holds the back ball</text>
   <line x1="550" y1="56" x2="550" y2="370" stroke="#ddd" stroke-width="1"/>
-  <text x="30" y="400" font-size="11.5" fill="#666">IR channels are drawn above the track to show where along it they sit. The track slopes toward the plunger lane.</text>
+  <text x="30" y="392" font-size="11.5" fill="#666">front and back are foils on the track floor, on E-1 and E-2 of the port expander. The wall foil behind the balls is at GND.</text>
+  <text x="30" y="408" font-size="11.5" fill="#666">exit is an IR channel under the track. The labels above the track show where along it each foil sits. The track slopes toward the plunger lane.</text>
 </svg>

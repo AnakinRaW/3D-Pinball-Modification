@@ -1,8 +1,8 @@
-"""The figures of the hit targets, in this build the stock machine's two bells, as inputs plus
-formulas."""
+"""The figures of the contacts on the port expander, in this build the drain ball store's foils
+and the stock machine's two bells, as inputs plus formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "targets", drawings=["targets-schematic.svg"],
+MODEL = Model.at(__file__, "contacts", drawings=["contacts-schematic.svg"],
                  documents=["../../firmware/drivers/contacts.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
@@ -28,6 +28,16 @@ with MODEL.block("LEVELS", section=LEVELS):
     fig("r_contact_max", "kΩ", "v_il_exp / i_pu_gp", "down",
         moves="+v_3v3_min +vil_frac_exp -i_pu_gp")
 
+# -- derived: a stored ball's input ------------------------------------------
+STORE = "Drain ball store"
+msr("d_fingers", 9, "mm", src="the distance between the seesaw's two fingers, measured on the "
+    "stock ball separator with a ruler")
+with MODEL.block("STORE", section=STORE):
+    # A stored ball closes two contacts in series, the floor foil and the wall foil, each taken
+    # as the shells' measured contact.
+    fig("r_store", "Ω", "2 * r_contact", "up", moves="+r_contact")
+    fig("v_store", "mV", "i_pu_gp * r_store", "up", moves="+i_pu_gp +r_store")
+
 # -- the contact driver, docs/firmware/drivers/contacts.md --------------------
 dec("t_quiet", 10, "ms", src="how long a contact has to have been open before the driver publishes "
     "its closure, decided: an estimate above the few milliseconds a contact bounces and far below "
@@ -44,14 +54,24 @@ _I = MODEL.invariant
 _I("a touched bell pulls its input under U1's low threshold", "v_touched <= v_il_exp")
 _I("the ball's contact, taken from the shells' measurement, stays under what a bell tolerates",
    "r_contact <= r_contact_max")
+_I("a stored ball pulls its input under U1's low threshold", "v_store <= v_il_exp")
+_I("a stored ball's two contacts stay under what an input tolerates", "r_store <= r_contact_max")
 _I("several of the driver tick's reads of the port expander fail before the contacts count as "
    "failed", "t_fail_contacts > 2 * t_poll")
 
 # -- wiring -------------------------------------------------------------------
-for _n, _e in ((1, "E-1"), (2, "E-2")):
+for _n, _e in ((1, "E-3"), (2, "E-4")):
     MODEL.net(f"Bell {_n}",
               contact(f"the ball between bell {_n} and the bells' foil at GND",
                       src="design.md, the bells' foil takes its ground from the Teensy motherboard"),
               pull(f"U1's pull-up at {_e}", TEENSY_RAIL,
                    src="port-expander/design.md, the driver switches every input's pull-up on"),
-              reads(f"U1 at {_e}", src="DS20001919F, Table 1-1: GP0 and GP1 are U1's inputs"))
+              reads(f"U1 at {_e}", src="DS20001919F, Table 1-1: GP2 and GP3 are U1's inputs"))
+
+for _slot, _e, _gp in (("front", "E-1", "GP0"), ("back", "E-2", "GP1")):
+    MODEL.net(f"Ball store {_slot}",
+              contact(f"a ball between the {_slot} floor foil and the wall foil at GND",
+                      src="design.md, the wall foil takes its ground from the Teensy motherboard"),
+              pull(f"U1's pull-up at {_e}", TEENSY_RAIL,
+                   src="port-expander/design.md, the driver switches every input's pull-up on"),
+              reads(f"U1 at {_e}", src=f"DS20001919F, Table 1-1: {_gp} is one of U1's inputs"))

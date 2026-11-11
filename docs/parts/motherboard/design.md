@@ -2,7 +2,7 @@
 
 The Teensy motherboard carries the Teensy, the DFR0954 amplifier module and the port expander. It hands the Teensy's rails on to the subsystems.
 
-The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Seven cables and the hit targets carry the Teensy's ground. The board spreads both over a rail each.
+The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Seven cables and the contacts carry the Teensy's ground. The board spreads both over a rail each.
 
 ## Circuit
 
@@ -34,7 +34,7 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 ### GND rail
 
-The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-MB-PWR's GND. These cables take their ground from it: J-IR-TEENSY of the IR mainboard, J-SENSE-TEENSY of the solenoid sense board, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the hit targets.
+The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-MB-PWR's GND. These cables take their ground from it: J-IR-TEENSY of the IR mainboard, J-SENSE-TEENSY of the solenoid sense board, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the contacts.
 
 ### Toggle switch
 
@@ -52,9 +52,11 @@ The DFR0954 sits beside the Teensy. Pins [2](../../pin-assignment.md "DIN to the
 
 U1 reads the pins E-1 to E-8. It sits on `Wire` with SDA on pin [18](../../pin-assignment.md "SDA on Wire") and SCL on pin [19](../../pin-assignment.md "SCL on Wire"). Its INT goes to pin [1](../../pin-assignment.md "Interrupt from the port expander"). R5 and R6 pull SDA and SCL up to the 3V3 rail. C1 decouples U1's VDD. The [port expander design](../port-expander/design.md) sets their values.
 
-### Hit targets
+### Contacts
 
-The two bells come in at E-1 and E-2. They are [hit targets](../targets/design.md). Their foil takes its ground from the GND rail.
+The drain ball store's front foil comes in at E-1 and its back foil at E-2. Its wall foil takes its ground from the GND rail. The [contacts design](../contacts/design.md#drain-ball-store) describes the foils.
+
+The two bells come in at E-3 and E-4. They are [hit targets](../contacts/design.md#hit-targets). Their foil takes its ground from the GND rail.
 
 ## Part list
 

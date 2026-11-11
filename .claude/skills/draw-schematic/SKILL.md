@@ -88,7 +88,7 @@ A net flag, the small box naming a net that leaves the drawing, keeps its net co
 - Orthogonal wires. Diagonals only where a straight run would cross three other nets.
 - No text overlapping a wire or another label.
 - Repeated identical channels: draw one in full, and label the rest as identical rather than drawing seven copies.
-- An IC shows every pin of its package, whatever the drawing is about (RULES.md rule 7). An unused buffer of a quad part, an enable on GND and an NC pin are each drawn as their own pin, with their wire or the gray unconnected marker. Pins on one net, such as four OE pins on GND, are drawn one by one and joined by wires. `docs/parts/lighting/lighting-schematic.svg` and `docs/parts/targets/targets-schematic.svg` show the pattern.
+- An IC shows every pin of its package, whatever the drawing is about (RULES.md rule 7). An unused buffer of a quad part, an enable on GND and an NC pin are each drawn as their own pin, with their wire or the gray unconnected marker. Pins on one net, such as four OE pins on GND, are drawn one by one and joined by wires. `docs/parts/lighting/lighting-schematic.svg` and `docs/parts/contacts/contacts-schematic.svg` show the pattern.
 
 ## Language and notation
 

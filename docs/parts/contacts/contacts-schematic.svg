@@ -1,7 +1,7 @@
-<svg viewBox="0 0 980 750" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="980" height="750" fill="#ffffff"/>
-  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Hit targets</text>
-  <text x="30" y="56" font-size="13" fill="#666">The stock machine's two bells as contacts against the bells' foil at GND, read by the port expander</text>
+<svg viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="980" height="770" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Contacts</text>
+  <text x="30" y="56" font-size="13" fill="#666">The drain's ball store foils and the stock machine's two bells as contacts to GND, read by the port expander</text>
 
   <!-- ===== the Teensy motherboard ===== -->
   <rect x="24" y="84" width="430" height="496" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
@@ -55,14 +55,10 @@
   <text x="338" y="211" text-anchor="end" font-size="11.5" fill="#777">pin 10</text>
   <text x="338" y="230" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP1</text>
   <text x="338" y="245" text-anchor="end" font-size="11.5" fill="#777">pin 11</text>
-  <text x="338" y="264" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP2</text>
+  <text x="338" y="264" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP2</text>
   <text x="338" y="279" text-anchor="end" font-size="11.5" fill="#777">pin 12</text>
-  <circle cx="350" cy="268" r="6" fill="#999"/>
-  <text x="364" y="272" font-size="11.5" fill="#777">unconnected</text>
-  <text x="338" y="298" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP3</text>
+  <text x="338" y="298" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP3</text>
   <text x="338" y="313" text-anchor="end" font-size="11.5" fill="#777">pin 13</text>
-  <circle cx="350" cy="302" r="6" fill="#999"/>
-  <text x="364" y="306" font-size="11.5" fill="#777">unconnected</text>
   <text x="338" y="332" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP4</text>
   <text x="338" y="347" text-anchor="end" font-size="11.5" fill="#777">pin 14</text>
   <circle cx="350" cy="336" r="6" fill="#999"/>
@@ -115,13 +111,25 @@
   <circle cx="400" cy="540" r="4" fill="#1a1a1a"/>
   <text x="470" y="373" font-size="11.5" fill="#666">one wire to the foil</text>
 
-  <!-- ===== E-1 to the bell, E-2 to bell 2 ===== -->
-  <line x1="356" y1="200" x2="694" y2="200" stroke="#23862f" stroke-width="5"/>
-  <line x1="356" y1="200" x2="694" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
+  <!-- ===== E-1 and E-2 to the drain's floor foils ===== -->
+  <line x1="356" y1="200" x2="470" y2="200" stroke="#23862f" stroke-width="5"/>
+  <line x1="356" y1="200" x2="470" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
   <line x1="356" y1="234" x2="470" y2="234" stroke="#23862f" stroke-width="5"/>
   <line x1="356" y1="234" x2="470" y2="234" stroke="#3cbf4e" stroke-width="2.5"/>
-  <text x="470" y="190" font-size="11.5" fill="#666">one wire to the bell</text>
-  <text x="478" y="238" font-size="12.5" font-weight="700" fill="#1f7a33">E-2, to bell 2</text>
+  <text x="478" y="204" font-size="12.5" font-weight="700" fill="#1f7a33">E-1, drain front foil</text>
+  <text x="478" y="238" font-size="12.5" font-weight="700" fill="#1f7a33">E-2, drain back foil</text>
+
+  <!-- ===== E-3 to bell 1, E-4 to bell 2 ===== -->
+  <line x1="356" y1="268" x2="680" y2="268" stroke="#23862f" stroke-width="5"/>
+  <line x1="680" y1="268" x2="680" y2="200" stroke="#23862f" stroke-width="5"/>
+  <line x1="680" y1="200" x2="694" y2="200" stroke="#23862f" stroke-width="5"/>
+  <line x1="356" y1="268" x2="680" y2="268" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="680" y1="268" x2="680" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="680" y1="200" x2="694" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
+  <text x="530" y="260" font-size="11.5" fill="#666">one wire to bell 1</text>
+  <line x1="356" y1="302" x2="470" y2="302" stroke="#23862f" stroke-width="5"/>
+  <line x1="356" y1="302" x2="470" y2="302" stroke="#3cbf4e" stroke-width="2.5"/>
+  <text x="478" y="306" font-size="12.5" font-weight="700" fill="#1f7a33">E-4, to bell 2</text>
 
   <!-- ===== out on the playfield: bell 1, the ball and the bells' foil ===== -->
   <rect x="700" y="164" width="250" height="86" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
@@ -145,8 +153,13 @@
 
   <!-- ===== bell 2 ===== -->
   <rect x="470" y="460" width="480" height="54" rx="6" fill="#fbfaf7" stroke="#8a6d0b" stroke-width="1.4" stroke-dasharray="6 4"/>
-  <text x="484" y="482" font-size="12" font-weight="700" fill="#5c4a00">Bell 2 identical: a wire to E-2,</text>
+  <text x="484" y="482" font-size="12" font-weight="700" fill="#5c4a00">Bell 2 identical: a wire to E-4,</text>
   <text x="484" y="500" font-size="11.5" fill="#5c4a00">on the same foil</text>
+
+  <!-- ===== the ball store ===== -->
+  <rect x="470" y="524" width="480" height="54" rx="6" fill="#fbfaf7" stroke="#8a6d0b" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="484" y="546" font-size="12" font-weight="700" fill="#5c4a00">Drain ball store: front foil on E-1, back foil on E-2,</text>
+  <text x="484" y="564" font-size="11.5" fill="#5c4a00">a resting ball ties each to the wall foil at GND</text>
   <!-- ===== Parts ===== -->
   <text x="30" y="620" font-size="13" font-weight="700" fill="#1a1a1a">Parts</text>
   <text x="30" y="644" font-size="12" font-weight="700" fill="#1a1a1a">Ref</text>
@@ -159,9 +172,12 @@
   <text x="30" y="694" font-size="11.5" fill="#444">Bell foil</text>
   <text x="150" y="694" font-size="11.5" fill="#444">conductive foil from the spare parts of the stock machine</text>
   <text x="500" y="694" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="716" font-size="11.5" fill="#444">U1</text>
-  <text x="150" y="716" font-size="11.5" fill="#444">Microchip MCP23008-E/P, counted with the port expander</text>
-  <text x="500" y="716" font-size="11.5" fill="#444">shared</text>
+  <text x="30" y="716" font-size="11.5" fill="#444">Drain foils</text>
+  <text x="150" y="716" font-size="11.5" fill="#444">conductive foil from the spare parts of the stock machine</text>
+  <text x="500" y="716" font-size="11.5" fill="#444">3</text>
+  <text x="30" y="738" font-size="11.5" fill="#444">U1</text>
+  <text x="150" y="738" font-size="11.5" fill="#444">Microchip MCP23008-E/P, counted with the port expander</text>
+  <text x="500" y="738" font-size="11.5" fill="#444">shared</text>
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="120" cy="220" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="120" cy="260" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
@@ -173,6 +189,8 @@
   <circle cx="270" cy="160" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="350" cy="200" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="350" cy="234" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="350" cy="268" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <circle cx="350" cy="302" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="270" cy="132" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="700" cy="200" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="825" cy="276" r="3.5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>

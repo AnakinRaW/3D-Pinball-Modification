@@ -1,13 +1,13 @@
 # Contact driver
 
-The driver watches the contacts on the pins E-1 and E-2 of the [port expander](../io/port-expander.md) and publishes every contact that closes. The playfield's hit targets are such contacts.
+The driver watches the contacts on the pins E-1 to E-4 of the [port expander](../io/port-expander.md) and publishes every contact that closes. The ball store's floor foils on E-1 and E-2 are such contacts. The playfield's hit targets on E-3 and E-4 are contacts as well.
 
 ## Driver events
 
 | Field | Content |
 |---|---|
 | Type | `DriverEventType::ContactClosed` |
-| Source | The pin, `0` for E-1 and `1` for E-2 |
+| Source | The pin, `0` for E-1 up to `3` for E-4 |
 | Timestamp | The moment INT fell, which the port expander reports with the change |
 | Payload | None |
 
@@ -24,11 +24,11 @@ The contacts count as [failed](../error-handling.md#device-faults) once no read 
 ```cpp
 class ContactDriver : public Driver {
 public:
-    // attaches the queue and the pins E-1 and E-2 to the port expander and registers with the device
+    // attaches the queue and the pins E-1 to E-4 to the port expander and registers with the device
     // monitor; false when the port expander refuses the pins or the device monitor is full
     bool begin() override;
 
-    // gets the pins whose contact is closed, bit 0 for E-1 and bit 1 for E-2
+    // gets the pins whose contact is closed, bit 0 for E-1 up to bit 3 for E-4
     uint8_t closed() const;
 
     // gets which parts have failed, bit 0 once no read of the port expander has worked for 1 s,
