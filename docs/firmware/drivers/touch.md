@@ -6,9 +6,9 @@ The driver reads the touch panel of the [display](../../parts/display/design.md)
 
 The touch controller sits on `Wire2`, which an [I²C bus](../io/i2c-bus.md) runs.
 
-The controller answers no earlier than 580 ms after power-up, so `begin()` waits until then. It then checks once through the bus whether the controller answers at its address. `present()` reports the result.
+The controller answers no earlier than 580 ms after power-up, so `begin()` waits until then. It then checks once through the bus whether the controller answers at its address. `present()` reports the result. The display and the touch controller sit on one module, so the answer also tells whether the machine has its display.
 
-Without a touch controller the driver publishes no touch.
+Without the display module the driver publishes no touch.
 
 The main task starts the driver after the display driver, so the black screen does not wait for the controller.
 
@@ -33,9 +33,9 @@ A payload holds x in its lower 16 bits and y in its upper 16, 0 at the top left.
 
 ## Device faults
 
-A controller that did not answer at `begin()` means this machine does not use touch input. This is not a fault.
+A controller that did not answer at `begin()` means the machine runs without its display module. This is not a fault.
 
-A controller that answered at `begin()` counts as [failed](../error-handling.md#device-faults) once it has answered no read for 100 ms. A read gets an answer whether or not a finger touches the screen. The error code holds the LPI2C4 error flags of the last failed read. 
+A controller that answered at `begin()` counts as [failed](../error-handling.md#device-faults) once it has answered no read for 100 ms. A read gets an answer whether or not a finger touches the screen. The error code holds the LPI2C4 error flags of the last failed read. A failed controller counts as a failed display.
 
 A failed read is dropped. The next tick requests a new one.
 
@@ -60,7 +60,7 @@ public:
     // is full
     bool begin() override;
 
-    bool   present() const;     // gets whether the machine has a touch controller, which begin() finds out once
+    bool   present() const;     // gets whether the machine has its display module, which begin() finds out once from the touch controller
     Finger finger() const;      // gets where a finger touches the screen
 
     // gets which parts have failed, bit 0 once the controller that answered at begin() has brought

@@ -12,7 +12,7 @@ public:
     // is full
     bool begin() override;
 
-    bool   present() const;     // gets whether the machine has a touch controller, which begin() finds out once
+    bool   present() const;     // gets whether the machine has its display module, which begin() finds out once from the touch controller
     Finger finger() const;      // gets where a finger touches the screen
 
     // gets which parts have failed, bit 0 once the controller that answered at begin() has brought

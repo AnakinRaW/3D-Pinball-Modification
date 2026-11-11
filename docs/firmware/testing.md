@@ -324,7 +324,7 @@ The program `touch` checks the [touch driver](drivers/touch.md).
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `touch` | bench | Touch the marks the test draws in the corners and the center, then drag a finger and rest it | Each touch lands inside the mark touched, and `TouchDown`, `TouchMoved`, `TouchHeld` and `TouchUp` come as the [events](drivers/touch.md#driver-events) describe |
-| `no-touch` | bench | Start with the touch controller disconnected | `present()` is false, the picture works, no touch event comes, and no fault is reported |
+| `no-touch` | bench | Start with the display module disconnected | `present()` is false, no touch event comes, and no fault is reported |
 | `touch-lost` | bench | Disconnect the touch controller while the machine runs | The controller is reported failed after 100 ms |
 
 ### Every driver
