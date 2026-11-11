@@ -252,6 +252,8 @@ def pass_orphans(model: Model, tokens: list[Token], rep: Report):
 
 
 DATA_FIG_RE = re.compile(r'<(\w+)\b([^>]*\bdata-fig="([^"]+)"[^>]*)>([^<]*)<')
+# a label that is nothing but a numbered pin name, such as 1A or 4Y of a quad buffer
+PIN_NAME_RE = re.compile(r"\d[A-Z]{1,3}")
 
 
 def anchor_fig(model: "Model", key: str):
@@ -309,6 +311,8 @@ def pass_drawings(model: Model, rep: Report):
         for m in re.finditer(r"<text\b[^>]*>([^<]*)</text>", body):
             if m.start() in keyed or 'data-fig="' in m.group(0):
                 continue
+            if PIN_NAME_RE.fullmatch(m.group(1).strip()):
+                continue    # an IC's pin name such as 1A, which the house style never writes for a current
             if TOKEN_RE.search(norm(m.group(1))):
                 unanchored += 1
                 ln = body.count("\n", 0, m.start()) + 1
