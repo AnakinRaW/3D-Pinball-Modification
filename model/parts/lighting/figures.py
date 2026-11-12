@@ -417,13 +417,10 @@ _I("a frame has gone out before the next one is handed on, so show() never waits
    "t_frame_out < t_frame")
 
 # -- wiring -------------------------------------------------------------------
-# each chain's pin feeds one buffer input through 2.2 kΩ; the input's clamp diode points to
-# the buffer's VCC, so it can sink the pin's current but never raises the pin
-for _n in "ABCDEF":
-    MODEL.net(f"LED chain {_n}, Teensy side",
-              reads("a CD74HCT125E input through 2.2 kΩ",
-                    src="design.md, Level shifting: 2.2 kΩ from the Teensy pin to each used input"),
-              teensy=f"LED chain {_n}")
+# the two boards, whose chain nets enter the wiring: each chain's pin feeds one buffer input
+# through 2.2 kΩ, and the input's clamp diode points to the buffer's VCC, so it can sink the
+# pin's current but never raises the pin
+MODEL.schematic("schematic.py")
 
 MODEL.owns("QuadTimer4", "FastLED's ObjectFLED driver owns channels 0 to 2 of QuadTimer4, "
                          "ObjectFLED.h in FastLED")
