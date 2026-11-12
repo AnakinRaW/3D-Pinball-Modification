@@ -11,3 +11,5 @@ MODEL.uses("r_pu", of="break-beam")
 MODEL.uses("r_gain", of="audio")
 MODEL.uses("r_pu_board", of="port-expander")
 MODEL.uses("c1", of="port-expander")
+
+MODEL.schematic("schematic.py")

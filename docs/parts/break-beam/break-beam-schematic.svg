@@ -1,4 +1,4 @@
-<svg viewBox="0 0 1000 703" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg data-boards="motherboard:main" viewBox="0 0 1000 703" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="1000" height="703" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Ball drain break beam</text>
   <text x="30" y="56" font-size="13" fill="#666">An IR emitter and a phototransistor face each other across the drain, with R2 and R3 on the Teensy motherboard</text>
@@ -24,46 +24,46 @@
 
   <!-- ===== the supply behind D1, feeding the Teensy's VIN and R2 ===== -->
   <text x="280" y="124" text-anchor="middle" font-size="11.5" font-weight="700" fill="#c0392b">from D1</text>
-  <line x1="280" y1="132" x2="280" y2="200" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="280" y1="132" x2="280" y2="200" stroke="#c0392b" stroke-width="2.5" data-net="VIN"/>
   <circle cx="280" cy="200" r="4" fill="#c0392b"/>
 
   <!-- ===== R2, from the supply behind D1 to the emitter ===== -->
-  <line x1="236" y1="200" x2="330" y2="200" stroke="#c0392b" stroke-width="2.5"/>
-  <rect x="330" y="190" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="236" y1="200" x2="330" y2="200" stroke="#c0392b" stroke-width="2.5" data-net="VIN" data-ends="R2.1"/>
+  <rect x="330" y="190" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R2"/>
   <text x="365" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="r_e">220 Ω</text>
   <text x="365" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R2</text>
-  <line x1="400" y1="200" x2="694" y2="200" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="400" y1="200" x2="694" y2="200" stroke="#c0392b" stroke-width="2.5" data-net="FEED" data-ends="R2.2"/>
 
   <!-- ===== R3, from 3V3 to the pin ===== -->
-  <line x1="236" y1="270" x2="442.5" y2="270" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="236" y1="270" x2="440" y2="270" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="236" y1="270" x2="442.5" y2="270" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="236" y1="270" x2="440" y2="270" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
   <text x="300" y="262" font-size="12.5" font-weight="700" fill="#8a6d0b" data-fig="v_3v3">3.3 V</text>
-  <line x1="440" y1="267.5" x2="440" y2="282.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="440" y1="270" x2="440" y2="285" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="427" y="285" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="440" y1="267.5" x2="440" y2="282.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="440" y1="270" x2="440" y2="285" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="R3.2"/>
+  <rect x="427" y="285" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R3"/>
   <text x="461" y="310" font-size="13" font-weight="700" fill="#1a1a1a">R3</text>
   <text x="461" y="328" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_pu">100 kΩ</text>
-  <line x1="440" y1="347.5" x2="440" y2="360" stroke="#23862f" stroke-width="5"/>
-  <line x1="440" y1="345" x2="440" y2="360" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="440" y1="347.5" x2="440" y2="360" stroke="#23862f" stroke-width="5" data-net="RECEIVER"/>
+  <line x1="440" y1="345" x2="440" y2="360" stroke="#3cbf4e" stroke-width="2.5" data-net="RECEIVER" data-ends="R3.1"/>
 
   <!-- ===== the receiver's output to the pin ===== -->
-  <line x1="236" y1="360" x2="642.5" y2="360" stroke="#23862f" stroke-width="5"/>
-  <line x1="640" y1="357.5" x2="640" y2="402.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="637.5" y1="400" x2="694" y2="400" stroke="#23862f" stroke-width="5"/>
-  <line x1="236" y1="360" x2="640" y2="360" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="640" y1="360" x2="640" y2="400" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="640" y1="400" x2="694" y2="400" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="236" y1="360" x2="642.5" y2="360" stroke="#23862f" stroke-width="5" data-net="RECEIVER"/>
+  <line x1="640" y1="357.5" x2="640" y2="402.5" stroke="#23862f" stroke-width="5" data-net="RECEIVER"/>
+  <line x1="637.5" y1="400" x2="694" y2="400" stroke="#23862f" stroke-width="5" data-net="RECEIVER"/>
+  <line x1="236" y1="360" x2="640" y2="360" stroke="#3cbf4e" stroke-width="2.5" data-net="RECEIVER"/>
+  <line x1="640" y1="360" x2="640" y2="400" stroke="#3cbf4e" stroke-width="2.5" data-net="RECEIVER"/>
+  <line x1="640" y1="400" x2="694" y2="400" stroke="#3cbf4e" stroke-width="2.5" data-net="RECEIVER"/>
 
   <!-- ===== GND to the receiver, and on its own cable around to the emitter ===== -->
-  <line x1="236" y1="440" x2="694" y2="440" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="236" y1="440" x2="694" y2="440" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
   <circle cx="500" cy="440" r="4" fill="#1a1a1a"/>
-  <line x1="500" y1="440" x2="500" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="500" y1="490" x2="940" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="940" y1="490" x2="940" y2="200" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="940" y1="200" x2="906" y2="200" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="500" y1="440" x2="500" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="500" y1="490" x2="940" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="940" y1="490" x2="940" y2="200" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="940" y1="200" x2="906" y2="200" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
 
   <!-- ===== emitter ===== -->
-  <rect x="700" y="120" width="200" height="110" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="700" y="120" width="200" height="110" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="emitter"/>
   <text x="716" y="146" font-size="16" font-weight="700" fill="#7a2556">Emitter</text>
   <text x="716" y="164" font-size="11.5" fill="#666">Kingbright AM4457F3C</text>
   <text x="716" y="180" font-size="11.5" fill="#666" data-fig="lam_p">infrared LED, 940 nm</text>
@@ -78,7 +78,7 @@
   <text x="820" y="282" font-size="11.5" fill="#8a6d0b" data-fig="d_gap">3.9 cm</text>
 
   <!-- ===== receiver ===== -->
-  <rect x="700" y="310" width="200" height="150" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="700" y="310" width="200" height="150" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="receiver"/>
   <text x="716" y="336" font-size="16" font-weight="700" fill="#7a2556">Receiver</text>
   <text x="716" y="354" font-size="11.5" fill="#666">Vishay TEKT5400S</text>
   <text x="716" y="370" font-size="11.5" fill="#666">phototransistor, HIGH = ball</text>

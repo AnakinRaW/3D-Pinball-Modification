@@ -1,4 +1,4 @@
-<svg viewBox="0 0 1230 714" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg data-boards="motherboard:main" viewBox="0 0 1230 714" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="1230" height="714" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Audio output</text>
   <text x="30" y="56" font-size="13" fill="#666" data-fig="r_spk v_dd">The Teensy sends I²S to a MAX98357A module beside it on the motherboard, which drives the stock 8 Ω speaker from the machine's 5 V</text>
@@ -12,15 +12,15 @@
   <text x="150" y="137" text-anchor="end" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_dd">5 V</text>
   <circle cx="160" cy="158" r="6" fill="#1a1a1a"/>
   <text x="150" y="163" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="166" y1="132" x2="224" y2="132" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="166" y1="158" x2="224" y2="158" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="166" y1="132" x2="224" y2="132" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-MB-PWR.1"/>
+  <line x1="166" y1="158" x2="224" y2="158" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-MB-PWR.2"/>
 
   <!-- ===== Teensy motherboard ===== -->
   <rect x="200" y="66" width="840" height="510" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
   <text x="216" y="88" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
 
   <!-- J-MB-PWR, fed from the power board's J-MAIN -->
-  <rect x="230" y="96" width="90" height="76" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="230" y="96" width="90" height="76" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-MB-PWR"/>
   <text x="275" y="114" text-anchor="middle" font-size="14" font-weight="700" fill="#333333">J-MB-PWR</text>
   <circle cx="230" cy="132" r="6" fill="#c0392b"/>
   <circle cx="320" cy="132" r="6" fill="#c0392b"/>
@@ -30,32 +30,32 @@
   <text x="275" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- J-MB-PWR's GND onto the board's ground -->
-  <line x1="326" y1="158" x2="340" y2="158" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="340" y1="158" x2="340" y2="172" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="326" y1="172" x2="354" y2="172" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="331" y1="178" x2="349" y2="178" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="336" y1="184" x2="344" y2="184" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="326" y1="158" x2="340" y2="158" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-MB-PWR.2"/>
+  <line x1="340" y1="158" x2="340" y2="172" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="326" y1="172" x2="354" y2="172" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="331" y1="178" x2="349" y2="178" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="336" y1="184" x2="344" y2="184" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- 5 V to D1 and the Teensy's VIN, to VCC, and through R4 to GAIN -->
-  <line x1="326" y1="132" x2="780" y2="132" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="326" y1="132" x2="780" y2="132" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-MB-PWR.1"/>
   <circle cx="380" cy="132" r="4" fill="#c0392b"/>
-  <line x1="380" y1="132" x2="380" y2="152" stroke="#c0392b" stroke-width="2.5"/>
-  <polygon points="369,152 391,152 380,172" fill="#1a1a1a"/>
-  <line x1="368" y1="173" x2="392" y2="173" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="368" y1="173" x2="368" y2="165" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="392" y1="173" x2="392" y2="181" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="380" y1="174" x2="380" y2="206" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="380" y1="132" x2="380" y2="152" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="D1.A"/>
+  <polygon points="369,152 391,152 380,172" fill="#1a1a1a" data-part="D1"/>
+  <line x1="368" y1="173" x2="392" y2="173" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="368" y1="173" x2="368" y2="165" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="392" y1="173" x2="392" y2="181" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="380" y1="174" x2="380" y2="206" stroke="#c0392b" stroke-width="2.5" data-net="VIN" data-ends="D1.K"/>
   <text x="400" y="162" font-size="12.5" font-weight="700" fill="#1a1a1a">D1</text>
   <text x="400" y="176" font-size="11" fill="#666">1N5819</text>
   <circle cx="660" cy="132" r="4" fill="#c0392b"/>
-  <line x1="660" y1="132" x2="660" y2="206" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="780" y1="132" x2="780" y2="142" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="660" y1="132" x2="660" y2="206" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A2.VCC"/>
+  <line x1="780" y1="132" x2="780" y2="142" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="R4.1"/>
 
-  <rect x="767" y="142" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="767" y="142" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R4"/>
   <text x="802" y="164" font-size="13" font-weight="700" fill="#1a1a1a">R4</text>
   <text x="802" y="180" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gain">100 kΩ</text>
   <text x="802" y="196" font-size="11.5" fill="#666" data-fig="gain">3 dB, the lowest gain</text>
-  <line x1="780" y1="202" x2="780" y2="206" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="780" y1="202" x2="780" y2="206" stroke="#c0392b" stroke-width="2.5" data-net="GAIN" data-ends="R4.2 A2.GAIN"/>
 
   <!-- Teensy -->
   <rect x="240" y="212" width="200" height="300" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
@@ -80,7 +80,7 @@
   <text x="430" y="496" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- DFR0954 module, the motherboard's second daughter board -->
-  <rect x="620" y="212" width="200" height="300" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <rect x="620" y="212" width="200" height="300" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="A2"/>
   <text x="720" y="430" text-anchor="middle" font-size="16" font-weight="700" fill="#5c4a00">DFR0954</text>
   <text x="720" y="448" text-anchor="middle" font-size="11.5" fill="#666">MAX98357A, class D</text>
   <text x="720" y="464" text-anchor="middle" font-size="11.5" fill="#666">SD pulled up: left channel</text>
@@ -108,28 +108,28 @@
   <text x="808" y="376" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SPK−</text>
 
   <!-- I²S lines on the board -->
-  <line x1="446" y1="282" x2="614" y2="282" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="446" y1="332" x2="614" y2="332" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="446" y1="382" x2="614" y2="382" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="446" y1="282" x2="614" y2="282" stroke="#1f4fd1" stroke-width="2.5" data-net="DIN" data-ends="A2.DIN"/>
+  <line x1="446" y1="332" x2="614" y2="332" stroke="#1f4fd1" stroke-width="2.5" data-net="LRC" data-ends="A2.LRC"/>
+  <line x1="446" y1="382" x2="614" y2="382" stroke="#1f4fd1" stroke-width="2.5" data-net="BCLK" data-ends="A2.BCLK"/>
 
   <!-- the Teensy's ground and the module's onto the board's ground -->
-  <line x1="446" y1="492" x2="614" y2="492" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="446" y1="492" x2="614" y2="492" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A2.GND"/>
   <circle cx="530" cy="492" r="4" fill="#1a1a1a"/>
-  <line x1="530" y1="492" x2="530" y2="506" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="516" y1="506" x2="544" y2="506" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="521" y1="512" x2="539" y2="512" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="526" y1="518" x2="534" y2="518" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="530" y1="492" x2="530" y2="506" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="516" y1="506" x2="544" y2="506" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="521" y1="512" x2="539" y2="512" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="526" y1="518" x2="534" y2="518" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- speaker -->
-  <rect x="1080" y="272" width="120" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="1080" y="272" width="120" height="140" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="speaker"/>
   <text x="1100" y="336" font-size="16" font-weight="700" fill="#7a2556">Speaker</text>
   <text x="1100" y="354" font-size="11.5" fill="#666" data-fig="r_spk">8 Ω, stock</text>
   <text x="1092" y="316" font-size="13" font-weight="700" fill="#4d4d4d">+</text>
   <text x="1092" y="376" font-size="13" font-weight="700" fill="#4d4d4d">−</text>
-  <line x1="826" y1="312" x2="1074" y2="312" stroke="#808080" stroke-width="5"/>
-  <line x1="826" y1="372" x2="1074" y2="372" stroke="#808080" stroke-width="5"/>
-  <line x1="826" y1="312" x2="1074" y2="312" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="826" y1="372" x2="1074" y2="372" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="826" y1="312" x2="1074" y2="312" stroke="#808080" stroke-width="5" data-part="speaker"/>
+  <line x1="826" y1="372" x2="1074" y2="372" stroke="#808080" stroke-width="5" data-part="speaker"/>
+  <line x1="826" y1="312" x2="1074" y2="312" stroke="#ffffff" stroke-width="2.5" data-part="speaker"/>
+  <line x1="826" y1="372" x2="1074" y2="372" stroke="#ffffff" stroke-width="2.5" data-part="speaker"/>
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="820" cy="312" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="820" cy="372" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>

@@ -37,15 +37,17 @@
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
 | | at the Teensy motherboard | 2 each | Dupont | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
+| Contacts | J-MB-STORE and J-MB-TARGETS, at the Teensy motherboard | 3 each | Dupont | Two contact lines into the port expander's E pins and their foil's GND |
+| | J-MB-SPARE, at the Teensy motherboard | 5 | Dupont | E-5 to E-8 and GND, for contacts still to come |
 
 ## By pole count
 
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
 | 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
-| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, the servo plug | |
+| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, 2 contact headers, the servo plug | |
 | 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, the D24V5F3's socket, J-DISP-MOD) | |
-| 5 | | 2 (J-SENSE-TEENSY) | |
+| 5 | | 3 (2 J-SENSE-TEENSY, J-MB-SPARE) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |
 | 12 | | 1 (the display bus) | |
