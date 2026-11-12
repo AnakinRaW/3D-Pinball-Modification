@@ -135,7 +135,7 @@ with MODEL.block("FAULT", section=SUPPLY):
 
 asm("place_gate", 10, "mm", src="how close R11 to R14 and R21 to R24 sit to their gate, against "
     "gate loop pickup; no datasheet states one")
-asm("place_filter", 15, "mm", src="how close R31 to R33 and C1 to C3 sit to J-M, so the wire is "
+asm("place_filter", 20, "mm", src="how close R31 to R33 and C1 to C3 sit to J-M, so the wire is "
     "filtered where it lands; no datasheet states one")
 asm("place_flyback", 20, "mm", src="how close D1 to D4 sit to their coil connector, which keeps "
     "the flyback loop short; no datasheet states one")
