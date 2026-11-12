@@ -341,6 +341,8 @@ def tables(o, L, y):
             what = f"{ohms_text(p.opt['value'])} resistor" + (", standing" if p.opt.get("standing") else "")
         rows.append((p.ref, what, ", ".join(f"{pin} {nm(h)}" if len(p.holes) > 2 else nm(h)
                                             for h, pin in zip(p.holes, p.pins))[:70]))
+    for ref, how in getattr(L, "offboard_parts", {}).items():
+        rows.append((ref, "off the board", how[:70]))
     yy = y + 22
     for i, r in enumerate(rows):
         st = dict(size=11.5, weight="700" if i == 0 else "400", fill="#1a1a1a" if i == 0 else "#444",

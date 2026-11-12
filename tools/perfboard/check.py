@@ -253,7 +253,7 @@ def check(L):
         net_of_group[g] = sorted(nets)[0]
     placed = {p.ref for p in L.parts}
     for net, pins in L.nets.items():
-        gs = {f(L.pin_hole(x)) for x in pins if x.rpartition(".")[0] in placed}
+        gs = {f(L.pin_hole(x)) for x in pins if x.split(".", 1)[0] in placed}
         if len(gs) > 1:
             E.append(f"open: {net} falls apart into {len(gs)} pieces")
     for p in L.parts:

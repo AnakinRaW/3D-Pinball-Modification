@@ -84,6 +84,8 @@ L.part("C1", "ceramic_k15", ["B28", "A28"])
 L.part("Q1", "to220", ["G5", "G4", "G3"], tab=+1)          # holes of pins 1, 2, 3
 L.part("U1", "cd74hct125e", pin1="C3", along=(1, 0))       # in a socket unless socket=False
 L.part("A1", "teensy41", at="B2", rot=0)                   # the hole under the module's first pin
+L.part("U3", "adafruit1207", at="C5", carries=True)        # an SOIC chip on its adapter
+L.offboard("A2", "on a cable from J3")                     # a netlist part that sits off this board
 L.part("X1", "terminal_5mm", ["B28", "D28"], entry=(1, 0)) # entry: the way the wires come in from
 L.part("J2", "pads", ["B>", "C>"])                         # edge pads: C< left of column 1, C> right
 L.bare("A1", "A5"); L.tin("A5", "A6"); L.link("C3", "C7"); L.wire("J4", "J24", via=["I4"])
@@ -93,3 +95,5 @@ LAYOUT = L
 ```
 
 `netlist` names the subsystem's model and the board it declares, as [`tools/CLAUDE.md`](../CLAUDE.md#boards) describes. Its nets stand in for `L.net`, and a resistor takes its value and its `fig` from there. The check reports a part placed here and missing there or the other way round, another inventory part, another value, and a net the layout declares itself. A layout of a board no model declares yet names its nets with `L.net`. A pin is named `REF.PIN`: `1` and `2` for a resistor or a ceramic, `K`/`A` for a diode, `+`/`-` for an electrolytic, `G`/`D`/`S` for a TO-220, the pin number for an IC, a header, a terminal, a module and the pads. A `tab` of +1 puts the TO-220's metal tab to the left of the way from pin 1 to pin 3 on the drawing. A value label that states a figure of a subsystem's model carries that figure's key in `fig`, so figcheck reads the drawing.
+
+An adapter placed with `carries=True` holds the chip the netlist declares under the same designator. The adapter's pin n is the chip's pin n, so its pins take the chip's names from the netlist, and the check compares the chip's entry with the netlist's. `L.offboard(ref, how)` names a part of the netlist that sits off the board, such as a module on a cable. The check then expects it unplaced, and the Parts table lists it with `how`.

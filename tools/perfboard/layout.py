@@ -23,6 +23,8 @@ from inventory import BOARDS, PARTS, MODULES, PITCH, edge_pads, unique_names
 
 
 def row_name(i):
+    if i < 0:
+        raise ValueError(f"row index {i} lies off the board")
     s = ""
     i += 1
     while i:
@@ -128,6 +130,7 @@ class Layout:
         self.limits = []
         self.notes = []
         self.declared, self.model, self.free = None, None, set()
+        self.offboard_parts = {}
         if netlist:
             self._declared(*netlist)
 
@@ -182,6 +185,16 @@ class Layout:
             opt.update(at=at, rot=rot, names=[n for _, _, n in m["pins"]])
             # a module's pins go by their names, as the netlist names them
             pins = unique_names(n for _, _, n in m["pins"])
+            if opt.get("carries"):
+                # an adapter: its pin n is the carried chip's pin n, which the netlist names
+                if d is None:
+                    raise KeyError(f"{ref} carries a chip, and the netlist declares no {ref}")
+                chip = d.pins
+                order = sorted(range(len(pins)), key=lambda i: int(pins[i]))
+                hs = [hs[i] for i in order]
+                pins = tuple(chip[int(pins[i]) - 1] for i in order)
+                opt["names"] = list(pins)
+                opt["carries"] = d.key
         elif PARTS[key]["kind"] in ("dip",):
             n = PARTS[key]["pins"]
             half = n // 2
@@ -239,6 +252,11 @@ class Layout:
     def note(self, text):
         self.notes.append(text)
 
+    def offboard(self, ref, how=""):
+        """A part of the netlist that stays off this board, such as a module hanging on a cable.
+        how says where it sits and how it is reached."""
+        self.offboard_parts[ref] = how
+
     def against_netlist(self):
         """Where the layout departs from the netlist its model declares: a part placed here and
         not there or the other way round, another inventory part, another value, a net of its
@@ -246,12 +264,18 @@ class Layout:
         if not self.declared:
             return []
         E, placed = [], {p.ref: p for p in self.parts}
+        for ref in self.offboard_parts:
+            if ref not in self.declared.parts:
+                E.append(f"{ref} is marked off the board and the netlist holds no {ref}")
+            elif ref in placed:
+                E.append(f"{ref} is marked off the board and placed on it")
         for ref, d in self.declared.parts.items():
             p = placed.get(ref)
             if p is None:
-                E.append(f"{ref} of the netlist is not placed")
+                if ref not in self.offboard_parts:
+                    E.append(f"{ref} of the netlist is not placed")
                 continue
-            if p.key != d.key:
+            if p.opt.get("carries", p.key) != d.key:
                 E.append(f"{ref} is a {p.key} here and a {d.key} in the netlist")
             elif p.pins != d.pins:
                 E.append(f"{ref} has the pins {', '.join(p.pins)} here and "
