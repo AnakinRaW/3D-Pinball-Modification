@@ -11,7 +11,7 @@
   <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">SPI crossing and the two converters</text>
 
   <!-- J-IR-TEENSY, the connector to the Teensy -->
-  <rect x="40" y="130" width="160" height="310" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="40" y="130" width="160" height="310" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-IR-TEENSY"/>
   <text x="54" y="154" font-size="13" font-weight="700" fill="#333333">J-IR-TEENSY</text>
   <text x="54" y="170" font-size="11" fill="#777">8-pin</text>
   <text x="54" y="186" font-size="9.5" fill="#777">pins per pin-assignment.md</text>
@@ -39,77 +39,77 @@
   <text x="54" y="434" font-size="10.5" fill="#777">Teensy GND</text>
 
   <!-- the conductors, named where they leave J-IR-TEENSY -->
-  <line x1="200" y1="220" x2="226" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="226" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <line x1="200" y1="220" x2="226" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK" data-ends="J-IR-TEENSY.1"/>
+  <rect x="226" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK"/>
   <text x="276" y="224" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK</text>
-  <line x1="326" y1="220" x2="374" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="200" y1="250" x2="226" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="226" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <line x1="326" y1="220" x2="374" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK" data-ends="U3.INA"/>
+  <line x1="200" y1="250" x2="226" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI" data-ends="J-IR-TEENSY.2"/>
+  <rect x="226" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI"/>
   <text x="276" y="254" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI</text>
-  <line x1="326" y1="250" x2="374" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="200" y1="280" x2="226" y2="280" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="226" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <line x1="326" y1="250" x2="374" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI" data-ends="U3.INB"/>
+  <line x1="200" y1="280" x2="226" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A" data-ends="J-IR-TEENSY.3"/>
+  <rect x="226" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A"/>
   <text x="276" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-A</text>
-  <line x1="326" y1="280" x2="374" y2="280" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="200" y1="310" x2="226" y2="310" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="226" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <line x1="326" y1="280" x2="374" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A" data-ends="U3.INC"/>
+  <line x1="200" y1="310" x2="226" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B" data-ends="J-IR-TEENSY.4"/>
+  <rect x="226" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B"/>
   <text x="276" y="314" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-B</text>
-  <line x1="326" y1="310" x2="374" y2="310" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="200" y1="340" x2="226" y2="340" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="226" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <line x1="326" y1="310" x2="374" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B" data-ends="U3.IND"/>
+  <line x1="200" y1="340" x2="226" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK" data-ends="J-IR-TEENSY.5"/>
+  <rect x="226" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK"/>
   <text x="276" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CLOCK</text>
-  <line x1="326" y1="340" x2="374" y2="340" stroke="#1f4fd1" stroke-width="2.5"/>
-  <line x1="200" y1="370" x2="223.5" y2="370" stroke="#23862f" stroke-width="5"/>
-  <line x1="200" y1="370" x2="226" y2="370" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="226" y="360" width="76" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="326" y1="340" x2="374" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK" data-ends="U3.INE"/>
+  <line x1="200" y1="370" x2="223.5" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO"/>
+  <line x1="200" y1="370" x2="226" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO" data-ends="J-IR-TEENSY.6"/>
+  <rect x="226" y="360" width="76" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="MISO"/>
   <text x="264" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">MISO</text>
-  <line x1="304.5" y1="370" x2="311.5" y2="370" stroke="#23862f" stroke-width="5"/>
-  <line x1="302" y1="370" x2="314" y2="370" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="314" y="360" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="304.5" y1="370" x2="311.5" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO"/>
+  <line x1="302" y1="370" x2="314" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO" data-ends="R34.1"/>
+  <rect x="314" y="360" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R34"/>
   <text data-fig="r_miso" x="337" y="374" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
   <text x="338" y="356" font-size="10" fill="#777">R34</text>
-  <line x1="362.5" y1="370" x2="374" y2="370" stroke="#23862f" stroke-width="5"/>
-  <line x1="360" y1="370" x2="374" y2="370" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="200" y1="400" x2="223.5" y2="400" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="200" y1="400" x2="226" y2="400" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="226" y="390" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="362.5" y1="370" x2="374" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO-OUTF"/>
+  <line x1="360" y1="370" x2="374" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO-OUTF" data-ends="R34.2 U3.OUTF"/>
+  <line x1="200" y1="400" x2="223.5" y2="400" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
+  <line x1="200" y1="400" x2="226" y2="400" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="J-IR-TEENSY.7"/>
+  <rect x="226" y="390" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3-TEENSY"/>
   <text x="282" y="404" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3 (Teensy)</text>
-  <line x1="340.5" y1="400" x2="356" y2="400" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="356" y1="397.5" x2="356" y2="442.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="338" y1="400" x2="356" y2="400" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="356" y1="400" x2="356" y2="445" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="338" y1="445" x2="374" y2="445" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="338" y1="459" x2="374" y2="459" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="340.5" y1="400" x2="356" y2="400" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
+  <line x1="356" y1="397.5" x2="356" y2="442.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
+  <line x1="338" y1="400" x2="356" y2="400" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY"/>
+  <line x1="356" y1="400" x2="356" y2="445" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="C3.1"/>
+  <line x1="338" y1="445" x2="374" y2="445" stroke="#1a1a1a" stroke-width="3.5" data-part="C3"/>
+  <line x1="338" y1="459" x2="374" y2="459" stroke="#1a1a1a" stroke-width="3.5" data-part="C3"/>
   <text x="330" y="449" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">C3</text>
   <text data-fig="c_decoupling" x="330" y="463" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="356" y1="459" x2="356" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="356" y1="459" x2="356" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="C3.2"/>
   <circle cx="356" cy="490" r="4" fill="#1a1a1a"/>
-  <line x1="200" y1="430" x2="236" y2="430" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="236" y1="430" x2="236" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="236" y1="490" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="200" y1="430" x2="236" y2="430" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="J-IR-TEENSY.8"/>
+  <line x1="236" y1="430" x2="236" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1"/>
+  <line x1="236" y1="490" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1"/>
 
   <!-- U3, the isolator between the two rails -->
-  <rect x="364" y="108" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <rect x="364" y="108" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3-TEENSY"/>
   <text x="420" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3 (Teensy)</text>
-  <line x1="420" y1="130.5" x2="420" y2="180" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="420" y1="128" x2="420" y2="180" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="490" y="108" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="420" y1="130.5" x2="420" y2="180" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
+  <line x1="420" y1="128" x2="420" y2="180" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="U3.VCC1"/>
+  <rect x="490" y="108" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
   <text x="528" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="528" y1="130.5" x2="528" y2="180" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="528" y1="128" x2="528" y2="180" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="528" y1="150" x2="612.5" y2="150" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="610" y1="147.5" x2="610" y2="161.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="528" y1="150" x2="610" y2="150" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="610" y1="150" x2="610" y2="164" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="592" y1="164" x2="628" y2="164" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="592" y1="178" x2="628" y2="178" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="528" y1="130.5" x2="528" y2="180" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="528" y1="128" x2="528" y2="180" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="U3.VCC2"/>
+  <line x1="528" y1="150" x2="612.5" y2="150" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="610" y1="147.5" x2="610" y2="161.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="528" y1="150" x2="610" y2="150" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
+  <line x1="610" y1="150" x2="610" y2="164" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="C4.1"/>
+  <line x1="592" y1="164" x2="628" y2="164" stroke="#1a1a1a" stroke-width="3.5" data-part="C4"/>
+  <line x1="592" y1="178" x2="628" y2="178" stroke="#1a1a1a" stroke-width="3.5" data-part="C4"/>
   <text x="636" y="168" text-anchor="start" font-size="10.5" font-weight="700" fill="#1a1a1a">C4</text>
   <text data-fig="c_decoupling" x="636" y="182" text-anchor="start" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="610" y1="178" x2="610" y2="194" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="596" y1="194" x2="624" y2="194" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="601" y1="200" x2="619" y2="200" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="606" y1="206" x2="614" y2="206" stroke="#1a1a1a" stroke-width="2"/>
-  <rect x="374" y="180" width="200" height="230" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <line x1="610" y1="178" x2="610" y2="194" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C4.2"/>
+  <line x1="596" y1="194" x2="624" y2="194" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="601" y1="200" x2="619" y2="200" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="606" y1="206" x2="614" y2="206" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
+  <rect x="374" y="180" width="200" height="230" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="U3"/>
   <text x="474" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#5c4a00">U3: ISO7761F</text>
   <line x1="474" y1="210" x2="474" y2="400" stroke="#5b4a8a" stroke-width="1.5" stroke-dasharray="5 4"/>
   <text x="426" y="174" font-size="9.5" font-weight="700" fill="#8a6d0b">VCC1</text>
@@ -122,52 +122,52 @@
   <circle cx="574" cy="220" r="5" fill="#1f4fd1"/>
   <text x="566" y="224" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTA</text>
   <text x="566" y="234.5" text-anchor="end" font-size="8.5" fill="#777">pin 15</text>
-  <line x1="574" y1="220" x2="600" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="600" y="210" width="76" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="638" y="224" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK</text>
+  <line x1="574" y1="220" x2="600" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U3.OUTA"/>
+  <rect x="600" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
+  <text x="650" y="224" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
   <circle cx="374" cy="250" r="5" fill="#1f4fd1"/>
   <text x="382" y="254" font-size="10.5" font-weight="700" fill="#1f4fd1">INB</text>
   <text x="382" y="264.5" font-size="8.5" fill="#777">pin 3</text>
   <circle cx="574" cy="250" r="5" fill="#1f4fd1"/>
   <text x="566" y="254" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTB</text>
   <text x="566" y="264.5" text-anchor="end" font-size="8.5" fill="#777">pin 14</text>
-  <line x1="574" y1="250" x2="600" y2="250" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="600" y="240" width="76" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="638" y="254" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI</text>
+  <line x1="574" y1="250" x2="600" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U3.OUTB"/>
+  <rect x="600" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
+  <text x="650" y="254" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
   <circle cx="374" cy="280" r="5" fill="#1f4fd1"/>
   <text x="382" y="284" font-size="10.5" font-weight="700" fill="#1f4fd1">INC</text>
   <text x="382" y="294.5" font-size="8.5" fill="#777">pin 4</text>
   <circle cx="574" cy="280" r="5" fill="#1f4fd1"/>
   <text x="566" y="284" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTC</text>
   <text x="566" y="294.5" text-anchor="end" font-size="8.5" fill="#777">pin 13</text>
-  <line x1="574" y1="280" x2="600" y2="280" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="600" y="270" width="76" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="638" y="284" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A</text>
+  <line x1="574" y1="280" x2="600" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A-2" data-ends="U3.OUTC"/>
+  <rect x="600" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A-2"/>
+  <text x="650" y="284" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A (board)</text>
   <circle cx="374" cy="310" r="5" fill="#1f4fd1"/>
   <text x="382" y="314" font-size="10.5" font-weight="700" fill="#1f4fd1">IND</text>
   <text x="382" y="324.5" font-size="8.5" fill="#777">pin 5</text>
   <circle cx="574" cy="310" r="5" fill="#1f4fd1"/>
   <text x="566" y="314" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTD</text>
   <text x="566" y="324.5" text-anchor="end" font-size="8.5" fill="#777">pin 12</text>
-  <line x1="574" y1="310" x2="600" y2="310" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="600" y="300" width="76" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="638" y="314" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B</text>
+  <line x1="574" y1="310" x2="600" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B-2" data-ends="U3.OUTD"/>
+  <rect x="600" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B-2"/>
+  <text x="650" y="314" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B (board)</text>
   <circle cx="374" cy="340" r="5" fill="#1f4fd1"/>
   <text x="382" y="344" font-size="10.5" font-weight="700" fill="#1f4fd1">INE</text>
   <text x="382" y="354.5" font-size="8.5" fill="#777">pin 6</text>
   <circle cx="574" cy="340" r="5" fill="#1f4fd1"/>
   <text x="566" y="344" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTE</text>
   <text x="566" y="354.5" text-anchor="end" font-size="8.5" fill="#777">pin 11</text>
-  <line x1="574" y1="340" x2="600" y2="340" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="600" y="330" width="76" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="638" y="344" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK</text>
+  <line x1="574" y1="340" x2="600" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK-2" data-ends="U3.OUTE"/>
+  <rect x="600" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK-2"/>
+  <text x="650" y="344" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK (board)</text>
   <text x="382" y="374" font-size="10.5" font-weight="700" fill="#1f7a33">OUTF</text>
   <text x="382" y="384.5" font-size="8.5" fill="#777">pin 7</text>
   <text x="566" y="374" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">INF</text>
   <text x="566" y="384.5" text-anchor="end" font-size="8.5" fill="#777">pin 10</text>
-  <line x1="574" y1="370" x2="597.5" y2="370" stroke="#23862f" stroke-width="5"/>
-  <line x1="574" y1="370" x2="600" y2="370" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="600" y="360" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="574" y1="370" x2="597.5" y2="370" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
+  <line x1="574" y1="370" x2="600" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="U3.INF"/>
+  <rect x="600" y="360" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
   <text x="643" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
   <!-- channel direction, the triangle sits at the driving pin -->
   <polygon points="412,211 412,229 438,220" fill="#1f4fd1"/>
@@ -183,46 +183,46 @@
   <circle cx="528" cy="410" r="5" fill="#1a1a1a"/>
   <text x="522" y="424" text-anchor="end" font-size="9.5" font-weight="700" fill="#1a1a1a">GND2</text>
   <text x="522" y="434.5" text-anchor="end" font-size="8.5" fill="#777">pin 9</text>
-  <line x1="420" y1="410" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="528" y1="410" x2="528" y2="448" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="514" y1="448" x2="542" y2="448" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="519" y1="454" x2="537" y2="454" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="524" y1="460" x2="532" y2="460" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="420" y1="410" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="U3.GND1"/>
+  <line x1="528" y1="410" x2="528" y2="448" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U3.GND2"/>
+  <line x1="514" y1="448" x2="542" y2="448" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="519" y1="454" x2="537" y2="454" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="524" y1="460" x2="532" y2="460" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
 
   <!-- R36, the pull-up that keeps ADC-DOUT defined -->
-  <rect x="740" y="180" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <rect x="740" y="180" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
   <text x="778" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="778" y1="202.5" x2="778" y2="215.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="778" y1="200" x2="778" y2="218" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="765" y="218" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="778" y1="202.5" x2="778" y2="215.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="778" y1="200" x2="778" y2="218" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="R36.1"/>
+  <rect x="765" y="218" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R36"/>
   <text data-fig="r_dout_pu" x="759" y="248" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">10 k&#937;</text>
   <text x="759" y="262" text-anchor="end" font-size="10" fill="#777">R36</text>
-  <line x1="778" y1="280.5" x2="778" y2="293.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="778" y1="278" x2="778" y2="296" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="735" y="296" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="778" y1="280.5" x2="778" y2="293.5" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
+  <line x1="778" y1="278" x2="778" y2="296" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R36.2"/>
+  <rect x="735" y="296" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
   <text x="778" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
 
   <!-- U1, board channels 1 to 8 -->
-  <rect x="40" y="580" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="83" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK</text>
-  <line x1="126" y1="590" x2="200" y2="590" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="40" y="610" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="83" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI</text>
-  <line x1="126" y1="620" x2="200" y2="620" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="40" y="640" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="83" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A</text>
-  <line x1="126" y1="650" x2="200" y2="650" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="40" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <rect x="26" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
+  <text x="76" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
+  <line x1="126" y1="590" x2="200" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U1.13"/>
+  <rect x="26" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
+  <text x="76" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
+  <line x1="126" y1="620" x2="200" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U1.11"/>
+  <rect x="26" y="640" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A-2"/>
+  <text x="76" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A (board)</text>
+  <line x1="126" y1="650" x2="200" y2="650" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A-2" data-ends="U1.10"/>
+  <rect x="40" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
   <text x="83" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
-  <line x1="128.5" y1="680" x2="137.5" y2="680" stroke="#23862f" stroke-width="5"/>
-  <line x1="126" y1="680" x2="140" y2="680" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="140" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="128.5" y1="680" x2="137.5" y2="680" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
+  <line x1="126" y1="680" x2="140" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R37.1"/>
+  <rect x="140" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R37"/>
   <text data-fig="r_dout" x="163" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="142" y="662" font-size="10" fill="#777">R37</text>
-  <line x1="188.5" y1="680" x2="200" y2="680" stroke="#23862f" stroke-width="5"/>
-  <line x1="186" y1="680" x2="200" y2="680" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="200" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <line x1="188.5" y1="680" x2="200" y2="680" stroke="#23862f" stroke-width="5" data-net="DOUT-U1"/>
+  <line x1="186" y1="680" x2="200" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-U1" data-ends="R37.2 U1.12"/>
+  <rect x="200" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="U1"/>
   <text x="208" y="750" font-size="13" font-weight="700" fill="#5c4a00">U1: MCP3008</text>
   <text x="208" y="766" font-size="10" fill="#777">8 channels, 10 bit, SPI</text>
   <text x="208" y="782" font-size="10" fill="#777">board channels 1 to 8</text>
@@ -239,51 +239,51 @@
   <text x="212" y="694.5" font-size="8.5" fill="#777">pin 12</text>
   <text x="358" y="584" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH0</text>
   <text x="358" y="594.5" text-anchor="end" font-size="8.5" fill="#777">pin 1</text>
-  <line x1="370" y1="580" x2="393.5" y2="580" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="580" x2="396" y2="580" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="570" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="580" x2="393.5" y2="580" stroke="#23862f" stroke-width="5" data-net="CH1"/>
+  <line x1="370" y1="580" x2="396" y2="580" stroke="#3cbf4e" stroke-width="2.5" data-net="CH1" data-ends="U1.1"/>
+  <rect x="396" y="570" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH1"/>
   <text x="431" y="584" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH1</text>
   <text x="358" y="614" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH1</text>
   <text x="358" y="624.5" text-anchor="end" font-size="8.5" fill="#777">pin 2</text>
-  <line x1="370" y1="610" x2="393.5" y2="610" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="610" x2="396" y2="610" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="600" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="610" x2="393.5" y2="610" stroke="#23862f" stroke-width="5" data-net="CH2"/>
+  <line x1="370" y1="610" x2="396" y2="610" stroke="#3cbf4e" stroke-width="2.5" data-net="CH2" data-ends="U1.2"/>
+  <rect x="396" y="600" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH2"/>
   <text x="431" y="614" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH2</text>
   <text x="358" y="644" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH2</text>
   <text x="358" y="654.5" text-anchor="end" font-size="8.5" fill="#777">pin 3</text>
-  <line x1="370" y1="640" x2="393.5" y2="640" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="640" x2="396" y2="640" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="630" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="640" x2="393.5" y2="640" stroke="#23862f" stroke-width="5" data-net="CH3"/>
+  <line x1="370" y1="640" x2="396" y2="640" stroke="#3cbf4e" stroke-width="2.5" data-net="CH3" data-ends="U1.3"/>
+  <rect x="396" y="630" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH3"/>
   <text x="431" y="644" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH3</text>
   <text x="358" y="674" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH3</text>
   <text x="358" y="684.5" text-anchor="end" font-size="8.5" fill="#777">pin 4</text>
-  <line x1="370" y1="670" x2="393.5" y2="670" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="670" x2="396" y2="670" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="660" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="670" x2="393.5" y2="670" stroke="#23862f" stroke-width="5" data-net="CH4"/>
+  <line x1="370" y1="670" x2="396" y2="670" stroke="#3cbf4e" stroke-width="2.5" data-net="CH4" data-ends="U1.4"/>
+  <rect x="396" y="660" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH4"/>
   <text x="431" y="674" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH4</text>
   <text x="358" y="704" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH4</text>
   <text x="358" y="714.5" text-anchor="end" font-size="8.5" fill="#777">pin 5</text>
-  <line x1="370" y1="700" x2="393.5" y2="700" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="700" x2="396" y2="700" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="690" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="700" x2="393.5" y2="700" stroke="#23862f" stroke-width="5" data-net="CH5"/>
+  <line x1="370" y1="700" x2="396" y2="700" stroke="#3cbf4e" stroke-width="2.5" data-net="CH5" data-ends="U1.5"/>
+  <rect x="396" y="690" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH5"/>
   <text x="431" y="704" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH5</text>
   <text x="358" y="734" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH5</text>
   <text x="358" y="744.5" text-anchor="end" font-size="8.5" fill="#777">pin 6</text>
-  <line x1="370" y1="730" x2="393.5" y2="730" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="730" x2="396" y2="730" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="720" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="730" x2="393.5" y2="730" stroke="#23862f" stroke-width="5" data-net="CH6"/>
+  <line x1="370" y1="730" x2="396" y2="730" stroke="#3cbf4e" stroke-width="2.5" data-net="CH6" data-ends="U1.6"/>
+  <rect x="396" y="720" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH6"/>
   <text x="431" y="734" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH6</text>
   <text x="358" y="764" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH6</text>
   <text x="358" y="774.5" text-anchor="end" font-size="8.5" fill="#777">pin 7</text>
-  <line x1="370" y1="760" x2="393.5" y2="760" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="760" x2="396" y2="760" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="750" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="760" x2="393.5" y2="760" stroke="#23862f" stroke-width="5" data-net="CH7"/>
+  <line x1="370" y1="760" x2="396" y2="760" stroke="#3cbf4e" stroke-width="2.5" data-net="CH7" data-ends="U1.7"/>
+  <rect x="396" y="750" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH7"/>
   <text x="431" y="764" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH7</text>
   <text x="358" y="794" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH7</text>
   <text x="358" y="804.5" text-anchor="end" font-size="8.5" fill="#777">pin 8</text>
-  <line x1="370" y1="790" x2="393.5" y2="790" stroke="#23862f" stroke-width="5"/>
-  <line x1="370" y1="790" x2="396" y2="790" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="396" y="780" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="370" y1="790" x2="393.5" y2="790" stroke="#23862f" stroke-width="5" data-net="CH8"/>
+  <line x1="370" y1="790" x2="396" y2="790" stroke="#3cbf4e" stroke-width="2.5" data-net="CH8" data-ends="U1.8"/>
+  <rect x="396" y="780" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH8"/>
   <text x="431" y="794" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH8</text>
   <text x="230" y="823" text-anchor="middle" font-size="9.5" font-weight="700" fill="#8a6d0b">VDD</text>
   <text x="230" y="813" text-anchor="middle" font-size="8.5" fill="#777">pin 16</text>
@@ -295,54 +295,54 @@
   <circle cx="340" cy="830" r="5" fill="#1a1a1a"/>
   <text x="340" y="823" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">DGND</text>
   <text x="340" y="813" text-anchor="middle" font-size="8.5" fill="#777">pin 9</text>
-  <line x1="230" y1="830" x2="230" y2="860" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="265" y1="830" x2="265" y2="862.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="216.5" y1="860" x2="267.5" y2="860" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="230" y1="830" x2="230" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="265" y1="830" x2="265" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="214" y1="860" x2="265" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <polygon points="214,860 200,854 200,866" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="230" y1="830" x2="230" y2="860" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="265" y1="830" x2="265" y2="862.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="216.5" y1="860" x2="267.5" y2="860" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="230" y1="830" x2="230" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="U1.16"/>
+  <line x1="265" y1="830" x2="265" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="U1.15"/>
+  <line x1="214" y1="860" x2="265" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC"/>
+  <polygon points="214,860 200,854 200,866" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3_ADC"/>
   <text x="192" y="864" text-anchor="end" font-size="11" font-weight="700" fill="#8a6d0b">3V3_ADC</text>
-  <line x1="247" y1="860" x2="247" y2="897.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="247" y1="860" x2="247" y2="900" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="229" y1="900" x2="265" y2="900" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="229" y1="914" x2="265" y2="914" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="247" y1="860" x2="247" y2="897.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="247" y1="860" x2="247" y2="900" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="C1.1"/>
+  <line x1="229" y1="900" x2="265" y2="900" stroke="#1a1a1a" stroke-width="3.5" data-part="C1"/>
+  <line x1="229" y1="914" x2="265" y2="914" stroke="#1a1a1a" stroke-width="3.5" data-part="C1"/>
   <text x="223" y="904" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">C1</text>
   <text data-fig="c_decoupling" x="223" y="918" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="247" y1="914" x2="247" y2="930" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="233" y1="930" x2="261" y2="930" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="238" y1="936" x2="256" y2="936" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="243" y1="942" x2="251" y2="942" stroke="#1a1a1a" stroke-width="2"/>
-  <line x1="305" y1="830" x2="305" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="340" y1="830" x2="340" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="305" y1="890" x2="340" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="247" y1="914" x2="247" y2="930" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C1.2"/>
+  <line x1="233" y1="930" x2="261" y2="930" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="238" y1="936" x2="256" y2="936" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="243" y1="942" x2="251" y2="942" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
+  <line x1="305" y1="830" x2="305" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.14"/>
+  <line x1="340" y1="830" x2="340" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.9"/>
+  <line x1="305" y1="890" x2="340" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
   <circle cx="305" cy="890" r="4" fill="#1a1a1a"/>
   <circle cx="340" cy="890" r="4" fill="#1a1a1a"/>
-  <line x1="322" y1="890" x2="322" y2="906" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="308" y1="906" x2="336" y2="906" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="313" y1="912" x2="331" y2="912" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="318" y1="918" x2="326" y2="918" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="322" y1="890" x2="322" y2="906" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="308" y1="906" x2="336" y2="906" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="313" y1="912" x2="331" y2="912" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="318" y1="918" x2="326" y2="918" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- U2, board channels 9 to 16 -->
-  <rect x="520" y="580" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="563" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK</text>
-  <line x1="606" y1="590" x2="680" y2="590" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="520" y="610" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="563" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI</text>
-  <line x1="606" y1="620" x2="680" y2="620" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="520" y="640" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="563" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B</text>
-  <line x1="606" y1="650" x2="680" y2="650" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="520" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <rect x="506" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
+  <text x="556" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
+  <line x1="606" y1="590" x2="680" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U2.13"/>
+  <rect x="506" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
+  <text x="556" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
+  <line x1="606" y1="620" x2="680" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U2.11"/>
+  <rect x="506" y="640" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B-2"/>
+  <text x="556" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B (board)</text>
+  <line x1="606" y1="650" x2="680" y2="650" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B-2" data-ends="U2.10"/>
+  <rect x="520" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
   <text x="563" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
-  <line x1="608.5" y1="680" x2="617.5" y2="680" stroke="#23862f" stroke-width="5"/>
-  <line x1="606" y1="680" x2="620" y2="680" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="620" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="608.5" y1="680" x2="617.5" y2="680" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
+  <line x1="606" y1="680" x2="620" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R38.1"/>
+  <rect x="620" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R38"/>
   <text data-fig="r_dout" x="643" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="622" y="662" font-size="10" fill="#777">R38</text>
-  <line x1="668.5" y1="680" x2="680" y2="680" stroke="#23862f" stroke-width="5"/>
-  <line x1="666" y1="680" x2="680" y2="680" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="680" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <line x1="668.5" y1="680" x2="680" y2="680" stroke="#23862f" stroke-width="5" data-net="DOUT-U2"/>
+  <line x1="666" y1="680" x2="680" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-U2" data-ends="R38.2 U2.12"/>
+  <rect x="680" y="560" width="170" height="270" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="U2"/>
   <text x="688" y="750" font-size="13" font-weight="700" fill="#5c4a00">U2: MCP3008</text>
   <text x="688" y="766" font-size="10" fill="#777">8 channels, 10 bit, SPI</text>
   <text x="688" y="782" font-size="10" fill="#777">board channels 9 to 16</text>
@@ -359,51 +359,51 @@
   <text x="692" y="694.5" font-size="8.5" fill="#777">pin 12</text>
   <text x="838" y="584" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH0</text>
   <text x="838" y="594.5" text-anchor="end" font-size="8.5" fill="#777">pin 1</text>
-  <line x1="850" y1="580" x2="873.5" y2="580" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="580" x2="876" y2="580" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="570" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="580" x2="873.5" y2="580" stroke="#23862f" stroke-width="5" data-net="CH9"/>
+  <line x1="850" y1="580" x2="876" y2="580" stroke="#3cbf4e" stroke-width="2.5" data-net="CH9" data-ends="U2.1"/>
+  <rect x="876" y="570" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH9"/>
   <text x="911" y="584" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH9</text>
   <text x="838" y="614" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH1</text>
   <text x="838" y="624.5" text-anchor="end" font-size="8.5" fill="#777">pin 2</text>
-  <line x1="850" y1="610" x2="873.5" y2="610" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="610" x2="876" y2="610" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="600" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="610" x2="873.5" y2="610" stroke="#23862f" stroke-width="5" data-net="CH10"/>
+  <line x1="850" y1="610" x2="876" y2="610" stroke="#3cbf4e" stroke-width="2.5" data-net="CH10" data-ends="U2.2"/>
+  <rect x="876" y="600" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH10"/>
   <text x="911" y="614" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH10</text>
   <text x="838" y="644" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH2</text>
   <text x="838" y="654.5" text-anchor="end" font-size="8.5" fill="#777">pin 3</text>
-  <line x1="850" y1="640" x2="873.5" y2="640" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="640" x2="876" y2="640" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="630" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="640" x2="873.5" y2="640" stroke="#23862f" stroke-width="5" data-net="CH11"/>
+  <line x1="850" y1="640" x2="876" y2="640" stroke="#3cbf4e" stroke-width="2.5" data-net="CH11" data-ends="U2.3"/>
+  <rect x="876" y="630" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH11"/>
   <text x="911" y="644" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH11</text>
   <text x="838" y="674" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH3</text>
   <text x="838" y="684.5" text-anchor="end" font-size="8.5" fill="#777">pin 4</text>
-  <line x1="850" y1="670" x2="873.5" y2="670" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="670" x2="876" y2="670" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="660" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="670" x2="873.5" y2="670" stroke="#23862f" stroke-width="5" data-net="CH12"/>
+  <line x1="850" y1="670" x2="876" y2="670" stroke="#3cbf4e" stroke-width="2.5" data-net="CH12" data-ends="U2.4"/>
+  <rect x="876" y="660" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH12"/>
   <text x="911" y="674" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH12</text>
   <text x="838" y="704" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH4</text>
   <text x="838" y="714.5" text-anchor="end" font-size="8.5" fill="#777">pin 5</text>
-  <line x1="850" y1="700" x2="873.5" y2="700" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="700" x2="876" y2="700" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="690" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="700" x2="873.5" y2="700" stroke="#23862f" stroke-width="5" data-net="CH13"/>
+  <line x1="850" y1="700" x2="876" y2="700" stroke="#3cbf4e" stroke-width="2.5" data-net="CH13" data-ends="U2.5"/>
+  <rect x="876" y="690" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH13"/>
   <text x="911" y="704" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH13</text>
   <text x="838" y="734" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH5</text>
   <text x="838" y="744.5" text-anchor="end" font-size="8.5" fill="#777">pin 6</text>
-  <line x1="850" y1="730" x2="873.5" y2="730" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="730" x2="876" y2="730" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="720" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="730" x2="873.5" y2="730" stroke="#23862f" stroke-width="5" data-net="CH14"/>
+  <line x1="850" y1="730" x2="876" y2="730" stroke="#3cbf4e" stroke-width="2.5" data-net="CH14" data-ends="U2.6"/>
+  <rect x="876" y="720" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH14"/>
   <text x="911" y="734" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH14</text>
   <text x="838" y="764" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH6</text>
   <text x="838" y="774.5" text-anchor="end" font-size="8.5" fill="#777">pin 7</text>
-  <line x1="850" y1="760" x2="873.5" y2="760" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="760" x2="876" y2="760" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="750" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="760" x2="873.5" y2="760" stroke="#23862f" stroke-width="5" data-net="CH15"/>
+  <line x1="850" y1="760" x2="876" y2="760" stroke="#3cbf4e" stroke-width="2.5" data-net="CH15" data-ends="U2.7"/>
+  <rect x="876" y="750" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH15"/>
   <text x="911" y="764" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH15</text>
   <text x="838" y="794" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">CH7</text>
   <text x="838" y="804.5" text-anchor="end" font-size="8.5" fill="#777">pin 8</text>
-  <line x1="850" y1="790" x2="873.5" y2="790" stroke="#23862f" stroke-width="5"/>
-  <line x1="850" y1="790" x2="876" y2="790" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="876" y="780" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="850" y1="790" x2="873.5" y2="790" stroke="#23862f" stroke-width="5" data-net="CH16"/>
+  <line x1="850" y1="790" x2="876" y2="790" stroke="#3cbf4e" stroke-width="2.5" data-net="CH16" data-ends="U2.8"/>
+  <rect x="876" y="780" width="70" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH16"/>
   <text x="911" y="794" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">CH16</text>
   <text x="710" y="823" text-anchor="middle" font-size="9.5" font-weight="700" fill="#8a6d0b">VDD</text>
   <text x="710" y="813" text-anchor="middle" font-size="8.5" fill="#777">pin 16</text>
@@ -415,54 +415,54 @@
   <circle cx="820" cy="830" r="5" fill="#1a1a1a"/>
   <text x="820" y="823" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">DGND</text>
   <text x="820" y="813" text-anchor="middle" font-size="8.5" fill="#777">pin 9</text>
-  <line x1="710" y1="830" x2="710" y2="860" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="745" y1="830" x2="745" y2="862.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="696.5" y1="860" x2="747.5" y2="860" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="710" y1="830" x2="710" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="745" y1="830" x2="745" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="694" y1="860" x2="745" y2="860" stroke="#f1c40f" stroke-width="2.5"/>
-  <polygon points="694,860 680,854 680,866" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="710" y1="830" x2="710" y2="860" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="745" y1="830" x2="745" y2="862.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="696.5" y1="860" x2="747.5" y2="860" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="710" y1="830" x2="710" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="U2.16"/>
+  <line x1="745" y1="830" x2="745" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="U2.15"/>
+  <line x1="694" y1="860" x2="745" y2="860" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC"/>
+  <polygon points="694,860 680,854 680,866" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3_ADC"/>
   <text x="672" y="864" text-anchor="end" font-size="11" font-weight="700" fill="#8a6d0b">3V3_ADC</text>
-  <line x1="727" y1="860" x2="727" y2="897.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="727" y1="860" x2="727" y2="900" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="709" y1="900" x2="745" y2="900" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="709" y1="914" x2="745" y2="914" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="727" y1="860" x2="727" y2="897.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="727" y1="860" x2="727" y2="900" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="C2.1"/>
+  <line x1="709" y1="900" x2="745" y2="900" stroke="#1a1a1a" stroke-width="3.5" data-part="C2"/>
+  <line x1="709" y1="914" x2="745" y2="914" stroke="#1a1a1a" stroke-width="3.5" data-part="C2"/>
   <text x="703" y="904" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">C2</text>
   <text data-fig="c_decoupling" x="703" y="918" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="727" y1="914" x2="727" y2="930" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="713" y1="930" x2="741" y2="930" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="718" y1="936" x2="736" y2="936" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="723" y1="942" x2="731" y2="942" stroke="#1a1a1a" stroke-width="2"/>
-  <line x1="785" y1="830" x2="785" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="820" y1="830" x2="820" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="785" y1="890" x2="820" y2="890" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="727" y1="914" x2="727" y2="930" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C2.2"/>
+  <line x1="713" y1="930" x2="741" y2="930" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="718" y1="936" x2="736" y2="936" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="723" y1="942" x2="731" y2="942" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
+  <line x1="785" y1="830" x2="785" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U2.14"/>
+  <line x1="820" y1="830" x2="820" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U2.9"/>
+  <line x1="785" y1="890" x2="820" y2="890" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
   <circle cx="785" cy="890" r="4" fill="#1a1a1a"/>
   <circle cx="820" cy="890" r="4" fill="#1a1a1a"/>
-  <line x1="802" y1="890" x2="802" y2="906" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="788" y1="906" x2="816" y2="906" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="793" y1="912" x2="811" y2="912" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="798" y1="918" x2="806" y2="918" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="802" y1="890" x2="802" y2="906" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="788" y1="906" x2="816" y2="906" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="793" y1="912" x2="811" y2="912" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="798" y1="918" x2="806" y2="918" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- ===== BAND 2: one channel in full ===== -->
   <line x1="30" y1="982" x2="930" y2="982" stroke="#ddd" stroke-width="1.5"/>
   <text x="30" y="1006" font-size="14" font-weight="700" fill="#0a6ea8">One channel in full</text>
   <text x="30" y="1022" font-size="11" fill="#666">Channel n of sixteen, n = 1 &#8230; 16. All sixteen identical.</text>
 
-  <rect x="40" y="1067" width="76" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <rect x="40" y="1067" width="76" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH4"/>
   <text x="78" y="1081" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">CHn</text>
-  <line x1="118.5" y1="1077" x2="424" y2="1077" stroke="#23862f" stroke-width="5"/>
-  <line x1="116" y1="1077" x2="424" y2="1077" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="118.5" y1="1077" x2="424" y2="1077" stroke="#23862f" stroke-width="5" data-net="CH4"/>
+  <line x1="116" y1="1077" x2="424" y2="1077" stroke="#3cbf4e" stroke-width="2.5" data-net="CH4" data-ends="J-S4.2"/>
   <text data-fig="u_node_max" x="200" y="1069" font-size="10.5" fill="#666">channel node, 0 &#8230; 3.45 V</text>
-  <line x1="160" y1="1077" x2="160" y2="1107" stroke="#1a1a1a" stroke-width="2.5"/>
-  <rect x="147" y="1107" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="160" y1="1077" x2="160" y2="1107" stroke="#1a1a1a" stroke-width="2.5" data-net="CH4" data-ends="R20.1"/>
+  <rect x="147" y="1107" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R20"/>
   <text data-fig="r_pd" x="141" y="1137" text-anchor="end" font-size="11" font-weight="700" fill="#1a1a1a">4.7 k&#937;</text>
   <text x="141" y="1151" text-anchor="end" font-size="10" fill="#777">R(16 + n)</text>
-  <line x1="160" y1="1167" x2="160" y2="1183" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="146" y1="1183" x2="174" y2="1183" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="151" y1="1189" x2="169" y2="1189" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="156" y1="1195" x2="164" y2="1195" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="160" y1="1167" x2="160" y2="1183" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="R20.2"/>
+  <line x1="146" y1="1183" x2="174" y2="1183" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="151" y1="1189" x2="169" y2="1189" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="156" y1="1195" x2="164" y2="1195" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
-  <rect x="430" y="1007" width="160" height="120" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="430" y="1007" width="160" height="120" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-S4"/>
   <text x="444" y="1031" font-size="13" font-weight="700" fill="#333333">J-Sn (sensor n)</text>
   <circle cx="430" cy="1047" r="6" fill="#c0392b"/>
   <text x="444" y="1051" font-size="11.5" fill="#c0392b">1: red</text>
@@ -470,20 +470,20 @@
   <text x="444" y="1081" font-size="11.5" fill="#1a1a1a">2: black</text>
   <text x="444" y="1111" font-size="11.5" fill="#8a6d0b">3: yellow</text>
 
-  <line x1="424" y1="1047" x2="402.5" y2="1047" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="424" y1="1047" x2="400" y2="1047" stroke="#f1c40f" stroke-width="2.5"/>
-  <polygon points="400,1047 386,1041 386,1053" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="424" y1="1047" x2="402.5" y2="1047" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="424" y1="1047" x2="400" y2="1047" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-S4.1"/>
+  <polygon points="400,1047 386,1041 386,1053" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
   <text x="378" y="1051" text-anchor="end" font-size="11" font-weight="700" fill="#8a6d0b">3V3</text>
 
-  <line x1="424" y1="1107" x2="400.5" y2="1107" stroke="#808080" stroke-width="5"/>
-  <line x1="424" y1="1107" x2="398" y2="1107" stroke="#ffffff" stroke-width="2.5"/>
-  <rect x="328" y="1097" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="424" y1="1107" x2="400.5" y2="1107" stroke="#808080" stroke-width="5" data-net="LED4"/>
+  <line x1="424" y1="1107" x2="398" y2="1107" stroke="#ffffff" stroke-width="2.5" data-net="LED4" data-ends="J-S4.3 R4.2"/>
+  <rect x="328" y="1097" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R4"/>
   <text data-fig="r_led" x="363" y="1111" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">220 &#937;</text>
   <text x="330" y="1132" font-size="10" fill="#777">Rn</text>
   <text data-fig="r_led_sharp" x="330" y="1147" font-size="10" font-weight="700" fill="#444">100 &#937; on the three boards from the stock machine</text>
-  <line x1="325.5" y1="1107" x2="306.5" y2="1107" stroke="#808080" stroke-width="5"/>
-  <line x1="328" y1="1107" x2="304" y2="1107" stroke="#ffffff" stroke-width="2.5"/>
-  <rect x="214" y="1097" width="90" height="20" rx="3" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <line x1="325.5" y1="1107" x2="306.5" y2="1107" stroke="#808080" stroke-width="5" data-net="LED-BUS"/>
+  <line x1="328" y1="1107" x2="304" y2="1107" stroke="#ffffff" stroke-width="2.5" data-net="LED-BUS" data-ends="R4.1"/>
+  <rect x="214" y="1097" width="90" height="20" rx="3" fill="#ffffff" stroke="#808080" stroke-width="1.5" data-rail="LED-BUS"/>
   <text x="259" y="1111" text-anchor="middle" font-size="11" font-weight="700" fill="#4d4d4d">LED BUS</text>
 
   <text x="610" y="1051" font-size="10.5" fill="#666">Pin 1 supply, Pin 2 the phototransistor emitter,</text>
@@ -493,42 +493,42 @@
   <line x1="30" y1="1227" x2="930" y2="1227" stroke="#ddd" stroke-width="1.5"/>
   <text x="30" y="1251" font-size="14" font-weight="700" fill="#0a6ea8">Emitter switch</text>
 
-  <rect x="40" y="1282" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
-  <text x="83" y="1296" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK</text>
-  <line x1="126" y1="1292" x2="150" y2="1292" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="150" y="1282" width="68" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="26" y="1282" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK-2"/>
+  <text x="76" y="1296" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK (board)</text>
+  <line x1="126" y1="1292" x2="150" y2="1292" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK-2" data-ends="R33.1"/>
+  <rect x="150" y="1282" width="68" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R33"/>
   <text data-fig="r_gate" x="184" y="1296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
   <text x="152" y="1276" font-size="10" fill="#777">R33</text>
-  <line x1="218" y1="1292" x2="330" y2="1292" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="218" y1="1292" x2="330" y2="1292" stroke="#1f4fd1" stroke-width="2.5" data-net="GATE" data-ends="R33.2 Q1.G"/>
   <circle cx="255" cy="1292" r="4" fill="#1f4fd1"/>
-  <line x1="255" y1="1292" x2="255" y2="1322" stroke="#1a1a1a" stroke-width="2.5"/>
-  <rect x="242" y="1322" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="255" y1="1292" x2="255" y2="1322" stroke="#1a1a1a" stroke-width="2.5" data-net="GATE" data-ends="R35.1"/>
+  <rect x="242" y="1322" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R35"/>
   <text data-fig="r_gate_pd" x="277" y="1352" font-size="11" font-weight="700" fill="#1a1a1a">100 k&#937;</text>
   <text x="277" y="1366" font-size="10" fill="#777">R35</text>
-  <line x1="255" y1="1382" x2="255" y2="1398" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="241" y1="1398" x2="269" y2="1398" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="246" y1="1404" x2="264" y2="1404" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="251" y1="1410" x2="259" y2="1410" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="255" y1="1382" x2="255" y2="1398" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="R35.2"/>
+  <line x1="241" y1="1398" x2="269" y2="1398" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="246" y1="1404" x2="264" y2="1404" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="251" y1="1410" x2="259" y2="1410" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
-  <line x1="330" y1="1266" x2="330" y2="1318" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="338" y1="1266" x2="338" y2="1281" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="338" y1="1285" x2="338" y2="1299" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="338" y1="1303" x2="338" y2="1318" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="340.5" y1="1273" x2="387.5" y2="1273" stroke="#808080" stroke-width="5"/>
-  <line x1="338" y1="1273" x2="390" y2="1273" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="338" y1="1292" x2="348" y2="1292" stroke="#1a1a1a" stroke-width="2.5"/>
-  <polygon points="338,1292 348,1287 348,1297" fill="#1a1a1a"/>
-  <line x1="348" y1="1292" x2="348" y2="1311" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="338" y1="1311" x2="356" y2="1311" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="356" y1="1311" x2="356" y2="1372" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="342" y1="1372" x2="370" y2="1372" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="347" y1="1378" x2="365" y2="1378" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="352" y1="1384" x2="360" y2="1384" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="330" y1="1266" x2="330" y2="1318" stroke="#1a1a1a" stroke-width="3" data-part="Q1"/>
+  <line x1="338" y1="1266" x2="338" y2="1281" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="338" y1="1285" x2="338" y2="1299" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="338" y1="1303" x2="338" y2="1318" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="340.5" y1="1273" x2="387.5" y2="1273" stroke="#808080" stroke-width="5" data-net="LED-BUS"/>
+  <line x1="338" y1="1273" x2="390" y2="1273" stroke="#ffffff" stroke-width="2.5" data-net="LED-BUS" data-ends="Q1.D"/>
+  <line x1="338" y1="1292" x2="348" y2="1292" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <polygon points="338,1292 348,1287 348,1297" fill="#1a1a1a" data-part="Q1"/>
+  <line x1="348" y1="1292" x2="348" y2="1311" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="338" y1="1311" x2="356" y2="1311" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="356" y1="1311" x2="356" y2="1372" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="Q1.S"/>
+  <line x1="342" y1="1372" x2="370" y2="1372" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="347" y1="1378" x2="365" y2="1378" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="352" y1="1384" x2="360" y2="1384" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
   <text x="324" y="1286" text-anchor="end" font-size="11" font-weight="700" fill="#1a1a1a">G</text>
   <text x="330" y="1254" font-size="11.5" font-weight="700" fill="#1a1a1a">Q1</text>
   <text x="366" y="1265" font-size="11" font-weight="700" fill="#1a1a1a">D</text>
   <text x="366" y="1328" font-size="11" font-weight="700" fill="#1a1a1a">S</text>
-  <rect x="390" y="1263" width="90" height="20" rx="3" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <rect x="390" y="1263" width="90" height="20" rx="3" fill="#ffffff" stroke="#808080" stroke-width="1.5" data-rail="LED-BUS"/>
   <text x="435" y="1277" text-anchor="middle" font-size="11" font-weight="700" fill="#4d4d4d">LED BUS</text>
   <text x="500" y="1277" font-size="11.5" font-weight="700" fill="#1a1a1a">Q1: IRL540N, N-channel</text>
   <text x="500" y="1293" font-size="11" fill="#666">one switch for all sixteen emitters</text>
@@ -537,58 +537,58 @@
   <line x1="30" y1="1427" x2="930" y2="1427" stroke="#ddd" stroke-width="1.5"/>
   <text data-fig="v_mod_nom" x="30" y="1451" font-size="14" font-weight="700" fill="#0a6ea8">Supply: 3.3 V from the D24V5F3 in its socket on this board; on the bench the Teensy&#8217;s 3V3 pin feeds the socket</text>
 
-  <rect x="40" y="1470" width="150" height="136" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="40" y="1470" width="150" height="136" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-D24V5F3"/>
   <text x="52" y="1490" font-size="12.5" font-weight="700" fill="#333333">D24V5F3 socket</text>
   <text data-fig="v_mod_nom" x="52" y="1520" font-size="11" font-weight="700" fill="#8a6d0b">VOUT: +3.3 V</text>
   <text x="52" y="1550" font-size="11" font-weight="700" fill="#1a1a1a">GND</text>
   <text data-fig="v_in_machine" x="52" y="1576" font-size="11" font-weight="700" fill="#c0392b">VIN: 5 V from J-IR</text>
   <text x="52" y="1594" font-size="11" font-weight="700" fill="#1a1a1a">SHDN: open</text>
   <circle cx="190" cy="1546" r="5" fill="#1a1a1a"/>
-  <line x1="196" y1="1546" x2="215" y2="1546" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="215" y1="1546" x2="215" y2="1566" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="201" y1="1566" x2="229" y2="1566" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="206" y1="1572" x2="224" y2="1572" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="211" y1="1578" x2="219" y2="1578" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="196" y1="1546" x2="215" y2="1546" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-D24V5F3.3"/>
+  <line x1="215" y1="1546" x2="215" y2="1566" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="201" y1="1566" x2="229" y2="1566" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="206" y1="1572" x2="224" y2="1572" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="211" y1="1578" x2="219" y2="1578" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
-  <line x1="196" y1="1516" x2="417.5" y2="1516" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="196" y1="1516" x2="420" y2="1516" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="196" y1="1516" x2="417.5" y2="1516" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="196" y1="1516" x2="420" y2="1516" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-D24V5F3.4 R39.1"/>
   <text x="460" y="1498" text-anchor="middle" font-size="10" fill="#777">R39</text>
-  <rect x="420" y="1504" width="80" height="24" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="420" y="1504" width="80" height="24" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R39"/>
   <text data-fig="r_ref" x="460" y="1521" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a">47 &#937;</text>
-  <line x1="502.5" y1="1516" x2="597.5" y2="1516" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="500" y1="1516" x2="600" y2="1516" stroke="#f1c40f" stroke-width="2.5"/>
-  <polygon points="614,1516 600,1510 600,1522" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="502.5" y1="1516" x2="597.5" y2="1516" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="500" y1="1516" x2="600" y2="1516" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="R39.2"/>
+  <polygon points="614,1516 600,1510 600,1522" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3_ADC"/>
   <text x="622" y="1520" font-size="11" font-weight="700" fill="#8a6d0b">3V3_ADC to U1 and U2</text>
 
-  <line x1="280" y1="1516" x2="280" y2="1541.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="280" y1="1516" x2="280" y2="1544" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="262" y1="1544" x2="298" y2="1544" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="262" y1="1558" x2="298" y2="1558" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="280" y1="1516" x2="280" y2="1541.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="280" y1="1516" x2="280" y2="1544" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="C5.1"/>
+  <line x1="262" y1="1544" x2="298" y2="1544" stroke="#1a1a1a" stroke-width="3.5" data-part="C5"/>
+  <line x1="262" y1="1558" x2="298" y2="1558" stroke="#1a1a1a" stroke-width="3.5" data-part="C5"/>
   <text x="306" y="1548" font-size="10.5" font-weight="700" fill="#1a1a1a">C5</text>
   <text data-fig="c_entry" x="306" y="1562" font-size="10.5" font-weight="700" fill="#1a1a1a">22 &#181;F</text>
   <text data-fig="c5_derated v_mod_nom" x="306" y="1575" font-size="9.5" fill="#666">X5R/X7R, &#8805; 11 &#181;F at 3.3 V bias</text>
-  <line x1="280" y1="1558" x2="280" y2="1582" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="266" y1="1582" x2="294" y2="1582" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="271" y1="1588" x2="289" y2="1588" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="276" y1="1594" x2="284" y2="1594" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="280" y1="1558" x2="280" y2="1582" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C5.2"/>
+  <line x1="266" y1="1582" x2="294" y2="1582" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="271" y1="1588" x2="289" y2="1588" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="276" y1="1594" x2="284" y2="1594" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
-  <line x1="560" y1="1516" x2="560" y2="1541.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="560" y1="1516" x2="560" y2="1544" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="542" y1="1544" x2="578" y2="1544" stroke="#1a1a1a" stroke-width="3.5"/>
-  <line x1="542" y1="1558" x2="578" y2="1558" stroke="#1a1a1a" stroke-width="3.5"/>
+  <line x1="560" y1="1516" x2="560" y2="1541.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3_ADC"/>
+  <line x1="560" y1="1516" x2="560" y2="1544" stroke="#f1c40f" stroke-width="2.5" data-net="3V3_ADC" data-ends="C6.1"/>
+  <line x1="542" y1="1544" x2="578" y2="1544" stroke="#1a1a1a" stroke-width="3.5" data-part="C6"/>
+  <line x1="542" y1="1558" x2="578" y2="1558" stroke="#1a1a1a" stroke-width="3.5" data-part="C6"/>
   <text x="586" y="1548" font-size="10.5" font-weight="700" fill="#1a1a1a">C6</text>
   <text data-fig="c_ref" x="586" y="1562" font-size="10.5" font-weight="700" fill="#1a1a1a">22 &#181;F</text>
   <text data-fig="c5_derated v_mod_nom" x="586" y="1575" font-size="9.5" fill="#666">X5R/X7R, &#8805; 11 &#181;F at 3.3 V bias</text>
-  <line x1="560" y1="1558" x2="560" y2="1582" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="546" y1="1582" x2="574" y2="1582" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="551" y1="1588" x2="569" y2="1588" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="556" y1="1594" x2="564" y2="1594" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="560" y1="1558" x2="560" y2="1582" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C6.2"/>
+  <line x1="546" y1="1582" x2="574" y2="1582" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="551" y1="1588" x2="569" y2="1588" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="556" y1="1594" x2="564" y2="1594" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
-  <line x1="340" y1="1516" x2="340" y2="1481.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="337.5" y1="1484" x2="597.5" y2="1484" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="340" y1="1516" x2="340" y2="1484" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="340" y1="1484" x2="600" y2="1484" stroke="#f1c40f" stroke-width="2.5"/>
-  <polygon points="614,1484 600,1478 600,1490" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="340" y1="1516" x2="340" y2="1481.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="337.5" y1="1484" x2="597.5" y2="1484" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="340" y1="1516" x2="340" y2="1484" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
+  <line x1="340" y1="1484" x2="600" y2="1484" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
+  <polygon points="614,1484 600,1478 600,1490" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
   <text x="622" y="1488" font-size="11" font-weight="700" fill="#8a6d0b">3V3 to Pin 1 of every sensor board, and to U3</text>
 
 
@@ -603,10 +603,10 @@
   <text x="30" y="1822" font-size="11.5" fill="#444">R39</text>
   <text x="150" y="1822" font-size="11.5" fill="#444" data-fig="r_ref">Resistor 47 &#937;</text>
   <text x="600" y="1822" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="1844" font-size="11.5" fill="#444">R1 to R16</text>
+  <text x="30" y="1844" font-size="11.5" fill="#444">R4 to R16</text>
   <text x="150" y="1844" font-size="11.5" fill="#444" data-fig="r_led">Resistor 220 &#937;</text>
   <text x="600" y="1844" font-size="11.5" fill="#444">up to 13</text>
-  <text x="30" y="1866" font-size="11.5" fill="#444">R1 to R16</text>
+  <text x="30" y="1866" font-size="11.5" fill="#444">R1 to R3</text>
   <text x="150" y="1866" font-size="11.5" fill="#444" data-fig="r_led_sharp">Resistor 100 &#937;</text>
   <text x="600" y="1866" font-size="11.5" fill="#444">3</text>
   <text x="30" y="1888" font-size="11.5" fill="#444">R37, R38</text>
@@ -657,7 +657,6 @@
   <!-- ===== pins and junctions of the light wires, on top ===== -->
   <circle cx="200" cy="370" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="200" cy="400" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <circle cx="420" cy="150" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="528" cy="150" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="420" cy="180" r="5" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="528" cy="180" r="5" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>

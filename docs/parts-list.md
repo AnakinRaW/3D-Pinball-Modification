@@ -39,8 +39,8 @@ The build takes these values from the resistor kit:
 | Value | Qty | Where |
 |---|---|---|
 | 47 Ω | 1 | R39 on the IR mainboard |
-| 100 Ω | 3 | R1 to R16 on the IR mainboard, for the three stock sensor boards |
-| 220 Ω | up to 14 | R1 to R16 on the IR mainboard for the rebuilt sensor boards, R2 on the Teensy motherboard for the break beam's emitter |
+| 100 Ω | 3 | R1 to R3 on the IR mainboard, for the three stock sensor boards |
+| 220 Ω | up to 14 | R4 to R16 on the IR mainboard for the rebuilt sensor boards, R2 on the Teensy motherboard for the break beam's emitter |
 | 330 Ω | 7 | R4 to R6 on each lighting board, R91 on the solenoid sense board |
 | 1.2 kΩ | 8 | R1 on the Teensy motherboard, R11 to R14 on the solenoid coil board, R2 on the servo board, R37 and R38 on the IR mainboard |
 | 2.2 kΩ | 9 | R1 to R3 on each lighting board, R3 on the servo board, R33 and R34 on the IR mainboard |

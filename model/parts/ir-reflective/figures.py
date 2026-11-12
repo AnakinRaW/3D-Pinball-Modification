@@ -1094,24 +1094,17 @@ for _text, _why in [
 ]:
     MODEL.aside(_text, _why)
 
-# -- wiring: every net at the Teensy, and the isolator's board-side nets ------
+# -- wiring: the mainboard, pin by pin, and the isolator's board-side nets -----
+# The nets at the Teensy come from the schematic. What it cannot hold stays declared here: the
+# Teensy's own LED on SCK, and the board-side nets, which reach no Teensy signal.
+MODEL.schematic("schematic.py")
 _SVG = "ir-sensor-mainboard.svg"
-_ISO_S1 = "design.md, U3: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, so U3 never drives MISO above the Teensy's own rail"
 _ISO_S2 = "design.md, U3: VCC2 from the board's rail"
 
-# side 1 of U3 reads the five signals the Teensy drives
-for _sig, _ch in (("SCK", "A"), ("MOSI", "B"), ("CS-A", "C"), ("CS-B", "D"), ("CLOCK", "E")):
-    _parts = [reads(f"U3 IN{_ch}", src=f"{_SVG}, channel {_ch} of the isolator")]
-    if _sig == "SCK":
-        _parts.append(reads("the Teensy's LED and its series resistor",
-                            src="PJRC schematic41.png, the LED on the SCK pin's net"))
-    MODEL.net(f"{_sig}, Teensy side", *_parts, teensy=_sig)
-
-# side 1 of U3 drives MISO: it has no enable pin, so it drives the line whenever the Teensy is powered
-MODEL.net("MISO, Teensy side",
-          drives("U3 OUTF through R34", "push-pull", rail=TEENSY_RAIL,
-                 src=_ISO_S1 + "; SLLSER1H Table 4-1 lists no enable pin"),
-          teensy="MISO")
+MODEL.net("SCK at the Teensy's LED",
+          reads("the Teensy's LED and its series resistor",
+                src="PJRC schematic41.png, the LED on the SCK pin's net"),
+          teensy="SCK")
 
 # side 2 of U3 drives the converters and Q1
 for _sig, _ch, _to in (("SCK", "A", "U1 and U2 CLK"), ("MOSI", "B", "U1 and U2 DIN"),

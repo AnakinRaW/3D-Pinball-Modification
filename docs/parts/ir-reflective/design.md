@@ -287,8 +287,8 @@ Additional to the Teensy 4.1 and the sensor boards, grouped by type and sorted b
 | Qty | Part | Type | Use |
 |---|---|---|---|
 | 1 | Resistor 47 Ω | | **R39.** With C6 the ripple filter in the supply branch of the two converters. At 1.4 mA it drops 66 mV and dissipates 92 µW |
-| up to 13 | Resistor 220 Ω | | **R1 … R16.** LED current limit, one per channel. Mandatory, the sensor board has none |
-| 3 | Resistor 100 Ω | | **R1 … R16**, the three channels the stock sensor boards sit on. Same position, brighter emitter |
+| up to 13 | Resistor 220 Ω | | **R4 … R16.** LED current limit, one per channel. Mandatory, the sensor board has none |
+| 3 | Resistor 100 Ω | | **R1 … R3**, the three channels the stock sensor boards sit on. Same position, brighter emitter |
 | 2 | Resistor 1.2 kΩ | | **R37, R38** at each converter's DOUT pin, bounding the current should both converters drive that net at once |
 | 2 | Resistor 2.2 kΩ | | **R33** limits the current into Q1's gate, **R34** the current in the MISO line should the Teensy pin and U3 ever drive against each other. Both hold U3's output inside its 2 mA figure |
 | up to 16 | Resistor 4.7 kΩ | | **R17 … R32.** Signal pull-down, one per channel position, fitted whether or not a sensor is connected |
