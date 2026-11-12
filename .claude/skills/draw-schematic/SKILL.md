@@ -138,6 +138,18 @@ Where several groups exist, list them in a placement table clear of the circuit 
 
 Every schematic under `docs/parts/` ends with a table headed Parts, at the bottom left: Ref, Part, Qty, one row for each row of the subsystem's part list, copied from it. Heading 13 bold, header row 12 bold `#1a1a1a`, a `#ccc` rule under it, rows 11.5 `#444` at 22 apart.
 
+## Netlist annotations
+
+Where the subsystem declares its boards in `schematic.py` (see `tools/CLAUDE.md#boards`), figcheck holds the drawing's wiring to those netlists:
+
+| Element | Annotation |
+|---|---|
+| Wire, outline stroke included | `data-net="GATE1"`, the net name the model declares |
+| Wire ending on a part's pin | also `data-ends="R11.2"`, the pins its two ends land on, space separated. A connector's pin is named by the wire on each side of it |
+| Every element of a part symbol | `data-part="Q1"`, the designator, or a plain name for what sits off the boards |
+
+A wire stops at a part's body and starts again on the far side, never runs underneath it. Every line of stroke width 2 or more carries one of the two annotations.
+
 ## Known limitation
 
 The white background is fixed, so these render as a bright panel against a dark GitHub theme. Changing it means reworking every existing diagram's contrast, so it stays until that is decided.

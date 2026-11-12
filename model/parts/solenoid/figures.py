@@ -447,23 +447,10 @@ for _text, _why in [
 ]:
     MODEL.aside(_text, _why)
 
-# -- wiring -------------------------------------------------------------------
-# each trigger drives its MOSFET's gate through R11 to R14, and R21 to R24 pull the gate
-# to power ground whenever the Teensy does not drive the pin
-for _n in range(1, 5):
-    MODEL.net(f"Trigger {_n}, Teensy side",
-              reads(f"Q{_n} gate through R1{_n}", src="design.md, R11 to R14 in series with the gates"),
-              pull(f"R2{_n} behind R1{_n}", "gnd", src="design.md, R21 to R24, the gate pull-downs on power ground"),
-              teensy=f"Solenoid trigger {_n}")
-
-# a ball bridges the foil and a solenoid's shell, which lifts that sense node to the
-# Teensy's 3V3 through R91; R31 to R33 hold it at signal ground otherwise
-for _n in range(1, 4):
-    MODEL.net(f"Sense {_n}, Teensy side",
-              contact(f"the ball between the foil and shell {_n}, through R91 and R4{_n}", to=TEENSY_RAIL,
-                      src="design.md, the foil is fed from the Teensy's 3V3 through R91"),
-              pull(f"R3{_n} behind R4{_n}", "gnd", src="design.md, R31 to R33, the sense pull-downs on signal ground"),
-              teensy=f"Solenoid sense {_n}")
+# -- the boards and the wiring ------------------------------------------------
+# schematic.py declares the boards pin by pin. The nets that reach a Teensy pin enter the
+# wiring check from there.
+MODEL.schematic("schematic.py")
 
 MODEL.draws("i_foil", pool=TEENSY_RAIL)   # the foil, fed from the Teensy's 3V3
 MODEL.draws(pool="driver tick")      # release() ends a pull-in on the tick after it is due

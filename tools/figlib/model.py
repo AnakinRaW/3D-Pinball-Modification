@@ -206,6 +206,9 @@ class Model:
         self.unlinted: list = []
         self.asides: list = []
         self.nets: list = []
+        self.boards: dict = {}        # name: the circuit of each of the subsystem's boards
+        self.schematic_path = None
+        self.schematic_problems: list = []
         self.owned: list = []
         self.drawn: list = []
         self.supplied: list = []
@@ -260,6 +263,22 @@ class Model:
     def net(self, name, *parts, teensy=None):
         """A net of the subsystem: every part on it, and the Teensy signal it reaches."""
         self.nets.append(Net(name, teensy, list(parts), self.name))
+
+    def schematic(self, path):
+        """The subsystem's boards, pin by pin, as the file `path` declares them beside the model.
+        The nets that reach a Teensy signal enter the wiring from there."""
+        from .circuit import load_schematic, teensy_nets
+        here = pathlib.Path(sys._getframe(1).f_globals.get("__file__", self.document)).parent
+        sch = load_schematic((here / path).resolve())
+        self.schematic_path = sch.path
+        for name, b in sch.boards.items():
+            if name in self.boards:
+                raise KeyError(f"board {name!r} is declared twice")
+            b.model = self.name
+            self.boards[name] = b
+            nets, problems = teensy_nets(b, self.name, f"{sch.path.name}, the {b.title.lower()}")
+            self.nets += nets
+            self.schematic_problems += [f"{self.name} board {name}: {m}" for m in problems]
 
     def owns(self, peripheral, why, *, serves=()):
         """A peripheral the subsystem's driver programs itself, which no other code may use. A

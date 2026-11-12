@@ -18,26 +18,6 @@
 *.bat     text eol=crlf
 *.ps1     text eol=crlf
 
-# EasyEDA Pro eprj3: a directory of line-based JSON records, documented at
-# https://github.com/easyeda/easyeda-pro-eprj3-format but not yet shipping as of
-# V3.2.149. Listed ahead of time so the files are handled correctly on arrival.
-# Bytes are preserved as EasyEDA wrote them (-text) because the parser's tolerance
-# of CRLF is unverified, while diffs stay textual so schematic changes are
-# reviewable.
-*.eprj3   -text diff
-*.esch2   -text diff
-*.epcb2   -text diff
-*.epan2   -text diff
-*.ecfg    -text diff
-*.evar    -text diff
-
-# EasyEDA Pro legacy project (eprj/eprj2) is a single SQLite3 database, and the
-# epro/epro2 exports are ZIP archives.
-*.eprj    binary
-*.eprj2   binary
-*.epro    binary
-*.epro2   binary
-
 # Fabrication outputs are sent to a manufacturer and must reach them byte-for-byte
 # as the EDA tool wrote them. Never rewrite their line endings.
 *.gbr     -text

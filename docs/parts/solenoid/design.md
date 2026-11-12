@@ -58,7 +58,7 @@ Both boards sit near the three bumpers.
 | Sense board | **J-SENSE-TEENSY** | 5 | The Teensy |
 | | **J-M** | 4 | Open wires with eyelets. One 3V for the foil and the three eyelets unpowered to the solenoid shells. |
 
-J-COIL-TEENSY on the coil board carries trigger 1 to trigger 4 from the Teensy, in that order. J-SENSE-TEENSY on the sense board carries the three senses, the Teensy's 3V3 and its ground.
+J-COIL-TEENSY on the coil board carries trigger 1 to trigger 4 from the Teensy, in that order. J-COIL-PWR carries 5 V on pin 1 and GND on pin 2. Each of J-C1 to J-C4 carries 5 V on pin 1 and the MOSFET's drain on pin 2. J-M carries shell 1 to shell 3 on pins 1 to 3 and the foil on pin 4. J-SENSE-TEENSY on the sense board carries the three senses, the Teensy's 3V3 and its ground.
 
 | J-SENSE-TEENSY pin | Signal | Direction |
 |---|---|---|

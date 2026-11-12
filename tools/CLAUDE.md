@@ -96,6 +96,8 @@ Each check reports on a separate line, and any of them can fail the run:
 | parts named by designator | Every designator a design names is one its own part list holds, one a design the same line links holds, or one the model names with `MODEL.names` as a module's or another board's |
 | datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
 | the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught |
+| the boards' netlists | Each board's netlist joins every pin of every part to exactly one net, or says why a pin stays free, and joins no net to a single pin. A part's value names a figure the model declares. The designators of the boards are those of the part list, a span such as R21 to R24 counted in full, and the boards' nets carry the same Teensy signals as the model's wiring. Each row of the part list counts the parts its Where cell names, and those parts share one inventory entry, one type and one value, which the Part cell names. A table headed `J-XYZ pin` and `Signal` names, pin by pin, the net the netlist puts on that pin, and leaves no pin out. See [Boards](#boards) |
+| the schematics' wiring | A drawing that annotates its wires is held to the boards' netlists. Each wire draws a declared net, and each pin its ends name sits on that net and touches that part's symbol. Wires that touch carry one net, the drawn pins of a net are joined by wires, and a drawn part other than a connector shows every pin. A line of stroke width 2 or more with neither annotation fails the run. See [Boards](#boards) |
 | one driver at a time | No net carries two outputs at once: an output that always drives shares its net with no other output, and tri-state outputs on one net have a select each. See [Wiring](#wiring) |
 | a defined level | A net that no push-pull output drives has a pull-up or a pull-down |
 | the Teensy's rail on its pins | Every output, pull and contact on a net that reaches a Teensy pin runs from the Teensy's own 3.3 V, or pulls to ground |
@@ -110,7 +112,7 @@ A number a diff removed from a document is reported under **Worth knowing** wher
 
 ## Writing the figures
 
-`--write` writes the model's figures into the document and the drawings, so a figure is typed in one place only. It also records the checksum of each cited datasheet that has none yet in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS). A checksum already recorded stays, so a sheet that changed is still reported. It reports every edit, and it reports the figure it could not place instead of guessing. A figure that moved far is found on the line that still reads its value at `--base`. Where figures that print different values could each take the same lines, those lines stay as they are until a `label` in the model tells the figures apart. A label is a phrase that only the figure's own line carries. A block in which a figure found no line of its own is left unwritten. Those figures go in by hand. A second run then writes the rest. A drawing is written by its `data-fig` keys and needs no such care. A pin that moved in the pin table is carried into every place that marks it.
+`--write` writes the model's figures into the document and the drawings, so a figure is typed in one place only. It also records the checksum of each cited datasheet that has none yet in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS). A checksum already recorded stays, so a sheet that changed is still reported. It reports every edit, and it reports the figure it could not place instead of guessing. A figure that moved far is found on the line that still reads its value at `--base`. Where figures that print different values could each take the same lines, those lines stay as they are until a `label` in the model tells the figures apart. A label is a phrase that only the figure's own line carries. A block in which a figure found no line of its own is left unwritten. Those figures go in by hand. A second run then writes the rest. A drawing is written by its `data-fig` keys and needs no such care. A pin that moved in the pin table is carried into every place that marks it. The Qty cells of a part list are written from the boards' netlists.
 
 ## Datasheets
 
@@ -167,6 +169,53 @@ The Teensy pin itself takes the part its Peripheral entry gives it. A port signa
 
 `MODEL.owns(peripheral, why)` claims a peripheral the subsystem's driver programs itself. The model that holds a bus run for the drivers of other subsystems claims the bus's port with `serves=(...)`, which names those subsystems. Their pins may then carry the port, as the firmware's model claims `Wire` for the rotary sensor and the port expander. `MODEL.supplies(key, pool=...)` names the figure a pool holds, and exactly one model supplies each pool. `MODEL.draws(key, pool=...)` names what the subsystem takes from it in the machine, and `MODEL.draws(pool=...)` one slot. The Teensy's model supplies its 3V3 pin under the wiring's own name for that rail, `TEENSY_RAIL`, and RAM2, and the firmware's model the slots of the driver tick and of the device monitor.
 
+## Boards
+
+A subsystem's boards are declared pin by pin in `schematic.py` beside its model, which loads it with `MODEL.schematic("schematic.py")`:
+
+```python
+from figcheck import TEENSY_RAIL, Schematic
+
+SCHEMATIC = Schematic()
+COIL = SCHEMATIC.board("coil", "Coil board")
+COIL.part("J-COIL-TEENSY", "header_male", pins=4)
+COIL.part("Q1", "to220", type="IRL540N")
+COIL.part("R11", "resistor", value="r_gate")
+COIL.net("TRIGGER1", "J-COIL-TEENSY.1", "R11.1", color="blue", label="TRIGGER 1",
+         teensy="Solenoid trigger 1")
+COIL.net("GATE1", "R11.2", "R21.1", "Q1.G", color="blue", label="GATE 1")
+COIL.net("PGND", "R21.2", "Q1.S", color="black", label="GND", rail="gnd")
+COIL.unconnected("U1.7", why="...")
+SENSE = SCHEMATIC.board("sense", "Sense board")
+SENSE.contact("J-M.1", "J-M.4", what="the ball between the foil and shell 1")
+```
+
+| Argument | Holds |
+|---|---|
+| the second of `part` | The part's entry in [`perfboard/inventory.py`](perfboard/inventory.py), which gives its pins: `1` and `2` for a resistor or a ceramic, `K` and `A` for a diode, `+` and `-` for an electrolytic, `G`, `D` and `S` for a TO-220, the number for an IC's or a module's pin |
+| `pins` | How many pins a header, a terminal or a row of edge pads has |
+| `type` | The part list's name for the part, where the value does not say it |
+| `value` | The key of the model's figure that sets the part's value |
+| `color`, `label` | The net's wire color from [`docs/connectors.md`](../docs/connectors.md), and how a drawing names it |
+| `teensy` | The Teensy signal the net carries, as the pin table names it up to the first comma |
+| `rail` | The supply a net is: `"gnd"`, `TEENSY_RAIL` for the Teensy's own 3.3 V, or the rail's name |
+| `contact` | Something off the board that joins two of its pins at times, such as a ball bridging two wires |
+| `role` | What a pin does to a Teensy net where its inventory entry cannot say, as one of the wiring's `drives`, `pull`, `reads` or `contact` |
+
+The nets that reach a Teensy signal enter the wiring check from the schematic, so a subsystem with a schematic declares no `MODEL.net`. A net reaches across a series resistor into the nets behind it. A resistor from there to a rail is a pull, and a capacitor leaves the level alone. A contact closes the net to the rail behind its far pin, across one resistor at most. Any other pin does what its role says: the one the schematic declares with `role`, or the one the part's entry in [`perfboard/inventory.py`](perfboard/inventory.py) gives in `roles`, read from the datasheet's pin table. An output takes its rail from the part's supply pin, and a 3-state output names the net on its enable pin as its select. A pin the firmware configures, such as a port expander's GP pins, needs its `role` in the schematic, and so does a part whose entry gives no roles. A connector pin with nothing declared on its far end fails the run.
+
+A schematic drawing of the model is held to these netlists once its wires carry annotations:
+
+```xml
+<line x1="500" y1="420" x2="700" y2="420" stroke="#1f4fd1" stroke-width="2.5"
+      data-net="GATE1" data-ends="R11.2 Q1.G"/>
+<rect x="430" y="410" width="70" height="20" data-part="R11" .../>
+```
+
+`data-net` is the net a wire draws, outline strokes included, and `data-ends` the part pins its ends land on. `data-part` marks every element of a part's symbol, by designator, or by a plain name for what sits off the boards. A wire stops at a part's body and starts again on the far side. A connector's pin is named by the wire on each side of it, which joins the two sides. The drawing may show one channel of several, so the check covers what is drawn: it does not require every net to appear.
+
+A perfboard layout takes its nets from here with `Layout(..., netlist=(model, board))`. [`netlist.py`](netlist.py) writes a board out for KiCad and compares a netlist KiCad exported.
+
 ## What the pins can carry
 
 The board's model declares what each pin can carry, every declaration with its source:
@@ -196,6 +245,7 @@ A signal lists the pins that can carry it, alternatives in the order the pin car
 | `checks.py` | The checks of one model, from the figures in its documents to `--mutate` |
 | `pins.py` | The pin table, the marked pins, the cost tables and the pins a diff moved |
 | `wiring.py` | The nets, the peripherals and the shared budgets, across every model |
+| `circuit.py` | Each board's netlist and its check against the part list and the wiring |
 | `write.py` | What `--write` puts into the documents and the drawings |
 | `listings.py` | What `--graph`, `--blind`, `--provenance` and `--groups` print |
 | `cli.py` | The run itself: a block for each model, then the pins and the wiring |
