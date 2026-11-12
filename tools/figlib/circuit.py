@@ -32,11 +32,11 @@ def pin_names(key: str, count: int | None, inv) -> tuple:
     if key == "pads":
         kind = "pads"
     elif key in inv.MODULES:
-        return tuple(str(i + 1) for i in range(len(inv.MODULES[key]["pins"])))
+        return inv.unique_names(n for _, _, n in inv.MODULES[key]["pins"])
     elif key in inv.PARTS:
         kind = inv.PARTS[key]["kind"]
     else:
-        raise KeyError(f"{key!r} is no part of {INVENTORY.relative_to(ROOT).as_posix()}")
+        return None
     spec = inv.PARTS.get(key, {})
     if kind in COUNTED:
         if not count:
@@ -58,6 +58,9 @@ class Part:
     type: str | None = None     # the part list's name for it, where the value does not say it
     value: str | None = None    # the key of the model's figure that sets its value
     title: str | None = None    # how a drawing names it, where the designator does not
+    roles: tuple | None = None  # its pins' roles, where its inventory entry gives none
+    listed_in: str | None = None  # the subsystem whose part list holds it, where that is
+                                  # another subsystem than the board's
 
 
 @dataclasses.dataclass
@@ -115,15 +118,25 @@ class Board:
             self._inv = inventory()
         return self._inv
 
-    def part(self, ref, key, *, pins=None, type=None, value=None, title=None):
-        """A part on the board: its designator, its inventory entry, and for a header, a
-        terminal or edge pads how many pins it has."""
+    def part(self, ref, key, *, pins=None, type=None, value=None, title=None, roles=None,
+             listed_in=None):
+        """A part on the board: its designator and its inventory entry. A header, a terminal or
+        edge pads name how many pins they have. A part the inventory does not hold names its
+        pins in order, and their roles where a Teensy net reaches them."""
         if ref in self.parts:
             raise KeyError(f"{self.name}: {ref} is declared twice")
         if not DESIGNATOR_RE.match(ref):
             raise ValueError(f"{self.name}: {ref!r} is no designator")
-        names = pin_names(key, pins, self._inventory())
-        self.parts[ref] = Part(ref, key, names, type, value, title)
+        names = pin_names(key, pins if isinstance(pins, int) else None, self._inventory())
+        if names is None:
+            if not isinstance(pins, (tuple, list)):
+                raise ValueError(f"{self.name}: {ref} is a {key}, which the inventory does not "
+                                 f"hold, so it names its pins")
+            names = self._inventory().unique_names(pins)
+        if roles is not None and len(roles) != len(names):
+            raise ValueError(f"{self.name}: {ref} names {len(roles)} roles for {len(names)} pins")
+        self.parts[ref] = Part(ref, key, names, type, value, title,
+                               tuple(roles) if roles else None, listed_in)
         return self.parts[ref]
 
     def net(self, name, *pins, color=None, label=None, teensy=None, rail=None):
@@ -164,7 +177,7 @@ class Board:
                 out.append(f"{where}: net {n.name} joins {len(n.pins)} pin, and a net "
                            f"joins two at least")
             for p in n.pins:
-                ref, _, pin = p.rpartition(".")
+                ref, _, pin = p.partition(".")
                 part = self.parts.get(ref)
                 if part is None:
                     out.append(f"{where}: net {n.name} names {p}, and {ref} is no part of "
@@ -202,7 +215,8 @@ CONNECTOR_KINDS = COUNTED
 def _kind(board, part) -> str:
     inv = board._inventory()
     return "pads" if part.key == "pads" else (
-        inv.PARTS[part.key]["kind"] if part.key in inv.PARTS else "module")
+        inv.PARTS[part.key]["kind"] if part.key in inv.PARTS else
+        "module" if part.key in inv.MODULES else "other")
 
 
 def _spec(board, part) -> dict:
@@ -214,6 +228,8 @@ def _pin_label(spec, part, pin) -> str:
     """A pin as a message names it: the part and the pin's name in its datasheet."""
     i = part.pins.index(pin)
     names = spec.get("pinout") or spec.get("pins")
+    if not spec:
+        return f"{part.ref} {pin}"
     if isinstance(names, (list, tuple)) and len(names) == len(part.pins):
         name = names[i][2] if isinstance(names[i], tuple) else names[i]
         return f"{part.ref} {name}"
@@ -225,7 +241,7 @@ def _by_role(board, part, pin, through, net_of, supply, src, WiringPart):
     string says why it cannot be told."""
     p = f"{part.ref}.{pin}"
     spec = _spec(board, part)
-    roles = spec.get("roles")
+    roles = part.roles or spec.get("roles")
     role = roles[part.pins.index(pin)] if roles else "other"
     name = _pin_label(spec, part, pin) + through
 
@@ -241,6 +257,15 @@ def _by_role(board, part, pin, through, net_of, supply, src, WiringPart):
         return WiringPart(name, "input", src=src)
     if role == "od":
         return WiringPart(name, "open-drain", src=src)
+    if role.startswith("odpull:"):
+        # an open drain with the part's own pull-up to the supply on the pin the role names
+        q = role[len("odpull:"):]
+        far = net_of.get(f"{part.ref}.{q}")
+        found = supply(far)[0] if far is not None else None
+        if found is None:
+            return f"the pull-up of {p} reaches no supply through {part.ref}.{q}"
+        return [WiringPart(name, "open-drain", src=src),
+                WiringPart(f"the pull-up inside {part.ref} on {pin}", "pull", found, src=src)]
     if role in ("supply", "gnd", "nc"):
         return None
     if role == "out" or role.startswith("tri:"):
@@ -258,7 +283,11 @@ def _by_role(board, part, pin, through, net_of, supply, src, WiringPart):
     return "its role is not declared"
 
 
-def teensy_nets(board, model: str, src: str):
+# the module that is the Teensy, whose pins the pin table describes
+TEENSY_KEY = "teensy41"
+
+
+def teensy_nets(board, model: str, src: str, own=None):
     """The nets of the board that reach a Teensy signal, each with what its parts do to it, as
     the wiring check reads a net. A net reaches across a series resistor into the nets behind it.
     A resistor from there to a supply is a pull, a capacitor does nothing to the level, and a
@@ -276,7 +305,7 @@ def teensy_nets(board, model: str, src: str):
         if net.rail:
             return net.rail, None
         for p in net.pins:
-            ref, _, pin = p.rpartition(".")
+            ref, _, pin = p.partition(".")
             part = board.parts[ref]
             if part.key == "resistor":
                 far = net_of.get(other(part, pin))
@@ -284,12 +313,13 @@ def teensy_nets(board, model: str, src: str):
                     return far.rail, ref
         return None, None
 
-    for start in (n for n in board.nets.values() if n.teensy):
+    for start in (n for n in board.nets.values()
+                  if n.teensy and (own is None or n.teensy in own)):
         region, via, frontier = [start], {start.name: []}, [start]
         while frontier:
             net = frontier.pop()
             for p in net.pins:
-                ref, _, pin = p.rpartition(".")
+                ref, _, pin = p.partition(".")
                 part = board.parts[ref]
                 if part.key != "resistor":
                     continue
@@ -304,8 +334,10 @@ def teensy_nets(board, model: str, src: str):
             behind = " behind " + " and ".join(via[net.name]) if via[net.name] else ""
             through = " through " + " and ".join(via[net.name]) if via[net.name] else ""
             for p in net.pins:
-                ref, _, pin = p.rpartition(".")
+                ref, _, pin = p.partition(".")
                 part, kind = board.parts[ref], _kind(board, board.parts[ref])
+                if part.key == TEENSY_KEY:
+                    continue
                 if p in board.roles:
                     parts.append(board.roles[p])
                 elif part.key == "resistor":
@@ -331,6 +363,8 @@ def teensy_nets(board, model: str, src: str):
                     got = _by_role(board, part, pin, through, net_of, supply, src, WiringPart)
                     if isinstance(got, str):
                         problems.append(f"{p} sits on the {start.name} side, and {got}")
+                    elif isinstance(got, list):
+                        parts += got
                     elif got is not None:
                         parts.append(got)
         out.append(WiringNet(f"{start.label or start.name} on the {board.title.lower()}",
@@ -340,8 +374,9 @@ def teensy_nets(board, model: str, src: str):
 
 # -- the check of a model's boards ------------------------------------------------------------
 PART_LIST_RE = re.compile(r"(?ms)^## Part list[ \t]*$(.*?)(?=^## |\Z)")
-# a designator of the part list, or a span of them written "R21 to R24"
-LISTED_RE = re.compile(r"(?<![\w-])([RCDUQLF])(\d{1,3})(?:\**\s+to\s+\**\1(\d{1,3}))?(?![\w-])")
+# a designator of the part list, or a span of them written "R21 to R24" or "R1 … R16"
+LISTED_RE = re.compile(r"(?<![\w-])([RCDUQLF])(\d{1,3})"
+                       r"(?:\**\s+(?:to|…|\.\.\.)\s+\**\1(\d{1,3}))?(?![\w-])")
 PLAIN_RE = re.compile(r"^[RCDUQLF]\d{1,3}$")
 
 
@@ -362,40 +397,81 @@ def listed(path) -> set | None:
     return out
 
 
+def _all_models():
+    from .repo import find_models, load_model
+    return [load_model(p) for p in find_models()]
+
+
+def teensy_pins(model) -> list[str]:
+    """A net that reaches the Teensy's own pin carries the signal the pin table gives that pin."""
+    from .pins import pin_rows
+    rows, out = {r.signal: r for r in pin_rows()}, []
+    for b in model.boards.values():
+        for n in b.nets.values():
+            for p in n.pins:
+                ref, _, pin = p.partition(".")
+                if b.parts[ref].key != TEENSY_KEY:
+                    continue
+                name = pin.split("#")[0]
+                if not name.isdigit():
+                    continue
+                row = rows.get(n.teensy) if n.teensy else None
+                if n.teensy is None:
+                    out.append(f"board {b.name}: net {n.name} reaches Teensy pin {name} and "
+                               f"names no Teensy signal")
+                elif row is None:
+                    out.append(f"board {b.name}: net {n.name} carries {n.teensy}, which the pin "
+                               f"table does not list")
+                elif name != str(row.pin):
+                    out.append(f"board {b.name}: net {n.name} carries {n.teensy} to Teensy pin "
+                               f"{name}, and the pin table gives it pin {row.pin}")
+    return out
+
+
 def pass_circuits(model, rep) -> int:
     """Each board's netlist is a circuit, sets each value from a figure of the model, holds the
     parts of the part list, and carries the Teensy signals the model's wiring declares."""
     boards = list(model.boards.values())
     if not boards:
         return 0
+    models = _all_models()
+    names = {m.name for m in models}
     for b in boards:
         for msg in b.problems():
             rep.error(msg, kind="circuit", key=b.name)
-    for msg in model.schematic_problems:
-        rep.error(msg, kind="circuit", key=model.name)
         for part in b.parts.values():
             if part.value is not None and part.value not in model.figs:
                 rep.error(f"{model.name} board {b.name}: {part.ref} takes its value from "
                           f"{part.value}, which the model does not declare",
                           kind="circuit", key=part.ref)
+            if part.listed_in and part.listed_in not in names:
+                rep.error(f"{model.name} board {b.name}: {part.ref} is listed in "
+                          f"{part.listed_in}, which no model is named", kind="circuit",
+                          key=part.ref)
+    for msg in model.schematic_problems + teensy_pins(model):
+        rep.error(msg if msg.startswith(model.name) else f"{model.name}: {msg}",
+                  kind="circuit", key=model.name)
+    # a designator names a part on its own board; a board built twice carries it twice
     on_boards = {}
     for b in boards:
         for ref in b.parts:
             if PLAIN_RE.match(ref):
-                if ref in on_boards:
-                    rep.error(f"{model.name}: {ref} sits on board {on_boards[ref]} and on "
-                              f"board {b.name}", kind="circuit", key=ref)
-                on_boards[ref] = b.name
+                on_boards.setdefault(ref, b.name)
     own = listed(model.document)
+    guests = {ref for m in models if m is not model for b in m.boards.values()
+              for ref, p in b.parts.items() if p.listed_in == model.name}
     if own is not None:
-        for ref in sorted(own - on_boards.keys()):
+        for ref in sorted(own - on_boards.keys() - guests):
             rep.error(f"{model.name}: the part list holds {ref}, which no board's netlist "
                       f"carries", kind="circuit", key=ref)
         for ref in sorted(on_boards.keys() - own):
             rep.error(f"{model.name}: board {on_boards[ref]} carries {ref}, which the part "
                       f"list does not hold", kind="circuit", key=ref)
+    from .pins import pin_rows
+    mine = {r.signal for r in pin_rows() if model.name in r.subsystems}
     wired = {n.teensy for n in model.nets if n.teensy}
-    carried = {n.teensy: b.name for b in boards for n in b.nets.values() if n.teensy}
+    carried = {n.teensy: b.name for b in boards for n in b.nets.values()
+               if n.teensy and n.teensy in mine}
     for sig in sorted(wired - carried.keys()):
         rep.error(f"{model.name}: the wiring reaches the Teensy signal {sig}, which no "
                   f"board's net carries", kind="circuit", key=sig)
@@ -440,6 +516,18 @@ def _part_index(model):
     return {ref: part for b in model.boards.values() for ref, part in b.parts.items()}
 
 
+def _instances(model) -> dict:
+    """How many parts each designator names: one on each of the model's boards that carries it,
+    and one on each other subsystem's board that carries it for this model."""
+    out = {}
+    for m in _all_models():
+        for b in m.boards.values():
+            for ref, p in b.parts.items():
+                if m is model or p.listed_in == model.name:
+                    out[ref] = out.get(ref, 0) + 1
+    return out
+
+
 def part_rows(model):
     """The rows of the document's part list against the netlists: the count each row's Qty has
     to read, and what disagrees. A row's parts share one inventory entry, one type and one value,
@@ -454,18 +542,30 @@ def part_rows(model):
         return {}, []
     first = text.count("\n", 0, m.start(1)) + 1
     parts, counts, found = _part_index(model), {}, []
+    instances = _instances(model)
     for at, head, rows in _tables(m.group(1)):
         cols = [_norm(h) for h in head]
-        if not {"qty", "part", "where"} <= set(cols):
+        # the designators stand in a Where or a Use column, a type may stand in its own
+        place = "where" if "where" in cols else "use" if "use" in cols else None
+        if not {"qty", "part"} <= set(cols) or place is None:
             continue
-        q, p, w = cols.index("qty"), cols.index("part"), cols.index("where")
+        q, p, w = cols.index("qty"), cols.index("part"), cols.index(place)
+        t = cols.index("type") if "type" in cols else None
         for line, cells in rows:
             refs = _expand(cells[w])
+            # the row lists the parts of its first designator's kind; another kind in the cell,
+            # as Q1 in "R1, with Q1, from its gate", is named in passing
+            refs = [r for r in refs if r[0] == refs[0][0]] if refs else refs
             where = f"part list, line {first + line}"
-            counts[first + line] = (len(refs), q)
-            if cells[q] != str(len(refs)):
-                found.append(f"{where} counts {cells[q]}, and its Where cell names "
-                             f"{len(refs)} parts")
+            # a count such as "up to 13" covers fitting options, which the netlist does not, and
+            # a row that names no designator, such as a module, has nothing to count
+            if not cells[q].strip().isdigit() or not refs:
+                continue
+            n = sum(instances.get(r, 0) for r in refs)
+            counts[first + line] = (n, q)
+            if cells[q].strip() != str(n):
+                found.append(f"{where} counts {cells[q].strip()}, and the boards carry {n} of "
+                             f"the parts its {place.title()} cell names")
             on = [parts[r] for r in refs if r in parts]
             if not on:
                 continue
@@ -477,7 +577,7 @@ def part_rows(model):
                              f"netlists give different parts or values")
                 continue
             key, type_, shown = kinds.pop()
-            cell = _norm(cells[p])
+            cell = _norm(cells[p] + (" " + cells[t] if t is not None else ""))
             if shown:
                 if _norm(shown) not in cell:
                     found.append(f"{where} names no {shown}, the value the netlist gives "
@@ -615,12 +715,15 @@ def schematic(path):
     """The wires a schematic SVG annotates, its part symbols, and the wide lines it leaves
     unannotated."""
     import xml.etree.ElementTree as ET
-    wires, parts, bare = [], {}, []
+    wires, parts, bare, rails = [], {}, [], []
     for el in ET.parse(path).getroot().iter():
         tag, pts = _local(el.tag), _points(el)
         if not pts:
             continue
-        if el.get("data-net") and tag in WIRE_TAGS:
+        if el.get("data-rail"):
+            # a ground or supply symbol: every one of a net's symbols is the same node
+            rails.append((el.get("data-rail"), pts, tag in ("rect", "polygon", "circle")))
+        elif el.get("data-net") and tag in WIRE_TAGS:
             wires.append({"net": el.get("data-net"), "pts": pts,
                           "ends": el.get("data-ends", "").split()})
         elif el.get("data-part"):
@@ -629,7 +732,26 @@ def schematic(path):
         elif (tag in WIRE_TAGS and float(el.get("stroke-width", 0) or 0) >= WIRE_WIDTH
               and el.get("stroke") not in (None, "none")):
             bare.append(pts)
-    return wires, parts, bare
+    return wires, parts, bare, rails
+
+
+def drawn_boards(model, path):
+    """The boards a drawing shows: those its root's data-boards names, as "board" of the model or
+    "model:board" of another, else every board of the model."""
+    import xml.etree.ElementTree as ET
+    from .repo import model_named
+    names = (ET.parse(path).getroot().get("data-boards") or "").split()
+    if not names:
+        return list(model.boards.values()), []
+    out, missing = [], []
+    for n in names:
+        owner, _, board = n.rpartition(":")
+        m = model_named(owner) if owner else model
+        if board in m.boards:
+            out.append(m.boards[board])
+        else:
+            missing.append(n)
+    return out, missing
 
 
 def _where(pts):
@@ -644,13 +766,15 @@ def check_schematic(model, path, rep) -> int:
     sides through its pin. A drawn part shows every pin, a connector only those it needs."""
     from .repo import rel
     name = rel(path)
-    wires, parts, bare = schematic(path)
-    nets, pins_of = {}, {}
-    for b in model.boards.values():
+    wires, parts, bare, rails = schematic(path)
+    boards, missing = drawn_boards(model, path)
+    nets, pins_of, free = {}, {}, set()
+    for b in boards:
         nets.update(b.nets)
         pins_of.update({ref: part.pins for ref, part in b.parts.items()})
+        free |= set(b.open)
     pin_net = {p: n.name for n in nets.values() for p in n.pins}
-    found = []
+    found = [f"data-boards names {n}, which no model declares" for n in missing]
 
     for pts in bare:
         found.append(f"the line {_where(pts)} carries neither data-net nor data-part")
@@ -662,7 +786,7 @@ def check_schematic(model, path, rep) -> int:
         if w["net"] not in nets:
             found.append(f"{at} draws net {w['net']}, which no board declares")
         for p in w["ends"]:
-            ref = p.rpartition(".")[0]
+            ref = p.partition(".")[0]
             if p not in pin_net:
                 found.append(f"{at} ends on {p}, which no netlist holds")
                 continue
@@ -701,31 +825,51 @@ def check_schematic(model, path, rep) -> int:
             if p in by_pin:
                 up[root(i)] = root(by_pin[p])
             by_pin[p] = i
+    # a wire that ends on a rail symbol joins every other wire on that rail's symbols
+    on_rail = {}
+    for i, w in enumerate(wires):
+        for rail, pts, filled in rails:
+            if any(_dist(e, pts, filled) <= JOIN for e in ends(w)):
+                if rail != w["net"]:
+                    found.append(f"the wire {_where(w['pts'])} of {w['net']} ends on a {rail} "
+                                 f"symbol")
+                elif rail in on_rail:
+                    up[root(i)] = root(on_rail[rail])
+                else:
+                    on_rail[rail] = i
     pieces = {}
     for i, w in enumerate(wires):
         if w["ends"] and w["net"] in nets:
             pieces.setdefault(w["net"], set()).add(root(i))
     for net, roots in sorted(pieces.items()):
+        # a supply net is one node wherever a drawing shows it, at a symbol or at a pin
+        if nets[net].rail:
+            continue
         if len(roots) > 1:
             found.append(f"the pins drawn on {net} fall apart into {len(roots)} pieces")
 
     for ref in parts:
-        if ref in pins_of and not ref.startswith("J-"):
-            missing = [f"{ref}.{p}" for p in pins_of[ref] if f"{ref}.{p}" not in by_pin]
-            if missing:
-                found.append(f"draws {ref} without a wire to {', '.join(missing)}")
+        # an IC is drawn with every pin; a connector or a plug-in module, such as the Teensy,
+        # only with the pins the drawing needs
+        if ref in pins_of and not ref.startswith("J-") and not re.match(r"A\d", ref):
+            unwired = [f"{ref}.{p}" for p in pins_of[ref]
+                       if f"{ref}.{p}" not in by_pin and f"{ref}.{p}" not in free]
+            if unwired:
+                found.append(f"draws {ref} without a wire to {', '.join(unwired)}")
     for msg in found:
         rep.error(f"{name}: {msg}", kind="schematic", key=name)
     return len(wires)
 
 
 def pass_schematics(model, rep) -> int:
-    """Every drawing of the model that annotates wires is held to the boards' netlists."""
-    if not model.boards:
-        return 0
+    """Every drawing of the model that annotates wires is held to the boards' netlists, its
+    model's or those its data-boards names."""
     checked = 0
     for path in model.drawings:
-        if path.exists() and "data-net=" in path.read_text(encoding="utf-8"):
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "data-net=" in text and (model.boards or "data-boards=" in text):
             check_schematic(model, path, rep)
             checked += 1
     return checked

@@ -23,6 +23,16 @@ BOARDS = {
 }
 
 
+def unique_names(names):
+    """Pin names as a netlist addresses them: a name that repeats, such as a module's GND, takes
+    #2, #3 and on from its second occurrence."""
+    seen, out = {}, []
+    for n in names:
+        seen[n] = seen.get(n, 0) + 1
+        out.append(n if seen[n] == 1 else f"{n}#{seen[n]}")
+    return tuple(out)
+
+
 def edge_pads(short):
     return short - 2
 
@@ -42,6 +52,7 @@ INSULATED_MIN = 10.0          # mm; shorter, the insulation melts back while sol
 #   out       drives it high and low from the part's supply pin
 #   tri:N     drives it only while pin N enables the output
 #   od        only pulls it low, an open drain or an open collector
+#   odpull:P  only pulls it low, and a resistor inside the part pulls it up to the supply on pin P
 #   supply, gnd, nc   a supply pin, a ground pin, a pin connected to nothing inside
 #   config    set by the firmware; the schematic declares the role it takes
 #   other     does none of these to a logic line
@@ -257,6 +268,11 @@ MODULES = {
         source="pololu.com d24v5fx-step-down-voltage-regulator-dimensions.pdf and product 2842: "
                "10.2 x 12.7, one row of 4 on 2.54, 1.27 from the edge; JP1 pin 1 SHDN"),
     "adafruit757": dict(
+        roles=("gnd", "odpull:LV", "odpull:LV", "odpull:LV", "odpull:LV", "supply",
+               "gnd", "odpull:HV", "odpull:HV", "odpull:HV", "odpull:HV", "supply"),
+        roles_source="github.com/adafruit/4-Channel-Level-Shifter-PCB, Adafruit FET 4-Channel "
+                     "Shifter.sch: each channel a BSS138 with its gate on LV, 10K from each A pin "
+                     "to LV and from each B pin to HV, so either side only pulls low",
         size=(20.447, 15.24), color="#1d4f91",
         pins=_row(3.81, 2.54, ("GND", "A4", "A3", "A2", "A1", "LV"))
              + _row(3.81, 12.70, ("GND", "B4", "B3", "B2", "B1", "HV")),

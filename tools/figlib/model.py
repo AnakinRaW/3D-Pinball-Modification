@@ -268,6 +268,10 @@ class Model:
         """The subsystem's boards, pin by pin, as the file `path` declares them beside the model.
         The nets that reach a Teensy signal enter the wiring from there."""
         from .circuit import load_schematic, teensy_nets
+        from .pins import pin_rows
+        # the Teensy signals the pin table gives this subsystem; a board's net that carries
+        # another subsystem's signal enters that subsystem's wiring, which declares it there
+        own = {r.signal for r in pin_rows() if self.name in r.subsystems}
         here = pathlib.Path(sys._getframe(1).f_globals.get("__file__", self.document)).parent
         sch = load_schematic((here / path).resolve())
         self.schematic_path = sch.path
@@ -276,7 +280,8 @@ class Model:
                 raise KeyError(f"board {name!r} is declared twice")
             b.model = self.name
             self.boards[name] = b
-            nets, problems = teensy_nets(b, self.name, f"{sch.path.name}, the {b.title.lower()}")
+            nets, problems = teensy_nets(b, self.name, f"{sch.path.name}, the {b.title.lower()}",
+                                         own)
             self.nets += nets
             self.schematic_problems += [f"{self.name} board {name}: {m}" for m in problems]
 

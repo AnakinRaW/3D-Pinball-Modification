@@ -57,7 +57,7 @@ def kicad(model, board) -> str:
     out += ["  )", "  (nets"]
     for code, net in enumerate(board.nets.values(), 1):
         nodes = " ".join(f"(node (ref {q(r)}) (pin {q(pad(board.parts[r], p))}))"
-                         for r, _, p in (x.rpartition(".") for x in net.pins))
+                         for r, _, p in (x.partition(".") for x in net.pins))
         out.append(f"    (net (code {q(code)}) (name {q(net.name)}) {nodes})")
     out += ["  )", ")"]
     return "\n".join(out) + "\n"
@@ -105,9 +105,9 @@ def diff(board, path) -> list[str]:
     count, since KiCad names a net it was given no name for after one of its pins."""
     theirs_parts, theirs = read_kicad(path)
     ours = {frozenset(f"{r}.{pad(board.parts[r], p)}" for r, _, p in
-                      (x.rpartition(".") for x in n.pins)) for n in board.nets.values()}
+                      (x.partition(".") for x in n.pins)) for n in board.nets.values()}
     names = {frozenset(f"{r}.{pad(board.parts[r], p)}" for r, _, p in
-                       (x.rpartition(".") for x in n.pins)): n.name for n in board.nets.values()}
+                       (x.partition(".") for x in n.pins)): n.name for n in board.nets.values()}
     out = [f"only in the model: part {r}" for r in sorted(board.parts.keys() - theirs_parts)]
     out += [f"only in KiCad: part {r}" for r in sorted(theirs_parts - board.parts.keys())]
     out += [f"only in the model: {names[n]} joins {', '.join(sorted(n))}"

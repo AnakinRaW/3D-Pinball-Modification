@@ -19,7 +19,7 @@ A layout file is a Python module that builds one `Layout` and names it LAYOUT:
 Holes are named by row letter and column number, as printed on the board. The edge pads are
 `C<` (the pad left of row C, before column 1) and `C>` (right of the last column).
 """
-from inventory import BOARDS, PARTS, MODULES, PITCH, edge_pads
+from inventory import BOARDS, PARTS, MODULES, PITCH, edge_pads, unique_names
 
 
 def row_name(i):
@@ -180,7 +180,8 @@ class Layout:
                 hs.append(h)
                 pins.append(str(i + 1))
             opt.update(at=at, rot=rot, names=[n for _, _, n in m["pins"]])
-            pins = tuple(pins)
+            # a module's pins go by their names, as the netlist names them
+            pins = unique_names(n for _, _, n in m["pins"])
         elif PARTS[key]["kind"] in ("dip",):
             n = PARTS[key]["pins"]
             half = n // 2
@@ -275,7 +276,7 @@ class Layout:
         return next(p for p in self.parts if p.ref == ref)
 
     def pin_hole(self, ref_pin):
-        ref, pin = ref_pin.rsplit(".", 1)
+        ref, pin = ref_pin.split(".", 1)
         p = self.find(ref)
         return p.holes[p.pins.index(pin)]
 
