@@ -129,13 +129,16 @@ for _text, _why in [
 _PU = ("design.md, the module's pull-ups R4 and R5, 4.7 kΩ; the module runs from VCC alone, "
        "which comes from the Teensy's 3V3")
 _WIRE = "docs/firmware/io/i2c-bus.md, Wire.begin() sets up the pins and their pull-ups"
-MODEL.net("SDA",
-          drives("AS5600 SDA", "open-drain", src="UM10204, every I²C device drives SDA open-drain"),
+# schematic.py declares the module and its cable pin by pin, and the AS5600's open-drain SDA
+# and its SCL input enter the wiring from there. A module pin takes one role, so the pull-ups
+# inside the module and inside the Teensy stay declared here, and the wiring merges them into
+# the nets of the same signal.
+MODEL.schematic("schematic.py")
+MODEL.net("SDA, the pull-ups",
           pull("the module's pull-up on SDA", TEENSY_RAIL, src=_PU),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SDA on Wire")
-MODEL.net("SCL",
-          reads("AS5600 SCL", src="design.md, the AS5600's input levels on the bus"),
+MODEL.net("SCL, the pull-ups",
           pull("the module's pull-up on SCL", TEENSY_RAIL, src=_PU),
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SCL on Wire")

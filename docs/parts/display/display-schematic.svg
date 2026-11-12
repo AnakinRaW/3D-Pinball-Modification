@@ -9,7 +9,7 @@
   <text x="54" y="146" font-size="11.5" fill="#666">FlexIO3 and Wire2</text>
 
   <!-- module block, seen from the screen side, the 8-bit header JP1 left, the SPI header JP2 right -->
-  <rect x="700" y="120" width="360" height="820" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="700" y="120" width="360" height="820" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="A1"/>
   <text x="880" y="148" text-anchor="middle" font-size="16" font-weight="700" fill="#7a2556">Adafruit 2090</text>
   <text x="880" y="166" text-anchor="middle" font-size="11.5" fill="#777">seen from the screen side, in landscape</text>
   <text x="712" y="194" font-size="12" font-weight="700" fill="#777">8-bit header</text>
@@ -19,52 +19,116 @@
   <circle cx="270" cy="220" r="6" fill="#1f4fd1"/>
   <text x="258" y="219" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D7</text>
   <text x="258" y="234" text-anchor="end" font-size="11.5" fill="#777" data-pin="D7 to the display">pin 27</text>
-  <line x1="276" y1="220" x2="694" y2="220" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="220" x2="494" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="D7" data-ends="J-DISP-BUS.8"/>
+  <line x1="576" y1="220" x2="694" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="D7" data-ends="J-DISP-BUS.8 A1.D7"/>
   <circle cx="270" cy="256" r="6" fill="#1f4fd1"/>
   <text x="258" y="255" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D6</text>
   <text x="258" y="270" text-anchor="end" font-size="11.5" fill="#777" data-pin="D6 to the display">pin 26</text>
-  <line x1="276" y1="256" x2="694" y2="256" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="256" x2="494" y2="256" stroke="#1f4fd1" stroke-width="2.5" data-net="D6" data-ends="J-DISP-BUS.7"/>
+  <line x1="576" y1="256" x2="694" y2="256" stroke="#1f4fd1" stroke-width="2.5" data-net="D6" data-ends="J-DISP-BUS.7 A1.D6"/>
   <circle cx="270" cy="292" r="6" fill="#1f4fd1"/>
   <text x="258" y="291" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D5</text>
   <text x="258" y="306" text-anchor="end" font-size="11.5" fill="#777" data-pin="D5 to the display">pin 39</text>
-  <line x1="276" y1="292" x2="694" y2="292" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="292" x2="494" y2="292" stroke="#1f4fd1" stroke-width="2.5" data-net="D5" data-ends="J-DISP-BUS.6"/>
+  <line x1="576" y1="292" x2="694" y2="292" stroke="#1f4fd1" stroke-width="2.5" data-net="D5" data-ends="J-DISP-BUS.6 A1.D5"/>
   <circle cx="270" cy="328" r="6" fill="#1f4fd1"/>
   <text x="258" y="327" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D4</text>
   <text x="258" y="342" text-anchor="end" font-size="11.5" fill="#777" data-pin="D4 to the display">pin 38</text>
-  <line x1="276" y1="328" x2="694" y2="328" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="328" x2="494" y2="328" stroke="#1f4fd1" stroke-width="2.5" data-net="D4" data-ends="J-DISP-BUS.5"/>
+  <line x1="576" y1="328" x2="694" y2="328" stroke="#1f4fd1" stroke-width="2.5" data-net="D4" data-ends="J-DISP-BUS.5 A1.D4"/>
   <circle cx="270" cy="364" r="6" fill="#1f4fd1"/>
   <text x="258" y="363" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D3</text>
   <text x="258" y="378" text-anchor="end" font-size="11.5" fill="#777" data-pin="D3 to the display">pin 21</text>
-  <line x1="276" y1="364" x2="694" y2="364" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="364" x2="494" y2="364" stroke="#1f4fd1" stroke-width="2.5" data-net="D3" data-ends="J-DISP-BUS.4"/>
+  <line x1="576" y1="364" x2="694" y2="364" stroke="#1f4fd1" stroke-width="2.5" data-net="D3" data-ends="J-DISP-BUS.4 A1.D3"/>
   <circle cx="270" cy="400" r="6" fill="#1f4fd1"/>
   <text x="258" y="399" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D2</text>
   <text x="258" y="414" text-anchor="end" font-size="11.5" fill="#777" data-pin="D2 to the display">pin 20</text>
-  <line x1="276" y1="400" x2="694" y2="400" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="400" x2="494" y2="400" stroke="#1f4fd1" stroke-width="2.5" data-net="D2" data-ends="J-DISP-BUS.3"/>
+  <line x1="576" y1="400" x2="694" y2="400" stroke="#1f4fd1" stroke-width="2.5" data-net="D2" data-ends="J-DISP-BUS.3 A1.D2"/>
   <circle cx="270" cy="436" r="6" fill="#1f4fd1"/>
   <text x="258" y="435" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D1</text>
   <text x="258" y="450" text-anchor="end" font-size="11.5" fill="#777" data-pin="D1 to the display">pin 23</text>
-  <line x1="276" y1="436" x2="694" y2="436" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="436" x2="494" y2="436" stroke="#1f4fd1" stroke-width="2.5" data-net="D1" data-ends="J-DISP-BUS.2"/>
+  <line x1="576" y1="436" x2="694" y2="436" stroke="#1f4fd1" stroke-width="2.5" data-net="D1" data-ends="J-DISP-BUS.2 A1.D1"/>
   <circle cx="270" cy="472" r="6" fill="#1f4fd1"/>
   <text x="258" y="471" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D0</text>
   <text x="258" y="486" text-anchor="end" font-size="11.5" fill="#777" data-pin="D0 to the display">pin 22</text>
-  <line x1="276" y1="472" x2="694" y2="472" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="472" x2="494" y2="472" stroke="#1f4fd1" stroke-width="2.5" data-net="D0" data-ends="J-DISP-BUS.1"/>
+  <line x1="576" y1="472" x2="694" y2="472" stroke="#1f4fd1" stroke-width="2.5" data-net="D0" data-ends="J-DISP-BUS.1 A1.D0"/>
   <circle cx="270" cy="760" r="6" fill="#1f4fd1"/>
   <text x="258" y="759" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">WR</text>
   <text x="258" y="774" text-anchor="end" font-size="11.5" fill="#777" data-pin="WR to the display">pin 17</text>
-  <line x1="276" y1="760" x2="694" y2="760" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="760" x2="494" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="J-DISP-BUS.9"/>
+  <line x1="576" y1="760" x2="694" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="J-DISP-BUS.9 A1.WR"/>
   <circle cx="270" cy="796" r="6" fill="#1f4fd1"/>
   <text x="258" y="795" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D/C</text>
   <text x="258" y="810" text-anchor="end" font-size="11.5" fill="#777" data-pin="D/C to the display">pin 29</text>
-  <line x1="276" y1="796" x2="694" y2="796" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="796" x2="494" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="J-DISP-BUS.10"/>
+  <line x1="576" y1="796" x2="694" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="J-DISP-BUS.10 A1.C/D"/>
   <circle cx="270" cy="832" r="6" fill="#1f4fd1"/>
   <text x="258" y="831" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CS</text>
   <text x="258" y="846" text-anchor="end" font-size="11.5" fill="#777" data-pin="CS to the display controller">pin 28</text>
-  <line x1="276" y1="832" x2="694" y2="832" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="276" y1="832" x2="494" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="J-DISP-BUS.11"/>
+  <line x1="576" y1="832" x2="694" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="J-DISP-BUS.11 A1.CS"/>
 
   <!-- the bus's ground, beside D0 -->
   <circle cx="270" cy="508" r="6" fill="#1a1a1a"/>
   <text x="258" y="513" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
-  <line x1="276" y1="508" x2="694" y2="508" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="276" y1="508" x2="494" y2="508" stroke="#1a1a1a" stroke-width="2.5" data-net="BUS-GND" data-ends="J-DISP-BUS.12"/>
+  <line x1="576" y1="508" x2="694" y2="508" stroke="#1a1a1a" stroke-width="2.5" data-net="BUS-GND" data-ends="J-DISP-BUS.12 A1.GND#2"/>
+
+  <!-- J-DISP-BUS, the bus cable at the 8-bit header -->
+  <rect x="500" y="176" width="70" height="686" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-DISP-BUS"/>
+  <text x="535" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-DISP-BUS</text>
+  <circle cx="500" cy="220" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="220" r="6" fill="#1f4fd1"/>
+  <text x="535" y="224" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D7</text>
+  <text x="535" y="238" text-anchor="middle" font-size="11.5" fill="#777">pin 8</text>
+  <circle cx="500" cy="256" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="256" r="6" fill="#1f4fd1"/>
+  <text x="535" y="260" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D6</text>
+  <text x="535" y="274" text-anchor="middle" font-size="11.5" fill="#777">pin 7</text>
+  <circle cx="500" cy="292" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="292" r="6" fill="#1f4fd1"/>
+  <text x="535" y="296" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D5</text>
+  <text x="535" y="310" text-anchor="middle" font-size="11.5" fill="#777">pin 6</text>
+  <circle cx="500" cy="328" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="328" r="6" fill="#1f4fd1"/>
+  <text x="535" y="332" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D4</text>
+  <text x="535" y="346" text-anchor="middle" font-size="11.5" fill="#777">pin 5</text>
+  <circle cx="500" cy="364" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="364" r="6" fill="#1f4fd1"/>
+  <text x="535" y="368" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D3</text>
+  <text x="535" y="382" text-anchor="middle" font-size="11.5" fill="#777">pin 4</text>
+  <circle cx="500" cy="400" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="400" r="6" fill="#1f4fd1"/>
+  <text x="535" y="404" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D2</text>
+  <text x="535" y="418" text-anchor="middle" font-size="11.5" fill="#777">pin 3</text>
+  <circle cx="500" cy="436" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="436" r="6" fill="#1f4fd1"/>
+  <text x="535" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D1</text>
+  <text x="535" y="454" text-anchor="middle" font-size="11.5" fill="#777">pin 2</text>
+  <circle cx="500" cy="472" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="472" r="6" fill="#1f4fd1"/>
+  <text x="535" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D0</text>
+  <text x="535" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
+  <circle cx="500" cy="508" r="6" fill="#1a1a1a"/>
+  <circle cx="570" cy="508" r="6" fill="#1a1a1a"/>
+  <text x="535" y="512" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <text x="535" y="526" text-anchor="middle" font-size="11.5" fill="#777">pin 12</text>
+  <circle cx="500" cy="760" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="760" r="6" fill="#1f4fd1"/>
+  <text x="535" y="764" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">WR</text>
+  <text x="535" y="778" text-anchor="middle" font-size="11.5" fill="#777">pin 9</text>
+  <circle cx="500" cy="796" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="796" r="6" fill="#1f4fd1"/>
+  <text x="535" y="800" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D/C</text>
+  <text x="535" y="814" text-anchor="middle" font-size="11.5" fill="#777">pin 10</text>
+  <circle cx="500" cy="832" r="6" fill="#1f4fd1"/>
+  <circle cx="570" cy="832" r="6" fill="#1f4fd1"/>
+  <text x="535" y="836" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">CS</text>
+  <text x="535" y="850" text-anchor="middle" font-size="11.5" fill="#777">pin 11</text>
 
   <!-- the 8-bit header JP1, pin 20 at the top -->
   <circle cx="700" cy="220" r="6" fill="#1f4fd1"/>
@@ -195,17 +259,17 @@
   <text x="880" y="644" text-anchor="middle" font-size="11.5" fill="#777">unconnected.</text>
 
   <!-- CCS held high by 3Vo, MOSI held low by GND at pin 1 -->
-  <line x1="1066" y1="256" x2="1084" y2="256" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="1066" y1="256" x2="1084" y2="256" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="1084" y="246" width="40" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="1066" y1="256" x2="1084" y2="256" stroke="#9a7d0a" stroke-width="5" data-net="3VO"/>
+  <line x1="1066" y1="256" x2="1084" y2="256" stroke="#f1c40f" stroke-width="2.5" data-net="3VO" data-ends="A1.CCS"/>
+  <rect x="1084" y="246" width="40" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3VO"/>
   <text x="1104" y="260" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d0b">3Vo</text>
-  <line x1="1066" y1="832" x2="1084" y2="832" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="1066" y1="832" x2="1084" y2="832" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="1084" y="822" width="40" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="1066" y1="832" x2="1084" y2="832" stroke="#9a7d0a" stroke-width="5" data-net="3VO"/>
+  <line x1="1066" y1="832" x2="1084" y2="832" stroke="#f1c40f" stroke-width="2.5" data-net="3VO" data-ends="A1.3Vo"/>
+  <rect x="1084" y="822" width="40" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3VO"/>
   <text x="1104" y="836" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8a6d0b">3Vo</text>
-  <line x1="1066" y1="724" x2="1150" y2="724" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="1150" y1="724" x2="1150" y2="904" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="1150" y1="904" x2="1066" y2="904" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1066" y1="724" x2="1150" y2="724" stroke="#1a1a1a" stroke-width="2.5" data-net="MOSI-GND" data-ends="A1.MOSI"/>
+  <line x1="1150" y1="724" x2="1150" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="MOSI-GND"/>
+  <line x1="1150" y1="904" x2="1066" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="MOSI-GND" data-ends="A1.GND#3"/>
 
   <!-- J-DISP from the power board, its cable soldered to the display board -->
   <rect x="140" y="1190" width="130" height="72" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
@@ -216,15 +280,29 @@
   <text x="258" y="1253" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
   <text x="140" y="1282" font-size="11" fill="#666">from the power board</text>
   <text x="140" y="1298" font-size="11.5" fill="#c0392b" data-fig="i_disp">at most 198 mA</text>
-  <line x1="276" y1="1210" x2="662" y2="1210" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="276" y1="1240" x2="686" y2="1240" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="276" y1="1210" x2="310" y2="1210" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-DISP-PWR.1"/>
+  <line x1="276" y1="1240" x2="310" y2="1240" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-DISP-PWR.2"/>
+  <line x1="392" y1="1210" x2="662" y2="1210" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-DISP-PWR.1"/>
+  <line x1="392" y1="1240" x2="686" y2="1240" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-DISP-PWR.2"/>
+
+  <!-- J-DISP-PWR, the pads the cable from J-DISP is soldered to -->
+  <rect x="316" y="1170" width="70" height="96" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-DISP-PWR"/>
+  <text x="351" y="1188" text-anchor="middle" font-size="10.5" font-weight="700" fill="#333333">J-DISP-PWR</text>
+  <circle cx="316" cy="1210" r="6" fill="#c0392b"/>
+  <circle cx="386" cy="1210" r="6" fill="#c0392b"/>
+  <text x="351" y="1214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c0392b" data-fig="v_rail">5 V</text>
+  <text x="351" y="1228" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
+  <circle cx="316" cy="1240" r="6" fill="#1a1a1a"/>
+  <circle cx="386" cy="1240" r="6" fill="#1a1a1a"/>
+  <text x="351" y="1244" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <text x="351" y="1258" text-anchor="middle" font-size="11.5" fill="#777">pin 2</text>
 
   <!-- display board -->
-  <rect x="400" y="945" width="320" height="380" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
-  <text x="414" y="966" font-size="15" font-weight="700" fill="#5c4a00">Display board</text>
+  <rect x="300" y="945" width="420" height="380" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
+  <text x="314" y="966" font-size="15" font-weight="700" fill="#5c4a00">Display board</text>
   <text x="414" y="1308" font-size="11.5" fill="#c0392b" data-fig="i_module">at most 197 mA for the module</text>
   <!-- the converter as a daughter board, its LV side on the Teensy's 3V3, its HV side on the board's 5 V -->
-  <rect x="420" y="1020" width="140" height="150" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <rect x="420" y="1020" width="140" height="150" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="A2"/>
   <text x="490" y="1070" text-anchor="middle" font-size="13" font-weight="700" fill="#5c4a00">Adafruit 757</text>
   <text x="490" y="1094" text-anchor="middle" font-size="10.5" fill="#666">a BSS138 per line</text>
   <text x="432" y="1122" font-size="11" font-weight="700" fill="#8a6d0b">LV</text>
@@ -234,22 +312,38 @@
   <!-- the touch cable, from the Teensy to the display board -->
   <text x="258" y="1045" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
   <text x="258" y="1060" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA to the touch controller">pin 25</text>
-  <line x1="276" y1="1046" x2="414" y2="1046" stroke="#808080" stroke-width="5"/>
-  <line x1="276" y1="1046" x2="414" y2="1046" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="276" y1="1046" x2="310" y2="1046" stroke="#808080" stroke-width="5" data-net="SDA"/>
+  <line x1="276" y1="1046" x2="310" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.1"/>
+  <line x1="392" y1="1046" x2="414" y2="1046" stroke="#808080" stroke-width="5" data-net="SDA"/>
+  <line x1="392" y1="1046" x2="414" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.1 A2.A1"/>
   <text x="258" y="1081" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <text x="258" y="1096" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL to the touch controller">pin 24</text>
-  <line x1="276" y1="1082" x2="414" y2="1082" stroke="#808080" stroke-width="5"/>
-  <line x1="276" y1="1082" x2="414" y2="1082" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="276" y1="1082" x2="310" y2="1082" stroke="#808080" stroke-width="5" data-net="SCL"/>
+  <line x1="276" y1="1082" x2="310" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.2"/>
+  <line x1="392" y1="1082" x2="414" y2="1082" stroke="#808080" stroke-width="5" data-net="SCL"/>
+  <line x1="392" y1="1082" x2="414" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.2 A2.A2"/>
   <text x="258" y="1123" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="276" y1="1118" x2="414" y2="1118" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="276" y1="1118" x2="414" y2="1118" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="276" y1="1118" x2="310" y2="1118" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="276" y1="1118" x2="310" y2="1118" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-TOUCH.3"/>
+  <line x1="392" y1="1118" x2="414" y2="1118" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="392" y1="1118" x2="414" y2="1118" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-TOUCH.3 A2.LV"/>
+
+  <!-- J-TOUCH, where the touch cable ends on the board -->
+  <rect x="316" y="1004" width="70" height="142" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-TOUCH"/>
+  <text x="351" y="1024" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-TOUCH</text>
+  <text x="351" y="1050" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4d4d4d">SDA</text>
+  <text x="351" y="1064" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
+  <text x="351" y="1086" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4d4d4d">SCL</text>
+  <text x="351" y="1100" text-anchor="middle" font-size="11.5" fill="#777">pin 2</text>
+  <text x="351" y="1122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a6d0b">3V3</text>
+  <text x="351" y="1136" text-anchor="middle" font-size="11.5" fill="#777">pin 3</text>
 
   <!-- the converter's ground on the board's GND -->
   <circle cx="560" cy="1154" r="6" fill="#1a1a1a"/>
   <text x="548" y="1158" text-anchor="end" font-size="11" font-weight="700" fill="#1a1a1a">GND</text>
 
   <!-- J-DISP-MOD, the cable to the module -->
-  <rect x="586" y="965" width="114" height="50" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="586" y="965" width="114" height="50" rx="6" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-DISP-MOD"/>
   <text x="643" y="986" text-anchor="middle" font-size="12" font-weight="700" fill="#333333">J-DISP-MOD</text>
   <text x="600" y="1004" text-anchor="middle" font-size="11.5" fill="#777">1</text>
   <text x="624" y="1004" text-anchor="middle" font-size="11.5" fill="#777">2</text>
@@ -257,36 +351,36 @@
   <text x="686" y="1004" text-anchor="middle" font-size="11.5" fill="#777">4</text>
 
   <!-- on the board, 5 V and GND from J-DISP, the converter's HV side and ground, to J-DISP-MOD -->
-  <line x1="662" y1="1210" x2="662" y2="1021" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="566" y1="1118" x2="662" y2="1118" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="662" y1="1210" x2="662" y2="1021" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-DISP-MOD.3"/>
+  <line x1="566" y1="1118" x2="662" y2="1118" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A2.HV"/>
   <circle cx="662" cy="1118" r="4" fill="#c0392b"/>
-  <line x1="686" y1="1240" x2="686" y2="1021" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="566" y1="1154" x2="686" y2="1154" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="686" y1="1240" x2="686" y2="1021" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-DISP-MOD.4"/>
+  <line x1="566" y1="1154" x2="686" y2="1154" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A2.GND#2"/>
   <circle cx="686" cy="1154" r="4" fill="#1a1a1a"/>
-  <line x1="566" y1="1046" x2="602.5" y2="1046" stroke="#808080" stroke-width="5"/>
-  <line x1="600" y1="1048.5" x2="600" y2="1021" stroke="#808080" stroke-width="5"/>
-  <line x1="566" y1="1046" x2="600" y2="1046" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="600" y1="1046" x2="600" y2="1021" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="566" y1="1082" x2="626.5" y2="1082" stroke="#808080" stroke-width="5"/>
-  <line x1="624" y1="1084.5" x2="624" y2="1021" stroke="#808080" stroke-width="5"/>
-  <line x1="566" y1="1082" x2="624" y2="1082" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="624" y1="1082" x2="624" y2="1021" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="566" y1="1046" x2="602.5" y2="1046" stroke="#808080" stroke-width="5" data-net="SDA-MOD"/>
+  <line x1="600" y1="1048.5" x2="600" y2="1021" stroke="#808080" stroke-width="5" data-net="SDA-MOD"/>
+  <line x1="566" y1="1046" x2="600" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA-MOD" data-ends="A2.B1"/>
+  <line x1="600" y1="1046" x2="600" y2="1021" stroke="#ffffff" stroke-width="2.5" data-net="SDA-MOD" data-ends="J-DISP-MOD.1"/>
+  <line x1="566" y1="1082" x2="626.5" y2="1082" stroke="#808080" stroke-width="5" data-net="SCL-MOD"/>
+  <line x1="624" y1="1084.5" x2="624" y2="1021" stroke="#808080" stroke-width="5" data-net="SCL-MOD"/>
+  <line x1="566" y1="1082" x2="624" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL-MOD" data-ends="A2.B2"/>
+  <line x1="624" y1="1082" x2="624" y2="1021" stroke="#ffffff" stroke-width="2.5" data-net="SCL-MOD" data-ends="J-DISP-MOD.2"/>
 
   <!-- the cable from J-DISP-MOD to the 8-bit header, its 5 V wire on Vin and RD -->
-  <line x1="662" y1="959" x2="662" y2="724" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="662" y1="724" x2="694" y2="724" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="662" y1="868" x2="694" y2="868" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="662" y1="959" x2="662" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-DISP-MOD.3"/>
+  <line x1="662" y1="724" x2="694" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A1.RD"/>
+  <line x1="662" y1="868" x2="694" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A1.Vin"/>
   <circle cx="662" cy="868" r="4" fill="#c0392b"/>
-  <line x1="686" y1="959" x2="686" y2="904" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="686" y1="904" x2="694" y2="904" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="600" y1="959" x2="600" y2="541.5" stroke="#808080" stroke-width="5"/>
-  <line x1="597.5" y1="544" x2="694" y2="544" stroke="#808080" stroke-width="5"/>
-  <line x1="600" y1="959" x2="600" y2="544" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="600" y1="544" x2="694" y2="544" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="624" y1="959" x2="624" y2="577.5" stroke="#808080" stroke-width="5"/>
-  <line x1="621.5" y1="580" x2="694" y2="580" stroke="#808080" stroke-width="5"/>
-  <line x1="624" y1="959" x2="624" y2="580" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="624" y1="580" x2="694" y2="580" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="686" y1="959" x2="686" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-DISP-MOD.4"/>
+  <line x1="686" y1="904" x2="694" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A1.GND"/>
+  <line x1="600" y1="959" x2="600" y2="541.5" stroke="#808080" stroke-width="5" data-net="SDA-MOD"/>
+  <line x1="597.5" y1="544" x2="694" y2="544" stroke="#808080" stroke-width="5" data-net="SDA-MOD"/>
+  <line x1="600" y1="959" x2="600" y2="544" stroke="#ffffff" stroke-width="2.5" data-net="SDA-MOD" data-ends="J-DISP-MOD.1"/>
+  <line x1="600" y1="544" x2="694" y2="544" stroke="#ffffff" stroke-width="2.5" data-net="SDA-MOD" data-ends="A1.SDA"/>
+  <line x1="624" y1="959" x2="624" y2="577.5" stroke="#808080" stroke-width="5" data-net="SCL-MOD"/>
+  <line x1="621.5" y1="580" x2="694" y2="580" stroke="#808080" stroke-width="5" data-net="SCL-MOD"/>
+  <line x1="624" y1="959" x2="624" y2="580" stroke="#ffffff" stroke-width="2.5" data-net="SCL-MOD" data-ends="J-DISP-MOD.2"/>
+  <line x1="624" y1="580" x2="694" y2="580" stroke="#ffffff" stroke-width="2.5" data-net="SCL-MOD" data-ends="A1.SCL"/>
 
   <!-- J-DISP-MOD's pins: SDA, SCL, 5 V, GND -->
   <circle cx="662" cy="965" r="6" fill="#c0392b"/>
@@ -305,6 +399,12 @@
   <circle cx="420" cy="1082" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="270" cy="1118" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="420" cy="1118" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="316" cy="1046" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="386" cy="1046" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="316" cy="1082" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="386" cy="1082" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="316" cy="1118" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="386" cy="1118" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
   <circle cx="560" cy="1046" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="560" cy="1082" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
   <circle cx="600" cy="965" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>

@@ -274,10 +274,9 @@ _I("C1 is at least what a stop needs", "c_c1 >= c_bulk_min")
 # -- wiring -------------------------------------------------------------------
 # the pin feeds U1 through R3, and R1 holds it low while nothing drives it; U1's input
 # clamp diode points to its own 5 V, so it can sink the pin's current but never raises the pin
-MODEL.net("Servo signal, Teensy side",
-          pull("R1", "gnd", src="design.md, R1 pulls the pin to ground through 10 kΩ"),
-          reads("U1 input A through R3", src="design.md, R3 between the Teensy and U1"),
-          teensy="Servo signal")
+# schematic.py declares the servo board pin by pin, and the Teensy's side of the signal enters
+# the wiring from there
+MODEL.schematic("schematic.py")
 MODEL.net("Servo signal, servo side",
           drives("U1 output Y", "push-pull", rail="the machine's 5 V",
                  src="design.md, U1 takes its 5 V at J-SERVO-PWR, and OE on ground keeps its output on"),

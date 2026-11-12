@@ -488,33 +488,22 @@ for _text, _why in [
     MODEL.aside(_text, _why)
 
 # -- wiring -------------------------------------------------------------------
+# schematic.py declares the display board, the module and the cables pin by pin, and the bus
+# lines and the Teensy's side of the touch bus enter the wiring from there. A module pin takes
+# one role, so the pull-ups on the Teensy's side of the touch bus stay declared here, and the
+# wiring merges them into the nets of the same signal.
+MODEL.schematic("schematic.py")
 _LVC = (f"{SCH}: every bus line from the 8-bit header enters a 74LVC245 input on the module "
         "and drives nothing back while RD is high")
-for _sig in ("D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7"):
-    MODEL.net(_sig, reads(f"the module's data buffer, input {_sig}", src=_LVC),
-              teensy=f"{_sig} to the display")
-MODEL.net("WR", reads("the module's control buffer, input WR", src=_LVC),
-          teensy="WR to the display")
-MODEL.net("CS", reads("the module's control buffer, input CS", src=_LVC),
-          teensy="CS to the display controller")
-MODEL.net("D/C", reads("the module's control buffer, input C/D", src=_LVC),
-          teensy="D/C to the display")
-
 _I2C = (f"{LVL}: each line passes a BSS138 whose gate sits at LV, the Teensy's 3V3, with a "
         "10 kΩ pull-up to LV on the Teensy's side and one to HV, the display's Vin, on the "
         f"module's side; {SCH}: R13 and R14 pull SCL and SDA up to Vin on the module, Q2 and "
         "Q3, BSS138, pass them to the touch controller")
 _WIRE = "docs/firmware/drivers/touch.md, Wire2.begin() sets up the pins and their pull-ups"
-MODEL.net("SDA",
-          drives("the converter's BSS138, which passes the touch controller's low",
-                 "open-drain", src=_I2C),
-          pull("the converter's LV pull-up", TEENSY_RAIL, src=_I2C),
+MODEL.net("SDA, the Teensy's pull-up",
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SDA to the touch controller")
-MODEL.net("SCL",
-          drives("the converter's BSS138, which passes the touch controller's low",
-                 "open-drain", src=_I2C),
-          pull("the converter's LV pull-up", TEENSY_RAIL, src=_I2C),
+MODEL.net("SCL, the Teensy's pull-up",
           pull("the Teensy's internal pull-up", TEENSY_RAIL, src=_WIRE),
           teensy="SCL to the touch controller")
 

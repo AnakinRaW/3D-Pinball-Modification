@@ -433,3 +433,8 @@ _I("a fault the 6 A adapter feeds opens F1 within its maximum time", "i_f1_open 
 
 MODEL.range("l_up_min", "l_up_max")
 MODEL.range("v_jack_min", "v_jack_max")
+
+# -- the board ----------------------------------------------------------------
+# schematic.py declares the power board pin by pin. No net of it reaches a Teensy pin, so the
+# board is checked for its netlist, its part list and its drawing.
+MODEL.schematic("schematic.py")
