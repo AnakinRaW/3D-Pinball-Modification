@@ -1,6 +1,7 @@
 """Draws a layout as one SVG: the top side, the bottom side turned over sideways, and the tables
 a builder solders from."""
 import math
+import re
 import draw as d
 from check import footprint, module_rect
 from inventory import PITCH, PARTS, MODULES, BAND_COLOR
@@ -42,10 +43,14 @@ def ohms_text(v):
 
 
 class View:
-    def __init__(self, L, y_top, bottom, mirror=False):
-        """bottom: the view shows the bottom side's copper. mirror: drawn as the board looks
-        turned over; otherwise seen through the board from above, column 1 on the left."""
-        self.L, self.bottom, self.mirror = L, bottom, mirror
+    def __init__(self, L, y_top, bottom, flip=None):
+        """bottom: the view shows the bottom side's copper. flip: "rows" draws the board turned
+        over its long edge, column 1 still on the left and row A at the bottom; "cols" turns it
+        over its short edge, column 1 on the right. mirror is true for either, since a turned
+        board shows every part the other way round."""
+        self.L, self.bottom = L, bottom
+        self.fx, self.fy = flip == "cols", flip == "rows"
+        self.mirror = self.fx or self.fy
         B = L.board
         self.ncol = B.c1 - B.c0 + 1
         pads = 1 if any(B.is_pad((r, B.c0 - 1)) or B.is_pad((r, B.c1 + 1))
@@ -56,15 +61,19 @@ class View:
 
     def px(self, h):
         B = self.L.board
-        c = h[1] - B.c0
-        if self.mirror:
+        c, r = h[1] - B.c0, h[0]
+        if self.fx:
             c = (self.ncol - 1) - c
-        return self.x0 + c * P, self.y0 + h[0] * P
+        if self.fy:
+            r = (B.rows - 1) - r
+        return self.x0 + c * P, self.y0 + r * P
 
     def mm_to_px(self, x, y):
         """A point in board millimeters (from the first kept hole) in this view."""
-        if self.mirror:
+        if self.fx:
             x = (self.ncol - 1) * PITCH - x
+        if self.fy:
+            y = (self.L.board.rows - 1) * PITCH - y
         return self.x0 + x * S, self.y0 + y * S
 
 
@@ -106,7 +115,7 @@ def board_frame(o, V, title, subtitle):
     a(f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{x1 - x0:.1f}" height="{y1 - y0:.1f}" rx="6" '
       'fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>')
     for r in range(B.rows):
-        y = V.y0 + r * P
+        y = V.px((r, B.c0))[1]
         a(d.text(x0 - 12, y, row_name(r), size=12.5, fill="#777", anchor="end"))
         a(d.text(x1 + 12, y, row_name(r), size=12.5, fill="#777", anchor="start"))
     for c in range(B.c0, B.c1 + 1):
@@ -150,12 +159,13 @@ def draw_part(o, V, p, nets):
         o += d.header(pts, S, female=(k == "socket"))
     elif k == "header_90":
         ox, oy = p.opt["out"]
-        o += d.header_90(pts, S, (-ox if V.mirror else ox, oy))
+        o += d.header_90(pts, S, (-ox if V.fx else ox, -oy if V.fy else oy))
     elif k == "terminal":
         ex, ey = p.opt["entry"]
-        o += d.terminal(pts, S, (-ex if V.mirror else ex, ey))
+        o += d.terminal(pts, S, (-ex if V.fx else ex, -ey if V.fy else ey))
     elif k == "side_led":
-        o += d.side_looker(pts[0], pts[1], S, p.key, p.opt.get("facing", 1))
+        o += d.side_looker(pts[0], pts[1], S, p.key,
+                           p.opt.get("facing", 1) * (-1 if V.mirror else 1))
     elif k in ("reflective", "reflective_grid"):
         o += d.reflective(pts, S, p.key)
     elif k == "module":
@@ -189,12 +199,20 @@ def label_part(o, V, p):
 
 
 def ghost_parts(o, V):
-    """The parts on the other side, as faint outlines, to find one's way on the bottom."""
+    """The parts on the other side, drawn faintly and without their labels inside a dashed
+    outline, so the kind of part shows through to the bottom."""
     L = V.L
+    nets = _hole_nets(L)
     for p in L.parts:
         r = footprint(L, p)
         if not r:
             continue
+        shape = []
+        draw_part(shape, V, p, nets)
+        shape = [s for s in shape if not s.lstrip().startswith("<text")]
+        o.append('<g opacity="0.22" data-svgcheck="a part on the other side, under the copper">')
+        o += shape
+        o.append("</g>")
         ax, ay = V.mm_to_px(r[0], r[1])
         bx, by = V.mm_to_px(r[2], r[3])
         o.append(f'<rect x="{min(ax, bx):.1f}" y="{min(ay, by):.1f}" width="{abs(bx - ax):.1f}" '
@@ -283,15 +301,71 @@ def _hole_nets(L):
 
 
 def joints(o, V):
-    """Solder joints: every lead hole, ringed in the color of its net."""
+    """Solder joints: every lead hole and every hole a wire or a link ends in, ringed in the
+    color of its net. The bottom shows them all; the top shows those of its own wires."""
     L = V.L
     hn = _hole_nets(L)
+    ends = [(pts[0], s) for pts, s in L.wires] + [(pts[-1], s) for pts, s in L.wires]
+    ends += [(a, s) for a, b, s in L.links] + [(b, s) for a, b, s in L.links]
+    holes = [h for p in L.parts for h in p.holes] if V.bottom else []
+    holes += [h for h, s in ends if V.bottom or s == "top"]
+    for h in dict.fromkeys(holes):
+        col = color(L, hn.get(h))
+        x, y = V.px(h)
+        o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{0.8 * S:.1f}" fill="#d5d9de" '
+                 f'stroke="{col[0] if col[0] != "#ffffff" else "#808080"}" stroke-width="2.2"/>')
+
+
+PIN_TEXT = {"-": "&#8722;"}
+
+
+def pin_labels(o, V):
+    """The pin names of every part that goes in one way round: G, D and S of a MOSFET, an IC's
+    numbers, K and A of a diode, plus and minus of an electrolytic, a sensor's pins. Each name
+    sits half a pitch off its hole, on a side where no copper of this view runs and no other lead
+    sits, across the part's row of pins where it can."""
+    L = V.L
+    side = "bottom" if V.bottom else "top"
+    leads = {h for p in L.parts for h in p.holes}
+    used = set()
+    for a, b, s in L.bares + L.tins + L.links:
+        if s == side:
+            hs = run_holes(a, b)
+            used |= {frozenset(x) for x in zip(hs, hs[1:])}
+    taken = set()
     for p in L.parts:
-        for h in p.holes:
-            col = color(L, hn.get(h))
-            x, y = V.px(h)
-            o.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{0.8 * S:.1f}" fill="#d5d9de" '
-                     f'stroke="{col[0] if col[0] != "#ffffff" else "#808080"}" stroke-width="2.2"/>')
+        if not (p.kind in ("to220", "dip", "radial_round", "side_led", "reflective",
+                           "reflective_grid") or p.key == "diode_do41"):
+            continue
+        dr, dc = 0, 1
+        if len(p.holes) > 1:
+            (r0, c0), (r1, c1) = p.holes[0], p.holes[1]
+            dr, dc = (r1 > r0) - (r1 < r0), (c1 > c0) - (c1 < c0)
+        across = [(dc, dr), (-dc, -dr)]
+        if p.kind == "to220":
+            # the front first, away from the body that stands behind the pins on the tab's side
+            t = p.opt.get("tab", 1)
+            across = [(t * dc, -t * dr), (-t * dc, t * dr)]
+        order = across + [(1, 1), (1, -1), (-1, 1), (-1, -1), (dr, dc), (-dr, -dc)]
+        for h, pin in zip(p.holes, p.pins):
+            r, c = h
+            for er, ec in order:
+                nb = (r + er, c + ec)
+                if nb in leads or (er == 0 or ec == 0) and frozenset((h, nb)) in used:
+                    continue
+                if er and ec and (frozenset(((r + er, c), (r, c + ec))) in used
+                                  or frozenset((h, (r + er, c))) in used
+                                  or frozenset((h, (r, c + ec))) in used):
+                    continue
+                (xa, ya), (xb, yb) = V.px(h), V.px(nb)
+                x, y = (xa + xb) / 2, (ya + yb) / 2
+                if (round(x), round(y)) in taken:
+                    continue
+                taken.add((round(x), round(y)))
+                o.append(f'<text x="{x:.1f}" y="{y + 3.3:.1f}" text-anchor="middle" '
+                         f'font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" '
+                         f'stroke-width="2.6" paint-order="stroke">{PIN_TEXT.get(pin, pin)}</text>')
+                break
 
 
 def connector_labels(o, V, frame):
@@ -301,54 +375,70 @@ def connector_labels(o, V, frame):
     for p in L.parts:
         if p.kind not in ("header", "socket", "header_90", "terminal", "pads", "module"):
             continue
-        pts = [V.px(h) for h in p.holes]
-        cx = sum(x for x, _ in pts) / len(pts)
-        cy = sum(y for _, y in pts) / len(pts)
         if p.kind == "module":
             continue
-        dist = {"left": cx - x0, "right": x1 - cx, "top": cy - y0, "bottom": y1 - cy}
-        side = min(dist, key=dist.get)
-        title = p.opt.get("title", p.ref)
-        sub = p.opt.get("sub", "")
-        if side in ("left", "right"):
-            tx = x0 - 34 if side == "left" else x1 + 34
-            anc = "end" if side == "left" else "start"
-            ys = [y for _, y in pts]
-            o.append(d.text(tx, min(ys) - 34, title, size=12.5, anchor=anc, fill="#333333"))
-            if sub:
-                o.append(d.text(tx, min(ys) - 19, sub, size=10.5, weight="400", fill="#777",
-                                anchor=anc))
-            for (x, y), pin in zip(pts, p.pins):
-                net = nets.get(f"{p.ref}.{pin}")
-                name = L.net_labels.get(net, net or "")
-                t = f"{name}, pin {pin}" if side == "left" else f"pin {pin}, {name}"
-                o.append(d.text(tx, y, t, size=11, anchor=anc, fill=color(L, net)[2]))
-        else:
-            ty = y0 - 30 if side == "top" else y1 + 34
-            o.append(d.text(cx, ty, f"{title}  " + "  ".join(
-                f"{pin} {L.net_labels.get(nets.get(f'{p.ref}.{pin}'), nets.get(f'{p.ref}.{pin}') or '')}"
-                for pin in p.pins), size=11, fill="#333333"))
+        groups = [list(zip(p.holes, p.pins))]
+        if p.kind == "pads":
+            # edge pads on both ends: each end is named on its own side
+            mid = (x0 + x1) / 2
+            groups = [g for g in ([hp for hp in groups[0] if V.px(hp[0])[0] < mid],
+                                  [hp for hp in groups[0] if V.px(hp[0])[0] >= mid]) if g]
+        for g in groups:
+            _connector_label(o, V, frame, p, [V.px(h) for h, _ in g], [pin for _, pin in g], nets)
+
+
+def _connector_label(o, V, frame, p, pts, pins, nets):
+    L = V.L
+    x0, y0, x1, y1 = frame
+    cx = sum(x for x, _ in pts) / len(pts)
+    cy = sum(y for _, y in pts) / len(pts)
+    dist = {"left": cx - x0, "right": x1 - cx, "top": cy - y0, "bottom": y1 - cy}
+    if len({round(y) for _, y in pts}) < len(pts):
+        # pins side by side in a row: their names stand in one line above or below
+        dist = {k: v for k, v in dist.items() if k in ("top", "bottom")}
+    side = min(dist, key=dist.get)
+    title = p.opt.get("title", p.ref)
+    sub = p.opt.get("sub", "")
+    if side in ("left", "right"):
+        tx = x0 - 34 if side == "left" else x1 + 34
+        anc = "end" if side == "left" else "start"
+        ys = [y for _, y in pts]
+        o.append(d.text(tx, min(ys) - 34, title, size=12.5, anchor=anc, fill="#333333"))
+        if sub:
+            o.append(d.text(tx, min(ys) - 19, sub, size=10.5, weight="400", fill="#777",
+                            anchor=anc))
+        for (x, y), pin in zip(pts, pins):
+            net = nets.get(f"{p.ref}.{pin}")
+            name = L.net_labels.get(net, net or "")
+            t = f"{name}, pin {pin}" if side == "left" else f"pin {pin}, {name}"
+            o.append(d.text(tx, y, t, size=11, anchor=anc, fill=color(L, net)[2]))
+    else:
+        ty = y0 - 30 if side == "top" else y1 + 34
+        o.append(d.text(cx, ty, f"{title}  " + "  ".join(
+            f"{pin} {L.net_labels.get(nets.get(f'{p.ref}.{pin}'), nets.get(f'{p.ref}.{pin}') or '')}"
+            for pin in pins), size=11, fill="#333333"))
 
 
 def tables(o, L, y):
     a = o.append
     nm = L.board.name
     a(d.text(40, y, "Parts", size=13, anchor="start"))
-    rows = [("Ref", "Part", "Holes")]
+    rows = [("Ref", "Part", "Holes", None)]
     for p in L.parts:
         what = p.opt.get("part") or NAMES.get(p.key, p.key)
         if p.key == "resistor":
             what = f"{ohms_text(p.opt['value'])} resistor" + (", standing" if p.opt.get("standing") else "")
-        rows.append((p.ref, what, ", ".join(f"{pin} {nm(h)}" if len(p.holes) > 2 else nm(h)
-                                            for h, pin in zip(p.holes, p.pins))[:70]))
+        rows.append((p.ref, what, ", ".join(f"{nm(h)} ({pin})" if len(p.holes) > 2 else nm(h)
+                                            for h, pin in zip(p.holes, p.pins))[:70],
+                     p.opt.get("fig")))
     for ref, how in getattr(L, "offboard_parts", {}).items():
-        rows.append((ref, "off the board", how[:70]))
+        rows.append((ref, "off the board", how[:70], None))
     yy = y + 22
     for i, r in enumerate(rows):
         st = dict(size=11.5, weight="700" if i == 0 else "400", fill="#1a1a1a" if i == 0 else "#444",
                   anchor="start")
         a(d.text(40, yy, r[0], **st))
-        a(d.text(170, yy, r[1], **st))
+        a(d.text(170, yy, r[1], fig=r[3], **st))
         a(d.text(380, yy, r[2], **st))
         yy += 19
     end1 = yy
@@ -400,25 +490,24 @@ def render(L, path, width=1700, mirror=False):
     board_h = (B.rows - 1) * P
     top = View(L, 200, False)
     o_top = []
-    frame = board_frame(o_top, top, "Top side",
-                        "The component side; the bottom side's copper shows faintly beneath")
+    frame = board_frame(o_top, top, "Top side", "")
     ghost_copper(o_top, top)
     copper(o_top, top, "top")
     for p in L.parts:
         draw_part(o_top, top, p, None)
+    joints(o_top, top)
     for p in L.parts:
         label_part(o_top, top, p)
+    pin_labels(o_top, top)
     connector_labels(o_top, top, frame)
     bottom_y = frame[3] + 260
-    bot = View(L, bottom_y, True, mirror=mirror)
+    bot = View(L, bottom_y, True, flip="cols" if mirror else "rows")
     o_bot = []
-    frame_b = board_frame(o_bot, bot, "Bottom side",
-                          ("Turned over sideways, column 1 on the right" if mirror else
-                           "Seen through the board from above, column 1 on the left as on the top")
-                          + "; the dashed outlines are the parts on the top")
+    frame_b = board_frame(o_bot, bot, "Bottom side, turned over", "")
     ghost_parts(o_bot, bot)
     copper(o_bot, bot, "bottom")
     joints(o_bot, bot)
+    pin_labels(o_bot, bot)
     connector_labels(o_bot, bot, frame_b)
     end = tables(o_bot, L, frame_b[3] + 80)
     W = max(width, int(frame[2] + MARGIN_R))
@@ -429,4 +518,26 @@ def render(L, path, width=1700, mirror=False):
             d.text(30, 34, L.title, size=20, anchor="start"),
             d.text(30, 56, L.subtitle or f"Perfboard {B.kind}, holes named as printed on it",
                    size=13, weight="400", fill="#666", anchor="start")]
-    open(path, "w", encoding="utf-8").write("\n".join(head + o_top + o_bot + ["</svg>"]) + "\n")
+    body = "\n".join(head + o_top + o_bot + ["</svg>"]) + "\n"
+    svg = label_figs(L, body)
+    import xml.etree.ElementTree as ET
+    ET.fromstring(svg)                   # a drawing no viewer can open is never written
+    open(path, "w", encoding="utf-8").write(svg)
+
+
+def label_figs(L, svg):
+    """Gives every text that prints a label of L.figure the key of its figure, so figcheck reads
+    it, such as a rail's "5 V" wherever a net or a pin is named."""
+    figs = getattr(L, "text_figs", {})
+
+    def one(m):
+        attrs, content = m.group(1), m.group(2)
+        keys = [k for t, k in figs.items() if t in content]
+        if not keys:
+            return m.group(0)
+        old = re.search(r' data-fig="([^"]*)"', attrs)
+        merged = " ".join(dict.fromkeys((old.group(1).split() if old else []) + keys))
+        attrs = (attrs.replace(old.group(0), f' data-fig="{merged}"') if old
+                 else attrs + f' data-fig="{merged}"')
+        return f"<text{attrs}>{content}</text>"
+    return re.sub(r"<text([^>]*)>([^<]*)</text>", one, svg) if figs else svg

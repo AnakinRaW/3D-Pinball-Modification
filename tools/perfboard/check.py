@@ -236,7 +236,7 @@ def check(L):
         for x, y in zip(pts, pts[1:]):
             for p in L.parts:
                 r = fps[p.ref]
-                if r and p.kind != "module" and _seg_hits_rect(B.xy(x), B.xy(y), r, -0.2):
+                if r and side == "top" and p.kind != "module" and _seg_hits_rect(B.xy(x), B.xy(y), r, -0.2):
                     E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} runs over {p.ref}")
                     break
 
@@ -298,6 +298,18 @@ def check(L):
             m = owner.get(v)
             if m and n and m != n and not (part_of.get(h) and part_of.get(h) == part_of.get(v)):
                 W.append(f"S1: {nm(h)} ({n}) and {nm(v)} ({m}) are neighbors")
+    rails = ({n.name for n in L.declared.nets.values() if n.rail} if L.declared else set())
+    for side in ("bottom", "top"):
+        degree = {}
+        for a, b, s in L.bares + L.tins + L.links:
+            if s != side:
+                continue
+            hs = run_holes(a, b)
+            for i, x in enumerate(hs):
+                degree[x] = degree.get(x, 0) + (1 if i in (0, len(hs) - 1) else 2)
+        for x, k in degree.items():
+            if k >= 3 and owner.get(x) not in rails:
+                W.append(f"S24: {owner.get(x)} branches at {nm(x)} on the {side}")
     for kind, what in (("to220", "tab"),):
         sides = {p.opt.get(what) for p in L.parts if p.kind == kind}
         if len(sides) > 1:

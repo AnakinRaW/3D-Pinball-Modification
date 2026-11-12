@@ -2,7 +2,7 @@
 
     python tools/perfboard/build.py <layout.py>              check only
     python tools/perfboard/build.py <layout.py> <out.svg>    check, then draw
-    --mirror      draw the bottom side as the turned-over board looks, column 1 on the right
+    --mirror      turn the board over its short edge for the bottom side, column 1 on the right
 
 The run lists every error (cannot be built, or does not make the netlist) and every house-style
 note, and exits with 1 when an error remains. It draws only a layout without errors, unless

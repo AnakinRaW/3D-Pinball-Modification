@@ -41,7 +41,7 @@ The checker reports each as an error.
 | H19 | A 90° header sits at the board edge, its pins pointing off the board |
 | V1 | The copper makes exactly the netlist the layout declares, pin by pin |
 | V2 | Every distance limit holds, measured straight from hole to hole |
-| S13 | A screw terminal sits at the edge, its pin row parallel to it, the wire openings facing off the board |
+| S13 | A screw terminal sits in the outermost holes, its pin row parallel to the edge, the wire openings facing off the board |
 
 ## House style
 
@@ -56,21 +56,24 @@ The checker reports each as a note where the layout leaves it.
 | S5 | Parts of one kind face one way: diode bands, electrolytic plus, MOSFET tabs |
 | S6 | Repeated channels are built alike, shifted or mirrored |
 | S7 | The signal runs from the input side to the load side |
-| S8 | Insulated wire is first choice where it is clearer, in the net's color of `docs/connectors.md`; bare wire for straight runs on the bottom; tin for one step |
+| S8 | Insulated wire is first choice where it is clearer, in the net's color of `docs/connectors.md`; bare wire for straight runs on the bottom; tin for one step. An insulated wire bends where its way turns and runs to its end, rather than handing over to bare copper on the way. It starts on the side it leaves toward, never running back over the lead it serves. Wires that run the same way lie in parallel rows and do not cross |
 | S9 | Copper runs on the bottom; the top carries links, insulated wires and runs where the bottom is taken |
 | S10 | GND and the supply run as rails along an edge, on free edge pads where there are some |
 | S11 | Coil and motor current keeps its own short paths, apart from the signals |
-| S12 | A connector sits at the edge where it can; a straight Dupont header may sit inside when the edge costs a much harder layout. Every cable leaves away from the board |
+| S12 | A connector sits at the edge where it can; a straight Dupont header may sit inside when the edge costs a much harder layout. Every cable leaves away from the board. The outputs of one connector stay together at one end |
 | S14 | Under a daughter board lies nothing taller than its socket header |
 | S15 | A cable soldered in for good lands on an edge pad |
 | S16 | The smallest board in stock that fits; cut once and straight, only where it saves much and the rest stays usable |
 | S17 | The corner holes stay free |
-| S18 | Top and bottom in one drawing. The bottom is seen through the board from above, column 1 on the left as on the top, with the top's parts as dashed outlines; the top shows the bottom's copper faintly. `--mirror` draws the bottom turned over instead |
-| S19 | Under the drawing: the parts, the copper per net, the distance limits |
+| S18 | Top and bottom in one drawing. The bottom is drawn as the board looks turned over its long edge: column 1 stays on the left, row A comes to the bottom, and the top's parts show faintly. The top shows the bottom's copper faintly. `--mirror` turns the board over its short edge instead |
+| S25 | Every MOSFET, IC, diode, electrolytic and sensor carries its pin names beside its pins, on both sides of the drawing |
+| S19 | Under the drawing: the parts, the copper per net, the distance limits. The side headings stand alone, and every hole a wire or a link ends in shows its solder joint |
 | S20 | Every DIP IC sits in a socket |
 | S21 | A layout that fits no board is split over several boards |
-| S23 | Parts spread over the board: no empty stretch while another place is crowded. Room goes first where leads, rails and groups meet |
+| S23 | Parts spread over the board: no empty stretch while another place is crowded. Room goes first where leads, rails and groups meet. A board that is not cut is used to its edges |
+| S24 | A net's copper runs as one chain from pin to pin, with corners and no branch. Only a supply rail branches, where a part taps it |
 | S22 | No part is added that the design does not list; a new part, a spare capacitor included, is asked for first |
+| S26 | The simpler layout wins over one with fewer notes: straight lanes to one end beat a split design, a straight drop onto a rail beats a detour around it |
 
 ## Layout format
 
@@ -91,9 +94,10 @@ L.part("J2", "pads", ["B>", "C>"])                         # edge pads: C< left 
 L.bare("A1", "A5"); L.tin("A5", "A6"); L.link("C3", "C7"); L.wire("J4", "J24", via=["I4"])
 L.net("GND", "J1.3", "R41.2", color="black", label="GND")
 L.limit("C1.1", "J2.1", 20, fig="place_filter")
+L.figure("5 V", "v_5v")                                    # a label that states a model's figure
 LAYOUT = L
 ```
 
-`netlist` names the subsystem's model and the board it declares, as [`tools/CLAUDE.md`](../CLAUDE.md#boards) describes. Its nets stand in for `L.net`, and a resistor takes its value and its `fig` from there. The check reports a part placed here and missing there or the other way round, another inventory part, another value, and a net the layout declares itself. A layout of a board no model declares yet names its nets with `L.net`. A pin is named `REF.PIN`: `1` and `2` for a resistor or a ceramic, `K`/`A` for a diode, `+`/`-` for an electrolytic, `G`/`D`/`S` for a TO-220, the pin number for an IC, a header, a terminal, a module and the pads. A `tab` of +1 puts the TO-220's metal tab to the left of the way from pin 1 to pin 3 on the drawing. A value label that states a figure of a subsystem's model carries that figure's key in `fig`, so figcheck reads the drawing.
+`netlist` names the subsystem's model and the board it declares, as [`tools/CLAUDE.md`](../CLAUDE.md#boards) describes. Its nets stand in for `L.net`, and a resistor takes its value and its `fig` from there. The check reports a part placed here and missing there or the other way round, another inventory part, another value, and a net the layout declares itself. A layout of a board no model declares yet names its nets with `L.net`. A pin is named `REF.PIN`: `1` and `2` for a resistor or a ceramic, `K`/`A` for a diode, `+`/`-` for an electrolytic, `G`/`D`/`S` for a TO-220, the pin number for an IC, a header, a terminal, a module and the pads. A `tab` of +1 puts the TO-220's metal tab to the left of the way from pin 1 to pin 3 on the drawing. A value label that states a figure of a subsystem's model carries that figure's key in `fig`, so figcheck reads the drawing. A part's value comes with its key from the netlist. A net label such as a rail's "5 V" is declared with `L.figure(text, key)`, and every text of the drawing that holds it carries the key.
 
 An adapter placed with `carries=True` holds the chip the netlist declares under the same designator. The adapter's pin n is the chip's pin n, so its pins take the chip's names from the netlist, and the check compares the chip's entry with the netlist's. `L.offboard(ref, how)` names a part of the netlist that sits off the board, such as a module on a cable. The check then expects it unplaced, and the Parts table lists it with `how`.

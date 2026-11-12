@@ -131,6 +131,7 @@ class Layout:
         self.notes = []
         self.declared, self.model, self.free = None, None, set()
         self.offboard_parts = {}
+        self.text_figs = {}
         if netlist:
             self._declared(*netlist)
 
@@ -251,6 +252,11 @@ class Layout:
 
     def note(self, text):
         self.notes.append(text)
+
+    def figure(self, text, key):
+        """A label the drawing prints that states a figure of a model, such as a rail's "5 V".
+        Every text holding it carries key in data-fig."""
+        self.text_figs[text] = key
 
     def offboard(self, ref, how=""):
         """A part of the netlist that stays off this board, such as a module hanging on a cable.

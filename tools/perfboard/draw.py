@@ -23,6 +23,7 @@ def _rot(a, b):
 def text(x, y, s, size=10.5, weight="700", fill="#1a1a1a", anchor="middle", fig=None, rotate=None):
     df = f' data-fig="{fig}"' if fig else ""
     tr = f' transform="rotate({rotate:.1f} {x:.1f} {y:.1f})"' if rotate else ""
+    s = str(s).replace("<", "&lt;")                              # edge pads on the left are named C<
     return (f'<text x="{x:.1f}" y="{y + size * 0.36:.1f}" text-anchor="{anchor}" '
             f'font-size="{size}" font-weight="{weight}" fill="{fill}"{df}{tr}>{s}</text>')
 
