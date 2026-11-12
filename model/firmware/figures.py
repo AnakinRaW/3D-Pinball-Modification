@@ -19,7 +19,7 @@ IRQ = "Interrupts"
 
 # -- the periods --------------------------------------------------------------
 dec("t_tick", 5, "ms", src="the driver tick's period, driver-design.md, on which the rotary "
-    "sensor's driver requests one read; docs/parts/magnetic-rotary/figures.py requires the read to "
+    "sensor's driver requests one read; model/parts/magnetic-rotary/figures.py requires the read to "
     "fit inside it")
 dec("t_monitor", 100, "ms", src="how often the device monitor of error-handling.md asks every "
     "driver which parts of its device have failed")

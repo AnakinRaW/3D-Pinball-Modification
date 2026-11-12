@@ -325,7 +325,7 @@ On the finished system:
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/ir-reflective/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
 
 **Base quantities.** Everything below is built from these.
 

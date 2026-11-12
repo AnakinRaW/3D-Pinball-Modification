@@ -72,7 +72,7 @@ The driver ensures that the servo cannot be operated outside of the predefined a
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
+[`figures.py`](../../../model/parts/servo/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
 
 ### Pulse
 

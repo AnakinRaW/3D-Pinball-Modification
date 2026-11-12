@@ -7,7 +7,6 @@ Component specifications and the reasoning behind a part choice are recorded her
 | Document | Contents |
 |---|---|
 | [`teensy-4.1.md`](teensy-4.1.md) | Specifications of the selected controller and the electrical constraints it imposes |
-| [`teensy-4.1.py`](teensy-4.1.py) | The controller's figures and what each of its pins can carry, each with its source, which the subsystems' models take their Teensy figures from |
 | [`Custom/adafruit-3992.md`](Custom/adafruit-3992.md) | The scoop's push-pull solenoid: its published figures, what the 2 A on its label describe, and how it pulls with and without its return spring |
 | [`Custom/sezo-ws2812b-strip.md`](Custom/sezo-ws2812b-strip.md) | The LED strip the lighting is cut from: its current per color and while dark, measured on two LEDs |
 | [`Custom/cny70.md`](Custom/cny70.md) | The reflective sensor held for a bench trial: its ratings, what its datasheet leaves unspecified, and how it compares to the part in the stock boards |

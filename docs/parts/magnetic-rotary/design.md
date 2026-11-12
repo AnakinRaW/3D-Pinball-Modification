@@ -52,7 +52,7 @@ The sensor is further abstracted to the [rotating seal component](../../firmware
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/magnetic-rotary/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
 ### Bus
 

@@ -113,7 +113,7 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/solenoid/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
 
 **The drive channel.** What the Teensy pin sees, what the gate sees, and what the drain sees.
 

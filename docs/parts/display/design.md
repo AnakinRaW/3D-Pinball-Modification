@@ -84,7 +84,7 @@ The video rate rests on an estimate of the card's speed. A slower card makes a v
 | 1 | Adafruit 757, bidirectional logic level converter, BSS138 | on the display board, in SDA and SCL between the Teensy and the module |
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names. `tools/figcheck.py` compares each one against the line that states it.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/display/figures.py) from the inputs it names. `tools/figcheck.py` compares each one against the line that states it.
 
 ### Bus
 

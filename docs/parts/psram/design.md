@@ -26,7 +26,7 @@ Variables declared with `EXTMEM` and memory from `extmem_malloc()` lie in the PS
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/psram/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
 ### Chip
 

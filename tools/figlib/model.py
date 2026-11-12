@@ -12,7 +12,7 @@ import re
 import sys
 
 from .quantities import Q, as_q
-from .repo import model_named
+from .repo import home_of, model_named
 
 
 # `graph` is a reading off a plotted curve, which the sheet's text never prints
@@ -220,8 +220,9 @@ class Model:
     @classmethod
     def at(cls, file, name, document="design.md", *, section=None, until="## Sources",
            drawings=(), documents=()):
-        """The model a file declares, its documents and drawings named from the file's folder."""
-        here = pathlib.Path(file).resolve().parent
+        """The model a file declares, its documents and drawings named from the folder under
+        docs/ that the file's folder under model/ stands for."""
+        here = home_of(file)
         path = lambda p: (here / p).resolve()
         return cls(name, path(document), section, until,
                    [path(d) for d in drawings], [path(d) for d in documents])
@@ -332,14 +333,14 @@ class Model:
 
     def ignores(self, path, why: str):
         """A markdown file or drawing in the model's folder that no model governs, and why."""
-        here = self.path.parent if self.path else self.document.parent
+        here = home_of(self.path) if self.path else self.document.parent
         self.ignored.append(((here / path).resolve(), why))
 
     def skips(self, path, heading: str, why: str):
         """A section of one of the model's documents that states nothing of the design, such as
         a bench sketch, and why. It runs from its heading to the next heading of its level or
         a higher one."""
-        here = self.path.parent if self.path else self.document.parent
+        here = home_of(self.path) if self.path else self.document.parent
         self.skipped.append(((here / path).resolve(), heading, why))
 
     def names(self, *designators, why: str):

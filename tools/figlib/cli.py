@@ -303,7 +303,7 @@ def _parser() -> argparse.ArgumentParser:
                     "marked Teensy pin against docs/pin-assignment.md")
     ap.add_argument("models", type=pathlib.Path, nargs="*",
                     help="the models to run, as paths from the repository root; every "
-                         "docs/parts/*/figures.py, and the pins of the whole tree, when "
+                         "model/parts/*/figures.py, and the pins of the whole tree, when "
                          "none is named")
     ap.add_argument("--base", default="HEAD",
                     help="git ref the stale pass diffs against and --write takes the old "
@@ -337,7 +337,7 @@ def main(argv=None):
     except ValueError as e:
         ap.error(str(e))
     if not paths:
-        print("No figure model found. Expected docs/parts/<subsystem>/figures.py.")
+        print("No figure model found. Expected model/parts/<subsystem>/figures.py.")
         return 1
     if args.graph:
         return show_graph(paths, args.graph)

@@ -59,7 +59,7 @@ The [contact driver](../../firmware/drivers/contacts.md) publishes each closure 
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` compares each one against the line that states it.
+[`figures.py`](../../../model/parts/contacts/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` compares each one against the line that states it.
 
 ### Levels
 

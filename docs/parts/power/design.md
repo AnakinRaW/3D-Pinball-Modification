@@ -107,7 +107,7 @@ The 3 A adapter delivers less than the machine draws at its peak. With it, the l
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs. `tools/figcheck.py` checks each one against its line and each drawn figure through its `data-fig` anchor.
+[`figures.py`](../../../model/parts/power/figures.py) recomputes every figure below from its inputs. `tools/figcheck.py` checks each one against its line and each drawn figure through its `data-fig` anchor.
 
 ### Loads
 

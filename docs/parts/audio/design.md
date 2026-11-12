@@ -53,7 +53,7 @@ The Teensy drives the module's inputs directly, and the module's 5 V never reach
 | 1 | 100 kΩ resistor, 5 % or better | R4, on the motherboard from GAIN to VCC |
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/audio/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
 
 ### Speaker level
 

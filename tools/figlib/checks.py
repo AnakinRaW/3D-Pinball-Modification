@@ -597,7 +597,7 @@ def pass_sums(model: Model, rep: Report):
 
 def pass_stale(base: str, rep: Report):
     try:
-        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs"],
+        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs", "model"],
                               cwd=ROOT, capture_output=True, text=True,
                               encoding="utf-8", check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
@@ -614,7 +614,7 @@ def pass_stale(base: str, rep: Report):
             added |= toks
     gone = sorted(removed - added)
     files = {p: norm(p.read_text(encoding="utf-8", errors="replace"))
-             for p in (ROOT / "docs").rglob("*")
+             for d in ("docs", "model") for p in (ROOT / d).rglob("*")
              if p.suffix in {".md", ".svg", ".py"} and p.is_file()}
     for num, unit in gone:
         tok = f"{num} {unit}"

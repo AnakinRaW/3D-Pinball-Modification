@@ -12,11 +12,11 @@ Python 3, standard library only, no build step.
 
 ## figcheck
 
-Each subsystem that derives figures holds its inputs and formulas in `docs/parts/<subsystem>/figures.py`. figcheck evaluates every model and compares the documents and drawings each one names against the result. It then checks the Teensy pins and the wiring across all models.
+Each subsystem that derives figures holds its inputs and formulas in `model/parts/<subsystem>/figures.py`. figcheck evaluates every model and compares the documents and drawings each one names against the result. It then checks the Teensy pins and the wiring across all models.
 
 ```
 python tools/figcheck.py --sheets                                  every model, then the pins
-python tools/figcheck.py docs/parts/ir-reflective/figures.py       one model, and the pins its files mark
+python tools/figcheck.py model/parts/ir-reflective/figures.py      one model, and the pins its files mark
 ```
 
 Each check reports on one line. Any of them can fail the run. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
