@@ -22,6 +22,9 @@ BOARDS = {
     "30x42": (30, 42, 2),
 }
 
+# screw terminals in stock, by number of poles: Same Sky TB002-500-02BE and -03BE
+TERMINALS = {2: 8, 3: 7}
+
 
 def unique_names(names):
     """Pin names as a netlist addresses them: a name that repeats, such as a module's GND, takes

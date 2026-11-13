@@ -231,8 +231,12 @@ def check(L):
         copper.update((pts[0], pts[-1]))
         length = sum(math.dist(B.xy(x), B.xy(y)) for x, y in zip(pts, pts[1:]))
         if length < INSULATED_MIN - 1e-6:
-            E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} is {length:.1f} mm, under the "
-                     f"{INSULATED_MIN:.0f} mm it needs")
+            if tuple(pts) in getattr(L, "short_wires", set()):
+                W.append(f"H9: insulated wire {nm(pts[0])}-{nm(pts[-1])} is {length:.1f} mm, "
+                         f"under {INSULATED_MIN:.0f} mm, accepted as short")
+            else:
+                E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} is {length:.1f} mm, under "
+                         f"the {INSULATED_MIN:.0f} mm it needs")
         for x, y in zip(pts, pts[1:]):
             for p in L.parts:
                 r = fps[p.ref]
@@ -244,7 +248,8 @@ def check(L):
     groups = {}
     for h, who in lead_of.items():
         groups.setdefault(f(h), set()).add(who)
-    expected = {pin: net for net, pins in L.nets.items() for pin in pins}
+    nets_made = L.effective_nets()
+    expected = {pin: net for net, pins in nets_made.items() for pin in pins}
     net_of_group = {}
     for g, pins in groups.items():
         nets = {expected.get(x, "?" + x) for x in pins}
@@ -252,7 +257,7 @@ def check(L):
             E.append("short: one piece of copper joins " + ", ".join(sorted(nets)))
         net_of_group[g] = sorted(nets)[0]
     placed = {p.ref for p in L.parts}
-    for net, pins in L.nets.items():
+    for net, pins in nets_made.items():
         gs = {f(L.pin_hole(x)) for x in pins if x.split(".", 1)[0] in placed}
         if len(gs) > 1:
             E.append(f"open: {net} falls apart into {len(gs)} pieces")
@@ -310,6 +315,26 @@ def check(L):
         for x, k in degree.items():
             if k >= 3 and owner.get(x) not in rails:
                 W.append(f"S24: {owner.get(x)} branches at {nm(x)} on the {side}")
+    # S27: straight stretches of different nets that lie along one another in a row or column
+    segs = []
+    for a_, b_, side in L.bares:
+        segs.append((a_, b_, side, owner.get(a_), "bare"))
+    for pts, side in L.wires:
+        for x, y in zip(pts, pts[1:]):
+            segs.append((x, y, side, owner.get(pts[0]), "wire"))
+    for i, (a1, b1, s1, n1, k1) in enumerate(segs):
+        for a2, b2, s2, n2, k2 in segs[i + 1:]:
+            if s1 != s2 or n1 == n2 or "bare" == k1 == k2:
+                continue
+            for ax in (0, 1):                       # the index that varies along the stretch
+                o = 1 - ax
+                if a1[o] == b1[o] == a2[o] == b2[o] and a1[ax] != b1[ax] and a2[ax] != b2[ax]:
+                    lo = max(min(a1[ax], b1[ax]), min(a2[ax], b2[ax]))
+                    hi = min(max(a1[ax], b1[ax]), max(a2[ax], b2[ax]))
+                    if hi > lo:
+                        start = (lo, a1[1]) if ax == 0 else (a1[0], lo)
+                        W.append(f"S27: a {k1} of {n1} and a {k2} of {n2} lie along each other "
+                                 f"from {nm(start)} on")
     for kind, what in (("to220", "tab"),):
         sides = {p.opt.get(what) for p in L.parts if p.kind == kind}
         if len(sides) > 1:

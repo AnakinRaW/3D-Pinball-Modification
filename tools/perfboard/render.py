@@ -118,10 +118,18 @@ def board_frame(o, V, title, subtitle):
         y = V.px((r, B.c0))[1]
         a(d.text(x0 - 12, y, row_name(r), size=12.5, fill="#777", anchor="end"))
         a(d.text(x1 + 12, y, row_name(r), size=12.5, fill="#777", anchor="start"))
+    # the column numbers stand clear of whatever overhangs the board, such as a breakout board
+    ty0, ty1 = y0, y1
+    for p in L.parts:
+        r = module_rect(L, p) if p.kind == "module" else footprint(L, p)
+        if r:
+            ya, yb = V.mm_to_px(r[0], r[1])[1], V.mm_to_px(r[2], r[3])[1]
+            ty0, ty1 = min(ty0, ya, yb), max(ty1, ya, yb)
+    V.ty0, V.ty1 = ty0, ty1
     for c in range(B.c0, B.c1 + 1):
         x, _ = V.px((0, c))
-        a(d.text(x, y0 - 10, str(c + 1), size=10.5, weight="400", fill="#777"))
-        a(d.text(x, y1 + 12, str(c + 1), size=10.5, weight="400", fill="#777"))
+        a(d.text(x, ty0 - 10, str(c + 1), size=10.5, weight="400", fill="#777"))
+        a(d.text(x, ty1 + 12, str(c + 1), size=10.5, weight="400", fill="#777"))
     for r in range(B.rows):
         for c in range(B.c0, B.c1 + 1):
             o += d.hole(*V.px((r, c)), S)
@@ -144,6 +152,8 @@ def draw_part(o, V, p, nets):
         o += d.ceramic(pts[0], pts[1], S, p.key)
     elif k == "radial_round":
         o += d.electrolytic(pts[0], pts[1], S, p.key)
+    elif k == "fuse_holder":
+        o += d.fuse_holder(pts[0], pts[1], S, p.key)
     elif k == "to220":
         tab = p.opt.get("tab", 1) * (-1 if V.mirror else 1)
         o += d.to220(pts, S, tab)
@@ -174,8 +184,16 @@ def draw_part(o, V, p, nets):
         bx, by = V.mm_to_px(r[2], r[3])
         m = MODULES[p.key]
         o += d.module(min(ax, bx), min(ay, by), max(ax, bx), max(ay, by), m["color"], pts, S)
+        mx, my = (ax + bx) / 2, (ay + by) / 2
         for (x, y), name in zip(pts, p.opt["names"]):
-            o.append(d.text(x, y + 1.7 * S, name, size=8.5, weight="400", fill="#ffffff"))
+            # the name sits beside its pin, across the pin's row and toward the module's middle
+            along_x = any(abs(q[1] - y) < 0.5 and 0.5 < abs(q[0] - x) < 1.5 * P for q in pts)
+            if along_x:
+                o.append(d.text(x, y + (1.7 * S if y < my else -1.7 * S), name, size=8.5,
+                                weight="400", fill="#ffffff"))
+            else:
+                o.append(d.text(x + (1.4 * S if x < mx else -1.4 * S), y, name, size=8.5,
+                                weight="400", fill="#ffffff", anchor="start" if x < mx else "end"))
 
 
 def label_part(o, V, p):
@@ -209,8 +227,10 @@ def ghost_parts(o, V):
             continue
         shape = []
         draw_part(shape, V, p, nets)
-        shape = [s for s in shape if not s.lstrip().startswith("<text")]
-        o.append('<g opacity="0.22" data-svgcheck="a part on the other side, under the copper">')
+        why = ' data-svgcheck="a part on the other side, faint under the copper"'
+        shape = [re.sub(r"^(\s*<\w+)", lambda m: m.group(1) + why, s, count=1)
+                 for s in shape if not s.lstrip().startswith("<text")]
+        o.append('<g opacity="0.22">')
         o += shape
         o.append("</g>")
         ax, ay = V.mm_to_px(r[0], r[1])
@@ -250,9 +270,11 @@ def copper(o, V, side_filter):
             continue
         col = color(L, group_net.get(a))
         (xa, ya), (xb, yb) = V.px(a), V.px(b)
+        thick = (a, b) in getattr(L, "gauges", {})
         o.append(f'<line x1="{xa:.1f}" y1="{ya:.1f}" x2="{xb:.1f}" y2="{yb:.1f}" stroke="{col[0]}" '
-                 f'stroke-opacity="0.45" stroke-width="{1.5 * S:.1f}" stroke-linecap="round"/>')
-        o += d.bare((xa, ya), (xb, yb), S)
+                 f'stroke-opacity="0.45" stroke-width="{(2.2 if thick else 1.5) * S:.1f}" '
+                 'stroke-linecap="round"/>')
+        o += d.bare((xa, ya), (xb, yb), S, thick=thick)
     for a, b, side in L.tins:
         if side == side_filter:
             o += d.tin(V.px(a), V.px(b), S)
@@ -347,31 +369,55 @@ def pin_labels(o, V):
             t = p.opt.get("tab", 1)
             across = [(t * dc, -t * dr), (-t * dc, t * dr)]
         order = across + [(1, 1), (1, -1), (-1, 1), (-1, -1), (dr, dc), (-dr, -dc)]
+        mr = sum(r for r, _ in p.holes) / len(p.holes)
+        mc = sum(c for _, c in p.holes) / len(p.holes)
         for h, pin in zip(p.holes, p.pins):
             r, c = h
-            for er, ec in order:
+            own = order
+            if p.kind == "dip":
+                # an IC's numbers stand just inside each pin: on the socket on the top, and on
+                # the bottom inside or else outside, wherever no copper runs
+                own = sorted(order[:2], key=lambda e: e[0] * (r - mr) + e[1] * (c - mc))
+                own = own if V.bottom else own[:1]
+            on_socket = p.kind == "dip" and not V.bottom
+            spot = None
+            for er, ec in own:
                 nb = (r + er, c + ec)
-                if nb in leads or (er == 0 or ec == 0) and frozenset((h, nb)) in used:
+                if not on_socket and (nb in leads or (er == 0 or ec == 0)
+                                      and frozenset((h, nb)) in used):
                     continue
                 if er and ec and (frozenset(((r + er, c), (r, c + ec))) in used
                                   or frozenset((h, (r + er, c))) in used
                                   or frozenset((h, (r, c + ec))) in used):
                     continue
+                k = 0.42 if on_socket else 0.5
                 (xa, ya), (xb, yb) = V.px(h), V.px(nb)
-                x, y = (xa + xb) / 2, (ya + yb) / 2
-                if (round(x), round(y)) in taken:
-                    continue
-                taken.add((round(x), round(y)))
-                o.append(f'<text x="{x:.1f}" y="{y + 3.3:.1f}" text-anchor="middle" '
-                         f'font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" '
-                         f'stroke-width="2.6" paint-order="stroke">{PIN_TEXT.get(pin, pin)}</text>')
-                break
+                xy = (xa + k * (xb - xa), ya + k * (yb - ya))
+                if (round(xy[0]), round(xy[1])) not in taken:
+                    spot = xy
+                    break
+            if spot is None and p.kind == "dip":
+                # every side carries copper: the name stands inside, over the copper
+                (xa, ya), (xb, yb) = V.px(h), V.px((r + own[0][0], c + own[0][1]))
+                spot = ((xa + xb) / 2, (ya + yb) / 2, ' data-svgcheck="a pin name on copper, '
+                        'which runs on every side of the pin"')
+            if spot is None:
+                continue
+            x, y, waiver = (*spot, "") if len(spot) == 2 else spot
+            if not waiver and p.kind == "radial_round":
+                waiver = ' data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it"'
+            taken.add((round(x), round(y)))
+            ink, halo = ("#ffffff", "#2a2a2a") if on_socket else ("#1a1a1a", "#ffffff")
+            o.append(f'<text x="{x:.1f}" y="{y + 3.3:.1f}" text-anchor="middle" '
+                     f'font-size="9.5" font-weight="700" fill="{ink}" stroke="{halo}" '
+                     f'stroke-width="2.6" paint-order="stroke"{waiver}>{PIN_TEXT.get(pin, pin)}</text>')
 
 
 def connector_labels(o, V, frame):
     L = V.L
     x0, y0, x1, y1 = frame
     nets = net_of(L)
+    placed = {}          # the label lines already set, by side and row
     for p in L.parts:
         if p.kind not in ("header", "socket", "header_90", "terminal", "pads", "module"):
             continue
@@ -384,10 +430,11 @@ def connector_labels(o, V, frame):
             groups = [g for g in ([hp for hp in groups[0] if V.px(hp[0])[0] < mid],
                                   [hp for hp in groups[0] if V.px(hp[0])[0] >= mid]) if g]
         for g in groups:
-            _connector_label(o, V, frame, p, [V.px(h) for h, _ in g], [pin for _, pin in g], nets)
+            _connector_label(o, V, frame, p, [V.px(h) for h, _ in g], [pin for _, pin in g], nets,
+                             placed)
 
 
-def _connector_label(o, V, frame, p, pts, pins, nets):
+def _connector_label(o, V, frame, p, pts, pins, nets, placed):
     L = V.L
     x0, y0, x1, y1 = frame
     cx = sum(x for x, _ in pts) / len(pts)
@@ -402,18 +449,37 @@ def _connector_label(o, V, frame, p, pts, pins, nets):
     if side in ("left", "right"):
         tx = x0 - 34 if side == "left" else x1 + 34
         anc = "end" if side == "left" else "start"
-        ys = [y for _, y in pts]
-        o.append(d.text(tx, min(ys) - 34, title, size=12.5, anchor=anc, fill="#333333"))
-        if sub:
-            o.append(d.text(tx, min(ys) - 19, sub, size=10.5, weight="400", fill="#777",
-                            anchor=anc))
+        ys = sorted(y for _, y in pts)
+        together = len(ys) == 1 or all(abs(b - a - P) < 1 for a, b in zip(ys, ys[1:]))
+        lines = placed.setdefault("lines", {})
+        spans = placed.setdefault("spans", [])
+        if together and any(sd == side and lo - 1.2 * P < ys[-1] and ys[0] < hi + 1.2 * P
+                            for sd, lo, hi in spans):
+            together = False             # another run's name already stands in these rows
+        spans.append((side, ys[0], ys[-1]))
+        if together:
+            # pins in one run: the name and its line above the run, the nets at the pins
+            o.append(d.text(tx, ys[0] - 34, title, size=12.5, anchor=anc, fill="#333333"))
+            if sub:
+                o.append(d.text(tx, ys[0] - 19, sub, size=10.5, weight="400", fill="#777",
+                                anchor=anc))
         for (x, y), pin in zip(pts, pins):
             net = nets.get(f"{p.ref}.{pin}")
             name = L.net_labels.get(net, net or "")
             t = f"{name}, pin {pin}" if side == "left" else f"pin {pin}, {name}"
-            o.append(d.text(tx, y, t, size=11, anchor=anc, fill=color(L, net)[2]))
+            if not together:
+                # pins apart: each line names its connector, so none stands without it
+                t = f"{title} {t}" if side == "right" else f"{title}: {t}"
+            key = (side, round(y))
+            if key in lines:
+                # another connector's pin on the same row: one line carries both
+                k, old = lines[key]
+                o[k] = o[k].replace("</text>", f"  &#183;  {t}</text>")
+            else:
+                lines[key] = (len(o), t)
+                o.append(d.text(tx, y, t, size=11, anchor=anc, fill=color(L, net)[2]))
     else:
-        ty = y0 - 30 if side == "top" else y1 + 34
+        ty = getattr(V, "ty0", y0) - 30 if side == "top" else getattr(V, "ty1", y1) + 34
         o.append(d.text(cx, ty, f"{title}  " + "  ".join(
             f"{pin} {L.net_labels.get(nets.get(f'{p.ref}.{pin}'), nets.get(f'{p.ref}.{pin}') or '')}"
             for pin in pins), size=11, fill="#333333"))
@@ -430,24 +496,36 @@ def tables(o, L, y):
             what = f"{ohms_text(p.opt['value'])} resistor" + (", standing" if p.opt.get("standing") else "")
         rows.append((p.ref, what, ", ".join(f"{nm(h)} ({pin})" if len(p.holes) > 2 else nm(h)
                                             for h, pin in zip(p.holes, p.pins))[:70],
-                     p.opt.get("fig")))
+                     # the row states the value only for a resistor and a capacitor
+                     p.opt.get("fig") if p.key == "resistor" or p.kind in ("radial", "radial_round")
+                     else None))
     for ref, how in getattr(L, "offboard_parts", {}).items():
         rows.append((ref, "off the board", how[:70], None))
+    for ref, (_joins, why) in getattr(L, "unfitted_parts", {}).items():
+        rows.append((ref, "not fitted", why[:70], None))
+    # the part column starts past the longest designator
+    x_part = max(170, 40 + max(len(r[0]) for r in rows) * 11.5 * 0.66 + 20)
     yy = y + 22
     for i, r in enumerate(rows):
         st = dict(size=11.5, weight="700" if i == 0 else "400", fill="#1a1a1a" if i == 0 else "#444",
                   anchor="start")
         a(d.text(40, yy, r[0], **st))
-        a(d.text(170, yy, r[1], fig=r[3], **st))
-        a(d.text(380, yy, r[2], **st))
+        a(d.text(x_part, yy, r[1], fig=r[3], **st))
+        a(d.text(x_part + 210, yy, r[2], **st))
         yy += 19
     end1 = yy
     a(d.text(900, y, "Copper", size=13, anchor="start"))
     yy = y + 22
+    if getattr(L, "gauges", {}):
+        a(d.text(900, yy, "The thick runs are the gauge they name; every other wire is 22 AWG solid.",
+                 size=11.5, weight="400", anchor="start", fill="#444"))
+        yy += 22
     hn = _hole_nets(L)
     by_net = {}
     for a_, b_, side in L.bares:
-        by_net.setdefault(hn.get(a_), []).append(f"bare {nm(a_)}-{nm(b_)}" + (" top" if side == "top" else ""))
+        g = getattr(L, "gauges", {}).get((a_, b_))
+        by_net.setdefault(hn.get(a_), []).append(f"bare {nm(a_)}-{nm(b_)}" + (" top" if side == "top" else "")
+                                                 + (f" ({g})" if g else ""))
     for a_, b_, side in L.tins:
         by_net.setdefault(hn.get(a_), []).append(f"tin {nm(a_)}-{nm(b_)}")
     for a_, b_, side in L.links:

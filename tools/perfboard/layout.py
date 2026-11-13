@@ -131,6 +131,9 @@ class Layout:
         self.notes = []
         self.declared, self.model, self.free = None, None, set()
         self.offboard_parts = {}
+        self.unfitted_parts = {}
+        self.gauges = {}           # runs of a wire thicker than the default, by their two ends
+        self.short_wires = set()   # insulated wires accepted under the minimum length
         self.text_figs = {}
         if netlist:
             self._declared(*netlist)
@@ -224,8 +227,12 @@ class Layout:
         return p
 
     # ---- connections ----------------------------------------------------------------------
-    def bare(self, a, b, side="bottom"):
-        self.bares.append((self.board.hole(a), self.board.hole(b), side))
+    def bare(self, a, b, side="bottom", gauge=None):
+        """A bare run; gauge names a wire thicker than the build's default, such as "1.3 mm"."""
+        ha, hb = self.board.hole(a), self.board.hole(b)
+        self.bares.append((ha, hb, side))
+        if gauge:
+            self.gauges[(ha, hb)] = gauge
 
     def tin(self, a, b, side="bottom"):
         self.tins.append((self.board.hole(a), self.board.hole(b), side))
@@ -233,9 +240,13 @@ class Layout:
     def link(self, a, b, side="top"):
         self.links.append((self.board.hole(a), self.board.hole(b), side))
 
-    def wire(self, a, b, via=(), side="top"):
+    def wire(self, a, b, via=(), side="bottom", short=False):
+        """An insulated wire. short accepts it under the minimum length, where the user took
+        the risk to the insulation for a straighter route."""
         pts = [self.board.hole(a)] + [self.board.hole(v) for v in via] + [self.board.hole(b)]
         self.wires.append((pts, side))
+        if short:
+            self.short_wires.add(tuple(pts))
 
     # ---- what the copper has to make ------------------------------------------------------
     def net(self, name, *pins, color=None, label=None):
@@ -258,6 +269,29 @@ class Layout:
         Every text holding it carries key in data-fig."""
         self.text_figs[text] = key
 
+    def unfitted(self, ref, joins=(), why=""):
+        """A part of the netlist the build leaves out, such as an optional protection. joins
+        names two of its pins whose nets a wire on the board joins in its place, as ("D", "S")
+        for a MOSFET in the ground line; the nets on its other pins go with it."""
+        self.unfitted_parts[ref] = (tuple(joins), why)
+
+    def effective_nets(self):
+        """The nets the copper has to make: the netlist's, with the nets an unfitted part's
+        joins name merged into one."""
+        nets = {n: set(p) for n, p in self.nets.items()}
+        for ref, (joins, _why) in self.unfitted_parts.items():
+            if len(joins) != 2:
+                continue
+            a, b = (next((n for n, p in nets.items() if f"{ref}.{pin}" in p), None)
+                    for pin in joins)
+            if a and b and a != b:
+                rails = ({n.name for n in self.declared.nets.values() if n.rail}
+                         if self.declared else set())
+                if a not in rails and b in rails:
+                    a, b = b, a              # the merged net keeps the rail's name
+                nets[a] |= nets.pop(b)
+        return nets
+
     def offboard(self, ref, how=""):
         """A part of the netlist that stays off this board, such as a module hanging on a cable.
         how says where it sits and how it is reached."""
@@ -275,10 +309,15 @@ class Layout:
                 E.append(f"{ref} is marked off the board and the netlist holds no {ref}")
             elif ref in placed:
                 E.append(f"{ref} is marked off the board and placed on it")
+        for ref in self.unfitted_parts:
+            if ref not in self.declared.parts:
+                E.append(f"{ref} is marked unfitted and the netlist holds no {ref}")
+            elif ref in placed:
+                E.append(f"{ref} is marked unfitted and placed on the board")
         for ref, d in self.declared.parts.items():
             p = placed.get(ref)
             if p is None:
-                if ref not in self.offboard_parts:
+                if ref not in self.offboard_parts and ref not in self.unfitted_parts:
                     E.append(f"{ref} of the netlist is not placed")
                 continue
             if p.opt.get("carries", p.key) != d.key:

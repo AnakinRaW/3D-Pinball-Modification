@@ -57,12 +57,14 @@ def tin(a, b, S):
             f'stroke-width="1" transform="rotate({ang:.1f} {cx:.1f} {cy:.1f})"/>']
 
 
-def bare(a, b, S):
-    """Uninsulated wire flat along a row, soldered in every hole on the way."""
+def bare(a, b, S, thick=False):
+    """Uninsulated wire flat along a row, soldered in every hole on the way. thick draws the
+    heavier wire, twice the width of the default."""
+    k = 2.0 if thick else 1.0
     return [f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" '
-            f'stroke="{SILVER_EDGE}" stroke-width="{0.75 * S:.1f}" stroke-linecap="round"/>',
+            f'stroke="{SILVER_EDGE}" stroke-width="{0.75 * S * k:.1f}" stroke-linecap="round"/>',
             f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" '
-            f'stroke="{SILVER}" stroke-width="{0.45 * S:.1f}" stroke-linecap="round"/>']
+            f'stroke="{SILVER}" stroke-width="{0.45 * S * k:.1f}" stroke-linecap="round"/>']
 
 
 def link(a, b, S):
@@ -155,13 +157,44 @@ def electrolytic(plus, minus, S, key="electrolytic_esl_c3"):
     ang = _rot(plus, minus)
     out = [f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{p["color"]}" stroke="#4d4d4d" '
            'stroke-width="1"/>']
-    # the stripe: a band of the can toward the minus lead
-    x0 = cx + math.cos(math.radians(ang)) * r * 0.45
+    # the stripe: a band of the can toward the minus lead, drawn toward +x and turned with the
+    # leads by the transform
+    x0 = cx + r * 0.45
     out.append(f'<path d="M {x0:.1f} {cy - r * 0.89:.1f} A {r:.1f} {r:.1f} 0 0 1 {x0:.1f} '
                f'{cy + r * 0.89:.1f} Z" fill="{p["stripe"]}" '
                f'transform="rotate({ang:.1f} {cx:.1f} {cy:.1f})"/>')
     out.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r * 0.55:.1f}" fill="none" '
                f'stroke="#6b6b6b" stroke-width="1"/>')
+    return out
+
+
+def fuse_holder(a, b, S, key="fuse_holder_5x20"):
+    """A 5 x 20 mm fuse holder seen from above, its pins at a and b: the black base, a metal clip
+    at each end and the glass fuse with its two caps lying in them."""
+    p = PARTS[key]
+    cx, cy = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+    ang = _rot(a, b)
+    L, W = p["body_l"][1] * S, p["body_w"][1] * S
+    tr = f' transform="rotate({ang:.1f} {cx:.1f} {cy:.1f})"'
+    out = [f'<rect x="{cx - L / 2:.1f}" y="{cy - W / 2:.1f}" width="{L:.1f}" height="{W:.1f}" '
+           f'rx="{0.8 * S:.1f}" fill="{p["color"]}" stroke="#4d4d4d" stroke-width="1"{tr}/>']
+    clip_l, clip_w = 4.0 * S, 7.0 * S                  # the two clips, at the ends of the base
+    for sx in (-1, 1):
+        x = cx + sx * (L / 2 - 0.8 * S) - (clip_l if sx > 0 else 0)
+        out.append(f'<rect x="{x:.1f}" y="{cy - clip_w / 2:.1f}" width="{clip_l:.1f}" '
+                   f'height="{clip_w:.1f}" rx="{0.6 * S:.1f}" fill="#c9ccd1" stroke="#7a7f87" '
+                   f'stroke-width="1"{tr}/>')
+    tube_l, tube_d, cap = 20.0 * S, 5.0 * S, 5.0 * S   # the fuse: glass between two metal caps
+    out.append(f'<rect x="{cx - tube_l / 2:.1f}" y="{cy - tube_d / 2:.1f}" width="{tube_l:.1f}" '
+               f'height="{tube_d:.1f}" rx="{0.5 * S:.1f}" fill="#dff1f7" stroke="#8fb3c0" '
+               f'stroke-width="1"{tr}/>')
+    for sx in (-1, 1):
+        x = cx + sx * tube_l / 2 - (cap if sx > 0 else 0)
+        out.append(f'<rect x="{x:.1f}" y="{cy - tube_d / 2:.1f}" width="{cap:.1f}" '
+                   f'height="{tube_d:.1f}" rx="{0.5 * S:.1f}" fill="#b8bcc2" stroke="#7a7f87" '
+                   f'stroke-width="1"{tr}/>')
+    out.append(f'<line x1="{cx - tube_l / 2 + cap:.1f}" y1="{cy:.1f}" x2="{cx + tube_l / 2 - cap:.1f}" '
+               f'y2="{cy:.1f}" stroke="#7a7f87" stroke-width="1"{tr}/>')   # the fuse wire
     return out
 
 
@@ -349,7 +382,9 @@ def breakout(key, ox, oy, S, rot=0, labels=True):
         mx, my = (x0 + x1) / 2, (y0 + y1) / 2
         for (x, y), n in pins:
             # the name sits beside the pin, across its row and toward the board's middle
-            row_runs_x = any(abs(q[1] - y) < 0.5 and abs(q[0] - x) > 0.5 for q, _ in pins)
+            # a row runs along x where a neighbor of the same row sits one pitch away
+            row_runs_x = any(abs(q[1] - y) < 0.5 and 0.5 < abs(q[0] - x) < 1.5 * PITCH * S
+                             for q, _ in pins)
             if row_runs_x:
                 tx, ty = x, y + (1.6 * S if y < my else -1.6 * S)
                 anchor = "middle"
