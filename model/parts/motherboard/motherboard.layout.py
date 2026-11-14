@@ -3,11 +3,14 @@
     python tools/perfboard/build.py model/parts/motherboard/motherboard.layout.py
 
 The Teensy lies across the middle with its USB end toward the left edge. Every line of its top
-row runs straight up to a header on the top edge and every line of its bottom row straight down
-to one on the bottom edge. A header that takes lines from both rows sits in pieces, one piece per
-row, and its cable meets each piece with a separate housing. The lines that have to leave at an
-end run under the Teensy between its rows of pins: to the left the bus to the port expander board
-and the servo's signal, to the right ground and 3.3 V for the sense board and the break beam.
+row runs up to a header on the top edge and every line of its bottom row straight down to one on
+the bottom edge, the headers of the top edge one free column apart. The IR isolator board's
+header takes lines from both rows and sits in pieces, one piece per row. The coil board's trigger
+3 and the display's D/C, CS, D7 and D6 leave the bottom row and reach their headers on the top
+edge in insulated wires around the Teensy's right end, the display's four on the top side, so
+they never pass between the Teensy and its sockets. The lines that have to leave at an end run
+under the Teensy between its rows of pins: to the left the bus to the port expander board and the
+servo's signal, to the right ground and 3.3 V for the sense board and the break beam.
 """
 from layout import Layout
 
@@ -21,65 +24,78 @@ L.part("A1", "teensy41", at="J14", rot=0)
 # ---- the top row, straight up to the top edge -------------------------------------------
 # ground from the Teensy's first ground pin up to the top edge
 L.bare("J15", "A15")
-# the display's first housing: GND, D1, D0, D3, D2, D5, D4 and WR; SCL and SDA leave their
-# columns free by going down, so D5 and D4 come over from the right in two insulated wires
+# the display in one housing from column 11 to 22: D4, D/C, CS, D7, GND, D6, D1, D0, D3, D2, D5
+# and WR. SCL and SDA leave their columns free by going down, so D5 and D4 come over from the
+# right in two insulated wires, D4 on to the housing's left end; D/C, CS, D7 and D6 come from the
+# bottom row on the top side; WR steps one column left, so column 23 stays free before the IR
+# housing
 L.piece("J-MB-DISPLAY", "a", "header_male",
-        ["A16", "A17", "A18", "A19", "A20", "A21", "A22", "A23"], pins=[1, 2, 3, 4, 5, 7, 8, 6],
-        title="J-MB-DISPLAY", sub="the display, first housing")
-L.tin("A15", "A16")
-for c in (17, 18, 19, 20, 23):
+        [f"A{c}" for c in range(11, 23)], pins=[8, 9, 10, 11, 1, 12, 2, 3, 4, 5, 7, 6],
+        title="J-MB-DISPLAY", sub="the display")
+for c in (17, 18, 19, 20):
     L.bare(f"J{c}", f"A{c}")
+L.bare("J23", "G23")
+L.bare("G23", "G22")
+L.bare("G22", "A22")                     # WR
 L.tin("J31", "I31")
 L.wire("I31", "B21", via=["I21"])
 L.tin("B21", "A21")
 L.tin("J32", "I32")
-L.wire("I32", "B22", via=["H32", "H22"])
-L.tin("B22", "A22")
+L.wire("I32", "B11", via=["H32", "H11"])
+L.tin("B11", "A11")
 # the IR isolator board's first housing: CS-B, CS-A, CLOCK, SCK and GND
 L.piece("J-IR-TEENSY", "a", "header_male", ["A24", "A25", "A26", "A27", "A28"],
         pins=[4, 3, 5, 1, 8], title="J-IR-TEENSY", sub="the IR isolator board, first housing")
 for c in (24, 25, 26, 27):
     L.bare(f"J{c}", f"A{c}")
 L.bare("A28", "L28")                     # GND, on down under the Teensy to the right end
-# the coil board's first housing: T2, T1 and T4
-L.piece("J-COIL-TEENSY", "a", "header_male", ["A29", "A30", "A31"], pins=[2, 1, 4],
-        title="J-COIL-TEENSY", sub="the coil board, first housing")
-L.bare("J29", "A29")
-L.bare("J30", "A30")
+# the coil board one column right of the IR housing: T2, T1, T4 and T3, the last from the bottom
+# row in an insulated wire around the right end; T2 and T1 step one column right, T1 first
+L.piece("J-COIL-TEENSY", "a", "header_male", ["A30", "A31", "A32", "A33"], pins=[2, 1, 4, 3],
+        title="J-COIL-TEENSY", sub="the coil board")
+L.bare("J29", "F29")
+L.bare("F29", "F30")
+L.bare("F30", "A30")                     # T2
+L.bare("J30", "G30")
+L.bare("G30", "G31")
+L.bare("G31", "A31")                     # T1
 L.bare("J33", "G33")
-L.bare("G33", "G31")
-L.bare("G31", "A31")
-# the sense board: S1, S2, S3, GND and 3V3
-L.piece("J-SENSE-TEENSY", "a", "header_male", ["A34", "A35", "A36", "A37", "A38"],
+L.bare("G33", "G32")
+L.bare("G32", "A32")                     # T4
+# the sense board one column right of the coil housing: S1, S2, S3, GND and 3V3; the senses
+# step one column right, S3 first, and ground comes down column 38 to the right end's rail
+L.piece("J-SENSE-TEENSY", "a", "header_male", ["A35", "A36", "A37", "A38", "A39"],
         pins=[1, 2, 3, 5, 4], title="J-SENSE-TEENSY", sub="the sense board")
-for c in (34, 35, 36):
-    L.bare(f"J{c}", f"A{c}")
-L.bare("A37", "I37")
-L.bare("I37", "I39")
-L.tin("A38", "B38")
-L.bare("B38", "B42")
+for c, r in ((34, "F"), (35, "G"), (36, "H")):
+    L.bare(f"J{c}", f"{r}{c}")
+    L.bare(f"{r}{c}", f"{r}{c + 1}")
+    L.bare(f"{r}{c + 1}", f"A{c + 1}")
+L.bare("A38", "I38")
+L.bare("I38", "I39")
+L.tin("A39", "B39")
+L.bare("B39", "B42")
 
 # ---- the left end: the bus to the port expander board and the rotary sensor ------------
 # INT, SDA, SCL and 3V3 leave under the Teensy along rows O, N, M and L and run up side by side
 # to the top edge, ground beside them from the Teensy's ground column; the rotary sensor's header
 # sits across SDA, SCL, 3V3 and GND on the way
 L.bare("J16", "L16")
-L.bare("L16", "L9")
-L.bare("L9", "A9")                       # 3V3
+L.bare("L16", "L5")
+L.bare("L5", "A5")                       # 3V3
 L.bare("J21", "M21")
-L.bare("M21", "M8")
-L.bare("M8", "A8")                       # SCL
+L.bare("M21", "M4")
+L.bare("M4", "A4")                       # SCL
 L.bare("J22", "N22")
-L.bare("N22", "N7")
-L.bare("N7", "A7")                       # SDA
+L.bare("N22", "N3")
+L.bare("N3", "A3")                       # SDA
 L.bare("P16", "O16")
-L.bare("O16", "O6")
-L.bare("O6", "A6")                       # INT
-L.bare("E15", "E10")
-L.bare("E10", "A10")                     # GND
-L.piece("J-PE-TEENSY", "a", "header_male", ["A6", "A7", "A8", "A9", "A10"], pins=[1, 3, 2, 4, 5],
+L.bare("O16", "O2")
+L.bare("O2", "A2")                       # INT
+L.bare("E15", "E6")
+L.bare("E6", "A6")                       # GND
+L.piece("J-PE-TEENSY", "a", "header_male", ["A2", "A3", "A4", "A5", "A6"], pins=[1, 3, 2, 4, 5],
         title="J-PE-TEENSY", sub="the port expander board")
-L.piece("J-MB-ROTARY", "a", "header_male", ["E7", "E8", "E9", "E10"], pins=[1, 2, 3, 4],
+L.piece("J-MB-ROTARY", "a", "header_male", ["E3", "E4", "E5", "E6"], pins=[1, 2, 3, 4],
         title="J-MB-ROTARY", sub="the rotary sensor")
 # D2 sits on the Teensy itself, from the VUSB hole onto the head of the Vin pin; the drawing
 # shows it there
@@ -148,13 +164,20 @@ L.piece("J-MB-TOUCH", "a", "header_male", ["AD28", "AD29", "AD30"], pins=[3, 1, 
         title="J-MB-TOUCH", sub="the touch controller")
 L.bare("P29", "AD29")
 L.bare("P30", "AD30")
-L.piece("J-MB-DISPLAY", "b", "header_male", ["AD31", "AD32", "AD33", "AD34"],
-        pins=[12, 11, 10, 9], title="J-MB-DISPLAY", sub="second housing")
+# D6, D7, CS and D/C on the top side around the Teensy's right end, nested so they never cross:
+# down from the bottom row, right, up beyond the Teensy, left above it and up to their pins
 for c in (31, 32, 33, 34):
-    L.bare(f"P{c}", f"AD{c}")
-L.piece("J-COIL-TEENSY", "b", "header_male", ["AD35"], pins=[3],
-        title="J-COIL-TEENSY", sub="second housing")
-L.bare("P35", "AD35")
+    L.tin(f"P{c}", f"Q{c}")
+for start, low, right, high, end in ((31, "T", 41, "C", 16), (32, "S", 40, "D", 14),
+                                     (33, "R", 39, "E", 13), (34, "Q", 38, "F", 12)):
+    via = ([f"{low}{start}"] if low != "Q" else []) + [f"{low}{right}", f"{high}{right}",
+                                                       f"{high}{end}"]
+    L.wire(f"Q{start}", f"B{end}", via=via, side="top")
+    L.tin(f"B{end}", f"A{end}")
+L.tin("P35", "O35")
+L.wire("O35", "C33", via=["O40", "C40"])   # T3 around the right end up to its housing
+L.tin("C33", "B33")
+L.tin("B33", "A33")
 # the break beam's receiver with its pull-up, and the toggle switch with its series resistor
 L.part("J-MB-RECEIVER", "header_male", ["AD36", "AD37"], title="J-MB-RECEIVER",
        sub="the receiver")
