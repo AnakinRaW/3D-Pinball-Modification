@@ -1,7 +1,8 @@
-"""The figures of the port expander on the Teensy motherboard, as inputs plus formulas."""
+"""The figures of the port expander on its own board, as inputs plus formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "port-expander", drawings=["port-expander-schematic.svg"],
+MODEL = Model.at(__file__, "port-expander",
+                 drawings=["port-expander-schematic.svg", "expander-board.svg"],
                  documents=["../../firmware/io/port-expander.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 
@@ -14,12 +15,12 @@ SUPPLY = "Supply"
 # -- the bus, Wire, which U1 shares with the rotary sensor --------------------
 with MODEL.block("BUS", section=BUS):
     MODEL.uses("r_pu", of="magnetic-rotary", label="rotary module")
-    dec("r_pu_board", 4.7, "kΩ", src="R5 and R6, SDA and SCL to the 3V3 rail on the Teensy "
-        "motherboard, a value of the resistor kit; with them a rising edge stays inside "
-        "Standard-mode on the motherboard's load alone", label="R5 and R6")
+    dec("r_pu_board", 4.7, "kΩ", src="R5 and R6, SDA and SCL to the 3V3 rail on the port expander "
+        "board, a value of the resistor kit; with them a rising edge stays inside "
+        "Standard-mode on the boards' load alone", label="R5 and R6")
     MODEL.uses("c_bus", of="magnetic-rotary")
-    asm("c_board", 100, "pF", src="each bus line's share of the motherboard's traces together with "
-        "U1's pin, taken generously; no measurement")
+    asm("c_board", 100, "pF", src="each bus line's share of the traces on both boards and of "
+        "J-PE-TEENSY's cable between them, together with U1's pin, taken generously; no measurement")
     ds("c_b_max", 400, "pF", sheet=EXP, src="DS20001919F, D102: the capacitive loading SDA allows, "
        "CB maximum")
     MODEL.uses("vil_frac", of="magnetic-rotary", stated=False)
@@ -38,7 +39,7 @@ with MODEL.block("BUS", section=BUS):
     fig("t_r_bus", "ns", "r_bus * c_line * ln((1 - vil_frac) / (1 - vih_frac))", "up",
         moves="+r_pu +r_pu_board +c_bus +c_board +vih_frac -vil_frac")
 
-    # The same edge with R5 and R6 as the only pull-ups and the motherboard as the whole load.
+    # The same edge with R5 and R6 as the only pull-ups and the boards as the whole load.
     fig("t_r_board", "ns", "r_pu_board * c_board * ln((1 - vil_frac) / (1 - vih_frac))", "up",
         moves="+r_pu_board +c_board +vih_frac -vil_frac")
 
@@ -85,7 +86,7 @@ ds("r_gppu", 100, "kΩ", sheet=EXP, src="DS20001919F, 1.6.7: the internal pull-u
 with MODEL.block(SUPPLY, stated="loose"):
     dec("c1", 100, "nF", src="C1, the 100 nF ceramic the build decouples every IC with")
     dec("d_c1", 10, "mm", src="the most C1 may sit from VDD on perfboard, as C6 on the IR "
-        "mainboard may")
+        "board may")
 with MODEL.block("SUPPLY", section=SUPPLY):
     fig("i_inputs", "mA", "i_pu_gp * n_gp", "up", moves="+i_pu_gp +n_gp")
 
@@ -98,7 +99,7 @@ MODEL.draws("i_board", pool=TEENSY_RAIL)   # U1 and R5, R6, fed from the Teensy'
 
 _I = MODEL.invariant
 _I("a rising edge on the shared bus stays inside Standard-mode", "t_r_bus <= t_r_std")
-_I("a rising edge stays inside Standard-mode with R5 and R6 alone on the motherboard's load",
+_I("a rising edge stays inside Standard-mode with R5 and R6 alone on the boards' load",
    "t_r_board <= t_r_std")
 _I("each bus line stays under the load U1 allows on SDA", "c_line <= c_b_max")
 _I("a device holding a line low sinks no more than an I²C output has to", "i_sink <= i_ol_std")
@@ -112,7 +113,7 @@ _I("the driver tick's read comes on whole ticks", "(t_poll / t_tick).raw.is_inte
 # -- wiring -------------------------------------------------------------------
 # SDA and SCL are Wire's, which docs/pin-assignment.md gives to the rotary sensor and to the
 # port expander. The nets merge with the rotary sensor's, which bring the Teensy's own pull-up.
-_R56 = "design.md, R5 on SDA and R6 on SCL, 4.7 kΩ to the motherboard's 3V3 rail, the Teensy's"
+_R56 = "design.md, R5 on SDA and R6 on SCL, 4.7 kΩ to the port expander board's 3V3, the Teensy's"
 MODEL.net("SDA",
           drives("U1 SDA", "open-drain", src="UM10204, every I²C device drives SDA open-drain"),
           pull("R5", TEENSY_RAIL, src=_R56),
