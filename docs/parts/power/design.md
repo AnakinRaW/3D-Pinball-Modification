@@ -17,7 +17,7 @@ The adapter needs short-circuit and overload protection. A short on any output i
 
 | Load | Current |
 |---|---|
-| The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 902 mA |
+| The Teensy, the amplifier, the IR board and the display, which draw all the time | 902 mA |
 | The lighting at its cap, with the 3 A adapter | 2.0 A |
 | The lighting at its cap, with the 6 A adapter | 2.93 A |
 | Three coils pulling at once, for at most 30 ms | 2.17 A |
@@ -62,7 +62,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 | J-SOL | the solenoids' coil board | 2.85 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-MAIN | the Teensy motherboard, with the Teensy and the amplifier module | 504 mA |
-| J-IR | the D24V5F3 at the IR mainboard | 201 mA |
+| J-IR | the D24V5F3 at the IR board | 201 mA |
 | J-DISP | the display board | 198 mA |
 
 ### Ground
@@ -77,9 +77,9 @@ J-MAIN carries 5 V to the [Teensy motherboard](../motherboard/design.md#supply).
 
 The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4.1.md#powering-from-something-other-than-usb) requires for an external supply. D2 runs from the VUSB hole to the VIN pin, so the Teensy also runs on USB alone.
 
-### IR mainboard
+### IR board
 
-J-IR carries 5 V to the IR mainboard. The Pololu D24V5F3 that makes the mainboard's 3.3 V is plugged into the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
+J-IR carries 5 V to the IR board. The Pololu D24V5F3 that makes the IR board's 3.3 V is plugged into the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
 
 ### Display
 
@@ -128,7 +128,7 @@ LOADS     the smaller adapter                      3 A
           the Teensy's VIN, behind a linear
           regulator, with the emitter            = 375 mA
           J-MAIN, with the amplifier             = 504 mA
-          the IR mainboard, sixteen channels       222 mA
+          the IR board, sixteen channels       222 mA
           at its module's highest output           3.432 V
           the module's efficiency, assumed         80 %
           the module's input current at its
@@ -240,7 +240,7 @@ FLOORS    what the lighting's buffers need         4.5 V
           and at most                              500 mA
           D2 from VUSB to VIN, the same 1N5819
           the Teensy's VIN on USB alone          = 4.15 V
-          the IR mainboard's module at 6 A       = 4.75 V
+          the IR board's module at 6 A       = 4.75 V
           what it needs                            3.4 V
           the display at 6 A                     = 4.77 V
           what its regulator needs, at least       3.49 V
@@ -265,7 +265,7 @@ ALLOW     the least bulk at J-IN that holds the
 
 - [Schurter FST 5x20](https://www.schurter.com/en/datasheet/typ_FST_5x20.pdf): the pre-arcing time to IEC 60127-2/3
 - [ST STP160N3LL](../../datasheets/STP160N3LL-ST.pdf), DocID025073 Rev 3: the ratings in Table 2, the thermal resistance in Table 3, R_DS(on), the gate threshold and the leakage in Table 4, and Figure 10 for R_DS(on) against temperature
-- [Pololu D24V5F3](https://www.pololu.com/product/2842): the typical efficiency of the IR mainboard's module
+- [Pololu D24V5F3](https://www.pololu.com/product/2842): the typical efficiency of the IR board's module
 - [Rubycon ZLH](../../datasheets/ZLH-Rubycon.pdf): C1's and C2's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
 - [PowerStream, wire gauge and current limits](https://www.powerstream.com/Wire_Size.htm): the chassis wiring current of 16 and 22 AWG
 - ASTM B258: the resistance of 16 and 18 AWG annealed copper

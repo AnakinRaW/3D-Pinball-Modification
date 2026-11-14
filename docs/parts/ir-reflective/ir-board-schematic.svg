@@ -1,222 +1,92 @@
-<svg viewBox="0 0 960 2244" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-  <rect x="0" y="0" width="960" height="2244" fill="#ffffff"/>
-  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR sensor mainboard schematic</text>
+<svg viewBox="0 0 960 2200" data-boards="main" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="960" height="2200" fill="#ffffff"/>
+  <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR board schematic</text>
   <text x="30" y="56" font-size="12.5" fill="#666">Up to sixteen reflective IR channels on a shared pulsed LED bus, digitized on the board and read over SPI.</text>
 
   <!-- ===== board outline ===== -->
   <rect x="16" y="70" width="928" height="1666" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
-  <text x="928" y="94" text-anchor="end" font-size="15" font-weight="700" fill="#5c4a00">IR sensor mainboard</text>
+  <text x="928" y="94" text-anchor="end" font-size="15" font-weight="700" fill="#5c4a00">IR board</text>
 
   <!-- ===== BAND 1: the crossing and the two converters ===== -->
-  <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">SPI crossing and the two converters</text>
+  <text x="30" y="94" font-size="14" font-weight="700" fill="#0a6ea8">The two converters and the isolator board's connector</text>
 
-  <!-- J-IR-TEENSY, the connector to the Teensy -->
-  <rect x="40" y="130" width="160" height="310" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-IR-TEENSY"/>
-  <text x="54" y="154" font-size="13" font-weight="700" fill="#333333">J-IR-TEENSY</text>
-  <text x="54" y="170" font-size="11" fill="#777">8-pin</text>
-  <text x="54" y="186" font-size="9.5" fill="#777">pins per pin-assignment.md</text>
-  <circle cx="200" cy="220" r="6" fill="#1f4fd1"/>
-  <text x="188" y="224" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">1: SCK</text>
-  <text x="54" y="224" font-size="10.5" fill="#777" data-pin="SCK">Pin 13</text>
-  <circle cx="200" cy="250" r="6" fill="#1f4fd1"/>
-  <text x="188" y="254" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">2: MOSI</text>
-  <text x="54" y="254" font-size="10.5" fill="#777" data-pin="MOSI">Pin 11</text>
-  <circle cx="200" cy="280" r="6" fill="#1f4fd1"/>
-  <text x="188" y="284" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">3: CS-A</text>
-  <text x="54" y="284" font-size="10.5" fill="#777" data-pin="CS-A">Pin 15</text>
-  <circle cx="200" cy="310" r="6" fill="#1f4fd1"/>
-  <text x="188" y="314" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">4: CS-B</text>
-  <text x="54" y="314" font-size="10.5" fill="#777" data-pin="CS-B">Pin 16</text>
-  <circle cx="200" cy="340" r="6" fill="#1f4fd1"/>
-  <text x="188" y="344" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f4fd1">5: CLOCK</text>
-  <text x="54" y="344" font-size="10.5" fill="#777" data-pin="CLOCK">Pin 14</text>
-  <text x="188" y="374" text-anchor="end" font-size="12.5" font-weight="700" fill="#1f7a33">6: MISO</text>
-  <text x="54" y="374" font-size="10.5" fill="#777" data-pin="MISO">Pin 12</text>
-  <text x="188" y="404" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a6d0b">7: 3V3</text>
-  <text x="54" y="404" font-size="10.5" fill="#777">Teensy 3V3</text>
-  <circle cx="200" cy="430" r="6" fill="#1a1a1a"/>
-  <text x="188" y="434" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">8: GND</text>
-  <text x="54" y="434" font-size="10.5" fill="#777">Teensy GND</text>
-
-  <!-- the conductors, named where they leave J-IR-TEENSY -->
-  <line x1="200" y1="220" x2="226" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK" data-ends="J-IR-TEENSY.1"/>
-  <rect x="226" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK"/>
-  <text x="276" y="224" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK</text>
-  <line x1="326" y1="220" x2="374" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK" data-ends="U3.INA"/>
-  <line x1="200" y1="250" x2="226" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI" data-ends="J-IR-TEENSY.2"/>
-  <rect x="226" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI"/>
-  <text x="276" y="254" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI</text>
-  <line x1="326" y1="250" x2="374" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI" data-ends="U3.INB"/>
-  <line x1="200" y1="280" x2="226" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A" data-ends="J-IR-TEENSY.3"/>
-  <rect x="226" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A"/>
-  <text x="276" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-A</text>
-  <line x1="326" y1="280" x2="374" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A" data-ends="U3.INC"/>
-  <line x1="200" y1="310" x2="226" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B" data-ends="J-IR-TEENSY.4"/>
-  <rect x="226" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B"/>
-  <text x="276" y="314" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-B</text>
-  <line x1="326" y1="310" x2="374" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B" data-ends="U3.IND"/>
-  <line x1="200" y1="340" x2="226" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK" data-ends="J-IR-TEENSY.5"/>
-  <rect x="226" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK"/>
-  <text x="276" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CLOCK</text>
-  <line x1="326" y1="340" x2="374" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK" data-ends="U3.INE"/>
-  <line x1="200" y1="370" x2="223.5" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO"/>
-  <line x1="200" y1="370" x2="226" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO" data-ends="J-IR-TEENSY.6"/>
-  <rect x="226" y="360" width="76" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="MISO"/>
-  <text x="264" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">MISO</text>
-  <line x1="304.5" y1="370" x2="311.5" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO"/>
-  <line x1="302" y1="370" x2="314" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO" data-ends="R34.1"/>
-  <rect x="314" y="360" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R34"/>
-  <text data-fig="r_miso" x="337" y="374" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
-  <text x="338" y="356" font-size="10" fill="#777">R34</text>
-  <line x1="362.5" y1="370" x2="374" y2="370" stroke="#23862f" stroke-width="5" data-net="MISO-OUTF"/>
-  <line x1="360" y1="370" x2="374" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="MISO-OUTF" data-ends="R34.2 U3.OUTF"/>
-  <line x1="200" y1="400" x2="223.5" y2="400" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
-  <line x1="200" y1="400" x2="226" y2="400" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="J-IR-TEENSY.7"/>
-  <rect x="226" y="390" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3-TEENSY"/>
-  <text x="282" y="404" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3 (Teensy)</text>
-  <line x1="340.5" y1="400" x2="356" y2="400" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
-  <line x1="356" y1="397.5" x2="356" y2="442.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
-  <line x1="338" y1="400" x2="356" y2="400" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY"/>
-  <line x1="356" y1="400" x2="356" y2="445" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="C3.1"/>
-  <line x1="338" y1="445" x2="374" y2="445" stroke="#1a1a1a" stroke-width="3.5" data-part="C3"/>
-  <line x1="338" y1="459" x2="374" y2="459" stroke="#1a1a1a" stroke-width="3.5" data-part="C3"/>
-  <text x="330" y="449" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">C3</text>
-  <text data-fig="c_decoupling" x="330" y="463" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="356" y1="459" x2="356" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="C3.2"/>
-  <circle cx="356" cy="490" r="4" fill="#1a1a1a"/>
-  <line x1="200" y1="430" x2="236" y2="430" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="J-IR-TEENSY.8"/>
-  <line x1="236" y1="430" x2="236" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1"/>
-  <line x1="236" y1="490" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1"/>
-
-  <!-- U3, the isolator between the two rails -->
-  <rect x="364" y="108" width="112" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3-TEENSY"/>
-  <text x="420" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3 (Teensy)</text>
-  <line x1="420" y1="130.5" x2="420" y2="180" stroke="#9a7d0a" stroke-width="5" data-net="3V3-TEENSY"/>
-  <line x1="420" y1="128" x2="420" y2="180" stroke="#f1c40f" stroke-width="2.5" data-net="3V3-TEENSY" data-ends="U3.VCC1"/>
-  <rect x="490" y="108" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
-  <text x="528" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="528" y1="130.5" x2="528" y2="180" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
-  <line x1="528" y1="128" x2="528" y2="180" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="U3.VCC2"/>
-  <line x1="528" y1="150" x2="612.5" y2="150" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
-  <line x1="610" y1="147.5" x2="610" y2="161.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
-  <line x1="528" y1="150" x2="610" y2="150" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
-  <line x1="610" y1="150" x2="610" y2="164" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="C4.1"/>
-  <line x1="592" y1="164" x2="628" y2="164" stroke="#1a1a1a" stroke-width="3.5" data-part="C4"/>
-  <line x1="592" y1="178" x2="628" y2="178" stroke="#1a1a1a" stroke-width="3.5" data-part="C4"/>
-  <text x="636" y="168" text-anchor="start" font-size="10.5" font-weight="700" fill="#1a1a1a">C4</text>
-  <text data-fig="c_decoupling" x="636" y="182" text-anchor="start" font-size="10.5" font-weight="700" fill="#1a1a1a">100 nF</text>
-  <line x1="610" y1="178" x2="610" y2="194" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C4.2"/>
-  <line x1="596" y1="194" x2="624" y2="194" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
-  <line x1="601" y1="200" x2="619" y2="200" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
-  <line x1="606" y1="206" x2="614" y2="206" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
-  <rect x="374" y="180" width="200" height="230" rx="6" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="U3"/>
-  <text x="474" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#5c4a00">U3: ISO7761F</text>
-  <line x1="474" y1="210" x2="474" y2="400" stroke="#5b4a8a" stroke-width="1.5" stroke-dasharray="5 4"/>
-  <text x="426" y="174" font-size="9.5" font-weight="700" fill="#8a6d0b">VCC1</text>
-  <text x="426" y="162.5" font-size="8.5" fill="#777">pin 1</text>
-  <text x="522" y="174" text-anchor="end" font-size="9.5" font-weight="700" fill="#8a6d0b">VCC2</text>
-  <text x="522" y="162.5" text-anchor="end" font-size="8.5" fill="#777">pin 16</text>
-  <circle cx="374" cy="220" r="5" fill="#1f4fd1"/>
-  <text x="382" y="224" font-size="10.5" font-weight="700" fill="#1f4fd1">INA</text>
-  <text x="382" y="234.5" font-size="8.5" fill="#777">pin 2</text>
-  <circle cx="574" cy="220" r="5" fill="#1f4fd1"/>
-  <text x="566" y="224" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTA</text>
-  <text x="566" y="234.5" text-anchor="end" font-size="8.5" fill="#777">pin 15</text>
-  <line x1="574" y1="220" x2="600" y2="220" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U3.OUTA"/>
-  <rect x="600" y="210" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
-  <text x="650" y="224" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
-  <circle cx="374" cy="250" r="5" fill="#1f4fd1"/>
-  <text x="382" y="254" font-size="10.5" font-weight="700" fill="#1f4fd1">INB</text>
-  <text x="382" y="264.5" font-size="8.5" fill="#777">pin 3</text>
-  <circle cx="574" cy="250" r="5" fill="#1f4fd1"/>
-  <text x="566" y="254" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTB</text>
-  <text x="566" y="264.5" text-anchor="end" font-size="8.5" fill="#777">pin 14</text>
-  <line x1="574" y1="250" x2="600" y2="250" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U3.OUTB"/>
-  <rect x="600" y="240" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
-  <text x="650" y="254" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
-  <circle cx="374" cy="280" r="5" fill="#1f4fd1"/>
-  <text x="382" y="284" font-size="10.5" font-weight="700" fill="#1f4fd1">INC</text>
-  <text x="382" y="294.5" font-size="8.5" fill="#777">pin 4</text>
-  <circle cx="574" cy="280" r="5" fill="#1f4fd1"/>
-  <text x="566" y="284" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTC</text>
-  <text x="566" y="294.5" text-anchor="end" font-size="8.5" fill="#777">pin 13</text>
-  <line x1="574" y1="280" x2="600" y2="280" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A-2" data-ends="U3.OUTC"/>
-  <rect x="600" y="270" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A-2"/>
-  <text x="650" y="284" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A (board)</text>
-  <circle cx="374" cy="310" r="5" fill="#1f4fd1"/>
-  <text x="382" y="314" font-size="10.5" font-weight="700" fill="#1f4fd1">IND</text>
-  <text x="382" y="324.5" font-size="8.5" fill="#777">pin 5</text>
-  <circle cx="574" cy="310" r="5" fill="#1f4fd1"/>
-  <text x="566" y="314" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTD</text>
-  <text x="566" y="324.5" text-anchor="end" font-size="8.5" fill="#777">pin 12</text>
-  <line x1="574" y1="310" x2="600" y2="310" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B-2" data-ends="U3.OUTD"/>
-  <rect x="600" y="300" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B-2"/>
-  <text x="650" y="314" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B (board)</text>
-  <circle cx="374" cy="340" r="5" fill="#1f4fd1"/>
-  <text x="382" y="344" font-size="10.5" font-weight="700" fill="#1f4fd1">INE</text>
-  <text x="382" y="354.5" font-size="8.5" fill="#777">pin 6</text>
-  <circle cx="574" cy="340" r="5" fill="#1f4fd1"/>
-  <text x="566" y="344" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f4fd1">OUTE</text>
-  <text x="566" y="354.5" text-anchor="end" font-size="8.5" fill="#777">pin 11</text>
-  <line x1="574" y1="340" x2="600" y2="340" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK-2" data-ends="U3.OUTE"/>
-  <rect x="600" y="330" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK-2"/>
-  <text x="650" y="344" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK (board)</text>
-  <text x="382" y="374" font-size="10.5" font-weight="700" fill="#1f7a33">OUTF</text>
-  <text x="382" y="384.5" font-size="8.5" fill="#777">pin 7</text>
-  <text x="566" y="374" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7a33">INF</text>
-  <text x="566" y="384.5" text-anchor="end" font-size="8.5" fill="#777">pin 10</text>
-  <line x1="574" y1="370" x2="597.5" y2="370" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
-  <line x1="574" y1="370" x2="600" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="U3.INF"/>
-  <rect x="600" y="360" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
-  <text x="643" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
-  <!-- channel direction, the triangle sits at the driving pin -->
-  <polygon points="412,211 412,229 438,220" fill="#1f4fd1"/>
-  <polygon points="412,241 412,259 438,250" fill="#1f4fd1"/>
-  <polygon points="412,271 412,289 438,280" fill="#1f4fd1"/>
-  <polygon points="412,301 412,319 438,310" fill="#1f4fd1"/>
-  <polygon points="412,331 412,349 438,340" fill="#1f4fd1"/>
-  <polygon points="540,361 540,379 514,370" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
-  <text x="460" y="300" transform="rotate(-90 460 300)" text-anchor="middle" font-size="10" font-weight="700" fill="#5b4a8a">isolation barrier</text>
-  <circle cx="420" cy="410" r="5" fill="#1a1a1a"/>
-  <text x="426" y="424" font-size="9.5" font-weight="700" fill="#1a1a1a">GND1</text>
-  <text x="426" y="434.5" font-size="8.5" fill="#777">pin 8</text>
-  <circle cx="528" cy="410" r="5" fill="#1a1a1a"/>
-  <text x="522" y="424" text-anchor="end" font-size="9.5" font-weight="700" fill="#1a1a1a">GND2</text>
-  <text x="522" y="434.5" text-anchor="end" font-size="8.5" fill="#777">pin 9</text>
-  <line x1="420" y1="410" x2="420" y2="490" stroke="#1a1a1a" stroke-width="2.5" data-net="GND1" data-ends="U3.GND1"/>
-  <line x1="528" y1="410" x2="528" y2="448" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U3.GND2"/>
-  <line x1="514" y1="448" x2="542" y2="448" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
-  <line x1="519" y1="454" x2="537" y2="454" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
-  <line x1="524" y1="460" x2="532" y2="460" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
-
-
-  <!-- R36, the pull-up that keeps ADC-DOUT defined -->
-  <rect x="740" y="180" width="76" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
-  <text x="778" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="778" y1="202.5" x2="778" y2="215.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
-  <line x1="778" y1="200" x2="778" y2="218" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="R36.1"/>
-  <rect x="765" y="218" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R36"/>
-  <text data-fig="r_dout_pu" x="759" y="248" text-anchor="end" font-size="10.5" font-weight="700" fill="#1a1a1a">10 k&#937;</text>
-  <text x="759" y="262" text-anchor="end" font-size="10" fill="#777">R36</text>
-  <line x1="778" y1="280.5" x2="778" y2="293.5" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
-  <line x1="778" y1="278" x2="778" y2="296" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R36.2"/>
-  <rect x="735" y="296" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
-  <text x="778" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
+  <!-- J-IR-ISO, the connector to the isolator board -->
+  <rect x="40" y="120" width="170" height="320" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-IR-ISO"/>
+  <text x="54" y="144" font-size="13" font-weight="700" fill="#333333">J-IR-ISO</text>
+  <text x="54" y="160" font-size="11" fill="#777">11-pin, to the isolator board</text>
+  <circle cx="210" cy="180" r="5" fill="#1f4fd1"/>
+  <text x="198" y="184" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">1: SCK</text>
+  <line x1="210" y1="180" x2="236" y2="180" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-U1" data-ends="J-IR-ISO.1"/>
+  <rect x="236" y="170" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-U1"/>
+  <text x="286" y="184" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK (board)</text>
+  <circle cx="210" cy="204" r="5" fill="#1f4fd1"/>
+  <text x="198" y="208" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">2: MOSI</text>
+  <line x1="210" y1="204" x2="236" y2="204" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-U1" data-ends="J-IR-ISO.2"/>
+  <rect x="236" y="194" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-U1"/>
+  <text x="286" y="208" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
+  <circle cx="210" cy="228" r="5" fill="#1f4fd1"/>
+  <text x="198" y="232" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">3: CS-A</text>
+  <line x1="210" y1="228" x2="236" y2="228" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A-2" data-ends="J-IR-ISO.3"/>
+  <rect x="236" y="218" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A-2"/>
+  <text x="286" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-A (board)</text>
+  <circle cx="210" cy="252" r="5" fill="#3cbf4e"/>
+  <text x="198" y="256" text-anchor="end" font-size="12" font-weight="700" fill="#1f7a33">4: DOUT</text>
+  <line x1="210" y1="252" x2="236" y2="252" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-A" data-ends="J-IR-ISO.4"/>
+  <rect x="236" y="242" width="100" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="DOUT-A"/>
+  <text x="286" y="256" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
+  <circle cx="210" cy="276" r="5" fill="#1f4fd1"/>
+  <text x="198" y="280" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">5: SCK</text>
+  <line x1="210" y1="276" x2="236" y2="276" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-U2" data-ends="J-IR-ISO.5"/>
+  <rect x="236" y="266" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-U2"/>
+  <text x="286" y="280" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">SCK (board)</text>
+  <circle cx="210" cy="300" r="5" fill="#1f4fd1"/>
+  <text x="198" y="304" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">6: MOSI</text>
+  <line x1="210" y1="300" x2="236" y2="300" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-U2" data-ends="J-IR-ISO.6"/>
+  <rect x="236" y="290" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-U2"/>
+  <text x="286" y="304" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
+  <circle cx="210" cy="324" r="5" fill="#1f4fd1"/>
+  <text x="198" y="328" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">7: CS-B</text>
+  <line x1="210" y1="324" x2="236" y2="324" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B-2" data-ends="J-IR-ISO.7"/>
+  <rect x="236" y="314" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B-2"/>
+  <text x="286" y="328" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CS-B (board)</text>
+  <circle cx="210" cy="348" r="5" fill="#3cbf4e"/>
+  <text x="198" y="352" text-anchor="end" font-size="12" font-weight="700" fill="#1f7a33">8: DOUT</text>
+  <line x1="210" y1="348" x2="236" y2="348" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-B" data-ends="J-IR-ISO.8"/>
+  <rect x="236" y="338" width="100" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="DOUT-B"/>
+  <text x="286" y="352" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
+  <circle cx="210" cy="372" r="5" fill="#1f4fd1"/>
+  <text x="198" y="376" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">9: CLOCK</text>
+  <line x1="210" y1="372" x2="236" y2="372" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK-2" data-ends="J-IR-ISO.9"/>
+  <rect x="236" y="362" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK-2"/>
+  <text x="286" y="376" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f4fd1">CLOCK (board)</text>
+  <circle cx="210" cy="396" r="5" fill="#f1c40f"/>
+  <text x="198" y="400" text-anchor="end" font-size="12" font-weight="700" fill="#8a6d0b">10: 3V3</text>
+  <line x1="210" y1="396" x2="236" y2="396" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-IR-ISO.10"/>
+  <rect x="236" y="386" width="100" height="20" rx="3" fill="#fdf5d3" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
+  <text x="286" y="400" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8a6d0b">3V3</text>
+  <circle cx="210" cy="420" r="5" fill="#1a1a1a"/>
+  <text x="198" y="424" text-anchor="end" font-size="12" font-weight="700" fill="#1a1a1a">11: GND</text>
+  <line x1="210" y1="420" x2="236" y2="420" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-IR-ISO.11"/>
+  <rect x="236" y="410" width="100" height="20" rx="3" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="1.5" data-rail="GND"/>
+  <text x="286" y="424" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a1a1a">GND</text>
+  <text x="370" y="184" font-size="11.5" fill="#444">The isolator U3 sits on the isolator board, see isolator-board-schematic.svg.</text>
+  <text x="370" y="202" font-size="11.5" fill="#444">SCK, MOSI and ADC-DOUT each run in two leads, one per converter,</text>
+  <text x="370" y="220" font-size="11.5" fill="#444">and the isolator board joins each pair.</text>
 
   <!-- U1, board channels 1 to 8 -->
-  <rect x="26" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
+  <rect x="26" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-U1"/>
   <text x="76" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
-  <line x1="126" y1="590" x2="200" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U1.13"/>
-  <rect x="26" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
+  <line x1="126" y1="590" x2="200" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-U1" data-ends="U1.13"/>
+  <rect x="26" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-U1"/>
   <text x="76" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
-  <line x1="126" y1="620" x2="200" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U1.11"/>
+  <line x1="126" y1="620" x2="200" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-U1" data-ends="U1.11"/>
   <rect x="26" y="640" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-A-2"/>
   <text x="76" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-A (board)</text>
   <line x1="126" y1="650" x2="200" y2="650" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-A-2" data-ends="U1.10"/>
-  <rect x="40" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
+  <rect x="40" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="DOUT-A"/>
   <text x="83" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
-  <line x1="128.5" y1="680" x2="137.5" y2="680" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
-  <line x1="126" y1="680" x2="140" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R37.1"/>
+  <line x1="128.5" y1="680" x2="137.5" y2="680" stroke="#23862f" stroke-width="5" data-net="DOUT-A"/>
+  <line x1="126" y1="680" x2="140" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-A" data-ends="R37.1"/>
   <rect x="140" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R37"/>
   <text data-fig="r_dout" x="163" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="142" y="662" font-size="10" fill="#777">R37</text>
@@ -324,19 +194,19 @@
   <line x1="318" y1="918" x2="326" y2="918" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- U2, board channels 9 to 16 -->
-  <rect x="506" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-2"/>
+  <rect x="506" y="580" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="SCK-U2"/>
   <text x="556" y="594" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">SCK (board)</text>
-  <line x1="606" y1="590" x2="680" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-2" data-ends="U2.13"/>
-  <rect x="506" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-2"/>
+  <line x1="606" y1="590" x2="680" y2="590" stroke="#1f4fd1" stroke-width="2.5" data-net="SCK-U2" data-ends="U2.13"/>
+  <rect x="506" y="610" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="MOSI-U2"/>
   <text x="556" y="624" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">MOSI (board)</text>
-  <line x1="606" y1="620" x2="680" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-2" data-ends="U2.11"/>
+  <line x1="606" y1="620" x2="680" y2="620" stroke="#1f4fd1" stroke-width="2.5" data-net="MOSI-U2" data-ends="U2.11"/>
   <rect x="506" y="640" width="100" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CS-B-2"/>
   <text x="556" y="654" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CS-B (board)</text>
   <line x1="606" y1="650" x2="680" y2="650" stroke="#1f4fd1" stroke-width="2.5" data-net="CS-B-2" data-ends="U2.10"/>
-  <rect x="520" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="ADC-DOUT"/>
+  <rect x="520" y="670" width="86" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="DOUT-B"/>
   <text x="563" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">ADC-DOUT</text>
-  <line x1="608.5" y1="680" x2="617.5" y2="680" stroke="#23862f" stroke-width="5" data-net="ADC-DOUT"/>
-  <line x1="606" y1="680" x2="620" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="ADC-DOUT" data-ends="R38.1"/>
+  <line x1="608.5" y1="680" x2="617.5" y2="680" stroke="#23862f" stroke-width="5" data-net="DOUT-B"/>
+  <line x1="606" y1="680" x2="620" y2="680" stroke="#3cbf4e" stroke-width="2.5" data-net="DOUT-B" data-ends="R38.1"/>
   <rect x="620" y="670" width="46" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R38"/>
   <text data-fig="r_dout" x="643" y="684" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">1.2 k&#937;</text>
   <text x="622" y="662" font-size="10" fill="#777">R38</text>
@@ -612,56 +482,43 @@
   <text x="30" y="1888" font-size="11.5" fill="#444">R37, R38</text>
   <text x="150" y="1888" font-size="11.5" fill="#444" data-fig="r_dout">Resistor 1.2 k&#937;</text>
   <text x="600" y="1888" font-size="11.5" fill="#444">2</text>
-  <text x="30" y="1910" font-size="11.5" fill="#444">R33, R34</text>
+  <text x="30" y="1910" font-size="11.5" fill="#444">R33</text>
   <text x="150" y="1910" font-size="11.5" fill="#444" data-fig="r_gate">Resistor 2.2 k&#937;</text>
-  <text x="600" y="1910" font-size="11.5" fill="#444">2</text>
+  <text x="600" y="1910" font-size="11.5" fill="#444">1</text>
   <text x="30" y="1932" font-size="11.5" fill="#444">R17 to R32</text>
   <text x="150" y="1932" font-size="11.5" fill="#444" data-fig="r_pd">Resistor 4.7 k&#937;</text>
   <text x="600" y="1932" font-size="11.5" fill="#444">up to 16</text>
-  <text x="30" y="1954" font-size="11.5" fill="#444">R36</text>
-  <text x="150" y="1954" font-size="11.5" fill="#444" data-fig="r_dout_pu">Resistor 10 k&#937;</text>
+  <text x="30" y="1954" font-size="11.5" fill="#444">R35</text>
+  <text x="150" y="1954" font-size="11.5" fill="#444" data-fig="r_gate_pd">Resistor 100 k&#937;</text>
   <text x="600" y="1954" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="1976" font-size="11.5" fill="#444">R35</text>
-  <text x="150" y="1976" font-size="11.5" fill="#444" data-fig="r_gate_pd">Resistor 100 k&#937;</text>
-  <text x="600" y="1976" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="1998" font-size="11.5" fill="#444">U1, U2</text>
-  <text x="150" y="1998" font-size="11.5" fill="#444">Ten-bit 8-channel SPI converter, MCP3008, PDIP-16</text>
-  <text x="600" y="1998" font-size="11.5" fill="#444">2</text>
-  <text x="30" y="2020" font-size="11.5" fill="#444">U3</text>
-  <text x="150" y="2020" font-size="11.5" fill="#444">Six-channel digital isolator, ISO7761F, SOIC-16 wide, on an adapter</text>
-  <text x="600" y="2020" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2042" font-size="11.5" fill="#444">Q1</text>
-  <text x="150" y="2042" font-size="11.5" fill="#444">Logic-level MOSFET, N-channel, IRL540N, TO-220</text>
+  <text x="30" y="1976" font-size="11.5" fill="#444">U1, U2</text>
+  <text x="150" y="1976" font-size="11.5" fill="#444">Ten-bit 8-channel SPI converter, MCP3008, PDIP-16</text>
+  <text x="600" y="1976" font-size="11.5" fill="#444">2</text>
+  <text x="30" y="1998" font-size="11.5" fill="#444">Q1</text>
+  <text x="150" y="1998" font-size="11.5" fill="#444">Logic-level MOSFET, N-channel, IRL540N, TO-220</text>
+  <text x="600" y="1998" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2020" font-size="11.5" fill="#444">C1, C2</text>
+  <text x="150" y="2020" font-size="11.5" fill="#444" data-fig="c_decoupling">Ceramic 100 nF</text>
+  <text x="600" y="2020" font-size="11.5" fill="#444">2</text>
+  <text x="30" y="2042" font-size="11.5" fill="#444">C5</text>
+  <text x="150" y="2042" font-size="11.5" fill="#444" data-fig="c_entry c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
   <text x="600" y="2042" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2064" font-size="11.5" fill="#444">C1 to C4</text>
-  <text x="150" y="2064" font-size="11.5" fill="#444" data-fig="c_decoupling">Ceramic 100 nF</text>
-  <text x="600" y="2064" font-size="11.5" fill="#444">4</text>
-  <text x="30" y="2086" font-size="11.5" fill="#444">C5</text>
-  <text x="150" y="2086" font-size="11.5" fill="#444" data-fig="c_entry c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
+  <text x="30" y="2064" font-size="11.5" fill="#444">C6</text>
+  <text x="150" y="2064" font-size="11.5" fill="#444" data-fig="c_ref c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
+  <text x="600" y="2064" font-size="11.5" fill="#444">1</text>
+  <text x="30" y="2086" font-size="11.5" fill="#444">J-IR-ISO</text>
+  <text x="150" y="2086" font-size="11.5" fill="#444">Connector, 11-pin, to the isolator board</text>
   <text x="600" y="2086" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2108" font-size="11.5" fill="#444">C6</text>
-  <text x="150" y="2108" font-size="11.5" fill="#444" data-fig="c_ref c5_derated v_mod_nom">Ceramic 22 &#181;F, X5R or X7R, 10 V or more, &#8805; 11 &#181;F at 3.3 V bias, radial MLCC</text>
+  <text x="30" y="2108" font-size="11.5" fill="#444">D24V5F3 socket</text>
+  <text x="150" y="2108" font-size="11.5" fill="#444">Socket header, 4-pin</text>
   <text x="600" y="2108" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2130" font-size="11.5" fill="#444">J-IR-TEENSY</text>
-  <text x="150" y="2130" font-size="11.5" fill="#444">Connector, 8-pin</text>
-  <text x="600" y="2130" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2152" font-size="11.5" fill="#444">D24V5F3 socket</text>
-  <text x="150" y="2152" font-size="11.5" fill="#444">Socket header, 4-pin</text>
-  <text x="600" y="2152" font-size="11.5" fill="#444">1</text>
-  <text x="30" y="2174" font-size="11.5" fill="#444">J-S1 to J-S16</text>
-  <text x="150" y="2174" font-size="11.5" fill="#444">Connector, 3-pin</text>
-  <text x="600" y="2174" font-size="11.5" fill="#444">up to 16</text>
+  <text x="30" y="2130" font-size="11.5" fill="#444">J-S1 to J-S16</text>
+  <text x="150" y="2130" font-size="11.5" fill="#444">Connector, 3-pin</text>
+  <text x="600" y="2130" font-size="11.5" fill="#444">up to 16</text>
 
-  <text x="30" y="2214" font-size="11.5" fill="#666">Placement, the groups that stay together and how close: see mainboard-placement.svg</text>
+  <text x="30" y="2170" font-size="11.5" fill="#666">The boards on perfboard: variants/ir-board.svg and isolator-board.svg</text>
 
   <!-- ===== pins and junctions of the light wires, on top ===== -->
-  <circle cx="200" cy="370" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
-  <circle cx="200" cy="400" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <circle cx="528" cy="150" r="4" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <circle cx="420" cy="180" r="5" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <circle cx="528" cy="180" r="5" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <circle cx="374" cy="370" r="5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
-  <circle cx="574" cy="370" r="5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="200" cy="680" r="5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="370" cy="580" r="5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <circle cx="370" cy="610" r="5" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>

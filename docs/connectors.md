@@ -13,7 +13,7 @@
 | | J-MB-SERVO | 1 | Dupont | The servo's signal |
 | Port expander board | J-PE-TEENSY, both ends | 5 | Dupont | The board's lines to the Teensy |
 | IR sensing | input of the D24V5F3 | 2 | soldered | The module has no reverse-voltage protection. VIN, GND and VOUT sit in one row |
-| | the D24V5F3 on the IR mainboard | 4 | socket header | The module stays pluggable. On the bench the Teensy's 3V3 feeds the socket in its place |
+| | the D24V5F3 on the IR board | 4 | socket header | The module stays pluggable. On the bench the Teensy's 3V3 feeds the socket in its place |
 | | J-IR-TEENSY, both ends | 8 | Dupont | The board's lines to the Teensy |
 | | J-S1 to J-S16 | 3 each | Dupont | 3.3 V, with no Teensy pin behind it. The stock sensors' cables end in Dupont plugs. A new sensor board's cable is soldered at the sensor |
 | Solenoids | J-COIL-PWR of the coil board | 2 | screw terminal | The coils' current |
@@ -61,7 +61,7 @@
 |---|---|---|
 | Black | GND | GND |
 | Red | 5 V, also behind a diode or a resistor, as VIN behind D1, the emitter behind R2 and GAIN behind R4 | VIN only |
-| Yellow | 3.3 V supply, also behind a resistor, as the Teensy's 3V3, the IR mainboard's own rail and the foil behind R91 | 3V3 |
+| Yellow | 3.3 V supply, also behind a resistor, as the Teensy's 3V3, the IR board's own rail and the foil behind R91 | 3V3 |
 | Blue | 3.3 V logic going out from the Teensy, also behind a series resistor or the isolator | an output |
 | Green | 3.3 V signals coming in, such as a sense, a contact, the receiver, an IR channel, MISO or INT | an input. Each one reads 0 V against GND with the supply on before the Teensy is first plugged in |
 | White | I²C at 3.3 V, and every line behind a level shifter or a driver, as the lighting data, the servo pulse, the display module's I²C, the coil drains, the LED bus and the speaker | the pins of `Wire` and `Wire2` only |

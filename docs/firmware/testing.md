@@ -48,7 +48,7 @@ The bench is the Teensy on USB with the boards of the subsystems under test, the
 | Solenoid coil board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/solenoid/design.md#supply) requires with the Teensy on USB |
 | Servo board | The Teensy's GND is joined with the board's GND, as its [supply](../parts/servo/design.md#supply) requires |
 | Lighting boards | The Teensy's GND is joined with each board's GND, as their [supply](../parts/lighting/design.md#supply) requires |
-| IR mainboard | It runs from its D24V5F3 on the bench supply, or from the Teensy's 3V3 pin while everything that pin feeds stays within the pin's [rating](../research/teensy-4.1.md#power) |
+| IR board | It runs from its D24V5F3 on the bench supply, or from the Teensy's 3V3 pin while everything that pin feeds stays within the pin's [rating](../research/teensy-4.1.md#power) |
 
 ## Test card
 
@@ -349,7 +349,7 @@ The program `file-system` checks the [file system component](components/file-sys
 
 ### Config
 
-The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys of its own making.
+The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys it makes up itself.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
