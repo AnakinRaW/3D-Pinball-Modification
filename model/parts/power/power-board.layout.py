@@ -2,14 +2,14 @@
 
     python tools/perfboard/build.py model/parts/power/power-board.layout.py
 
-Two thick rails cross the board: 5 V along row I, ground along row K. J-IN feeds them from the
+Two thick rails cross the board: ground along row H, 5 V along row J. J-IN feeds them from the
 left edge and J-SOL takes the coils' current at the right edge, C1 and C2 standing on the rails
 beside J-IN with nothing tapping the rails between them. Q1 and R1 are left out, so ground runs
-straight onto J-IN's negative. The fuse sits above the rails right of C2 and feeds the fused rail
-along row C. The four fused terminals stand along the top edge in mirrored pairs, so the ground
-pins of a pair sit side by side, a free row above the fused rail, and reach the ground rail right
-of C2 in one insulated wire. The lights' pads sit below J-SOL at the right end, ground over 5 V,
-each taking its 5 V across the ground rail in an insulated wire.
+straight onto J-IN's negative. The fuse sits below the rails right of C2 and feeds the fused rail
+along row P. The four fused terminals stand along the bottom edge in mirrored pairs, so the
+ground pins of a pair sit side by side, a free row below the fused rail, and reach the ground
+rail right of C2 in one insulated wire. The lights' pads sit above J-SOL at the right end, 5 V
+under ground, each taking its 5 V across the ground rail in an insulated wire.
 """
 from layout import Layout
 
@@ -22,59 +22,59 @@ L.unfitted("Q1", joins=("D", "S"), why="the optional reverse-polarity switch, le
 L.unfitted("R1", why="Q1's gate resistor, left out with Q1")
 
 # the rails, from J-IN at the left edge to J-SOL at the right edge
-L.part("J-IN", "terminal_5mm", ["I1", "K1"], entry=(-1, 0), title="J-IN", sub="the adapter")
-L.part("J-SOL", "terminal_5mm", ["I24", "K24"], entry=(1, 0), title="J-SOL",
+L.part("J-IN", "terminal_5mm", ["J1", "H1"], entry=(-1, 0), title="J-IN", sub="the adapter")
+L.part("J-SOL", "terminal_5mm", ["J24", "H24"], entry=(1, 0), title="J-SOL",
        sub="the coil board")
-L.bare("I1", "I24", gauge="1.3 mm")      # 5 V
-L.bare("K1", "K24", gauge="1.3 mm")      # ground
-L.part("C1", "electrolytic_zlh_8x20", ["I5", "K5"])
-L.part("C2", "electrolytic_zlh_8x20", ["I9", "K9"])
+L.bare("J1", "J24", gauge="1.3 mm")      # 5 V
+L.bare("H1", "H24", gauge="1.3 mm")      # ground
+L.part("C1", "electrolytic_zlh_8x20", ["J5", "H5"])
+L.part("C2", "electrolytic_zlh_8x20", ["J9", "H9"])
 
-# the fuse, from the 5 V rail right of C2 up to the fused rail along row C
-L.part("F1", "fuse_holder_5x20", ["F12", "F21"])
-L.bare("F12", "I12", gauge="1.3 mm")
-L.bare("F21", "C21")
-L.bare("C6", "C23")
+# the fuse, from the 5 V rail right of C2 down to the fused rail along row P
+L.part("F1", "fuse_holder_5x20", ["M12", "M21"])
+L.bare("M12", "J12", gauge="1.3 mm")
+L.bare("M21", "P21")
+L.bare("P6", "P23")
 
-# the fused terminals along the top edge in mirrored pairs: each 5 V pin down onto row C, the
-# two ground pins in the middle of a pair joined along row A, a free row above the fused rail,
-# and taken down to the ground rail right of C2 in one insulated wire
+# the fused terminals along the bottom edge in mirrored pairs: each 5 V pin up onto row P, the
+# two ground pins in the middle of a pair joined along row R, a free row below the fused rail,
+# and taken up to the ground rail right of C2 in one insulated wire
 for x, ref, sub, flip in ((6, "J-SERVO", "the servo board", False),
                           (11, "J-MAIN", "the motherboard", True),
                           (16, "J-IR", "the IR board", False),
                           (21, "J-DISP", "the display board", True)):
     v, g = (x + 2, x) if flip else (x, x + 2)
-    L.part(ref, "terminal_5mm", [f"A{v}", f"A{g}"], entry=(0, -1), title=ref, sub=sub)
-    L.bare(f"A{v}", f"C{v}")
-L.bare("A8", "A11")
-L.tin("A10", "B10")
-L.wire("B10", "L10")
-L.tin("L10", "K10")
-L.bare("A18", "A21")
-L.tin("A20", "B20")
-L.wire("B20", "L20")
-L.tin("L20", "K20")
+    L.part(ref, "terminal_5mm", [f"R{v}", f"R{g}"], entry=(0, 1), title=ref, sub=sub)
+    L.bare(f"R{v}", f"P{v}")
+L.bare("R8", "R11")
+L.tin("R10", "Q10")
+L.wire("Q10", "G10")
+L.tin("G10", "H10")
+L.bare("R18", "R21")
+L.tin("R20", "Q20")
+L.wire("Q20", "G20")
+L.tin("G20", "H20")
 
-# the lights at the right end below J-SOL, each pair ground over 5 V with a free row between
+# the lights at the right end above J-SOL, each pair 5 V under ground with a free row between
 # the pairs: ground straight onto the rail, 5 V out into the open board and across the ground
 # rail in an insulated wire, each in a separate column
-L.part("J-LIGHT1", "pads", ["N>", "M>"], title="J-LIGHT1", sub="the ambient board")
-L.part("J-LIGHT2", "pads", ["Q>", "P>"], title="J-LIGHT2", sub="the playfield board")
-L.tin("M>", "M24")
-L.bare("M24", "K24")
-L.tin("N>", "N24")
-L.bare("N24", "N22")
-L.tin("N22", "N21")
-L.wire("N21", "H21")
-L.tin("H21", "I21")
-L.tin("P>", "P24")
-L.bare("P24", "P18")
-L.bare("P18", "K18")
-L.tin("Q>", "Q24")
-L.bare("Q24", "Q15")
-L.tin("Q15", "Q14")
-L.wire("Q14", "H14")
-L.tin("H14", "I14")
+L.part("J-LIGHT1", "pads", ["E>", "F>"], title="J-LIGHT1", sub="the ambient board")
+L.part("J-LIGHT2", "pads", ["B>", "C>"], title="J-LIGHT2", sub="the playfield board")
+L.tin("F>", "F24")
+L.bare("F24", "H24")
+L.tin("E>", "E24")
+L.bare("E24", "E22")
+L.tin("E22", "E21")
+L.wire("E21", "K21")
+L.tin("K21", "J21")
+L.tin("C>", "C24")
+L.bare("C24", "C18")
+L.bare("C18", "H18")
+L.tin("B>", "B24")
+L.bare("B24", "B15")
+L.tin("B15", "B14")
+L.wire("B14", "K14")
+L.tin("K14", "J14")
 
 L.limit("C1.+", "J-IN.1", 21, fig="place_bulk")
 L.limit("C2.+", "J-IN.1", 21, fig="place_bulk")

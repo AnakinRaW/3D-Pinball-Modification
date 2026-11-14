@@ -3,10 +3,11 @@
     python tools/perfboard/build.py model/parts/ir-reflective/isolator-board.layout.py
 
 U3 lies turned on its adapter, side 1 toward J-IR-TEENSY at the left edge and side 2 toward
-J-IR-ISO along the bottom edge. Each of the Teensy's lines runs straight along its row into side
-1, MISO through R34. Each line of side 2 runs right along its row and turns down to its pin of
-J-IR-ISO, the lower rows turning first. Two ground rails lie under the adapter, GND1 beside side
-1 and GND2 beside side 2. R36 stands across the side-2 lines from the 3V3 line down to INF's.
+J-IR-ISO along the top edge, which faces the IR board. Each of the Teensy's lines runs straight
+along its row into side 1, MISO through R34. Each line of side 2 runs right along its row and
+turns up to its pin of J-IR-ISO, the upper rows turning first. Two ground rails lie under the
+adapter, GND1 beside side 1 and GND2 beside side 2. R36 lies across the side-2 lines from the
+3V3 line down to INF's.
 """
 from layout import Layout, row_name
 
@@ -41,24 +42,24 @@ L.limit("C3.1", "U3.VCC1", 10, fig="place_decoupling")
 L.bare(h(1, 11), h(8, 11))
 L.tin(h(8, 13), h(8, 12))
 L.tin(h(8, 12), h(8, 11))
-L.part("C4", "ceramic_k15", [h(0, 13), h(0, 12)])
-L.tin(h(0, 13), h(1, 13))
-L.tin(h(0, 12), h(0, 11))
+L.part("C4", "ceramic_k15", [h(0, 12), h(0, 11)])
 L.tin(h(0, 11), h(1, 11))
+L.tin(h(0, 12), h(0, 13))
+L.tin(h(0, 13), h(1, 13))
 L.limit("C4.1", "U3.VCC2", 10, fig="place_decoupling")
 
-# J-IR-ISO along the bottom edge; each line of side 2 right along its row and down to its pin
-L.piece("J-IR-ISO", "a", "header_male", [h(9, c) for c in range(13, 24)],
-        pins=[11, 4, 8, 9, 7, 3, 2, 6, 1, 5, 10], title="J-IR-ISO", sub="to the IR board")
-L.tin(h(8, 13), h(9, 13))                               # GND2
-for row, col in ((7, 14), (6, 16), (5, 17), (4, 18), (3, 19), (2, 21), (1, 23)):
+# J-IR-ISO along the top edge, 3V3 at its left end beside C4; each line of side 2 right along its
+# row and up to its pin, the upper rows turning first, the two leads of a pair tinned together
+L.piece("J-IR-ISO", "a", "header_male", [h(0, c) for c in range(13, 24)],
+        pins=[10, 1, 5, 2, 6, 3, 7, 9, 4, 8, 11], title="J-IR-ISO", sub="to the IR board")
+for row, col in ((2, 15), (3, 17), (4, 18), (5, 19), (6, 20), (7, 22), (8, 23)):
     L.bare(h(row, 13), h(row, col))
-    L.bare(h(row, col), h(9, col))
-L.tin(h(9, 14), h(9, 15))                               # the two ADC-DOUT leads
-L.tin(h(9, 19), h(9, 20))                               # the two MOSI leads
-L.tin(h(9, 21), h(9, 22))                               # the two SCK leads
-# R36 from the 3V3 line down to INF's, its body across the lines between
-L.part("R36", "resistor", [h(1, 15), h(7, 15)])
-L.tin(h(7, 15), h(7, 14))
+    L.bare(h(row, col), h(0, col))
+L.tin(h(0, 15), h(0, 14))                               # the two SCK leads
+L.tin(h(0, 17), h(0, 16))                               # the two MOSI leads
+L.tin(h(0, 22), h(0, 21))                               # the two ADC-DOUT leads
+# R36 from the 3V3 pin down to INF's line, its body across the lines between
+L.part("R36", "resistor", [h(1, 14), h(7, 14)])
+L.tin(h(1, 13), h(1, 14))
 VARIANT = ("IR sensing", ["16 channels", "11 channels, 26x31", "11 channels, 30x42"])
 LAYOUT = L
