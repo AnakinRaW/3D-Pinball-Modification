@@ -313,15 +313,15 @@
   <text x="258" y="1045" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
   <text x="258" y="1060" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA to the touch controller">pin 25</text>
   <line x1="276" y1="1046" x2="310" y2="1046" stroke="#808080" stroke-width="5" data-net="SDA"/>
-  <line x1="276" y1="1046" x2="310" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.1"/>
+  <line x1="276" y1="1046" x2="310" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.2"/>
   <line x1="392" y1="1046" x2="414" y2="1046" stroke="#808080" stroke-width="5" data-net="SDA"/>
-  <line x1="392" y1="1046" x2="414" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.1 A2.A1"/>
+  <line x1="392" y1="1046" x2="414" y2="1046" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-TOUCH.2 A2.A1"/>
   <text x="258" y="1081" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
   <text x="258" y="1096" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL to the touch controller">pin 24</text>
   <line x1="276" y1="1082" x2="310" y2="1082" stroke="#808080" stroke-width="5" data-net="SCL"/>
-  <line x1="276" y1="1082" x2="310" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.2"/>
+  <line x1="276" y1="1082" x2="310" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.1"/>
   <line x1="392" y1="1082" x2="414" y2="1082" stroke="#808080" stroke-width="5" data-net="SCL"/>
-  <line x1="392" y1="1082" x2="414" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.2 A2.A2"/>
+  <line x1="392" y1="1082" x2="414" y2="1082" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-TOUCH.1 A2.A2"/>
   <text x="258" y="1123" text-anchor="end" font-size="13" font-weight="700" fill="#8a6d0b">3V3</text>
   <line x1="276" y1="1118" x2="310" y2="1118" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
   <line x1="276" y1="1118" x2="310" y2="1118" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-TOUCH.3"/>
@@ -332,9 +332,9 @@
   <rect x="316" y="1004" width="70" height="142" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-TOUCH"/>
   <text x="351" y="1024" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-TOUCH</text>
   <text x="351" y="1050" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4d4d4d">SDA</text>
-  <text x="351" y="1064" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
+  <text x="351" y="1064" text-anchor="middle" font-size="11.5" fill="#777">pin 2</text>
   <text x="351" y="1086" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4d4d4d">SCL</text>
-  <text x="351" y="1100" text-anchor="middle" font-size="11.5" fill="#777">pin 2</text>
+  <text x="351" y="1100" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
   <text x="351" y="1122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8a6d0b">3V3</text>
   <text x="351" y="1136" text-anchor="middle" font-size="11.5" fill="#777">pin 3</text>
 
