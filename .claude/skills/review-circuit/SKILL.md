@@ -19,7 +19,7 @@ Read these first. They hold the numbers this review is judged against. Do not re
 | `docs/research/Rokr/*.md` | Measurements and reconstructed circuits of the stock machine |
 | `docs/research/Custom/*.md` | Notes on the parts the modification adds, bench readings included |
 | `docs/parts/*/design.md` | The circuit under review and the subsystems it connects to |
-| `docs/parts/*/figures.py` | Every figure a subsystem derives, with its inputs and their sources. `python tools/figcheck.py <model> --graph <key>` reads one back |
+| `model/parts/*/figures.py` | Every figure a subsystem derives, with its inputs and their sources. `python tools/figcheck.py <model> --graph <key>` reads one back |
 | `docs/datasheets/` | Manufacturer datasheets held locally, as PDF or as a translated markdown copy |
 | Manufacturer datasheets | Absolute maximums for every part in the circuit under review |
 

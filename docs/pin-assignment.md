@@ -54,7 +54,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | Lost | To |
 |---|---|
 | I²S2 | Audio, pins 2, 3, 4, 33 |
-| The whole SPI bus | Sensors, pins 11, 12, 13, 15 and 16. The mainboard's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus |
+| The whole SPI bus | Sensors, pins 11, 12, 13, 15 and 16. The IR sensing's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus |
 | QuadTimer3, all four channels | Sensors, pin 14. Channel 3 starts the read block and has no pin, and channels 0 and 1 stay unused because all four share one interrupt |
 | Serial3 and S/PDIF | Sensors, pins 14 and 15 |
 | Wire1 and Serial4 | Sensors, pin 16; display, pin 17 |

@@ -45,7 +45,7 @@ The emitter and the receiver sit 3.9 cm apart in the stock machine's niches on e
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
+[`figures.py`](../../../model/parts/break-beam/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
 
 ### Emitter
 

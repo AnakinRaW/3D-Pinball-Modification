@@ -338,7 +338,7 @@ WAIVER_RE = re.compile(r'<\w+\b[^>]*\bdata-svgcheck="([^"]*)"')
 
 def _waived(src, bad):
     """The findings, less those on or against an element that overlaps on purpose and says
-    why. A waiver without a reason is a finding of its own."""
+    why. A waiver without a reason is a finding in itself."""
     lines, out = set(), []
     for m in WAIVER_RE.finditer(src):
         line = src.count("\n", 0, m.start()) + 1

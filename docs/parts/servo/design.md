@@ -26,7 +26,7 @@ At power-up, the servo's position is unknown, and its first move runs at full sp
 
 ## Circuit
 
-A servo board beside the Teensy carries U1, R1 to R3, C1, C2 and J-SERVO-PWR. The servo plugs into it. J-SERVO-PWR takes 5 V and GND from the power board's J-SERVO and the signal from the Teensy's pin [0](../../pin-assignment.md "Servo signal"). The board's ground comes over J-SERVO from the power board's star point, so no ground wire runs from the Teensy.
+A servo board beside the Teensy carries U1, R1 to R3, C1 and C2, and the servo plugs into it. The board takes 5 V and GND from the power board's J-SERVO and the signal from the Teensy's pin [0](../../pin-assignment.md "Servo signal"). Its ground comes from the power board's star point, so no ground wire runs from the Teensy.
 
 ![Servo schematic](servo-schematic.svg)
 
@@ -40,11 +40,11 @@ U1 has four buffers. The servo uses one of them. Its enable pin OE sits on groun
 
 ### Supply
 
-The servo gets the machine's 5 V through J-SERVO-PWR. U1 takes its 5 V and its ground at J-SERVO-PWR. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 228 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
+The servo gets the machine's 5 V over the servo board. U1 takes its 5 V and its ground at the board's input. The servo draws up to 800 mA at each start and also when the motor is blocked. C1 with 100 µF at the start of the servo's cable absorbs the servo's steep current edges. At a sudden stop, the 5 V then rises by 228 mV at most. C2 with 100 nF at U1's supply pin delivers U1's short current peak at each edge of the pulse.
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 
-> Before the Teensy's wire is clamped into J-SERVO-PWR for the first time, the signal terminal should be measured against J-SERVO-PWR's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
+> Before the Teensy's signal wire is connected for the first time, the signal terminal should be measured against the board's GND with J-SERVO powered. It must read 0 V. Anything else means the 5 V side has reached the signal terminal and would damage the Teensy.
 
 ## Teensy pins
 
@@ -72,7 +72,7 @@ The driver ensures that the servo cannot be operated outside of the predefined a
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
+[`figures.py`](../../../model/parts/servo/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
 
 ### Pulse
 

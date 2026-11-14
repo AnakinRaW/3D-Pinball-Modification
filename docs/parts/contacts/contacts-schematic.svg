@@ -1,41 +1,41 @@
-<svg viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg data-boards="motherboard:expander" viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="980" height="770" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Contacts</text>
   <text x="30" y="56" font-size="13" fill="#666">The drain's ball store foils and the stock machine's two bells as contacts to GND, read by the port expander</text>
 
-  <!-- ===== the Teensy motherboard ===== -->
+  <!-- ===== the port expander board ===== -->
   <rect x="24" y="84" width="430" height="496" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
-  <text x="40" y="106" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
+  <text x="40" y="106" font-size="15" font-weight="700" fill="#5c4a00">Port expander board</text>
 
-  <!-- ===== Teensy ===== -->
-  <rect x="30" y="170" width="90" height="160" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
-  <text x="36" y="194" font-size="15" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <!-- ===== J-PE-TEENSY, the cable from the Teensy ===== -->
+  <rect x="30" y="170" width="90" height="160" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-PE-TEENSY"/>
+  <text x="36" y="190" font-size="12" font-weight="700" fill="#333333">J-PE-TEENSY</text>
   <text x="108" y="216" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
-  <text x="108" y="231" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL on Wire">pin 19</text>
+  <text x="108" y="231" text-anchor="end" font-size="11.5" fill="#777">pin 2</text>
   <text x="108" y="256" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
-  <text x="108" y="271" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA on Wire">pin 18</text>
+  <text x="108" y="271" text-anchor="end" font-size="11.5" fill="#777">pin 3</text>
   <text x="108" y="296" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">INT</text>
-  <text x="108" y="311" text-anchor="end" font-size="11.5" fill="#777" data-pin="Interrupt from the port expander">pin 1</text>
+  <text x="108" y="311" text-anchor="end" font-size="11.5" fill="#777">pin 1</text>
 
-  <!-- ===== the bus and INT from the Teensy to U1 ===== -->
-  <line x1="126" y1="220" x2="164" y2="220" stroke="#808080" stroke-width="5"/>
-  <line x1="126" y1="220" x2="164" y2="220" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="126" y1="260" x2="164" y2="260" stroke="#808080" stroke-width="5"/>
-  <line x1="126" y1="260" x2="164" y2="260" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="126" y1="300" x2="164" y2="300" stroke="#23862f" stroke-width="5"/>
-  <line x1="126" y1="300" x2="164" y2="300" stroke="#3cbf4e" stroke-width="2.5"/>
+  <!-- ===== the bus and INT from the cable to U1 ===== -->
+  <line x1="126" y1="220" x2="164" y2="220" stroke="#808080" stroke-width="5" data-net="SCL"/>
+  <line x1="126" y1="220" x2="164" y2="220" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-PE-TEENSY.2 U1.1"/>
+  <line x1="126" y1="260" x2="164" y2="260" stroke="#808080" stroke-width="5" data-net="SDA"/>
+  <line x1="126" y1="260" x2="164" y2="260" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-PE-TEENSY.3 U1.2"/>
+  <line x1="126" y1="300" x2="164" y2="300" stroke="#23862f" stroke-width="5" data-net="INT"/>
+  <line x1="126" y1="300" x2="164" y2="300" stroke="#3cbf4e" stroke-width="2.5" data-net="INT" data-ends="J-PE-TEENSY.1 U1.8"/>
 
   <!-- ===== RESET and VDD to the 3V3 rail ===== -->
-  <line x1="220" y1="154" x2="220" y2="132" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="220" y1="154" x2="220" y2="132" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="270" y1="154" x2="270" y2="132" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="270" y1="154" x2="270" y2="132" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="220" y1="132" x2="380" y2="132" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="220" y1="132" x2="380" y2="132" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="220" y1="154" x2="220" y2="132" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="220" y1="154" x2="220" y2="132" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="U1.6"/>
+  <line x1="270" y1="154" x2="270" y2="132" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="270" y1="154" x2="270" y2="132" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="U1.18"/>
+  <line x1="220" y1="132" x2="380" y2="132" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="220" y1="132" x2="380" y2="132" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
   <text x="386" y="136" font-size="12" font-weight="700" fill="#8a6d0b">3V3 rail</text>
 
   <!-- ===== U1, all eighteen pins ===== -->
-  <rect x="170" y="160" width="180" height="350" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2"/>
+  <rect x="170" y="160" width="180" height="350" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="U1"/>
   <text x="260" y="340" text-anchor="middle" font-size="16" font-weight="700" fill="#5c4a00">U1</text>
   <text x="260" y="358" text-anchor="middle" font-size="12" fill="#666">MCP23008-E/P</text>
   <text x="260" y="374" text-anchor="middle" font-size="12" fill="#666">port expander</text>
@@ -59,51 +59,59 @@
   <text x="338" y="279" text-anchor="end" font-size="11.5" fill="#777">pin 12</text>
   <text x="338" y="298" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP3</text>
   <text x="338" y="313" text-anchor="end" font-size="11.5" fill="#777">pin 13</text>
-  <text x="338" y="332" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP4</text>
+  <text x="338" y="332" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP4</text>
   <text x="338" y="347" text-anchor="end" font-size="11.5" fill="#777">pin 14</text>
-  <circle cx="350" cy="336" r="6" fill="#999"/>
-  <text x="364" y="340" font-size="11.5" fill="#777">unconnected</text>
-  <text x="338" y="366" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP5</text>
+  <line x1="356" y1="336" x2="366" y2="336" stroke="#23862f" stroke-width="5" data-net="E-5"/>
+  <line x1="356" y1="336" x2="366" y2="336" stroke="#3cbf4e" stroke-width="2.5" data-net="E-5" data-ends="U1.14"/>
+  <circle cx="350" cy="336" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <text x="372" y="340" font-size="11.5" font-weight="700" fill="#1f7a33">E-5, spare</text>
+  <text x="338" y="366" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP5</text>
   <text x="338" y="381" text-anchor="end" font-size="11.5" fill="#777">pin 15</text>
-  <circle cx="350" cy="370" r="6" fill="#999"/>
-  <text x="364" y="374" font-size="11.5" fill="#777">unconnected</text>
-  <text x="338" y="400" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP6</text>
+  <line x1="356" y1="370" x2="366" y2="370" stroke="#23862f" stroke-width="5" data-net="E-6"/>
+  <line x1="356" y1="370" x2="366" y2="370" stroke="#3cbf4e" stroke-width="2.5" data-net="E-6" data-ends="U1.15"/>
+  <circle cx="350" cy="370" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <text x="372" y="374" font-size="11.5" font-weight="700" fill="#1f7a33">E-6, spare</text>
+  <text x="338" y="400" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP6</text>
   <text x="338" y="415" text-anchor="end" font-size="11.5" fill="#777">pin 16</text>
-  <circle cx="350" cy="404" r="6" fill="#999"/>
-  <text x="364" y="408" font-size="11.5" fill="#777">unconnected</text>
-  <text x="338" y="434" text-anchor="end" font-size="13" font-weight="700" fill="#777">GP7</text>
+  <line x1="356" y1="404" x2="366" y2="404" stroke="#23862f" stroke-width="5" data-net="E-7"/>
+  <line x1="356" y1="404" x2="366" y2="404" stroke="#3cbf4e" stroke-width="2.5" data-net="E-7" data-ends="U1.16"/>
+  <circle cx="350" cy="404" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <text x="372" y="408" font-size="11.5" font-weight="700" fill="#1f7a33">E-7, spare</text>
+  <text x="338" y="434" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">GP7</text>
   <text x="338" y="449" text-anchor="end" font-size="11.5" fill="#777">pin 17</text>
-  <circle cx="350" cy="438" r="6" fill="#999"/>
-  <text x="364" y="442" font-size="11.5" fill="#777">unconnected</text>
+  <line x1="356" y1="438" x2="366" y2="438" stroke="#23862f" stroke-width="5" data-net="E-8"/>
+  <line x1="356" y1="438" x2="366" y2="438" stroke="#3cbf4e" stroke-width="2.5" data-net="E-8" data-ends="U1.17"/>
+  <circle cx="350" cy="438" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
+  <text x="372" y="442" font-size="11.5" font-weight="700" fill="#1f7a33">E-8, spare</text>
   <circle cx="195" cy="510" r="6" fill="#999"/>
   <text x="195" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#777">NC</text>
   <text x="195" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 7</text>
   <circle cx="230" cy="510" r="6" fill="#1a1a1a"/>
   <text x="230" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">A2</text>
   <text x="230" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 3</text>
-  <line x1="230" y1="516" x2="230" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="230" y1="516" x2="230" y2="540" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.3"/>
   <circle cx="265" cy="510" r="6" fill="#1a1a1a"/>
   <text x="265" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">A1</text>
   <text x="265" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 4</text>
-  <line x1="265" y1="516" x2="265" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="265" y1="516" x2="265" y2="540" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.4"/>
   <circle cx="300" cy="510" r="6" fill="#1a1a1a"/>
   <text x="300" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">A0</text>
   <text x="300" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 5</text>
-  <line x1="300" y1="516" x2="300" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="300" y1="516" x2="300" y2="540" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.5"/>
   <circle cx="335" cy="510" r="6" fill="#1a1a1a"/>
   <text x="335" y="476" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">VSS</text>
   <text x="335" y="490" text-anchor="middle" font-size="11.5" fill="#777">pin 9</text>
-  <line x1="335" y1="516" x2="335" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="335" y1="516" x2="335" y2="540" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="U1.9"/>
   <text x="195" y="534" text-anchor="middle" font-size="11.5" fill="#777">unconnected</text>
 
   <!-- ===== the address pins and VSS on the GND rail, which also feeds the foil ===== -->
-  <line x1="230" y1="540" x2="440" y2="540" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="440" y1="540" x2="440" y2="383" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="440" y1="383" x2="694" y2="383" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="400" y1="540" x2="400" y2="554" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="386" y1="554" x2="414" y2="554" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="391" y1="560" x2="409" y2="560" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="396" y1="566" x2="404" y2="566" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="230" y1="540" x2="440" y2="540" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="440" y1="540" x2="440" y2="383" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="440" y1="383" x2="694" y2="383" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="400" y1="540" x2="400" y2="554" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="386" y1="554" x2="414" y2="554" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="391" y1="560" x2="409" y2="560" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="396" y1="566" x2="404" y2="566" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
   <text x="380" y="566" text-anchor="end" font-size="12" font-weight="700" fill="#1a1a1a">GND rail</text>
   <circle cx="265" cy="540" r="4" fill="#1a1a1a"/>
   <circle cx="300" cy="540" r="4" fill="#1a1a1a"/>
@@ -112,41 +120,41 @@
   <text x="470" y="373" font-size="11.5" fill="#666">one wire to the foil</text>
 
   <!-- ===== E-1 and E-2 to the drain's floor foils ===== -->
-  <line x1="356" y1="200" x2="470" y2="200" stroke="#23862f" stroke-width="5"/>
-  <line x1="356" y1="200" x2="470" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="356" y1="234" x2="470" y2="234" stroke="#23862f" stroke-width="5"/>
-  <line x1="356" y1="234" x2="470" y2="234" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="356" y1="200" x2="470" y2="200" stroke="#23862f" stroke-width="5" data-net="E-1"/>
+  <line x1="356" y1="200" x2="470" y2="200" stroke="#3cbf4e" stroke-width="2.5" data-net="E-1" data-ends="U1.10"/>
+  <line x1="356" y1="234" x2="470" y2="234" stroke="#23862f" stroke-width="5" data-net="E-2"/>
+  <line x1="356" y1="234" x2="470" y2="234" stroke="#3cbf4e" stroke-width="2.5" data-net="E-2" data-ends="U1.11"/>
   <text x="478" y="204" font-size="12.5" font-weight="700" fill="#1f7a33">E-1, drain front foil</text>
   <text x="478" y="238" font-size="12.5" font-weight="700" fill="#1f7a33">E-2, drain back foil</text>
 
   <!-- ===== E-3 to bell 1, E-4 to bell 2 ===== -->
-  <line x1="356" y1="268" x2="680" y2="268" stroke="#23862f" stroke-width="5"/>
-  <line x1="680" y1="268" x2="680" y2="200" stroke="#23862f" stroke-width="5"/>
-  <line x1="680" y1="200" x2="694" y2="200" stroke="#23862f" stroke-width="5"/>
-  <line x1="356" y1="268" x2="680" y2="268" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="680" y1="268" x2="680" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="680" y1="200" x2="694" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="356" y1="268" x2="680" y2="268" stroke="#23862f" stroke-width="5" data-net="E-3"/>
+  <line x1="680" y1="268" x2="680" y2="200" stroke="#23862f" stroke-width="5" data-net="E-3"/>
+  <line x1="680" y1="200" x2="694" y2="200" stroke="#23862f" stroke-width="5" data-net="E-3"/>
+  <line x1="356" y1="268" x2="680" y2="268" stroke="#3cbf4e" stroke-width="2.5" data-net="E-3" data-ends="U1.12"/>
+  <line x1="680" y1="268" x2="680" y2="200" stroke="#3cbf4e" stroke-width="2.5" data-net="E-3"/>
+  <line x1="680" y1="200" x2="694" y2="200" stroke="#3cbf4e" stroke-width="2.5" data-net="E-3"/>
   <text x="530" y="260" font-size="11.5" fill="#666">one wire to bell 1</text>
-  <line x1="356" y1="302" x2="470" y2="302" stroke="#23862f" stroke-width="5"/>
-  <line x1="356" y1="302" x2="470" y2="302" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="356" y1="302" x2="470" y2="302" stroke="#23862f" stroke-width="5" data-net="E-4"/>
+  <line x1="356" y1="302" x2="470" y2="302" stroke="#3cbf4e" stroke-width="2.5" data-net="E-4" data-ends="U1.13"/>
   <text x="478" y="306" font-size="12.5" font-weight="700" fill="#1f7a33">E-4, to bell 2</text>
 
   <!-- ===== out on the playfield: bell 1, the ball and the bells' foil ===== -->
-  <rect x="700" y="164" width="250" height="86" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="700" y="164" width="250" height="86" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="bell 1"/>
   <text x="825" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#7a2556">BELL 1</text>
   <text x="825" y="214" text-anchor="middle" font-size="11" fill="#666">stock bell, paint sanded</text>
   <text x="825" y="230" text-anchor="middle" font-size="11" fill="#666">off where the ball hits</text>
 
-  <line x1="825" y1="252.5" x2="825" y2="272" stroke="#23862f" stroke-width="5"/>
-  <line x1="825" y1="250" x2="825" y2="272" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="825" y1="324" x2="853" y2="292" stroke="#666" stroke-width="2.5"/>
+  <line x1="825" y1="252.5" x2="825" y2="272" stroke="#23862f" stroke-width="5" data-part="ball"/>
+  <line x1="825" y1="250" x2="825" y2="272" stroke="#3cbf4e" stroke-width="2.5" data-part="ball"/>
+  <line x1="825" y1="324" x2="853" y2="292" stroke="#666" stroke-width="2.5" data-part="ball"/>
   <circle cx="825" cy="324" r="3.5" fill="#1a1a1a"/>
-  <line x1="825" y1="328" x2="825" y2="350" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="825" y1="328" x2="825" y2="350" stroke="#1a1a1a" stroke-width="2.5" data-part="ball"/>
   <text x="868" y="296" font-size="12" fill="#444">ball bridges</text>
   <text x="868" y="312" font-size="12" fill="#444">bell to foil</text>
   <text x="868" y="330" font-size="11.5" fill="#666" data-fig="r_contact">30 &#937; closed</text>
 
-  <rect x="700" y="350" width="250" height="66" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="700" y="350" width="250" height="66" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="bell foil"/>
   <circle cx="700" cy="383" r="6" fill="#1a1a1a"/>
   <text x="825" y="380" text-anchor="middle" font-size="15" font-weight="700" fill="#7a2556">BELL FOIL</text>
   <text x="825" y="400" text-anchor="middle" font-size="11" fill="#666">at GND</text>

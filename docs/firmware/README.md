@@ -17,4 +17,3 @@ The firmware is the embedded software running on the Teensy 4.1 that drives the 
 | [`io/`](io/) | The I/O layer beneath the drivers: the I²C buses and the port expander's pins, which drivers share |
 | [`components/`](components/) | One document per component: the playfield elements and the services a game uses |
 | [`firmware/gist/`](../../firmware/gist/) | Code notes for the drivers and components, which the real firmware starts from |
-| [`figures.py`](figures.py) | The firmware's periods, watchdog timeout, interrupt priorities and slots, which `tools/figcheck.py` checks these documents against |

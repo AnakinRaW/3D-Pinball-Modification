@@ -95,7 +95,7 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 
   Every pin of an IC carries its pin number beside its name, taken from the datasheet's pinout for the package the build uses.
 
-  An IC of the modification is drawn with every pin of its package, in every drawing that shows it. Each pin is a marker of its own and shows its connection, either a wire to its net or the gray marker of an unconnected pin. Pins on the same net are drawn one by one and joined by wires. A note that lists pins never stands in for drawing them.
+  An IC of the modification is drawn with every pin of its package, in every drawing that shows it. Each pin is a separate marker and shows its connection, either a wire to its net or the gray marker of an unconnected pin. Pins on the same net are drawn one by one and joined by wires. A note that lists pins never stands in for drawing them.
 
   Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
 
@@ -261,7 +261,7 @@ The severity tables of the review skills map onto these levels:
 
 ## 15. Figures are checked against a model
 
-**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, beside the document it governs, and [`tools/figcheck.py`](tools/figcheck.py) checks that document, any further document the model names and its drawings against it. IR sensing is the first consumer, in [`docs/parts/ir-reflective/figures.py`](docs/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
+**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, and [`tools/figcheck.py`](tools/figcheck.py) checks the subsystem's document, any further document the model names and its drawings against it. The models and every other Python file the checks read live under `model/`, in folders that mirror those under `docs/`, so `docs/` holds prose and drawings only. IR sensing is the first consumer, in [`model/parts/ir-reflective/figures.py`](model/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
 
 **A calculation is finished when it stands in the model.** A figure worked out in conversation, or typed straight into a document, has nothing checking it. Until it is declared with its inputs, its unit and its source, it counts as unverified under rule 3, and an answer that reports it says so.
 

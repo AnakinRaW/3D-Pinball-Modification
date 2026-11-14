@@ -523,7 +523,7 @@ def number_forms(x: float) -> list[str]:
 
 
 def standalone(form: str, text: str) -> bool:
-    """Whether the number stands in the text as a number of its own, not inside a longer one."""
+    """Whether the number stands in the text as a separate number, not inside a longer one."""
     return re.search(rf"(?<![\d.]){re.escape(form)}(?!\d|\.\d)", text) is not None
 
 
@@ -597,7 +597,7 @@ def pass_sums(model: Model, rep: Report):
 
 def pass_stale(base: str, rep: Report):
     try:
-        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs"],
+        diff = subprocess.run(["git", "diff", "-U0", base, "--", "docs", "model"],
                               cwd=ROOT, capture_output=True, text=True,
                               encoding="utf-8", check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
@@ -614,7 +614,7 @@ def pass_stale(base: str, rep: Report):
             added |= toks
     gone = sorted(removed - added)
     files = {p: norm(p.read_text(encoding="utf-8", errors="replace"))
-             for p in (ROOT / "docs").rglob("*")
+             for d in ("docs", "model") for p in (ROOT / d).rglob("*")
              if p.suffix in {".md", ".svg", ".py"} and p.is_file()}
     for num, unit in gone:
         tok = f"{num} {unit}"
@@ -708,7 +708,7 @@ def part_list(path) -> set | None:
 
 
 def pass_designators(model: Model, rep: Report):
-    """Every part the document names by its designator is a part of its own part list, of
+    """Every part the document names by its designator is a part of the document's part list, of
     the design the same line links, or one the model names as another board's."""
     text = norm(model.document.read_text(encoding="utf-8"))
     own = part_list(model.document)

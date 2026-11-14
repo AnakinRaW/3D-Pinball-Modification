@@ -12,7 +12,7 @@ import re
 import sys
 
 from .quantities import Q, as_q
-from .repo import model_named
+from .repo import home_of, model_named
 
 
 # `graph` is a reading off a plotted curve, which the sheet's text never prints
@@ -104,7 +104,7 @@ def _expression(key, text: str, scope: dict, lint=True):
     names = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.Lambda, ast.comprehension, ast.NamedExpr)):
-            raise ValueError(f"{key}: a formula that binds names of its own is written "
+            raise ValueError(f"{key}: a formula that binds further names is written "
                              f"as a function")
         if (lint and isinstance(node, ast.Constant) and not isinstance(node.value, bool)
                 and isinstance(node.value, (int, float, complex))
@@ -206,6 +206,9 @@ class Model:
         self.unlinted: list = []
         self.asides: list = []
         self.nets: list = []
+        self.boards: dict = {}        # name: the circuit of each of the subsystem's boards
+        self.schematic_path = None
+        self.schematic_problems: list = []
         self.owned: list = []
         self.drawn: list = []
         self.supplied: list = []
@@ -220,8 +223,9 @@ class Model:
     @classmethod
     def at(cls, file, name, document="design.md", *, section=None, until="## Sources",
            drawings=(), documents=()):
-        """The model a file declares, its documents and drawings named from the file's folder."""
-        here = pathlib.Path(file).resolve().parent
+        """The model a file declares, its documents and drawings named from the folder under
+        docs/ that the file's folder under model/ stands for."""
+        here = home_of(file)
         path = lambda p: (here / p).resolve()
         return cls(name, path(document), section, until,
                    [path(d) for d in drawings], [path(d) for d in documents])
@@ -259,6 +263,27 @@ class Model:
     def net(self, name, *parts, teensy=None):
         """A net of the subsystem: every part on it, and the Teensy signal it reaches."""
         self.nets.append(Net(name, teensy, list(parts), self.name))
+
+    def schematic(self, path):
+        """The subsystem's boards, pin by pin, as the file `path` declares them beside the model.
+        The nets that reach a Teensy signal enter the wiring from there."""
+        from .circuit import load_schematic, teensy_nets
+        from .pins import pin_rows
+        # the Teensy signals the pin table gives this subsystem; a board's net that carries
+        # another subsystem's signal enters that subsystem's wiring, which declares it there
+        own = {r.signal for r in pin_rows() if self.name in r.subsystems}
+        here = pathlib.Path(sys._getframe(1).f_globals.get("__file__", self.document)).parent
+        sch = load_schematic((here / path).resolve())
+        self.schematic_path = sch.path
+        for name, b in sch.boards.items():
+            if name in self.boards:
+                raise KeyError(f"board {name!r} is declared twice")
+            b.model = self.name
+            self.boards[name] = b
+            nets, problems = teensy_nets(b, self.name, f"{sch.path.name}, the {b.title.lower()}",
+                                         own)
+            self.nets += nets
+            self.schematic_problems += [f"{self.name} board {name}: {m}" for m in problems]
 
     def owns(self, peripheral, why, *, serves=()):
         """A peripheral the subsystem's driver programs itself, which no other code may use. A
@@ -332,14 +357,14 @@ class Model:
 
     def ignores(self, path, why: str):
         """A markdown file or drawing in the model's folder that no model governs, and why."""
-        here = self.path.parent if self.path else self.document.parent
+        here = home_of(self.path) if self.path else self.document.parent
         self.ignored.append(((here / path).resolve(), why))
 
     def skips(self, path, heading: str, why: str):
         """A section of one of the model's documents that states nothing of the design, such as
         a bench sketch, and why. It runs from its heading to the next heading of its level or
         a higher one."""
-        here = self.path.parent if self.path else self.document.parent
+        here = home_of(self.path) if self.path else self.document.parent
         self.skipped.append(((here / path).resolve(), heading, why))
 
     def names(self, *designators, why: str):
