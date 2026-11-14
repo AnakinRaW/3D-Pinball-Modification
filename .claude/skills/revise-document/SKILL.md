@@ -104,7 +104,7 @@ Rewrite for structure, not for polish:
 
 **Chase the references.** After any heading that changed or moved, grep the repository for the old heading and for cross-references such as "below" and "above".
 
-**Run the checks that apply.** `python tools/figcheck.py docs/parts/<subsystem>/figures.py` after any change to a document a model governs, and `python tools/svgcheck.py` after a drawing moved. Report a green run only where a figure, a formula or a drawing was touched: a green figure check says nothing about prose, and every prose defect passes it.
+**Run the checks that apply.** `python tools/figcheck.py model/parts/<subsystem>/figures.py` after any change to a document a model governs, and `python tools/svgcheck.py` after a drawing moved. Report a green run only where a figure, a formula or a drawing was touched: a green figure check says nothing about prose, and every prose defect passes it.
 
 ## Reporting
 

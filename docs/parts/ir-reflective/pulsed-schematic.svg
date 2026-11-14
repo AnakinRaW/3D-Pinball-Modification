@@ -1,101 +1,101 @@
-<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" data-boards="main">
   <rect x="0" y="0" width="900" height="500" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Design B: pulsed LED with differential measurement</text>
   <text x="30" y="56" font-size="13" fill="#666">One sensor channel. The emitter switch is shared by every channel.</text>
 
   <!-- 3.3 V rail -->
-  <polygon points="120,100 106,94 106,106" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <polygon points="120,100 106,94 106,106" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-rail="3V3"/>
   <text x="98" y="104" text-anchor="end" font-size="12.5" font-weight="700" fill="#8a6d0b">3V3</text>
-  <line x1="122.5" y1="100" x2="662.5" y2="100" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="120" y1="100" x2="660" y2="100" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="122.5" y1="100" x2="662.5" y2="100" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="120" y1="100" x2="660" y2="100" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
 
   <!-- sensor board -->
-  <rect x="690" y="110" width="170" height="190" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
+  <rect x="690" y="110" width="170" height="190" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2" data-part="sensor board"/>
   <text x="704" y="136" font-size="15" font-weight="700" fill="#7a2556">Sensor board</text>
-  <circle cx="690" cy="160" r="6" fill="#c0392b"/>
+  <circle cx="690" cy="160" r="6" fill="#c0392b" data-part="sensor board"/>
   <text x="704" y="164" font-size="12" font-weight="700" fill="#c0392b">Pin 1 (red)</text>
-  <circle cx="690" cy="200" r="6" fill="#1a1a1a"/>
+  <circle cx="690" cy="200" r="6" fill="#1a1a1a" data-part="sensor board"/>
   <text x="704" y="204" font-size="12" font-weight="700" fill="#1a1a1a">Pin 2 (black)</text>
   <text x="704" y="259" font-size="12" font-weight="700" fill="#8a6d0b">Pin 3 (yellow)</text>
   <text x="704" y="285" font-size="10.5" fill="#666">no ground pin</text>
 
-  <line x1="684" y1="160" x2="657.5" y2="160" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="660" y1="162.5" x2="660" y2="97.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="684" y1="160" x2="660" y2="160" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="660" y1="160" x2="660" y2="100" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="684" y1="160" x2="657.5" y2="160" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="660" y1="162.5" x2="660" y2="97.5" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="684" y1="160" x2="660" y2="160" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
+  <line x1="660" y1="160" x2="660" y2="100" stroke="#f1c40f" stroke-width="2.5" data-net="3V3"/>
 
   <!-- channel node -->
-  <line x1="684" y1="200" x2="302.5" y2="200" stroke="#23862f" stroke-width="5"/>
-  <line x1="684" y1="200" x2="300" y2="200" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="200" y="190" width="100" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5"/>
+  <line x1="684" y1="200" x2="302.5" y2="200" stroke="#23862f" stroke-width="5" data-net="CH4"/>
+  <line x1="684" y1="200" x2="300" y2="200" stroke="#3cbf4e" stroke-width="2.5" data-net="CH4"/>
+  <rect x="200" y="190" width="100" height="20" rx="3" fill="#e6f4e6" stroke="#23862f" stroke-width="1.5" data-rail="CH4"/>
   <text x="250" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">CHn</text>
   <text x="200" y="228" font-size="10.5" fill="#666">to its digitizing input</text>
-  <text x="200" y="242" font-size="10.5" fill="#666">on the mainboard</text>
+  <text x="200" y="242" font-size="10.5" fill="#666">on the IR board</text>
   <text data-fig="u_node_max" x="450" y="192" font-size="11.5" fill="#1f7a33">0 &#8230; 3.45 V</text>
-  <line x1="350" y1="200" x2="350" y2="220" stroke="#1a1a1a" stroke-width="2.5"/>
-  <rect x="337" y="220" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="350" y1="200" x2="350" y2="220" stroke="#1a1a1a" stroke-width="2.5" data-net="CH4" data-ends="R20.1"/>
+  <rect x="337" y="220" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R20"/>
   <text x="371" y="232" font-size="10" fill="#777">R(16 + n)</text>
   <text data-fig="r_pd" x="371" y="246" font-size="12.5" font-weight="700" fill="#1a1a1a">4.7 k&#937;</text>
-  <line x1="350" y1="280" x2="350" y2="296" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="336" y1="296" x2="364" y2="296" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="341" y1="302" x2="359" y2="302" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="346" y1="308" x2="354" y2="308" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="350" y1="280" x2="350" y2="296" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="R20.2"/>
+  <line x1="336" y1="296" x2="364" y2="296" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="341" y1="302" x2="359" y2="302" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="346" y1="308" x2="354" y2="308" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- Pin 3 through 220 Ohm onto the LED bus -->
-  <line x1="684" y1="255" x2="622.5" y2="255" stroke="#808080" stroke-width="5"/>
-  <line x1="684" y1="255" x2="620" y2="255" stroke="#ffffff" stroke-width="2.5"/>
-  <rect x="550" y="245" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="684" y1="255" x2="622.5" y2="255" stroke="#808080" stroke-width="5" data-net="LED4"/>
+  <line x1="684" y1="255" x2="620" y2="255" stroke="#ffffff" stroke-width="2.5" data-net="LED4" data-ends="R4.2"/>
+  <rect x="550" y="245" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R4"/>
   <text data-fig="r_led" x="585" y="259" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a">220 &#937;</text>
   <text x="552" y="240" font-size="10" fill="#777">Rn</text>
   <text x="552" y="281" font-size="10.5" fill="#444">one per channel</text>
   <text data-fig="r_led_sharp" x="552" y="295" font-size="10.5" font-weight="700" fill="#444">100 &#937; on the three boards</text>
   <text x="552" y="307" font-size="10.5" font-weight="700" fill="#444">from the stock machine</text>
-  <line x1="547.5" y1="255" x2="407.5" y2="255" stroke="#808080" stroke-width="5"/>
-  <line x1="410" y1="252.5" x2="410" y2="353.5" stroke="#808080" stroke-width="5"/>
-  <line x1="550" y1="255" x2="410" y2="255" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="410" y1="255" x2="410" y2="351" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="547.5" y1="255" x2="407.5" y2="255" stroke="#808080" stroke-width="5" data-net="LED-BUS"/>
+  <line x1="410" y1="252.5" x2="410" y2="353.5" stroke="#808080" stroke-width="5" data-net="LED-BUS"/>
+  <line x1="550" y1="255" x2="410" y2="255" stroke="#ffffff" stroke-width="2.5" data-net="LED-BUS" data-ends="R4.1"/>
+  <line x1="410" y1="255" x2="410" y2="351" stroke="#ffffff" stroke-width="2.5" data-net="LED-BUS"/>
   <text x="420" y="308" font-size="11" font-weight="700" fill="#5c4a00">LED BUS</text>
 
   <!-- gate path -->
-  <rect x="40" y="360" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5"/>
+  <rect x="40" y="360" width="86" height="20" rx="3" fill="#e8eefb" stroke="#1f4fd1" stroke-width="1.5" data-rail="CLOCK-2"/>
   <text x="83" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1f4fd1">CLOCK</text>
-  <line x1="126" y1="370" x2="150" y2="370" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="150" y="360" width="68" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="126" y1="370" x2="150" y2="370" stroke="#1f4fd1" stroke-width="2.5" data-net="CLOCK-2" data-ends="R33.1"/>
+  <rect x="150" y="360" width="68" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R33"/>
   <text x="152" y="354" font-size="10" fill="#777">R33</text>
   <text data-fig="r_gate" x="184" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a">2.2 k&#937;</text>
-  <line x1="218" y1="370" x2="330" y2="370" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="218" y1="370" x2="330" y2="370" stroke="#1f4fd1" stroke-width="2.5" data-net="GATE" data-ends="R33.2 Q1.G"/>
   <circle cx="262" cy="370" r="4" fill="#1f4fd1"/>
-  <line x1="262" y1="370" x2="262" y2="390" stroke="#1a1a1a" stroke-width="2.5"/>
-  <rect x="249" y="390" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="262" y1="370" x2="262" y2="390" stroke="#1a1a1a" stroke-width="2.5" data-net="GATE" data-ends="R35.1"/>
+  <rect x="249" y="390" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R35"/>
   <text data-fig="r_gate_pd" x="283" y="420" font-size="12" font-weight="700" fill="#1a1a1a">100 k&#937;</text>
   <text x="283" y="434" font-size="10" fill="#777">R35</text>
-  <line x1="262" y1="450" x2="262" y2="466" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="248" y1="466" x2="276" y2="466" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="253" y1="472" x2="271" y2="472" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="258" y1="478" x2="266" y2="478" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="262" y1="450" x2="262" y2="466" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="R35.2"/>
+  <line x1="248" y1="466" x2="276" y2="466" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="253" y1="472" x2="271" y2="472" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="258" y1="478" x2="266" y2="478" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
 
   <!-- Q1 -->
   <text x="330" y="332" font-size="11.5" font-weight="700" fill="#1a1a1a">Q1</text>
-  <line x1="330" y1="344" x2="330" y2="396" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="338" y1="344" x2="338" y2="359" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="338" y1="363" x2="338" y2="377" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="338" y1="381" x2="338" y2="396" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="340.5" y1="351" x2="412.5" y2="351" stroke="#808080" stroke-width="5"/>
-  <line x1="338" y1="351" x2="410" y2="351" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="338" y1="370" x2="348" y2="370" stroke="#1a1a1a" stroke-width="2.5"/>
-  <polygon points="338,370 348,365 348,375" fill="#1a1a1a"/>
-  <line x1="348" y1="370" x2="348" y2="389" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="338" y1="389" x2="356" y2="389" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="356" y1="389" x2="356" y2="450" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="342" y1="450" x2="370" y2="450" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="347" y1="456" x2="365" y2="456" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="352" y1="462" x2="360" y2="462" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="330" y1="344" x2="330" y2="396" stroke="#1a1a1a" stroke-width="3" data-part="Q1"/>
+  <line x1="338" y1="344" x2="338" y2="359" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="338" y1="363" x2="338" y2="377" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="338" y1="381" x2="338" y2="396" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="340.5" y1="351" x2="412.5" y2="351" stroke="#808080" stroke-width="5" data-net="LED-BUS"/>
+  <line x1="338" y1="351" x2="410" y2="351" stroke="#ffffff" stroke-width="2.5" data-net="LED-BUS" data-ends="Q1.D"/>
+  <line x1="338" y1="370" x2="348" y2="370" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <polygon points="338,370 348,365 348,375" fill="#1a1a1a" data-part="Q1"/>
+  <line x1="348" y1="370" x2="348" y2="389" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="338" y1="389" x2="356" y2="389" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="356" y1="389" x2="356" y2="450" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="Q1.S"/>
+  <line x1="342" y1="450" x2="370" y2="450" stroke="#1a1a1a" stroke-width="3" data-rail="GND"/>
+  <line x1="347" y1="456" x2="365" y2="456" stroke="#1a1a1a" stroke-width="2.5" data-rail="GND"/>
+  <line x1="352" y1="462" x2="360" y2="462" stroke="#1a1a1a" stroke-width="2" data-rail="GND"/>
   <text x="324" y="364" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">G</text>
   <text x="366" y="343" font-size="11.5" font-weight="700" fill="#1a1a1a">D</text>
   <text x="366" y="404" font-size="11.5" font-weight="700" fill="#1a1a1a">S</text>
   <text x="510" y="355" font-size="12" font-weight="700" fill="#1a1a1a">Q1: IRL540N, N-channel, TO-220</text>
   <text x="510" y="391" font-size="11" fill="#666">one switch for all sixteen emitters</text>
   <!-- ===== pins and junctions of the light wires, on top ===== -->
-  <circle cx="690" cy="255" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <circle cx="690" cy="255" r="6" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5" data-part="sensor board"/>
   <circle cx="350" cy="200" r="4" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
 </svg>

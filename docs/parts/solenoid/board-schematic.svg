@@ -26,8 +26,8 @@
   <text x="342" y="254" font-size="15" font-weight="700" fill="#5c4a00">Coil board</text>
 
   <!-- the coil board's J-COIL-TEENSY -->
-  <line x1="246" y1="420" x2="338" y2="420" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="344" y="392" width="64" height="60" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <line x1="246" y1="420" x2="338" y2="420" stroke="#1f4fd1" stroke-width="2.5" data-net="TRIGGER1" data-ends="J-COIL-TEENSY.1"/>
+  <rect x="344" y="392" width="64" height="60" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-COIL-TEENSY"/>
   <text x="376" y="408" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">J-COIL-</text>
   <text x="376" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#333333">TEENSY</text>
   <text x="376" y="444" text-anchor="middle" font-size="11.5" fill="#777">pin 1</text>
@@ -35,87 +35,88 @@
   <circle cx="408" cy="420" r="6" fill="#1f4fd1"/>
 
   <!-- trigger, R11 into the gate, R21 to power GND -->
-  <line x1="414" y1="420" x2="700" y2="420" stroke="#1f4fd1" stroke-width="2.5"/>
+  <line x1="414" y1="420" x2="430" y2="420" stroke="#1f4fd1" stroke-width="2.5" data-net="TRIGGER1" data-ends="J-COIL-TEENSY.1 R11.1"/>
+  <line x1="500" y1="420" x2="700" y2="420" stroke="#1f4fd1" stroke-width="2.5" data-net="GATE1" data-ends="R11.2 Q1.G"/>
 
-  <rect x="430" y="410" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="430" y="410" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R11"/>
   <text x="465" y="404" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R11</text>
   <text x="465" y="425" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_gate">1.2 k&#937;</text>
 
   <circle cx="620" cy="420" r="4" fill="#1f4fd1"/>
-  <line x1="620" y1="420" x2="620" y2="465" stroke="#1f4fd1" stroke-width="2.5"/>
-  <rect x="607" y="465" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="620" y1="420" x2="620" y2="465" stroke="#1f4fd1" stroke-width="2.5" data-net="GATE1" data-ends="R21.1"/>
+  <rect x="607" y="465" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R21"/>
   <text x="601" y="489" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">R21</text>
   <text x="601" y="507" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_gate_pd">10 k&#937;</text>
-  <line x1="620" y1="525" x2="620" y2="550" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="620" y1="525" x2="620" y2="550" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND" data-ends="R21.2"/>
 
   <!-- Q1, N-channel, low side -->
-  <line x1="700" y1="393" x2="700" y2="447" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="709" y1="391" x2="709" y2="406" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="709" y1="410" x2="709" y2="425" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="709" y1="429" x2="709" y2="444" stroke="#1a1a1a" stroke-width="4"/>
-  <line x1="711.5" y1="398" x2="902.5" y2="398" stroke="#808080" stroke-width="5"/>
-  <line x1="709" y1="398" x2="900" y2="398" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="709" y1="437" x2="760" y2="437" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="709" y1="417" x2="741" y2="417" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="741" y1="417" x2="741" y2="437" stroke="#1a1a1a" stroke-width="2.5"/>
-  <polygon points="711,417 724,411 724,423" fill="#1a1a1a"/>
+  <line x1="700" y1="393" x2="700" y2="447" stroke="#1a1a1a" stroke-width="3" data-part="Q1"/>
+  <line x1="709" y1="391" x2="709" y2="406" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="709" y1="410" x2="709" y2="425" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="709" y1="429" x2="709" y2="444" stroke="#1a1a1a" stroke-width="4" data-part="Q1"/>
+  <line x1="711.5" y1="398" x2="902.5" y2="398" stroke="#808080" stroke-width="5" data-net="DRAIN1"/>
+  <line x1="709" y1="398" x2="900" y2="398" stroke="#ffffff" stroke-width="2.5" data-net="DRAIN1" data-ends="Q1.D"/>
+  <line x1="709" y1="437" x2="760" y2="437" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="709" y1="417" x2="741" y2="417" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <line x1="741" y1="417" x2="741" y2="437" stroke="#1a1a1a" stroke-width="2.5" data-part="Q1"/>
+  <polygon points="711,417 724,411 724,423" fill="#1a1a1a" data-part="Q1"/>
   <text x="694" y="377" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">Q1</text>
   <text x="694" y="436" text-anchor="end" font-size="11.5" fill="#777">G</text>
   <text x="724" y="387" font-size="11.5" fill="#777">D</text>
   <text x="724" y="461" font-size="11.5" fill="#777">S</text>
-  <line x1="760" y1="437" x2="760" y2="550" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="760" y1="437" x2="760" y2="550" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND" data-ends="Q1.S"/>
 
   <!-- the drain up to J-C1 -->
-  <line x1="820" y1="398" x2="820" y2="292" stroke="#808080" stroke-width="5"/>
-  <line x1="820" y1="398" x2="820" y2="292" stroke="#ffffff" stroke-width="2.5"/>
+  <line x1="820" y1="398" x2="820" y2="292" stroke="#808080" stroke-width="5" data-net="DRAIN1"/>
+  <line x1="820" y1="398" x2="820" y2="292" stroke="#ffffff" stroke-width="2.5" data-net="DRAIN1" data-ends="J-C1.2"/>
 
   <!-- D1 flyback -->
-  <line x1="900" y1="400.5" x2="900" y2="374.5" stroke="#808080" stroke-width="5"/>
-  <line x1="900" y1="398" x2="900" y2="372" stroke="#ffffff" stroke-width="2.5"/>
-  <polygon points="886,372 914,372 900,346" fill="#1a1a1a"/>
-  <line x1="884" y1="344" x2="916" y2="344" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="884" y1="344" x2="884" y2="355" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="916" y1="344" x2="916" y2="333" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="900" y1="344" x2="900" y2="320" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="900" y1="400.5" x2="900" y2="374.5" stroke="#808080" stroke-width="5" data-net="DRAIN1"/>
+  <line x1="900" y1="398" x2="900" y2="372" stroke="#ffffff" stroke-width="2.5" data-net="DRAIN1" data-ends="D1.A"/>
+  <polygon points="886,372 914,372 900,346" fill="#1a1a1a" data-part="D1"/>
+  <line x1="884" y1="344" x2="916" y2="344" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="884" y1="344" x2="884" y2="355" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="916" y1="344" x2="916" y2="333" stroke="#1a1a1a" stroke-width="3" data-part="D1"/>
+  <line x1="900" y1="344" x2="900" y2="320" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="D1.K"/>
   <text x="878" y="350" text-anchor="end" font-size="12.5" font-weight="700" fill="#1a1a1a">D1</text>
   <text x="878" y="366" text-anchor="end" font-size="11.5" fill="#666">1N5819</text>
 
   <!-- the 5 V rail from J-COIL-PWR to D1, J-C1 and C91 -->
-  <line x1="900" y1="320" x2="1114" y2="320" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="900" y1="320" x2="1114" y2="320" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-COIL-PWR.1"/>
   <text x="920" y="312" font-size="13" font-weight="700" fill="#c0392b" data-fig="v_5v">5 V</text>
   <circle cx="1000" cy="320" r="4" fill="#c0392b"/>
-  <line x1="1000" y1="320" x2="1000" y2="292" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="1000" y1="320" x2="1000" y2="292" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-C1.1"/>
 
   <circle cx="1080" cy="320" r="4" fill="#c0392b"/>
-  <line x1="1080" y1="320" x2="1080" y2="350" stroke="#c0392b" stroke-width="2.5"/>
-  <line x1="1062" y1="350" x2="1098" y2="350" stroke="#1a1a1a" stroke-width="3"/>
-  <path d="M 1062 368 Q 1080 356 1098 368" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="1080" y1="320" x2="1080" y2="350" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="C91.+"/>
+  <line x1="1062" y1="350" x2="1098" y2="350" stroke="#1a1a1a" stroke-width="3" data-part="C91"/>
+  <path d="M 1062 368 Q 1080 356 1098 368" fill="none" stroke="#1a1a1a" stroke-width="3" data-part="C91"/>
   <text x="1104" y="356" font-size="19" font-weight="700" fill="#1a1a1a">+</text>
-  <line x1="1080" y1="362" x2="1080" y2="400" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1080" y1="362" x2="1080" y2="400" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND" data-ends="C91.-"/>
   <text x="1054" y="356" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">C91</text>
   <text x="1054" y="372" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_c91">100 &#181;F</text>
-  <line x1="1080" y1="400" x2="1200" y2="400" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1080" y1="400" x2="1200" y2="400" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND"/>
   <circle cx="1080" cy="400" r="4" fill="#1a1a1a"/>
   <circle cx="1200" cy="400" r="4" fill="#1a1a1a"/>
 
   <!-- J-C1 -->
-  <rect x="796" y="246" width="228" height="40" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="796" y="246" width="228" height="40" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-C1"/>
   <text x="910" y="271" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">J-C1</text>
   <circle cx="1000" cy="246" r="6" fill="#c0392b"/>
   <circle cx="1000" cy="286" r="6" fill="#c0392b"/>
-  <line x1="820" y1="182" x2="820" y2="240" stroke="#808080" stroke-width="5"/>
-  <line x1="820" y1="182" x2="820" y2="240" stroke="#ffffff" stroke-width="2.5"/>
-  <line x1="1000" y1="182" x2="1000" y2="240" stroke="#c0392b" stroke-width="2.5"/>
+  <line x1="820" y1="182" x2="820" y2="240" stroke="#808080" stroke-width="5" data-net="DRAIN1"/>
+  <line x1="820" y1="182" x2="820" y2="240" stroke="#ffffff" stroke-width="2.5" data-net="DRAIN1" data-ends="J-C1.2"/>
+  <line x1="1000" y1="182" x2="1000" y2="240" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-C1.1"/>
 
   <!-- J-COIL-PWR -->
-  <rect x="1120" y="300" width="110" height="60" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="1120" y="300" width="110" height="60" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-COIL-PWR"/>
   <text x="1175" y="326" text-anchor="middle" font-size="15" font-weight="700" fill="#333333">J-COIL-PWR</text>
   <circle cx="1120" cy="320" r="6" fill="#c0392b"/>
   <circle cx="1200" cy="360" r="6" fill="#1a1a1a"/>
-  <line x1="1200" y1="366" x2="1200" y2="550" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="1200" y1="366" x2="1200" y2="550" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND" data-ends="J-COIL-PWR.2"/>
 
   <!-- power GND -->
-  <line x1="620" y1="550" x2="1200" y2="550" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="620" y1="550" x2="1200" y2="550" stroke="#1a1a1a" stroke-width="2.5" data-net="PGND"/>
   <circle cx="620" cy="550" r="4" fill="#1a1a1a"/>
   <circle cx="760" cy="550" r="4" fill="#1a1a1a"/>
   <text x="1192" y="570" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">power GND, to the distribution over J-COIL-PWR</text>
@@ -136,7 +137,7 @@
   <text x="342" y="634" font-size="15" font-weight="700" fill="#5c4a00">Sense board</text>
 
   <!-- the sense board's J-SENSE-TEENSY -->
-  <rect x="344" y="650" width="84" height="200" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="344" y="650" width="84" height="200" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-SENSE-TEENSY"/>
   <text x="386" y="666" text-anchor="middle" font-size="12" font-weight="700" fill="#333333">J-SENSE-</text>
   <text x="386" y="680" text-anchor="middle" font-size="12" font-weight="700" fill="#333333">TEENSY</text>
   <text x="386" y="698" text-anchor="middle" font-size="11.5" fill="#777">pin 4</text>
@@ -144,89 +145,89 @@
   <circle cx="344" cy="820" r="6" fill="#1a1a1a"/>
   <circle cx="428" cy="820" r="6" fill="#1a1a1a"/>
   <text x="386" y="838" text-anchor="middle" font-size="11.5" fill="#777">pin 5</text>
-  <line x1="246" y1="680" x2="338" y2="680" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="246" y1="680" x2="338" y2="680" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="246" y1="740" x2="338" y2="740" stroke="#23862f" stroke-width="5"/>
-  <line x1="246" y1="740" x2="338" y2="740" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="246" y1="820" x2="338" y2="820" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="246" y1="680" x2="338" y2="680" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="246" y1="680" x2="338" y2="680" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-SENSE-TEENSY.4"/>
+  <line x1="246" y1="740" x2="338" y2="740" stroke="#23862f" stroke-width="5" data-net="SENSE1"/>
+  <line x1="246" y1="740" x2="338" y2="740" stroke="#3cbf4e" stroke-width="2.5" data-net="SENSE1" data-ends="J-SENSE-TEENSY.1"/>
+  <line x1="246" y1="820" x2="338" y2="820" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-SENSE-TEENSY.5"/>
 
   <!-- the foil feed through R91 -->
-  <line x1="434" y1="680" x2="697.5" y2="680" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="434" y1="680" x2="700" y2="680" stroke="#f1c40f" stroke-width="2.5"/>
-  <rect x="700" y="670" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="434" y1="680" x2="697.5" y2="680" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>
+  <line x1="434" y1="680" x2="700" y2="680" stroke="#f1c40f" stroke-width="2.5" data-net="3V3" data-ends="J-SENSE-TEENSY.4 R91.1"/>
+  <rect x="700" y="670" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R91"/>
   <text x="735" y="664" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R91</text>
   <text x="735" y="685" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_foil">330 &#937;</text>
-  <line x1="772.5" y1="680" x2="882.5" y2="680" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="880" y1="677.5" x2="880" y2="732.5" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="877.5" y1="730" x2="944" y2="730" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="770" y1="680" x2="880" y2="680" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="880" y1="680" x2="880" y2="730" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="880" y1="730" x2="944" y2="730" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="772.5" y1="680" x2="882.5" y2="680" stroke="#9a7d0a" stroke-width="5" data-net="FOIL"/>
+  <line x1="880" y1="677.5" x2="880" y2="732.5" stroke="#9a7d0a" stroke-width="5" data-net="FOIL"/>
+  <line x1="877.5" y1="730" x2="944" y2="730" stroke="#9a7d0a" stroke-width="5" data-net="FOIL"/>
+  <line x1="770" y1="680" x2="880" y2="680" stroke="#f1c40f" stroke-width="2.5" data-net="FOIL" data-ends="R91.2"/>
+  <line x1="880" y1="680" x2="880" y2="730" stroke="#f1c40f" stroke-width="2.5" data-net="FOIL"/>
+  <line x1="880" y1="730" x2="944" y2="730" stroke="#f1c40f" stroke-width="2.5" data-net="FOIL" data-ends="J-M.4"/>
 
   <!-- J-M -->
-  <rect x="950" y="700" width="60" height="240" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2"/>
+  <rect x="950" y="700" width="60" height="240" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-M"/>
   <text x="980" y="720" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">J-M</text>
   <text x="980" y="750" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6d0b">FOIL</text>
   <text x="980" y="903" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a33">SHELL 1</text>
 
   <!-- the foil and the shell, out on the playfield -->
-  <line x1="1016" y1="730" x2="1054" y2="730" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="1016" y1="730" x2="1054" y2="730" stroke="#f1c40f" stroke-width="2.5"/>
+  <line x1="1016" y1="730" x2="1054" y2="730" stroke="#9a7d0a" stroke-width="5" data-net="FOIL"/>
+  <line x1="1016" y1="730" x2="1054" y2="730" stroke="#f1c40f" stroke-width="2.5" data-net="FOIL" data-ends="J-M.4"/>
   <rect x="1060" y="700" width="200" height="60" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
   <text x="1165" y="736" text-anchor="middle" font-size="15" font-weight="700" fill="#7a2556">PLAYFIELD FOIL</text>
 
-  <line x1="1160" y1="762.5" x2="1160" y2="804" stroke="#9a7d0a" stroke-width="5"/>
-  <line x1="1160" y1="760" x2="1160" y2="804" stroke="#f1c40f" stroke-width="2.5"/>
-  <line x1="1160" y1="808" x2="1188" y2="840" stroke="#666" stroke-width="2.5"/>
-  <line x1="1160" y1="856" x2="1160" y2="877.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="1160" y1="856" x2="1160" y2="880" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="1160" y1="762.5" x2="1160" y2="804" stroke="#9a7d0a" stroke-width="5" data-net="FOIL"/>
+  <line x1="1160" y1="760" x2="1160" y2="804" stroke="#f1c40f" stroke-width="2.5" data-net="FOIL"/>
+  <line x1="1160" y1="808" x2="1188" y2="840" stroke="#666" stroke-width="2.5" data-part="ball"/>
+  <line x1="1160" y1="856" x2="1160" y2="877.5" stroke="#23862f" stroke-width="5" data-net="SHELL1"/>
+  <line x1="1160" y1="856" x2="1160" y2="880" stroke="#3cbf4e" stroke-width="2.5" data-net="SHELL1"/>
   <text x="1210" y="810" font-size="12" fill="#444">ball bridges</text>
   <text x="1210" y="826" font-size="12" fill="#444">foil to shell</text>
   <text x="1210" y="844" font-size="11.5" fill="#666" data-fig="r_contact">30 &#937; closed</text>
 
-  <line x1="1016" y1="915" x2="1054" y2="915" stroke="#23862f" stroke-width="5"/>
-  <line x1="1016" y1="915" x2="1054" y2="915" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="1016" y1="915" x2="1054" y2="915" stroke="#23862f" stroke-width="5" data-net="SHELL1"/>
+  <line x1="1016" y1="915" x2="1054" y2="915" stroke="#3cbf4e" stroke-width="2.5" data-net="SHELL1" data-ends="J-M.1"/>
   <rect x="1060" y="880" width="200" height="70" rx="8" fill="#fbeef5" stroke="#a8437a" stroke-width="2"/>
   <text x="1165" y="912" text-anchor="middle" font-size="15" font-weight="700" fill="#7a2556">SHELL 1</text>
   <text x="1165" y="932" text-anchor="middle" font-size="11" fill="#666">shell, plunger, frame: one node</text>
 
   <!-- the shell's wire through the filter and R41 to the Teensy -->
-  <line x1="692.5" y1="915" x2="944" y2="915" stroke="#23862f" stroke-width="5"/>
-  <line x1="690" y1="915" x2="944" y2="915" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="692.5" y1="915" x2="944" y2="915" stroke="#23862f" stroke-width="5" data-net="SHELL1"/>
+  <line x1="690" y1="915" x2="944" y2="915" stroke="#3cbf4e" stroke-width="2.5" data-net="SHELL1" data-ends="R41.2 J-M.1"/>
 
-  <line x1="880" y1="915" x2="880" y2="952.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="880" y1="915" x2="880" y2="955" stroke="#3cbf4e" stroke-width="2.5"/>
-  <rect x="867" y="955" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="880" y1="915" x2="880" y2="952.5" stroke="#23862f" stroke-width="5" data-net="SHELL1"/>
+  <line x1="880" y1="915" x2="880" y2="955" stroke="#3cbf4e" stroke-width="2.5" data-net="SHELL1" data-ends="R31.1"/>
+  <rect x="867" y="955" width="26" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R31"/>
   <text x="899" y="979" font-size="13" font-weight="700" fill="#1a1a1a">R31</text>
   <text x="899" y="997" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="r_pulldown">10 k&#937;</text>
-  <line x1="880" y1="1015" x2="880" y2="1120" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="880" y1="1015" x2="880" y2="1120" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="R31.2"/>
 
-  <line x1="800" y1="915" x2="800" y2="962.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="800" y1="915" x2="800" y2="965" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="782" y1="965" x2="818" y2="965" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="782" y1="979" x2="818" y2="979" stroke="#1a1a1a" stroke-width="3"/>
-  <line x1="800" y1="979" x2="800" y2="1120" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="800" y1="915" x2="800" y2="962.5" stroke="#23862f" stroke-width="5" data-net="SHELL1"/>
+  <line x1="800" y1="915" x2="800" y2="965" stroke="#3cbf4e" stroke-width="2.5" data-net="SHELL1" data-ends="C1.1"/>
+  <line x1="782" y1="965" x2="818" y2="965" stroke="#1a1a1a" stroke-width="3" data-part="C1"/>
+  <line x1="782" y1="979" x2="818" y2="979" stroke="#1a1a1a" stroke-width="3" data-part="C1"/>
+  <line x1="800" y1="979" x2="800" y2="1120" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="C1.2"/>
   <text x="776" y="971" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">C1</text>
   <text x="776" y="989" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a" data-fig="c_filter">100 nF</text>
 
-  <rect x="620" y="905" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="620" y="905" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R41"/>
   <text x="655" y="899" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R41</text>
   <text x="655" y="920" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_series">10 k&#937;</text>
-  <line x1="467.5" y1="915" x2="617.5" y2="915" stroke="#23862f" stroke-width="5"/>
-  <line x1="470" y1="737.5" x2="470" y2="917.5" stroke="#23862f" stroke-width="5"/>
-  <line x1="434" y1="740" x2="472.5" y2="740" stroke="#23862f" stroke-width="5"/>
-  <line x1="470" y1="915" x2="620" y2="915" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="470" y1="740" x2="470" y2="915" stroke="#3cbf4e" stroke-width="2.5"/>
-  <line x1="434" y1="740" x2="470" y2="740" stroke="#3cbf4e" stroke-width="2.5"/>
+  <line x1="467.5" y1="915" x2="617.5" y2="915" stroke="#23862f" stroke-width="5" data-net="SENSE1"/>
+  <line x1="470" y1="737.5" x2="470" y2="917.5" stroke="#23862f" stroke-width="5" data-net="SENSE1"/>
+  <line x1="434" y1="740" x2="472.5" y2="740" stroke="#23862f" stroke-width="5" data-net="SENSE1"/>
+  <line x1="470" y1="915" x2="620" y2="915" stroke="#3cbf4e" stroke-width="2.5" data-net="SENSE1" data-ends="R41.1"/>
+  <line x1="470" y1="740" x2="470" y2="915" stroke="#3cbf4e" stroke-width="2.5" data-net="SENSE1"/>
+  <line x1="434" y1="740" x2="470" y2="740" stroke="#3cbf4e" stroke-width="2.5" data-net="SENSE1" data-ends="J-SENSE-TEENSY.1"/>
 
   <rect x="730" y="882" width="215" height="152" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text x="730" y="856" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_filter">keep together, under 15 mm:</text>
+  <text x="730" y="856" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_filter">keep together, under 20 mm:</text>
   <text x="730" y="872" font-size="11.5" font-weight="700" fill="#0a8a6a">the filter sits where the wire lands</text>
 
   <!-- signal GND -->
-  <line x1="434" y1="820" x2="440" y2="820" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="440" y1="820" x2="440" y2="1120" stroke="#1a1a1a" stroke-width="2.5"/>
-  <line x1="440" y1="1120" x2="880" y2="1120" stroke="#1a1a1a" stroke-width="2.5"/>
+  <line x1="434" y1="820" x2="440" y2="820" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-SENSE-TEENSY.5"/>
+  <line x1="440" y1="820" x2="440" y2="1120" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
+  <line x1="440" y1="1120" x2="880" y2="1120" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
   <circle cx="440" cy="1120" r="4" fill="#1a1a1a"/>
   <circle cx="800" cy="1120" r="4" fill="#1a1a1a"/>
   <text x="470" y="1140" font-size="13" font-weight="700" fill="#1a1a1a">signal GND, to the Teensy over J-SENSE-TEENSY</text>
@@ -275,7 +276,7 @@
   <text x="1010" y="1262" font-size="11.5" fill="#444" data-fig="place_gate">under 10 mm</text>
   <text x="1130" y="1262" font-size="11.5" fill="#444">gate loop pickup</text>
   <text x="820" y="1284" font-size="11.5" fill="#444">R31, C1 at J-M</text>
-  <text x="1010" y="1284" font-size="11.5" fill="#444" data-fig="place_filter">under 15 mm</text>
+  <text x="1010" y="1284" font-size="11.5" fill="#444" data-fig="place_filter">under 20 mm</text>
   <text x="1130" y="1284" font-size="11.5" fill="#444">filters where the wire lands</text>
   <text x="820" y="1306" font-size="11.5" fill="#444">D1 to D4 at their connector</text>
   <text x="1010" y="1306" font-size="11.5" fill="#444" data-fig="place_flyback">under 20 mm</text>

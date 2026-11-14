@@ -10,7 +10,7 @@ The ball store in the [drain](../../firmware/components/drain.md#ball-store) hol
 |---|---|---|
 | front | on the track floor between the seesaw's two fingers, which stand 9 mm apart | E-1 of the port expander |
 | back | on the track floor behind the rear finger, up to the store's entry | E-2 of the port expander |
-| wall | on the track's side wall, along both places | the GND rail of the [Teensy motherboard](../motherboard/design.md) |
+| wall | on the track's side wall, along both places | GND on the [port expander board](../port-expander/design.md) |
 
 The rear finger's slot through the track separates the front foil from the back foil.
 
@@ -28,7 +28,7 @@ The stock machine has two bells. To reuse them as hit targets, each bell needs t
 
 The bells therefore need to have their paint removed with sandpaper, so the ball meets bare metal there. The foil comes from the spare parts of the stock machine and is glued onto the playfield. Because of the targets' design, this foil must not touch the bumper foil.
 
-Bell 1 is wired to the input E-3 of the port expander and bell 2 to E-4. The foil is wired to the GND rail of the [Teensy motherboard](../motherboard/design.md).
+Bell 1 is wired to the input E-3 of the port expander and bell 2 to E-4. The foil is wired to GND on the [port expander board](../port-expander/design.md).
 
 ### Stand-up targets
 
@@ -59,7 +59,7 @@ The [contact driver](../../firmware/drivers/contacts.md) publishes each closure 
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` compares each one against the line that states it.
+[`figures.py`](../../../model/parts/contacts/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` compares each one against the line that states it.
 
 ### Levels
 

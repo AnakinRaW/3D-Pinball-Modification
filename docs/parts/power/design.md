@@ -6,7 +6,7 @@ The power board takes the 5 V of an external adapter and passes it to every subs
 
 - The machine runs from a 5 V adapter of 3 A or of 6 A.
 - Every subsystem takes its 5 V and its ground over a separate pair from one point on the board.
-- With the optional switch fitted, plus and minus swapped at the input damage nothing, whether the adapter or the wiring to J-IN swaps them.
+- With the optional switch fitted, plus and minus swapped at the input damage nothing, whether the adapter or its wiring swaps them.
 - The rail stays inside the range every subsystem accepts, at power-up and at every load step.
 
 ## Adapter
@@ -17,7 +17,7 @@ The adapter needs short-circuit and overload protection. A short on any output i
 
 | Load | Current |
 |---|---|
-| The Teensy, the amplifier, the IR mainboard and the display, which draw all the time | 902 mA |
+| The Teensy, the amplifier, the IR board and the display, which draw all the time | 902 mA |
 | The lighting at its cap, with the 3 A adapter | 2.0 A |
 | The lighting at its cap, with the 6 A adapter | 2.93 A |
 | Three coils pulling at once, for at most 30 ms | 2.17 A |
@@ -33,18 +33,18 @@ One ball triggers at most two bumpers within one pull-in, however fast it is, wh
 
 ### Input
 
-The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
+The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to the board.
 
-C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 20 mm of J-IN.
+C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 21 mm of the input.
 
 ### Input protection
 
-The board proposes an optional protection against swapped polarity. Q1 protects the machine against swapped polarity at J-IN. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity. Q1 and R1 are optional. Without them a wire joins J-IN's negative to the board's ground. Every figure of this design is derived with Q1 fitted, and leaving it out only raises the bus.
+The board proposes an optional protection against swapped polarity. Q1 protects the machine against swapped polarity at the input. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity. Q1 and R1 are optional. Without them a wire joins the input's negative to the board's ground. Every figure of this design is derived with Q1 fitted, and leaving it out only raises the bus.
 
 F1 is an optional 2 A time-lag fuse in the 5 V of J-SERVO, J-MAIN, J-IR and J-DISP protecting their wires. Any T2A that drops at most 242 mV at 2 A fits. J-LIGHT1, J-LIGHT2 and J-SOL stay without a fuse, because this would cost voltage that the coils and the lighting's buffers cannot spare.
 
 > [!WARNING]
-> Without Q1, swapped polarity at J-IN reaches every subsystem. It destroys the Teensy and the ICs on the boards.
+> Without Q1, swapped polarity at the input reaches every subsystem. It destroys the Teensy and the ICs on the boards.
 
 > [!WARNING]
 > The board has no overvoltage protection. An adapter above 5.5 V destroys the Teensy.
@@ -62,7 +62,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 | J-SOL | the solenoids' coil board | 2.85 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-MAIN | the Teensy motherboard, with the Teensy and the amplifier module | 504 mA |
-| J-IR | the D24V5F3 at the IR mainboard | 201 mA |
+| J-IR | the D24V5F3 at the IR board | 201 mA |
 | J-DISP | the display board | 198 mA |
 
 ### Ground
@@ -77,9 +77,9 @@ J-MAIN carries 5 V to the [Teensy motherboard](../motherboard/design.md#supply).
 
 The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4.1.md#powering-from-something-other-than-usb) requires for an external supply. D2 runs from the VUSB hole to the VIN pin, so the Teensy also runs on USB alone.
 
-### IR mainboard
+### IR board
 
-J-IR carries 5 V to the IR mainboard. The Pololu D24V5F3 that makes the mainboard's 3.3 V is plugged into the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
+J-IR carries 5 V to the IR board. The Pololu D24V5F3 that makes the IR board's 3.3 V sits on the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
 
 ### Display
 
@@ -107,7 +107,7 @@ The 3 A adapter delivers less than the machine draws at its peak. With it, the l
 
 ## Appendix: derivations
 
-[`figures.py`](figures.py) recomputes every figure below from its inputs. `tools/figcheck.py` checks each one against its line and each drawn figure through its `data-fig` anchor.
+[`figures.py`](../../../model/parts/power/figures.py) recomputes every figure below from its inputs. `tools/figcheck.py` checks each one against its line and each drawn figure through its `data-fig` anchor.
 
 ### Loads
 
@@ -128,7 +128,7 @@ LOADS     the smaller adapter                      3 A
           the Teensy's VIN, behind a linear
           regulator, with the emitter            = 375 mA
           J-MAIN, with the amplifier             = 504 mA
-          the IR mainboard, sixteen channels       222 mA
+          the IR board, sixteen channels       222 mA
           at its module's highest output           3.432 V
           the module's efficiency, assumed         80 %
           the module's input current at its
@@ -240,7 +240,7 @@ FLOORS    what the lighting's buffers need         4.5 V
           and at most                              500 mA
           D2 from VUSB to VIN, the same 1N5819
           the Teensy's VIN on USB alone          = 4.15 V
-          the IR mainboard's module at 6 A       = 4.75 V
+          the IR board's module at 6 A       = 4.75 V
           what it needs                            3.4 V
           the display at 6 A                     = 4.77 V
           what its regulator needs, at least       3.49 V
@@ -265,7 +265,7 @@ ALLOW     the least bulk at J-IN that holds the
 
 - [Schurter FST 5x20](https://www.schurter.com/en/datasheet/typ_FST_5x20.pdf): the pre-arcing time to IEC 60127-2/3
 - [ST STP160N3LL](../../datasheets/STP160N3LL-ST.pdf), DocID025073 Rev 3: the ratings in Table 2, the thermal resistance in Table 3, R_DS(on), the gate threshold and the leakage in Table 4, and Figure 10 for R_DS(on) against temperature
-- [Pololu D24V5F3](https://www.pololu.com/product/2842): the typical efficiency of the IR mainboard's module
+- [Pololu D24V5F3](https://www.pololu.com/product/2842): the typical efficiency of the IR board's module
 - [Rubycon ZLH](../../datasheets/ZLH-Rubycon.pdf): C1's and C2's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
 - [PowerStream, wire gauge and current limits](https://www.powerstream.com/Wire_Size.htm): the chassis wiring current of 16 and 22 AWG
 - ASTM B258: the resistance of 16 and 18 AWG annealed copper

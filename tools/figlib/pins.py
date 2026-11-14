@@ -256,7 +256,7 @@ def pass_moved_pins(base: str, rep: Report, files=None):
             for g in sorted(named(old) - named(new))]
     if not moved and not gone:
         return
-    for path in files or [p for p in sorted((ROOT / "docs").rglob("*"))
+    for path in files or [p for d in ("docs", "model") for p in sorted((ROOT / d).rglob("*"))
                           if p.suffix in {".md", ".svg", ".py"} and p.is_file()]:
         if not _allocating(path):
             continue

@@ -14,11 +14,12 @@ sys.modules.setdefault("figcheck", sys.modules[__name__])
 
 # The names a model file imports from here.
 from figlib.model import TEENSY_RAIL, Model, contact, drives, pull, reads
+from figlib.circuit import Schematic
 from figlib.quantities import (Q, ceil_to, db, exp, floor_to, from_db, interp_log, ln,
                                log10, sqrt)
 from figlib.cli import main
 
-__all__ = ["Model", "Q", "TEENSY_RAIL", "ceil_to", "contact", "db", "drives", "exp",
+__all__ = ["Model", "Q", "Schematic", "TEENSY_RAIL", "ceil_to", "contact", "db", "drives", "exp",
            "floor_to", "from_db", "interp_log", "ln", "log10", "main", "pull", "reads",
            "sqrt"]
 

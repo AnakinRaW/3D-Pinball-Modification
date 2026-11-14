@@ -4,6 +4,7 @@
 |---|---|
 | [`figcheck.py`](figcheck.py) | Recomputes a subsystem's figures from its inputs, checks its document and drawings against the result, and writes the figures back into them. Checks every marked Teensy pin against the pin table |
 | [`figlib/`](figlib/) | The modules `figcheck.py` runs |
+| [`netlist.py`](netlist.py) | Prints the netlist a subsystem's model declares for each board, writes one board as a KiCad netlist, and compares a netlist KiCad exported with it |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
 | [`picture.py`](picture.py) | Turns PNGs of at most 320 × 240 pixels into picture files for the screen, in LVGL's image format and dithered to RGB565, as [`media.md`](../assets/media.md) describes |
@@ -12,11 +13,11 @@ Python 3, standard library only, no build step.
 
 ## figcheck
 
-Each subsystem that derives figures holds its inputs and formulas in `docs/parts/<subsystem>/figures.py`. figcheck evaluates every model and compares the documents and drawings each one names against the result. It then checks the Teensy pins and the wiring across all models.
+Each subsystem that derives figures holds its inputs and formulas in `model/parts/<subsystem>/figures.py`. figcheck evaluates every model and compares the documents and drawings each one names against the result. It then checks the Teensy pins and the wiring across all models.
 
 ```
 python tools/figcheck.py --sheets                                  every model, then the pins
-python tools/figcheck.py docs/parts/ir-reflective/figures.py       one model, and the pins its files mark
+python tools/figcheck.py model/parts/ir-reflective/figures.py      one model, and the pins its files mark
 ```
 
 Each check reports on one line. Any of them can fail the run. A failure names the file, the line and the two values, and the run ends by saying whether anything needs fixing.
@@ -31,6 +32,16 @@ Each check reports on one line. Any of them can fail the run. A failure names th
 | `--groups` | The block groups and value tokens the markdown parser found |
 | `--blind` | Each quantity, its unit and its inputs, with no formula and no value |
 | `--base <ref>` | The git ref the stale pass diffs against, `HEAD` by default. `--mutate` and `--provenance` run no stale pass |
+
+## netlist
+
+```
+python tools/netlist.py model/parts/solenoid/figures.py                        every board
+python tools/netlist.py model/parts/solenoid/figures.py coil --kicad coil.net  a KiCad netlist
+python tools/netlist.py model/parts/solenoid/figures.py coil --diff kicad.net  differences
+```
+
+KiCad numbers a part's pins by its footprint's pads, and a part whose pins carry names, such as G, D and S of a TO-220, takes the pads in the order the perfboard inventory lists them. The footprints written out are names from KiCad's standard library and are not checked against an installed KiCad. The diff compares which pins each net joins and ignores the net names.
 
 ## svgcheck
 

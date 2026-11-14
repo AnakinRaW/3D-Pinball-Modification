@@ -9,6 +9,7 @@ import sys
 from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_designators,
                      pass_direction, pass_drawings, pass_extremes, pass_invariants, pass_mutate,
                      pass_orphans, pass_sources, pass_stale, pass_sums, write_sums)
+from .circuit import pass_circuits, pass_schematics, write_part_list
 from .coverage import run_coverage
 from .document import NEVER, headings, parse_document
 from .listings import print_blind, print_groups, print_provenance, show_graph
@@ -97,6 +98,7 @@ def _write(run: Run) -> int:
     """--write: the figures into the files, then every edit and everything left unplaced."""
     rep = run.rep
     written = pass_write(run.model, run.tokens, rep)
+    written += write_part_list(run.model, rep)
     write_sums(run.model, rep)
     if rep.count("unplaced") and run.model.name not in values_at(run.args.base):
         rep.note(f"{run.args.base} holds no {run.model.name} model this figcheck can "
@@ -213,6 +215,21 @@ def _designators(run: Run):
                f"{seen} mentions, {run.rep.count('designator')} of a part no list holds")
 
 
+def _circuits(run: Run):
+    """Each board's netlist is a circuit that matches the part list and the wiring."""
+    boards = pass_circuits(run.model, run.rep)
+    if boards:
+        nets = sum(len(b.nets) for b in run.model.boards.values())
+        status(not run.rep.count("circuit"), "the boards' netlists",
+               f"{boards} board{'' if boards == 1 else 's'}, {nets} nets, "
+               f"{run.rep.count('circuit')} problems")
+    drawn = pass_schematics(run.model, run.rep)
+    if drawn:
+        status(not run.rep.count("schematic"), "the schematics' wiring",
+               f"{drawn} drawing{'' if drawn == 1 else 's'}, "
+               f"{run.rep.count('schematic')} problems")
+
+
 def _curves(run: Run):
     """Each plotted curve keeps its shape, and each reading sits on its curve."""
     model = run.model
@@ -276,7 +293,7 @@ def _stale(run: Run):
 
 
 CHECKS = (_figures, _numbers, _skipped, _drawings, _pins, _direction, _extremes, _curves, _invariants,
-          _sources, _designators, _unlinted, _sheets, _sums, _mutate, _stale)
+          _sources, _designators, _circuits, _unlinted, _sheets, _sums, _mutate, _stale)
 
 
 def _verdict(rep: Report) -> int:
@@ -303,7 +320,7 @@ def _parser() -> argparse.ArgumentParser:
                     "marked Teensy pin against docs/pin-assignment.md")
     ap.add_argument("models", type=pathlib.Path, nargs="*",
                     help="the models to run, as paths from the repository root; every "
-                         "docs/parts/*/figures.py, and the pins of the whole tree, when "
+                         "model/parts/*/figures.py, and the pins of the whole tree, when "
                          "none is named")
     ap.add_argument("--base", default="HEAD",
                     help="git ref the stale pass diffs against and --write takes the old "
@@ -337,7 +354,7 @@ def main(argv=None):
     except ValueError as e:
         ap.error(str(e))
     if not paths:
-        print("No figure model found. Expected docs/parts/<subsystem>/figures.py.")
+        print("No figure model found. Expected model/parts/<subsystem>/figures.py.")
         return 1
     if args.graph:
         return show_graph(paths, args.graph)

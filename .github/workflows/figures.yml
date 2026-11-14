@@ -4,12 +4,14 @@ on:
   push:
     paths:
       - "docs/**"
+      - "model/**"
       - "firmware/**"
       - "tools/**"
       - ".github/workflows/figures.yml"
   pull_request:
     paths:
       - "docs/**"
+      - "model/**"
       - "firmware/**"
       - "tools/**"
 
@@ -27,8 +29,8 @@ jobs:
           python-version: "3.12"
 
       # Every subsystem that derives figures declares them in its own
-      # docs/parts/<subsystem>/figures.py, and the figures the subsystems share
-      # stand in docs/research/teensy-4.1.py and docs/firmware/figures.py. figcheck
+      # model/parts/<subsystem>/figures.py, and the figures the subsystems share
+      # stand in model/research/teensy-4.1.py and model/firmware/figures.py. figcheck
       # finds each one, checks it, and then checks every marked Teensy pin
       # against docs/pin-assignment.md.
       - name: Recompute every figure and check the documents and the pins against it

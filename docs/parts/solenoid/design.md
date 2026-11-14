@@ -34,15 +34,15 @@ Each sensed solenoid's shell reaches the sense board on a separate wire. A pull-
 
 ## Supply
 
-The four coils draw from the central 5 V power distribution, brought in at J-COIL-PWR. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
+The four coils draw from the central 5 V power distribution. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
 
-Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's J-SENSE-TEENSY. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over J-COIL-PWR. J-COIL-TEENSY on the coil board carries no ground.
+Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's cable. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over the coil board's supply pair. The coil board's cable to the Teensy carries no ground.
 
 > On the bench, with the Teensy on USB, the coil board's GND must be joined with the Teensy's GND.
 
-**C91, 100 µF at J-COIL-PWR**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
+**C91, 100 µF at the coil board's supply input**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
 
-The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, J-COIL-PWR stays above the 4.4 V a stock coil needs for its kick.
+The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, the coil board's input stays above the 4.4 V a stock coil needs for its kick.
 
 ## Boards
 
@@ -58,8 +58,6 @@ Both boards sit near the three bumpers.
 | Sense board | **J-SENSE-TEENSY** | 5 | The Teensy |
 | | **J-M** | 4 | Open wires with eyelets. One 3V for the foil and the three eyelets unpowered to the solenoid shells. |
 
-J-COIL-TEENSY on the coil board carries trigger 1 to trigger 4 from the Teensy, in that order. J-SENSE-TEENSY on the sense board carries the three senses, the Teensy's 3V3 and its ground.
-
 | J-SENSE-TEENSY pin | Signal | Direction |
 |---|---|---|
 | 1 | Sense 1 | board to the Teensy |
@@ -68,7 +66,7 @@ J-COIL-TEENSY on the coil board carries trigger 1 to trigger 4 from the Teensy, 
 | 4 | 3V3 | the Teensy's rail, feeding the foil through R91 |
 | 5 | GND | the Teensy's ground, beside the signals |
 
-> Before the Teensy is plugged in for the first time, every pin of J-COIL-TEENSY and J-SENSE-TEENSY should be measured against J-COIL-PWR's GND with J-COIL-PWR powered and both open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
+> Before the Teensy is plugged in for the first time, every pin of the two cables to the Teensy should be measured against the coil board's GND, with the coil board powered and both cables open. All values must read 0 V. Anything else means the 5 V side has reached the connector and would kill an unpowered Teensy.
 
 ### Layout
 
@@ -113,7 +111,7 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
+Every figure below is recomputed by [`figures.py`](../../../model/parts/solenoid/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
 
 **The drive channel.** What the Teensy pin sees, what the gate sees, and what the drain sees.
 

@@ -67,7 +67,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md), the colors on a piece of two LEDs cut from it and the dark draw on the whole strip. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 0.42 mA even while the LED is dark, 0.1 A for all 240 LEDs.
 
-This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
+This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR board. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
 The adapter's rating is set in the [machine config](../../firmware/components/config.md). The [lighting driver](../../firmware/drivers/lighting.md) picks the matching profile from that setting at start-up. A brightness is FastLED's value from 0 to 255. The 3 A config is the default and fallback setting for any error case.
 
@@ -112,7 +112,7 @@ The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slig
 
 ### Supply
 
-Each board takes the machine's 5 V through its own power input, J-AMBIENT-PWR or J-PLAYFIELD-PWR, and passes it on to its three chain outputs, J-LA to J-LC on the ambient board and J-LD to J-LF on the playfield board. The buffer also takes its 5 V at that input. The input is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends. The board's ground comes over that pair from the power board's star point, so no ground wire runs from the Teensy.
+Each board takes the machine's 5 V at its power input and passes it on to its three chain outputs. The buffer also takes its 5 V at that input. The input is a pair of 22 AWG (better 18 or 16 AWG) wires, at most 30 cm long and **soldered** at both ends. The board's ground comes over that pair from the power board's star point, so no ground wire runs from the Teensy.
 
 > On the bench, with the Teensy on USB, connect the Teensy's GND with the board's GND from the power supply.
 

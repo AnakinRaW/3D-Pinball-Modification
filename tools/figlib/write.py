@@ -28,7 +28,7 @@ def _renumber(line: str, col: int, old_num: str, new_num: str):
 def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
     """Write every figure the model computes into the line that states it.
 
-    A block in which a figure found no line of its own is written nowhere, since a line
+    A block in which a figure found no separate line is written nowhere, since a line
     found for another figure of that block may be its own.
     """
     placed = {t.claimed_by for t in tokens if t.claimed_by}
@@ -55,7 +55,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
     for group, section in sorted(held, key=lambda g: (g[0] or "", g[1] or "")):
         rep.note(f"not written {group!r}: "
                  + ", ".join(unsure[(group, section)])
-                 + " found no line of their own, so a line found for another figure of "
+                 + " found no separate line, so a line found for another figure of "
                    "that block may be theirs, and none is written")
 
     written = 0

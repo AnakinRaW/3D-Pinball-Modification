@@ -1,8 +1,8 @@
 # Teensy motherboard
 
-The Teensy motherboard carries the Teensy, the DFR0954 amplifier module and the port expander. It hands the Teensy's rails on to the subsystems.
+The Teensy motherboard carries the Teensy and the DFR0954 amplifier module. It hands the Teensy's rails on to the subsystems. The port expander sits on the port expander board, which a cable joins to the motherboard.
 
-The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Seven cables and the contacts carry the Teensy's ground. The board spreads both over a rail each.
+The Teensy has two 3V3 pins and three GND pins. Six subsystems run from the Teensy's 3V3. Seven cables and the contacts carry the Teensy's ground. The board spreads both over a rail each.
 
 ## Circuit
 
@@ -10,12 +10,12 @@ The Teensy's edge headers offer two 3V3 pins and three GND pins. Six subsystems 
 
 ### Supply
 
-J-MB-PWR takes 5 V and GND from the power board's [J-MAIN](../power/design.md#outputs). Its GND joins the GND rail.
+The board takes 5 V and GND from the power board's [J-MAIN](../power/design.md#outputs). The GND joins the GND rail.
 
 The Teensy runs from this 5 V or from USB alone. Its trace between VUSB and VIN is cut. Two diodes feed VIN from either source and keep the sources apart:
 
-- D1 is a 1N5819 between J-MB-PWR's 5 V and VIN. While the machine is off, it keeps USB from feeding the power board.
-- D2 is a 1N5819 from the VUSB hole beside the Teensy's USB socket to its VIN pin. It prevents the power board feeding the USB.
+- D1 is a 1N5819 between the incoming 5 V and VIN. While the machine is off, it keeps USB from feeding the power board.
+- D2 is a 1N5819 soldered onto the Teensy, from the VUSB hole beside its USB socket to its VIN pin or pad. It prevents the power board feeding the USB.
 
 The DFR0954 takes its 5 V ahead of D1, so it stays off on USB alone. The node behind D1 feeds both the Teensy's VIN and R2 of the break beam.
 
@@ -25,8 +25,8 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 | Subsystem | What the 3V3 feeds |
 |---|---|
-| [IR sensing](../ir-reflective/design.md) | the isolator's Teensy side, over the IR mainboard's J-IR-TEENSY |
-| [Solenoids](../solenoid/design.md) | the foil, over the sense board's J-SENSE-TEENSY |
+| [IR sensing](../ir-reflective/design.md) | the isolator's Teensy side |
+| [Solenoids](../solenoid/design.md) | the foil |
 | [Break beam](../break-beam/design.md) | R3, the receiver's pull-up |
 | [Magnetic rotary sensor](../magnetic-rotary/design.md) | the module |
 | [Display](../display/design.md) | the touch converter's LV side, over the touch cable |
@@ -34,7 +34,7 @@ The 3V3 rail starts at the Teensy's two 3V3 pins and feeds these subsystems.
 
 ### GND rail
 
-The GND rail joins the Teensy's three GND pins, the DFR0954's GND, the port expander's GND and J-MB-PWR's GND. These cables take their ground from it: J-IR-TEENSY of the IR mainboard, J-SENSE-TEENSY of the solenoid sense board, the rotary sensor's cable, the display bus, the break beam's emitter, its receiver, the toggle switch and the contacts.
+The GND rail joins the Teensy's three GND pins, the DFR0954's GND and the incoming GND. These take their ground from it: the IR isolator board, the solenoid sense board, the port expander board, the rotary sensor, the display bus, the break beam's emitter and receiver, and the toggle switch. The contacts take theirs from the port expander board.
 
 ### Toggle switch
 
@@ -50,13 +50,13 @@ The DFR0954 sits beside the Teensy. Pins [2](../../pin-assignment.md "DIN to the
 
 ### Port expander
 
-U1 reads the pins E-1 to E-8. It sits on `Wire` with SDA on pin [18](../../pin-assignment.md "SDA on Wire") and SCL on pin [19](../../pin-assignment.md "SCL on Wire"). Its INT goes to pin [1](../../pin-assignment.md "Interrupt from the port expander"). R5 and R6 pull SDA and SCL up to the 3V3 rail. C1 decouples U1's VDD. The [port expander design](../port-expander/design.md) sets their values.
+INT from pin [1](../../pin-assignment.md "Interrupt from the port expander"), SCL from pin [19](../../pin-assignment.md "SCL on Wire"), SDA from pin [18](../../pin-assignment.md "SDA on Wire"), 3V3 and GND run to the port expander board, where U1, R5, R6 and C1 sit. The [port expander design](../port-expander/design.md) describes them.
 
 ### Contacts
 
-The drain ball store's front foil comes in at E-1 and its back foil at E-2. Its wall foil takes its ground from the GND rail. The [contacts design](../contacts/design.md#drain-ball-store) describes the foils.
+The drain ball store's front foil comes in at E-1 and its back foil at E-2. Both inputs sit on the port expander board, where the store's wall foil takes its ground. The [contacts design](../contacts/design.md#drain-ball-store) describes the foils.
 
-The two bells come in at E-3 and E-4. They are [hit targets](../contacts/design.md#hit-targets). Their foil takes its ground from the GND rail.
+The two bells come in at E-3 and E-4. They are [hit targets](../contacts/design.md#hit-targets). Their foil takes its ground on the port expander board.
 
 ## Part list
 
@@ -66,11 +66,11 @@ Each part on the board is listed and counted by the subsystem it serves.
 |---|---|---|---|
 | 1 | Teensy 4.1 | in socket headers in the middle of the board | [`research/teensy-4.1.md`](../../research/teensy-4.1.md) |
 | 1 | DFRobot DFR0954, MAX98357A amplifier module | in socket headers beside the Teensy | [audio](../audio/design.md#part-list) |
-| 1 | Microchip MCP23008-E/P, PDIP-18 | U1 | [port expander](../port-expander/design.md#part-list) |
+| 1 | Microchip MCP23008-E/P, PDIP-18 | U1, on the port expander board | [port expander](../port-expander/design.md#part-list) |
 | 2 | 1N5819 Schottky diode, DO-41 | D1, D2 | [power](../power/design.md) |
 | 1 | 1.2 kΩ resistor | R1 | [controls](../controls/design.md#part-list) |
 | 1 | 220 Ω resistor | R2 | [break beam](../break-beam/design.md#part-list) |
 | 1 | 100 kΩ resistor | R3 | [break beam](../break-beam/design.md#part-list) |
 | 1 | 100 kΩ resistor | R4 | [audio](../audio/design.md#part-list) |
-| 2 | 4.7 kΩ resistor | R5, R6 | [port expander](../port-expander/design.md#part-list) |
-| 1 | 100 nF ceramic capacitor | C1 | [port expander](../port-expander/design.md#part-list) |
+| 2 | 4.7 kΩ resistor | R5, R6, on the port expander board | [port expander](../port-expander/design.md#part-list) |
+| 1 | 100 nF ceramic capacitor | C1, on the port expander board | [port expander](../port-expander/design.md#part-list) |
