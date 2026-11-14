@@ -16,10 +16,12 @@ A layout file is a Python module that builds one `Layout` and names it LAYOUT:
     L.limit("C1.1", "J-M.1", 20, fig="place_filter")
     LAYOUT = L
 
-Holes are named by row letter and column number, as printed on the board. The edge pads are
-`C<` (the pad left of row C, before column 1) and `C>` (right of the last column).
+A layout names its holes by row letter and column number, rows down the short side. The edge
+pads are `C<` (the pad left of row C, before column 1) and `C>` (right of the last column). A board
+whose edges are printed otherwise, as LABELS in inventory.py gives them, keeps these names in its
+layout file, and its drawing writes the printed ones.
 """
-from inventory import BOARDS, PARTS, MODULES, PITCH, edge_pads, unique_names
+from inventory import BOARDS, LABELS, PARTS, MODULES, PITCH, edge_pads, unique_names
 
 
 def row_name(i):
@@ -67,6 +69,28 @@ class Board:
         if c == self.c1 + 1:
             return f"{row_name(r)}>"
         return f"{row_name(r)}{c + 1}"
+
+    def row_label(self, r):
+        """How the board prints row r on its edge."""
+        lab = LABELS.get(self.kind)
+        return lab[0][r] if lab else row_name(r)
+
+    def col_label(self, c):
+        """How the board prints column c on its edge."""
+        lab = LABELS.get(self.kind)
+        return lab[1][c] if lab else str(c + 1)
+
+    def printed(self, h):
+        """A hole's or a pad's name as the printing on the board gives it."""
+        r, c = h
+        if c in (self.c0 - 1, self.c1 + 1):
+            return f"{self.row_label(r)}{'<' if c < self.c0 else '>'}"
+        lab = LABELS.get(self.kind)
+        if not lab:
+            return self.name(h)
+        if lab[2] == "long":
+            return f"{self.col_label(c)}{self.row_label(r)}"
+        return f"{self.col_label(c)}/{self.row_label(r)}"
 
     def is_pad(self, h):
         r, c = h

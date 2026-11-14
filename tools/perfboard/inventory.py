@@ -22,6 +22,17 @@ BOARDS = {
     "30x42": (30, 42, 2),
 }
 
+# how a board's edges are printed, where it differs from letters down the short side and numbers
+# along the long side: the short side's labels, the long side's labels, and which comes first in a
+# hole's name. The 30 x 42 board prints A to Z and then A to P again along its long side, which a
+# drawing writes A' to P'.
+_AZ = [chr(65 + i) for i in range(26)]
+LABELS = {
+    "18x24": ([str(i) for i in range(1, 19)], _AZ[:24], "long"),
+    "14x20": ([str(i) for i in range(1, 15)], _AZ[:20], "long"),
+    "30x42": (_AZ + ["1", "2", "3", "4"], _AZ + [ch + "'" for ch in _AZ[:16]], "both"),
+}
+
 # screw terminals in stock, by number of poles: Same Sky TB002-500-02BE and -03BE
 TERMINALS = {2: 8, 3: 7}
 
