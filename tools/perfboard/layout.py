@@ -121,6 +121,55 @@ DEFAULT_PINS = {
 }
 
 
+class Merged:
+    """Several boards of one model built as one: a designator that two of them hold is the
+    cable between them, which the copper replaces, so its pin n on each board joins the nets
+    there and the part itself goes."""
+
+    def __init__(self, boards):
+        from types import SimpleNamespace
+        seen, cables = set(), set()
+        for b in boards:
+            cables |= seen & b.parts.keys()
+            seen |= b.parts.keys()
+        self.cables = cables
+        self.parts = {r: p for b in boards for r, p in b.parts.items() if r not in cables}
+        self.open = {p: w for b in boards for p, w in b.open.items()
+                     if p.split(".")[0] not in cables}
+        # union the nets of every board over the cable's pins
+        nets = [(b, n) for b in boards for n in b.nets.values()]
+        parent = list(range(len(nets)))
+
+        def root(i):
+            while parent[i] != i:
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            return i
+
+        by_pin = {}
+        for i, (_, n) in enumerate(nets):
+            for p in n.pins:
+                if p.split(".")[0] in cables:
+                    if p in by_pin:
+                        parent[root(i)] = root(by_pin[p])
+                    else:
+                        by_pin[p] = i
+        groups = {}
+        for i in range(len(nets)):
+            groups.setdefault(root(i), []).append(nets[i][1])
+        self.nets = {}
+        for members in groups.values():
+            first = next((n for n in members if n.rail),
+                         max(members, key=lambda n: len(n.pins)))
+            pins = [p for n in members for p in n.pins if p.split(".")[0] not in cables]
+            name = first.name
+            while name in self.nets:
+                name += "'"
+            self.nets[name] = SimpleNamespace(
+                name=name, pins=pins, color=first.color, label=first.label,
+                rail=first.rail, teensy=next((n.teensy for n in members if n.teensy), None))
+
+
 class Layout:
     def __init__(self, board, title="", subtitle="", cut=None, netlist=None):
         """netlist names the subsystem's model and the board in it, as
@@ -153,10 +202,13 @@ class Layout:
         import figcheck  # noqa: F401  the module a model imports its names from
         from figlib.repo import load_model, model_file
         self.model = load_model(model_file(model_path))
-        if board not in self.model.boards:
-            raise KeyError(f"{self.model.name} declares no board {board!r}, only "
-                           f"{', '.join(self.model.boards) or 'none'}")
-        self.declared = self.model.boards[board]
+        boards = (board,) if isinstance(board, str) else tuple(board)
+        for b in boards:
+            if b not in self.model.boards:
+                raise KeyError(f"{self.model.name} declares no board {b!r}, only "
+                               f"{', '.join(self.model.boards) or 'none'}")
+        self.declared = (self.model.boards[board] if isinstance(board, str)
+                         else Merged([self.model.boards[b] for b in boards]))
         self.free = set(self.declared.open)
         for n in self.declared.nets.values():
             self.net(n.name, *n.pins, color=n.color, label=n.label)
