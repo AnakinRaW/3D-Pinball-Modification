@@ -97,7 +97,7 @@
   <text x="842" y="274" font-size="12" font-weight="700" fill="#1a1a1a" data-fig="c_one v_c_rating">1000 &#181;F each, 16 V</text>
   <text x="842" y="290" font-size="11.5" fill="#666">Rubycon ZLH</text>
   <rect x="750" y="140" width="210" height="160" rx="10" fill="none" stroke="#0a8a6a" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text x="750" y="116" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bulk">keep together, under 20 mm:</text>
+  <text x="750" y="116" font-size="11.5" font-weight="700" fill="#0a8a6a" data-fig="place_bulk">keep together, under 21 mm:</text>
   <text x="750" y="130" font-size="11.5" font-weight="700" fill="#0a8a6a">C1 and C2 at J-IN</text>
   <!-- ===== outputs ===== -->
   <circle cx="1004" cy="170" r="4" fill="#c0392b"/>
@@ -194,7 +194,7 @@
   <text x="320" y="702" font-size="12" font-weight="700" fill="#1a1a1a">Reason</text>
   <line x1="20" y1="709" x2="840" y2="709" stroke="#ccc" stroke-width="1"/>
   <text x="20" y="727" font-size="11.5" fill="#444">C1 and C2 at J-IN</text>
-  <text x="220" y="727" font-size="11.5" fill="#444" data-fig="place_bulk">under 20 mm</text>
+  <text x="220" y="727" font-size="11.5" fill="#444" data-fig="place_bulk">under 21 mm</text>
   <text x="320" y="727" font-size="11.5" fill="#444">the bulk sits where the input current enters the bus</text>
   <text x="20" y="745" font-size="11.5" fill="#444">the GND star point</text>
   <text x="220" y="745" font-size="11.5" fill="#444">one point</text>

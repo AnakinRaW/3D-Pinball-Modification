@@ -35,7 +35,7 @@ One ball triggers at most two bumpers within one pull-in, however fast it is, wh
 
 The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
 
-C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 20 mm of J-IN.
+C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 21 mm of J-IN.
 
 ### Input protection
 
