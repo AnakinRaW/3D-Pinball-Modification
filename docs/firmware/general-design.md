@@ -49,6 +49,8 @@ The solution to this is using [freertos-teensy](https://github.com/tsandmann/fre
 
 The firmware runs two tasks, the main task with priority 1 for the main loop and the storage task with priority 2 for the SD card (In FreeRTOS a lower priority number means lower priority). While SdFat waits for the card, the main loop runs, and the card's interrupt wakes the storage task the moment a transfer ends. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
 
+[Zephyr](../research/zephyr-teensy-4.1.md) lost to FreeRTOS on the Teensy 4.1: its SD card driver aborted reads, its PSRAM driver read back only zeros, and LVGL drew more slowly.
+
 ## Interrupts
 
 A lower number is a higher priority, and a handler makes every interrupt of the same or a lower priority wait.
@@ -70,6 +72,8 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | FreeRTOS, its tick and its task switch | SysTick and PendSV | its next tick, 1 ms | yes | 240 |
 
 FreeRTOS holds back the interrupts that call it for a moment while it changes its task lists. The more urgent interrupts never wait for it.
+
+On the bench, with every load of the firmware running at once, the IR timer's interrupt fired at most 0.35 µs off its time and the driver tick at most 0.30 µs.
 
 ## Exclusive peripherals
 
@@ -121,9 +125,9 @@ Four parts of the firmware order their entries with a priority list. The [lamps 
 
 `setup()` starts the [clock](#time-measurement), creates the main task and starts FreeRTOS. The main task then runs, in this order:
 
-1. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
-2. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
-3. the storage driver's `begin()`, so later drivers can read their settings from the card;
+1. the storage driver's `begin()`, so later drivers can read their settings from the card. It comes ahead of the watchdog, so a card that holds up its mount only delays the start;
+2. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
+3. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the [config's](components/config.md) `begin()`, which reads the machine's settings, so every later driver starts with them, and the solenoids' `configure()`, which takes their pull times from them;
 6. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;

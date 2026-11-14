@@ -94,8 +94,8 @@ extern "C" void watchdogWarned(const uint32_t* frame);
 // unfed in CrashReport's breadcrumbs, #1 the cause and #2 its detail
 class Watchdog {
 public:
-    // starts the watchdog and its warning; the main task calls it first, right before the
-    // solenoids' begin(), so it guards the coils from their first pull
+    // starts the watchdog and its warning; the main task calls it right after the storage
+    // driver's mount and before the solenoids' begin(), so it guards the coils from their first pull
     void begin();
 
     // feeds the watchdog while every guard holds, and notes the cause where one fails; at the end
@@ -171,7 +171,8 @@ void Watchdog::note(unsigned cause, unsigned detail) {
 }
 
 // prints CrashReport's report line by line where the chip records a restart other than a
-// power-up; CrashReport clears it once printed
+// power-up; CrashReport clears it once printed, the reset status included. Breadcrumbs beyond #2
+// come from firmware flashed earlier and appear in the first report only
 void Watchdog::report(Logger& logger) {
     if (!CrashReport && !(SRC_SRSR & ~SRC_SRSR_IPP_RESET_B)) return;
     struct Lines : Print {

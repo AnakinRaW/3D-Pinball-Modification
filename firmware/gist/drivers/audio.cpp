@@ -66,8 +66,8 @@ public:
     void update() override;
 
 private:
-    static constexpr uint32_t kChunk  = 4096;    // bytes in one read of the card
-    static constexpr uint8_t  kChunks = 8;       // chunks in the ring
+    static constexpr uint32_t kChunk  = 8192;    // bytes in one read of the card, which costs mostly the card's start-up
+    static constexpr uint8_t  kChunks = 4;       // chunks in the ring
 
     // a request: the main loop fills the slot the request word does not name, then publishes it,
     // and the update reads the slot the word names

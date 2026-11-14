@@ -178,8 +178,22 @@ MODEL.draws("ram_usb", pool="RAM2")
 MODEL.draws("ram_objectfled", pool="RAM2")
 MODEL.draws("ram_fastled", pool="RAM2")
 
+# -- the bench, firmware/tests/load and firmware/tests/watchdog ----------------
+_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+msr("t_ir_jitter_bench", 0.35, "µs", src=f"{_LOAD}: the spread of the IR timer's interrupt, the "
+    "largest of six runs of about 33000 interrupts each")
+msr("t_tick_jitter_bench", 0.30, "µs", src=f"{_LOAD}: the spread of the driver tick's interrupt, "
+    "the largest of six runs of about 4000 interrupts each")
+MODEL.uses("t_jitter", of="ir-reflective", stated=False)
+msr("t_wdt_warn_bench", 1.5, "s", src="firmware/tests/watchdog on the Teensy 4.1 under FreeRTOS, a "
+    "hang with interrupts on: the time from the last feed to the warning interrupt, 1500 ms")
+
 # -- what the firmware requires -----------------------------------------------
 _I = MODEL.invariant
+
+_I("the IR timer fired on the bench well inside the reserve its phase keeps for a late trigger",
+   "t_ir_jitter_bench < t_jitter")
+_I("the watchdog warned on the bench no later than it is set to", "t_wdt_warn_bench <= t_wdt - t_wdt_warn")
 
 _I("the IR driver's interrupts preempt the pin interrupts and the driver tick, whose deadlines are "
    "milliseconds", "prio_ir < prio_pins and prio_ir < prio_tick")

@@ -103,13 +103,14 @@ static void machineTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, 0);   // the core's priority, which the kernel's start reset
     NVIC_SET_PRIORITY(IRQ_GPIO6789, 96);    // sets the global priority of every pin interrupt
 
+    // storage first, so every later driver can read its settings from the card, and ahead of the
+    // watchdog, so a card that holds up its mount only delays the start
+    storage.begin();                        // starts the storage task and waits for the mount
+
     // the watchdog before the first coil pulls, so a fault from here on ends in a restart; the idle
     // task feeds it while the start-up waits
     watchdog.begin();
     solenoids.begin();                      // pulls every coil once, as the stock machine does at power-on
-
-    // storage next, so every later driver can read its settings from the card
-    storage.begin();                        // starts the storage task and waits for the mount
     logger.begin();                         // finds where the log goes on, which needs the card
     watchdog.report(logger);                // the cause of the last restart, which needs the log
     config.begin();                         // the machine's settings, which every later driver starts with

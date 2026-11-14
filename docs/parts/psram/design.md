@@ -18,6 +18,8 @@ The chip runs from the Teensy's 3.3 V regulator, as the card socket does. Its cu
 
 Variables declared with `EXTMEM` and memory from `extmem_malloc()` lie in the PSRAM. The processor's cache serves it the way it serves RAM2. The [screen component](../../firmware/components/screen.md#pictures) keeps its picture memory there.
 
+PJRC's [`teensy41_psram_memtest`](https://github.com/PaulStoffregen/teensy41_psram_memtest) found the chip soldered on the bench Teensy and passed every pattern over its 8 MB.
+
 ## Part list
 
 | Qty | Part | Where |

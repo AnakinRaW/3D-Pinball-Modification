@@ -100,7 +100,7 @@ with MODEL.block("BUFFERS", section=BUFFERS):
     dec("n_streams", 4, "", src="kChannels in docs/firmware/drivers/audio.md, the four inputs of "
         "the driver's mixer", stated=False)
     dec("buf", 32, "KB", src="the ring buffer each channel gets in RAM2")
-    dec("chunk", 4, "KB", src="what one card read brings into a channel's ring, kChunk in "
+    dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, kChunk in "
         "docs/firmware/drivers/audio.md")
     MODEL.as_written("chunk_bytes", of="chunk", unit="bytes")
     MODEL.as_written("buf_bytes", of="buf", unit="bytes")
@@ -134,8 +134,8 @@ fig("n_chunks", "", "buf / chunk", moves="+buf -chunk", stated=False)
 # -- the card, stated in docs/firmware/drivers/storage.md ---------------------
 SD = "SD Specifications Part 1, Physical Layer Simplified Specification, version 3.01"
 dec("card_app_class", 1, "", src="the lowest SD Application Performance Class the build accepts, "
-    "A1, a decision: the card load in docs/parts/display/design.md rests on the random reads of "
-    "4 KB an A1 card guarantees. An A2 card is accepted as well. SdFat uses neither its command "
+    "A1, a decision: the class that guarantees a rate of random reads, which the audio streams "
+    "make; the card load in docs/parts/display/design.md is measured. An A2 card is accepted as well. SdFat uses neither its command "
     "queue nor its cache, and the SD Association states that an A2 card then still delivers at "
     "least A1 performance, www.sdcard.org/developers/overview/application/")
 ds("line", 32, "bytes", src="the data cache line of the Cortex-M7, the unit arm_dcache_delete() in "
@@ -148,6 +148,28 @@ ds("t_rd_block", 100, "ms", src=f"{SD}, 4.6.2.1: the read timeout of SDHC and SD
 ds("t_wr_block", 500, "ms", src=f"{SD}, 4.6.2.2: the longest busy an SDXC card may show after a "
    "block it writes, 250 ms for an SDHC card; the application note asks a host to wait longer than "
    "500 ms")
+msr("t_mount_nocard", 3, "s", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: the "
+    "longest of 8 calls of SdFat's begin() in its DMA mode with no card in the socket, 3002 ms, "
+    "in which no other task ran")
+_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+msr("t_main_wait_pull", 0.13, "ms", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: "
+    "the longest the main task waited while the storage task read frames, met the pulled card and "
+    "failed three reads")
+msr("t_frame_fat", 17.35, "ms", src=f"{_LOAD}: the mean time one frame read itself took over three "
+    "runs, the file opened anew and SdFat asking the FAT for each cluster")
+msr("t_frame_contig", 16.65, "ms", src=f"{_LOAD}: the same over two runs once contiguousRange() had "
+    "marked the file as lying in one piece")
+_SAVES = ("a sketch on the Teensy 4.1 saving 4 KB in SdFat's DMA mode, written at the file's start "
+          "and synced, twice into a new file and twelve times over it, from the PSRAM and from RAM2 "
+          "in turn")
+msr("t_save_new", 15.80, "ms", src=f"{_SAVES}: the longer of the two first saves into a new file")
+msr("t_save_over", 4.69, "ms", src=f"{_SAVES}: the longest save over an existing file")
+msr("t_frame_fast", 12.45, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in one "
+    "run of the same build")
+msr("t_frame_slow", 17.41, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in "
+    "the other runs of the same build")
+msr("t_audio_wait_load", 21.53, "ms", src=f"{_LOAD}, 8 KB chunks: the longest of 861 audio reads "
+    "from request to end")
 dec("n_open", 16, "", src="kOpen in docs/firmware/drivers/storage.md, the files the storage task "
     "keeps open at once")
 dec("t_probe", 1, "s", src="how often the storage task asks a failed card for its status, kProbeMs "
@@ -181,6 +203,8 @@ ds("t_sdfat", 1, "s", src="BUSY_TIMEOUT_MICROS in SdFat's src/SdCard/SdioTeensy.
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
+_I("a file marked as lying in one piece reads a frame faster", "t_frame_contig < t_frame_fat")
+_I("an audio read under full load ends before the four channels could run dry", "t_audio_wait_load < t_read_max")
 _I("a full-scale sine stays under the power the speaker is assumed to take", "p_fs < p_spk")
 _I("the cap holds the loudest digital signal to that power", "g_cap * g_cap * p_square <= p_spk")
 _I("the rail does not clip a full-scale signal", "v_peak < v_dd")

@@ -38,8 +38,8 @@ public:
 private:
     // the two profiles of the lighting design's current ceiling: the playfield at full brightness,
     // the ambient lights at what the cap leaves with the whole layout at full white
-    static constexpr Profile k3A = {2, 78, 255, 2000};
-    static constexpr Profile k6A = {1, 117, 255, 2930};
+    static constexpr Profile k3A = {2, 121, 255, 2000};
+    static constexpr Profile k6A = {1, 128, 255, 2930};
     static constexpr uint8_t kAdapterMinA = 3;   // lighting.adapter_a's range, the two adapters the design derives
     static constexpr uint8_t kAdapterMaxA = 6;
 
@@ -57,7 +57,7 @@ private:
 
     // what one LED of the strip draws at full value, in mW at 5 V and rounded up, from the currents
     // measured in docs/research/Components/sezo-ws2812b-strip.md
-    static constexpr uint8_t kRedMw = 28, kGreenMw = 31, kBlueMw = 31, kDarkMw = 9;
+    static constexpr uint8_t kRedMw = 28, kGreenMw = 31, kBlueMw = 31, kDarkMw = 3;
     static constexpr uint8_t kVolts = 5;
 
     Profile profile_ = k3A;

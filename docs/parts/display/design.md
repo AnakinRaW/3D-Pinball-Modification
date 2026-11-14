@@ -74,7 +74,7 @@ The [display driver](../../firmware/drivers/display.md) sends what LVGL draws ov
 
 Fast motion in a video can show a tear, since the module gives no signal when the panel refreshes.
 
-The video rate rests on an estimate of the card's speed. A slower card makes a video stutter before it touches the sound.
+The video rate needs the card formatted with 32 KB clusters. SdFat costs one command per cluster in its DMA mode, and smaller clusters make a video stutter.
 
 ## Part list
 
@@ -145,22 +145,19 @@ LVGL      its two buffers of the whole screen in
           holds                                  = 54
 MOVIE     the frame rate of every movie            25 Hz
           one frame                              = 40 ms
-          the chunk the card is read in            16 KB
-          a full-screen frame, in chunks         = 9.4
-CARD      one 4 KB read, at an estimated 1500 a
-          second                                 = 0.667 ms
-          the SD bus's High Speed clock            50 MHz
-          4 KB on that bus                       = 0.164 ms
-          one audio chunk on the Teensy,
-          estimated                              = 0.831 ms
-          16 KB on that bus                      = 0.655 ms
-          one movie chunk on the Teensy,
-          estimated                              = 1.33 ms
-          a full-screen frame from the card      = 12.4 ms
-          the four audio streams meanwhile       = 2.87 ms
-          the card's load at 25 frames a second  = 38.2 %
-          the same on the A1 class alone, every
-          4 KB a random read                     = 85.1 %
+CARD      the card's clusters                      32 KB
+          a full-screen frame from the card, at
+          most, measured                           18.01 ms
+          one audio chunk, at most, measured       3.13 ms
+          the audio chunks the four streams read
+          meanwhile                              = 1.73
+          their time                             = 5.4 ms
+          the card's load at 25 frames a second  = 58.6 %
+          the next frame read, the audio between = 23.41 ms
+          the same under full load, at most,
+          measured                                 23.09 ms
+          LVGL draws a frame, at most, measured    7.09 ms
+          the current frame drawn and sent       = 19.89 ms
 ```
 
 ### Touch bus
@@ -249,7 +246,8 @@ START     the supervisor's reset after power-up,
 - [FocalTech, FT6x06 datasheet](https://cdn-shop.adafruit.com/datasheets/FT6x06%20Datasheet_V0.1_Preliminary_20120723.pdf), V0.1: the time from reset to the first I²C answer
 - [`datasheets/IMXRT1060CEC.pdf`](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 27, the pads' drive strengths
 - [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3: Table 14-5, the FlexIO clock's limit; 50.3.3.1, the shifters that drive several pins; Table 4-3, no DMA request for FlexIO3
-- [SD Specifications Part 1, Physical Layer Simplified Specification](https://www.sdcard.org/downloads/pls/), version 6.00: the A1 class in 4.16, the source of the estimated read rate, and its clocks in Table 4-72
+- [`firmware/tests/card-speed`](../../../firmware/tests/card-speed/card-speed.ino): the measured time of an audio chunk from the card
+- [`firmware/tests/stack`](../../../firmware/tests/stack/src/main.cpp): the measured time of a full-screen frame from the card under FreeRTOS
 - [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the Standard-mode rise time
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
 - [`pin-assignment.md`](../../pin-assignment.md): the display's pins and their cost
