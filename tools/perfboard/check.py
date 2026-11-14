@@ -226,6 +226,23 @@ def check(L):
             continue
         u(a, b)
         copper.update((a, b))
+    run_holes_of = set()
+    for a, b, side in L.bares:
+        run_holes_of.update(run_holes(a, b) or [])
+    wire_ends = {}
+    for pts, side in L.wires:
+        for end in (pts[0], pts[-1]):
+            # the wire's end goes through a hole of its own: no lead in it, no bare run across it,
+            # no other wire's end
+            name = f"insulated wire {nm(pts[0])}-{nm(pts[-1])}"
+            if end in lead_of:
+                E.append(f"{name} ends in {nm(end)}, which holds {lead_of[end]}")
+            elif end in run_holes_of and not B.is_pad(end):
+                E.append(f"{name} ends in {nm(end)}, which a bare run crosses; it needs a hole "
+                         f"of its own, tinned to the run")
+            if end in wire_ends:
+                E.append(f"{name} ends in {nm(end)}, where {wire_ends[end]} ends too")
+            wire_ends[end] = name
     for pts, side in L.wires:
         u(pts[0], pts[-1])
         copper.update((pts[0], pts[-1]))

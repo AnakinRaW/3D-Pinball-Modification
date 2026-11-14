@@ -32,7 +32,7 @@ The checker reports each as an error.
 | H6 | Tin joins two neighboring holes only, never diagonally |
 | H7 | A bare wire runs straight along a row or column and joins every hole it passes. On the top it runs under no part |
 | H8 | Two bare runs never cross, on either side. A crossing takes a part's body or an insulated wire |
-| H9 | An insulated wire joins two points, has no branch, is at least 10 mm long, and runs over no part. A wire marked `short=True` may be shorter where a straight route is worth the risk to its insulation; the check lists it as a note |
+| H9 | An insulated wire joins two points, has no branch, is at least 10 mm long, and runs over no part. Each end goes through a hole that holds no lead and that no bare run crosses, tinned to the copper it joins, since a wire end cannot be soldered onto a run. A wire marked `short=True` may be shorter where a straight route is worth the risk to its insulation; the check lists it as a note |
 | H10 | A link is bare wire through two holes; every hole it spans is free or of its own net |
 | H13 | Parts sit on the top unless a sensor has to face another way |
 | H14 | No lead sits under another part's body; bodies do not overlap |
