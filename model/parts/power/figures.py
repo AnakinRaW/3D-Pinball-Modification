@@ -1,7 +1,7 @@
 """The figures of the power board, as inputs plus formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "power", drawings=["power-schematic.svg"])
+MODEL = Model.at(__file__, "power", drawings=["power-schematic.svg", "power-board.svg"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.names("D1", "D2", why="the Teensy motherboard's diodes, which feed VIN")
 
@@ -136,6 +136,9 @@ MODEL.curve(f"{Q1}, Figure 10, normalized R_DS(on) against junction temperature"
             [("t_fig10_a", "k_fig10_a"), ("t_hot", "k_hot"), ("t_fig10_c", "k_fig10_c")],
             rises=True)
 
+dec("d_rail_wire", 1.3, "mm", src="the solid copper wire the power board's 5 V and ground rails are "
+    "laid in, from the stock; it is 16 AWG to within a hundredth of a millimeter", stated=False)
+
 # -- C1 and C2, the bulk at the input -----------------------------------------
 dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}; the C2 on each lighting board is the same "
     "part and takes its figures from here, while the solenoid board's C91 and the servo's C1 are a "
@@ -147,10 +150,11 @@ ds("z_c", 29, "mΩ", sheet=BULK_SHEET, src=f"{BULK}, impedance maximum at 100 kH
 ds("v_c_rating", 16, "V", sheet=BULK_SHEET, src=f"{BULK}, rated voltage")
 dec("derate_elko", 80, "%", src="the electrolytic voltage target of the design-review skill, at "
     "most 80 % of the rating")
-asm("place_bulk", 20, "mm", src="how close C1 and C2 sit to J-IN, where the input current enters "
+dec("l_fuse", 20, "mm", src="F1's size, the 5 x 20 mm fuse and its holder", stated=False)
+asm("place_bulk", 21, "mm", src="how close C1 and C2 sit to J-IN, where the input current enters "
     "the bus; no datasheet states one")
 
-# -- the D24V5F3 at the IR mainboard ------------------------------------------
+# -- the D24V5F3 at the IR board ------------------------------------------
 asm("eta_u1", 80, "%", src="the D24V5F3's efficiency, the low end of the 80 % to 93 % Pololu gives "
     "as typical for the D24V5F3; no minimum is published", group="LOADS", section=LOADS,
     stated=True)
@@ -207,7 +211,7 @@ with MODEL.block("LOADS", section=LOADS):
     fig("i_main", "mA", "i_teensy_vin + i_amp", "up",
         moves="+i_teensy_40 +i_teensy_3v3 +i_f_max +i_amp")
 
-    # The D24V5F3 at the IR mainboard takes its input over J-IR's pair. Its input current
+    # The D24V5F3 at the IR board takes its input over J-IR's pair. Its input current
     # at its lowest input voltage bounds the pair's drop, and the module's input behind that
     # drop gives its current.
     fig("i_ir_max", "mA", "i_tot * v_mod_max / (eta_u1 * v_mod_in_min)", "up",
@@ -288,7 +292,7 @@ with MODEL.block("RAIL", section=RAIL):
 
 # -- derived: F1 --------------------------------------------------------------
 with MODEL.block("FUSE", section=FUSE_SEC):
-    # What passes F1 at most: every output behind it, the servo stalled and the IR mainboard's
+    # What passes F1 at most: every output behind it, the servo stalled and the IR board's
     # module at its lowest input, where it draws the most.
     fig("i_small", "A", "i_teensy_vin + i_amp + i_ir_max + i_disp + i_stall", "up",
         moves="+i_teensy_40 +i_teensy_3v3 +i_amp +i_tot +i_disp +i_stall -eta_u1 -v_mod_in_min")
@@ -426,7 +430,7 @@ _I("on USB alone, the Teensy's VIN stays inside its range", "v_teensy_usb >= v_i
 _I("on USB alone, D2 carries the Teensy's current inside its rating", "i_teensy_vin < i_f_av")
 _I("on USB alone, a high-power port supplies the Teensy's whole current",
    "i_teensy_vin <= i_usb_max")
-_I("the D24V5F3 at the IR mainboard gets more than its lowest input", "v_ir_end >= v_mod_in_min")
+_I("the D24V5F3 at the IR board gets more than its lowest input", "v_ir_end >= v_mod_in_min")
 _I("the display's regulator gets the input it needs at full load", "v_disp_in >= v_in_mod_min")
 _I("F1 carries the most the outputs behind it draw", "i_small <= i_f1")
 _I("a fault the 6 A adapter feeds opens F1 within its maximum time", "i_f1_open <= i_supply_6a")
