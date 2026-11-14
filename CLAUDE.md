@@ -32,9 +32,9 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 | Microcontroller | Teensy 4.1 (NXP i.MX RT1062) | Chosen |
 | Schematic + PCB | EasyEDA, working from local project files | Chosen — **Standard vs. Pro not yet recorded**, and they use different file formats |
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
-| Firmware build | Not chosen (Arduino IDE / PlatformIO / `teensy_loader_cli`) | Open |
-| Teensy core | Always the newest Teensyduino release | Chosen |
-| LED library | FastLED 3.10.6 or newer from the Library Manager. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
+| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader (`upload_protocol = teensy-gui`; `teensy-cli` fails to write on this machine). Its own linker script, [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld), keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
+| Teensy core | Always the newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
+| LED library | FastLED 3.10.6 or newer from PlatformIO's registry. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
 | UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
 | RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/gist/freertos-config.h`](firmware/gist/freertos-config.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
@@ -79,7 +79,12 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. One without is stored opaque. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
 
-No build system exists yet. Record build/flash/test commands here once the firmware toolchain is chosen.
+The firmware builds with PlatformIO, installed with `python -m pip install platformio`. A project's folder holds its `platformio.ini`, as [`firmware/tests/stack/`](firmware/tests/stack/) does:
+
+| | |
+|---|---|
+| `python -m platformio run` | Builds the project in the current folder and prints how much of RAM1, RAM2, the flash and the PSRAM it takes |
+| `python -m platformio run -t upload` | Builds and flashes it onto the Teensy. A serial monitor holding the Teensy's port blocks the upload |
 
 ## Conventions
 

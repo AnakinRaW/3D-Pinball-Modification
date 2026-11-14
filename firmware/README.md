@@ -10,11 +10,16 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 
 ## Building
 
-TODO: the build tool, the IDE setup, and the commands that build the firmware and flash it onto the Teensy.
+The firmware builds with [PlatformIO](https://platformio.org). [`tests/stack/platformio.ini`](tests/stack/platformio.ini) is the template for a project. It pins the Teensyduino release, the libraries and their versions.
 
-The firmware builds with the newest Teensyduino release and the libraries it ships. On top of those it uses [freertos-teensy](https://github.com/tsandmann/freertos-teensy) v11.2.0_v4 with its pull request 43 and the settings in [`gist/freertos-config.h`](gist/freertos-config.h), and [WDT_T4](https://github.com/tonton81/WDT_T4) for the watchdog.
+```
+python -m platformio run               builds the project in the current folder
+python -m platformio run -t upload     builds it and flashes it onto the Teensy
+```
 
-FastLED comes from the Library Manager, in version 3.10.6 or newer. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, both of which the [lighting driver](../docs/firmware/drivers/lighting.md) uses. The driver selects ObjectFLED as `Bus::FLEX_IO` slot 0, the name FastLED gives it from 3.10.6 on.
+The template links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.
+
+The firmware defines `USE_ARDUINO_DEFINES` before it includes `arduino_freertos.h`, because FastLED and [WDT_T4](https://github.com/tonton81/WDT_T4) need Arduino's macros.
 
 ## Testing
 
