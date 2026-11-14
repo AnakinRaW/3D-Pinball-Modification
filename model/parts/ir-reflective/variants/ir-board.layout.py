@@ -66,7 +66,7 @@ L.bare(h(29, 5), h(29, 38))                             # 3V3 along the bottom e
 L.part("U1", "mcp3008_p", pin1=h(12, 16), along=(0, 1))
 L.part("U2", "mcp3008_p", pin1=h(16, 28), along=(0, -1))
 
-# lanes: each signal along its header row, then along a column of its own to its pin row, and
+# lanes: each signal along its header row, then along a separate column to its pin row, and
 # into the pin; the inner lanes turn first
 TURN = {False: {13: 9, 10: 11, 6: 13, 3: 15, 17: 10, 20: 12, 24: 14, 27: 15},
         True: {9: 34, 5: 32, 2: 30, 12: 35, 16: 33, 19: 31, 23: 30, 26: 29}}

@@ -6,7 +6,7 @@ Channel n of sixteen takes Rn into the LED bus, R(16 + n) as its pull-down and J
 sensor board. U1 reads channels 1 to 8 on CH0 to CH7, U2 channels 9 to 16. The three sensor
 boards from the stock machine sit on channels 1 to 3, so R1 to R3 carry 100 Ω.
 
-The isolator U3 sits on a board of its own beside the IR board, with J-IR-TEENSY, R34, R36, C3
+The isolator U3 sits on the isolator board beside the IR board, with J-IR-TEENSY, R34, R36, C3
 and C4. J-IR-ISO joins the two boards. SCK, MOSI and ADC-DOUT run in two leads each, one per
 converter, and the isolator board joins each pair, so the IR board never joins U1's control
 lines to U2's.

@@ -523,7 +523,7 @@ def number_forms(x: float) -> list[str]:
 
 
 def standalone(form: str, text: str) -> bool:
-    """Whether the number stands in the text as a number of its own, not inside a longer one."""
+    """Whether the number stands in the text as a separate number, not inside a longer one."""
     return re.search(rf"(?<![\d.]){re.escape(form)}(?!\d|\.\d)", text) is not None
 
 
@@ -708,7 +708,7 @@ def part_list(path) -> set | None:
 
 
 def pass_designators(model: Model, rep: Report):
-    """Every part the document names by its designator is a part of its own part list, of
+    """Every part the document names by its designator is a part of the document's part list, of
     the design the same line links, or one the model names as another board's."""
     text = norm(model.document.read_text(encoding="utf-8"))
     own = part_list(model.document)

@@ -106,7 +106,7 @@ with MODEL.block("Decoupling", section=BUFFERS):
     asm("place_bypass", 10, "mm", src="how close each 100 nF sits to its buffer's supply pin, "
         "which keeps the loop through the capacitor short; no datasheet states one")
 
-# The LED reads a high only above a fraction of its own supply.
+# The LED reads a high only above a fraction of its supply.
 fig("vih_led", "V", "vih_led_frac * v_rail", "up", moves="+vih_led_frac +v_rail", group=SHIFT,
     stated="loose")
 

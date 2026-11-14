@@ -33,7 +33,7 @@ The checker reports each as an error.
 | H7 | A bare wire runs straight along a row or column and joins every hole it passes. On the top it runs under no part |
 | H8 | Two bare runs never cross, on either side. A crossing takes a part's body or an insulated wire |
 | H9 | An insulated wire joins two points, has no branch, is at least 10 mm long, and runs over no part. Each end goes through a hole that holds no lead and that no bare run crosses, tinned to the copper it joins, since a wire end cannot be soldered onto a run. A wire marked `short=True` may be shorter where a straight route is worth the risk to its insulation; the check lists it as a note |
-| H10 | A link is bare wire through two holes; every hole it spans is free or of its own net |
+| H10 | A link is bare wire through two holes; every hole it spans is free or on the link's net |
 | H13 | Parts sit on the top unless a sensor has to face another way |
 | H14 | No lead sits under another part's body; bodies do not overlap |
 | H16 | A part's leads span what its inventory entry allows: a lying resistor 4 to 6 holes, standing 1 to 2; radial parts 1 to 2; headers and TO-220 in neighboring holes; a screw terminal every second hole |

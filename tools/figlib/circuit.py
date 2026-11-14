@@ -633,7 +633,7 @@ def write_part_list(model, rep) -> int:
     written = 0
     for line, (n, q) in sorted(counts.items()):
         cells = lines[line - 1].split("|")
-        q += 1                      # the text before the first bar is a cell of its own
+        q += 1                      # the text before the first bar is a separate cell
         if cells[q].strip() != str(n):
             pad = len(cells[q]) - len(cells[q].lstrip())
             cells[q] = " " * pad + str(n) + " "

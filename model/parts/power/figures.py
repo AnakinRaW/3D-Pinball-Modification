@@ -142,7 +142,7 @@ dec("d_rail_wire", 1.3, "mm", src="the solid copper wire the power board's 5 V a
 # -- C1 and C2, the bulk at the input -----------------------------------------
 dec("c_one", 1000, "µF", src=f"C1 and C2 each, {BULK}; the C2 on each lighting board is the same "
     "part and takes its figures from here, while the solenoid board's C91 and the servo's C1 are a "
-    "smaller part of their own", group="RAIL", section=RAIL, stated=True)
+    "smaller, different part", group="RAIL", section=RAIL, stated=True)
 dec("n_bulk", 2, "", src="C1 and C2 in parallel, the fewest of that part that hold the release "
     "under the Teensy's VIN maximum with the 6 A adapter")
 ds("z_c", 29, "mΩ", sheet=BULK_SHEET, src=f"{BULK}, impedance maximum at 100 kHz as DigiKey lists "

@@ -23,7 +23,7 @@ L.part("R32", "resistor", ["C26", "A26"], standing=True)
 L.part("C1", "ceramic_k15", ["B27", "A27"])
 L.part("C3", "ceramic_k15", ["D27", "F27"])
 
-L.wire("A12", "F12", side="bottom")      # each end in a hole of its own, tinned to its rail
+L.wire("A12", "F12", side="bottom")      # each end in a separate hole, tinned to its rail
 L.tin("A12", "A13")
 L.tin("F11", "F12")
 L.tin("F12", "F13")

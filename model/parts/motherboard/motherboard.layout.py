@@ -5,7 +5,7 @@
 The Teensy lies across the middle with its USB end toward the left edge. Every line of its top
 row runs straight up to a header on the top edge and every line of its bottom row straight down
 to one on the bottom edge. A header that takes lines from both rows sits in pieces, one piece per
-row, and its cable meets each piece with a housing of its own. The lines that have to leave at an
+row, and its cable meets each piece with a separate housing. The lines that have to leave at an
 end run under the Teensy between its rows of pins: to the left the bus to the port expander board
 and the servo's signal, to the right ground and 3.3 V for the sense board and the break beam.
 """

@@ -57,7 +57,7 @@ L.tin("L20", "K20")
 
 # the lights at the right end below J-SOL, each pair ground over 5 V with a free row between
 # the pairs: ground straight onto the rail, 5 V out into the open board and across the ground
-# rail in an insulated wire of its own column
+# rail in an insulated wire, each in a separate column
 L.part("J-LIGHT1", "pads", ["N>", "M>"], title="J-LIGHT1", sub="the ambient board")
 L.part("J-LIGHT2", "pads", ["Q>", "P>"], title="J-LIGHT2", sub="the playfield board")
 L.tin("M>", "M24")

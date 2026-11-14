@@ -95,7 +95,7 @@ Each document has a scope. Detail that belongs elsewhere is moved there and link
 
   Every pin of an IC carries its pin number beside its name, taken from the datasheet's pinout for the package the build uses.
 
-  An IC of the modification is drawn with every pin of its package, in every drawing that shows it. Each pin is a marker of its own and shows its connection, either a wire to its net or the gray marker of an unconnected pin. Pins on the same net are drawn one by one and joined by wires. A note that lists pins never stands in for drawing them.
+  An IC of the modification is drawn with every pin of its package, in every drawing that shows it. Each pin is a separate marker and shows its connection, either a wire to its net or the gray marker of an unconnected pin. Pins on the same net are drawn one by one and joined by wires. A note that lists pins never stands in for drawing them.
 
   Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
 

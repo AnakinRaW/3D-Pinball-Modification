@@ -7,7 +7,7 @@ sits under its anode, and the MOSFET stands below with its tab toward the bottom
 from the gate, R2 sits two columns right of it, and the source jogs one column right under the
 MOSFET's body and runs down to the ground rail of row Q. Every net of a channel is one chain of
 copper without a branch; only the rails take branches. Power enters at the left edge, and
-each trigger runs left in a row of its own to the Teensy header at the left edge.
+each trigger runs left in a separate row to the Teensy header at the left edge.
 """
 from layout import Layout
 
@@ -52,7 +52,7 @@ for n in range(1, 5):
     L.tin(h("H", c3), h("I", c3))                     # source, under the MOSFET's body
     L.tin(h("I", c3), h("I", c4))
     L.bare(h("I", c4), h("Q", c4))                    # down to the ground rail
-    lane = "ONML"[n - 1]                              # each trigger runs left in a row of its own
+    lane = "ONML"[n - 1]                              # each trigger runs left in a separate row
     L.tin(f"{lane}2", f"{lane}1")                     # into a hole beside its header pin
     if lane == "O":                                   # channel 1 leaves left, past nothing
         L.tin(h("O", c1), h("O", c0))

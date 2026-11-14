@@ -104,7 +104,7 @@ def _expression(key, text: str, scope: dict, lint=True):
     names = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.Lambda, ast.comprehension, ast.NamedExpr)):
-            raise ValueError(f"{key}: a formula that binds names of its own is written "
+            raise ValueError(f"{key}: a formula that binds further names is written "
                              f"as a function")
         if (lint and isinstance(node, ast.Constant) and not isinstance(node.value, bool)
                 and isinstance(node.value, (int, float, complex))
