@@ -64,7 +64,7 @@ The checker reports each as a note where the layout leaves it.
 | S12 | A connector sits at the edge where it can; a straight Dupont header may sit inside when the edge costs a much harder layout. Every cable leaves away from the board. The outputs of one connector stay together at one end |
 | S14 | Under a daughter board lies nothing taller than its socket header |
 | S15 | A cable soldered in for good lands on an edge pad |
-| S16 | The smallest board in stock that fits; cut once and straight, only where it saves much and the rest stays usable. All layouts together take no more boards and screw terminals than the stock holds (`stock.py`) |
+| S16 | The smallest board in stock that fits; cut once and straight, only where it saves much and the rest stays usable. All layouts together take no more boards and screw terminals than the stock holds (`stock.py`). Layouts that are alternative builds of one thing name their family and variant in `VARIANT`, and a variant takes no stock from the others |
 | S17 | The corner holes stay free |
 | S18 | Top and bottom in one drawing. The bottom is drawn as the board looks turned over its long edge: column 1 stays on the left, row A comes to the bottom, and the top's parts show faintly. The top shows the bottom's copper faintly. `--mirror` turns the board over its short edge instead |
 | S25 | Every MOSFET, IC, diode, electrolytic and sensor carries its pin names beside its pins, on both sides of the drawing |
