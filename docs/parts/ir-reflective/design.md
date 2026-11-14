@@ -295,13 +295,9 @@ VOUT powers the IR board and U3's side 2: in the machine from the D24V5F3, on th
 - R33 and R35 should stay within 10 mm of Q1's gate
 - each channel's 4.7 kΩ should stay within 35 mm of its converter input, so the stub adds little to the source resistance the acquisition window is derived from
 
+![IR board on perfboard](variants/ir-board.svg)
 
-- **The LED bus should return on one side of the board**, so its pulsing does not reach the measurement.
-  - the module's socket, all sixteen sensor connectors with their 220 Ω, and Q1 on that side
-  - the converters, U3, the channel resistors and J-IR-TEENSY on the other
-  - one ground pour over the whole board, apart from U3's side 1, where GND1, C3 and J-IR-TEENSY pin 8 share their own copper
-
-  ![Placement sketch of the mainboard](mainboard-placement.svg)
+![IR isolator board on perfboard](isolator-board.svg)
 
 ## Part list
 
