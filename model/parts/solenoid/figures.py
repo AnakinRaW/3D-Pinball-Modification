@@ -4,6 +4,8 @@ from math import inf
 from figcheck import *
 
 MODEL = Model.at(__file__, "solenoid", drawings=["board-schematic.svg",
+                                                 "sense-board.svg",
+                                                 "coil-board.svg",
                                                  "../../firmware/components/scoop.svg"],
                  documents=["../../firmware/drivers/solenoid.md",
                             "../../firmware/components/scoop.md"])

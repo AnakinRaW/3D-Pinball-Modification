@@ -5,7 +5,7 @@ from math import floor, inf
 from figcheck import *
 
 MODEL = Model.at(__file__, "lighting",
-                 drawings=["lighting-schematic.svg",
+                 drawings=["lighting-schematic.svg", "ambient-board.svg", "playfield-board.svg",
                            "../../firmware/components/lamps-architecture.svg"],
                  documents=["../../firmware/components/lamps.md",
                             "../../firmware/drivers/lighting.md",

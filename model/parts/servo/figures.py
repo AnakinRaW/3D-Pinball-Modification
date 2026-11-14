@@ -1,7 +1,7 @@
 """The figures of the servo, its buffer and its supply, as inputs plus formulas."""
 from figcheck import *
 
-MODEL = Model.at(__file__, "servo", drawings=["servo-schematic.svg",
+MODEL = Model.at(__file__, "servo", drawings=["servo-schematic.svg", "servo-board.svg",
                                              "../../firmware/components/drain-ball-store.svg"],
                  documents=["../../firmware/drivers/servo.md",
                             "../../firmware/components/drain.md"])
