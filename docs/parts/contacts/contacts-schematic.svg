@@ -1,29 +1,29 @@
-<svg data-boards="motherboard:main" viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg data-boards="motherboard:expander" viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="980" height="770" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Contacts</text>
   <text x="30" y="56" font-size="13" fill="#666">The drain's ball store foils and the stock machine's two bells as contacts to GND, read by the port expander</text>
 
-  <!-- ===== the Teensy motherboard ===== -->
+  <!-- ===== the port expander board ===== -->
   <rect x="24" y="84" width="430" height="496" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
-  <text x="40" y="106" font-size="15" font-weight="700" fill="#5c4a00">Teensy motherboard</text>
+  <text x="40" y="106" font-size="15" font-weight="700" fill="#5c4a00">Port expander board</text>
 
-  <!-- ===== Teensy ===== -->
-  <rect x="30" y="170" width="90" height="160" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2" data-part="A1"/>
-  <text x="36" y="194" font-size="15" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
+  <!-- ===== J-PE-TEENSY, the cable from the Teensy ===== -->
+  <rect x="30" y="170" width="90" height="160" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-PE-TEENSY"/>
+  <text x="36" y="190" font-size="12" font-weight="700" fill="#333333">J-PE-TEENSY</text>
   <text x="108" y="216" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SCL</text>
-  <text x="108" y="231" text-anchor="end" font-size="11.5" fill="#777" data-pin="SCL on Wire">pin 19</text>
+  <text x="108" y="231" text-anchor="end" font-size="11.5" fill="#777">pin 2</text>
   <text x="108" y="256" text-anchor="end" font-size="13" font-weight="700" fill="#4d4d4d">SDA</text>
-  <text x="108" y="271" text-anchor="end" font-size="11.5" fill="#777" data-pin="SDA on Wire">pin 18</text>
+  <text x="108" y="271" text-anchor="end" font-size="11.5" fill="#777">pin 3</text>
   <text x="108" y="296" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">INT</text>
-  <text x="108" y="311" text-anchor="end" font-size="11.5" fill="#777" data-pin="Interrupt from the port expander">pin 1</text>
+  <text x="108" y="311" text-anchor="end" font-size="11.5" fill="#777">pin 1</text>
 
-  <!-- ===== the bus and INT from the Teensy to U1 ===== -->
+  <!-- ===== the bus and INT from the cable to U1 ===== -->
   <line x1="126" y1="220" x2="164" y2="220" stroke="#808080" stroke-width="5" data-net="SCL"/>
-  <line x1="126" y1="220" x2="164" y2="220" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="A1.19 U1.1"/>
+  <line x1="126" y1="220" x2="164" y2="220" stroke="#ffffff" stroke-width="2.5" data-net="SCL" data-ends="J-PE-TEENSY.2 U1.1"/>
   <line x1="126" y1="260" x2="164" y2="260" stroke="#808080" stroke-width="5" data-net="SDA"/>
-  <line x1="126" y1="260" x2="164" y2="260" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="A1.18 U1.2"/>
+  <line x1="126" y1="260" x2="164" y2="260" stroke="#ffffff" stroke-width="2.5" data-net="SDA" data-ends="J-PE-TEENSY.3 U1.2"/>
   <line x1="126" y1="300" x2="164" y2="300" stroke="#23862f" stroke-width="5" data-net="INT"/>
-  <line x1="126" y1="300" x2="164" y2="300" stroke="#3cbf4e" stroke-width="2.5" data-net="INT" data-ends="A1.1 U1.8"/>
+  <line x1="126" y1="300" x2="164" y2="300" stroke="#3cbf4e" stroke-width="2.5" data-net="INT" data-ends="J-PE-TEENSY.1 U1.8"/>
 
   <!-- ===== RESET and VDD to the 3V3 rail ===== -->
   <line x1="220" y1="154" x2="220" y2="132" stroke="#9a7d0a" stroke-width="5" data-net="3V3"/>

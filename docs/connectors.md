@@ -10,7 +10,8 @@
 | | J-SERVO, J-MAIN, J-IR, J-DISP | 2 each | screw terminal | 5 V. A reversed Dupont plug would reverse the supply |
 | Teensy motherboard | the Teensy | 2 × 24 | socket headers | The Teensy stays pluggable |
 | | J-MB-PWR, from J-MAIN | 2 | screw terminal | 5 V |
-| | the signal to the servo board | 1 | soldered | It comes apart at the servo board's J-SERVO-PWR |
+| | J-MB-SERVO | 1 | Dupont | The servo's signal |
+| Port expander board | J-PE-TEENSY, both ends | 5 | Dupont | The board's lines to the Teensy |
 | IR sensing | input of the D24V5F3 | 2 | soldered | The module has no reverse-voltage protection. VIN, GND and VOUT sit in one row |
 | | the D24V5F3 on the IR mainboard | 4 | socket header | The module stays pluggable. On the bench the Teensy's 3V3 feeds the socket in its place |
 | | J-IR-TEENSY, both ends | 8 | Dupont | The board's lines to the Teensy |
@@ -37,17 +38,18 @@
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
 | | at the Teensy motherboard | 2 each | Dupont | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
-| Contacts | J-MB-STORE and J-MB-TARGETS, at the Teensy motherboard | 3 each | Dupont | Two contact lines into the port expander's E pins and their foil's GND |
-| | J-MB-SPARE, at the Teensy motherboard | 5 | Dupont | E-5 to E-8 and GND, for contacts still to come |
+| Contacts | J-PE-STORE and J-PE-TARGETS, at the port expander board | 3 each | Dupont | Two contact lines into the port expander's E pins and their foil's GND |
+| | J-PE-SPARE, at the port expander board | 5 | Dupont | E-5 to E-8 and GND, for contacts still to come |
 
 ## By pole count
 
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
+| 1 | | 1 (J-MB-SERVO) | |
 | 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
 | 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, 2 contact headers, the servo plug | |
 | 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, the D24V5F3's socket, J-DISP-MOD) | |
-| 5 | | 3 (2 J-SENSE-TEENSY, J-MB-SPARE) | |
+| 5 | | 5 (2 J-SENSE-TEENSY, 2 J-PE-TEENSY, J-PE-SPARE) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |
 | 12 | | 1 (the display bus) | |
