@@ -3,7 +3,7 @@ formulas."""
 from figcheck import *
 
 MODEL = Model.at(__file__, "display",
-                 drawings=["display-schematic.svg",
+                 drawings=["display-schematic.svg", "display-board.svg",
                            "../../firmware/components/screen-architecture.svg"],
                  documents=["../../firmware/drivers/display.md", "../../firmware/drivers/touch.md",
                             "../../firmware/components/screen.md",

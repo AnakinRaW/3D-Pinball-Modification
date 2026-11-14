@@ -7,8 +7,8 @@ them apart, since the module and not the wiring joins them. A2 is the Adafruit 7
 its channel 1, SCL its channel 2.
 
 Connector pin orders: J-DISP-PWR, where the cable from the power board's J-DISP is soldered,
-carries 5 V on pin 1 and GND on pin 2. J-TOUCH carries SDA, SCL and the Teensy's 3V3 on pins 1
-to 3. J-DISP-MOD carries SDA, SCL, 5 V and GND on pins 1 to 4, as docs/connectors.md gives them.
+carries 5 V on pin 1 and GND on pin 2. J-TOUCH carries SCL, SDA and the Teensy's 3V3 on pins 1
+to 3, as J-MB-TOUCH does. J-DISP-MOD carries SDA, SCL, 5 V and GND on pins 1 to 4, as docs/connectors.md gives them.
 J-DISP-BUS, the bus cable from the Teensy to the module's header, carries D0 to D7 on pins 1 to
 8, WR on pin 9, D/C on pin 10, CS on pin 11 and GND on pin 12.
 """
@@ -52,9 +52,9 @@ DISPLAY.net("CS", "J-DISP-BUS.11", "A1.CS", color="blue", label="CS",
 DISPLAY.net("BUS-GND", "J-DISP-BUS.12", "A1.GND#2", color="black", label="GND", rail="gnd")
 
 # the touch bus through the converter
-DISPLAY.net("SDA", "J-TOUCH.1", "A2.A1", color="white", label="SDA",
+DISPLAY.net("SDA", "J-TOUCH.2", "A2.A1", color="white", label="SDA",
             teensy="SDA to the touch controller")
-DISPLAY.net("SCL", "J-TOUCH.2", "A2.A2", color="white", label="SCL",
+DISPLAY.net("SCL", "J-TOUCH.1", "A2.A2", color="white", label="SCL",
             teensy="SCL to the touch controller")
 DISPLAY.net("3V3", "J-TOUCH.3", "A2.LV", color="yellow", label="3V3", rail=TEENSY_RAIL)
 DISPLAY.net("SDA-MOD", "A2.B1", "J-DISP-MOD.1", "A1.SDA", color="white", label="SDA")
