@@ -278,7 +278,9 @@ class Layout:
                 order = sorted(range(len(pins)), key=lambda i: int(pins[i]))
                 hs = [hs[i] for i in order]
                 pins = tuple(chip[int(pins[i]) - 1] for i in order)
-                opt["names"] = list(pins)
+                # the adapter prints only the numbers: the drawing names both
+                opt["names"] = [f"{i + 1} {n}" if not n.isdigit() else n
+                                for i, n in enumerate(pins)]
                 opt["carries"] = d.key
         elif PARTS[key]["kind"] in ("dip",):
             n = PARTS[key]["pins"]
@@ -373,10 +375,15 @@ class Layout:
                 nets[a] |= nets.pop(b)
         return nets
 
-    def offboard(self, ref, how=""):
+    def offboard(self, ref, how="", key=None, at=()):
         """A part of the netlist that stays off this board, such as a module hanging on a cable.
-        how says where it sits and how it is reached."""
+        how says where it sits and how it is reached. A part soldered onto a module, such as a
+        diode on the Teensy, names its inventory key and the two grid points it spans in `at`, and
+        the drawing shows it there on top of the module."""
         self.offboard_parts[ref] = how
+        if key and at:
+            self.on_module = getattr(self, "on_module", [])
+            self.on_module.append(Part(ref, key, [self.board.hole(h) for h in at], ("K", "A")))
 
     def against_netlist(self):
         """Where the layout departs from the netlist its model declares: a part placed here and

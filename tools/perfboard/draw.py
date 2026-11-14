@@ -102,7 +102,7 @@ def resistor(a, b, S, ohms, standing=False):
     """Carbon film resistor: beige body with its four color bands."""
     p = PARTS["resistor"]
     if standing:
-        return _standing(a, b, S, p["body_d"][1], p["color"], bands=bands(ohms))
+        return _standing_resistor(a, b, S, p["body_d"][1], p["color"], bands(ohms))
     out, (cx, cy, bl, bd, tr) = _axial_body(a, b, S, p["body_l"][1], p["body_d"][1], p["color"])
     bw = 0.55 * S
     xs = [cx - bl / 2 + bl * f for f in (0.20, 0.33, 0.46, 0.80)]
@@ -112,16 +112,25 @@ def resistor(a, b, S, ohms, standing=False):
     return out
 
 
-def _standing(a, b, S, dia, fill, bands=None):
-    """A part stood upright over lead a, its other lead bent back down into b."""
+def _standing_resistor(a, b, S, dia, fill, rings):
+    """A resistor stood upright over lead a, its other lead bent back down into b. The body
+    shows its four color bands, read from left to right whichever way the lead bends, and the
+    bent lead is drawn as the wire it is, with its solder joint in b."""
     r = dia / 2 * S
-    out = [f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" '
-           f'stroke="{SILVER_EDGE}" stroke-width="{0.55 * S:.1f}"/>',
-           f'<circle cx="{a[0]:.1f}" cy="{a[1]:.1f}" r="{r:.1f}" fill="{fill}" stroke="#4d4d4d" '
-           'stroke-width="1"/>']
-    if bands:
-        out.append(f'<circle cx="{a[0]:.1f}" cy="{a[1]:.1f}" r="{r * 0.62:.1f}" fill="none" '
-                   f'stroke="{BAND_COLOR[bands[0]]}" stroke-width="{0.45 * S:.1f}"/>')
+    out = bare(a, b, S)
+    out.append(f'<circle cx="{b[0]:.1f}" cy="{b[1]:.1f}" r="{0.45 * S:.1f}" fill="{SILVER}" '
+               f'stroke="{SILVER_EDGE}" stroke-width="1"/>')
+    out.append(f'<circle cx="{a[0]:.1f}" cy="{a[1]:.1f}" r="{r:.1f}" fill="{fill}"/>')
+    # the bands upright, the first on the left, each as long as the chord at its outer edge, so
+    # it stays inside the body
+    bw = 0.32 * S
+    for f, c in zip((-0.58, -0.22, 0.14, 0.6), rings):
+        edge = abs(f) * r + bw / 2
+        half = math.sqrt(max(r * r - edge * edge, 0))
+        out.append(f'<rect x="{a[0] + f * r - bw / 2:.1f}" y="{a[1] - half:.1f}" '
+                   f'width="{bw:.1f}" height="{2 * half:.1f}" fill="{BAND_COLOR[c]}"/>')
+    out.append(f'<circle cx="{a[0]:.1f}" cy="{a[1]:.1f}" r="{r:.1f}" fill="none" stroke="#333333" '
+               'stroke-width="1.6"/>')
     return out
 
 
@@ -275,7 +284,8 @@ def terminal(pins, S, entry):
 
 
 def dip(pins, S, body_l, body_w, color="#1a1a1a"):
-    """DIP IC from above: body over two rows, notch at the pin 1 end, dot beside pin 1.
+    """DIP IC from above: body over two rows, notch at the pin 1 end. The pin numbers on the
+    body mark pin 1, so it carries no dot.
 
     pins are the pin centers in pin order 1..n, counterclockwise as the package numbers them."""
     n = len(pins)
@@ -291,14 +301,10 @@ def dip(pins, S, body_l, body_w, color="#1a1a1a"):
     # notch: a half circle on the end where pin 1 sits
     if horiz:
         ex = cx - w / 2 if p1[0] < cx else cx + w / 2
-        out.append(f'<circle cx="{ex:.1f}" cy="{cy:.1f}" r="{0.9 * S:.1f}" fill="#3a3a3a"/>')
+        out.append(f'<circle cx="{ex:.1f}" cy="{cy:.1f}" r="{0.6 * S:.1f}" fill="#3a3a3a"/>')
     else:
         ey = cy - h / 2 if p1[1] < cy else cy + h / 2
-        out.append(f'<circle cx="{cx:.1f}" cy="{ey:.1f}" r="{0.9 * S:.1f}" fill="#3a3a3a"/>')
-    dx = (cx - p1[0]) * 0.25 if horiz else (cx - p1[0]) * 0.55
-    dy = (cy - p1[1]) * 0.55 if horiz else (cy - p1[1]) * 0.25
-    out.append(f'<circle cx="{p1[0] + dx:.1f}" cy="{p1[1] + dy:.1f}" r="{0.45 * S:.1f}" '
-               'fill="#5a5a5a"/>')
+        out.append(f'<circle cx="{cx:.1f}" cy="{ey:.1f}" r="{0.6 * S:.1f}" fill="#3a3a3a"/>')
     return out
 
 
