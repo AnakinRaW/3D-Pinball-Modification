@@ -2,8 +2,9 @@
 from figcheck import *
 
 MODEL = Model.at(__file__, "ir-reflective",
-                 drawings=["ir-sensor-mainboard.svg", "pulsed-schematic.svg",
-                           "mainboard-placement.svg", "continuous-schematic.svg"],
+                 drawings=["ir-board-schematic.svg", "isolator-board-schematic.svg", "pulsed-schematic.svg",
+                           "continuous-schematic.svg", "variants/ir-board.svg", "ir-board-11.svg", "variants/ir-board-11-30x42.svg",
+                           "isolator-board.svg"],
                  documents=["../../firmware/drivers/ir-sensing.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.ignores("bench-measurement.de.md", "the bench record the measured inputs cite, which the "
@@ -134,6 +135,8 @@ asm("t_ovh", 2, "µs", src="reserved per conversion for the firmware's own overh
 asm("t_jitter", 10, "µs", src="reserve kept at the end of the phase, sized by the worst case for a "
     "trigger that fires late")
 asm("stray_dout", 15, "pF", src="stray at the ADC-DOUT net")
+asm("c_iso_lead", 40, "pF", src="the two ADC-DOUT leads of J-IR-ISO between the IR board and the "
+    "isolator board, taken generously for Dupont leads of up to 20 cm; not measured")
 asm("stray_miso", 20, "pF", src="stray at the MISO conductor and the Teensy pin")
 asm("derate", 50, "%", src="ceramic capacitance kept under DC bias, as FN8373.2 itself advises")
 asm("vcc2_overshoot", 70, "mV", src="load-release overshoot on VCC2, the order of the droop")
@@ -625,7 +628,8 @@ with MODEL.block(stated="loose"):
         return i_iso_ac_s2_1m + (i_iso_ac_s2_10m - i_iso_ac_s2_1m) * f.raw
     fig("i_iso_ac_s2", "mA", _i_iso_ac_s2, group=_U3)
 with MODEL.block(_U3):
-    fig("t_r37_net", "ns", "r_dout_hi * stray_dout")
+    fig("c_dout", "pF", "stray_dout + c_iso_lead")
+    fig("t_r37_net", "ns", "r_dout_hi * c_dout")
     fig("t_r34_net", "ns", "r_miso_hi * stray_miso")
     fig("half_period", "ns", "1 / (2 * f_clk)", moves="-f_clk")
     fig("dout_round_trip", "ns", "2 * t_pd_iso + t_do_adc + t_r37_net + t_r34_net",
@@ -688,7 +692,8 @@ fig("r_miso_min", "kΩ", "v_3v3_max / (i_out_iso * (1 - kit_tol))", "up",
     moves="+v_3v3_max +kit_tol -i_out_iso", stated=False)
 fig("r_miso_max", "kΩ",
     "(half_period - 2 * t_pd_iso - t_do_adc - t_r37_net) / (stray_miso * (1 + kit_tol))", "down",
-    moves="-f_clk -t_pd_iso -t_do_adc -r_dout -stray_dout -stray_miso -kit_tol", stated=False)
+    moves="-f_clk -t_pd_iso -t_do_adc -r_dout -stray_dout -c_iso_lead -stray_miso -kit_tol",
+    stated=False)
 
 # R35: at its low end it still leaves the gate above the IRL540N's highest threshold behind
 # R33 at its high end, and at its high end the gate's leakage still holds the IRL540N's
@@ -951,7 +956,7 @@ with MODEL.block(_PLACE, stated="loose"):
         "distance perfboard allows; no datasheet states one")
     asm("place_local", 10, "mm", src="how close a part sits to the node it serves, the module's socket, Q1's "
         "gate and the converters' VDD pins alike; no datasheet states one")
-    asm("place_channel", 25, "mm", src="how far a channel's pull-down may sit from its converter "
+    asm("place_channel", 35, "mm", src="how far a channel's pull-down may sit from its converter "
         "input, so the stub adds little to the source resistance")
 asm("ball_diameter", 9, "mm", src="the steel ball the EG01 kit supplies, taken as 9 mm; no "
     "measurement of it is recorded")
@@ -1094,11 +1099,11 @@ for _text, _why in [
 ]:
     MODEL.aside(_text, _why)
 
-# -- wiring: the mainboard, pin by pin, and the isolator's board-side nets -----
+# -- wiring: the IR board, pin by pin, and the isolator's board-side nets -----
 # The nets at the Teensy come from the schematic. What it cannot hold stays declared here: the
 # Teensy's own LED on SCK, and the board-side nets, which reach no Teensy signal.
 MODEL.schematic("schematic.py")
-_SVG = "ir-sensor-mainboard.svg"
+_SVG = "ir-board-schematic.svg"
 _ISO_S2 = "design.md, U3: VCC2 from the board's rail"
 
 MODEL.net("SCK at the Teensy's LED",
