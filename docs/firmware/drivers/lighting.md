@@ -12,7 +12,7 @@ A `show()` that comes while the previous frame is still being sent waits for it.
 
 FastLED also holds the color of every LED. It keeps the current within the budget the [lighting design](../../parts/lighting/design.md#current-ceiling) sets.
 
-`begin()` hands FastLED the strip's measured currents as its power model, `setPowerModel(PowerModelRGB(...))`. At 5 V and rounded up, an LED takes 28 mW for red, 31 mW for green and 31 mW for blue, and 9 mW while it is dark. `setPowerModel` exists from FastLED 3.10.4 on.
+`begin()` hands FastLED the strip's measured currents as its power model, `setPowerModel(PowerModelRGB(...))`. At 5 V and rounded up, an LED takes 28 mW for red, 31 mW for green and 31 mW for blue, and 3 mW while it is dark. `setPowerModel` exists from FastLED 3.10.4 on.
 
 `begin()` also makes ObjectFLED the only driver FastLED may use, with `setExclusiveDriver<fl::Bus::FLEX_IO, 0>()`. FastLED names ObjectFLED slot 0 of its `FLEX_IO` bus from 3.10.6 on. Slot 1 of that bus is FastLED's FlexIO2 driver, and FlexIO2 belongs to the [display driver](display.md).
 

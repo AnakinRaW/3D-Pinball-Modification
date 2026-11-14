@@ -15,7 +15,7 @@ The strip draws far less than the usual budget of 20 mA per color. A piece of tw
 | White | 37.5 mA | 17 mA |
 | Green at half its value | 9.8 mA | 3.15 mA |
 
-The controller of an LED draws 1.75 mA, also while the LED is dark.
+The controller's dark draw is measured on the whole strip. Its remaining 308 LEDs, all dark, draw 130 mA, so the controller of an LED draws 0.42 mA, also while the LED is dark.
 
 The three colors add up to 17.8 mA, a little more than the 17 mA white draws.
 
@@ -25,7 +25,7 @@ The [lighting design](../../parts/lighting/design.md#current-ceiling) budgets th
 
 ## Sources
 
-- The bench measurement above
+- The bench measurements above
 - [SEZO strip listing](https://amzn.eu/d/0jcgB8mw): the length, the width and the LED density
 
 ## Test Code 

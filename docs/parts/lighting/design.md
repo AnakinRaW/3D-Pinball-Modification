@@ -12,6 +12,8 @@ The modification keeps the stock light positions but also adds new lights for ga
 
 Most lights come from a cuttable strip of WS2812B LEDs, 2 m long and 2.7 mm wide. This format also barely fits the stock plastic trenches along the playfield's side panels. A WS2812B is an RGB LED with its own controller. It takes its color from a data line and passes the remaining data on to the next LED, so the LEDs on one data line form a chain. A segment is a piece cut from the strip and fitted at one place. The segments of a chain are wired one after the other.
 
+A playfield light may instead be cut from a [BTF-Lighting WS2812B-2020 strip 5 mm wide](../../research/Custom/ws2812b-2020-strip.md). Its LEDs take the same data and draw no more than the SEZO's, so they go into the same chains and the current ceiling below holds for them.
+
 The sides and the diorama ceiling take 115.5 cm of the strip and the other stock positions about 45 cm.
 
 The ball count board P28 is taken out whole and kept intact. Six LEDs take its positions.
@@ -63,7 +65,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 ## Current ceiling
 
-The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md) on a piece of two LEDs cut from it. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 1.75 mA even while the LED is dark, 0.42 A for all 240 LEDs.
+The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md), the colors on a piece of two LEDs cut from it and the dark draw on the whole strip. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 0.42 mA even while the LED is dark, 0.1 A for all 240 LEDs.
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR mainboard. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
@@ -73,7 +75,7 @@ The adapter's rating is set in the [machine config](../../firmware/components/co
 |---|---|---|
 | Perimeter LEDs lit | every second, 80 | all, 158 |
 | Playfield lights, brightness at most | 255 | 255 |
-| Ambient lights, brightness at most | 78 | 117 |
+| Ambient lights, brightness at most |121 | 128 |
 | Cap | 2 A | 2.93 A |
 
 The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
@@ -135,6 +137,7 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 | Qty | Part | Where |
 |---|---|---|
 | 1 | SEZO WS2812B strip, 2.7 mm wide, 160 LEDs/m, 2 m | the perimeters, the ceiling and the playfield segments |
+| 1 * | BTF-Lighting WS2812B-2020 strip, 5 mm wide, 160 LEDs/m, 1 m | playfield lights, in place of SEZO segments |
 | 2 | CD74HCT125E quad buffer, DIP-14 | U1 on each board, the level shifter |
 | 6 | 2.2 kΩ resistor | R1 to R3 on each board, from the Teensy pins to the buffer inputs |
 | 6 | 330 Ω resistor | R4 to R6 on each board, in the data lines at the buffer outputs |

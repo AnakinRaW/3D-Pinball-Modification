@@ -9,7 +9,8 @@ MODEL = Model.at(__file__, "lighting",
                            "../../firmware/components/lamps-architecture.svg"],
                  documents=["../../firmware/components/lamps.md",
                             "../../firmware/drivers/lighting.md",
-                            "../../research/Custom/sezo-ws2812b-strip.md"])
+                            "../../research/Custom/sezo-ws2812b-strip.md",
+                            "../../research/Custom/ws2812b-2020-strip.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.skips("../../research/Custom/sezo-ws2812b-strip.md", "Test Code",
             "the bench sketch the strip's currents were measured with")
@@ -51,7 +52,12 @@ msr("i_bench_red", 14.6, "mA", src=f"{_BENCH} CRGB(255, 0, 0)", stated=False)
 msr("i_bench_green", 15.8, "mA", src=f"{_BENCH} CRGB(0, 255, 0)", stated=False)
 msr("i_bench_blue", 15.7, "mA", src=f"{_BENCH} CRGB(0, 0, 255)", stated=False)
 msr("i_bench_white", 37.5, "mA", src=f"{_BENCH} CRGB(255, 255, 255)", stated=False)
-fig("i_ctrl", "mA", "i_bench_dark / n_bench", moves="+i_bench_dark -n_bench", stated=False)
+# A controller's dark draw comes from the whole strip, where the small piece's reading is too coarse.
+dec("n_strip_dark", 308, "", src="the LEDs of the SEZO strip the dark draw was measured on: 2 m at "
+    "160 LEDs/m less the 12 LEDs already cut off", stated=False)
+msr("i_strip_dark", 130, "mA", src="bench: the SEZO strip, 2 m with 12 of its LEDs cut off, every "
+    "LED dark", stated=False)
+fig("i_ctrl", "mA", "i_strip_dark / n_strip_dark", moves="+i_strip_dark -n_strip_dark", stated=False)
 fig("i_red", "mA", "(i_bench_red - i_bench_dark) / n_bench",
     moves="+i_bench_red -i_bench_dark -n_bench", stated=False)
 fig("i_green", "mA", "(i_bench_green - i_bench_dark) / n_bench",
@@ -60,6 +66,42 @@ fig("i_blue", "mA", "(i_bench_blue - i_bench_dark) / n_bench",
     moves="+i_bench_blue -i_bench_dark -n_bench", stated=False)
 fig("i_green_half", "mA", "(i_bench_green_half - i_bench_dark) / n_bench",
     moves="+i_bench_green_half -i_bench_dark -n_bench", stated=False)
+
+# The 5 mm strip, an option for the playfield lights in the widest holes, measured on one meter with
+# its first LED lit and the rest dark. The meter sat in series in the strip's 5 V line.
+_W5 = ("bench: one meter of the 5 mm WS2812B-2020 strip on a bench supply, its current read off the "
+       "supply with the meter in series in the strip's 5 V line, FastLED at brightness 255 setting "
+       "the first LED to")
+dec("n_w5_meter", 160, "", src="the LEDs of the meter the 5 mm strip was measured on, 160 LEDs/m",
+    stated=False)
+dec("n_w5_lit", 1, "", src="the LEDs lit in each colored reading of the 5 mm strip", stated=False)
+dec("w_w5", 5, "mm", src="the 5 mm strip's width, as measured")
+msr("i_w5_bench_dark", 66.1, "mA", src=f"{_W5} black, so every LED is dark", stated=False)
+msr("i_w5_bench_red", 71.6, "mA", src=f"{_W5} CRGB(255, 0, 0)", stated=False)
+msr("i_w5_bench_green", 71.7, "mA", src=f"{_W5} CRGB(0, 255, 0)", stated=False)
+msr("i_w5_bench_blue", 71.6, "mA", src=f"{_W5} CRGB(0, 0, 255)", stated=False)
+msr("i_w5_bench_white", 82.5, "mA", src=f"{_W5} CRGB(255, 255, 255)", stated=False)
+fig("i_w5_ctrl", "mA", "i_w5_bench_dark / n_w5_meter", moves="+i_w5_bench_dark -n_w5_meter",
+    stated=False)
+fig("i_w5_red", "mA", "(i_w5_bench_red - i_w5_bench_dark) / n_w5_lit",
+    moves="+i_w5_bench_red -i_w5_bench_dark -n_w5_lit", stated=False)
+fig("i_w5_green", "mA", "(i_w5_bench_green - i_w5_bench_dark) / n_w5_lit",
+    moves="+i_w5_bench_green -i_w5_bench_dark -n_w5_lit", stated=False)
+fig("i_w5_blue", "mA", "(i_w5_bench_blue - i_w5_bench_dark) / n_w5_lit",
+    moves="+i_w5_bench_blue -i_w5_bench_dark -n_w5_lit", stated=False)
+fig("i_w5_white_sum", "mA", "i_w5_red + i_w5_green + i_w5_blue",
+    moves="+i_w5_bench_red +i_w5_bench_green +i_w5_bench_blue -i_w5_bench_dark", stated=False)
+fig("i_w5_white", "mA", "(i_w5_bench_white - i_w5_bench_dark) / n_w5_lit",
+    moves="+i_w5_bench_white -i_w5_bench_dark -n_w5_lit", stated=False)
+V6 = "WS2812B-2020-V6-Worldsemi.pdf"
+ds("i_v6_test", 12, "mA", sheet=V6, src="LED Characteristics, the working current the brightness "
+   "of each color is tested at, p. 4", stated=False)
+ds("i_v6_static", 1, "µA", sheet=V6, src="Main Features: static power consumption below 1 µA, p. 1",
+   stated=False)
+# The size of one cut LED.
+dec("pitch_strip", 6.25, "mm", src="the length of one cut LED at 160 LEDs/m, 1 m over 160")
+fig("d_w5_piece", "mm", "(w_w5 ** 2 + pitch_strip ** 2) ** (1 / 2)", "up",
+    moves="+w_w5 +pitch_strip")
 
 # Full white as the three colors summed, which lies above the white reading and so bounds it.
 fig("i_led_white", "mA", "i_red + i_green + i_blue", "up",
@@ -312,19 +354,22 @@ fig("frac_playfield", "%", "(playfield_max + 1) / scale_steps", stated=False)
 
 
 # The ambient lights take what is left of the cap once the controllers and the playfield at its
-# brightness are paid, as the FastLED brightness value whose scale stays under it.
-def _ambient_max(budget, i_idle, n_playfield, i_led_white, frac_playfield, n_lit, scale_steps):
+# brightness are paid, as the FastLED brightness value whose scale stays under it, and no more than
+# they need.
+def _ambient_max(budget, i_idle, n_playfield, i_led_white, frac_playfield, n_lit, scale_steps, ceiling):
     left = (budget - i_idle - n_playfield.raw * i_led_white * frac_playfield.raw) / (n_lit.raw * i_led_white)
-    return Q.of(floor(left.raw * scale_steps.raw) - 1, "")
+    return Q.of(min(floor(left.raw * scale_steps.raw) - 1, ceiling.raw), "")
 
 
 fig("ambient_max_3a", "", lambda i_budget, i_idle, n_playfield, i_led_white, frac_playfield,
-    n_ambient_lit_3a, scale_steps: _ambient_max(i_budget, i_idle, n_playfield, i_led_white,
-                                               frac_playfield, n_ambient_lit_3a, scale_steps), "down",
+    n_ambient_lit_3a, scale_steps, ambient_ceiling: _ambient_max(
+        i_budget, i_idle, n_playfield, i_led_white, frac_playfield, n_ambient_lit_3a, scale_steps,
+        ambient_ceiling), "down",
     group="Ambient lights, brightness at most", section=CEILING)
 fig("ambient_max_6a", "", lambda i_budget_6a, i_idle, n_playfield, i_led_white, frac_playfield,
-    n_ambient, scale_steps: _ambient_max(i_budget_6a, i_idle, n_playfield, i_led_white,
-                                        frac_playfield, n_ambient, scale_steps), "down",
+    n_ambient, scale_steps, ambient_ceiling: _ambient_max(
+        i_budget_6a, i_idle, n_playfield, i_led_white, frac_playfield, n_ambient, scale_steps,
+        ambient_ceiling), "down",
     group="Ambient lights, brightness at most", section=CEILING)
 
 # what the whole layout draws at full white with each profile
@@ -341,7 +386,7 @@ fig("pm_green", "mW", "ceil_to(i_green * v_rail, 'mW', mw_grain.to('mW'))", "up"
 fig("pm_blue", "mW", "ceil_to(i_blue * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_blue -i_bench_dark +v_rail", stated=False)
 fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
-    moves="+i_bench_dark +v_rail", stated=False)
+    moves="+i_strip_dark +v_rail", stated=False)
 
 # -- the frame ----------------------------------------------------------------
 OBJECTFLED = "ObjectFLED.h in FastLED"
@@ -407,6 +452,9 @@ _I("the ambient lights stay at or under the brightness they need",
 _I("the ambient lights keep some brightness with either adapter", "ambient_max_3a > Q.of(0, '')")
 _I("the 6 A adapter carries the lighting at its cap, the permanent consumers and two bumpers with "
    "the scoop", "i_budget_6a + i_coils_at_once + i_permanent <= i_supply_6a")
+_I("the 5 mm strip draws no more per color and while dark than the SEZO strip, so the budget, "
+   "taken with the SEZO's currents, holds for every light cut from either",
+   "i_w5_red <= i_red and i_w5_green <= i_green and i_w5_blue <= i_blue and i_w5_ctrl <= i_ctrl")
 _I("the strip draws less per color than the usual budget", "i_red < i_color_usual and "
    "i_green < i_color_usual and i_blue < i_color_usual")
 _I("green at half its value draws less than at full and more than nothing",
