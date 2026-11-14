@@ -154,6 +154,8 @@ CARD      the card's clusters                      32 KB
           their time                             = 5.4 ms
           the card's load at 25 frames a second  = 58.6 %
           the next frame read, the audio between = 23.41 ms
+          the same under full load, at most,
+          measured                                 23.09 ms
           LVGL draws a frame, at most, measured    7.09 ms
           the current frame drawn and sent       = 19.89 ms
 ```

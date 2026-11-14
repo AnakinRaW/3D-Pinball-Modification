@@ -84,6 +84,8 @@ Each request reports its own end. A failing card reaches the event queue through
 
 A request fails with a card error when the card reports its transfer as failed or does not answer within 1 s.
 
+On the bench every read that met a pulled card failed after that second. The main task kept running meanwhile and waited at most 0.13 ms.
+
 The card counts as failed when `begin()` finds no card or no file system it can read, after three card errors in a row, or when the file system does not come back after a card error. 
 
 Before it mounts, the driver reads DAT3 as an input with a pull-down. Without a card it skips the mount and reports the card failed at once.
@@ -99,6 +101,10 @@ A card that `begin()` could not set up, and a card pulled out and put back, stay
 A card that sits in the socket but does not answer holds up the start for about 3 s. The mount runs before the watchdog starts, so the start is only delayed.
 
 When the card gives a broken answer to a command that starts a transfer, the main loop can be stuck for one second.
+
+A save from the PSRAM takes longer than one from RAM2. On the bench a save of 4 KB took at most 16.19 ms from the PSRAM and 0.77 ms from RAM2.
+
+Under full load a movie frame took 12.45 ms in the mean from its request to its end in one run and 17.41 ms in the others, with the same build. The cause is unknown. The display's card budget takes the slower run.
 
 ## Existing libraries
 

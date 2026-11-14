@@ -99,3 +99,5 @@ After every restart other than a power-up, the log on the card states its cause.
 | The firmware hangs | the address of the running code |
 
 Right after the logger's `begin()`, the main task writes the report into the log.
+
+On the bench a hang with interrupts on raised the warning 1.5 s after the last feed, and the report named the hang and its address. A hang with interrupts off restarted the Teensy without the warning, so its report names only the watchdog.

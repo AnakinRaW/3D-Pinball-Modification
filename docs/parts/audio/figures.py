@@ -151,6 +151,20 @@ ds("t_wr_block", 500, "ms", src=f"{SD}, 4.6.2.2: the longest busy an SDXC card m
 msr("t_mount_nocard", 3, "s", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: the "
     "longest of 8 calls of SdFat's begin() in its DMA mode with no card in the socket, 3002 ms, "
     "in which no other task ran")
+_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+msr("t_main_wait_pull", 0.13, "ms", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: "
+    "the longest the main task waited while the storage task read frames, met the pulled card and "
+    "failed three reads")
+msr("t_save_ram2", 0.77, "ms", src=f"{_LOAD}: the longest of 25 saves of 4 KB from RAM2, each "
+    "written, synced and read back")
+msr("t_save_psram", 16.19, "ms", src=f"{_LOAD}: the longest of 25 saves of 4 KB from the PSRAM, "
+    "each written, synced and read back")
+msr("t_frame_fast", 12.45, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in one "
+    "run of the same build")
+msr("t_frame_slow", 17.41, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in "
+    "the other runs of the same build")
+msr("t_audio_wait_load", 21.53, "ms", src=f"{_LOAD}, 8 KB chunks: the longest of 861 audio reads "
+    "from request to end")
 dec("n_open", 16, "", src="kOpen in docs/firmware/drivers/storage.md, the files the storage task "
     "keeps open at once")
 dec("t_probe", 1, "s", src="how often the storage task asks a failed card for its status, kProbeMs "
@@ -184,6 +198,7 @@ ds("t_sdfat", 1, "s", src="BUSY_TIMEOUT_MICROS in SdFat's src/SdCard/SdioTeensy.
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
+_I("an audio read under full load ends before the four channels could run dry", "t_audio_wait_load < t_read_max")
 _I("a full-scale sine stays under the power the speaker is assumed to take", "p_fs < p_spk")
 _I("the cap holds the loudest digital signal to that power", "g_cap * g_cap * p_square <= p_spk")
 _I("the rail does not clip a full-scale signal", "v_peak < v_dd")

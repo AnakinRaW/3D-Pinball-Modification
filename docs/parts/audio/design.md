@@ -116,6 +116,8 @@ BUFFERS   RAM2 on the Teensy 4.1                   512 KB
           what a channel holds ahead at least    = 278 ms
           the longest one card read may take
           with all four channels waiting         = 69.6 ms
+          the longest read under full load,
+          measured                                 21.53 ms
           all four channels together             = 128 KB
 ```
 

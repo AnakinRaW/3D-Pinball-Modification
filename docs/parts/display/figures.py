@@ -168,9 +168,10 @@ with MODEL.block("MOVIE", section=MOVIE):
 # the card: measured on the bench. SdFat's file layer cuts a read at every cluster, and its DMA
 # mode costs a command per piece, so the cluster size sets how fast a frame comes
 # ---------------------------------------------------------------------------
-_CARD_TEST = ("firmware/tests/card-speed on the Teensy 4.1 with its PSRAM and an 8 GB card of speed class 10 with no A1 mark, formatted "
+_CARD_TEST = ("firmware/tests/card-speed on the Teensy 4.1 with its PSRAM and an 8 GB card of speed class 10 with no A1 mark, which reads 1152 random 4 KB blocks a second where A1 asks 1500, formatted "
               "FAT32 with 32 KB clusters by SdFat's format(), reading in SdFat's DMA mode into the "
               "PSRAM:")
+_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
 with MODEL.block("CARD", section=MOVIE):
     dec("b_cluster", 32, "KB", src="the cluster every card of the machine is formatted with, which "
         "the SD Association's formatter and SdFat's format() give a FAT32 card of 8 to 32 GB")
@@ -202,6 +203,8 @@ with MODEL.block("CARD", section=MOVIE):
     fig("t_read_cycle", "ms", "t_card_frame + t_card_audio", "up",
         moves="+t_card_frame +t_audio_read")
     fig("t_draw_cycle", "ms", "t_render + t_frame_bus", "up", moves="+t_render +n_cols +n_rows")
+    msr("t_read_cycle_load", 23.09, "ms", src=f"{_LOAD}, 8 KB audio chunks: the longest of 500 "
+        "frames from its request to its end, every one in time")
 
 # -- the touch bus: Wire2 to the touch controller, read on the touch driver's tick
 with MODEL.block("TOUCH", section=TOUCH):
@@ -405,6 +408,7 @@ MODEL.uses("ram2", of="teensy-4.1")
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
+_I("a frame read under full load ends inside its movie frame", "t_read_cycle_load < t_movie")
 _I("a single failed touch read does not count as a failure", "t_fail > 2 * t_ttick")
 _I("the shortest supervisor reset silences the touch controller longer than its failure time",
    "t_fail < t_sup_min")
