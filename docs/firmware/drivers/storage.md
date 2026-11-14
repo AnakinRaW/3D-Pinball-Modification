@@ -59,6 +59,8 @@ An interrupt that starts requests has a priority number of 208 or more (higher v
 
 SdFat reads a file one cluster at a time. In its DMA mode each cluster costs one command to the card, so a large read is as fast as the card's clusters are large. The card is formatted FAT32 with 32 KB clusters. A full-screen video frame then arrives within the time the [display's appendix](../../parts/display/design.md#appendix-derivations) measures.
 
+A file opened for reading goes through SdFat's `contiguousRange()` once. A FAT32 file loses on open the mark that its clusters lie in one piece, and without it SdFat asks the FAT for each next cluster. Marked again, a full-screen frame read in 16.65 ms instead of 17.35 ms on the bench.
+
 ## Writing
 
 `write()` writes `size` bytes at position `at` of the file. It therefore takes the data directly from `data`, so the caller leaves `data` unchanged until the request has ended. A write that starts past the end of the file fails. A write into a missing directory creates the directory first.
@@ -88,7 +90,7 @@ On the bench every read that met a pulled card failed after that second. The mai
 
 The card counts as failed when `begin()` finds no card or no file system it can read, after three card errors in a row, or when the file system does not come back after a card error. 
 
-Before it mounts, the driver reads DAT3 as an input with a pull-down. Without a card it skips the mount and reports the card failed at once.
+Before it mounts, the driver reads DAT3 as an input with a pull-down. Without a card it skips the mount and reports the card failed at once. On the bench DAT3 read high with the card in and low without it, also once the card was back.
 
 [`failed()`](../error-handling.md#device-faults) reports it with the code of the last card error. While the card counts as failed, every request fails at once. 
 
@@ -102,7 +104,7 @@ A card that sits in the socket but does not answer holds up the start for about 
 
 When the card gives a broken answer to a command that starts a transfer, the main loop can be stuck for one second.
 
-A save from the PSRAM takes longer than one from RAM2. On the bench a save of 4 KB took at most 16.19 ms from the PSRAM and 0.77 ms from RAM2.
+The first save into a new file takes longer than one over an existing file. On the bench a save of 4 KB took at most 15.80 ms into a new file and 4.69 ms over an existing one, from the PSRAM as from RAM2.
 
 Under full load a movie frame took 12.45 ms in the mean from its request to its end in one run and 17.41 ms in the others, with the same build. The cause is unknown. The display's card budget takes the slower run.
 

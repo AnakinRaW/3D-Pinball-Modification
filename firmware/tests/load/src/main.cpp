@@ -85,7 +85,8 @@ static volatile uint64_t audioSum = 0;
 
 static volatile bool     frameWanted = false;
 static volatile uint32_t frameIssued = 0, frameN = 0, frameMax = 0, frameOver = 0;
-static volatile uint64_t frameSum = 0;
+static volatile uint64_t frameSum = 0, frameWaitSum = 0, frameReadSum = 0;
+static volatile uint32_t frameReadMax = 0;
 static volatile uint32_t frameIndex = 0;
 
 enum WriteKind : uint8_t { kNone, kLog, kSavePsram, kSaveRam2 };
@@ -219,6 +220,10 @@ static void storageMain(void*) {
     storageTask = xTaskGetCurrentTaskHandle();
     ok = ok && frames.open("load.bin", O_RDONLY) && saves.open("save.bin", O_RDWR | O_CREAT | O_TRUNC)
             && logFile.open("log.txt", O_RDWR | O_CREAT | O_TRUNC);
+    // a FAT32 file forgets on open that it lies in one piece; contiguousRange() walks its clusters
+    // once and marks it, so later reads and seeks take its clusters without asking the FAT, as the
+    // storage driver does for a file it opens for reading
+    if (ok) frames.contiguousRange(nullptr, nullptr);
     if (ok) storageStep = 4;
     xTaskNotifyGive(mainTask);
     if (!ok) vTaskSuspend(nullptr);
@@ -239,11 +244,15 @@ static void storageMain(void*) {
             continue;
         }
         if (frameWanted) {
+            const uint32_t started = us();
             arm_dcache_flush_delete(picture, kFrame);
             frames.seekSet((frameIndex % kFrames) * kFrame);
             frames.read(picture, kFrame);
             arm_dcache_flush_delete(picture, kFrame);
-            const uint32_t d = us() - frameIssued;
+            const uint32_t ended = us(), d = ended - frameIssued;
+            frameWaitSum = frameWaitSum + (started - frameIssued);
+            frameReadSum = frameReadSum + (ended - started);
+            if (ended - started > frameReadMax) frameReadMax = ended - started;
             frameIndex = frameIndex + 1;
             frameN = frameN + 1; frameSum = frameSum + d;
             if (d > frameMax) frameMax = d;
@@ -341,6 +350,9 @@ static void mainMain(void*) {
     Serial.printf("   video frames: %lu of %lu due, from request to end mean %.2f ms, max %.2f ms, %lu past 40 ms\n",
                   frameN, kLoadMs / kFrameMs, frameN ? frameSum / frameN / 1000.0f : 0.0f, frameMax / 1000.0f,
                   frameOver);
+    Serial.printf("   of that, waiting behind the audio reads mean %.2f ms, the read itself mean %.2f ms, max %.2f ms; the file is %scontiguous\n",
+                  frameN ? frameWaitSum / frameN / 1000.0f : 0.0f, frameN ? frameReadSum / frameN / 1000.0f : 0.0f,
+                  frameReadMax / 1000.0f, frames.isContiguous() ? "" : "not ");
 
     // 3. saves from the PSRAM and from RAM2, with audio still streaming
     const uint32_t audioMaxBefore = audioMax;

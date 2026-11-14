@@ -406,9 +406,11 @@ void Storage::serve(FileRequest& r) {
 
 // gets the entry of r's file in the table of open files, opening the file through SdFat where it
 // is not open: for a read as it is, for a write with O_RDWR | O_CREAT after creating a missing
-// directory, which also opens anew a file opened for reading. Paths compare without regard to
-// case, as the card's file system names its files. A full table closes the entry used longest ago.
-// nullptr when the file does not open
+// directory, which also opens anew a file opened for reading. A file opened for reading goes
+// through SdFat's contiguousRange() once: a FAT32 file forgets on open that its clusters lie in one
+// piece, and marked so, its reads and seeks take the next cluster without asking the FAT. Paths
+// compare without regard to case, as the card's file system names its files. A full table closes
+// the entry used longest ago. nullptr when the file does not open
 Storage::OpenFile* Storage::find(FileRequest& r);
 
 // after a card error: stops the card's transfer where one still runs and frees the SD controller,

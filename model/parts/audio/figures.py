@@ -155,10 +155,15 @@ _LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load ru
 msr("t_main_wait_pull", 0.13, "ms", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: "
     "the longest the main task waited while the storage task read frames, met the pulled card and "
     "failed three reads")
-msr("t_save_ram2", 0.77, "ms", src=f"{_LOAD}: the longest of 25 saves of 4 KB from RAM2, each "
-    "written, synced and read back")
-msr("t_save_psram", 16.19, "ms", src=f"{_LOAD}: the longest of 25 saves of 4 KB from the PSRAM, "
-    "each written, synced and read back")
+msr("t_frame_fat", 17.35, "ms", src=f"{_LOAD}: the mean time one frame read itself took over three "
+    "runs, the file opened anew and SdFat asking the FAT for each cluster")
+msr("t_frame_contig", 16.65, "ms", src=f"{_LOAD}: the same over two runs once contiguousRange() had "
+    "marked the file as lying in one piece")
+_SAVES = ("a sketch on the Teensy 4.1 saving 4 KB in SdFat's DMA mode, written at the file's start "
+          "and synced, twice into a new file and twelve times over it, from the PSRAM and from RAM2 "
+          "in turn")
+msr("t_save_new", 15.80, "ms", src=f"{_SAVES}: the longer of the two first saves into a new file")
+msr("t_save_over", 4.69, "ms", src=f"{_SAVES}: the longest save over an existing file")
 msr("t_frame_fast", 12.45, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in one "
     "run of the same build")
 msr("t_frame_slow", 17.41, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in "
@@ -198,6 +203,7 @@ ds("t_sdfat", 1, "s", src="BUSY_TIMEOUT_MICROS in SdFat's src/SdCard/SdioTeensy.
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
+_I("a file marked as lying in one piece reads a frame faster", "t_frame_contig < t_frame_fat")
 _I("an audio read under full load ends before the four channels could run dry", "t_audio_wait_load < t_read_max")
 _I("a full-scale sine stays under the power the speaker is assumed to take", "p_fs < p_spk")
 _I("the cap holds the loudest digital signal to that power", "g_cap * g_cap * p_square <= p_spk")
