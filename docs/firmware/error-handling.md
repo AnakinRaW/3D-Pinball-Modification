@@ -60,7 +60,7 @@ The watchdog time can be only as long as the shortest guard it has to ensure.
 
 The main loop feeds it once per pass, and only while every condition it should guard holds. Feeding the watchdog belongs in the main loop because interrupts keep running while the loop hangs, and a watchdog fed from one would never fire.
 
-The watchdog starts first. Until the main loop runs, FreeRTOS's idle task feeds it under the same conditions.
+The watchdog starts right after the storage driver's mount, ahead of the solenoids. Until the main loop runs, FreeRTOS's idle task feeds it under the same conditions.
 
 The following components are guarded by the watchdog:
 
@@ -74,8 +74,8 @@ The following components are guarded by the watchdog:
 // the i.MX RT's WDOG1, which restarts the Teensy unless it is fed within 2 s
 class Watchdog {
 public:
-    // starts the watchdog and its warning; the main task calls it first, right before the
-    // solenoids' begin(), so it guards the coils from their first pull
+    // starts the watchdog and its warning; the main task calls it right after the storage
+    // driver's mount and before the solenoids' begin(), so it guards the coils from their first pull
     void begin();
 
     // feeds the watchdog while every guard holds, and notes the cause where one fails; at the end

@@ -52,7 +52,7 @@ The bench is the Teensy on USB with the boards of the subsystems under test, the
 
 ## Test card
 
-The card is of Class A1 or A2. It holds two games, `/games/a/` and `/games/b/`, and nothing else. The test programs carry two test games with those ids, which print every call the host makes to them. Each game's directory holds these files:
+The card is of Class A1 or A2. It is formatted FAT32 with 32 KB clusters and holds two games, `/games/a/` and `/games/b/`, and nothing else. The test programs carry two test games with those ids, which print every call the host makes to them. Each game's directory holds these files:
 
 | File | Content |
 |---|---|
@@ -143,7 +143,7 @@ The program `storage` checks the [storage driver](drivers/storage.md) against it
 | `loop-runs` | Teensy | Write a file of several megabytes and read it back while the main loop counts its passes | No pass of the main loop lasts as long as a driver tick |
 | `writing` | Teensy | Start several writes back to back | One `WritingStarted` comes before the first, and one `WritingEnded` after the last |
 | `yield` | Teensy | Attach an `EventResponder` to `yield()`, trigger it from an interrupt, and read a large file meanwhile | The responder runs in the main task once per pass and never in the storage task, and the read ends normally |
-| `no-card` | Teensy | Start without the card | The start-up completes, every request fails at once, and the card is reported failed |
+| `no-card` | Teensy | Start without the card | The start-up completes without a restart, every request fails at once, and the card is reported failed |
 | `pulled` | bench | Pull the card while a long read runs | The read fails, every later request fails at once, and the card stays reported failed until a restart |
 | `back` | bench | Put the card back and restart | The program's `Teensy` tests pass again |
 | `readable` | bench | Put the card into the computer after the other tests | The computer's disk check finds no error |

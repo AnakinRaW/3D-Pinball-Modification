@@ -123,9 +123,9 @@ Four parts of the firmware order their entries with a priority list. The [lamps 
 
 `setup()` starts the [clock](#time-measurement), creates the main task and starts FreeRTOS. The main task then runs, in this order:
 
-1. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
-2. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
-3. the storage driver's `begin()`, so later drivers can read their settings from the card;
+1. the storage driver's `begin()`, so later drivers can read their settings from the card. It comes ahead of the watchdog, so a card that holds up its mount only delays the start;
+2. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
+3. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the [config's](components/config.md) `begin()`, which reads the machine's settings, so every later driver starts with them, and the solenoids' `configure()`, which takes their pull times from them;
 6. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;

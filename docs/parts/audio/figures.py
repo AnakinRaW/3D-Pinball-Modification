@@ -148,6 +148,9 @@ ds("t_rd_block", 100, "ms", src=f"{SD}, 4.6.2.1: the read timeout of SDHC and SD
 ds("t_wr_block", 500, "ms", src=f"{SD}, 4.6.2.2: the longest busy an SDXC card may show after a "
    "block it writes, 250 ms for an SDHC card; the application note asks a host to wait longer than "
    "500 ms")
+msr("t_mount_nocard", 3, "s", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: the "
+    "longest of 8 calls of SdFat's begin() in its DMA mode with no card in the socket, 3002 ms, "
+    "in which no other task ran")
 dec("n_open", 16, "", src="kOpen in docs/firmware/drivers/storage.md, the files the storage task "
     "keeps open at once")
 dec("t_probe", 1, "s", src="how often the storage task asks a failed card for its status, kProbeMs "

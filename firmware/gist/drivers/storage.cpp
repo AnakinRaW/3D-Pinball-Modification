@@ -129,6 +129,7 @@ constexpr uint32_t    kSector       = 512;       // the card's sector
 constexpr uint32_t    kBounce       = 4096;      // the read buffer in RAM1
 constexpr uint8_t     kOpen         = 16;        // files the storage task keeps open at once
 constexpr uint32_t    kProbeMs      = 1000;      // from one status query of a failed card to the next
+constexpr uint8_t     kDat3         = 46;        // the socket's DAT3, the _SD_DAT3 of PJRC's SD.cpp
 constexpr uint32_t    kStack        = 8192;      // the storage task's stack in bytes; a test build measures its deepest call chain at 1.66 KB
 constexpr UBaseType_t kTaskPriority = 2;         // above the main task's 1, so the next transfer starts as soon as one ends
 constexpr uint8_t     kKernel       = 208;       // the lowest priority number that may call the kernel, configMAX_SYSCALL_INTERRUPT_PRIORITY
@@ -243,6 +244,16 @@ static StaticTask_t task_;
 static TaskHandle_t storageTask_ = nullptr;
 static void       (*sdfat_)()    = nullptr;
 
+// gets whether a card sits in the socket: its DAT3 line, read with a pull-down, which a card pulls
+// high, as PJRC's SD library does in mediaPresent(). SdFat's begin() waits about 3 s for a missing
+// card without calling yield(), so no other task would run meanwhile. begin() gives the pin back
+// to the SD controller
+static bool cardPresent() {
+    pinMode(kDat3, INPUT_PULLDOWN);
+    delayMicroseconds(5);                           // the pull-down settles, as SD.cpp waits
+    return digitalReadFast(kDat3);
+}
+
 // gets the exception the caller runs in, 0 in a task
 static uint32_t exception() {
     uint32_t ipsr;
@@ -280,7 +291,7 @@ bool Storage::begin() {
 // once a second
 void Storage::run() {
     storageTask_ = xTaskGetCurrentTaskHandle();     // yield() knows the task from here on, the mount included
-    mounted_ = card_.begin(SdioConfig(DMA_SDIO));   // SdFat waits for the card here, through yield()
+    mounted_ = cardPresent() && card_.begin(SdioConfig(DMA_SDIO));   // SdFat waits for the card here, through yield() where it answers
     down_    = !mounted_ || !volume_.begin(&counted_);   // a file system that does not read is asked again like a failed card
     if (down_) lastError_ = card_.errorCode();
     probed_  = nowUs();

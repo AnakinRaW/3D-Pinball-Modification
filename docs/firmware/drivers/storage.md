@@ -57,6 +57,8 @@ An interrupt that starts requests has a priority number of 208 or more (higher v
 
 `read()` reads up to `size` bytes from position `at` of the file into `buffer`. A read stops at the end of the file. It brings 0 bytes from a missing or empty file and from a position at or past the end. `bytes()` gives how many bytes it brought. `fileSize()` gives the file’s size after every read, also when the read brought 0 bytes.
 
+SdFat reads a file one cluster at a time. In its DMA mode each cluster costs one command to the card, so a large read is as fast as the card's clusters are large. The card is formatted FAT32 with 32 KB clusters. A full-screen video frame then arrives within the time the [display's appendix](../../parts/display/design.md#appendix-derivations) measures.
+
 ## Writing
 
 `write()` writes `size` bytes at position `at` of the file. It therefore takes the data directly from `data`, so the caller leaves `data` unchanged until the request has ended. A write that starts past the end of the file fails. A write into a missing directory creates the directory first.
@@ -84,6 +86,8 @@ A request fails with a card error when the card reports its transfer as failed o
 
 The card counts as failed when `begin()` finds no card or no file system it can read, after three card errors in a row, or when the file system does not come back after a card error. 
 
+Before it mounts, the driver reads DAT3 as an input with a pull-down. Without a card it skips the mount and reports the card failed at once.
+
 [`failed()`](../error-handling.md#device-faults) reports it with the code of the last card error. While the card counts as failed, every request fails at once. 
 
 The driver asks the card for its status once a second and clears the fault as soon as the card answers and its file system reads. 
@@ -91,6 +95,8 @@ The driver asks the card for its status once a second and clears the fault as so
 A card that `begin()` could not set up, and a card pulled out and put back, stay failed until a restart.
 
 ## Limitations
+
+A card that sits in the socket but does not answer holds up the start for about 3 s. The mount runs before the watchdog starts, so the start is only delayed.
 
 When the card gives a broken answer to a command that starts a transfer, the main loop can be stuck for one second.
 
