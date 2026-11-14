@@ -8,9 +8,9 @@ The video player plays videos in a viewport on a [slide](screen.md#slides) of th
 
 A video named `jackpot` is the file `video/jackpot.rgb` in the game's directory. With `sound`, its sound `audio/jackpot.wav` plays as a [track](sounds.md#music) over every track of the game. The track that played is paused meanwhile. With `loop`, the video and its sound repeat.
 
-The video player shows each frame as an LVGL image. It reserves memory for one frame in the screen's [picture memory](screen.md#pictures) when the video starts and frees it when the video ends or stops. A full-screen frame takes 150 KB. When the picture memory is full, `play()` plays nothing and returns false.
+The video player shows each frame as an LVGL image. It reserves memory for two frames in the screen's [picture memory](screen.md#pictures) when the video starts and frees it when the video ends or stops. A full-screen frame takes 150 KB. When the picture memory is full, `play()` plays nothing and returns false.
 
-The video player runs as an LVGL timer. The [screen](screen.md)'s `render()` runs it in every pass of the main loop. When a frame is due, the video player makes LVGL redraw the screen right away, without waiting for LVGL's own refresh. It then reads the next frame from the card in one go into its memory. While a video plays, LVGL's own refresh pauses. The screen is then redrawn only with each frame of the video. A change elsewhere on the screen, such as a new score, appears with the next frame. A video with sound takes its time from its sound. It shows the frame that belongs to how far the sound has played, so a sound that stalls holds the video with it. When the sound ends before the video, the video switches to the clock and plays on from the frame it shows. A video without sound takes its time from its start. A frame that the card brings late stays on the screen longer. The video then skips to the frame that is due.
+The video player runs as an LVGL timer. The [screen](screen.md)'s `render()` runs it in every pass of the main loop. The card reads each frame in one go into one of the two frames, while LVGL draws the frame in the other. When a frame is due, the video player makes LVGL redraw the screen right away, without waiting for LVGL's own refresh. The frame LVGL has drawn from then takes the next read. While a video plays, LVGL's own refresh pauses. The screen is then redrawn only with each frame of the video. A change elsewhere on the screen, such as a new score, appears with the next frame. A video with sound takes its time from its sound. It shows the frame that belongs to how far the sound has played, so a sound that stalls holds the video with it. When the sound ends before the video, the video switches to the clock and plays on from the frame it shows. A video without sound takes its time from its start. A frame that the card brings late stays on the screen longer. The video then skips to the frame that is due.
 
 ## Owner
 
@@ -30,7 +30,7 @@ The timer detects the end. The video player hands `MovieEnded` to the game in it
 
 ## Existing libraries
 
-Raw frames need no decoder. Motion JPEG decoded with bitbank2's [JPEGDEC](https://github.com/bitbank2/JPEGDEC) cuts the card's traffic to about a tenth. Its decoding would run in the main loop for every frame. The card carries raw frames with room to spare, as the [display's appendix](../../parts/display/design.md#appendix-derivations) estimates.
+Raw frames need no decoder. Motion JPEG decoded with bitbank2's [JPEGDEC](https://github.com/bitbank2/JPEGDEC) cuts the card's traffic to about a tenth. Its decoding would run in the main loop for every frame. The card carries raw frames with room to spare, as the [display's appendix](../../parts/display/design.md#appendix-derivations) measures.
 
 An animated GIF holds at most 256 colors per frame. bitbank2's [AnimatedGIF](https://github.com/bitbank2/AnimatedGIF) and LVGL's `lv_gif` play such files. `lv_gif` also reads its file through LVGL's file interface in the main loop.
 

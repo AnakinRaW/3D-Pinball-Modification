@@ -100,7 +100,7 @@ with MODEL.block("BUFFERS", section=BUFFERS):
     dec("n_streams", 4, "", src="kChannels in docs/firmware/drivers/audio.md, the four inputs of "
         "the driver's mixer", stated=False)
     dec("buf", 32, "KB", src="the ring buffer each channel gets in RAM2")
-    dec("chunk", 4, "KB", src="what one card read brings into a channel's ring, kChunk in "
+    dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, kChunk in "
         "docs/firmware/drivers/audio.md")
     MODEL.as_written("chunk_bytes", of="chunk", unit="bytes")
     MODEL.as_written("buf_bytes", of="buf", unit="bytes")
@@ -134,8 +134,8 @@ fig("n_chunks", "", "buf / chunk", moves="+buf -chunk", stated=False)
 # -- the card, stated in docs/firmware/drivers/storage.md ---------------------
 SD = "SD Specifications Part 1, Physical Layer Simplified Specification, version 3.01"
 dec("card_app_class", 1, "", src="the lowest SD Application Performance Class the build accepts, "
-    "A1, a decision: the card load in docs/parts/display/design.md rests on the random reads of "
-    "4 KB an A1 card guarantees. An A2 card is accepted as well. SdFat uses neither its command "
+    "A1, a decision: the class that guarantees a rate of random reads, which the audio streams "
+    "make; the card load in docs/parts/display/design.md is measured. An A2 card is accepted as well. SdFat uses neither its command "
     "queue nor its cache, and the SD Association states that an A2 card then still delivers at "
     "least A1 performance, www.sdcard.org/developers/overview/application/")
 ds("line", 32, "bytes", src="the data cache line of the Cortex-M7, the unit arm_dcache_delete() in "

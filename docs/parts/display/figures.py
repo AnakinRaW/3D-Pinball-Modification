@@ -25,7 +25,6 @@ MCU = "IMXRT1060CEC.pdf"
 RM = "IMXRT1060RM Rev. 3"
 SCH = ("Adafruit's EAGLE schematic of the 2090, rev D, "
        "github.com/adafruit/Adafruit-2.8-TFT-with-Capacitive-Touch-PCB")
-SD = "SD Specifications Part 1, Physical Layer Simplified Specification, version 6.00"
 
 BUS = "Bus"
 FRAME = "Picture"
@@ -163,58 +162,46 @@ with MODEL.block("LVGL", section=FRAME):
 # -- the movie: RGB565 frames from the card, each read whole into its room in the picture memory
 with MODEL.block("MOVIE", section=MOVIE):
     dec("f_movie", 25, "Hz", src="the frame rate of every movie")
-    dec("movie_chunk", 16, "KB", src="the piece of a frame the estimate charges one card access "
-        "for, four of the audio's chunks; the video player reads a frame in one request, which the "
-        "estimate counts as one access for every 16 KB")
-    MODEL.uses("chunk", of="audio", stated=False)
-
     fig("t_movie", "ms", "1 / f_movie", moves="-f_movie")
-    fig("n_frame_chunks", "", "b_frame / movie_chunk",
-        moves="+n_cols +n_rows +b_pixel -movie_chunk")
 
 # ---------------------------------------------------------------------------
-# the card: an estimate of how long a chunk takes, from the A1 class
+# the card: measured on the bench. SdFat's file layer cuts a read at every cluster, and its DMA
+# mode costs a command per piece, so the cluster size sets how fast a frame comes
 # ---------------------------------------------------------------------------
-ds("f_a1", 1500, "Hz", src=f"{SD}, 4.16.1.1: an A1 card reads at least 1500 random blocks of 4 KB "
-   "a second, measured at the UHS-I clocks of Table 4-72 only")
+_CARD_TEST = ("firmware/tests/card-speed on the Teensy 4.1 with its PSRAM and an 8 GB card of speed class 10 with no A1 mark, formatted "
+              "FAT32 with 32 KB clusters by SdFat's format(), reading in SdFat's DMA mode into the "
+              "PSRAM:")
 with MODEL.block("CARD", section=MOVIE):
-    ds("f_sd", 50, "MHz", src=f"{SD}: the High Speed clock, which SdFat sets on the Teensy 4.1 and "
-       "the storage driver keeps")
-    ds("n_sd_lines", 4, "bits", src=f"{SD}: the four data lines of the SD bus, one bit each per "
-       "clock", stated=False)
-    ds("b_bits", 8, "bits", src="the bits of one byte", stated=False)
+    dec("b_cluster", 32, "KB", src="the cluster every card of the machine is formatted with, which "
+        "the SD Association's formatter and SdFat's format() give a FAT32 card of 8 to 32 GB")
+    msr("t_card_frame", 18.01, "ms", src="firmware/tests/stack on the same Teensy and card under "
+        "FreeRTOS, its storage task sleeping in yield() until the SD controller's interrupt as the "
+        "storage driver does: the longest of 180 full-screen frames, each read whole in one "
+        "FsFile::read in SdFat's DMA mode into the PSRAM")
+    msr("t_audio_read", 3.13, "ms", src=f"{_CARD_TEST} the longest of 1000 reads of one 8 KB audio "
+        "chunk at random places of the file")
+    MODEL.uses("chunk", of="audio", stated=False)
     MODEL.uses("n_streams", of="audio", stated=False)
     MODEL.uses("f_s", of="audio", stated=False)
     MODEL.uses("b_sample", of="audio", stated=False)
     MODEL.uses("buf", of="audio", stated=False)
-    fig("t_a1", "ms", "1 / f_a1", moves="-f_a1")
-
-    # The A1 rate is measured on a faster bus; the whole chunk's time on the Teensy's
-    # High Speed bus is added on top of it, which counts the bus twice and keeps the
-    # estimate on the slow side.
-    fig("t_chunk_bus", "ms", "chunk * b_bits / (n_sd_lines * f_sd)",
-        moves="+chunk +b_bits -f_sd -n_sd_lines")
-    fig("t_chunk_est", "ms", "t_a1 + t_chunk_bus", "up", moves="+chunk -f_a1 -f_sd")
-    fig("t_movie_bus", "ms", "movie_chunk * b_bits / (n_sd_lines * f_sd)",
-        moves="+movie_chunk +b_bits -f_sd -n_sd_lines")
-    asm("n_movie_access", 1, "", src="the A1 accesses one movie chunk costs: a read of 16 KB that "
-        "follows on in one file costs the card one access, as a read of 4 KB does. The A1 class "
-        "measures random reads of 4 KB only, so this is an estimate, and card_load_a1 holds "
-        "without it", stated=False)
-    fig("t_movie_chunk_est", "ms", "n_movie_access * t_a1 + t_movie_bus", "up",
-        moves="+movie_chunk +n_movie_access -f_a1 -f_sd")
-    fig("t_card_frame", "ms", "n_frame_chunks * t_movie_chunk_est", "up",
-        moves="+n_cols +n_rows +b_pixel -f_a1 -f_sd")
 
     # the four audio streams read their chunks from the same card meanwhile
-    fig("t_card_audio", "ms", "n_streams * f_s * b_sample * t_movie / chunk * t_chunk_est", "up",
-        moves="+n_streams +f_s +b_sample -f_movie -f_a1")
+    fig("n_audio_reads", "", "n_streams * f_s * b_sample * t_movie / chunk", "up",
+        moves="+n_streams +f_s +b_sample -f_movie -chunk")
+    fig("t_card_audio", "ms", "n_audio_reads * t_audio_read", "up",
+        moves="+n_streams +f_s +b_sample -f_movie -chunk +t_audio_read")
     fig("card_load", "%", "(t_card_frame + t_card_audio) / t_movie", "up",
-        moves="+f_movie +n_cols +n_rows -f_a1 -f_sd")
-
-    # on the A1 class alone: every 4 KB of a frame costs one random read, whatever the chunk
-    fig("card_load_a1", "%", "(b_frame / chunk * t_chunk_est + t_card_audio) / t_movie", "up",
-        moves="+f_movie +n_cols +n_rows -f_a1 -f_sd")
+        moves="+f_movie +t_card_frame +t_audio_read")
+    # The video player keeps two frames in the picture memory, so the card reads the next frame
+    # while LVGL draws the current one and the bus sends it. Each of the two has a movie frame.
+    msr("t_render", 7.09, "ms", src="firmware/tests/stack on the Teensy 4.1 under FreeRTOS, built "
+        "with PlatformIO and LVGL's code in the flash: the longest of 30 times LVGL draws the "
+        "full-screen frame from the PSRAM into its buffer in RAM2 while the storage task reads "
+        "frames")
+    fig("t_read_cycle", "ms", "t_card_frame + t_card_audio", "up",
+        moves="+t_card_frame +t_audio_read")
+    fig("t_draw_cycle", "ms", "t_render + t_frame_bus", "up", moves="+t_render +n_cols +n_rows")
 
 # -- the touch bus: Wire2 to the touch controller, read on the touch driver's tick
 with MODEL.block("TOUCH", section=TOUCH):
@@ -451,13 +438,13 @@ _I("the touch driver's tick is a whole number of driver ticks, which attach() re
 _I("TouchHeld comes after a whole number of the touch driver's ticks",
    "n_hold_ticks.raw.is_integer()")
 _I("a full frame on the bus fits inside a movie frame", "t_frame_bus < t_movie")
-_I("sending a full-screen frame and reading the next, one after the other, fit inside a movie "
-   "frame", "t_card_frame + t_frame_bus < t_movie")
+_I("reading the next full-screen frame, with the audio reads between, fits inside a movie frame",
+   "t_read_cycle < t_movie")
+_I("drawing the current frame and sending it on the bus fit inside a movie frame",
+   "t_draw_cycle < t_movie")
 _I("a full-screen frame or picture, read whole at normal priority, ends before an audio stream's "
    "ring runs dry, so a sound never waits for it", "t_card_frame < buf / (f_s * b_sample)")
-_I("the card carries a full-screen movie and the four audio streams, by the estimate",
-   "card_load.raw < 1")
-_I("and by the A1 class alone, which guarantees random reads of 4 KB", "card_load_a1.raw < 1")
+_I("the card carries a full-screen movie and the four audio streams", "card_load.raw < 1")
 _I("a touch read ends well inside the touch driver's tick", "t_touch_read < t_ttick")
 _I("a rising edge on the touch bus stays inside the Standard-mode limit", "t_r_touch < t_r_std")
 _I("the touch bus runs at a clock the touch controller takes", "f_scl <= f_scl_max")
