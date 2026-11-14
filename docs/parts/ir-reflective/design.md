@@ -33,7 +33,7 @@ Three sensor boards come out of the stock machine. This modification keeps these
 
 ### Central board
 
-It is planned to have a central IR board which provides the whole electrical infrastructure to interconnect sensor boards to the Teensy microcontroller. The IR board therefore provides a bank of connectors to the sensor boards, and carries the sensor boards' supply with it.
+It is planned to have a central IR board which provides the whole electrical infrastructure to interconnect sensor boards to the Teensy microcontroller. The IR board therefore connects the sensor boards and carries their supply.
 
 ### Power Supply Design: 5 V vs 3.3 V
 
@@ -216,18 +216,18 @@ Three parts sit on the board's supply path:
 - **C5, 22 µF** at the 3V3 entry. It halves the phase-start excursion on the rail and trims the pulse overshoot of the module's power-save ripple in the dark phase.
 - **R39, 47 Ω**, and **C6, 22 µF**, between 3V3 and 3V3_ADC, the branch that carries the two converters alone. They keep the module's ripple out of the rail the converters measure against. C6 sits at the converters' VDD pins, where it also carries their conversion current, the bypass DS21295D asks for at the pin.
 
-The two rails differ by the 66 mV R39 drops. 3V3 feeds Pin 1 of every sensor connector and, over J-IR-ISO, U3's VCC2 and R36; 3V3_ADC feeds nothing but VDD and VREF of U1 and U2.
+The two rails differ by the 66 mV R39 drops. 3V3 feeds every sensor board, U3's VCC2 and R36; 3V3_ADC feeds nothing but VDD and VREF of U1 and U2.
 
 
 #### Separating power rails
 
 In the machine the board keeps its own rail, so either side can be live while the other is dark, in any order. [Teensy pins must not be driven while the controller is off](../../research/teensy-4.1.md#driving-a-pin-while-the-board-is-unpowered), and a converter input must not be driven while its own supply is off.
 
-**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3 over J-IR-TEENSY pin 7, VCC2 from the board's rail. Each side also has its own ground. GND1 takes the Teensy's ground over J-IR-TEENSY pin 8 and returns side 1 and C3 alone. GND2 takes the IR board's ground over J-IR-ISO pin 11, and the IR board takes its ground from J-IR alone. The board thus reaches the star point on one path, and the LED bus returns its current without crossing the Teensy's ground. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
+**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3, VCC2 from the board's rail. Each side also has its own ground. GND1 takes the Teensy's ground and returns side 1 and C3 alone. GND2 takes the IR board's ground, and the IR board takes its ground from the power board alone. The board thus reaches the star point on one path, and the LED bus returns its current without crossing the Teensy's ground. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
 
 The four resistors around U3 keep the DOUT path defined: R37 and R38 bound the current if both converters drive it at once, R36 holds it at a level when neither does, and R34 bounds the current should the Teensy's MISO pin and U3's output ever drive against each other.
 
-**U3 sits on the isolator board**, a 10 x 24 perfboard that also carries J-IR-TEENSY, R34, R36, C3 and C4. On the IR board the control pins of U1 and U2 face each other in reversed order, and U3's outputs reach neither converter in copper without a crossing. J-IR-ISO therefore carries SCK, MOSI and ADC-DOUT in two leads each, one per converter. The isolator board joins each pair, and the IR board keeps U1's lines apart from U2's.
+**U3 sits on the isolator board**, a 10 x 24 perfboard that also carries R34, R36, C3 and C4. On the IR board the control pins of U1 and U2 face each other in reversed order, and U3's outputs reach neither converter in copper without a crossing. The cable between the boards therefore carries SCK, MOSI and ADC-DOUT in two leads each, one per converter. The isolator board joins each pair, and the IR board keeps U1's lines apart from U2's.
 
 ### One LED driver for the whole bus
 
@@ -237,15 +237,15 @@ The stock machine gives every channel its own LED driver transistor; this board 
 
 #### To the power distribution
 
-The module's socket, four contacts: SHDN, VIN, GND and VOUT. VIN takes the 5 V of the power board's J-IR on the module itself. The D24V5F3 sits flat on a stacking header, the cable's Dupont plugs onto its VIN and GND pins from above, and the socket's VIN contact carries no copper. SHDN stays open, since the module pulls it to VIN.
+The D24V5F3 plugs into a socket on the board and takes the power board's 5 V on its VIN pin, so the socket's VIN contact carries no copper. SHDN stays open, since the module pulls it to VIN.
 
 > The D24V5F3 has no reverse-voltage protection, and a plug one pin off puts 5 V on the 3V3 rail. The marked plug is checked against the module's pin names before power goes on.
 
-VOUT powers the IR board, and over J-IR-ISO U3's side 2 with it: in the machine from the D24V5F3, on the bench from the Teensy's 3V3 pin. Side 1 takes the Teensy's 3.3 V over J-IR-TEENSY pin 7 so that it can never drive MISO above the Teensy's own rail, which costs the Teensy up to 10.3 mA. On the bench both conductors leave that one pin, 233 mA at sixteen channels against the 250 mA it allows.
+VOUT powers the IR board and U3's side 2: in the machine from the D24V5F3, on the bench from the Teensy's 3V3 pin. Side 1 takes the Teensy's 3.3 V so that it can never drive MISO above the Teensy's own rail, which costs the Teensy up to 10.3 mA. On the bench both conductors leave that one pin, 233 mA at sixteen channels against the 250 mA it allows.
 
-**To the Teensy**, J-IR-TEENSY on the isolator board, eight conductors on a connector that cannot be plugged in reversed. Teensy pin allocation is in [`pin-assignment.md`](../../pin-assignment.md). 
+**To the Teensy**, eight conductors on a plug that cannot go in reversed. Teensy pin allocation is in [`pin-assignment.md`](../../pin-assignment.md). 
 
->Before the Teensy is plugged in for the first time, every J-IR-TEENSY pin should be measured against the IR board's ground, with the isolator board on J-IR-ISO and the IR board powered through the module's socket. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy. Pin 8 must show no connection to the IR board's ground, or the two grounds have met on the isolator board.
+>Before the Teensy is plugged in for the first time, every pin of the Teensy cable should be measured against the IR board's ground, with the isolator board connected and the IR board powered through the module's socket. All values must measure under 0.25 V, ideally 0 V. Otherwise a board-rail net has reached the connector and would kill an unpowered Teensy. The ground pin must show no connection to the IR board's ground, or the two grounds have met on the isolator board.
 
 | J-IR-TEENSY pin | Signal | Direction |
 |---|---|---|
@@ -258,7 +258,7 @@ VOUT powers the IR board, and over J-IR-ISO U3's side 2 with it: in the machine 
 | 7 | 3V3 | the Teensy's rail, supplying U3's side 1 |
 | 8 | GND | the Teensy's ground, to U3's GND1 and C3 alone |
 
-**To the isolator board**, J-IR-ISO, eleven conductors. On the IR board the connector is split into two housings: U1's four leads with 3V3 and GND below U1, and U2's four leads with CLOCK above U2.
+**To the isolator board**, eleven conductors.
 
 | J-IR-ISO pin | Signal | IR board end |
 |---|---|---|

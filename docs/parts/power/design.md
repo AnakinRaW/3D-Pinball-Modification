@@ -6,7 +6,7 @@ The power board takes the 5 V of an external adapter and passes it to every subs
 
 - The machine runs from a 5 V adapter of 3 A or of 6 A.
 - Every subsystem takes its 5 V and its ground over a separate pair from one point on the board.
-- With the optional switch fitted, plus and minus swapped at the input damage nothing, whether the adapter or the wiring to J-IN swaps them.
+- With the optional switch fitted, plus and minus swapped at the input damage nothing, whether the adapter or its wiring swaps them.
 - The rail stays inside the range every subsystem accepts, at power-up and at every load step.
 
 ## Adapter
@@ -33,18 +33,18 @@ One ball triggers at most two bumpers within one pull-in, however fast it is, wh
 
 ### Input
 
-The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to J-IN on the board.
+The adapter's plug goes into the machine's barrel jack, which has to be rated for the adapter's current. A 16 AWG pair of at most 30 cm takes the 5 V from the jack to the board.
 
-C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 21 mm of J-IN.
+C1 and C2 keep the rail steady when the load steps. They are low-impedance electrolytics of 29 mΩ each. That keeps the rail above every subsystem's lowest supply voltage when the lighting, the coils or the servo start. Their 2000 µF keep the rail under the 5.5 V the Teensy's VIN takes when the whole load stops. They sit within 21 mm of the input.
 
 ### Input protection
 
-The board proposes an optional protection against swapped polarity. Q1 protects the machine against swapped polarity at J-IN. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity. Q1 and R1 are optional. Without them a wire joins J-IN's negative to the board's ground. Every figure of this design is derived with Q1 fitted, and leaving it out only raises the bus.
+The board proposes an optional protection against swapped polarity. Q1 protects the machine against swapped polarity at the input. It is an N-channel MOSFET in the ground line, with its drain at the adapter's negative and its source on the board's ground. R1 ties its gate to the 5 V bus, so Q1 conducts with the right polarity and stays off with swapped polarity. Q1 and R1 are optional. Without them a wire joins the input's negative to the board's ground. Every figure of this design is derived with Q1 fitted, and leaving it out only raises the bus.
 
 F1 is an optional 2 A time-lag fuse in the 5 V of J-SERVO, J-MAIN, J-IR and J-DISP protecting their wires. Any T2A that drops at most 242 mV at 2 A fits. J-LIGHT1, J-LIGHT2 and J-SOL stay without a fuse, because this would cost voltage that the coils and the lighting's buffers cannot spare.
 
 > [!WARNING]
-> Without Q1, swapped polarity at J-IN reaches every subsystem. It destroys the Teensy and the ICs on the boards.
+> Without Q1, swapped polarity at the input reaches every subsystem. It destroys the Teensy and the ICs on the boards.
 
 > [!WARNING]
 > The board has no overvoltage protection. An adapter above 5.5 V destroys the Teensy.
@@ -79,7 +79,7 @@ The Teensy's VUSB-VIN trace is cut, as [`teensy-4.1.md`](../../research/teensy-4
 
 ### IR board
 
-J-IR carries 5 V to the IR board. The Pololu D24V5F3 that makes the IR board's 3.3 V is plugged into the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
+J-IR carries 5 V to the IR board. The Pololu D24V5F3 that makes the IR board's 3.3 V sits on the board there, as the [IR design](../ir-reflective/design.md#supply-and-input-filter) requires. The module works from 3.4 V, which the end of the pair stays far above.
 
 ### Display
 

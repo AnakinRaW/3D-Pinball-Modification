@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board beside the module carries J-DISP-MOD and the Adafruit 757 as a daughter board. The cable from the power board's J-DISP brings 5 V and GND to the board. The touch cable from the Teensy ends on the board. J-DISP-MOD carries SDA, SCL, 5 V and GND from the board to the module's 8-bit header. At the header, the 5 V wire feeds both Vin and RD. The bus and its ground run from the Teensy straight to the same header.
+A display board beside the module carries the Adafruit 757 as a daughter board. It takes 5 V and GND from the power board and the touch lines from the Teensy, and passes SDA, SCL, 5 V and GND on to the module's 8-bit header. At the header, the 5 V wire feeds both Vin and RD. The bus and its ground run from the Teensy straight to the same header.
 
 ![Display schematic](display-schematic.svg)
 

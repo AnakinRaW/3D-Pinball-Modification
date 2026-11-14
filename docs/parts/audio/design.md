@@ -17,7 +17,7 @@ The amplifier drives one speaker. I²S always sends two channels. The module pla
 
 ## Circuit
 
-The DFR0954 sits in socket headers on the [Teensy motherboard](../motherboard/design.md), beside the Teensy. R4 sits on the motherboard as well.
+The DFR0954 sits on the [Teensy motherboard](../motherboard/design.md), beside the Teensy. R4 sits on the motherboard as well.
 
 ![Audio schematic](audio-schematic.svg)
 
@@ -35,7 +35,7 @@ The speaker carries no marking. Its size suggests a rating of 0.5 W to 1 W. The 
 
 ### Supply
 
-The module takes the machine's 5 V from the motherboard's J-MB-PWR ahead of [D1](../motherboard/design.md#supply) and decouples its own supply pin. It therefore stays off while the Teensy runs on USB alone. Capped at 0.5 W, it draws at most 129 mA.
+The module takes the machine's 5 V from the motherboard ahead of [D1](../motherboard/design.md#supply) and decouples its own supply pin. It therefore stays off while the Teensy runs on USB alone. Capped at 0.5 W, it draws at most 129 mA.
 
 A 3.3 V supply from the Teensy was rejected, because the other subsystems already take nearly all of its 3V3 pin.
 
