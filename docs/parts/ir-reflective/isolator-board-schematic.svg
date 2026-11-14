@@ -1,7 +1,7 @@
 <svg viewBox="0 0 960 1130" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" data-boards="iso">
   <rect x="0" y="0" width="960" height="1130" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">IR isolator board schematic</text>
-  <text x="30" y="56" font-size="12.5" fill="#666">The SPI crossing between the Teensy and the IR board, on a board of its own.</text>
+  <text x="30" y="56" font-size="12.5" fill="#666">The SPI crossing between the Teensy and the IR board.</text>
 
   <!-- ===== board outline ===== -->
   <rect x="16" y="70" width="928" height="770" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
