@@ -99,6 +99,11 @@ class Part:
         self.ref, self.key, self.holes, self.pins, self.opt = ref, key, holes, pins, opt
 
     @property
+    def netref(self):
+        """The netlist's designator: the part's own, or for a piece the part it belongs to."""
+        return self.opt.get("of", self.ref)
+
+    @property
     def spec(self):
         return PARTS.get(self.key) or MODULES.get(self.key)
 
@@ -303,7 +308,16 @@ class Layout:
         own."""
         if not self.declared:
             return []
-        E, placed = [], {p.ref: p for p in self.parts}
+        E, placed = [], {}
+        for p in self.parts:
+            if p.netref in placed and "of" in p.opt:
+                q = placed[p.netref]       # the pieces of one header count as one part
+                placed[p.netref] = Part(p.netref, q.key, q.holes + p.holes, q.pins + p.pins,
+                                        pieces=True)
+            elif "of" in p.opt:
+                placed[p.netref] = Part(p.netref, p.key, p.holes, p.pins, pieces=True)
+            else:
+                placed[p.netref] = p
         for ref in self.offboard_parts:
             if ref not in self.declared.parts:
                 E.append(f"{ref} is marked off the board and the netlist holds no {ref}")
@@ -322,7 +336,8 @@ class Layout:
                 continue
             if p.opt.get("carries", p.key) != d.key:
                 E.append(f"{ref} is a {p.key} here and a {d.key} in the netlist")
-            elif p.pins != d.pins:
+            elif (sorted(p.pins) != sorted(d.pins) if p.opt.get("pieces")
+                  else p.pins != d.pins):
                 E.append(f"{ref} has the pins {', '.join(p.pins)} here and "
                          f"{', '.join(d.pins)} in the netlist")
             if d.value and p.opt.get("fig") != d.value:
@@ -346,8 +361,18 @@ class Layout:
 
     def pin_hole(self, ref_pin):
         ref, pin = ref_pin.split(".", 1)
-        p = self.find(ref)
+        p = next(q for q in self.parts if q.netref == ref and pin in q.pins)
         return p.holes[p.pins.index(pin)]
+
+    def piece(self, ref, name, key, holes, pins, **opt):
+        """One piece of a header the netlist declares as one part, placed apart from its other
+        pieces: pins names the netlist's pins of this piece, in the order of holes. The cable
+        meets the pieces with one housing each."""
+        B = self.board
+        p = Part(f"{ref}/{name}", key, [B.hole(h) for h in holes], tuple(str(x) for x in pins),
+                 of=ref, **opt)
+        self.parts.append(p)
+        return p
 
 
 def run_holes(a, b):

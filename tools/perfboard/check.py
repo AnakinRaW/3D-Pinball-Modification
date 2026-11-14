@@ -145,12 +145,12 @@ def check(L):
         for h, pin in zip(p.holes, p.pins):
             if p.kind == "pads":
                 if not B.is_pad(h):
-                    E.append(f"{p.ref}.{pin}: {nm(h)} is not an edge pad")
+                    E.append(f"{p.netref}.{pin}: {nm(h)} is not an edge pad")
             elif not B.on_board(h):
-                E.append(f"{p.ref}.{pin}: {nm(h)} is off the board")
+                E.append(f"{p.netref}.{pin}: {nm(h)} is off the board")
             if h in lead_of:
-                E.append(f"{nm(h)} holds {lead_of[h]} and {p.ref}.{pin}")
-            lead_of[h] = f"{p.ref}.{pin}"
+                E.append(f"{nm(h)} holds {lead_of[h]} and {p.netref}.{pin}")
+            lead_of[h] = f"{p.netref}.{pin}"
 
     # each part's own geometry
     for p in L.parts:
@@ -169,7 +169,7 @@ def check(L):
         if not r or p.kind == "module":
             continue
         for h, who in lead_of.items():
-            if who.split(".")[0] == p.ref:
+            if who.split(".")[0] == p.netref and h in p.holes:
                 continue
             if _inside(B.xy(h), r, MARGIN):
                 E.append(f"{who} in {nm(h)} sits under the body of {p.ref}")
@@ -261,6 +261,19 @@ def check(L):
                     E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} runs over {p.ref}")
                     break
 
+    # a module joins its pins of one name on its own board, such as the Teensy's GND pins
+    expected_pins = {pin for pins in L.effective_nets().values() for pin in pins}
+    for p in L.parts:
+        if p.kind != "module":
+            continue
+        same = {}
+        for h, pin in zip(p.holes, p.pins):
+            if f"{p.netref}.{pin}" in expected_pins:
+                same.setdefault(pin.split("#")[0], []).append(h)
+        for hs in same.values():
+            for x in hs[1:]:
+                u(hs[0], x)
+
     # what each copper group carries
     groups = {}
     for h, who in lead_of.items():
@@ -273,16 +286,16 @@ def check(L):
         if len(nets) > 1:
             E.append("short: one piece of copper joins " + ", ".join(sorted(nets)))
         net_of_group[g] = sorted(nets)[0]
-    placed = {p.ref for p in L.parts}
+    placed = {p.netref for p in L.parts}
     for net, pins in nets_made.items():
         gs = {f(L.pin_hole(x)) for x in pins if x.split(".", 1)[0] in placed}
         if len(gs) > 1:
             E.append(f"open: {net} falls apart into {len(gs)} pieces")
     for p in L.parts:
         for pin in p.pins:
-            if (p.kind != "pads" and f"{p.ref}.{pin}" not in expected
-                    and f"{p.ref}.{pin}" not in L.free):
-                E.append(f"{p.ref}.{pin} is on no net of the netlist")
+            if (p.kind != "pads" and f"{p.netref}.{pin}" not in expected
+                    and f"{p.netref}.{pin}" not in L.free):
+                E.append(f"{p.netref}.{pin} is on no net of the netlist")
     E += L.against_netlist()
 
     # links touch nothing in between
