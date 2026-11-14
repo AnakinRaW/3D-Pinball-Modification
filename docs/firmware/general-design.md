@@ -49,6 +49,8 @@ The solution to this is using [freertos-teensy](https://github.com/tsandmann/fre
 
 The firmware runs two tasks, the main task with priority 1 for the main loop and the storage task with priority 2 for the SD card (In FreeRTOS a lower priority number means lower priority). While SdFat waits for the card, the main loop runs, and the card's interrupt wakes the storage task the moment a transfer ends. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
 
+[Zephyr](../research/zephyr-teensy-4.1.md) lost to FreeRTOS on the Teensy 4.1: its SD card driver aborted reads, its PSRAM driver read back only zeros, and LVGL drew more slowly.
+
 ## Interrupts
 
 A lower number is a higher priority, and a handler makes every interrupt of the same or a lower priority wait.

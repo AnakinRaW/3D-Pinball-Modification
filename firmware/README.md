@@ -6,6 +6,7 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 |---|---|
 | `src/` | The firmware project. |
 | `tests/` | The test code. |
+| `tools/` | Sketches that prepare the bench, such as formatting the SD card. |
 | [`gist/`](gist/) | Code notes for every driver and component. |
 
 ## Building
