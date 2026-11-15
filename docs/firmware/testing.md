@@ -6,7 +6,7 @@ A test on the Teensy judges what it can from inside the firmware and prints its 
 
 ## Test programs
 
-Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, and its other tests build for the Teensy. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
+Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `native` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
 
 Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
 

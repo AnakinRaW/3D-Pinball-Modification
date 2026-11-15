@@ -22,7 +22,7 @@ The SER0049 has no end stop and turns all the way round by hand. The mechanism's
 
 The mechanism has two end positions. The angle of each is set once on the assembled machine. One end is the start position.
 
-At power-up, the servo's position is unknown, and its first move runs at full speed whatever the pulse. The driver's first pulse therefore points at the middle between the two end positions, so the fast move covers at most half the distance between them. From the middle, the servo moves to the start position at limited speed.
+At power-up, the servo's position is unknown, and its first move runs at full speed whatever the pulse. The driver's first pulse points at the start position, where the servo rests between moves. A servo that stands there does not move at power-up.
 
 ## Circuit
 
@@ -50,7 +50,7 @@ The servo gets the machine's 5 V over the servo board. U1 takes its 5 V and its 
 
 | Signal | What the pin has to be |
 |---|---|
-| Servo signal | A PWM pin. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [0](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.1, only with pins 42 and 43, and the SD card holds both |
+| Servo signal | A pin that a channel X of FlexPWM1 drives, the only kind [PWMServoT4](../../firmware/drivers/servo.md) takes. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [0](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.1, only with pins 42 and 43, and the SD card holds both |
 
 [`pin-assignment.md`](../../pin-assignment.md) lists what the pin costs elsewhere in the build.
 
@@ -81,7 +81,7 @@ PULSE     the frame of the Arduino Servo library   20 ms
           its rate                               = 50 Hz
           the pulse for 0°                         500 µs
           the pulse for 180°                       2500 µs
-          PWMServo's resolution of the frame       4096 steps
+          PWMServoT4's resolution of the frame     4096 steps
           one step of the pulse                  = 4.88 µs
           the servo's travel in steps            = 410 steps
 ```

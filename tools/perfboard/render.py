@@ -478,7 +478,8 @@ def pin_labels(o, V):
     """The pin names of every part that goes in one way round: G, D and S of a MOSFET, an IC's
     numbers, K and A of a diode, plus and minus of an electrolytic, a sensor's pins. Each name
     sits half a pitch off its hole, on a side where no copper of this view runs and no other lead
-    sits, across the part's row of pins where it can."""
+    sits, across the part's row of pins where it can. On the bottom an IC's number stands in its
+    pin's solder joint."""
     L = V.L
     side = "bottom" if V.bottom else "top"
     leads = {h for p in L.parts for h in p.holes}
@@ -506,12 +507,18 @@ def pin_labels(o, V):
         mc = sum(c for _, c in p.holes) / len(p.holes)
         for h, pin in zip(p.holes, p.pins):
             r, c = h
+            if p.kind == "dip" and V.bottom:
+                # on the bottom an IC's number stands in its pin's solder joint, which keeps its
+                # net's ring around it
+                x, y = V.px(h)
+                size = 7.5 if len(str(pin)) > 1 else 9
+                o.append(f'<text x="{x:.1f}" y="{y + 0.35 * size:.1f}" text-anchor="middle" '
+                         f'font-size="{size}" font-weight="700" fill="#1a1a1a">{pin}</text>')
+                continue
             own = order
             if p.kind == "dip":
-                # an IC's numbers stand just inside each pin: on the socket on the top, and on
-                # the bottom inside or else outside, wherever no copper runs
-                own = sorted(order[:2], key=lambda e: e[0] * (r - mr) + e[1] * (c - mc))
-                own = own if V.bottom else own[:1]
+                # on the top an IC's numbers stand just inside each pin, on the socket
+                own = sorted(order[:2], key=lambda e: e[0] * (r - mr) + e[1] * (c - mc))[:1]
             on_socket = p.kind == "dip" and not V.bottom
             pinout = PARTS.get(p.key, {}).get("pinout")
             if on_socket and pinout:

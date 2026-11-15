@@ -5,6 +5,7 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 | Folder | Contents |
 |---|---|
 | `src/` | The firmware's source. |
+| `lib/` | The libraries this repository holds, such as PWMServoT4. |
 | `tests/` | The tests of the firmware's code. |
 | `bench/` | The measurement programs behind the bench figures. |
 | `tools/` | Sketches that prepare the bench, such as formatting the SD card, and the build's scripts. |
