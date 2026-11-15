@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-No firmware, board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 
@@ -46,7 +46,7 @@ No firmware, board design or CAD model exists yet. IR ball sensing, the break be
 
 - `firmware/` — the firmware for the Teensy 4.1: its source, its tests and code notes
 - `firmware/gist/` — code notes, not firmware
-- `firmware/src/` — the real firmware project
+- `firmware/src/` — the real firmware project. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
 - `firmware/tests/` — the firmware's test code
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
@@ -83,7 +83,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. One without is stored opaque. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
 
-The firmware builds with PlatformIO, installed with `python -m pip install platformio`. A project's folder holds its `platformio.ini`, as [`firmware/tests/stack/`](firmware/tests/stack/) does:
+The firmware builds with PlatformIO, installed with `python -m pip install platformio`. A project's folder holds its `platformio.ini`, as [`firmware/src/`](firmware/src/) does. CI builds the firmware and every PlatformIO test on each push touching `firmware/`:
 
 | | |
 |---|---|

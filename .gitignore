@@ -17,6 +17,8 @@ build/
 .pioenvs/
 *.hex
 *.elf
+# the .gitignore PlatformIO's VS Code setup writes into every project folder
+firmware/**/.gitignore
 
 # Python helper scripts
 __pycache__/

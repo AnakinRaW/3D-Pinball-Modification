@@ -11,14 +11,14 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 
 ## Building
 
-The firmware builds with [PlatformIO](https://platformio.org). [`tests/stack/platformio.ini`](tests/stack/platformio.ini) is the template for a project. It pins the Teensyduino release, the libraries and their versions.
+The firmware builds with [PlatformIO](https://platformio.org). [`src/platformio.ini`](src/platformio.ini) pins the Teensyduino release, the libraries and their versions, and the test projects in `tests/` copy it.
 
 ```
-python -m platformio run               builds the project in the current folder
+python -m platformio run               builds the project in the current folder, src/ for the firmware
 python -m platformio run -t upload     builds it and flashes it onto the Teensy
 ```
 
-The template links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.
+The firmware links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.
 
 The firmware defines `USE_ARDUINO_DEFINES` before it includes `arduino_freertos.h`, because FastLED and [WDT_T4](https://github.com/tonton81/WDT_T4) need Arduino's macros.
 

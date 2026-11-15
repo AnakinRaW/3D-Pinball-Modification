@@ -1,0 +1,19 @@
+# The layout of firmware/CLAUDE.md's code style: PJRC's Teensy core and Arduino, four spaces,
+# 100 columns, braces on the statement's line and always around a body
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+UseTab: Never
+BreakBeforeBraces: Attach
+AccessModifierOffset: -4
+InsertBraces: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: Never
+PointerAlignment: Left
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 3
+SortIncludes: Never
+IncludeBlocks: Preserve
+NamespaceIndentation: None
