@@ -4,18 +4,21 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 
 | Folder | Contents |
 |---|---|
-| `src/` | The firmware project. |
-| `tests/` | The test code. |
+| `src/` | The firmware's source. |
+| `tests/` | The tests of the firmware's code. |
+| `bench/` | The measurement programs behind the bench figures. |
 | `tools/` | Sketches that prepare the bench, such as formatting the SD card. |
 | [`gist/`](gist/) | Code notes for every driver and component. |
 
 ## Building
 
-The firmware builds with [PlatformIO](https://platformio.org). [`src/platformio.ini`](src/platformio.ini) pins the Teensyduino release, the libraries and their versions, and the test projects in `tests/` copy it.
+The firmware builds with [PlatformIO](https://platformio.org). [`platformio.ini`](../platformio.ini) in the repository's root pins the Teensyduino release, the libraries and their versions, and the programs in `bench/` copy it.
 
 ```
-python -m platformio run               builds the project in the current folder, src/ for the firmware
+python -m platformio run               builds the debug firmware, run in the repository's root
 python -m platformio run -t upload     builds it and flashes it onto the Teensy
+python -m platformio run -e release    builds the firmware for the machine
+python -m platformio test -e native    runs the tests that need no hardware
 ```
 
 The firmware links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.

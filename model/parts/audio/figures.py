@@ -148,11 +148,11 @@ ds("t_rd_block", 100, "ms", src=f"{SD}, 4.6.2.1: the read timeout of SDHC and SD
 ds("t_wr_block", 500, "ms", src=f"{SD}, 4.6.2.2: the longest busy an SDXC card may show after a "
    "block it writes, 250 ms for an SDHC card; the application note asks a host to wait longer than "
    "500 ms")
-msr("t_mount_nocard", 3, "s", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: the "
+msr("t_mount_nocard", 3, "s", src="firmware/bench/card-pull on the Teensy 4.1 under FreeRTOS: the "
     "longest of 8 calls of SdFat's begin() in its DMA mode with no card in the socket, 3002 ms, "
     "in which no other task ran")
-_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
-msr("t_main_wait_pull", 0.13, "ms", src="firmware/tests/card-pull on the Teensy 4.1 under FreeRTOS: "
+_LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+msr("t_main_wait_pull", 0.13, "ms", src="firmware/bench/card-pull on the Teensy 4.1 under FreeRTOS: "
     "the longest the main task waited while the storage task read frames, met the pulled card and "
     "failed three reads")
 msr("t_frame_fat", 17.35, "ms", src=f"{_LOAD}: the mean time one frame read itself took over three "

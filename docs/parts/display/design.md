@@ -246,8 +246,8 @@ START     the supervisor's reset after power-up,
 - [FocalTech, FT6x06 datasheet](https://cdn-shop.adafruit.com/datasheets/FT6x06%20Datasheet_V0.1_Preliminary_20120723.pdf), V0.1: the time from reset to the first I²C answer
 - [`datasheets/IMXRT1060CEC.pdf`](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 27, the pads' drive strengths
 - [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3: Table 14-5, the FlexIO clock's limit; 50.3.3.1, the shifters that drive several pins; Table 4-3, no DMA request for FlexIO3
-- [`firmware/tests/card-speed`](../../../firmware/tests/card-speed/card-speed.ino): the measured time of an audio chunk from the card
-- [`firmware/tests/stack`](../../../firmware/tests/stack/src/main.cpp): the measured time of a full-screen frame from the card under FreeRTOS
+- [`firmware/bench/card-speed`](../../../firmware/bench/card-speed/card-speed.ino): the measured time of an audio chunk from the card
+- [`firmware/bench/stack`](../../../firmware/bench/stack/src/main.cpp): the measured time of a full-screen frame from the card under FreeRTOS
 - [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the Standard-mode rise time
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the pins are not 5 V tolerant
 - [`pin-assignment.md`](../../pin-assignment.md): the display's pins and their cost

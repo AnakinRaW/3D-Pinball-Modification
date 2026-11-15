@@ -168,14 +168,14 @@ with MODEL.block("MOVIE", section=MOVIE):
 # the card: measured on the bench. SdFat's file layer cuts a read at every cluster, and its DMA
 # mode costs a command per piece, so the cluster size sets how fast a frame comes
 # ---------------------------------------------------------------------------
-_CARD_TEST = ("firmware/tests/card-speed on the Teensy 4.1 with its PSRAM and an 8 GB card of speed class 10 with no A1 mark, which reads 1152 random 4 KB blocks a second where A1 asks 1500, formatted "
+_CARD_TEST = ("firmware/bench/card-speed on the Teensy 4.1 with its PSRAM and an 8 GB card of speed class 10 with no A1 mark, which reads 1152 random 4 KB blocks a second where A1 asks 1500, formatted "
               "FAT32 with 32 KB clusters by SdFat's format(), reading in SdFat's DMA mode into the "
               "PSRAM:")
-_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+_LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
 with MODEL.block("CARD", section=MOVIE):
     dec("b_cluster", 32, "KB", src="the cluster every card of the machine is formatted with, which "
         "the SD Association's formatter and SdFat's format() give a FAT32 card of 8 to 32 GB")
-    msr("t_card_frame", 18.01, "ms", src="firmware/tests/stack on the same Teensy and card under "
+    msr("t_card_frame", 18.01, "ms", src="firmware/bench/stack on the same Teensy and card under "
         "FreeRTOS, its storage task sleeping in yield() until the SD controller's interrupt as the "
         "storage driver does: the longest of 180 full-screen frames, each read whole in one "
         "FsFile::read in SdFat's DMA mode into the PSRAM")
@@ -196,7 +196,7 @@ with MODEL.block("CARD", section=MOVIE):
         moves="+f_movie +t_card_frame +t_audio_read")
     # The video player keeps two frames in the picture memory, so the card reads the next frame
     # while LVGL draws the current one and the bus sends it. Each of the two has a movie frame.
-    msr("t_render", 7.09, "ms", src="firmware/tests/stack on the Teensy 4.1 under FreeRTOS, built "
+    msr("t_render", 7.09, "ms", src="firmware/bench/stack on the Teensy 4.1 under FreeRTOS, built "
         "with PlatformIO and LVGL's code in the flash: the longest of 30 times LVGL draws the "
         "full-screen frame from the PSRAM into its buffer in RAM2 while the storage task reads "
         "frames")

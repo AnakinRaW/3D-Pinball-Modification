@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "firmware/**"
+      - "platformio.ini"
       - ".github/workflows/firmware.yml"
   pull_request:
     paths:
       - "firmware/**"
+      - "platformio.ini"
       - ".github/workflows/firmware.yml"
 
 jobs:
@@ -28,19 +30,8 @@ jobs:
           find firmware/src \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
   build:
-    name: Build ${{ matrix.project }}
+    name: Build the release firmware and run the tests
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # the firmware is built and tested as the release build
-          - project: firmware/src
-            args: -e release
-          - project: firmware/tests/stack
-          - project: firmware/tests/load
-          - project: firmware/tests/watchdog
-          - project: firmware/tests/card-pull
     steps:
       - uses: actions/checkout@v4
 
@@ -51,13 +42,22 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: platformio-${{ hashFiles(format('{0}/platformio.ini', matrix.project)) }}
+          key: platformio-${{ hashFiles('platformio.ini') }}
 
       - name: Install PlatformIO
         run: python -m pip install platformio
 
       - name: Build
         env:
-          # each platformio.ini puts PlatformIO's build and library folders under %LOCALAPPDATA%\pio
+          # platformio.ini puts PlatformIO's build and library folders under %LOCALAPPDATA%\pio
           LOCALAPPDATA: ${{ runner.temp }}
-        run: python -m platformio run -d ${{ matrix.project }} ${{ matrix.args }}
+        run: python -m platformio run -e release
+
+      # the tests that need no hardware, from the first test in firmware/tests on
+      - name: Test
+        env:
+          LOCALAPPDATA: ${{ runner.temp }}
+        run: |
+          if [ -d firmware/tests ]; then
+            python -m platformio test -e native
+          fi

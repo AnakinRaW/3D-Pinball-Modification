@@ -178,14 +178,14 @@ MODEL.draws("ram_usb", pool="RAM2")
 MODEL.draws("ram_objectfled", pool="RAM2")
 MODEL.draws("ram_fastled", pool="RAM2")
 
-# -- the bench, firmware/tests/load and firmware/tests/watchdog ----------------
-_LOAD = "firmware/tests/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
+# -- the bench, firmware/bench/load and firmware/bench/watchdog ----------------
+_LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
 msr("t_ir_jitter_bench", 0.35, "µs", src=f"{_LOAD}: the spread of the IR timer's interrupt, the "
     "largest of six runs of about 33000 interrupts each")
 msr("t_tick_jitter_bench", 0.30, "µs", src=f"{_LOAD}: the spread of the driver tick's interrupt, "
     "the largest of six runs of about 4000 interrupts each")
 MODEL.uses("t_jitter", of="ir-reflective", stated=False)
-msr("t_wdt_warn_bench", 1.5, "s", src="firmware/tests/watchdog on the Teensy 4.1 under FreeRTOS, a "
+msr("t_wdt_warn_bench", 1.5, "s", src="firmware/bench/watchdog on the Teensy 4.1 under FreeRTOS, a "
     "hang with interrupts on: the time from the last feed to the warning interrupt, 1500 ms")
 
 # -- what the firmware requires -----------------------------------------------

@@ -19,7 +19,7 @@ default_envs = debug
 build_src_flags = -D DEBUG
 
 [env:release]
-build_flags = ${env.build_flags} -D NDEBUG
+build_flags = ${teensy.build_flags} -D NDEBUG
 ```
 
 `DEBUG` is set with `build_src_flags`, which reach only the firmware's own code, because freertos-teensy names a constant `DEBUG`. `NDEBUG` reaches the libraries as well.

@@ -44,10 +44,11 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 
 ## Repository layout
 
-- `firmware/` — the firmware for the Teensy 4.1: its source, its tests and code notes
+- `firmware/` — the firmware for the Teensy 4.1: its source, its tests, its measurement programs and code notes. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
 - `firmware/gist/` — code notes, not firmware
-- `firmware/src/` — the real firmware project. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
-- `firmware/tests/` — the firmware's test code
+- `firmware/src/` — the firmware's source
+- `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md)
+- `firmware/bench/` — the measurement programs the bench figures in the models come from
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
 - `docs/` — documentation of the mod
@@ -83,7 +84,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. One without is stored opaque. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
 
-The firmware builds with PlatformIO, installed with `python -m pip install platformio`. A project's folder holds its `platformio.ini`, as [`firmware/src/`](firmware/src/) does. CI builds the firmware and every PlatformIO test on each push touching `firmware/`:
+The firmware builds with PlatformIO, installed with `python -m pip install platformio`. The firmware's [`platformio.ini`](platformio.ini) stands in the repository's root, where PlatformIO finds the project when the repository is opened. The commands run there. CI builds the release firmware and runs the `native` tests on each push touching `firmware/`:
 
 | | |
 |---|---|
