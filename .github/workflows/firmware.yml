@@ -53,11 +53,12 @@ jobs:
           LOCALAPPDATA: ${{ runner.temp }}
         run: python -m platformio run -e release
 
-      # the tests that need no hardware, from the first test in firmware/tests on
+      # the tests that need no hardware, from the first test_ folder in firmware/tests on; a
+      # Teensy test program stands beside them as a project of its own and runs on the bench
       - name: Test
         env:
           LOCALAPPDATA: ${{ runner.temp }}
         run: |
-          if [ -d firmware/tests ]; then
+          if compgen -G "firmware/tests/test_*" > /dev/null; then
             python -m platformio test -e native
           fi
