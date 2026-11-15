@@ -1,5 +1,6 @@
-// Servo trial for the Teensy 4.1 with the DFRobot SER0049: ServoDriver and PWMServoT4 as the gists
-// firmware/gist/drivers/servo.cpp and pwmservo-t4.cpp design them, on the driver tick.
+// Servo trial for the Teensy 4.1 with the DFRobot SER0049: ServoDriver as the gist
+// firmware/gist/drivers/servo.cpp designs it, on the driver tick, with PWMServoT4 from
+// firmware/lib/pwm-servo-t4.
 //
 // The program starts once the serial monitor is open. It runs begin(), which sends the servo to its
 // start position, and then moves three times to the end position and back.
@@ -10,6 +11,9 @@
 
 #include <Arduino.h>
 #include "servo-driver.h"
+
+// the core's pwm.c: each pin's timer, read here to print the pulse the registers hold
+extern const struct pwm_pin_info_struct { uint8_t type, module, channel, muxval; } pwm_pin_info[];
 
 constexpr uint8_t  SERVO_PIN   = 0;          // ServoDriver's kPin in servo-driver.h
 constexpr uint8_t  CAPTURE_PIN = 1;          // the wire from the servo pin lands here
@@ -118,7 +122,8 @@ void setup() {
     Serial.begin(115200);
     while (!Serial) {}
     delay(200);
-    Serial.println("\nServo trial: ServoDriver and PWMServoT4 from the gists, SER0049 on pin 0");
+    Serial.println("\nServo trial: ServoDriver from the gist, PWMServoT4 from firmware/lib, "
+                   "SER0049 on pin 0");
 
     ARM_DEMCR |= ARM_DEMCR_TRCENA;
     ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;

@@ -69,7 +69,7 @@ private:
 - Braces open on the line of the statement. `if`, `for` and `while` always take braces.
 - `public:` and `private:` stand at the class's indentation.
 - A comment stands on its own line above the code it explains, as full sentences. A comment at the end of a line is kept to a few words, as for a constant's source.
-- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/` against it with clang-format 18.
+- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/` and `lib/` against it with clang-format 18.
 
 ## Run time and memory
 

@@ -50,7 +50,7 @@ The servo gets the machine's 5 V over the servo board. U1 takes its 5 V and its 
 
 | Signal | What the pin has to be |
 |---|---|
-| Servo signal | A PWM pin. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [0](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.1, only with pins 42 and 43, and the SD card holds both |
+| Servo signal | A pin that a channel X of FlexPWM1 drives, the only kind [PWMServoT4](../../firmware/drivers/servo.md) takes. PWMServo sets its timer to 50 Hz, and that holds for every pin on the timer. No other pin in use may sit on it. Pin [0](../../pin-assignment.md "Servo signal") shares its timer, FlexPWM1.1, only with pins 42 and 43, and the SD card holds both |
 
 [`pin-assignment.md`](../../pin-assignment.md) lists what the pin costs elsewhere in the build.
 

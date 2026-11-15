@@ -1,7 +1,7 @@
 // ServoDriver as firmware/gist/drivers/servo.cpp holds it, unchanged.
 #pragma once
 #include "driver-base.h"
-#include <PWMServoT4.h>   // this repository's copy of PWMServo, pwmservo-t4.cpp
+#include <pwm-servo-t4.h>   // this repository's copy of PWMServo, firmware/lib/pwm-servo-t4
 
 class ServoDriver : public Driver {
 public:

@@ -1,10 +1,10 @@
 # Servo driver
 
-The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../../parts/servo/design.md) describes. It uses PWMServoT4, a library in this repository that copies [PWMServo](https://github.com/PaulStoffregen/PWMServo) for the Teensy 4 alone. [`firmware/gist/drivers/pwmservo-t4.cpp`](../../../firmware/gist/drivers/pwmservo-t4.cpp) holds it.
+The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../../parts/servo/design.md) describes. It uses PWMServoT4, a library in this repository that copies [PWMServo](https://github.com/PaulStoffregen/PWMServo) for the Teensy 4 alone. [`firmware/lib/pwm-servo-t4/`](../../../firmware/lib/pwm-servo-t4/) holds it.
 
 A timer repeats the servo pulse in every frame of 20 ms. A new pulse width written to the timer takes effect at the start of the next frame. Until then, the timer keeps the width it already holds. For the servo's pin, the Teensy core sets that width to the whole frame at boot. PWMServo's first `write()` connects the pin to the timer at once, so the servo first gets a pulse of up to 20 ms and drives to its stop. PWMServoT4's `attach()` therefore sets the timer to no pulse first and waits until the timer has taken that setting. The first pulse the servo gets is then the one the first `write()` names.
 
-The library's header is called `PWMServoT4.h`. The compiler therefore cannot include the PWMServo that Teensyduino bundles in its place.
+`attach()` takes only a pin that a channel X of FlexPWM1 drives, because the no-pulse setting goes into that channel's compare register. The library's header is called `pwm-servo-t4.h`. The compiler therefore cannot include the PWMServo that Teensyduino bundles in its place.
 
 ## Servo positions
 
