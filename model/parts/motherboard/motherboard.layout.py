@@ -110,12 +110,11 @@ L.tin("J14", "J13")
 L.tin("J13", "J12")
 L.wire("J12", "Q12")                     # VIN across the bus
 L.part("D1", "diode_do41", ["Q10", "U10"])
-L.bare("Q9", "Q11")
+L.bare("Q5", "Q11")                      # VIN on along row Q
 L.tin("Q11", "Q12")
-L.part("R2", "resistor", ["Q9", "Q5"])
-L.piece("J-MB-EMITTER", "a", "header_male", ["R5", "S5"], pins=[1, 2],
-        title="J-MB-EMITTER", sub="the break beam's emitter")
+# VIN runs to R2 at the emitter's header beside the receiver's
 L.tin("Q5", "R5")
+L.wire("R5", "X33", via=["V5", "V33"])
 L.part("J-MB-PWR", "terminal_5mm", ["U1", "S1"], entry=(-1, 0), title="J-MB-PWR",
        sub="5 V from the power board")
 L.bare("P14", "Z14")                     # ground down from the Teensy's bottom ground pin
@@ -178,7 +177,16 @@ L.tin("P35", "O35")
 L.wire("O35", "C33", via=["O40", "C40"])   # T3 around the right end up to its housing
 L.tin("C33", "B33")
 L.tin("B33", "A33")
-# the break beam's receiver with its pull-up, and the toggle switch with its series resistor
+# the break beam's emitter and receiver side by side, the emitter's ground over from the
+# receiver's; then the receiver's pull-up, and the toggle switch with its series resistor
+L.piece("J-MB-EMITTER", "a", "header_male", ["AD33", "AD34"], pins=[1, 2],
+        title="J-MB-EMITTER", sub="the break beam's emitter")
+L.tin("X33", "Y33")
+L.part("R2", "resistor", ["Y33", "AC33"])
+L.tin("AC33", "AD33")
+L.tin("AD34", "AC34")
+L.wire("AC34", "AC38")
+L.tin("AC38", "AD38")
 L.part("J-MB-RECEIVER", "header_male", ["AD36", "AD37"], title="J-MB-RECEIVER",
        sub="the receiver")
 L.bare("P36", "AD36")
