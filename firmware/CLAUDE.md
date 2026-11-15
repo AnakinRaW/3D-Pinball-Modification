@@ -95,7 +95,7 @@ private:
 
 ## Tools
 
-- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. Libraries keep their warnings.
+- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. The libraries and the Teensy core compile with `-w`, which [`tools/quiet-libraries.py`](tools/quiet-libraries.py) adds, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
 - **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in a `native` environment and run in CI. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.
