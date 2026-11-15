@@ -1,0 +1,10 @@
+{
+  "name": "pwm-servo-t4",
+  "version": "1.0.0",
+  "description": "PWMServoT4, this repository's copy of PJRC's PWMServo for the Teensy 4.1, whose attach() keeps the first pulse the one the first write() names",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}

@@ -24,8 +24,8 @@ with MODEL.block("PULSE", section=PULSE):
        "end of the travel")
     ds("t_max", 2500, "µs", sheet=SERVO, src="Pulse Width Range, the long end, the other end of "
        "the travel")
-    dec("n_duty", 4096, "steps", src="PWMServo's write() sets the pulse through analogWrite() at "
-        "12-bit resolution, 4096 steps to the frame, PJRC's PWMServo.cpp")
+    dec("n_duty", 4096, "steps", src="PWMServoT4's write() sets the pulse through analogWrite() at "
+        "12-bit resolution, 4096 steps to the frame, as PJRC's PWMServo.cpp does, firmware/lib/pwm-servo-t4")
     ds("t_min_default", 544, "µs", stated=False, src="PWMServo.h, the pulse for 0 degrees "
        "attach(pin) takes when no range is given")
     ds("t_max_default", 2400, "µs", stated=False, src="PWMServo.h, the pulse for 180 degrees "
@@ -216,10 +216,6 @@ with MODEL.block("SUPPLY", section=SUPPLY):
     asm("t_roll", 2, "s", stated=False, src="how long the drain component waits past the servo's "
         "travel for a released ball to reach the exit channel; the seesaw and the lane are not "
         "built yet, docs/firmware/components/drain.md")
-    dec("t_hold_mid", 500, "ms", stated=False, src="how long the first pulse after power-up stays "
-        "at the middle between the end positions before the slow move to the start position; "
-        "the SER0049 sheet states no speed, and a servo still moving when the hold ends only "
-        "meets the moving pulse early, docs/firmware/drivers/servo.md")
 
     # The feed's inductance keeps its current flowing when the servo stops drawing,
     # and C1 takes it: half L I squared into half C dV squared, plus the same current

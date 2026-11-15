@@ -47,6 +47,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `firmware/` — the firmware for the Teensy 4.1: its source, its tests, its measurement programs and code notes. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
 - `firmware/gist/` — code notes, not firmware
 - `firmware/src/` — the firmware's source
+- `firmware/lib/` — the libraries this repository holds, one folder each, which `platformio.ini` names in `lib_deps` and a bench program takes with `symlink://`
 - `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md)
 - `firmware/bench/` — the measurement programs the bench figures in the models come from
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`

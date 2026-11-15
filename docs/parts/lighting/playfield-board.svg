@@ -1745,20 +1745,20 @@
 <circle cx="911.1" cy="1403.2" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
 <circle cx="613.9" cy="1502.2" r="10.4" fill="#d5d9de" stroke="#1a1a1a" stroke-width="2.2"/>
 <circle cx="911.1" cy="1700.3" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
-<text x="696.4" y="1703.7" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">1</text>
-<text x="729.4" y="1670.7" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">2</text>
-<text x="729.4" y="1637.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">3</text>
-<text x="696.4" y="1604.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">4</text>
-<text x="729.4" y="1571.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">5</text>
-<text x="729.4" y="1538.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">6</text>
-<text x="729.4" y="1505.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name on copper, which runs on every side of the pin">7</text>
-<text x="795.5" y="1505.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">8</text>
-<text x="795.5" y="1538.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">9</text>
-<text x="828.5" y="1570.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">10</text>
-<text x="795.5" y="1603.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">11</text>
-<text x="795.5" y="1636.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">12</text>
-<text x="795.5" y="1670.7" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name on copper, which runs on every side of the pin">13</text>
-<text x="795.5" y="1703.0" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">14</text>
+<text x="712.9" y="1703.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">1</text>
+<text x="712.9" y="1670.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">2</text>
+<text x="712.9" y="1637.5" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">3</text>
+<text x="712.9" y="1604.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">4</text>
+<text x="712.9" y="1571.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">5</text>
+<text x="712.9" y="1538.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">6</text>
+<text x="712.9" y="1505.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">7</text>
+<text x="812.0" y="1505.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">8</text>
+<text x="812.0" y="1538.4" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a1a">9</text>
+<text x="812.0" y="1570.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a">10</text>
+<text x="812.0" y="1603.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a">11</text>
+<text x="812.0" y="1636.9" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a">12</text>
+<text x="812.0" y="1670.0" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a">13</text>
+<text x="812.0" y="1703.0" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a">14</text>
 <text x="580.9" y="1390.0" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it">+</text>
 <text x="564.3" y="1438.8" text-anchor="middle" font-size="7.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it">&#8722;</text>
 <text x="289.3" y="1407.1" text-anchor="end" font-size="11" font-weight="700" fill="#c0392b" data-fig="v_rail">J-PLAYFIELD-PWR: 5 V, pin 1</text>

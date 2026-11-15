@@ -69,7 +69,7 @@ private:
 - Braces open on the line of the statement. `if`, `for` and `while` always take braces.
 - `public:` and `private:` stand at the class's indentation.
 - A comment stands on its own line above the code it explains, as full sentences. A comment at the end of a line is kept to a few words, as for a constant's source.
-- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/` against it with clang-format 18.
+- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/` and `lib/` against it with clang-format 18.
 
 ## Run time and memory
 
@@ -95,7 +95,7 @@ private:
 
 ## Tools
 
-- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. Libraries keep their warnings.
+- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. The libraries and the Teensy core compile with `-w`, which [`tools/quiet-libraries.py`](tools/quiet-libraries.py) adds, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
 - **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in a `native` environment and run in CI. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.
