@@ -240,7 +240,7 @@
   <text x="220" y="980" text-anchor="middle" font-size="11.5" font-weight="700" fill="#c0392b">GAIN</text>
   <line x1="420" y1="380" x2="420" y2="930" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square" data-net="5V"/>
   <line x1="420" y1="930" x2="320" y2="930" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square" data-net="5V"/>
-  <line x1="320" y1="930" x2="320" y2="954" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square" data-net="5V" data-ends="A2.VCC"/>
+  <line x1="320" y1="930" x2="320" y2="954" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square" data-net="5V" data-ends="A2.VCC#2"/>
   <circle cx="320" cy="930" r="4" fill="#c0392b"/>
   <line x1="320" y1="930" x2="310" y2="930" stroke="#c0392b" stroke-width="2.5" stroke-linecap="square" data-net="5V" data-ends="R4.1"/>
   <rect x="240" y="920" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R4"/>
@@ -260,11 +260,29 @@
   <circle cx="400" cy="1140" r="6" fill="#1a1a1a"/>
   <text x="386" y="1144" text-anchor="end" font-size="11.5" font-weight="700" fill="#1a1a1a">GND</text>
   <line x1="406" y1="1140" x2="440" y2="1140" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="square" data-net="GND" data-ends="A2.GND"/>
-  <circle cx="140" cy="1060" r="6" fill="#8a6d0b"/>
-  <text x="154" y="1064" font-size="11.5" font-weight="700" fill="#8a6d0b">SPK+</text>
-  <circle cx="140" cy="1096" r="6" fill="#8a6d0b"/>
-  <text x="154" y="1100" font-size="11.5" font-weight="700" fill="#8a6d0b">SPK−</text>
-  <text x="154" y="1124" font-size="11" fill="#666">speaker socket</text>
+  <circle cx="140" cy="1060" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <text x="154" y="1064" font-size="11.5" font-weight="700" fill="#4d4d4d">SPK−</text>
+  <circle cx="140" cy="1096" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <text x="154" y="1100" font-size="11.5" font-weight="700" fill="#4d4d4d">SPK+</text>
+  <line x1="134" y1="1060" x2="96" y2="1060" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK-"/>
+  <line x1="96" y1="1060" x2="96" y2="1650" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK-"/>
+  <line x1="96" y1="1650" x2="134" y2="1650" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK-"/>
+  <line x1="134" y1="1060" x2="96" y2="1060" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK-" data-ends="A2.SPK-"/>
+  <line x1="96" y1="1060" x2="96" y2="1650" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK-"/>
+  <line x1="96" y1="1650" x2="134" y2="1650" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK-" data-ends="J-MB-SPK.2"/>
+  <line x1="134" y1="1096" x2="110" y2="1096" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK+"/>
+  <line x1="110" y1="1096" x2="110" y2="1620" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK+"/>
+  <line x1="110" y1="1620" x2="134" y2="1620" stroke="#808080" stroke-width="5.0" stroke-linecap="square" data-net="SPK+"/>
+  <line x1="134" y1="1096" x2="110" y2="1096" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK+" data-ends="A2.SPK+"/>
+  <line x1="110" y1="1096" x2="110" y2="1620" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK+"/>
+  <line x1="110" y1="1620" x2="134" y2="1620" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" data-net="SPK+" data-ends="J-MB-SPK.1"/>
+  <rect x="140" y="1594" width="240" height="84" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-MB-SPK"/>
+  <text x="368" y="1624" text-anchor="end" font-size="13" font-weight="700" fill="#333333">Speaker</text>
+  <text x="368" y="1640" text-anchor="end" font-size="11" fill="#666">the stock speaker</text>
+  <circle cx="140" cy="1620" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <text x="154" y="1624" font-size="12" font-weight="700" fill="#4d4d4d">SPK+</text>
+  <circle cx="140" cy="1650" r="6" fill="#ffffff" stroke="#808080" stroke-width="1.5"/>
+  <text x="154" y="1654" font-size="12" font-weight="700" fill="#4d4d4d">SPK−</text>
   <rect x="140" y="1166" width="240" height="190" rx="8" fill="#f0f0f0" stroke="#6b6b6b" stroke-width="2" data-part="J-MB-AMBIENT"/>
   <text x="152" y="1257.0" font-size="13" font-weight="700" fill="#333333">Lighting, ambient</text>
   <text x="152" y="1273.0" font-size="11" fill="#666">data to the board</text>
