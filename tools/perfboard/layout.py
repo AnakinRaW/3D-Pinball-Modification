@@ -282,6 +282,19 @@ class Layout:
                 opt["names"] = [f"{i + 1} {n}" if not n.isdigit() else n
                                 for i, n in enumerate(pins)]
                 opt["carries"] = d.key
+        elif PARTS[key]["kind"] == "box_header":
+            # pin 1 at pin1, the odd pins along the run, each even pin beside its odd pin on
+            # the left of the run, so pin n meets ribbon wire n
+            n = PARTS[key]["pins"]
+            r0, c0 = B.hole(pin1)
+            ax, ay = along
+            rx, ry = ay, -ax
+            hs = []
+            for i in range(n // 2):
+                hs.append((r0 + ay * i, c0 + ax * i))
+                hs.append((r0 + ay * i + ry, c0 + ax * i + rx))
+            pins = tuple(str(i + 1) for i in range(n))
+            opt.update(pin1=pin1, along=along)
         elif PARTS[key]["kind"] in ("dip",):
             n = PARTS[key]["pins"]
             half = n // 2
@@ -340,6 +353,11 @@ class Layout:
             self.net_colors[name] = color
         if label:
             self.net_labels[name] = label
+
+    def unconnected(self, *pins, why):
+        """Pins a layout without a netlist leaves free on purpose, as a schematic's
+        unconnected does."""
+        self.free.update(pins)
 
     def limit(self, a, b, mm, fig=None, why=""):
         self.limits.append((a, b, mm, fig, why))

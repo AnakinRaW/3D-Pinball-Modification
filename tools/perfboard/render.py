@@ -175,6 +175,8 @@ def draw_part(o, V, p, nets):
         o += d.dip(pts, S, s["body_l"][1], s["body_w"][1], s["color"])
     elif k in ("header", "socket"):
         o += d.header(pts, S, female=(k == "socket"))
+    elif k == "box_header":
+        o += d.box_header(pts, S, p.key)
     elif k == "header_90":
         ox, oy = p.opt["out"]
         o += d.header_90(pts, S, (-ox if V.fx else ox, -oy if V.fy else oy))
@@ -225,7 +227,8 @@ def draw_part(o, V, p, nets):
 
 
 def label_part(o, V, p):
-    if p.kind in ("pads", "module", "header", "socket", "header_90", "terminal"):
+    if p.kind in ("pads", "module", "header", "socket", "header_90", "terminal",
+                  "box_header"):
         return
     L = V.L
     r = footprint(L, p)
@@ -446,6 +449,30 @@ def joints(o, V):
 
 PIN_TEXT = {"-": "&#8722;"}
 
+CONNECTOR_KINDS = ("header", "socket", "header_90", "terminal", "box_header")
+
+
+def pin_numbers(o, V):
+    """Every connector's pin number in its pin, on both sides, and on the bottom every module's
+    pin name in its joint, so a pin can be told without the plate beside it."""
+    L = V.L
+    for p in L.parts:
+        if p.kind in CONNECTOR_KINDS:
+            names = p.pins
+        elif p.kind == "module" and V.bottom and not p.opt.get("carries"):
+            names = p.opt.get("names") or p.pins
+        else:
+            continue
+        for h, n in zip(p.holes, names):
+            n = str(n).split("#")[0]
+            x, y = V.px(h)
+            if p.kind == "terminal" and not V.bottom:
+                y += 0.85 * S              # below the screw's slot, which crosses the pin
+            size = 9.5 if len(n) <= 2 else 7.5 if len(n) == 3 else 6.5
+            o.append(f'<text x="{x:.1f}" y="{y + size * 0.36:.1f}" text-anchor="middle" '
+                     f'font-size="{size}" font-weight="700" fill="#1a1a1a" stroke="#ffffff" '
+                     f'stroke-width="2.4" paint-order="stroke">{n}</text>')
+
 
 def pin_labels(o, V):
     """The pin names of every part that goes in one way round: G, D and S of a MOSFET, an IC's
@@ -573,7 +600,8 @@ def connector_labels(o, V, frame):
             return -1                    # a connector named at the side keeps its order
         return min(q.holes[0][0], rows - 1 - q.holes[0][0])
     for p in sorted(L.parts, key=edge_rank):
-        if p.kind not in ("header", "socket", "header_90", "terminal", "pads", "module"):
+        if p.kind not in ("header", "socket", "header_90", "terminal", "pads", "module",
+                          "box_header"):
             continue
         if p.kind == "module":
             continue
@@ -670,13 +698,20 @@ def _connector_label(o, V, frame, p, pts, pins, nets, placed):
             spots = [below_, above_, (right_, py_), (left_, py_)]
         else:
             spots = [above_, below_, (right_, py_), (left_, py_)]
+        if p.kind == "box_header":
+            # a box header's plate names twenty pins and would hide the board: it stands left of
+            # the board, beside the row names
+            b_ = plate_box(0, 0, lines_)
+            spots = [(x0 - 40 - (b_[2] - b_[0]) / 2, py_)]
 
         if not hasattr(V, "header_boxes"):
             # the connectors' bodies, which a plate never hides
             V.header_boxes = []
             for q in L.parts:
-                f = footprint(L, q) if q.kind in ("header", "socket", "header_90",
-                                                  "terminal") else None
+                # a module's pins carry their names, so a plate keeps off its body as well
+                f = (module_rect(L, q) if q.kind == "module" else
+                     footprint(L, q) if q.kind in ("header", "socket", "header_90",
+                                                   "terminal", "box_header") else None)
                 if f:
                     (qx0, qy0), (qx1, qy1) = V.mm_to_px(f[0], f[1]), V.mm_to_px(f[2], f[3])
                     V.header_boxes.append((min(qx0, qx1), min(qy0, qy1), max(qx0, qx1),
@@ -810,7 +845,8 @@ def tables(o, L, y):
 
 def edge_label_room(L):
     """How far the pin names of the connectors along the top and bottom edges reach out."""
-    if not any(p.kind in ("header", "socket", "header_90", "terminal") for p in L.parts):
+    if not any(p.kind in ("header", "socket", "header_90", "terminal", "box_header")
+               for p in L.parts):
         return 0
     nets = net_of(L)
     names = [L.net_labels.get(n, n) for n in nets.values() if n]
@@ -837,6 +873,7 @@ def render(L, path, width=1700, mirror=False):
         o_top.append('</g>')
         label_part(o_top, top, p)             # its designator on its body, as on the board
     joints(o_top, top)
+    pin_numbers(o_top, top)
     # a standing resistor's plate goes beside its body, so it is placed once the others stand
     for p in sorted(L.parts, key=lambda p: bool(p.kind == "axial" and p.opt.get("standing"))):
         label_part(o_top, top, p)
@@ -850,10 +887,12 @@ def render(L, path, width=1700, mirror=False):
     ghost_parts(o_bot, bot)
     copper(o_bot, bot, "bottom")
     joints(o_bot, bot)
+    pin_numbers(o_bot, bot)
     pin_labels(o_bot, bot)
     adapter_names(o_bot, bot)
     connector_labels(o_bot, bot, frame_b)
-    end = tables(o_bot, L, max(frame_b[3] + 80, getattr(bot, "label_y1", 0) + 40))
+    end = tables(o_bot, L, max(frame_b[3] + 80, bot.ty1 + 40,
+                              getattr(bot, "label_y1", 0) + 40))
     W = max(width, int(frame[2] + MARGIN_R))
     H = int(end + 30)
     head = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" '

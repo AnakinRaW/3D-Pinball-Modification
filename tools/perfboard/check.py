@@ -65,6 +65,12 @@ def footprint(L, p):
         return (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
     if k in ("header", "socket"):
         return (min(xs) - PITCH / 2, min(ys) - PITCH / 2, max(xs) + PITCH / 2, max(ys) + PITCH / 2)
+    if k == "box_header":
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        length, width = s["body_l"][1], s["body_w"][1]
+        horiz = (max(xs) - min(xs)) > (max(ys) - min(ys))
+        w, h = (length, width) if horiz else (width, length)
+        return (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
     if k == "header_90":
         ox, oy = p.opt["out"]
         face, thick = s["row_to_face"][1], s["body_w"][1]
@@ -255,6 +261,11 @@ def check(L):
                 E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} is {length:.1f} mm, under "
                          f"the {INSULATED_MIN:.0f} mm it needs")
         for x, y in zip(pts, pts[1:]):
+            # a wire lies over no lead's solder joint, which it would only press against
+            for h in (run_holes(x, y) or [])[1:-1]:
+                if h in lead_of:
+                    E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} runs over {lead_of[h]} "
+                             f"at {nm(h)}")
             for p in L.parts:
                 r = fps[p.ref]
                 if r and side == "top" and p.kind != "module" and _seg_hits_rect(B.xy(x), B.xy(y), r, -0.2):

@@ -32,7 +32,7 @@ The checker reports each as an error.
 | H6 | Tin joins two neighboring holes only, never diagonally |
 | H7 | A bare wire runs straight along a row or column and joins every hole it passes. On the top it runs under no part |
 | H8 | Two bare runs never cross, on either side. A crossing takes a part's body or an insulated wire |
-| H9 | An insulated wire joins two points, has no branch, is at least 10 mm long, and runs over no part. Each end goes through a hole that holds no lead and that no bare run crosses, tinned to the copper it joins, since a wire end cannot be soldered onto a run. A wire marked `short=True` may be shorter where a straight route is worth the risk to its insulation; the check lists it as a note |
+| H9 | An insulated wire joins two points, has no branch, is at least 10 mm long, and runs over no part and over no lead's solder joint. Each end goes through a hole that holds no lead and that no bare run crosses, tinned to the copper it joins, since a wire end cannot be soldered onto a run. A wire marked `short=True` may be shorter where a straight route is worth the risk to its insulation; the check lists it as a note |
 | H10 | A link is bare wire through two holes; every hole it spans is free or on the link's net |
 | H13 | Parts sit on the top unless a sensor has to face another way |
 | H14 | No lead sits under another part's body; bodies do not overlap |
@@ -67,7 +67,7 @@ The checker reports each as a note where the layout leaves it.
 | S16 | The smallest board in stock that fits; cut once and straight, only where it saves much and the rest stays usable. All layouts together take no more boards and screw terminals than the stock holds (`stock.py`). Layouts that are alternative builds of one thing name their family and variant in `VARIANT`, and a variant takes no stock from the others |
 | S17 | The corner holes stay free |
 | S18 | Top and bottom in one drawing. The bottom is drawn as the board looks turned over its long edge: column 1 stays on the left, row A comes to the bottom, and the top's parts show faintly. The top shows the bottom's copper faintly. `--mirror` turns the board over its short edge instead |
-| S25 | Every MOSFET, IC, diode, electrolytic and sensor carries its pin names beside its pins, on both sides of the drawing. On the top a DIP IC carries each pin's number and function on its body, and an adapter each pin's number and name |
+| S25 | Every connector carries its pin numbers in its pins, on both sides of the drawing, and on the bottom every module carries its pin names in its joints. Every MOSFET, IC, diode, electrolytic and sensor carries its pin names beside its pins, on both sides of the drawing. On the top a DIP IC carries each pin's number and function on its body, and an adapter each pin's number and name |
 | S19 | Under the drawing only what the drawing cannot show: a run of thicker wire with its gauge, a part off the board, a part left out. The side headings stand alone, and every hole a wire or a link ends in shows its solder joint, as does every hole where one bare run crosses another. A connector's plate inside the board sits where it hides the least copper and never on a connector |
 | S20 | Every DIP IC sits in a socket |
 | S21 | A layout that fits no board is split over several boards |
@@ -88,6 +88,7 @@ L.part("R41", "resistor", ["B2", "B6"], value=10000, fig="r_series")
 L.part("C1", "ceramic_k15", ["B28", "A28"])
 L.part("Q1", "to220", ["G5", "G4", "G3"], tab=+1)          # holes of pins 1, 2, 3
 L.part("U1", "cd74hct125e", pin1="C3", along=(1, 0))       # in a socket unless socket=False
+L.part("J5", "box_header_20", pin1="F4", along=(1, 0))     # odd pins along the run, each even pin left of it
 L.part("A1", "teensy41", at="B2", rot=0)                   # the hole under the module's first pin
 L.part("U3", "adafruit1207", at="C5", carries=True)        # an SOIC chip on its adapter
 L.offboard("A2", "on a cable from J3")                     # a netlist part that sits off this board
@@ -97,6 +98,7 @@ L.part("J2", "pads", ["B>", "C>"])                         # edge pads: C< left 
 L.piece("J4", "a", "header_male", ["A3", "A4"], pins=[2, 1])  # one housing of a header in pieces
 L.bare("A1", "A5"); L.tin("A5", "A6"); L.link("C3", "C7"); L.wire("J4", "J24", via=["I4"])
 L.net("GND", "J1.3", "R41.2", color="black", label="GND")
+L.unconnected("J5.7", why="...")                           # a pin left free, in a layout without a netlist
 L.limit("C1.1", "J2.1", 20, fig="place_filter")
 L.figure("5 V", "v_5v")                                    # a label that states a model's figure
 LAYOUT = L

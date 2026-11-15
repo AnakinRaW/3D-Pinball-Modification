@@ -1059,6 +1059,18 @@
 <line x1="1094.9" y1="875.1" x2="1123.5" y2="875.1" stroke="#6b6b6b" stroke-width="3.9"/>
 <circle cx="1043.1" cy="875.1" r="20.8" fill="#c9ccd1" stroke="#8a8f96" stroke-width="1"/>
 <line x1="1028.8" y1="875.1" x2="1057.4" y2="875.1" stroke="#6b6b6b" stroke-width="3.9"/>
+<text x="382.7" y="625.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="559.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1142.2" y="625.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1142.2" y="559.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="547.8" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="613.9" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="779.0" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="712.9" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="878.0" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="944.1" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1109.2" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1043.1" y="889.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
 <rect x="505.3" y="569.9" width="19.0" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
 <text x="514.8" y="581.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">C1</text>
 <rect x="637.4" y="569.9" width="19.0" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
@@ -2245,6 +2257,18 @@
 <circle cx="1010.1" cy="1741.0" r="10.4" fill="#d5d9de" stroke="#1a1a1a" stroke-width="2.2"/>
 <circle cx="1043.1" cy="1608.9" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
 <circle cx="812.0" cy="1608.9" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
+<text x="382.7" y="1645.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="1711.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1142.2" y="1645.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1142.2" y="1711.4" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="547.8" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="613.9" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="779.0" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="712.9" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="878.0" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="944.1" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1109.2" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1043.1" y="1381.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
 <text x="514.8" y="1661.8" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it">+</text>
 <text x="514.8" y="1727.8" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it">&#8722;</text>
 <text x="646.9" y="1661.8" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="a pin name at its capacitor, over the ring drawn on the can or the copper beneath it">+</text>

@@ -201,7 +201,7 @@ SENSE.contact("J-M.1", "J-M.4", what="the ball between the foil and shell 1")
 | `rail` | The supply a net is: `"gnd"`, `TEENSY_RAIL` for the Teensy's own 3.3 V, or the rail's name |
 | `contact` | Something off the board that joins two of its pins at times, such as a ball bridging two wires |
 | `role` | What a pin does to a Teensy net where its inventory entry cannot say, as one of the wiring's `drives`, `pull`, `reads` or `contact` |
-| `roles` | The role of each pin of a part the inventory does not hold, in the inventory's words: `in`, `out`, `tri:N`, `od`, `odpull:P` for an open drain the part pulls up to the supply on its pin P, `supply`, `gnd`, `nc`, `config`, `other` |
+| `roles` | The role of each pin of a part the inventory does not hold, in the inventory's words: `in`, `out`, `tri:N`, `od`, `odpull:P` for an open drain the part pulls up to the supply on its pin P, `supply`, `gnd`, `nc`, `through` for a line an adapter only passes on, `config`, `other` |
 | `listed_in` | The subsystem whose part list holds a part, where the board belongs to another subsystem, as the motherboard carries the break beam's R2 |
 
 A module's pins go by the names its inventory entry gives them, a repeated name taking `#2`, `#3` and on, so the Teensy's pin 32 is `A1.32` and its second GND `A1.GND#2`. A net that reaches the Teensy's own pin names the signal the pin table gives that pin.

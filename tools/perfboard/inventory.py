@@ -117,6 +117,19 @@ PARTS = {
         kind="socket", body_w=(2.54, 2.54), body_h=(8.50, 8.50), color="#1a1a1a",
         source="Header-female-Sullins.pdf, page 1, LFB straight: A 8.50, B 2.54, tail 3.20",
         unverified="reference part; the socket headers in stock carry no maker"),
+    "box_header_20": dict(
+        kind="box_header", pins=20, body_l=(32.72, 33.32), body_w=(8.70, 8.90),
+        inner_l=30.82, inner_w=6.50, body_h=(9.00, 9.00), key_w=4.50, pin=(0.64, 0.64),
+        color="#1a1a1a",
+        source="BH1S-XX-L.pdf, drawing BH1S-XX-L rev B, box header 2.54 mm, straight, 20 "
+               "positions: length 2.54 x positions/2 + 7.62 +-0.30, opening 2.54 x "
+               "positions/2 + 5.42, width 8.70 to 8.90, opening 6.50, height 9.00, key slot "
+               "4.50 in the middle of one long side, pins 0.64 square, rows 2.54 apart; the pin-1 "
+               "triangle sits on the keyed face",
+        pin_note="pin 1 at the triangle; the odd pins form the row on the keyed side, the even "
+                 "pins the other row, so ribbon wire n lands on pin n",
+        unverified="the row the key sits beside is read from the triangle on the keyed face; "
+                   "the drawing gives no pin numbers"),
     "terminal_5mm": dict(
         kind="terminal", pitch=5.00, body_depth=(7.60, 7.85), body_h=(10.0, 10.0),
         pin_d=(1.00, 1.00), hole=1.30, pins_from_back=4.10, color="#2a6fcf",
@@ -296,8 +309,8 @@ MODULES = {
         size=(20.32, 17.78), color="#1d4f91",
         pins=_row(1.27, 16.51, tuple(str(i) for i in range(1, 9)))
              + _row(1.27, 1.27, tuple(str(i) for i in range(16, 8, -1))),
-        source="adafruit.com product 1207 (rows 0.6 in apart, 0.1 in pitch) and the DigiKey size "
-               "0.800 x 0.700 in; DIP numbering counterclockwise from the chip side",
+        source="adafruit.com product 1207 (rows 0.6 in apart, 0.1 in pitch) and a distributor's "
+               "size of 0.800 x 0.700 in; DIP numbering counterclockwise from the chip side",
         unverified="Adafruit publishes no drawing; the outline is the distributor's"),
     "dfr0954": dict(
         size=(18.0, 18.0), color="#1a1a1a",

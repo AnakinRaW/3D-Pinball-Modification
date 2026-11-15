@@ -266,7 +266,8 @@ def _by_role(board, part, pin, through, net_of, supply, src, WiringPart):
             return f"the pull-up of {p} reaches no supply through {part.ref}.{q}"
         return [WiringPart(name, "open-drain", src=src),
                 WiringPart(f"the pull-up inside {part.ref} on {pin}", "pull", found, src=src)]
-    if role in ("supply", "gnd", "nc"):
+    if role in ("supply", "gnd", "nc", "through"):
+        # a supply, a ground, a free pin, or a line an adapter only passes on
         return None
     if role == "out" or role.startswith("tri:"):
         r = rail()

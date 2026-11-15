@@ -638,6 +638,12 @@
 <rect x="809.9" y="566.0" width="7.2" height="33.8" fill="#d22b2b" transform="rotate(0.0 828.5 582.9)"/>
 <rect x="821.4" y="566.0" width="7.2" height="33.8" fill="#d22b2b" transform="rotate(0.0 828.5 582.9)"/>
 <rect x="851.5" y="566.0" width="7.2" height="33.8" fill="#c9a227" transform="rotate(0.0 828.5 582.9)"/>
+<text x="382.7" y="465.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="531.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="382.7" y="597.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="1142.2" y="619.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1142.2" y="586.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1142.2" y="553.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
 <rect x="769.5" y="459.4" width="19.0" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
 <text x="779.0" y="470.7" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a">U1</text>
 <rect x="1066.6" y="591.4" width="19.0" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
@@ -1418,6 +1424,12 @@
 <circle cx="1043.1" cy="1384.2" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
 <circle cx="448.8" cy="1087.0" r="10.4" fill="#d5d9de" stroke="#1a1a1a" stroke-width="2.2"/>
 <circle cx="1043.1" cy="1153.1" r="10.4" fill="#d5d9de" stroke="#c0392b" stroke-width="2.2"/>
+<text x="382.7" y="1288.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="1222.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="382.7" y="1156.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="1142.2" y="1123.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="1142.2" y="1156.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="1142.2" y="1189.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
 <text x="679.9" y="1238.9" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">1</text>
 <text x="712.9" y="1238.9" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">2</text>
 <text x="746.0" y="1238.9" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">3</text>

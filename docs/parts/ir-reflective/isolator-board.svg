@@ -676,6 +676,25 @@
 <rect x="793.4" y="492.9" width="7.2" height="33.8" fill="#1a1a1a" transform="rotate(90.0 812.0 509.8)"/>
 <rect x="804.9" y="492.9" width="7.2" height="33.8" fill="#f08a24" transform="rotate(90.0 812.0 509.8)"/>
 <rect x="834.9" y="492.9" width="7.2" height="33.8" fill="#c9a227" transform="rotate(90.0 812.0 509.8)"/>
+<text x="382.7" y="414.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">7</text>
+<text x="382.7" y="447.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="480.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="382.7" y="513.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="382.7" y="546.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">4</text>
+<text x="382.7" y="579.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">5</text>
+<text x="382.7" y="612.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">6</text>
+<text x="382.7" y="645.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">8</text>
+<text x="779.0" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">10</text>
+<text x="812.0" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="845.0" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">5</text>
+<text x="878.0" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="911.1" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">6</text>
+<text x="944.1" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="977.1" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">7</text>
+<text x="1010.1" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">9</text>
+<text x="1043.1" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">4</text>
+<text x="1076.2" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">8</text>
+<text x="1109.2" y="381.1" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">11</text>
 <rect x="450.2" y="600.9" width="63.1" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
 <text x="481.8" y="612.3" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" data-fig="r_miso">R34 2.2 k&#937;</text>
 <rect x="538.3" y="386.3" width="19.0" height="15.9" rx="3" fill="#ffffff" fill-opacity="0.92" stroke="#6b6b6b" stroke-width="0.8"/>
@@ -1475,6 +1494,25 @@
 <circle cx="1109.2" cy="1436.2" r="10.4" fill="#d5d9de" stroke="#1a1a1a" stroke-width="2.2"/>
 <circle cx="812.0" cy="1403.2" r="10.4" fill="#d5d9de" stroke="#f1c40f" stroke-width="2.2"/>
 <circle cx="812.0" cy="1205.1" r="10.4" fill="#d5d9de" stroke="#3cbf4e" stroke-width="2.2"/>
+<text x="382.7" y="1406.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">7</text>
+<text x="382.7" y="1373.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="382.7" y="1340.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="382.7" y="1307.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="382.7" y="1274.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">4</text>
+<text x="382.7" y="1241.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">5</text>
+<text x="382.7" y="1208.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">6</text>
+<text x="382.7" y="1175.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">8</text>
+<text x="779.0" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">10</text>
+<text x="812.0" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">1</text>
+<text x="845.0" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">5</text>
+<text x="878.0" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">2</text>
+<text x="911.1" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">6</text>
+<text x="944.1" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">3</text>
+<text x="977.1" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">7</text>
+<text x="1010.1" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">9</text>
+<text x="1043.1" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">4</text>
+<text x="1076.2" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">8</text>
+<text x="1109.2" y="1439.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">11</text>
 <text x="599.1" y="1406.2" text-anchor="start" font-size="8.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="the pin name of a chip on the bottom, over the copper beneath the adapter">1 VCC1</text>
 <text x="599.1" y="1373.2" text-anchor="start" font-size="8.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="the pin name of a chip on the bottom, over the copper beneath the adapter">2 INA</text>
 <text x="599.1" y="1340.2" text-anchor="start" font-size="8.5" font-weight="700" fill="#1a1a1a" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" data-svgcheck="the pin name of a chip on the bottom, over the copper beneath the adapter">3 INB</text>

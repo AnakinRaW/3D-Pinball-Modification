@@ -251,6 +251,51 @@ def header(pins, S, female=False):
     return out
 
 
+def box_header(pins, S, key):
+    """Box header: black shroud with its opening, the key slot on the odd row's side, a pin per
+    position and the pin-1 triangle on the shroud."""
+    p = PARTS[key]
+    xs = [x for x, _ in pins]
+    ys = [y for _, y in pins]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    horiz = max(xs) - min(xs) > max(ys) - min(ys)
+    L, W = p["body_l"][1] * S, p["body_w"][1] * S
+    il, iw = p["inner_l"] * S, p["inner_w"] * S
+    kw = p["key_w"] * S
+    w, h = (L, W) if horiz else (W, L)
+    iw_, ih_ = (il, iw) if horiz else (iw, il)
+    out = [f'<rect x="{cx - w / 2:.1f}" y="{cy - h / 2:.1f}" width="{w:.1f}" height="{h:.1f}" '
+           f'rx="2" fill="{p["color"]}" stroke="#4d4d4d" stroke-width="1"/>',
+           f'<rect x="{cx - iw_ / 2:.1f}" y="{cy - ih_ / 2:.1f}" width="{iw_:.1f}" '
+           f'height="{ih_:.1f}" fill="#3a3a3a"/>']
+    # the key slot cuts the wall on the odd row's side, in the middle of the long side
+    ox, oy = pins[0][0] - pins[1][0], pins[0][1] - pins[1][1]
+    wall = (W - iw) / 2
+    if horiz:
+        y = cy + (h / 2 - wall if oy > 0 else -h / 2)
+        out.append(f'<rect x="{cx - kw / 2:.1f}" y="{y:.1f}" width="{kw:.1f}" '
+                   f'height="{wall:.1f}" fill="#3a3a3a"/>')
+    else:
+        x = cx + (w / 2 - wall if ox > 0 else -w / 2)
+        out.append(f'<rect x="{x:.1f}" y="{cy - kw / 2:.1f}" width="{wall:.1f}" '
+                   f'height="{kw:.1f}" fill="#3a3a3a"/>')
+    s = p["pin"][1] * S
+    for x, y in pins:
+        out.append(f'<rect x="{x - s / 2:.1f}" y="{y - s / 2:.1f}" width="{s:.1f}" '
+                   f'height="{s:.1f}" fill="#d9b54a"/>')
+    # the pin-1 triangle, on the wall beside pin 1
+    x1, y1 = pins[0]
+    t = 1.2 * S
+    if horiz:
+        ty = cy + (h / 2 - wall / 2 if oy > 0 else -h / 2 + wall / 2)
+        pts = f"{x1 - t:.1f},{ty - t / 2:.1f} {x1 + t:.1f},{ty - t / 2:.1f} {x1:.1f},{ty + t / 2:.1f}"
+    else:
+        tx = cx + (w / 2 - wall / 2 if ox > 0 else -w / 2 + wall / 2)
+        pts = f"{tx - t / 2:.1f},{y1 - t:.1f} {tx - t / 2:.1f},{y1 + t:.1f} {tx + t / 2:.1f},{y1:.1f}"
+    out.append(f'<polygon points="{pts}" fill="#ffffff"/>')
+    return out
+
+
 def terminal(pins, S, entry):
     """Screw terminal: blue body, a screw over each pin, wire entry on the side `entry` names.
 
