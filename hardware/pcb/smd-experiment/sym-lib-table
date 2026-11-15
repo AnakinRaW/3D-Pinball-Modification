@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "smd_experiment")(type "KiCad")(uri "${KIPRJMOD}/smd_experiment.kicad_sym")(options "")(descr "Custom symbols of the SMD experiment"))
+)
