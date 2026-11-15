@@ -5,10 +5,9 @@ public:
     enum class Position : uint8_t { Start, End };
 
     // registers with the device monitor, attaches its step to the driver tick, attaches the pin
-    // with the SER0049's range, 500 µs to 2500 µs, sets no pulse, sends the servo at full speed
-    // to the middle between its end positions and from there slowly to its start position; false
-    // when the device monitor or the driver tick is full or the timer has not taken the no-pulse
-    // setting after two frames
+    // with the SER0049's range, 500 µs to 2500 µs, sets no pulse and sends the servo to its start
+    // position; false when the device monitor or the driver tick is full or the timer has not
+    // taken the no-pulse setting after two frames
     bool begin() override {
         if (!deviceMonitor.watch(Device::Servo, *this)) return false;    // before the wait, so a timer that never takes the pulse is reported
         if (!driverTick.attach([this] { step(); }, kFrameMs * 1000)) return false;
@@ -19,14 +18,13 @@ public:
 
         // The servo has no feedback line, so after power-up its position is unknown, and a servo
         // runs at full speed to whatever its first pulse points at. No ramp can soften that first
-        // move, because a ramp needs a starting point. Pointing the first pulse at the middle
-        // keeps the fast move to half the distance between the end positions at most.
-        nowDeg_    = uint8_t((startDeg_ + endDeg_) / 2);
-        targetDeg_ = nowDeg_;
+        // move, because a ramp needs a starting point. The servo rests at its start position
+        // between releases, so a first pulse there leaves it standing in the usual case.
+        nowDeg_    = startDeg_;
+        targetDeg_ = startDeg_;
+        position_  = Position::Start;
         servo_.write(nowDeg_);
-        holdFrames_ = kHoldMs / kFrameMs;
         ready_ = true;
-        moveTo(Position::Start);
         return true;
     }
 
@@ -59,16 +57,12 @@ private:
     static constexpr uint32_t kSpeedDegS = 50;      // servo.speed_deg_s's default, one degree per frame
     static constexpr uint32_t kSpeedMin  = 10;      // the slowest servo.speed_deg_s the config takes
     static constexpr uint32_t kSpeedMax  = 200;     // the fastest servo.speed_deg_s the config takes
-    static constexpr uint32_t kHoldMs  = 500;       // how long the first pulse stays at the middle
 
     // Runs on the driver tick once per frame. The servo itself always runs at full speed to the
     // angle its pulse names, so the speed is limited by moving that angle a little each frame. A
     // speed below one degree per frame gathers its thousandths of a degree over several frames.
     void step() {
         if (!ready_) return;
-        // The sheet states no speed, so the hold lets the fast move to the middle end first. A
-        // servo still moving when it ends only meets the moving pulse early and follows it.
-        if (holdFrames_) { --holdFrames_; return; }
         const uint8_t to = targetDeg_;
         if (nowDeg_ == to) { carryMdeg_ = 0; return; }
         carryMdeg_ += stepMdeg_;
@@ -89,7 +83,6 @@ private:
     volatile uint8_t  targetDeg_  = 0;       // the angle step() walks the pulse to
     uint32_t          stepMdeg_   = 0;       // servo.speed_deg_s as thousandths of a degree per frame
     uint32_t          carryMdeg_  = 0;       // thousandths of a degree gathered toward the next step
-    uint32_t          holdFrames_ = 0;       // frames left at the middle after power-up
     bool              stuck_      = false;   // the timer did not take the no-pulse setting in attach()
     Position          position_   = Position::Start;
 };

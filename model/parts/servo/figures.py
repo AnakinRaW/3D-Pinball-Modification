@@ -216,10 +216,6 @@ with MODEL.block("SUPPLY", section=SUPPLY):
     asm("t_roll", 2, "s", stated=False, src="how long the drain component waits past the servo's "
         "travel for a released ball to reach the exit channel; the seesaw and the lane are not "
         "built yet, docs/firmware/components/drain.md")
-    dec("t_hold_mid", 500, "ms", stated=False, src="how long the first pulse after power-up stays "
-        "at the middle between the end positions before the slow move to the start position; "
-        "the SER0049 sheet states no speed, and a servo still moving when the hold ends only "
-        "meets the moving pulse early, docs/firmware/drivers/servo.md")
 
     # The feed's inductance keeps its current flowing when the servo stops drawing,
     # and C1 takes it: half L I squared into half C dV squared, plus the same current

@@ -37,7 +37,7 @@ The timer of pin [0](../../pin-assignment.md "Servo signal") is FlexPWM1.1. PWMS
 
 If the timer has not taken the no-pulse setting after two frames, `attach()` returns false, and so does `begin()`. The servo then gets no pulse.
 
-After power-up, the servo's position is unknown, and its first move runs at full speed whatever the pulse. The first pulse therefore points at the middle between the two end positions. The driver holds it there for 500 ms and then moves the servo to its start position at the config's speed. The SER0049's sheet states no speed. A servo that is still moving when the hold ends meets the moving pulse early and follows it from there.
+After power-up, the servo's position is unknown, and its first move runs at full speed whatever the pulse. The first pulse points at the start position, where the servo rests between moves. A servo that stands there does not move at power-up. One that stands at the end position runs the whole way to the start position at full speed.
 
 ## Device faults
 
@@ -51,10 +51,9 @@ public:
     enum class Position : uint8_t { Start, End };
 
     // registers with the device monitor, attaches its step to the driver tick, attaches the pin
-    // with the SER0049's range, 500 µs to 2500 µs, sets no pulse, sends the servo at full speed
-    // to the middle between its end positions and from there slowly to its start position; false
-    // when the device monitor or the driver tick is full or the timer has not taken the no-pulse
-    // setting after two frames
+    // with the SER0049's range, 500 µs to 2500 µs, sets no pulse and sends the servo to its start
+    // position; false when the device monitor or the driver tick is full or the timer has not
+    // taken the no-pulse setting after two frames
     bool begin() override;
 
     // moves the servo at the config's speed to one of its two end positions; nothing once begin()
