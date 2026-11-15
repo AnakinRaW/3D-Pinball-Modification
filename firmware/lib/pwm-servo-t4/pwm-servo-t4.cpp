@@ -12,20 +12,18 @@ struct XPin {
 };
 constexpr XPin X_PINS[] = {{0, 1}, {1, 0}, {24, 2}, {25, 3}};
 
-constexpr float FRAME_HZ = 50;             // PWMServo's frame of 20 ms
+constexpr float FRAME_HZ = 50;   // PWMServo's frame of 20 ms
+constexpr uint32_t FRAME_US = 20000;
 constexpr uint32_t LOAD_TIMEOUT_MS = 40;   // two frames, while the next reload comes within one
 constexpr uint32_t DUTY_BITS = 12;         // PWMServo's resolution of the frame
-
-// PWMServo's fixed-point arithmetic, unchanged: the pulse in 1/256 µs, then in steps of the frame
-constexpr uint32_t US256_PER_DEG = 46603;   // 16 * 256 / 180, scaled by 2^11
-constexpr uint32_t US256_SHIFT = 11;
-constexpr uint32_t MIN16_TO_US256 = 12;     // 16 µs as 2^12 of 1/256 µs
-constexpr uint32_t DUTY_PER_US256 = 3355;   // 4096 / 20000 / 256, scaled by 2^22
-constexpr uint32_t DUTY_SHIFT = 22;
+constexpr uint32_t DUTY_STEPS = 1u << DUTY_BITS;
 
 }   // namespace
 
 bool PWMServoT4::attach(uint8_t pinNumber, uint16_t minUs, uint16_t maxUs) {
+    if (minUs >= maxUs || maxUs > FRAME_US) {
+        return false;
+    }
     const XPin* x = nullptr;
     for (const XPin& candidate : X_PINS) {
         if (candidate.pin == pinNumber) {
@@ -58,8 +56,8 @@ bool PWMServoT4::attach(uint8_t pinNumber, uint16_t minUs, uint16_t maxUs) {
         }
     }
 
-    min16 = minUs >> 4;
-    max16 = maxUs >> 4;
+    lowUs = minUs;
+    highUs = maxUs;
     pin = pinNumber;
     return true;
 }
@@ -69,9 +67,12 @@ void PWMServoT4::write(uint8_t angleDeg) {
         return;
     }
     const uint32_t angle = angleDeg > MAX_ANGLE_DEG ? MAX_ANGLE_DEG : angleDeg;
-    const uint32_t us256 = (((uint32_t)(max16 - min16) * US256_PER_DEG * angle) >> US256_SHIFT) +
-                           ((uint32_t)min16 << MIN16_TO_US256);
-    const uint32_t duty = (us256 * DUTY_PER_US256) >> DUTY_SHIFT;
+    // The pulse in µs times MAX_ANGLE_DEG, so the division by the angle comes last, and from there
+    // the nearest step of the frame. PWMServo keeps the range in 16 µs and rounds down twice,
+    // which put 0 degrees at 493 µs for a range from 500 µs.
+    const uint64_t pulse = uint64_t(lowUs) * MAX_ANGLE_DEG + uint64_t(highUs - lowUs) * angle;
+    const uint64_t whole = uint64_t(FRAME_US) * MAX_ANGLE_DEG;
+    const uint32_t duty = uint32_t((pulse * DUTY_STEPS + whole / 2) / whole);
 
     // analogWrite()'s resolution is one setting for every pin, so it is set and put back with
     // interrupts off, as PWMServo does

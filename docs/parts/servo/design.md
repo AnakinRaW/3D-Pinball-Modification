@@ -81,7 +81,7 @@ PULSE     the frame of the Arduino Servo library   20 ms
           its rate                               = 50 Hz
           the pulse for 0°                         500 µs
           the pulse for 180°                       2500 µs
-          PWMServo's resolution of the frame       4096 steps
+          PWMServoT4's resolution of the frame     4096 steps
           one step of the pulse                  = 4.88 µs
           the servo's travel in steps            = 410 steps
 ```
