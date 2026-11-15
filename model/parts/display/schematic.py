@@ -3,14 +3,14 @@ figures.py loads this file, and the checks of docs/parts/display/ read it from t
 
 A1 is the Adafruit 2090, its pins those of the 8-bit header JP1, pins 1 to 20, then those of the
 SPI header JP2, pins 1 to 20. Pins of one name are one line on the module, and the netlist keeps
-them apart, since the module and not the wiring joins them. A2 is the Adafruit 757: SDA passes
-its channel 1, SCL its channel 2.
+them apart, since the module and not the wiring joins them. A2 is the Adafruit 757: SCL passes
+its channel 1, SDA its channel 2. A3 is the FPC board on the display board, A4 the one at the
+module. The flat flex cable joins pin n of A3 to pin n of A4, and a wire joins pin n of A4 to pin
+n of the module's 8-bit header, so each net names A3, A4 and the module's pin together.
 
-Connector pin orders: J-DISP-PWR, where the cable from the power board's J-DISP is soldered,
-carries 5 V on pin 1 and GND on pin 2. J-TOUCH carries SCL, SDA and the Teensy's 3V3 on pins 1
-to 3, as J-MB-TOUCH does. J-DISP-MOD carries SDA, SCL, 5 V and GND on pins 1 to 4, as docs/connectors.md gives them.
-J-DISP-BUS, the bus cable from the Teensy to the module's header, carries D0 to D7 on pins 1 to
-8, WR on pin 9, D/C on pin 10, CS on pin 11 and GND on pin 12.
+Connector pin orders: J-DISP-PWR carries 5 V on pin 1 and GND on pin 2. J-TOUCH carries SCL, SDA
+and the Teensy's 3V3 on pins 1 to 3, as J-MB-TOUCH does. J-DISP-BUS mates with J-MB-DISPLAY pin
+for pin: GND, D1, D0, D3, D2, WR, D5, D4, D/C, CS, D7 and D6 on pins 1 to 12.
 """
 from figcheck import TEENSY_RAIL, Schematic
 
@@ -35,36 +35,40 @@ DISPLAY = SCHEMATIC.board("display", "Display")
 DISPLAY.part("A1", "adafruit2090", type="Adafruit 2090", pins=tuple(n for n, _ in MODULE_PINS),
              roles=tuple(r for _, r in MODULE_PINS))
 DISPLAY.part("A2", "adafruit757", type="Adafruit 757")
-DISPLAY.part("J-DISP-PWR", "pads", pins=2, title="the cable from J-DISP on the edge pads")
+DISPLAY.part("A3", "quarkzman_fpc20", type="QUARKZMAN FPC board")
+DISPLAY.part("A4", "quarkzman_fpc20", type="QUARKZMAN FPC board")
+DISPLAY.part("J-DISP-PWR", "header_male", pins=2)
 DISPLAY.part("J-TOUCH", "header_male", pins=3)
-DISPLAY.part("J-DISP-MOD", "header_male", pins=4)
 DISPLAY.part("J-DISP-BUS", "header_male", pins=12)
 
-# the bus, from the Teensy straight to the 8-bit header
-for i in range(8):
-    DISPLAY.net(f"D{i}", f"J-DISP-BUS.{i + 1}", f"A1.D{i}", color="blue", label=f"D{i}",
-                teensy=f"D{i} to the display")
-DISPLAY.net("WR", "J-DISP-BUS.9", "A1.WR", color="blue", label="WR", teensy="WR to the display")
-DISPLAY.net("D/C", "J-DISP-BUS.10", "A1.C/D", color="blue", label="D/C",
+# the bus: from the Teensy over J-DISP-BUS, the flat flex cable and A4 to the 8-bit header; the
+# FPC boards' pin n is the header's pin n
+BUS = (("D0", 3, 13), ("D1", 2, 14), ("D2", 5, 15), ("D3", 4, 16), ("D4", 8, 17),
+       ("D5", 7, 18), ("D6", 12, 19), ("D7", 11, 20))
+for sig, bus, fpc in BUS:
+    DISPLAY.net(sig, f"J-DISP-BUS.{bus}", f"A3.{fpc}", f"A4.{fpc}", f"A1.{sig}", color="blue",
+                label=sig, teensy=f"{sig} to the display")
+DISPLAY.net("WR", "J-DISP-BUS.6", "A3.5", "A4.5", "A1.WR", color="blue", label="WR",
+            teensy="WR to the display")
+DISPLAY.net("D/C", "J-DISP-BUS.9", "A3.4", "A4.4", "A1.C/D", color="blue", label="D/C",
             teensy="D/C to the display")
-DISPLAY.net("CS", "J-DISP-BUS.11", "A1.CS", color="blue", label="CS",
+DISPLAY.net("CS", "J-DISP-BUS.10", "A3.3", "A4.3", "A1.CS", color="blue", label="CS",
             teensy="CS to the display controller")
-DISPLAY.net("BUS-GND", "J-DISP-BUS.12", "A1.GND#2", color="black", label="GND", rail="gnd")
 
 # the touch bus through the converter
-DISPLAY.net("SDA", "J-TOUCH.2", "A2.A1", color="white", label="SDA",
-            teensy="SDA to the touch controller")
-DISPLAY.net("SCL", "J-TOUCH.1", "A2.A2", color="white", label="SCL",
+DISPLAY.net("SCL", "J-TOUCH.1", "A2.A1", color="white", label="SCL",
             teensy="SCL to the touch controller")
+DISPLAY.net("SDA", "J-TOUCH.2", "A2.A2", color="white", label="SDA",
+            teensy="SDA to the touch controller")
 DISPLAY.net("3V3", "J-TOUCH.3", "A2.LV", color="yellow", label="3V3", rail=TEENSY_RAIL)
-DISPLAY.net("SDA-MOD", "A2.B1", "J-DISP-MOD.1", "A1.SDA", color="white", label="SDA")
-DISPLAY.net("SCL-MOD", "A2.B2", "J-DISP-MOD.2", "A1.SCL", color="white", label="SCL")
+DISPLAY.net("SCL-MOD", "A2.B1", "A3.10", "A4.10", "A1.SCL", color="white", label="SCL")
+DISPLAY.net("SDA-MOD", "A2.B2", "A3.11", "A4.11", "A1.SDA", color="white", label="SDA")
 
-# the supply, and the 5 V wire on Vin and RD at the header
-DISPLAY.net("5V", "J-DISP-PWR.1", "A2.HV", "J-DISP-MOD.3", "A1.Vin", "A1.RD", color="red",
+# the supply: 5 V on Vin's line, bridged to RD at the module; ground on pins 1 and 12
+DISPLAY.net("5V", "J-DISP-PWR.1", "A2.HV", "A3.2", "A4.2", "A1.Vin", "A1.RD", color="red",
             label="5 V", rail="5V")
-DISPLAY.net("GND", "J-DISP-PWR.2", "A2.GND#2", "J-DISP-MOD.4", "A1.GND", color="black",
-            label="GND", rail="gnd")
+DISPLAY.net("GND", "J-DISP-PWR.2", "J-DISP-BUS.1", "A2.GND#2", "A3.1", "A3.12", "A4.1", "A4.12",
+            "A1.GND", "A1.GND#2", color="black", label="GND", rail="gnd")
 
 # the SPI header's ties: CCS to 3.3Vout, MOSI to GND at pin 1
 DISPLAY.net("3VO", "A1.3Vo", "A1.CCS", color="yellow", label="3Vo", rail="module 3.3Vout")
@@ -79,6 +83,9 @@ DISPLAY.unconnected("A1.CLK", "A1.D/C", "A1.CS#2",
                     why="the SPI header's lines of C/D, WR and CS, which the 8-bit header carries")
 DISPLAY.unconnected("A1.Vin#2", "A1.GND#4", "A1.RST#2", "A1.Lite#2", "A1.IRQ#2", "A1.SDA#2",
                     "A1.SCL#2", why="the same lines as the 8-bit header's pins of that name")
+DISPLAY.unconnected("A3.6", "A4.6", why="RD takes 5 V from Vin over a bridge at the module")
+DISPLAY.unconnected("A3.7", "A3.8", "A3.9", "A4.7", "A4.8", "A4.9",
+                    why="the lines of RST, Lite and IRQ, which stay unconnected")
 DISPLAY.unconnected("A2.A3", "A2.A4", "A2.B3", "A2.B4",
                     why="channels 3 and 4 of the converter stay unused")
 DISPLAY.unconnected("A2.GND", why="the converter joins it to its HV row's GND, which takes the "

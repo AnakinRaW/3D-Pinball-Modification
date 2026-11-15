@@ -30,11 +30,13 @@
 | Servo | J-SERVO-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
 | | servo plug | 3 | pin header | The servo's cable stays whole |
 | Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
-| Display | the cable from J-DISP, at the display board | 2 | soldered | The board comes off at J-DISP-MOD |
-| | touch cable, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
-| | J-DISP-MOD, display board to the module | 4 | Dupont at the board, soldered at the module | Pin order SDA, SCL, 5 V, GND, so a reversed plug never swaps 5 V and GND. Vin sits on the module's header beside the bus |
+| Display | J-DISP-PWR, the cable from J-DISP | 2 | Dupont at the display board | The display board comes off. Plug and header carry a mark on the 5 V side, since a reversed plug reverses the supply |
+| | J-TOUCH, both ends | 3 | Dupont | SDA, SCL and 3V3 of the Teensy |
+| | J-DISP-BUS, both ends | 12 | Dupont | Pin for pin with J-MB-DISPLAY. The display board takes it on three housings |
 | | the Adafruit 757 on the display board | 2 × 6 | socket headers | The 757 comes with two 6-pin headers |
-| | bus | 12 | Dupont at the Teensy, soldered at the module | Vin sits on the module's header beside the bus |
+| | A3 on the display board | 2 × 10 | socket header | A3 stays pluggable |
+| | the flat flex cable, A3 to A4 | 20 | the FPC boards' sockets | The display comes off at A3's socket |
+| | A4 to the module's 8-bit header | 20 | soldered | No header fits behind the module |
 | Break beam | at the emitter and the receiver | 2 each | soldered | The bare parts sit in the niches |
 | | at the Teensy motherboard | 2 each | Dupont | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
@@ -46,13 +48,14 @@
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
 | 1 | | 1 (J-MB-SERVO) | |
-| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 7 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
-| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, 2 contact headers, the servo plug | |
-| 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, the D24V5F3's socket, J-DISP-MOD) | |
-| 5 | | 5 (2 J-SENSE-TEENSY, 2 J-PE-TEENSY, J-PE-SPARE) | |
+| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 8 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
+| 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, 2 contact headers, the servo plug, the display bus's housing for CS, WR and D/C | |
+| 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, the D24V5F3's socket, the display bus's housing for D0 to D6) | |
+| 5 | | 6 (2 J-SENSE-TEENSY, 2 J-PE-TEENSY, J-PE-SPARE, the display bus's housing for GND and D1 to D7) | |
 | 6 | | 4 socket headers, two for the Adafruit 757 and two for the DFR0954 | |
 | 8 | | 2 (J-IR-TEENSY) | |
-| 12 | | 1 (the display bus) | |
+| 12 | | 1 (the display bus at the Teensy) | |
+| 20 | | 1 socket header, 2 × 10, for A3 | the sockets of A3 and A4 for the flat flex cable |
 | 24 | | 2 socket headers for the Teensy | |
 
 ## Wire colors
@@ -70,4 +73,4 @@
 |---|---|
 | A cable that comes with a part or from the stock machine, as the servo's, the speaker's and the coils' | its own. Black there can carry a signal |
 | J-S1 to J-S16, the stock sensors' cables and a new sensor board's alike | red 3.3 V, black signal, yellow LED cathode |
-| Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V, the cable to the module a red 5 V on Vin and on RD |
+| Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V. J-DISP-PWR brings a red 5 V and a black GND |

@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board beside the module carries the Adafruit 757 as a daughter board. It takes 5 V and GND from the power board and the touch lines from the Teensy, and passes SDA, SCL, 5 V and GND on to the module's 8-bit header. At the header, the 5 V wire feeds both Vin and RD. The bus and its ground run from the Teensy straight to the same header.
+A display board carries the Adafruit 757 and the FPC board A3. A flat flex cable runs from A3 to a second FPC board, A4, which lies flat beside the module. A4 is wired pin for pin to the module's 8-bit header.
 
 ![Display schematic](display-schematic.svg)
 
@@ -35,7 +35,7 @@ FlexIO3 is a programmable I/O block of the i.MX RT. FlexIO3's timer drives WR on
 
 The driver sets the bus pins to their weakest drive and their slow slew rate. WR then rises too gently to ring, so the display takes each byte exactly once. That edge is still fast enough for FlexIO3's clock.
 
-The display only receives, so RD is held at 5 V by a wire from Vin on the header. CCS is tied to 3.3Vout, which keeps the module's card socket off. MOSI is tied to GND at pin 1 of the SPI header. RST, Lite and the touch controller's IRQ stay unconnected.
+The display only receives, so RD is held at 5 V by the bridge from Vin on the header. CCS is tied to 3.3Vout, which keeps the module's card socket off. MOSI is tied to GND at pin 1 of the SPI header. RST, Lite and the touch controller's IRQ stay unconnected.
 
 IM0 to IM3, MISO and CD stay unconnected as well. The module's jumpers set the 8-bit mode. Pins named alike on both headers are one line on the module. On the SPI header, CLK carries C/D and D/C carries WR. These two and that header's CS stay open.
 
@@ -82,6 +82,8 @@ The video rate needs the card formatted with 32 KB clusters. SdFat costs one com
 |---|---|---|
 | 1 | Adafruit 2090, 2.8" TFT with capacitive touch, ILI9341 and CST026 | in the diorama |
 | 1 | Adafruit 757, bidirectional logic level converter, BSS138 | on the display board, in SDA and SCL between the Teensy and the module |
+| 2 | QUARKZMAN FFC/FPC connector board | A3 on the display board, A4 beside the module |
+| 1 | QUARKZMAN flat flex cable, type B | from A3 to A4 |
 ## Appendix: derivations
 
 Every figure below is recomputed by [`figures.py`](../../../model/parts/display/figures.py) from the inputs it names. `tools/figcheck.py` compares each one against the line that states it.

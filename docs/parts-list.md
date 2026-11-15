@@ -20,6 +20,7 @@ Every part needed to build the modification is listed here, with a link to what 
 | Pololu D24V5F3 | 1 | 3.3 V step-down module, plugged into the IR board, fed from the power board | [`parts/ir-reflective/design.md`](parts/ir-reflective/design.md#supply-and-input-filter) | [Pololu](https://www.pololu.com/product/2842) |
 | Adafruit 2090 | 1 | 2.8" TFT with capacitive touch, ILI9341 and CST026, in the diorama | [`parts/display/design.md`](parts/display/design.md) | [Adafruit 2090](https://www.adafruit.com/product/2090) |
 | Adafruit 757 | 1 | Bidirectional logic level converter, BSS138, in the display's touch bus | [`parts/display/design.md`](parts/display/design.md#touch) | [Adafruit 757](https://www.adafruit.com/product/757) |
+| QUARKZMAN FFC/FPC connector board, 20 pins | 2 | Socket for the display's flat flex cable, A3 on the display board and A4 beside the module | [`research/Custom/quarkzman-fpc.md`](research/Custom/quarkzman-fpc.md) | [Amazon B0D846Z73P](https://www.amazon.de/dp/B0D846Z73P) |
 | DFRobot DFR0954 | 1 | I²S class D amplifier module, MAX98357A | [`datasheets/MAX98357A-MAX98357B-Maxim.pdf`](datasheets/MAX98357A-MAX98357B-Maxim.pdf), [module schematic](datasheets/DFR0954-DFRobot-schematic.pdf) | [DFRobot DFR0954](https://www.dfrobot.com/product-2614.html) |
 | Seeed 101020692 | 1 | Grove magnetic rotary position sensor, an AS5600 on I²C | [`datasheets/AS5600-ams.pdf`](datasheets/AS5600-ams.pdf), [module schematic](datasheets/Grove-AS5600-Seeed-schematic.pdf) | [Seeed Studio 101020692](https://www.seeedstudio.com/Grove-12-bit-Magnetic-Rotary-Position-Sensor-AS5600-p-4192.html) |
 
@@ -95,4 +96,6 @@ Both reflective sensors are bought, since neither their performance nor their fi
 | Wire, 16 AWG, from the barrel jack to J-IN | a pair of up to 30 cm | [`parts/power/design.md`](parts/power/design.md#input) | |
 | Wire, 22 AWG, from the power board's outputs | one pair per output | [`parts/power/design.md`](parts/power/design.md#wiring) | |
 | Dupont cables, 26 AWG, point to point from the boards to the small consumers | as needed | [`parts/power/design.md`](parts/power/design.md#wiring) | |
+| QUARKZMAN flat flex cable, 20 conductors, 0.5 mm pitch, type B, 250 mm | 1 | [`research/Custom/quarkzman-fpc.md`](research/Custom/quarkzman-fpc.md) | [Amazon B0G15RKF2G](https://www.amazon.de/dp/B0G15RKF2G) |
+| Neutral-curing RTV silicone, to hold and insulate A4's wires at the module | one tube | | [Amazon B0DT461WL7](https://www.amazon.de/dp/B0DT461WL7) |
 | Perfboard, 2.54 mm pitch, in several sizes, with 2.54 mm pin headers | as needed | | |
