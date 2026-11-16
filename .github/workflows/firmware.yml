@@ -60,5 +60,5 @@ jobs:
           LOCALAPPDATA: ${{ runner.temp }}
         run: |
           if compgen -G "firmware/tests/test_*" > /dev/null; then
-            python -m platformio test -e native
+            python -m platformio test -e computer
           fi

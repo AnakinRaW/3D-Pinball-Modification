@@ -30,7 +30,7 @@ asm("len_sides_ceiling", 115.5, "cm", src="the strip the side panels and the dio
 asm("len_other_stock", 45, "cm", src="the strip the other stock positions take, a rough length")
 dec("hole_min", 6, "mm", src="the narrowest hole a new playfield light gets")
 dec("hole_max", 10, "mm", src="the widest hole a new playfield light gets")
-dec("n_leds", 240, "", src="every LED the light layout table plans")
+dec("n_leds", 244, "", src="every LED the light layout table plans")
 dec("n_perimeter", 158, "", src="the LEDs of the two perimeter chains, A and B, in the light layout table")
 dec("n_perimeter_lit_3a", 80, "", src="the perimeter LEDs the 3 A adapter lights, every second of A and "
     "B, 40 each in the light layout table")
@@ -353,31 +353,6 @@ dec("ambient_ceiling", 128, "", src="the most brightness the ambient lights need
 fig("frac_playfield", "%", "(playfield_max + 1) / scale_steps", stated=False)
 
 
-# The ambient lights take what is left of the cap once the controllers and the playfield at its
-# brightness are paid, as the FastLED brightness value whose scale stays under it, and no more than
-# they need.
-def _ambient_max(budget, i_idle, n_playfield, i_led_white, frac_playfield, n_lit, scale_steps, ceiling):
-    left = (budget - i_idle - n_playfield.raw * i_led_white * frac_playfield.raw) / (n_lit.raw * i_led_white)
-    return Q.of(min(floor(left.raw * scale_steps.raw) - 1, ceiling.raw), "")
-
-
-fig("ambient_max_3a", "", lambda i_budget, i_idle, n_playfield, i_led_white, frac_playfield,
-    n_ambient_lit_3a, scale_steps, ambient_ceiling: _ambient_max(
-        i_budget, i_idle, n_playfield, i_led_white, frac_playfield, n_ambient_lit_3a, scale_steps,
-        ambient_ceiling), "down",
-    group="Ambient lights, brightness at most", section=CEILING)
-fig("ambient_max_6a", "", lambda i_budget_6a, i_idle, n_playfield, i_led_white, frac_playfield,
-    n_ambient, scale_steps, ambient_ceiling: _ambient_max(
-        i_budget_6a, i_idle, n_playfield, i_led_white, frac_playfield, n_ambient, scale_steps,
-        ambient_ceiling), "down",
-    group="Ambient lights, brightness at most", section=CEILING)
-
-# what the whole layout draws at full white with each profile
-fig("i_white_3a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
-    "n_ambient_lit_3a.raw * (ambient_max_3a.raw + 1) / scale_steps.raw)", "up", stated=False)
-fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
-    "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
-
 # -- FastLED's power model ------------------------------------------------------
 fig("pm_red", "mW", "ceil_to(i_red * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_red -i_bench_dark +v_rail", stated=False)
@@ -387,6 +362,67 @@ fig("pm_blue", "mW", "ceil_to(i_blue * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_bench_blue -i_bench_dark +v_rail", stated=False)
 fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_strip_dark +v_rail", stated=False)
+
+# FastLED's limiter sums more than the LEDs' own draw. Besides every LED's color and dark draw
+# from the power model, it charges the processor and a reserve of a few codes on every lit channel
+# for dithering, all at the cap's voltage. power_mgt.cpp.hpp of FastLED 3.10.9.
+FASTLED_POWER = "power_mgt.cpp.hpp in FastLED 3.10.9"
+ds("p_fastled_mcu", 125, "mW", src=f"{FASTLED_POWER}: gMCU_mW, the 25 mA at 5 V its limiter "
+   "charges for the processor in every frame", stated=False)
+ds("n_dither_codes", 2, "", src=f"{FASTLED_POWER}: kDitherReserveCodes, the codes its limiter "
+   "reserves on every lit channel for dithering", stated=False)
+ds("power_codes", 256, "", src=f"{FASTLED_POWER}: the >> 8 that turns a channel's value times its "
+   "mW into mW", stated=False)
+fig("pm_white", "mW", "pm_red + pm_green + pm_blue", "up",
+    moves="+i_bench_red +i_bench_green +i_bench_blue -i_bench_dark +v_rail", stated=False)
+
+
+# What FastLED charges for a layout whatever its brightness: the processor, every LED's dark draw
+# and the dithering reserve on each lit LED's three channels.
+def _fastled_fixed(p_mcu, n_leds, pm_dark, n_codes, n_lit, pm_white, codes):
+    return p_mcu + n_leds.raw * pm_dark + n_codes.raw * n_lit.raw * pm_white / codes.raw
+
+
+fig("p_fixed_3a", "mW", lambda p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield,
+    n_ambient_lit_3a, pm_white, power_codes: _fastled_fixed(
+        p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield + n_ambient_lit_3a, pm_white,
+        power_codes), "up", stated=False)
+fig("p_fixed_6a", "mW", lambda p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield,
+    n_ambient, pm_white, power_codes: _fastled_fixed(
+        p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield + n_ambient, pm_white,
+        power_codes), "up", stated=False)
+
+
+# The ambient lights take what is left of the cap in FastLED's sum once the fixed part and the
+# playfield at its brightness are paid, as the FastLED brightness value whose scale stays under it,
+# and no more than they need. FastLED then dims nothing with the whole layout at full white.
+def _ambient_max(cap_mw, fixed, n_playfield, pm_white, frac_playfield, n_lit, scale_steps, ceiling):
+    left = (cap_mw - fixed - n_playfield.raw * pm_white * frac_playfield.raw) / (n_lit.raw * pm_white)
+    return Q.of(min(floor(left.raw * scale_steps.raw) - 1, ceiling.raw), "")
+
+
+fig("ambient_max_3a", "", lambda i_budget, v_rail, p_fixed_3a, n_playfield, pm_white,
+    frac_playfield, n_ambient_lit_3a, scale_steps, ambient_ceiling: _ambient_max(
+        i_budget * v_rail, p_fixed_3a, n_playfield, pm_white, frac_playfield, n_ambient_lit_3a,
+        scale_steps, ambient_ceiling), "down",
+    group="Ambient lights, brightness at most", section=CEILING)
+fig("ambient_max_6a", "", lambda i_budget_6a, v_rail, p_fixed_6a, n_playfield, pm_white,
+    frac_playfield, n_ambient, scale_steps, ambient_ceiling: _ambient_max(
+        i_budget_6a * v_rail, p_fixed_6a, n_playfield, pm_white, frac_playfield, n_ambient,
+        scale_steps, ambient_ceiling), "down",
+    group="Ambient lights, brightness at most", section=CEILING)
+
+# FastLED's sum for the whole layout at full white with each profile
+fig("p_white_3a", "mW", "p_fixed_3a + pm_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient_lit_3a.raw * (ambient_max_3a.raw + 1) / scale_steps.raw)", "up", stated=False)
+fig("p_white_6a", "mW", "p_fixed_6a + pm_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
+
+# what the whole layout draws at full white with each profile
+fig("i_white_3a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient_lit_3a.raw * (ambient_max_3a.raw + 1) / scale_steps.raw)", "up", stated=False)
+fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
+    "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
 
 # -- the frame ----------------------------------------------------------------
 OBJECTFLED = "ObjectFLED.h in FastLED"
@@ -447,6 +483,10 @@ _I("the controllers alone stay inside the smaller cap, so the colors keep a shar
 _I("with the 3 A adapter the whole layout at full white stays inside the cap", "i_white_3a <= i_budget")
 _I("with the 6 A adapter the whole layout at full white stays inside the cap",
    "i_white_6a <= i_budget_6a")
+_I("with the 3 A adapter FastLED's sum for the whole layout at full white stays inside the cap, so "
+   "it dims nothing", "p_white_3a <= i_budget * v_rail")
+_I("with the 6 A adapter FastLED's sum for the whole layout at full white stays inside the cap, so "
+   "it dims nothing", "p_white_6a <= i_budget_6a * v_rail")
 _I("the ambient lights stay at or under the brightness they need",
    "ambient_max_3a <= ambient_ceiling and ambient_max_6a <= ambient_ceiling")
 _I("the ambient lights keep some brightness with either adapter", "ambient_max_3a > Q.of(0, '')")

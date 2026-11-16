@@ -6,7 +6,7 @@ The firmware handles errors on two levels. A device is the hardware a driver wor
 
 The device monitor is a firmware component that attaches to the [driver tick](driver-design.md#driver-intervaltimer) with a period of 100 ms and reports every fault. Each driver notes when its device parts last worked and counts the errors it notices. A part counts as failed once it has been out of order for longer than the driver allows, or has failed as often as the driver allows. A driver that counts time uses [`elapsedMs()`](general-design.md#time-measurement) to measure for how long the device part is inoperative.
 
-Drivers register to the monitor in their `begin()` method. On every tick the device monitor calls `Fault failed()` of every registered driver. The driver returns a `Fault`, which holds a bitmask with one bit per failed part and the driver's error code. The bits count from the LSB, and the error code is 0 for a driver without error codes.
+The main task registers each watched driver with the monitor right after the driver's `begin()`. On every tick the device monitor calls `Fault failed()` of every registered driver. The driver returns a `Fault`, which holds a bitmask with one bit per failed part and the driver's error code. The bits count from the LSB, and the error code is 0 for a driver without error codes.
 
 For every part whose bit error status, the monitor publishes `DeviceFailed` or `DeviceRecovered` into its event queue. The event's source packs the device and the part. The device is an entry of [`Device`](driver-design.md#devices). The payload of `DeviceFailed` is the driver's error code, and `DeviceRecovered` has no payload. When the queue is full, the part keeps the state it was last reported in, and the next check tries again.
 

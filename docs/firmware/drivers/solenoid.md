@@ -48,7 +48,7 @@ Each coil's pull time stands in the [machine config](../components/config.md), o
 |---|---|---|
 | `solenoid.pull_ms.0` to `solenoid.pull_ms.3` | 30 | 5 to 30 ms |
 
-`configure()` takes the pull times right after the config's `begin()`, so the pulls of the driver's own `begin()` run at 30 ms.
+The main task hands the pull times to `configure()` right after the config's `begin()`, so the pulls of the driver's own `begin()` run at 30 ms.
 
 ## Device faults
 
@@ -59,14 +59,15 @@ A sensed solenoid counts as failed once its contact has stayed closed for 2 s. T
 ```cpp
 class SolenoidDriver : public Driver {
 public:
-    // attaches the queue, attaches the release to the driver tick and registers with the
-    // device monitor; false when the driver tick or the device monitor is full, and the
-    // driver then never energises a coil
+    // attaches the queue and attaches the release to the driver tick; false when the driver
+    // tick is full, and the driver then never energises a coil
     bool begin() override;
 
-    // takes each coil's pull time from the config, held between the tick's period and 30 ms; the
-    // main task, right after the config's begin(). Until then every coil pulls for 30 ms
-    void configure();
+    struct Settings;   // each coil's pull time in ms, in the order of the trigger pins
+
+    // takes each coil's pull time, held between the tick's period and 30 ms; the main task, from
+    // the config right after the config's begin(). Until then every coil pulls for 30 ms
+    void configure(const Settings& settings);
 
     // starts a pull of the coil; false while it is still on or cooling down
     bool fire(uint8_t coil);

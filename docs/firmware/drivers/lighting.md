@@ -18,7 +18,7 @@ FastLED also holds the color of every LED. It keeps the current within the budge
 
 ## Adapter profile
 
-How much current the lighting may draw depends on the machine's adapter. `begin()` selects the 6 A profile for an adapter rated at 6 A in the [config](#config) and the 3 A profile for anything less.
+How much current the lighting may draw depends on the machine's adapter. The main task hands the adapter's rating from the [config](#config) to `configure()` before `begin()`. `begin()` selects the 6 A profile for an adapter rated at 6 A and the 3 A profile for anything less.
 
 A profile sets which perimeter LEDs are lamps, how bright the ambient and the playfield lights may be, and the cap the driver hands FastLED. The [lighting design](../../parts/lighting/design.md#current-ceiling) derives the two profiles. The [lamps component](../components/lamps.md) gets the profile with `profile()`. From it, the component takes which perimeter LEDs it uses as lamps and how bright each lamp may be.
 
@@ -36,6 +36,8 @@ The driver notes no fault. The LED chains give the Teensy no feedback, so a dead
 
 ## Interface
 
+The driver is the library [`firmware/lib/lighting/`](../../../firmware/lib/lighting/). `LightingChains` takes the length of each chain, so a bench program drives the LEDs it has. A chain of no LEDs stays out of FastLED, and its pin is left as it is. `Lighting` is the driver with the chains of the [light layout](../../parts/lighting/design.md#light-layout).
+
 ```cpp
 // what the lighting may light and how bright, for one adapter rating
 struct Profile {
@@ -45,10 +47,18 @@ struct Profile {
     uint32_t capMa;           // the lighting's cap, in mA at 5 V
 };
 
-class Lighting : public Driver {
+template <uint16_t LEDS_A, uint16_t LEDS_B, uint16_t LEDS_C, uint16_t LEDS_D, uint16_t LEDS_E,
+          uint16_t LEDS_F>
+class LightingChains : public Driver {
 public:
-    // selects the profile for the config's adapter, adds the six chains to FastLED on their pins and
-    // sets the power model and the cap
+    // the adapter's rating of the config, 3 A by default
+    struct Settings;
+
+    // takes the adapter's rating; the main task, before begin()
+    void configure(const Settings& settings);
+
+    // selects the profile for the config's adapter, adds the chains with LEDs to FastLED on their
+    // pins and sets the power model and the cap
     bool begin() override;
 
     const Profile& profile() const;   // gets the profile the lighting runs with
@@ -57,4 +67,6 @@ public:
 
     void show();              // sends the colors of every LED by DMA; returns at once
 };
+
+using Lighting = LightingChains<...>;   // the chains of the light layout
 ```

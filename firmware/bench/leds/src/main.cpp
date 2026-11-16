@@ -1,7 +1,7 @@
 // LED test for the Teensy 4.1: five WS2812B on chain A, pin 5, lit in five colors of the rainbow
 // that drift slowly along the chain.
 //
-// FastLED drives the chain the way firmware/gist/drivers/lighting.cpp does: ObjectFLED as the only
+// FastLED drives the chain the way firmware/lib/lighting does: ObjectFLED as the only
 // driver, WS2812B, color order GRB. The data line runs through the lighting board's level
 // shifter, as docs/parts/lighting/design.md draws it, since the LEDs need at least 3.5 V for a
 // high bit and a Teensy pin gives 3.3 V.

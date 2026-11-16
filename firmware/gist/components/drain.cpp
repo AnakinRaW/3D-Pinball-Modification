@@ -59,7 +59,7 @@ public:
     // false while a release runs or the store is empty
     bool release() {
         if (phase_ != Phase::Idle || stored() == 0) return false;
-        servo_.moveTo(ServoDriver::Position::End);
+        servo_.moveTo(ServoDriver::Position::END);
         phase_ = Phase::Opening;
         since_ = nowUs();
         return true;
@@ -80,7 +80,7 @@ private:
     static constexpr uint8_t  kBack      = 1;      // the back foil on E-2, the contact driver's source 1
 
     void close(uint32_t now) {
-        servo_.moveTo(ServoDriver::Position::Start);
+        servo_.moveTo(ServoDriver::Position::START);
         phase_ = Phase::Closing;
         since_ = now;
     }

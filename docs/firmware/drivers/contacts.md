@@ -24,8 +24,8 @@ The contacts count as [failed](../error-handling.md#device-faults) once no read 
 ```cpp
 class ContactDriver : public Driver {
 public:
-    // attaches the queue and the pins E-1 to E-4 to the port expander and registers with the device
-    // monitor; false when the port expander refuses the pins or the device monitor is full
+    // attaches the queue and the pins E-1 to E-4 to the port expander; false when the port
+    // expander refuses the pins
     bool begin() override;
 
     // gets the pins whose contact is closed, bit 0 for E-1 up to bit 3 for E-4
