@@ -11,7 +11,8 @@ INT, SCL, SDA, 3V3 and GND on pins 1 to 5, pin for pin at both ends. J-MB-ROTARY
 3V3 and GND on pins 1 to 4. J-PE-STORE carries E-1, E-2 and the wall foil's GND, J-PE-TARGETS E-3,
 E-4 and the bell foil's GND, on pins 1 to 3. J-PE-SPARE carries E-5 to E-8 on pins 1 to 4 and GND
 on pin 5. J-MB-EMITTER carries the feed behind R2, J-MB-RECEIVER the receiver's output and J-MB-SWITCH the switch behind R1 on pin 1, each with GND on pin 2.
-J-MB-SERVO carries the servo board's signal on a single Dupont pin.
+J-MB-SERVO carries the servo board's signal on a single Dupont pin. J-MB-SPK carries SPK+ on pin 1
+and SPK- on pin 2.
 """
 from figcheck import TEENSY_RAIL, Schematic
 
@@ -41,9 +42,10 @@ MB.part("J-MB-ROTARY", "header_male", pins=4)
 MB.part("J-MB-EMITTER", "header_male", pins=2)
 MB.part("J-MB-RECEIVER", "header_male", pins=2)
 MB.part("J-MB-SWITCH", "header_male", pins=2)
+MB.part("J-MB-SPK", "header_male", pins=2)
 
 # -- supply -------------------------------------------------------------------------------------
-MB.net("5V", "J-MB-PWR.1", "D1.A", "A2.VCC", "R4.1", color="red", label="5 V", rail="5V")
+MB.net("5V", "J-MB-PWR.1", "D1.A", "A2.VCC#2", "R4.1", color="red", label="5 V", rail="5V")
 MB.net("VIN", "D1.K", "D2.K", "A1.Vin", "R2.1", color="red", label="VIN", rail="VIN")
 MB.net("GND", "J-MB-PWR.2", "A1.GND", "A1.GND#2", "A1.GND#3", "A2.GND", "J-MB-DISPLAY.1",
        "J-IR-TEENSY.8", "J-SENSE-TEENSY.5", "J-PE-TEENSY.5", "J-MB-ROTARY.4", "J-MB-EMITTER.2", "J-MB-RECEIVER.2",
@@ -68,9 +70,10 @@ MB.unconnected("A1.33", why="MCLK, which I2S2 drives and the DFR0954 does not ta
 MB.unconnected("A2.SD", why="the module pulls SD up itself, which plays the left channel, "
                "DFR0954-DFRobot-schematic.pdf")
 MB.unconnected("A2.NC", why="NC on the module, DFR0954-DFRobot-schematic.pdf")
-MB.unconnected("A2.SPK+", "A2.SPK-", why="the speaker plugs into the module's own PH2.0 socket")
-MB.unconnected("A2.VCC#2", "A2.GND#2", why="the module joins them to its first VCC and GND, "
-               "DFR0954-DFRobot-schematic.pdf")
+MB.net("SPK+", "A2.SPK+", "J-MB-SPK.1", color="white", label="SPK+")
+MB.net("SPK-", "A2.SPK-", "J-MB-SPK.2", color="white", label="SPK-")
+MB.unconnected("A2.VCC", "A2.GND#2", why="the module joins its two VCC pins and its two GND "
+               "pins, DFR0954-DFRobot-schematic.pdf")
 
 # -- lighting -----------------------------------------------------------------------------------
 for i, chain in enumerate("ABCDEF"):
