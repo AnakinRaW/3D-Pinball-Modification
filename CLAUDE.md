@@ -36,7 +36,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | Teensy core | Always the newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
 | LED library | FastLED 3.10.6 or newer from PlatformIO's registry. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
 | UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
-| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/gist/freertos-config.h`](firmware/gist/freertos-config.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
+| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
 **The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
 
@@ -47,6 +47,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `firmware/` — the firmware for the Teensy 4.1: its source, its tests, its measurement programs and code notes. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
 - `firmware/gist/` — code notes, not firmware
 - `firmware/src/` — the firmware's source
+- `firmware/include/` — the settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings
 - `firmware/lib/` — the libraries this repository holds, one folder each, which `platformio.ini` names in `lib_deps` and a bench program takes with `symlink://`
 - `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md): the computer tests in `test_<program>`, and every Teensy test in the one test image `teensy/`
 - `firmware/bench/` — the measurement programs the bench figures in the models come from
