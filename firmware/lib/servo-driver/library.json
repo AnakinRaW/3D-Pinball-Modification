@@ -1,0 +1,10 @@
+{
+  "name": "servo-driver",
+  "version": "1.0.0",
+  "description": "The servo driver: moves the SER0049 in the drain between its two end positions at the config's speed, with PWMServoT4",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}

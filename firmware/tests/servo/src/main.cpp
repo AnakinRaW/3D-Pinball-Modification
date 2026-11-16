@@ -1,5 +1,5 @@
-// The servo test program of docs/firmware/testing.md: ServoDriver as the gist
-// firmware/gist/drivers/servo.cpp designs it, on the driver tick, with PWMServoT4 from
+// The servo test program of docs/firmware/testing.md: ServoDriver of
+// docs/firmware/drivers/servo.md on the driver tick, with PWMServoT4 from
 // firmware/lib/pwm-servo-t4, and the SER0049 on pin 0.
 //
 // A wire from pin 0 to pin 1 lets the Teensy tests time every pulse: an interrupt on pin 1 notes
@@ -11,7 +11,7 @@
 // before it stay at their target and write no pulse, so only the newest one moves the servo.
 
 #include <Arduino.h>
-#include "servo-driver.h"
+#include <servo-driver.h>
 
 constexpr uint8_t CAPTURE_PIN = 1;   // the wire from the servo pin lands here
 constexpr uint32_t EDGES = 1024;     // edges kept between two drains
@@ -38,10 +38,6 @@ constexpr int32_t SET_START_DEG = 10;
 constexpr int32_t SET_END_DEG = 50;
 constexpr int32_t SLOW_DEG_S = 25;
 constexpr int32_t FAST_DEG_S = 100;
-
-DriverTick driverTick;
-DeviceMonitor deviceMonitor;
-Config config;
 
 static ServoDriver firstServo;
 static ServoDriver configuredServo;
@@ -211,7 +207,6 @@ static void testFirstPulse() {
     run(test);
     restart();
     collect(FRAME_MS * 10);
-    config.clear();
     if (!firstServo.begin()) {
         fail(test, "begin() false", "begin() true");
         return;
@@ -237,13 +232,14 @@ static void testFirstPulse() {
     pass(test);
 }
 
-// pulses: with both angles in the config, each end position gets the pulse of its angle.
+// pulses: with both angles handed to configure(), each end position gets the pulse of its angle.
 static void testPulses() {
     const char* test = "pulses";
     run(test);
-    config.clear();
-    config.set(ConfigKey::kServoStart, SET_START_DEG);
-    config.set(ConfigKey::kServoEnd, SET_END_DEG);
+    ServoDriver::Settings settings;
+    settings.startDeg = uint8_t(SET_START_DEG);
+    settings.endDeg = uint8_t(SET_END_DEG);
+    configuredServo.configure(settings);
     if (!configuredServo.begin()) {
         fail(test, "begin() false", "begin() true");
         return;
@@ -252,11 +248,11 @@ static void testPulses() {
     if (wireMissing(test)) {
         return;
     }
-    moveAndSettle(configuredServo, ServoDriver::Position::End);
+    moveAndSettle(configuredServo, ServoDriver::Position::END);
     if (!checkSteady(test, "the end", widthOfNs(SET_END_DEG))) {
         return;
     }
-    moveAndSettle(configuredServo, ServoDriver::Position::Start);
+    moveAndSettle(configuredServo, ServoDriver::Position::START);
     if (!checkSteady(test, "the start", widthOfNs(SET_START_DEG))) {
         return;
     }
@@ -268,8 +264,8 @@ static void testEnds() {
     const char* test = "ends";
     run(test);
     for (uint32_t i = 0; i < ENDS_ROUNDS; ++i) {
-        moveAndSettle(configuredServo, ServoDriver::Position::End);
-        moveAndSettle(configuredServo, ServoDriver::Position::Start);
+        moveAndSettle(configuredServo, ServoDriver::Position::END);
+        moveAndSettle(configuredServo, ServoDriver::Position::START);
     }
     while (Serial.available()) {
         Serial.read();
@@ -292,11 +288,10 @@ static void testEnds() {
     skip(test, "no answer");
 }
 
-// defaults: with neither angle in the config, the end positions get the pulses of the defaults.
+// defaults: without configure(), the end positions get the pulses of the defaults.
 static void testDefaults() {
     const char* test = "defaults";
     run(test);
-    config.clear();
     if (!defaultServo.begin()) {
         fail(test, "begin() false", "begin() true");
         return;
@@ -305,11 +300,11 @@ static void testDefaults() {
     if (wireMissing(test)) {
         return;
     }
-    moveAndSettle(defaultServo, ServoDriver::Position::End);
+    moveAndSettle(defaultServo, ServoDriver::Position::END);
     if (!checkSteady(test, "the end", widthOfNs(DEFAULT_END_DEG))) {
         return;
     }
-    moveAndSettle(defaultServo, ServoDriver::Position::Start);
+    moveAndSettle(defaultServo, ServoDriver::Position::START);
     if (!checkSteady(test, "the start", widthOfNs(DEFAULT_START_DEG))) {
         return;
     }
@@ -319,15 +314,16 @@ static void testDefaults() {
 // One speed: the pulse walks from the start to the end position in the frames the speed asks for,
 // never back, and stops on the end position's pulse.
 static bool checkSpeed(const char* test, ServoDriver& servo, int32_t speedDegS) {
-    config.clear();
-    config.set(ConfigKey::kServoSpeed, speedDegS);
+    ServoDriver::Settings settings;
+    settings.speedDegS = uint32_t(speedDegS);
+    servo.configure(settings);
     if (!servo.begin()) {
         fail(test, "begin() false", "begin() true");
         return false;
     }
     collect(SETTLE_MS);
     restart();
-    servo.moveTo(ServoDriver::Position::End);
+    servo.moveTo(ServoDriver::Position::END);
     collect(servo.travelMs() + SETTLE_MS);
     char seen[64];
     char wanted[48];

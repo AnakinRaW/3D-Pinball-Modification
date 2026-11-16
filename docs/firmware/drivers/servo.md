@@ -22,6 +22,8 @@ The two angles stand in the [machine config](../components/config.md) in whole d
 | `servo.end_deg` | 40 | 0 to 60 |
 | `servo.speed_deg_s` | 50 | 10 to 200 |
 
+The main task hands the three values to `configure()` before `begin()`. A value outside its range counts as the nearer end.
+
 
 ## Driver events
 
@@ -45,15 +47,22 @@ The servo counts as failed when its timer has not taken the no-pulse setting in 
 
 ## Driver Code
 
+The driver is the library [`firmware/lib/servo-driver/`](../../../firmware/lib/servo-driver/).
+
 ```cpp
 class ServoDriver : public Driver {
 public:
-    enum class Position : uint8_t { Start, End };
+    enum class Position : uint8_t { START, END };
 
-    // registers with the device monitor, attaches its step to the driver tick, attaches the pin
-    // with the SER0049's range, 500 µs to 2500 µs, sets no pulse and sends the servo to its start
-    // position; false when the device monitor or the driver tick is full or the timer has not
-    // taken the no-pulse setting after two frames
+    // the two angles and the speed of the config, each with its default
+    struct Settings;
+
+    // takes the angles and the speed, each held inside its range; the main task, before begin()
+    void configure(const Settings& settings);
+
+    // attaches its step to the driver tick, attaches the pin with the SER0049's range, 500 µs to
+    // 2500 µs, sets no pulse and sends the servo to its start position; false when the driver
+    // tick is full or the timer has not taken the no-pulse setting after two frames
     bool begin() override;
 
     // moves the servo at the config's speed to one of its two end positions; nothing once begin()
