@@ -1,4 +1,5 @@
-// Tests on the bench whether the lighting driver lights the LEDs within its current limits.
+// The lighting program of docs/firmware/testing.md. It tests on the bench whether the lighting
+// driver lights the LEDs within its current limits.
 //
 //   profiles   begin() picks the 6 A profile for a 6 A adapter and the 3 A profile otherwise
 //   begin      without configure(), the driver starts on the 3 A profile
@@ -9,10 +10,9 @@
 //   layout-6a  the same at 6 A
 //
 // Wiring: three WS2812B on chain A behind the lighting board's level shifter, and the Teensy's
-// ground joined to the lighting board's. Chains B to F stay empty. A question waits for y or n.
-// Run: open the serial monitor, and the program starts. Each test prints RUN and then PASS, FAIL
-// or SKIP, and the last line reads END <passed> <failed> <skipped>. The tests are rows of
-// docs/firmware/testing.md.
+// ground joined to the lighting board's. Chains B to F stay empty. A bench test lights the three
+// LEDs and asks what they showed. The LEDs hold the asked state until the answer comes or the
+// question times out.
 
 #include <Arduino.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
@@ -21,6 +21,7 @@
 #include <FastLED.h>
 #pragma GCC diagnostic pop
 #include <lighting.h>
+#include "test-harness.h"
 
 constexpr uint16_t BENCH_LEDS = 3;   // the three LEDs on chain A at the bench
 using BenchLighting = LightingChains<BENCH_LEDS, 0, 0, 0, 0, 0>;
@@ -40,8 +41,10 @@ constexpr uint8_t PERIMETER_CHAINS = 2;   // A and B
 constexpr uint8_t AMBIENT_CHAINS = 3;     // A to C, the perimeters and the ceiling
 constexpr uint32_t HOLD_MS = 2000;
 constexpr uint32_t ASK_TIMEOUT_MS = 60000;
-constexpr uint32_t RAINBOW_STEP_MS = 20;
 constexpr uint8_t HUE_STEP = 256 / BENCH_LEDS;   // three colors spread over the color wheel
+// the longest each test takes: its holds and its question with room to spare
+constexpr uint32_t TEENSY_LIMIT_S = 10;
+constexpr uint32_t ASK_LIMIT_S = 90;
 
 // one driver without chains for each config begin() is tried with in profiles
 struct ProfileCase {
@@ -59,48 +62,31 @@ static NoChains probes[PROFILE_CASE_COUNT];
 static BenchLighting lighting;
 static CRGB layout[LAYOUT_CHAINS][LAYOUT_ROOM];
 
-static uint32_t passed = 0;
-static uint32_t failed = 0;
-static uint32_t skipped = 0;
-
-static void run(const char* test) {
-    Serial.printf("RUN lighting.%s\n", test);
-}
-
-static void pass(const char* test) {
-    Serial.printf("PASS lighting.%s\n", test);
-    ++passed;
-}
-
-static void skip(const char* test, const char* reason) {
-    Serial.printf("SKIP lighting.%s %s\n", test, reason);
-    ++skipped;
-}
-
-static void fail(const char* test, const char* seen, const char* wanted) {
-    Serial.printf("FAIL lighting.%s %s expected %s\n", test, seen, wanted);
-    ++failed;
-}
-
 // Asks a person and waits for y or n. The LEDs keep what they show meanwhile.
-static void ask(const char* test, const char* question) {
-    while (Serial.available()) {
-        Serial.read();
+static void ask(const char* question) {
+    switch (test::ask(question, ASK_TIMEOUT_MS)) {
+    case test::Answer::YES:
+        test::pass();
+        break;
+    case test::Answer::NO:
+        test::fail("n", "y");
+        break;
+    case test::Answer::NONE:
+        test::skip("no answer");
+        break;
     }
-    Serial.printf("ASK lighting.%s %s\n", test, question);
-    const uint32_t t0 = millis();
-    while (millis() - t0 < ASK_TIMEOUT_MS) {
-        const int c = Serial.read();
-        if (c == 'y') {
-            pass(test);
-            return;
-        }
-        if (c == 'n') {
-            fail(test, "n", "y");
-            return;
-        }
+}
+
+// Starts the bench driver once after the start, also for a test run without begin before it.
+// Reports a failure and returns false where begin() fails.
+static bool begun() {
+    static bool started = false;
+    if (!started && !lighting.begin()) {
+        test::fail("begin() false", "begin() true");
+        return false;
     }
-    skip(test, "no answer");
+    started = true;
+    return true;
 }
 
 static bool sameProfile(const Profile& a, const Profile& b) {
@@ -113,12 +99,12 @@ static void fillBench(const CRGB& color) {
 }
 
 // Shows a frame and holds it. Reports a failure and returns false when the limiter dimmed it.
-static bool showUnlimited(const char* test, const char* what) {
+static bool showUnlimited(const char* what) {
     lighting.show();
     if (FastLED.isPowerLimited()) {
         char seen[64];
         snprintf(seen, sizeof seen, "%s dimmed to %u", what, FastLED.getLastShowBrightness());
-        fail(test, seen, "no dimming");
+        test::fail(seen, "no dimming");
         return false;
     }
     delay(HOLD_MS);
@@ -169,8 +155,6 @@ static uint8_t limitedBrightness(const Demand& demand, uint32_t capMw) {
 // profiles: begin() selects the 6 A profile for an adapter of 6 A and the 3 A profile for
 // anything less, the default and values outside the range included.
 static void testProfiles() {
-    const char* test = "profiles";
-    run(test);
     for (uint8_t i = 0; i < PROFILE_CASE_COUNT; ++i) {
         const ProfileCase& pc = PROFILE_CASES[i];
         if (pc.set) {
@@ -179,7 +163,7 @@ static void testProfiles() {
         char seen[64];
         if (!probes[i].begin()) {
             snprintf(seen, sizeof seen, "begin() false at %ld A", pc.adapterA);
-            fail(test, seen, "begin() true");
+            test::fail(seen, "begin() true");
             return;
         }
         const Profile& wanted = pc.sixA ? NoChains::PROFILE_6A : NoChains::PROFILE_3A;
@@ -191,24 +175,21 @@ static void testProfiles() {
                 snprintf(seen, sizeof seen, "cap %lu mA without the key",
                          probes[i].profile().capMa);
             }
-            fail(test, seen, pc.sixA ? "the 6 A profile" : "the 3 A profile");
+            test::fail(seen, pc.sixA ? "the 6 A profile" : "the 3 A profile");
             return;
         }
     }
-    pass(test);
+    test::pass();
 }
 
 // begin: without configure(), the bench driver starts on the 3 A profile and hands
 // FastLED the strip's power model.
 static void testBegin() {
-    const char* test = "begin";
-    run(test);
-    if (!lighting.begin()) {
-        fail(test, "begin() false", "begin() true");
+    if (!begun()) {
         return;
     }
     if (!sameProfile(lighting.profile(), BenchLighting::PROFILE_3A)) {
-        fail(test, "another profile", "the 3 A profile");
+        test::fail("another profile", "the 3 A profile");
         return;
     }
     const PowerModelRGB model = FastLED.getPowerModel();
@@ -217,47 +198,49 @@ static void testBegin() {
         char seen[64];
         snprintf(seen, sizeof seen, "power model %u %u %u %u mW", model.red_mW, model.green_mW,
                  model.blue_mW, model.dark_mW);
-        fail(test, seen, "28 31 31 3 mW");
+        test::fail(seen, "28 31 31 3 mW");
         return;
     }
     if (lighting.chain(BenchLighting::CHAINS) != nullptr) {
-        fail(test, "a chain past F", "nullptr");
+        test::fail("a chain past F", "nullptr");
         return;
     }
-    pass(test);
+    test::pass();
 }
 
 // colors: the three LEDs show red, green, blue and white at full value, then three colors of the
 // rainbow, and the limiter dims none of them under the profile's cap.
 static void testColors() {
-    const char* test = "colors";
-    run(test);
+    if (!begun()) {
+        return;
+    }
     const CRGB colors[] = {CRGB::Red, CRGB::Green, CRGB::Blue, CRGB::White};
     const char* names[] = {"red", "green", "blue", "white"};
     for (uint8_t i = 0; i < 4; ++i) {
         fillBench(colors[i]);
-        if (!showUnlimited(test, names[i])) {
+        if (!showUnlimited(names[i])) {
             return;
         }
     }
     fill_rainbow(lighting.chain(0), BENCH_LEDS, 0, HUE_STEP);
     lighting.show();
-    ask(test, "Did all three LEDs show red, green, blue and white in turn, and do they now show "
-              "three different colors of the rainbow?");
+    ask("Did all three LEDs show red, green, blue and white in turn, and do they now show "
+        "three different colors of the rainbow?");
 }
 
 // limits: white at the profile's playfield brightness, then at its ambient brightness, then the
 // perimeter pattern of the profile at the ambient brightness.
 static void testLimits() {
-    const char* test = "limits";
-    run(test);
+    if (!begun()) {
+        return;
+    }
     const Profile& p = lighting.profile();
     fillBench(CRGB(CRGB::White).nscale8(p.playfieldMax));
-    if (!showUnlimited(test, "the playfield brightness")) {
+    if (!showUnlimited("the playfield brightness")) {
         return;
     }
     fillBench(CRGB(CRGB::White).nscale8(p.ambientMax));
-    if (!showUnlimited(test, "the ambient brightness")) {
+    if (!showUnlimited("the ambient brightness")) {
         return;
     }
     CRGB* leds = lighting.chain(0);
@@ -267,16 +250,17 @@ static void testLimits() {
     lighting.show();
     Serial.printf("the profile: playfield %u, ambient %u of 255, perimeter step %u\n",
                   p.playfieldMax, p.ambientMax, p.perimeterStep);
-    ask(test, "Did the three white LEDs step down to under half their brightness, and do now only "
-              "the first and the third light?");
+    ask("Did the three white LEDs step down to under half their brightness, and do now only "
+        "the first and the third light?");
 }
 
 // cap: under the profile's cap the three LEDs at full white stay undimmed. Under a cap they
 // exceed, the limiter dims them to the brightness the program's sum gives and keeps their
 // estimate inside that cap.
 static void testCap() {
-    const char* test = "cap";
-    run(test);
+    if (!begun()) {
+        return;
+    }
     char seen[80];
     char wanted[48];
     fillBench(CRGB::White);
@@ -284,7 +268,7 @@ static void testCap() {
     if (FastLED.isPowerLimited() || FastLED.getLastShowBrightness() != 255) {
         snprintf(seen, sizeof seen, "brightness %u under %lu mA", FastLED.getLastShowBrightness(),
                  lighting.profile().capMa);
-        fail(test, seen, "255");
+        test::fail(seen, "255");
         return;
     }
     delay(HOLD_MS);
@@ -303,31 +287,30 @@ static void testCap() {
     FastLED.setMaxPowerInVoltsAndMilliamps(BenchLighting::VOLTS, lighting.profile().capMa);
     lighting.show();
     if (!FastLED.isPowerLimited() && live == 255) {
-        fail(test, "no dimming", "dimming");
+        test::fail("no dimming", "dimming");
         return;
     }
     if (live != sum) {
         snprintf(seen, sizeof seen, "brightness %u", live);
         snprintf(wanted, sizeof wanted, "%u from the program's sum", sum);
-        fail(test, seen, wanted);
+        test::fail(seen, wanted);
         return;
     }
     if (estimateMw > capMw) {
         snprintf(seen, sizeof seen, "estimate %lu mW", estimateMw);
         snprintf(wanted, sizeof wanted, "at most %lu mW", capMw);
-        fail(test, seen, wanted);
+        test::fail(seen, wanted);
         return;
     }
-    ask(test, "Did the three white LEDs dim to about two thirds for two seconds and then come back "
-              "to full?");
+    ask("Did the three white LEDs dim to about two thirds for two seconds and then come back "
+        "to full?");
 }
 
 // layout: the whole light layout at full white within one profile's limits, with the action
 // lights at the playfield brightness, stays under the profile's cap in FastLED's sum, so the
 // limiter dims nothing. The limiter itself only sees the chains added to FastLED, so the test
 // repeats its sum with FastLED's public power functions.
-static void testLayout(const char* test, const Profile& p) {
-    run(test);
+static void testLayout(const Profile& p) {
     uint16_t counts[LAYOUT_CHAINS];
     CRGB* chains[LAYOUT_CHAINS];
     for (uint8_t c = 0; c < LAYOUT_CHAINS; ++c) {
@@ -351,40 +334,28 @@ static void testLayout(const char* test, const Profile& p) {
         snprintf(seen, sizeof seen, "%lu mA, dimmed to %u", fullMw / Lighting::VOLTS,
                  limitedBrightness(demand, capMw));
         snprintf(wanted, sizeof wanted, "at most %lu mA", p.capMa);
-        fail(test, seen, wanted);
+        test::fail(seen, wanted);
         return;
     }
-    pass(test);
+    test::pass();
 }
 
-void setup() {
-    Serial.begin(115200);
-    while (!Serial) {
-    }
-    delay(200);
-
-    testProfiles();
-    testBegin();
-    testColors();
-    testLimits();
-    testCap();
-    testLayout("layout-3a", Lighting::PROFILE_3A);
-    testLayout("layout-6a", Lighting::PROFILE_6A);
-    Serial.printf("END %lu %lu %lu\n", passed, failed, skipped);
+static void testLayout3a() {
+    testLayout(Lighting::PROFILE_3A);
 }
 
-// After the run, a rainbow drifts along the three LEDs at the ambient brightness.
-void loop() {
-    static uint8_t hue = 0;
-    static uint32_t lastMs = 0;
-    if (millis() - lastMs < RAINBOW_STEP_MS) {
-        return;
-    }
-    lastMs = millis();
-    fill_rainbow(lighting.chain(0), BENCH_LEDS, hue, HUE_STEP);
-    for (uint16_t i = 0; i < BENCH_LEDS; ++i) {
-        lighting.chain(0)[i].nscale8(lighting.profile().ambientMax);
-    }
-    lighting.show();
-    hue = hue + 1;
+static void testLayout6a() {
+    testLayout(Lighting::PROFILE_6A);
 }
+
+static const Test TESTS[] = {
+    {"lighting.profiles", RunsOn::TEENSY, TEENSY_LIMIT_S, TEENSY_LIMIT_S, testProfiles, nullptr},
+    {"lighting.begin", RunsOn::TEENSY, TEENSY_LIMIT_S, TEENSY_LIMIT_S, testBegin, nullptr},
+    {"lighting.colors", RunsOn::BENCH, ASK_LIMIT_S, ASK_LIMIT_S, testColors, nullptr},
+    {"lighting.limits", RunsOn::BENCH, ASK_LIMIT_S, ASK_LIMIT_S, testLimits, nullptr},
+    {"lighting.cap", RunsOn::BENCH, ASK_LIMIT_S, ASK_LIMIT_S, testCap, nullptr},
+    {"lighting.layout-3a", RunsOn::TEENSY, TEENSY_LIMIT_S, TEENSY_LIMIT_S, testLayout3a, nullptr},
+    {"lighting.layout-6a", RunsOn::TEENSY, TEENSY_LIMIT_S, TEENSY_LIMIT_S, testLayout6a, nullptr},
+};
+
+extern const Program LIGHTING = {TESTS, sizeof TESTS / sizeof TESTS[0]};

@@ -48,7 +48,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `firmware/gist/` — code notes, not firmware
 - `firmware/src/` — the firmware's source
 - `firmware/lib/` — the libraries this repository holds, one folder each, which `platformio.ini` names in `lib_deps` and a bench program takes with `symlink://`
-- `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md)
+- `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md): the computer tests in `test_<program>`, and every Teensy test in the one test image `teensy/`
 - `firmware/bench/` — the measurement programs the bench figures in the models come from
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
 - `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
@@ -91,6 +91,9 @@ The firmware builds with PlatformIO, installed with `python -m pip install platf
 |---|---|
 | `python -m platformio run` | Builds the project in the current folder and prints how much of RAM1, RAM2, the flash and the PSRAM it takes |
 | `python -m platformio run -t upload` | Builds and flashes it onto the Teensy. A serial monitor holding the Teensy's port blocks the upload |
+| `python firmware/tools/teensy-tests.py` | Runs every `Teensy` test of [`docs/firmware/testing.md`](docs/firmware/testing.md) on the test image in `firmware/tests/teensy`, quick, and exits with 1 on a failure, a hang or a crash. `--upload` builds and flashes the image first, a pattern such as `"servo.*"` picks tests, `--soak` takes the durations testing.md states and `--bench` adds the bench tests for a person at the bench. The image takes its tests from `src/<program>`, one folder per section, and `src/main.cpp` lists the programs. A test reports through `test-harness.h`. The Results section of testing.md holds the lines and commands between the runner and the image |
+
+The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache finds an object file by its command line, its source and its place in the build folder, so it serves only the project that compiled the file. Worktrees share each project's build folder. A build after another worktree's build therefore takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's own code `-Wall -Wextra -Werror` and every library `-w`.
 
 ## Conventions
 
