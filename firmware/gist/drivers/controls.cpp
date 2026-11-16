@@ -3,7 +3,7 @@ public:
     // attaches the queue, sets the pin as an input with the Teensy's pull-up and puts both
     // edges on the pin interrupt; always true
     bool begin() override {
-        out_  = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         self_ = this;
         pinMode(kPin, INPUT_PULLUP);
         reported_ = position();

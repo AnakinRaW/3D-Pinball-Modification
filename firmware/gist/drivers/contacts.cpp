@@ -3,13 +3,13 @@ public:
     // attaches the queue and the pins E-1 to E-4 to the port expander and registers with the device
     // monitor; false when the port expander refuses the pins or the device monitor is full
     bool begin() override {
-        out_ = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         const uint32_t now = nowUs();
         for (uint32_t& t : openedAt_) t = now;               // an open contact counts as open since begin()
         if (!io::expander.attach(kPins, [this](uint8_t changed, uint8_t levels, uint32_t time) {
                 change(changed, levels, time);
             })) return false;
-        return deviceMonitor.watch(Device::Contacts, *this);
+        return deviceMonitor.watch(Device::CONTACTS, *this);
     }
 
     // gets the pins whose contact is closed, bit 0 for E-1 up to bit 3 for E-4
