@@ -6,7 +6,11 @@
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include <lvgl.h>
+// FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
+// the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
+#pragma GCC diagnostic push
 #include <FastLED.h>
+#pragma GCC diagnostic pop
 
 constexpr uint32_t MAIN_STACK_BYTES = 8192;
 constexpr uint32_t BLINK_MS = 500;   // half the LED's blink period
