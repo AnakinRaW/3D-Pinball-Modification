@@ -333,7 +333,7 @@ The program `every-driver` checks the [rules every driver follows](driver-design
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `begin-fails` | Teensy | Take every slot of the driver tick and of the device monitor, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
+| `begin-fails` | Teensy | Take every slot of the driver tick, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
 | `at-once` | Teensy | Make every driver call that starts a long transfer, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs |
 
 ## Components

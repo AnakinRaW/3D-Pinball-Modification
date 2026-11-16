@@ -57,8 +57,8 @@ struct MagnetState {
 class MagneticRotaryDriver : public Driver {
 public:
     // attaches the queue and the transfers, reads STATUS, AGC and the first angle, points
-    // the AS5600 at RAW ANGLE, attaches its read to the driver tick and registers with
-    // the device monitor; false when the AS5600 does not answer or either of the two is full
+    // the AS5600 at RAW ANGLE and attaches its read to the driver tick; false when the AS5600
+    // does not answer or the driver tick is full
     bool begin() override;
 
     // steps since begin(), 4096 to a turn

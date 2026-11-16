@@ -16,7 +16,9 @@ Device faults reach the event queue through the [device monitor](error-handling.
 
 ## Driver interface
 
-Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()` and registers itself in `begin()`.
+Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()`. The main task registers it with the device monitor right after its `begin()`, whether `begin()` succeeded or not.
+
+A driver reads no config. The main task reads a driver's settings from the [config](components/config.md) and hands them over with the driver's `configure()`, before the driver's `begin()`. The solenoids take theirs after their `begin()`, as the [start-up](general-design.md#main-program) lists.
 
 ```cpp
 // the interface every driver implements

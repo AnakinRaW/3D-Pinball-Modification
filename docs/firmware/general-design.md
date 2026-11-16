@@ -129,8 +129,8 @@ Four parts of the firmware order their entries with a priority list. The [lamps 
 2. the [watchdog](error-handling.md#watchdog), so it guards the coils from their first pull;
 3. the solenoids' `begin()`, which pulls every coil once, so the machine shows at once that it starts;
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
-5. the [config's](components/config.md) `begin()`, which reads the machine's settings, so every later driver starts with them, and the solenoids' `configure()`, which takes their pull times from them;
-6. the `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
+5. the [config's](components/config.md) `begin()`, which reads the machine's settings, and the solenoids' `configure()`, which hands them their pull times;
+6. the `configure()` and `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
 7. the `begin()` of the screen, which starts LVGL, and of the video player;
 8. the game host's `begin()`;
 9. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lamps, calls `yield()` and feeds the watchdog. The screen runs the video player through LVGL.
