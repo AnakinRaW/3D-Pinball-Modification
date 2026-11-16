@@ -32,6 +32,7 @@ With the 3 A adapter the perimeters light only every second LED, as the [current
 | Playfield score stars | D | 10 | 10 |
 | Drain | D | 1 | 1 |
 | Shooter Lane Lights (stock: P28) | D | 6 | 6 |
+| Inner and outer lane lights* | D | 4 | 4 |
 | Track Arrows | E | 4 | 4 |
 | Track Lights* | E | 3 | 3 |
 | Scoop* | E | 1 | 1 |
@@ -39,14 +40,14 @@ With the 3 A adapter the perimeters light only every second LED, as the [current
 | Bumper section | F | 4 | 4 |
 | Top lane rollovers* | F | 3 | 3 |
 | Playfield action lights* | D - F | 20 | 20 |
-| **Total** |  | **240** | **162** |
+| **Total** |  | **244** | **166** |
 
 **New in this machine*
 
 The LEDs are organized in chains by where they sit and by how the game uses them. There are two kinds:
 
 1. Playfield lights are single lights that stand for something in the game, such as a bumper or a score star. A component switches each of them. They share chains by location, which keeps the chains and their wiring short.
-2. Ambient lights along the perimeter and in the ceiling act as strips. Effects run along a strip as a whole, so the game never needs to know which LED is which. Each strip forms a chain, since the three together hold 184 of the 240 LEDs.
+2. Ambient lights along the perimeter and in the ceiling act as strips. Effects run along a strip as a whole, so the game never needs to know which LED is which. Each strip forms a chain, since the three together hold 184 of the 244 LEDs.
 
 Chains A to C are the three ambient strips. Chain D covers the lower playfield, chain E the middle and chain F the upper playfield.
 
@@ -65,7 +66,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 ## Current ceiling
 
-The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md), the colors on a piece of two LEDs cut from it and the dark draw on the whole strip. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 0.42 mA even while the LED is dark, 0.1 A for all 240 LEDs.
+The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md), the colors on a piece of two LEDs cut from it and the dark draw on the whole strip. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 0.42 mA even while the LED is dark, 0.1 A for all 244 LEDs.
 
 This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR board. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
@@ -75,12 +76,12 @@ The adapter's rating is set in the [machine config](../../firmware/components/co
 |---|---|---|
 | Perimeter LEDs lit | every second, 80 | all, 158 |
 | Playfield lights, brightness at most | 255 | 255 |
-| Ambient lights, brightness at most |121 | 128 |
+| Ambient lights, brightness at most |96 | 126 |
 | Cap | 2 A | 2.93 A |
 
-The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
+The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves in FastLED's sum with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
 
-FastLED holds the cap with its `setMaxPowerInVoltsAndMilliamps` function. Before each `show()` it dims every light until the sum fits the set max current. It works out the sum from the measured currents, which the lighting driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap, so FastLED dims nothing in play.
+FastLED holds the cap with its `setMaxPowerInVoltsAndMilliamps` function. Before each `show()` it dims every light until the sum fits the set max current. It works out the sum from the measured currents, which the lighting driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap in that sum, so FastLED dims nothing in play.
 
 ## Circuit
 
