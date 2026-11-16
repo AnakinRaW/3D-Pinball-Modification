@@ -111,7 +111,7 @@ static void storageMain(void*) {
     vTaskSuspend(nullptr);
 }
 
-static void mainMain(void*) {
+static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     Serial.println("Card-pull test: pull the card about 15 s in, put it back about 15 s later");
     xTaskCreate(storageMain, "storage", 8192 / sizeof(StackType_t), nullptr, 2, nullptr);
@@ -153,7 +153,7 @@ static void mainMain(void*) {
 
 void setup() {
     Serial.begin(115200);
-    xTaskCreate(mainMain, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
+    xTaskCreate(runMainTask, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
     vTaskStartScheduler();
 }
 

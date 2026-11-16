@@ -132,7 +132,7 @@ static void drawTimes(lv_display_t* d, lv_obj_t* img, float& mean, float& max) {
     max  = top / 1000.0f;
 }
 
-static void mainMain(void*) {
+static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     Serial.printf("Stack test, PSRAM %d MB, FreeRTOS %s, LVGL %d.%d.%d, FastLED %d\n", external_psram_size,
                   tskKERNEL_VERSION_NUMBER, LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH,
@@ -189,7 +189,7 @@ static void mainMain(void*) {
 
 void setup() {
     Serial.begin(115200);
-    xTaskCreate(mainMain, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
+    xTaskCreate(runMainTask, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
     vTaskStartScheduler();
 }
 

@@ -77,7 +77,7 @@ __attribute__((noinline)) static void hangWithoutInterrupts() {
     for (;;) asm volatile("nop");
 }
 
-static void mainMain(void*) {
+static void runMainTask(void*) {
     const uint32_t srsr = SRC_SRSR;
     startWatchdog();
     while (!Serial) { feed(); vTaskDelay(10); }
@@ -124,7 +124,7 @@ static void mainMain(void*) {
 
 void setup() {
     Serial.begin(115200);
-    xTaskCreate(mainMain, "main", 8192 / sizeof(StackType_t), nullptr, 1, nullptr);
+    xTaskCreate(runMainTask, "main", 8192 / sizeof(StackType_t), nullptr, 1, nullptr);
     vTaskStartScheduler();
 }
 
