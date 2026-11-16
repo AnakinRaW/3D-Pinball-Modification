@@ -119,15 +119,13 @@ L.part("J-MB-PWR", "terminal_5mm", ["U1", "S1"], entry=(-1, 0), title="J-MB-PWR"
        sub="5 V from the power board")
 L.bare("P14", "Z14")                     # ground down from the Teensy's bottom ground pin
 L.bare("S14", "S1")                      # ground across to the terminal
-L.tin("U1", "T1")                        # 5 V
-L.bare("T1", "T10")
-L.tin("T10", "U10")
-L.bare("U10", "Y10")                     # 5 V down to the amplifier
+L.bare("U1", "U10")                      # 5 V straight to D1
+L.bare("U1", "AC1")                      # 5 V down to the amplifier
+L.bare("AC1", "AC3")
+L.tin("AC3", "AC4")                      # the second VCC, clear of the I2S row
 L.part("A2", "dfr0954", at="Y10", rot=90)
-L.part("R4", "resistor", ["W8", "W4"])
-L.tin("W4", "X4")
-L.tin("X4", "Y4")
-L.bare("T8", "W8")
+L.part("R4", "resistor", ["AC3", "Y3"])  # beside the module, from its second VCC to GAIN
+L.tin("Y3", "Y4")
 L.bare("Z14", "Z10")
 L.bare("P18", "AA18")
 L.bare("AA18", "AA10")
@@ -136,6 +134,14 @@ L.bare("AB19", "AB10")
 L.tin("P17", "Q17")
 L.wire("Q17", "AC11", via=["AC17"])       # DIN across LRC and BCLK
 L.tin("AC11", "AC10")
+# the speaker two columns right of the module, clear of its edge; SPK- under the module and
+# across SPK+ in an insulated wire
+L.part("J-MB-SPK", "header_male", ["AD12", "AD13"], title="J-MB-SPK", sub="the speaker")
+L.tin("AD10", "AD11")
+L.tin("AD11", "AD12")                    # SPK+
+L.tin("AD4", "AD5")
+L.wire("AD5", "AD14", via=["X5", "X15", "AD15"])
+L.tin("AD14", "AD13")                    # SPK-
 
 # ---- the right end: ground and 3.3 V from under the Teensy ------------------------------
 L.bare("L28", "L39")

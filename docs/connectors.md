@@ -26,7 +26,7 @@
 | | J-LA to J-LC on the ambient board, J-LD to J-LF on the playfield board | 3 each | screw terminal | 5 V with a whole chain's current. A reversed plug would reverse the LEDs' supply |
 | | segment to segment | 3 each | soldered | |
 | Audio | the DFR0954 on the Teensy motherboard | 2 × 6 | socket headers | DFRobot includes no header |
-| | speaker | 2 | PH2.0 at the module, the stock plug at the speaker | Polarity does not matter |
+| | J-MB-SPK, the speaker | 2 | Dupont at the Teensy motherboard, the stock plug at the speaker | Polarity does not matter |
 | Servo | J-SERVO-PWR of the servo board | 3 | screw terminal | 5 V beside a Teensy pin |
 | | servo plug | 3 | pin header | The servo's cable stays whole |
 | Magnetic rotary sensor | Teensy and module | 4 | Dupont | 3.3 V and I²C |
@@ -48,7 +48,7 @@
 | Poles | Screw terminal | Dupont or socket header | Counterpart to a stock or module plug |
 |---|---|---|---|
 | 1 | | 1 (J-MB-SERVO) | |
-| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 8 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR) | the toggle switch, the speaker, PH2.0 at the DFR0954 |
+| 2 | 8 (six on the power board, J-MB-PWR and J-COIL-PWR) | 9 (the toggle switch, J-C1 to J-C4, the break beam's emitter and receiver, J-DISP-PWR, J-MB-SPK) | the toggle switch, the speaker |
 | 3 | 7 (the six lighting chains, J-SERVO-PWR) | up to 16 J-S, 2 touch, 4 lighting data, 2 contact headers, the servo plug, the display bus's housing for CS, WR and D/C | |
 | 4 | | 6 (2 rotary sensor, 2 J-COIL-TEENSY, the D24V5F3's socket, the display bus's housing for D0 to D6) | |
 | 5 | | 6 (2 J-SENSE-TEENSY, 2 J-PE-TEENSY, J-PE-SPARE, the display bus's housing for GND and D1 to D7) | |
