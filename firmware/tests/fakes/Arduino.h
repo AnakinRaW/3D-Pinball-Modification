@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <cstdio>
 
+// GPT2's counter, which nowUs() reads. A test sets it to the time it wants nowUs() to give.
+inline volatile uint32_t GPT2_CNT = 0;
+
 inline void noInterrupts() {}
 inline void interrupts() {}
 

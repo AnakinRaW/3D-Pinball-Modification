@@ -39,7 +39,7 @@ MODEL.as_written("t_wdt_s", of="t_wdt", unit="s")
 ds("n_clock_range", 4294967296, "", src="GPT2's counter, 32 bits, i.MX RT1060 reference manual "
    "Rev. 3, General Purpose Timer, GPT_CNT")
 dec("t_clock_step", 1, "µs", src="GPT2 counts the 24 MHz crystal divided by 24, its two prescalers "
-    "in general-design.cpp")
+    "in startClock() of firmware/lib/clock/clock.cpp")
 fig("t_clock_wrap", "minutes", "n_clock_range * t_clock_step", moves="+n_clock_range +t_clock_step",
     stated=False)
 
@@ -232,6 +232,5 @@ _I("FreeRTOS never masks the watchdog's warning, which does not call it",
 
 for _text, _why in [
     ("0", "a loop's start, an empty count or mask, and a pure virtual function in the listings"),
-    ("1000", "the microseconds in a millisecond, which elapsedMs() multiplies its span by"),
 ]:
     MODEL.aside(_text, _why)
