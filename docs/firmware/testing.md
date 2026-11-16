@@ -485,6 +485,7 @@ The program `start-up` checks the [main program](general-design.md#main-program)
 |---|---|---|---|
 | `order` | Teensy | Start, with every step of the start-up printing a line | The lines come in the order the main program lists |
 | `priorities` | Teensy | Read the priority of every interrupt once the main loop runs | Each interrupt sits at the priority the [interrupt table](general-design.md#interrupts) lists |
+| `heap` | Teensy | Take a block with `malloc()` in the constructor of a static object, and a second block in the main task | Both blocks lie in RAM2, and they do not overlap |
 
 ### Game host
 
