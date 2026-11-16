@@ -1,0 +1,10 @@
+{
+  "name": "driver-base",
+  "version": "1.0.0",
+  "description": "What every driver shares: the Driver interface, the Fault it reports and the driver tick, one IntervalTimer for every driver that needs a regular period",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}
