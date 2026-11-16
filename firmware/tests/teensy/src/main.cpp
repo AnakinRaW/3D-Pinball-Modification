@@ -12,23 +12,33 @@
 //   reset                      restarts the Teensy
 //
 // The image keeps no state across a restart. A crash report left by the run before is printed as
-// CRASH lines once the host opens the port.
+// CRASH lines once the host opens the port. The tests run in a FreeRTOS task, as the firmware's
+// main loop does, and setup() starts the clock before it, as the firmware's setup() does.
 
 #include <Arduino.h>
+#include <FreeRTOS.h>
+#include <clock.h>
 #include <string.h>
+#include <task.h>
 #include "test-harness.h"
 
+extern const Program CLOCK;
 extern const Program DRIVER_TICK;
+extern const Program PSRAM;
 extern const Program LIGHTING;
 extern const Program SERVO;
 extern const Program EVERY_DRIVER;
+extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
-static const Program* const PROGRAMS[] = {&DRIVER_TICK, &LIGHTING, &SERVO, &EVERY_DRIVER};
+static const Program* const PROGRAMS[] = {&CLOCK, &DRIVER_TICK,  &PSRAM,   &LIGHTING,
+                                          &SERVO, &EVERY_DRIVER, &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
 constexpr uint32_t RESTART_FLUSH_MS = 100;   // lets the last line leave over USB before a restart
+// the stack of the task the tests run in, enough for the largest test's local variables
+constexpr uint32_t TEST_STACK_BYTES = 32768;
 
 // ARMv7-M Architecture Reference Manual, B3.2.6: AIRCR takes a write only with the key 0x05FA in
 // its upper half, and SYSRESETREQ, bit 2, restarts the processor
@@ -281,7 +291,36 @@ static void command() {
     }
 }
 
+// Reads the command lines and carries them out, for good.
+static void testTask(void*) {
+    for (;;) {
+        while (Serial.available()) {
+            const int c = Serial.read();
+            if (c == '\r') {
+                continue;
+            }
+            if (c != '\n') {
+                if (lineLength + 1 < LINE_BYTES) {
+                    line[lineLength++] = char(c);
+                } else {
+                    lineTooLong = true;
+                }
+                continue;
+            }
+            line[lineLength] = '\0';
+            if (lineTooLong) {
+                Serial.printf("ERROR a line longer than %lu bytes\n", LINE_BYTES - 1);
+            } else {
+                command();
+            }
+            lineLength = 0;
+            lineTooLong = false;
+        }
+    }
+}
+
 void setup() {
+    startClock();
     Serial.begin(115200);
     while (!Serial) {
     }
@@ -292,29 +331,13 @@ void setup() {
         LinePrefix crash("CRASH ");
         crash.print(CrashReport);
     }
+    if (xTaskCreate(testTask, "tests", TEST_STACK_BYTES / sizeof(StackType_t), nullptr, 1,
+                    nullptr) != pdPASS) {
+        Serial.printf("ERROR no memory for the test task\n");
+        return;
+    }
+    vTaskStartScheduler();
 }
 
-void loop() {
-    while (Serial.available()) {
-        const int c = Serial.read();
-        if (c == '\r') {
-            continue;
-        }
-        if (c != '\n') {
-            if (lineLength + 1 < LINE_BYTES) {
-                line[lineLength++] = char(c);
-            } else {
-                lineTooLong = true;
-            }
-            continue;
-        }
-        line[lineLength] = '\0';
-        if (lineTooLong) {
-            Serial.printf("ERROR a line longer than %lu bytes\n", LINE_BYTES - 1);
-        } else {
-            command();
-        }
-        lineLength = 0;
-        lineTooLong = false;
-    }
-}
+// never runs once FreeRTOS has started
+void loop() {}

@@ -10,7 +10,7 @@ Each section below is one test program. The `computer` tests of a section build 
 
 Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
 
-The test image is the test build. It adds the counters and hooks its tests read, and the normal build carries none of them.
+The test image is the test build. It adds the counters and hooks its tests read, and the normal build carries none of them. The image runs its tests in a FreeRTOS task, as the firmware runs its main loop.
 
 Code that touches no register is kept apart from code that does, so that it builds for the computer. There, fakes stand in for the hardware and for the drivers below the code under test. A fake has the interface of the part it replaces, records every call it gets, and answers as its test sets it up.
 
