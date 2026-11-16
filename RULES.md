@@ -305,3 +305,7 @@ What a request touches:
 ## 17. Through-hole build
 
 **The build is through-hole.** Every part is chosen, drawn, listed and computed in a through-hole package. No document, drawing or model carries an SMD variant of a part. A part that exists only in an SMD package is the exception. It sits on an adapter with through-hole pins.
+
+## 18. Coordination between sessions
+
+**A message from another session that coordinates shared work takes priority.** It is answered as soon as possible, so the session waiting on it is not left blocked. The step in hand is finished first and not broken off for it. The answer comes before the next step begins.
