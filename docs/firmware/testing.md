@@ -6,7 +6,7 @@ A test on the Teensy judges what it can from inside the firmware and prints its 
 
 ## Test programs
 
-Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `native` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
+Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `computer` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
 
 Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
 
@@ -95,10 +95,14 @@ The program `event-queue` checks the [event queue](input-handling.md).
 
 ### Driver tick
 
-The program `driver-tick` checks the [driver tick](driver-design.md#driver-intervaltimer).
+The program `driver-tick` checks the [driver tick](driver-design.md#driver-intervaltimer). Its `computer` tests step a fake `IntervalTimer` one tick at a time.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `due` | computer | Attach callbacks with periods of one, two and twenty ticks and step forty ticks | Each callback runs on exactly the ticks its period gives |
+| `refused` | computer | Attach a period of no ticks, of half a tick and of one and a half ticks, then callbacks until every slot is taken, and one more | `attach()` returns false for each refusal, and the attached callbacks run on the next tick |
+| `timer-start` | computer | Attach two callbacks | The first `attach()` starts the timer with the tick's period and priority, and the second leaves it as it is |
+| `no-timer` | computer | Let the fake timer refuse to start, then let it start | The first `attach()` returns false and keeps no callback, and the second starts the timer |
 | `periods` | Teensy | Attach callbacks with periods of one, two and twenty ticks and let them run for a minute | Each callback runs as often as its period gives, and every run lies a whole number of ticks after the one before |
 | `refusals` | Teensy | Attach a period that is no multiple of the tick, then callbacks until every slot is taken, and one more | `attach()` returns false for the odd period and for the extra callback, and the attached callbacks keep running |
 

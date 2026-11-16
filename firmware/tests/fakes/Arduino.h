@@ -1,0 +1,21 @@
+// What the firmware's code takes from the Teensy core's Arduino.h, for the tests that run on the
+// computer. Interrupts do not exist there, and Serial prints to the console.
+#pragma once
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+
+inline void noInterrupts() {}
+inline void interrupts() {}
+
+struct FakeSerial {
+    __attribute__((format(printf, 2, 3))) int printf(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        const int written = std::vprintf(format, args);
+        va_end(args);
+        return written;
+    }
+};
+inline FakeSerial Serial;
