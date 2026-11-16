@@ -1,14 +1,16 @@
-// The servo test program of docs/firmware/testing.md: ServoDriver of
-// docs/firmware/drivers/servo.md on the driver tick, with PWMServoT4 from
-// firmware/lib/pwm-servo-t4, and the SER0049 on pin 0.
+// Tests on the bench whether the servo driver sends the right pulses and moves the seesaw.
 //
-// A wire from pin 0 to pin 1 lets the Teensy tests time every pulse: an interrupt on pin 1 notes
-// the cycle count of each edge. Without the wire, pin 1 sees no edge, and those tests report SKIP.
-// The program starts once the serial monitor is open and prints its run in the lines of the
-// testing document's Results section.
+//   first-pulse  from before begin() on, every pulse lies inside the SER0049's range
+//   pulses       angles handed to configure() give the pulses of those angles
+//   ends         the seesaw reaches both end positions without straining (asks at the bench)
+//   defaults     without configure(), the end positions take the default angles
+//   speed        a slow and a fast setting move the pulse at the speed they set
 //
-// Each test that starts the driver with another config uses a ServoDriver of its own. The ones
-// before it stay at their target and write no pulse, so only the newest one moves the servo.
+// Wiring: the SER0049 on pin 0, and a wire from pin 0 to pin 1, where the program times each
+// pulse edge. Without the wire, the timed tests report SKIP. A question waits for y or n.
+// Run: open the serial monitor, and the program starts. Each test prints RUN and then PASS, FAIL
+// or SKIP, and the last line reads END <passed> <failed> <skipped>. The tests are rows of
+// docs/firmware/testing.md.
 
 #include <Arduino.h>
 #include <servo-driver.h>
@@ -39,6 +41,8 @@ constexpr int32_t SET_END_DEG = 50;
 constexpr int32_t SLOW_DEG_S = 25;
 constexpr int32_t FAST_DEG_S = 100;
 
+// Each test that hands the driver other settings uses a ServoDriver of its own. The ones before it
+// stay at their target and write no pulse, so only the newest one moves the servo.
 static ServoDriver firstServo;
 static ServoDriver configuredServo;
 static ServoDriver defaultServo;

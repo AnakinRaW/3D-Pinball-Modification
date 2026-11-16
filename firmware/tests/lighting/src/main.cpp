@@ -1,14 +1,18 @@
-// The lighting test program of docs/firmware/testing.md: the lighting driver from
-// firmware/lib/lighting on the bench, with three WS2812B on chain A behind the lighting board's
-// level shifter. Chains B to F have no LEDs, so their pins stay untouched.
+// Tests on the bench whether the lighting driver lights the LEDs within its current limits.
 //
-// The program starts once the serial monitor is open and prints its run in the lines of the
-// testing document's Results section. A bench test lights the three LEDs and asks what they
-// showed. The LEDs hold the asked state until the answer comes or the question times out.
+//   profiles   begin() picks the 6 A profile for a 6 A adapter and the 3 A profile otherwise
+//   begin      without configure(), the driver starts on the 3 A profile
+//   colors     the LEDs show pure colors and a rainbow, undimmed (asks at the bench)
+//   limits     the LEDs step down to the profile's ambient brightness (asks at the bench)
+//   cap        a cap the LEDs exceed dims them by the amount the program computes (asks too)
+//   layout-3a  the whole light layout at the 3 A limits stays under the 3 A cap, in memory
+//   layout-6a  the same at 6 A
 //
-// The layout tests run FastLED's power limiter on the whole light layout in memory. The limiter
-// itself only sees the chains added to FastLED, so the program repeats its sum with FastLED's
-// public power functions. The cap test checks that sum against the live limiter on the three LEDs.
+// Wiring: three WS2812B on chain A behind the lighting board's level shifter, and the Teensy's
+// ground joined to the lighting board's. Chains B to F stay empty. A question waits for y or n.
+// Run: open the serial monitor, and the program starts. Each test prints RUN and then PASS, FAIL
+// or SKIP, and the last line reads END <passed> <failed> <skipped>. The tests are rows of
+// docs/firmware/testing.md.
 
 #include <Arduino.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
@@ -320,7 +324,8 @@ static void testCap() {
 
 // layout: the whole light layout at full white within one profile's limits, with the action
 // lights at the playfield brightness, stays under the profile's cap in FastLED's sum, so the
-// limiter dims nothing.
+// limiter dims nothing. The limiter itself only sees the chains added to FastLED, so the test
+// repeats its sum with FastLED's public power functions.
 static void testLayout(const char* test, const Profile& p) {
     run(test);
     uint16_t counts[LAYOUT_CHAINS];

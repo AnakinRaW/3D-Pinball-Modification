@@ -1,5 +1,12 @@
-// The computer tests of the driver-tick program in docs/firmware/testing.md: DriverTick from
-// firmware/lib/driver-base on a fake IntervalTimer, which the tests step one tick at a time.
+// Tests on the computer whether the driver tick calls the right callbacks on the right ticks. A
+// fake IntervalTimer stands in for the Teensy's, and the tests step it one tick at a time.
+//
+//   due          callbacks every 1, 2 and 20 ticks run on exactly their ticks
+//   refused      attach() turns down a bad period and a ninth callback
+//   timer-start  the first attach() starts the timer, the second leaves it alone
+//   no-timer     with no IntervalTimer free, attach() fails and keeps nothing
+//
+// Run: pio test -e computer, which runs in CI as well.
 
 #include <driver-base.h>
 #include <unity.h>

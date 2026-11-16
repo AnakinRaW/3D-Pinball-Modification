@@ -1,9 +1,12 @@
-// The driver-tick test program of docs/firmware/testing.md: DriverTick from
-// firmware/lib/driver-base on the Teensy alone, with nothing wired to it.
+// Tests on the Teensy whether the driver tick calls its callbacks on time.
 //
-// Every callback notes the processor's cycle count when it runs, so the program can time each
-// run against the one before. The program starts once the serial monitor is open and prints its
-// run in the lines of the testing document's Results section.
+//   periods   callbacks every 1, 2 and 20 ticks run for a minute, each one exactly on time
+//   refusals  attach() turns down a bad period and a ninth callback, and the others run on
+//
+// Wiring: none, the Teensy alone.
+// Run: open the serial monitor, and the program starts. Each test prints RUN and then PASS, FAIL
+// or SKIP, and the last line reads END <passed> <failed> <skipped>. The tests are rows of
+// docs/firmware/testing.md.
 
 #include <Arduino.h>
 #include <driver-base.h>
@@ -19,6 +22,8 @@ constexpr uint32_t KEEP_RUNNING_MS =
 constexpr uint32_t ON_TICK_NS = 20000;
 constexpr uint32_t COUNT_SLACK = 1;   // runs the count may differ by at the window's two ends
 
+// Every callback notes the processor's cycle count when it runs, so each run is timed against the
+// one before.
 struct Timed {
     uint32_t periodTicks;
     volatile uint32_t runs;
