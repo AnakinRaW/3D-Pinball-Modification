@@ -23,6 +23,7 @@
 #include "test-harness.h"
 
 extern const Program CLOCK;
+extern const Program EVENT_QUEUE;
 extern const Program DRIVER_TICK;
 extern const Program PSRAM;
 extern const Program LIGHTING;
@@ -31,8 +32,8 @@ extern const Program EVERY_DRIVER;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
-static const Program* const PROGRAMS[] = {&CLOCK, &DRIVER_TICK,  &PSRAM,   &LIGHTING,
-                                          &SERVO, &EVERY_DRIVER, &START_UP};
+static const Program* const PROGRAMS[] = {&CLOCK,    &EVENT_QUEUE, &DRIVER_TICK,  &PSRAM,
+                                          &LIGHTING, &SERVO,       &EVERY_DRIVER, &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
