@@ -6,13 +6,17 @@ A test on the Teensy judges what it can from inside the firmware and prints its 
 
 ## Test programs
 
-Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `computer` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
+Each section below is one test program. The `computer` tests of a section build for the computer, in the folder `firmware/tests/test_<program>` of the `computer` environment. Its other tests are part of the test image, one firmware for the Teensy that holds the tests of every program. The image is the PlatformIO project in `firmware/tests/teensy`. Each program's code stands in its folder `src/<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
 
 Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
 
-A test build is the firmware built for one test program. It adds the counters and hooks its tests read, and the normal build carries none of them.
+The test image is the test build. It adds the counters and hooks its tests read, and the normal build carries none of them. The image runs its tests in a FreeRTOS task, as the firmware runs its main loop.
 
 Code that touches no register is kept apart from code that does, so that it builds for the computer. There, fakes stand in for the hardware and for the drivers below the code under test. A fake has the interface of the part it replaces, records every call it gets, and answers as its test sets it up.
+
+The runner `firmware/tools/teensy-tests.py` runs the image's tests from the computer. The image is built and flashed once. The runner then sends the tests one at a time over USB serial. The Teensy restarts before each program, so every program starts from the state after power-up. Every check stands in the test's code as a condition. The runner only reads the result lines.
+
+A run comes in two lengths with the same checks. The default is a quick run, which shortens every duration a row states to a few seconds. With `--soak`, a soak run takes the durations the rows state. A run leaves out the `bench` tests unless `--bench` is given, so nobody needs to be at the bench.
 
 ## Where a test runs
 
@@ -25,7 +29,7 @@ Code that touches no register is kept apart from code that does, so that it buil
 
 ## Results
 
-A Teensy program prints its run to the serial monitor in these lines:
+The test image prints its run to the serial port in these lines:
 
 | Line | Meaning |
 |---|---|
@@ -35,7 +39,25 @@ A Teensy program prints its run to the serial monitor in these lines:
 | `PASS <test>` | The test has passed |
 | `FAIL <test> <seen> expected <wanted>` | The test has failed, with what it saw and what it expected |
 | `SKIP <test> <reason>` | The test could not run, such as for a part that is not connected |
-| `END <passed> <failed> <skipped>` | The program has run every test |
+| `END <passed> <failed> <skipped>` | The image has run every test the command named |
+| `RESTART <test>` | The test restarts the Teensy and goes on after `resume` |
+| `TEST <test> <runs on> <quick s> <soak s>` | The image holds the test. It ends within the seconds given for a quick and for a soak run |
+| `READY <count>` | The list of tests has ended. The count gives the tests run since the start |
+| `CRASH <text>` | One line of the crash report that a crash left before the restart |
+| `ERROR <text>` | A command or a test broke these rules, such as a test that reported twice |
+
+The image takes these commands, one to a line:
+
+| Command | Effect |
+|---|---|
+| `list` | A `TEST` line for every test, then `READY` |
+| `run <pattern> [soak]` | Runs every test whose name matches the pattern, in the order of this document, then prints `END`. A `*` stands for any text. Several patterns may follow `run` |
+| `resume <test> [soak]` | Runs the part of the test that follows its restart, then prints `END` |
+| `reset` | Restarts the Teensy |
+
+The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line.
+
+The runner fails a test that prints `FAIL` or `ERROR`. It also fails a test that runs past its time from the `TEST` line, and a test during which the serial port goes away without a `RESTART`. A crash report after such a loss marks the failure as a crash. A test past its time stops the run, since the image no longer answers. The runner exits with 0 when every test passed or skipped, and with 1 otherwise.
 
 A computer test reports through its test framework, and its run fails when a single check fails.
 

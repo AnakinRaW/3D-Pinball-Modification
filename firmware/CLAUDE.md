@@ -15,8 +15,11 @@ The firmware's `platformio.ini` has two environments:
 [platformio]
 default_envs = debug
 
+[teensy]
+build_src_flags = -Wall -Wextra -Werror
+
 [env:debug]
-build_src_flags = -D DEBUG
+build_src_flags = ${teensy.build_src_flags} -D DEBUG
 
 [env:release]
 build_flags = ${teensy.build_flags} -D NDEBUG
@@ -100,7 +103,7 @@ private:
 
 ## Tools
 
-- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. The libraries and the Teensy core compile with `-w`, which [`tools/quiet-libraries.py`](tools/quiet-libraries.py) adds, so a build reports only the firmware's own warnings.
+- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `lib/` and the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
 - **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in the `computer` environment and run in CI. PlatformIO builds that environment for the computer itself, with its platform `native`. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.

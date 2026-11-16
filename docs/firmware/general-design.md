@@ -101,19 +101,7 @@ The firmware takes its times from GPT2, a hardware counter that counts microseco
 
 The two `elapsed` functions read the noted time before the current one, so an interrupt in between cannot make the difference negative. `nowUs()` wraps every 71.6 minutes. `before()` keeps two times in order across the wrap.
 
-```cpp
-// gets the microseconds GPT2 has counted since setup() started it
-inline uint32_t nowUs() { return GPT2_CNT; }
-
-// gets whether at least span microseconds have passed since t, a time from nowUs()
-inline bool elapsedUs(uint32_t t, uint32_t span) { return nowUs() - t >= span; }
-
-// gets whether at least span milliseconds have passed since t, a time from nowUs()
-inline bool elapsedMs(uint32_t t, uint32_t span) { return nowUs() - t >= span * 1000; }
-
-// gets whether time a lies before time b, also across the wrap of nowUs()
-inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
-```
+[`firmware/lib/clock`](../../firmware/lib/clock/clock.h) holds the four functions and `startClock()`.
 
 ## Priority lists
 

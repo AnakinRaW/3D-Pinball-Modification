@@ -280,7 +280,7 @@ static void printLateness(const char* when) {
 
 static void waitWrite() { while (writeWanted != kNone) vTaskDelay(1); }
 
-static void mainMain(void*) {
+static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     ARM_DEMCR |= ARM_DEMCR_TRCENA; ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
     Serial.printf("Load test, PSRAM %d MB\nwriting the test file ...\n", external_psram_size);
@@ -382,7 +382,7 @@ static void mainMain(void*) {
 
 void setup() {
     Serial.begin(115200);
-    xTaskCreate(mainMain, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
+    xTaskCreate(runMainTask, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
     vTaskStartScheduler();
 }
 

@@ -1,14 +1,4 @@
-// gets the microseconds GPT2 has counted since setup() started it
-inline uint32_t nowUs() { return GPT2_CNT; }
-
-// gets whether at least span microseconds have passed since t, a time from nowUs()
-inline bool elapsedUs(uint32_t t, uint32_t span) { return nowUs() - t >= span; }
-
-// gets whether at least span milliseconds have passed since t, a time from nowUs()
-inline bool elapsedMs(uint32_t t, uint32_t span) { return nowUs() - t >= span * 1000; }
-
-// gets whether time a lies before time b, also across the wrap of nowUs()
-inline bool before(uint32_t a, uint32_t b) { return (int32_t)(a - b) < 0; }
+// nowUs(), elapsedUs(), elapsedMs(), before() and startClock() stand in firmware/lib/clock
 
 EventQueue       events;
 DriverTick       driverTick;             // the drivers attach to it in their begin()
@@ -64,16 +54,6 @@ static void guardStack(uintptr_t at) {
                    SCB_MPU_RASR_SIZE(4) | SCB_MPU_RASR_ENABLE;   // no access, 2^(4+1) = 32 bytes
     asm volatile("dsb");
     asm volatile("isb");
-}
-
-// starts GPT2 counting microseconds from the 24 MHz crystal, free-running across 2^32. Its clock
-// gate is off after a reset, and a register access before the gate is on stops the Teensy
-static void startClock() {
-    CCM_CCGR0 |= CCM_CCGR0_GPT2_BUS(CCM_CCGR_ON) | CCM_CCGR0_GPT2_SERIAL(CCM_CCGR_ON);
-    GPT2_CR = 0;
-    GPT2_PR = GPT_PR_PRESCALER24M(7) | GPT_PR_PRESCALER(2);   // 24 MHz / 8 / 3 = 1 MHz
-    GPT2_CR = GPT_CR_EN_24M | GPT_CR_CLKSRC(5) | GPT_CR_FRR | GPT_CR_WAITEN | GPT_CR_ENMOD;
-    GPT2_CR |= GPT_CR_EN;                   // ENMOD clears the counter as it starts
 }
 
 // the main task's stack is the rest of RAM1, between the guard behind the static variables and the

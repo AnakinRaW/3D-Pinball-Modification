@@ -1,12 +1,11 @@
-// Tests on the Teensy two promises every driver makes, with the servo and the lighting driver.
+// The every-driver program of docs/firmware/testing.md. It tests on the Teensy two promises every
+// driver makes, with the servo and the lighting driver.
 //
 //   begin-fails  a driver whose begin() failed answers every later call at once, with no data
 //   at-once      show() returns at once while the LEDs still receive their frame
 //
-// Wiring: none. LEDs on chain A may stay connected, they stay dark.
-// Run: open the serial monitor, and the program starts. Each test prints RUN and then PASS, FAIL
-// or SKIP, and the last line reads END <passed> <failed> <skipped>. The tests are rows of
-// docs/firmware/testing.md.
+// Wiring: none. LEDs on chain A may stay connected, they stay dark. begin-fails takes every slot of
+// the driver tick and keeps them, so it relies on the restart before the program.
 
 #include <Arduino.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
@@ -16,40 +15,23 @@
 #pragma GCC diagnostic pop
 #include <lighting.h>
 #include <servo-driver.h>
+#include "test-harness.h"
 
 // lighting design.md, the frame: a WS2812B takes 24 bits, and ObjectFLED sends a bit in 1250 ns
 constexpr uint32_t BITS_PER_LED = 24;
 constexpr uint32_t BIT_NS = 1250;
 constexpr uint32_t SETTLE_MS = 10;    // longer than a frame, so no transfer is pending
 constexpr uint32_t AT_ONCE_US = 50;   // what a call that only sets a value may take
+constexpr uint32_t LIMIT_S = 10;      // the longest each test takes, with room to spare
 
 static ServoDriver servo;
 static Lighting lighting;
-
-static uint32_t passed = 0;
-static uint32_t failed = 0;
-static uint32_t skipped = 0;
-
-static void run(const char* test) {
-    Serial.printf("RUN every-driver.%s\n", test);
-}
-
-static void pass(const char* test) {
-    Serial.printf("PASS every-driver.%s\n", test);
-    ++passed;
-}
-
-static void fail(const char* test, const char* seen, const char* wanted) {
-    Serial.printf("FAIL every-driver.%s %s expected %s\n", test, seen, wanted);
-    ++failed;
-}
+static bool lightingBegun = false;
 
 // begin-fails: with every slot of the driver tick taken, the servo driver's begin() returns false
 // and every later call answers at once with nothing. The lighting driver needs no slot, so its
 // begin() still returns true.
 static void testBeginFails() {
-    const char* test = "begin-fails";
-    run(test);
     char seen[64];
     uint8_t taken = 0;
     while (driverTick.attach([] {}, DriverTick::PERIOD_US)) {
@@ -57,11 +39,11 @@ static void testBeginFails() {
     }
     if (taken != DriverTick::SLOTS) {
         snprintf(seen, sizeof seen, "%u slots taken", taken);
-        fail(test, seen, "every slot");
+        test::fail(seen, "every slot");
         return;
     }
     if (servo.begin()) {
-        fail(test, "servo begin() true", "false");
+        test::fail("servo begin() true", "false");
         return;
     }
     const uint32_t t0Us = micros();
@@ -69,26 +51,32 @@ static void testBeginFails() {
     const uint32_t moveUs = micros() - t0Us;
     if (moveUs > AT_ONCE_US) {
         snprintf(seen, sizeof seen, "servo moveTo() took %lu us", moveUs);
-        fail(test, seen, "an answer at once");
+        test::fail(seen, "an answer at once");
         return;
     }
     if (servo.position() != ServoDriver::Position::START || servo.travelMs() != 0 ||
         servo.failed().parts != 0) {
-        fail(test, "servo answers with data", "empty data");
+        test::fail("servo answers with data", "empty data");
         return;
     }
-    if (!lighting.begin()) {
-        fail(test, "lighting begin() false", "true, it needs no slot");
+    lightingBegun = lighting.begin();
+    if (!lightingBegun) {
+        test::fail("lighting begin() false", "true, it needs no slot");
         return;
     }
-    pass(test);
+    test::pass();
 }
 
 // at-once: show() returns while the frame of the longest chain still goes out. A second show()
 // right after it waits for that frame.
 static void testAtOnce() {
-    const char* test = "at-once";
-    run(test);
+    if (!lightingBegun) {
+        lightingBegun = lighting.begin();
+        if (!lightingBegun) {
+            test::fail("lighting begin() false", "true");
+            return;
+        }
+    }
     uint16_t longest = 0;
     for (uint8_t c = 0; c < Lighting::CHAINS; ++c) {
         fill_solid(lighting.chain(c), Lighting::CHAIN_LEDS[c], CRGB::Black);
@@ -109,21 +97,15 @@ static void testAtOnce() {
         char wanted[48];
         snprintf(seen, sizeof seen, "show() took %lu us", firstUs);
         snprintf(wanted, sizeof wanted, "less than the frame's %lu us", frameUs);
-        fail(test, seen, wanted);
+        test::fail(seen, wanted);
         return;
     }
-    pass(test);
+    test::pass();
 }
 
-void setup() {
-    Serial.begin(115200);
-    while (!Serial) {
-    }
-    delay(200);
+static const Test TESTS[] = {
+    {"every-driver.begin-fails", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testBeginFails, nullptr},
+    {"every-driver.at-once", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testAtOnce, nullptr},
+};
 
-    testBeginFails();
-    testAtOnce();
-    Serial.printf("END %lu %lu %lu\n", passed, failed, skipped);
-}
-
-void loop() {}
+extern const Program EVERY_DRIVER = {TESTS, sizeof TESTS / sizeof TESTS[0]};

@@ -1,8 +1,8 @@
 // Stack test for the Teensy 4.1 with its PSRAM and the card in its socket.
 //
 // Builds FreeRTOS from freertos-teensy 11.2.0-4 with its pull request 43 and the four settings of
-// firmware/gist/freertos-config.h, LVGL 9.6 with firmware/gist/lv_conf.h, FastLED and SdFat into
-// one program, and checks on the bench:
+// firmware/include/freertos_config_override.h, LVGL 9.6 with firmware/gist/lv_conf.h, FastLED and
+// SdFat into one program, and checks on the bench:
 // 1. the storage task sleeps while SdFat's DMA reads a frame, so the main task keeps running
 // 2. how long a frame read whole takes under FreeRTOS
 // 3. how long LVGL takes to draw a full-screen picture from the PSRAM into its buffer in RAM2
@@ -132,7 +132,7 @@ static void drawTimes(lv_display_t* d, lv_obj_t* img, float& mean, float& max) {
     max  = top / 1000.0f;
 }
 
-static void mainMain(void*) {
+static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     Serial.printf("Stack test, PSRAM %d MB, FreeRTOS %s, LVGL %d.%d.%d, FastLED %d\n", external_psram_size,
                   tskKERNEL_VERSION_NUMBER, LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH,
@@ -189,7 +189,7 @@ static void mainMain(void*) {
 
 void setup() {
     Serial.begin(115200);
-    xTaskCreate(mainMain, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
+    xTaskCreate(runMainTask, "main", 8192 / sizeof(StackType_t), nullptr, 1, &mainTask);
     vTaskStartScheduler();
 }
 
