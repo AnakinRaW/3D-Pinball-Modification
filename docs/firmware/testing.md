@@ -182,10 +182,17 @@ The program `solenoid` checks the [solenoid driver](drivers/solenoid.md).
 
 ### Lighting
 
-The program `lighting` checks the [lighting driver](drivers/lighting.md).
+The program `lighting` checks the [lighting driver](drivers/lighting.md). Its tests up to `layout-6a` need LEDs on chain A alone.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `profiles` | Teensy | Start a driver without chains with `lighting.adapter_a` absent, below, inside and above its range | Each start selects the larger adapter's profile from that adapter's rating on, and the smaller adapter's profile below it |
+| `begin` | Teensy | Start the driver without `configure()` | `begin()` returns true with the smaller adapter's profile, and FastLED holds the strip's power model |
+| `colors` | bench | Show red, green, blue and white on chain A, then a rainbow | Each LED shows each color, and the limiter dims none of them |
+| `limits` | bench | Show white at the profile's playfield brightness and at its ambient brightness, then its perimeter pattern | The LEDs step down to the ambient brightness, and the pattern lights the LEDs the profile's perimeter step names |
+| `cap` | bench | Show full white under the profile's cap, then under a cap the LEDs exceed | The limiter dims nothing under the profile's cap. Under the lower one it dims to the brightness the program's sum gives, and its estimate stays within that cap |
+| `layout-3a` | Teensy | Sum the whole light layout at full white within the limits of the smaller adapter's profile with FastLED's power functions | The sum stays under the profile's cap, so the limiter dims nothing |
+| `layout-6a` | Teensy | Do the same with the larger adapter's profile | The same |
 | `chains` | bench | Run one lit device along each chain from its start, chain after chain, with the chain's number on the serial monitor | Each chain lights all its devices in order, and no device of another chain lights |
 | `current` | bench | Limit the bench supply to just above the [budget](../parts/lighting/design.md#current-ceiling), connect every chain and set every device to full white | The supply never reaches its limit |
 

@@ -1,0 +1,10 @@
+{
+  "name": "lighting",
+  "version": "1.0.0",
+  "description": "The lighting driver: the LED chains on FastLED with ObjectFLED as its only driver, the strip's measured power model and the cap of the adapter's profile",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}
