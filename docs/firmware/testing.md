@@ -6,7 +6,7 @@ A test on the Teensy judges what it can from inside the firmware and prints its 
 
 ## Test programs
 
-Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `native` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
+Each section below is one test program in `firmware/tests/`. The `computer` tests of a section build for the computer, in the folder `test_<program>` of the `computer` environment. Its other tests build for the Teensy, as a PlatformIO project of their own in the folder `<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
 
 Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
 
@@ -95,10 +95,14 @@ The program `event-queue` checks the [event queue](input-handling.md).
 
 ### Driver tick
 
-The program `driver-tick` checks the [driver tick](driver-design.md#driver-intervaltimer).
+The program `driver-tick` checks the [driver tick](driver-design.md#driver-intervaltimer). Its `computer` tests step a fake `IntervalTimer` one tick at a time.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `due` | computer | Attach callbacks with periods of one, two and twenty ticks and step forty ticks | Each callback runs on exactly the ticks its period gives |
+| `refused` | computer | Attach a period of no ticks, of half a tick and of one and a half ticks, then callbacks until every slot is taken, and one more | `attach()` returns false for each refusal, and the attached callbacks run on the next tick |
+| `timer-start` | computer | Attach two callbacks | The first `attach()` starts the timer with the tick's period and priority, and the second leaves it as it is |
+| `no-timer` | computer | Let the fake timer refuse to start, then let it start | The first `attach()` returns false and keeps no callback, and the second starts the timer |
 | `periods` | Teensy | Attach callbacks with periods of one, two and twenty ticks and let them run for a minute | Each callback runs as often as its period gives, and every run lies a whole number of ticks after the one before |
 | `refusals` | Teensy | Attach a period that is no multiple of the tick, then callbacks until every slot is taken, and one more | `attach()` returns false for the odd period and for the extra callback, and the attached callbacks keep running |
 
@@ -182,10 +186,17 @@ The program `solenoid` checks the [solenoid driver](drivers/solenoid.md).
 
 ### Lighting
 
-The program `lighting` checks the [lighting driver](drivers/lighting.md).
+The program `lighting` checks the [lighting driver](drivers/lighting.md). Its tests up to `layout-6a` need LEDs on chain A alone.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `profiles` | Teensy | Start a driver without chains with `lighting.adapter_a` absent, below, inside and above its range | Each start selects the larger adapter's profile from that adapter's rating on, and the smaller adapter's profile below it |
+| `begin` | Teensy | Start the driver without `configure()` | `begin()` returns true with the smaller adapter's profile, and FastLED holds the strip's power model |
+| `colors` | bench | Show red, green, blue and white on chain A, then a rainbow | Each LED shows each color, and the limiter dims none of them |
+| `limits` | bench | Show white at the profile's playfield brightness and at its ambient brightness, then its perimeter pattern | The LEDs step down to the ambient brightness, and the pattern lights the LEDs the profile's perimeter step names |
+| `cap` | bench | Show full white under the profile's cap, then under a cap the LEDs exceed | The limiter dims nothing under the profile's cap. Under the lower one it dims to the brightness the program's sum gives, and its estimate stays within that cap |
+| `layout-3a` | Teensy | Sum the whole light layout at full white within the limits of the smaller adapter's profile with FastLED's power functions | The sum stays under the profile's cap, so the limiter dims nothing |
+| `layout-6a` | Teensy | Do the same with the larger adapter's profile | The same |
 | `chains` | bench | Run one lit device along each chain from its start, chain after chain, with the chain's number on the serial monitor | Each chain lights all its devices in order, and no device of another chain lights |
 | `current` | bench | Limit the bench supply to just above the [budget](../parts/lighting/design.md#current-ceiling), connect every chain and set every device to full white | The supply never reaches its limit |
 
@@ -333,7 +344,7 @@ The program `every-driver` checks the [rules every driver follows](driver-design
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `begin-fails` | Teensy | Take every slot of the driver tick and of the device monitor, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
+| `begin-fails` | Teensy | Take every slot of the driver tick, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
 | `at-once` | Teensy | Make every driver call that starts a long transfer, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs |
 
 ## Components
@@ -474,6 +485,7 @@ The program `start-up` checks the [main program](general-design.md#main-program)
 |---|---|---|---|
 | `order` | Teensy | Start, with every step of the start-up printing a line | The lines come in the order the main program lists |
 | `priorities` | Teensy | Read the priority of every interrupt once the main loop runs | Each interrupt sits at the priority the [interrupt table](general-design.md#interrupts) lists |
+| `heap` | Teensy | Take a block with `malloc()` in the constructor of a static object, and a second block in the main task | Both blocks lie in RAM2, and they do not overlap |
 
 ### Game host
 

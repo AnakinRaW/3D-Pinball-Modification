@@ -56,8 +56,7 @@ struct Finger {
 class Touch : public Driver {
 public:
     // attaches its transfer to the bus on Wire2, checks once whether the touch controller answers,
-    // attaches to the driver tick and registers with the device monitor; false when one of the two
-    // is full
+    // and attaches to the driver tick; false when the driver tick is full
     bool begin() override;
 
     bool   present() const;     // gets whether the machine has its display module, which begin() finds out once from the touch controller

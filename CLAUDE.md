@@ -85,7 +85,7 @@ Sub-directory `README.md` files describe their contents **for a repository visit
 | `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. One without is stored opaque. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
 
-The firmware builds with PlatformIO, installed with `python -m pip install platformio`. The firmware's [`platformio.ini`](platformio.ini) stands in the repository's root, where PlatformIO finds the project when the repository is opened. The commands run there. CI builds the release firmware and runs the `native` tests on each push touching `firmware/`:
+The firmware builds with PlatformIO, installed with `python -m pip install platformio`. The firmware's [`platformio.ini`](platformio.ini) stands in the repository's root, where PlatformIO finds the project when the repository is opened. The commands run there. CI builds the release firmware and runs the `computer` tests on each push touching `firmware/`:
 
 | | |
 |---|---|

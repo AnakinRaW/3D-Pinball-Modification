@@ -26,7 +26,7 @@ build_flags = ${teensy.build_flags} -D NDEBUG
 
 A plain `python -m platformio run` or `-t upload` therefore builds the debug firmware. The release firmware needs `-e release`.
 
-Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output goes through `DEBUG_LOG()`, which compiles to nothing without `DEBUG`, so no `Serial.print()` stays behind in the release firmware:
+Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output goes through `DEBUG_LOG()`, which the compiler removes without `DEBUG`, so no `Serial.print()` stays behind in the release firmware. The call stands behind `if (false)`, so a variable that only a log line reads raises no warning in the release build:
 
 ```cpp
 #if defined(DEBUG) && defined(NDEBUG)
@@ -36,9 +36,13 @@ Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output 
 #if defined(DEBUG)
 #define DEBUG_LOG(...) Serial.printf(__VA_ARGS__)
 #else
-#define DEBUG_LOG(...) do {} while (0)
+#define DEBUG_LOG(...) do { if (false) { Serial.printf(__VA_ARGS__); } } while (0)
 #endif
 ```
+
+[`lib/driver-base/debug-log.h`](lib/driver-base/debug-log.h) holds the macro.
+
+**Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 
 CI builds and tests the release code: every project in CI builds with `-e release`.
 
@@ -90,6 +94,7 @@ private:
 - **Only a driver touches its hardware.** Registers and pins belong to the driver that owns them, and everything above it goes through the driver's interface.
 - **No exceptions and no RTTI**, built with `-fno-exceptions` and `-fno-rtti`. A failure is a return value, and every return value of a call that reaches hardware is checked.
 - **`src/` takes nothing from `gist/`.** A gist is a note to read. Code in `src/` neither includes a gist nor copies one, and is written for the firmware itself.
+- **A gist is deleted once its driver stands as code.** When a driver runs as code in `firmware/` and its gist holds nothing that the code and the documents lack, the gist goes, and every reference to it points to the code.
 - **A library is used through its API.** Code never reaches past a library into its internals, whether registers, private members or raw sectors.
 - **A comment says why.** A register value names its datasheet section.
 
@@ -97,5 +102,5 @@ private:
 
 - **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror`. The libraries and the Teensy core compile with `-w`, which [`tools/quiet-libraries.py`](tools/quiet-libraries.py) adds, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
-- **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in a `native` environment and run in CI. Tests that need the Teensy run on the bench.
+- **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in the `computer` environment and run in CI. PlatformIO builds that environment for the computer itself, with its platform `native`. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.

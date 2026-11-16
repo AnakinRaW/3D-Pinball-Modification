@@ -145,7 +145,7 @@ The build step's results stand in the [machine config](../components/config.md) 
 | `ball_build` | the same with a ball on it | above `clear_build`, up to 1023 |
 | `order` | the channel's place in the read order | 0 to 15 |
 
-`begin()` leaves out an entry that breaks one of these rules and writes a line to the log. A channel without an entry fails its calibration at start-up, and so does every channel until the build step has run once.
+The main task hands the list over with `configure()`. `begin()` leaves out an entry that breaks one of these rules and writes a line to the log. A channel without an entry fails its calibration at start-up, and so does every channel until the build step has run once.
 
 ## Start-up
 
@@ -158,7 +158,7 @@ The build step's results stand in the [machine config](../components/config.md) 
 5. It computes `T` and `t_first` from the channel count, or refuses to run.
 6. It starts channels 2 and 3 of QuadTimer3, which run free from then on.
 7. It discards the cycles in which the sensors and the converters' reference settle.
-8. It runs the start-up calibration and then registers with the device monitor.
+8. It runs the start-up calibration.
 
 ## Device faults
 

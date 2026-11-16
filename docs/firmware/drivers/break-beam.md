@@ -28,9 +28,8 @@ The beam counts as failed once it has stayed broken for 5 s, which no passing ba
 ```cpp
 class BreakBeamDriver : public Driver {
 public:
-    // attaches the queue, registers with the device monitor, sets the pin as an input with
-    // hysteresis and without the Teensy's pull-up, and arms the pin interrupt; false when the
-    // device monitor is full, and the driver then does nothing
+    // attaches the queue, sets the pin as an input with hysteresis and without the Teensy's
+    // pull-up, and arms the pin interrupt
     bool begin() override;
 
     // the state the game logic may query between events

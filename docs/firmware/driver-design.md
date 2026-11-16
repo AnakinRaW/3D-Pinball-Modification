@@ -16,7 +16,9 @@ Device faults reach the event queue through the [device monitor](error-handling.
 
 ## Driver interface
 
-Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()` and registers itself in `begin()`.
+Every driver implements a `Driver` interface. A driver that reports events holds its queue and attaches it to the [event queue](input-handling.md) in its `begin()` method. `begin()` is called by the [main task](general-design.md#main-program) before the main loop. A driver whose device the [device monitor](error-handling.md#device-faults) watches overrides `failed()`. The main task registers it with the device monitor right after its `begin()`, whether `begin()` succeeded or not.
+
+A driver reads no config. The main task reads a driver's settings from the [config](components/config.md) and hands them over with the driver's `configure()`, before the driver's `begin()`. The solenoids take theirs after their `begin()`, as the [start-up](general-design.md#main-program) lists.
 
 ```cpp
 // the interface every driver implements
@@ -70,18 +72,20 @@ For example, on every tick the rotary sensor reads values, the solenoid driver c
 
 The timer starts on the very first attached driver. Attaching does not need to be in any special order. The driver tick calls only the callbacks that are due.
 
+The library [`firmware/lib/driver-base/`](../../firmware/lib/driver-base/) holds the driver tick, `Driver` and `Fault`.
+
 ```cpp
 // one IntervalTimer, shared by every driver that needs a regular period
 class DriverTick {
 public:
     using Callback = teensy::inplace_function<void(void), 16>;   // a lambda capturing this fits
 
-    static constexpr uint32_t kPeriodUs = 5000;    // tick period
+    static constexpr uint32_t PERIOD_US = 5000;    // tick period
 
     // runs fn every periodUs; before the main loop only, and the first call starts the timer. False
-    // when every slot is taken, periodUs is no multiple of kPeriodUs or no IntervalTimer is free
+    // when every slot is taken, periodUs is no multiple of PERIOD_US or no IntervalTimer is free
     bool attach(Callback fn, uint32_t periodUs);
 };
 
-extern DriverTick driverTick;   // the one driver tick, defined in the main file
+extern DriverTick driverTick;   // the one driver tick, defined in the library
 ```
