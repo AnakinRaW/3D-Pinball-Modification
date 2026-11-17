@@ -9,6 +9,9 @@
 // GPT2's counter, which nowUs() reads. A test sets it to the time it wants nowUs() to give.
 inline volatile uint32_t GPT2_CNT = 0;
 
+// The computer has no RAM2, so a buffer that names it lies with the other variables.
+#define DMAMEM
+
 inline void noInterrupts() {}
 inline void interrupts() {}
 

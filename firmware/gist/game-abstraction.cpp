@@ -203,10 +203,10 @@ void GameHost::begin(Machine& machine, bool touch) {
 }
 
 void GameHost::dispatch(const DriverEvent& e) {
-    if (e.type == DriverEventType::DeviceFailed)    { failed_.set(faultDevice(e.source), faultPart(e.source), e.payload); return; }     // the list the menu shows; no game sees it
-    if (e.type == DriverEventType::DeviceRecovered) {
+    if (e.type == DriverEventType::DEVICE_FAILED)    { failed_.set(faultDevice(e.source), faultPart(e.source), e.payload); return; }     // the list the menu shows; no game sees it
+    if (e.type == DriverEventType::DEVICE_RECOVERED) {
         failed_.clear(faultDevice(e.source), faultPart(e.source));
-        if (faultDevice(e.source) == Device::Touch) machine_->screen.restart();   // the module's supervisor reset the panel with the touch controller
+        if (faultDevice(e.source) == Device::TOUCH) machine_->screen.restart();   // the module's supervisor reset the panel with the touch controller
         return;
     }
     PinballEvents t;
