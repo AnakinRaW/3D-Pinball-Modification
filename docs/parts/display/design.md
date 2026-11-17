@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board carries the Adafruit 757 and the FPC board A3. A flat flex cable runs from A3 to a second FPC board, A4, which lies flat beside the module. A4 is wired pin for pin to the module's 8-bit header.
+A display board carries the Adafruit 757 and the FPC board A3. A flat flex cable runs from A3 to a second FPC board, A4, which lies flat beside the module. A4 is wired to the module's 8-bit header in reverse order, its pin 1 to the header's pin 20, so the wires run straight across without crossing.
 
 ![Display schematic](display-schematic.svg)
 
@@ -35,7 +35,7 @@ FlexIO3 is a programmable I/O block of the i.MX RT. FlexIO3's timer drives WR on
 
 The driver sets the bus pins to their weakest drive and their slow slew rate. WR then rises too gently to ring, so the display takes each byte exactly once. That edge is still fast enough for FlexIO3's clock.
 
-The display only receives, so RD is held at 5 V by the bridge from Vin on the header. CCS is tied to 3.3Vout, which keeps the module's card socket off. MOSI is tied to GND at pin 1 of the SPI header. RST, Lite and the touch controller's IRQ stay unconnected.
+The display only receives, so the display board holds RD at 5 V. RD reaches it over the flat flex cable like every other line. CCS is tied to 3.3Vout, which keeps the module's card socket off. MOSI is tied to GND at pin 1 of the SPI header. RST, Lite and the touch controller's IRQ run over the cable as well and end unconnected on the display board.
 
 IM0 to IM3, MISO and CD stay unconnected as well. The module's jumpers set the 8-bit mode. Pins named alike on both headers are one line on the module. On the SPI header, CLK carries C/D and D/C carries WR. These two and that header's CS stay open.
 

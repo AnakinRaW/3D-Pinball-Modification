@@ -6,7 +6,7 @@ SPI header JP2, pins 1 to 20. Pins of one name are one line on the module, and t
 them apart, since the module and not the wiring joins them. A2 is the Adafruit 757: SCL passes
 its channel 1, SDA its channel 2. A3 is the FPC board on the display board, A4 the one at the
 module. The flat flex cable joins pin n of A3 to pin n of A4, and a wire joins pin n of A4 to pin
-n of the module's 8-bit header, so each net names A3, A4 and the module's pin together.
+21 - n of the module's 8-bit header, so each net names A3, A4 and the module's pin together.
 
 Connector pin orders: J-DISP-PWR carries 5 V on pin 1 and GND on pin 2. J-TOUCH carries SCL, SDA
 and the Teensy's 3V3 on pins 1 to 3, as J-MB-TOUCH does. J-DISP-BUS mates with J-MB-DISPLAY pin
@@ -42,17 +42,18 @@ DISPLAY.part("J-TOUCH", "header_male", pins=3)
 DISPLAY.part("J-DISP-BUS", "header_male", pins=12)
 
 # the bus: from the Teensy over J-DISP-BUS, the flat flex cable and A4 to the 8-bit header; the
-# FPC boards' pin n is the header's pin n
-BUS = (("D0", 3, 13), ("D1", 2, 14), ("D2", 5, 15), ("D3", 4, 16), ("D4", 8, 17),
-       ("D5", 7, 18), ("D6", 12, 19), ("D7", 11, 20))
+# FPC boards' pin n is the header's pin 21 - n, since A4 lies beside the header with its pin 1
+# level with the header's pin 20
+BUS = (("D0", 3, 8), ("D1", 2, 7), ("D2", 5, 6), ("D3", 4, 5), ("D4", 8, 4),
+       ("D5", 7, 3), ("D6", 12, 2), ("D7", 11, 1))
 for sig, bus, fpc in BUS:
     DISPLAY.net(sig, f"J-DISP-BUS.{bus}", f"A3.{fpc}", f"A4.{fpc}", f"A1.{sig}", color="blue",
                 label=sig, teensy=f"{sig} to the display")
-DISPLAY.net("WR", "J-DISP-BUS.6", "A3.5", "A4.5", "A1.WR", color="blue", label="WR",
+DISPLAY.net("WR", "J-DISP-BUS.6", "A3.16", "A4.16", "A1.WR", color="blue", label="WR",
             teensy="WR to the display")
-DISPLAY.net("D/C", "J-DISP-BUS.9", "A3.4", "A4.4", "A1.C/D", color="blue", label="D/C",
+DISPLAY.net("D/C", "J-DISP-BUS.9", "A3.17", "A4.17", "A1.C/D", color="blue", label="D/C",
             teensy="D/C to the display")
-DISPLAY.net("CS", "J-DISP-BUS.10", "A3.3", "A4.3", "A1.CS", color="blue", label="CS",
+DISPLAY.net("CS", "J-DISP-BUS.10", "A3.18", "A4.18", "A1.CS", color="blue", label="CS",
             teensy="CS to the display controller")
 
 # the touch bus through the converter
@@ -61,21 +62,24 @@ DISPLAY.net("SCL", "J-TOUCH.1", "A2.A1", color="white", label="SCL",
 DISPLAY.net("SDA", "J-TOUCH.2", "A2.A2", color="white", label="SDA",
             teensy="SDA to the touch controller")
 DISPLAY.net("3V3", "J-TOUCH.3", "A2.LV", color="yellow", label="3V3", rail=TEENSY_RAIL)
-DISPLAY.net("SCL-MOD", "A2.B1", "A3.10", "A4.10", "A1.SCL", color="white", label="SCL")
-DISPLAY.net("SDA-MOD", "A2.B2", "A3.11", "A4.11", "A1.SDA", color="white", label="SDA")
+DISPLAY.net("SCL-MOD", "A2.B1", "A3.11", "A4.11", "A1.SCL", color="white", label="SCL")
+DISPLAY.net("SDA-MOD", "A2.B2", "A3.10", "A4.10", "A1.SDA", color="white", label="SDA")
 
-# the supply: 5 V on Vin's line, bridged to RD at the module; ground on pins 1 and 12
-DISPLAY.net("5V", "J-DISP-PWR.1", "A2.HV", "A3.2", "A4.2", "A1.Vin", "A1.RD", color="red",
-            label="5 V", rail="5V")
-DISPLAY.net("GND", "J-DISP-PWR.2", "J-DISP-BUS.1", "A2.GND#2", "A3.1", "A3.12", "A4.1", "A4.12",
+# the supply: 5 V on Vin's line and on RD's, which the display board joins; ground on the
+# header's pins 1 and 12
+DISPLAY.net("5V", "J-DISP-PWR.1", "A2.HV", "A3.19", "A4.19", "A1.Vin", "A3.15", "A4.15", "A1.RD",
+            color="red", label="5 V", rail="5V")
+DISPLAY.net("GND", "J-DISP-PWR.2", "J-DISP-BUS.1", "A2.GND#2", "A3.20", "A3.9", "A4.20", "A4.9",
             "A1.GND", "A1.GND#2", color="black", label="GND", rail="gnd")
 
 # the SPI header's ties: CCS to 3.3Vout, MOSI to GND at pin 1
 DISPLAY.net("3VO", "A1.3Vo", "A1.CCS", color="yellow", label="3Vo", rail="module 3.3Vout")
 DISPLAY.net("MOSI-GND", "A1.MOSI", "A1.GND#3", color="black", label="GND", rail="gnd")
 
-DISPLAY.unconnected("A1.RST", "A1.Lite", "A1.IRQ",
-                    why="RST, Lite and the touch controller's IRQ stay unconnected")
+# RST, Lite and the touch controller's IRQ reach the display board over the cable and end there
+DISPLAY.net("RST", "A3.14", "A4.14", "A1.RST", color="white", label="RST")
+DISPLAY.net("LITE", "A3.13", "A4.13", "A1.Lite", color="white", label="Lite")
+DISPLAY.net("IRQ", "A3.12", "A4.12", "A1.IRQ", color="white", label="IRQ")
 DISPLAY.unconnected("A1.IM0", "A1.IM1", "A1.IM2", "A1.IM3", "A1.MISO", "A1.CD",
                     why="the module's jumpers set the 8-bit mode, and the card's MISO and its "
                         "card detect stay unconnected")
@@ -83,9 +87,6 @@ DISPLAY.unconnected("A1.CLK", "A1.D/C", "A1.CS#2",
                     why="the SPI header's lines of C/D, WR and CS, which the 8-bit header carries")
 DISPLAY.unconnected("A1.Vin#2", "A1.GND#4", "A1.RST#2", "A1.Lite#2", "A1.IRQ#2", "A1.SDA#2",
                     "A1.SCL#2", why="the same lines as the 8-bit header's pins of that name")
-DISPLAY.unconnected("A3.6", "A4.6", why="RD takes 5 V from Vin over a bridge at the module")
-DISPLAY.unconnected("A3.7", "A3.8", "A3.9", "A4.7", "A4.8", "A4.9",
-                    why="the lines of RST, Lite and IRQ, which stay unconnected")
 DISPLAY.unconnected("A2.A3", "A2.A4", "A2.B3", "A2.B4",
                     why="channels 3 and 4 of the converter stay unused")
 DISPLAY.unconnected("A2.GND", why="the converter joins it to its HV row's GND, which takes the "
