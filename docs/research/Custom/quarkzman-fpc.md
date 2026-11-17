@@ -14,7 +14,7 @@ Figures are quoted from the Amazon listing B0D846Z73P, which gives no drawing an
 | Size | 26 × 33 mm |
 | Pack | 4 boards |
 
-To do before soldering: check the pin mapping, the header position and the contact side with a continuity tester. The layout assumes the odd pins on the outer row.
+The silkscreen numbers the header and the socket. The even pins sit on the row at the board's edge, and each odd pin sits beside its even pin, toward the socket. Header pin n carries socket contact n, and pin 1 lies at the end where the socket has contact 1. The header's position on the board is not stated and has not been measured.
 
 ## Flat flex cable
 

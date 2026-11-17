@@ -310,13 +310,14 @@ MODULES = {
         roles_source="the board joins each socket contact to its header pin and carries no part",
         size=(33.0, 26.0), color="#1f7a4a",
         pins=[p for i in range(10)
-              for p in ((5.07 + i * PITCH, 24.0, str(2 * i + 1)),
-                        (5.07 + i * PITCH, 24.0 - PITCH, str(2 * i + 2)))],
+              for p in ((5.07 + i * PITCH, 24.0 - PITCH, str(2 * i + 1)),
+                        (5.07 + i * PITCH, 24.0, str(2 * i + 2)))],
         source="QUARKZMAN FFC/FPC connector board, 20 pins, the maker's product description: "
-               "26 x 33 mm, a 0.5 mm socket, a 2 x 10 header on 2.54 mm",
-        unverified="the maker gives no drawing and no pin numbers: the header centered along "
-                   "the 33 mm side, 2 mm in from the edge, and the odd pins on the outer row, "
-                   "each even pin beside its odd pin, are assumed until the board is measured"),
+               "26 x 33 mm, a 0.5 mm socket, a 2 x 10 header on 2.54 mm; the board's silkscreen: "
+               "the even pins on the row at the edge, each odd pin beside its even pin toward the "
+               "socket, pin 1 at the end where the socket has contact 1",
+        unverified="the maker gives no drawing: the header centered along the 33 mm side, 2 mm "
+                   "in from the edge, is assumed until the board is measured"),
     "adafruit1207": dict(
         size=(20.32, 17.78), color="#1d4f91",
         pins=_row(1.27, 16.51, tuple(str(i) for i in range(1, 9)))
