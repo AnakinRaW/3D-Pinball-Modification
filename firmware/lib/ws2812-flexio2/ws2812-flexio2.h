@@ -11,8 +11,11 @@
 // without a pause cannot keep it from refilling the shifters.
 //
 // A lane may sit on any pin that reaches FlexIO2: 6 to 13 and 32 on the Teensy 4.0, 34 to 37
-// besides on the 4.1, and 40 to 45 besides on the MicroMod. One FlexIO2 and one DMA channel serve
-// every object of this class, so a program sends through one object at a time.
+// besides on the 4.1, and 40 to 45 besides on the MicroMod.
+//
+// One FlexIO2 and one DMA channel serve every object of this class. A frame of one object
+// therefore blocks every other object: busy() holds and send() is refused for all of them until
+// it has gone out. Each send() then sets FlexIO2 up for the lanes of its own object.
 //
 // Design: docs/firmware/drivers/lighting.md.
 #pragma once
@@ -21,7 +24,8 @@
 
 class Ws2812Flexio2 {
 public:
-    static constexpr uint8_t MAX_LANES = 8;   // RM FlexIO: FlexIO2 has eight shifters
+    static constexpr uint8_t MAX_LANES = 8;      // RM FlexIO: FlexIO2 has eight shifters
+    static constexpr uint8_t NO_SIGNAL = 0xFF;   // what signalOf() gets for a pin without FlexIO2
 
     // one chain: the Teensy pin its data leaves on and its LEDs
     struct Lane {
@@ -38,13 +42,17 @@ public:
     // call keeps the lanes of the first and hands their pins over again.
     bool begin(const Lane* lanes, uint8_t count);
 
-    // Gets whether a frame still goes out.
+    // Gets whether a frame of any object still goes out.
     bool busy() const;
+
+    // Gets the FlexIO2 signal a pin of this board carries, or NO_SIGNAL for a pin that does not
+    // reach FlexIO2.
+    static uint8_t signalOf(uint8_t pin);
 
     // Encodes each lane's colors, stored red, green, blue as FastLED's CRGB stores them and
     // scaled by the brightness, and starts sending them. rgb holds one pointer for each lane, in
     // the order begin() took the lanes. Returns at once. Returns false, and sends nothing, before
-    // begin(), without LEDs and while the last frame still goes out.
+    // begin(), without LEDs and while a frame of any object still goes out.
     bool send(const uint8_t* const* rgb, uint8_t brightness);
 
 private:

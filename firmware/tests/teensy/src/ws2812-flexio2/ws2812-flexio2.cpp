@@ -14,6 +14,7 @@
 //   latch      a frame sent the moment the last one is done starts only after the LEDs' reset time
 //   clock      a clock root at another rate is refused while FlexIO3 is enabled on it, and set to
 //              120 MHz while FlexIO3 is not
+//   shared     while one output's frame goes out, another output is busy and refuses to send
 //
 // Wiring: none. LEDs on chain A may stay connected. Its first three show the wave's colors for a
 // moment and go dark again. long, load and latch send on chain F, where no LED is wired.
@@ -32,8 +33,6 @@ constexpr uint8_t SIX = 6;
 constexpr uint8_t TWO = 2;
 constexpr uint16_t MOST_LEDS = 3;
 constexpr uint8_t PINS[SIX] = {32, 6, 7, 8, 9, 10};   // pin-assignment.md: LED chain A to F
-// RM IOMUXC: the FlexIO2 signal of each of those pads, the bit FLEXIO2_PIN reads it on
-constexpr uint8_t SIGNALS[SIX] = {12, 10, 17, 16, 11, 0};
 // ten LEDs over six lanes, chain A's three the bench's
 constexpr uint8_t SIX_OF[SIX] = {0, 1, 2, 3, 4, 5};
 constexpr uint16_t SIX_LEDS[SIX] = {3, 2, 2, 1, 1, 1};
@@ -149,7 +148,7 @@ static void assign(Rig& rig, const uint8_t* chains, const uint16_t* leds, uint8_
     rig.count = count;
     for (uint8_t l = 0; l < count; ++l) {
         rig.lanes[l] = {PINS[chains[l]], leds[l]};
-        rig.signals[l] = SIGNALS[chains[l]];
+        rig.signals[l] = Ws2812Flexio2::signalOf(PINS[chains[l]]);
         rig.rgb[l] = rig.colors[l];
     }
 }
@@ -343,10 +342,11 @@ static void testRefusals() {
     const uint8_t dark[COLORS] = {};
     const uint8_t* rgb[TWO] = {dark, dark};
     const bool e = notFlexio.send(rgb, FULL);
-    if (a || b || c || d || e) {
+    const bool f = Ws2812Flexio2::signalOf(NOT_FLEXIO2) != Ws2812Flexio2::NO_SIGNAL;
+    if (a || b || c || d || e || f) {
         char seen[64];
-        snprintf(seen, sizeof seen, "begin %d %d %d %d, send %d", a, b, c, d, e);
-        test::fail(seen, "begin 0 0 0 0, send 0");
+        snprintf(seen, sizeof seen, "begin %d %d %d %d, send %d, signal %d", a, b, c, d, e, f);
+        test::fail(seen, "begin 0 0 0 0, send 0, signal 0");
         return;
     }
     test::pass();
@@ -384,7 +384,7 @@ static bool longStarted() {
 // out of the extremes.
 static Reading readLong() {
     Reading r = {0, 0, 0, UINT32_MAX, 0, UINT32_MAX, 0, false};
-    const uint32_t pin = 1u << SIGNALS[CHAIN_F];
+    const uint32_t pin = 1u << Ws2812Flexio2::signalOf(PINS[CHAIN_F]);
     const uint32_t bits = uint32_t(LONG_LEDS) * ws2812::BITS_PER_LED;
     const uint8_t* rgb[1] = {longColors};
     bool high = false;
@@ -528,7 +528,7 @@ static void testLatch() {
         v = FULL;
     }
     const uint8_t* rgb[1] = {latchColors};
-    const uint32_t pin = 1u << SIGNALS[CHAIN_F];
+    const uint32_t pin = 1u << Ws2812Flexio2::signalOf(PINS[CHAIN_F]);
     delay(SETTLE_MS);
     bool high = false;
     bool second = false;
@@ -607,6 +607,33 @@ static void testClock() {
     test::pass();
 }
 
+// shared: the long lane's output sends a frame. While it goes out, the six lanes' output is busy
+// as well and refuses its send at once. Once the frame is out, the six lanes' send goes through.
+static void testShared() {
+    assign(six, SIX_OF, SIX_LEDS, SIX);
+    if (!longStarted() || !started(six)) {
+        return;
+    }
+    fillLong(0);
+    fill(six, false);
+    delay(SETTLE_MS);
+    const uint8_t* rgb[1] = {longColors};
+    const bool first = longOutput.send(rgb, FULL);
+    const bool busy = six.output.busy();
+    const bool refused = !six.output.send(six.rgb, FULL);
+    delay(SETTLE_MS);
+    const bool after = six.output.send(six.rgb, FULL);
+    delay(SETTLE_MS);
+    if (!first || !busy || !refused || !after) {
+        char seen[64];
+        snprintf(seen, sizeof seen, "sent %d, other busy %d, refused %d, then sent %d", first, busy,
+                 refused, after);
+        test::fail(seen, "sent 1, other busy 1, refused 1, then sent 1");
+        return;
+    }
+    test::pass();
+}
+
 static const Test TESTS[] = {
     {"ws2812-flexio2.wave", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testWave, nullptr},
     {"ws2812-flexio2.two-lanes", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testTwoLanes, nullptr},
@@ -616,6 +643,7 @@ static const Test TESTS[] = {
     {"ws2812-flexio2.load", RunsOn::TEENSY, LIMIT_S, LONG_LIMIT_S, testLoad, nullptr},
     {"ws2812-flexio2.latch", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLatch, nullptr},
     {"ws2812-flexio2.clock", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testClock, nullptr},
+    {"ws2812-flexio2.shared", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testShared, nullptr},
 };
 
 extern const Program WS2812_FLEXIO2 = {TESTS, sizeof TESTS / sizeof TESTS[0]};

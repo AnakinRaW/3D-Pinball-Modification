@@ -3,13 +3,8 @@
 
 // the lighting model's pitch_strip: 6.25 mm from LED to LED at 160 LEDs/m, in quarter millimeters
 constexpr uint32_t PITCH_Q = 25;
-constexpr uint32_t Q_PER_MM = 4;
-constexpr uint32_t MS_PER_S = 1000;
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint8_t FULL = 255;   // the value of an effect's second color
-// an asteroid's tail is a quarter of the round, and at least two lamps long
-constexpr uint32_t TAIL_SHARE = 4;
-constexpr uint32_t TAIL_LEAST_LAMPS = 2;
 // a palette by time moves one of its 256 steps per frame
 constexpr uint32_t PALETTE_STEP_MS = Lamps::FRAME_US / US_PER_MS;
 constexpr float HALF = 0.5f;   // rounds a scale to the nearest step
@@ -22,109 +17,22 @@ static Color toColor(const CRGB& c) {
     return {c.r, c.g, c.b, false};
 }
 
-uint8_t Steady::value(uint32_t, const Spot&) const {
-    return FULL;
-}
-
-uint8_t Blink::value(uint32_t ms, const Spot&) const {
-    const uint32_t periodMs = uint32_t(onMs) + offMs;
-    if (periodMs == 0) {
-        return 0;
-    }
-    return ms % periodMs < onMs ? FULL : 0;
-}
-
-// FastLED's cubicwave8 rises from 0 to 255 over the first half of its 256 steps and falls back
-// over the second, eased at both ends.
-uint8_t Pulse::value(uint32_t ms, const Spot&) const {
-    if (periodMs == 0) {
-        return 0;
-    }
-    const uint32_t phase = (ms % periodMs) * (FULL + 1) / periodMs;
-    return cubicwave8(uint8_t(phase));
-}
-
-// FastLED's ease8InOutCubic eases the fade at both ends, as the pulse does.
-uint8_t Fade::value(uint32_t ms, const Spot&) const {
-    if (ms >= fadeMs) {
-        return FULL;
-    }
-    return ease8InOutCubic(uint8_t(ms * FULL / fadeMs));
-}
-
-// The head moves along the lamps' positions: one position a lamp on the playfield, a quarter
-// millimeter on a strip. A lamp lights once the head has reached it.
-uint8_t Run::value(uint32_t ms, const Spot& at) const {
-    const bool up = direction == Direction::UP;
-    uint64_t travelled;   // how far the head has gone since the effect began
-    uint32_t x;           // where the lamp lies from the start of the run
-    uint32_t pitch;       // how far the head covers a lamp
-    uint32_t round;       // how far the head goes before it starts over
-    if (at.pitchQ == 0) {
-        travelled = step == 0 ? 0 : ms / step;
-        x = up ? at.index : uint32_t(at.count - 1 - at.index);
-        pitch = 1;
-        round = at.count;
-    } else {
-        travelled = uint64_t(ms) * step * Q_PER_MM / MS_PER_S;
-        x = up ? at.mmQ : at.lengthQ - at.mmQ;
-        pitch = at.pitchQ;
-        round = at.lengthQ + at.pitchQ;
-    }
-    if (travelled < x) {
-        return 0;
-    }
-    const uint32_t behind = uint32_t((travelled - x) % round);   // how far the head is past it
-    switch (pattern) {
-    case Pattern::CHASE:
-        return behind < pitch ? FULL : 0;
-    case Pattern::ASTEROID: {
-        const uint32_t least = TAIL_LEAST_LAMPS * pitch;
-        const uint32_t tail = round / TAIL_SHARE > least ? round / TAIL_SHARE : least;
-        return behind < tail ? uint8_t(FULL - behind * FULL / tail) : 0;
-    }
-    case Pattern::WIPE:
-        return FULL;
-    }
-    return 0;
-}
-
 LampRange LampRange::sub(uint16_t from, uint16_t n) const {
     if (from >= count) {
-        return {lamps, uint16_t(first + count), 0, key, priority};
+        return {lamps, uint16_t(first + count), 0, layer};
     }
     const uint16_t left = count - from;
-    return {lamps, uint16_t(first + from), n < left ? n : left, key, priority};
-}
-
-LampRange& LampRange::set(Paint c) {
-    return play(Steady(), c, c);
-}
-
-LampRange& LampRange::off() {
-    return set(Color::BLACK);
-}
-
-LampRange& LampRange::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
-    return play(Blink(onMs, offMs), off == Off::DARK ? Color::BLACK : Color::NONE, c);
-}
-
-LampRange& LampRange::alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs) {
-    return play(Blink(aMs, bMs), b, a);
-}
-
-LampRange& LampRange::pulse(Paint a, Paint b, uint16_t periodMs) {
-    return play(Pulse(periodMs), a, b);
+    return {lamps, uint16_t(first + from), n < left ? n : left, layer};
 }
 
 LampRange& LampRange::fade(Paint c, uint16_t ms) {
     for (uint16_t i = 0; i < count; ++i) {
         const Color now = toColor(lamps->playfieldFrame[first + i]);
-        Lamps::Entry* e =
-            lamps->start(lamps->playfieldEffects[first + i], key, priority, now, c, Fade(ms));
+        Lamps::Entry* e = lamps->start(lamps->playfieldEffects[first + i], layer.key,
+                                       layer.priority, now, c, Fade(ms));
         if (e == nullptr) {
             DEBUG_LOG("Lamps: lamp %u holds five effects and refuses a fade of key %u\n", first + i,
-                      key);
+                      layer.key);
             continue;
         }
         e->index = i;
@@ -135,7 +43,7 @@ LampRange& LampRange::fade(Paint c, uint16_t ms) {
 
 LampRange& LampRange::run(Pattern p, Direction d, Paint c, uint16_t stepMs, Paint back) {
     if (stepMs == 0) {
-        DEBUG_LOG("Lamps: a run of key %u takes 1 ms a lamp in place of 0\n", key);
+        DEBUG_LOG("Lamps: a run of key %u takes 1 ms a lamp in place of 0\n", layer.key);
         stepMs = 1;
     }
     return play(Run(p, d, stepMs), back, c);
@@ -145,7 +53,7 @@ void LampRange::lasting(uint16_t ms) {
     const uint32_t endMs = lamps->clockAt(nowUs()) + ms;
     for (uint16_t i = 0; i < count; ++i) {
         Lamps::Entry* e = lamps->playfieldEffects[first + i].find(
-            [this](const Lamps::Entry& x) { return x.key == key; });
+            [this](const Lamps::Entry& x) { return x.key == layer.key; });
         if (e != nullptr) {
             e->ends = true;
             e->endMs = endMs;
@@ -156,32 +64,12 @@ void LampRange::lasting(uint16_t ms) {
 void LampRange::clear() {
     for (uint16_t i = 0; i < count; ++i) {
         lamps->playfieldEffects[first + i].removeIf(
-            [this](const Lamps::Entry& x) { return x.key == key; });
+            [this](const Lamps::Entry& x) { return x.key == layer.key; });
     }
 }
 
 uint16_t Strip::size() const {
     return lamps->stripSize(strip);
-}
-
-Strip& Strip::set(Paint c) {
-    return play(Steady(), c, c);
-}
-
-Strip& Strip::off() {
-    return set(Color::BLACK);
-}
-
-Strip& Strip::blink(Paint c, uint16_t onMs, uint16_t offMs, Off off) {
-    return play(Blink(onMs, offMs), off == Off::DARK ? Color::BLACK : Color::NONE, c);
-}
-
-Strip& Strip::alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs) {
-    return play(Blink(aMs, bMs), b, a);
-}
-
-Strip& Strip::pulse(Paint a, Paint b, uint16_t periodMs) {
-    return play(Pulse(periodMs), a, b);
 }
 
 Strip& Strip::fade(Paint c, uint16_t ms) {
@@ -197,8 +85,8 @@ Strip& Strip::run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back) 
 }
 
 void Strip::lasting(uint16_t ms) {
-    Lamps::Entry* e =
-        lamps->stripEffects[strip].find([this](const Lamps::Entry& x) { return x.key == key; });
+    Lamps::Entry* e = lamps->stripEffects[strip].find(
+        [this](const Lamps::Entry& x) { return x.key == layer.key; });
     if (e != nullptr) {
         e->ends = true;
         e->endMs = lamps->clockAt(nowUs()) + ms;
@@ -206,7 +94,8 @@ void Strip::lasting(uint16_t ms) {
 }
 
 void Strip::clear() {
-    lamps->stripEffects[strip].removeIf([this](const Lamps::Entry& x) { return x.key == key; });
+    lamps->stripEffects[strip].removeIf(
+        [this](const Lamps::Entry& x) { return x.key == layer.key; });
 }
 
 bool Lamps::Entry::above(const Entry& other) const {
@@ -337,15 +226,13 @@ bool Lamps::chainLeds(const Settings& settings, uint16_t (&leds)[Lighting::CHAIN
 }
 
 LampGroups Lamps::groups(Layer layer) {
-    const uint8_t key = layer.key;
-    const uint8_t priority = layer.priority;
     LampGroups g;
-    g.perimeterLeft = Strip(this, LEFT, key, priority);
-    g.perimeterRight = Strip(this, RIGHT, key, priority);
-    g.ceiling = Strip(this, CEILING, key, priority);
-    g.perimeter = Strip(this, PERIMETER, key, priority);
-    g.ambient = Strip(this, AMBIENT, key, priority);
-    g.playfield = LampRange(this, 0, playfieldLamps, key, priority);
+    g.perimeterLeft = Strip(this, LEFT, layer);
+    g.perimeterRight = Strip(this, RIGHT, layer);
+    g.ceiling = Strip(this, CEILING, layer);
+    g.perimeter = Strip(this, PERIMETER, layer);
+    g.ambient = Strip(this, AMBIENT, layer);
+    g.playfield = LampRange(this, 0, playfieldLamps, layer);
     return g;
 }
 

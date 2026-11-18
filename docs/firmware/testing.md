@@ -237,11 +237,12 @@ The program `ws2812-flexio2` checks the [FlexIO2 output](drivers/lighting.md#how
 | `wave` | Teensy | Send one frame of ten LEDs over six lanes on the lighting's pins, each LED a different color, and read the pins back through FlexIO2's pin register while the frame goes out | Every lane carries exactly its LEDs' bits, each high lies within the reading's tolerance of the encoder's high for a 0 or a 1, and every line is low before and after the frame |
 | `two-lanes` | Teensy | Do the same with two lanes, chain F's pin first and chain A's second | The same |
 | `busy` | Teensy | Send a frame, send a second one right after it, and send a third after the first has gone out | The output is busy while the first frame goes out and refuses the second at once. Then it is free again and takes the third |
-| `refusals` | Teensy | Start outputs with no lane, with one lane more than FlexIO2 has shifters, with a pin that does not reach FlexIO2 and with one pin for two lanes, then send on one of them | Each start and the send return false |
+| `refusals` | Teensy | Start outputs with no lane, with one lane more than FlexIO2 has shifters, with a pin that does not reach FlexIO2 and with one pin for two lanes, then send on one of them, and ask for the FlexIO2 signal of that pin | Each start and the send return false, and the pin has no signal |
 | `long` | Teensy | Send one frame of the longest chain the lighting allows on chain F, where no LED is wired, and check each bit as it comes back | Every bit of the frame comes back as sent, each high within the reading's tolerance, and the line is low after the frame |
 | `load` | Teensy | Do the same frame after frame, at the lamps' frame period, while a second DMA channel copies between two buffers in RAM2 without a pause. A soak run sends ten times as many frames | Every frame comes back whole |
 | `latch` | Teensy | Send a short frame on chain F and the next one the moment the output is free again | The line stays low between the two frames for longer than the reset time that ends a frame for the LEDs |
 | `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts, and a frame goes out afterwards |
+| `shared` | Teensy | Send a frame through one output, then send through a second output while the frame goes out, and again once it is out | The second output is busy while the first one's frame goes out and refuses its send at once. Afterwards its send goes through |
 
 ### Lighting
 

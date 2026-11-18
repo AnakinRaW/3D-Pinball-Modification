@@ -3,6 +3,8 @@
 
 constexpr uint8_t PINS[] = {32, 6, 7, 8, 9, 10};   // pin-assignment.md: LED chain A to F
 static_assert(sizeof PINS == Lighting::CHAINS, "a pin for every chain");
+// show() hands the output each chain's colors as bytes, three to an LED, red, green, blue
+static_assert(sizeof(CRGB) == 3, "FastLED's CRGB holds an LED in three bytes");
 
 void Lighting::configure(const Settings& given) {
     settings = given;

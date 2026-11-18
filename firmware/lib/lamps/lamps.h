@@ -5,8 +5,9 @@
 //
 // The config names each group's chain and its LEDs: the two perimeters, the ceiling, and the
 // playfield's lower, middle and upper section. A playfield lamp takes one LED or several in a row.
-// A strip's hidden LEDs stay dark, and its lamps are the LEDs between them, every one on the
-// ceiling and on the perimeters as the driver's profile steps them.
+// Hidden LEDs stay dark and belong to no lamp. A strip's lamps are the LEDs between them, every
+// one on the ceiling and on the perimeters as the driver's profile steps them. The colors and the
+// effects stand in lamp-effects.h.
 //
 // Design: docs/firmware/components/lamps.md.
 #pragma once
@@ -15,139 +16,40 @@
 #include <type_traits>
 #include <clock.h>
 #include <debug-log.h>
+#include <lamp-effects.h>
 #include <layer.h>
 #include <lighting.h>
 #include <priority-list.h>
 
-// a color of a lamp, 8 bits for each of red, green and blue
-struct Color {
-    static constexpr uint8_t WHOLE_PERCENT = 100;
-
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    // shows the effect below instead of a color, as Color::NONE does
-    bool below = false;
-
-    // Gets the color at percent of its brightness. A percent above 100 counts as 100.
-    constexpr Color dim(uint8_t percent) const {
-        const uint32_t p = percent > WHOLE_PERCENT ? WHOLE_PERCENT : percent;
-        return {uint8_t(r * p / WHOLE_PERCENT), uint8_t(g * p / WHOLE_PERCENT),
-                uint8_t(b * p / WHOLE_PERCENT), below};
-    }
-
-    static const Color BLACK, WHITE, RED, GREEN, BLUE, AMBER, NONE;
-};
-
-inline constexpr Color Color::BLACK{0, 0, 0, false};
-inline constexpr Color Color::WHITE{255, 255, 255, false};
-inline constexpr Color Color::RED{255, 0, 0, false};
-inline constexpr Color Color::GREEN{0, 255, 0, false};
-inline constexpr Color Color::BLUE{0, 0, 255, false};
-inline constexpr Color Color::AMBER{255, 120, 0, false};
-inline constexpr Color Color::NONE{0, 0, 0, true};
-
-// what picks a palette's color: the time, the lamp's place, or the effect's value
-enum class By : uint8_t { TIME, POSITION, VALUE };
-
-// What an effect paints with: a single color, or the colors of one of FastLED's palettes, such as
-// RainbowColors_p. A single Color is passed as it is.
-struct Paint {
-    Color color;
-    const TProgmemRGBPalette16* palette = nullptr;   // in flash, as FastLED keeps its palettes
-    By by = By::VALUE;
-
-    constexpr Paint() = default;
-    constexpr Paint(Color c) : color(c) {}
-    constexpr Paint(const TProgmemRGBPalette16& colors, By by) : palette(&colors), by(by) {}
-};
-
-// the patterns run() moves along the lamps
-enum class Pattern : uint8_t { CHASE, ASTEROID, WIPE };
-// UP runs toward the higher lamp numbers
-enum class Direction : uint8_t { UP, DOWN };
-// what a blink shows while off: the effect below, or a dark lamp
-enum class Off : uint8_t { THROUGH, DARK };
-
-// where a lamp lies among the lamps an effect covers, for an effect that moves along them
-struct Spot {
-    uint16_t index;   // the lamp's place, 0 for the first
-    uint16_t count;   // how many lamps the effect covers
-    uint32_t
-        mmQ;   // a strip lamp's position along its strip in quarter millimeters, 0 on the playfield
-    uint32_t lengthQ;   // the position of the strip's last lamp, 0 on the playfield
-    uint32_t pitchQ;    // the spacing of the perimeters' lamps, which a run's head covers, 0 on the
-                        // playfield
-};
-
-// What every effect is. An entry of a lamp keeps a copy of the effect, so an effect holds plain
-// values only and fits Lamps::EFFECT_BYTES.
-class Effect {
-public:
-    // Gets 0 for the first color, 255 for the second, or a value between, ms after the effect
-    // began.
-    virtual uint8_t value(uint32_t ms, const Spot& at) const = 0;
-
-protected:
-    ~Effect() = default;
-};
-
-// lights steadily in the second color
-class Steady : public Effect {
-public:
-    uint8_t value(uint32_t ms, const Spot& at) const override;
-};
-
-// lights in the second color for onMs, then in the first for offMs, over and over
-class Blink : public Effect {
-public:
-    Blink(uint16_t onMs, uint16_t offMs) : onMs(onMs), offMs(offMs) {}
-    uint8_t value(uint32_t ms, const Spot& at) const override;
-
-private:
-    uint16_t onMs;
-    uint16_t offMs;
-};
-
-// fades from the first color to the second and back once per period
-class Pulse : public Effect {
-public:
-    explicit Pulse(uint16_t periodMs) : periodMs(periodMs) {}
-    uint8_t value(uint32_t ms, const Spot& at) const override;
-
-private:
-    uint16_t periodMs;
-};
-
-// fades from the first color to the second within ms and stays there
-class Fade : public Effect {
-public:
-    explicit Fade(uint16_t ms) : fadeMs(ms) {}
-    uint8_t value(uint32_t ms, const Spot& at) const override;
-
-private:
-    uint16_t fadeMs;
-};
-
-// Moves a pattern in the second color over the first. step is the ms from lamp to lamp on the
-// playfield and the mm a second along a strip.
-class Run : public Effect {
-public:
-    Run(Pattern pattern, Direction direction, uint16_t step)
-        : pattern(pattern), direction(direction), step(step) {}
-    uint8_t value(uint32_t ms, const Spot& at) const override;
-
-private:
-    Pattern pattern;
-    Direction direction;
-    uint16_t step;
-};
-
 class Lamps;
 class Lamp;
 
-// some lamps of the playfield, to which effects go with one key and priority
-class LampRange {
+// The built-in effects set, off, blink, alternate and pulse, which every group of lamps can start.
+// LampRange, Lamp and Strip derive from this class, so the five are written once for all three.
+// Group names the class that derives from it, and each effect starts through that class's play().
+template <typename Group> class EffectCalls {
+public:
+    // Lights steadily in c.
+    Group& set(Paint c) { return self().play(Steady(), c, c); }
+    // Lights dark.
+    Group& off() { return set(Color::BLACK); }
+    // Lights in c for onMs, then shows off for offMs, over and over.
+    Group& blink(Paint c, uint16_t onMs, uint16_t offMs, Off off = Off::THROUGH) {
+        return self().play(Blink(onMs, offMs), off == Off::DARK ? Color::BLACK : Color::NONE, c);
+    }
+    // Lights in a for aMs, then in b for bMs, over and over.
+    Group& alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs) {
+        return self().play(Blink(aMs, bMs), b, a);
+    }
+    // Fades from a to b and back once per periodMs.
+    Group& pulse(Paint a, Paint b, uint16_t periodMs) { return self().play(Pulse(periodMs), a, b); }
+
+private:
+    Group& self() { return static_cast<Group&>(*this); }
+};
+
+// some lamps of the playfield, to which the effects of one layer go
+class LampRange : public EffectCalls<LampRange> {
 public:
     LampRange() = default;
 
@@ -161,34 +63,28 @@ public:
     // Starts an effect that mixes from into to, a built-in one or one a game writes.
     template <typename E> LampRange& play(const E& effect, Paint from, Paint to);
 
-    LampRange& set(Paint c);
-    LampRange& off();
-    LampRange& blink(Paint c, uint16_t onMs, uint16_t offMs, Off off = Off::THROUGH);
-    LampRange& alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs);
-    LampRange& pulse(Paint a, Paint b, uint16_t periodMs);
     // Fades each lamp from the color it shows now to c within ms.
     LampRange& fade(Paint c, uint16_t ms);
     // Moves the pattern in c over back by one lamp every stepMs.
     LampRange& run(Pattern p, Direction d, Paint c, uint16_t stepMs, Paint back = Color::NONE);
     // Removes the range's effects ms from now.
     void lasting(uint16_t ms);
-    // Removes the effects the range's mode set, so the ones below show.
+    // Removes the effects the range's layer set, so the ones below show.
     void clear();
 
 private:
     friend class Lamps;
-    LampRange(Lamps* lamps, uint16_t first, uint16_t count, uint8_t key, uint8_t priority)
-        : lamps(lamps), first(first), count(count), key(key), priority(priority) {}
+    LampRange(Lamps* lamps, uint16_t first, uint16_t count, Layer layer)
+        : lamps(lamps), first(first), count(count), layer(layer) {}
 
     Lamps* lamps = nullptr;
     uint16_t first = 0;   // the range's first lamp in the playfield
     uint16_t count = 0;
-    uint8_t key = 0;
-    uint8_t priority = 0;
+    Layer layer = {};
 };
 
-// a single lamp of the playfield, to which effects go with one key and priority
-class Lamp {
+// a single lamp of the playfield, to which the effects of one layer go
+class Lamp : public EffectCalls<Lamp> {
 public:
     Lamp() = default;
 
@@ -197,26 +93,7 @@ public:
         return *this;
     }
 
-    Lamp& set(Paint c) {
-        one.set(c);
-        return *this;
-    }
-    Lamp& off() {
-        one.off();
-        return *this;
-    }
-    Lamp& blink(Paint c, uint16_t onMs, uint16_t offMs, Off off = Off::THROUGH) {
-        one.blink(c, onMs, offMs, off);
-        return *this;
-    }
-    Lamp& alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs) {
-        one.alternate(a, b, aMs, bMs);
-        return *this;
-    }
-    Lamp& pulse(Paint a, Paint b, uint16_t periodMs) {
-        one.pulse(a, b, periodMs);
-        return *this;
-    }
+    // Fades the lamp from the color it shows now to c within ms.
     Lamp& fade(Paint c, uint16_t ms) {
         one.fade(c, ms);
         return *this;
@@ -237,20 +114,16 @@ inline Lamp LampRange::operator[](uint16_t i) const {
 
 // a strip of lamps that an effect covers as a whole: a perimeter, the ceiling, or a path through
 // several of them
-class Strip {
+class Strip : public EffectCalls<Strip> {
 public:
     Strip() = default;
 
     // Gets how many lamps the strip holds.
     uint16_t size() const;
 
+    // Starts an effect that mixes from into to, a built-in one or one a game writes.
     template <typename E> Strip& play(const E& effect, Paint from, Paint to);
 
-    Strip& set(Paint c);
-    Strip& off();
-    Strip& blink(Paint c, uint16_t onMs, uint16_t offMs, Off off = Off::THROUGH);
-    Strip& alternate(Paint a, Paint b, uint16_t aMs, uint16_t bMs);
-    Strip& pulse(Paint a, Paint b, uint16_t periodMs);
     // Fades the strip from the color its first lamp shows now to c within ms.
     Strip& fade(Paint c, uint16_t ms);
     // Moves the pattern in c over back along the strip at mmPerS millimeters a second.
@@ -260,16 +133,14 @@ public:
 
 private:
     friend class Lamps;
-    Strip(Lamps* lamps, uint8_t strip, uint8_t key, uint8_t priority)
-        : lamps(lamps), strip(strip), key(key), priority(priority) {}
+    Strip(Lamps* lamps, uint8_t strip, Layer layer) : lamps(lamps), strip(strip), layer(layer) {}
 
     Lamps* lamps = nullptr;
     uint8_t strip = 0;   // which of the lamps component's strips
-    uint8_t key = 0;
-    uint8_t priority = 0;
+    Layer layer = {};
 };
 
-// the lamp groups, to which effects go with one key and priority
+// the lamp groups, to which the effects of one layer go
 struct LampGroups {
     Strip perimeterLeft;
     Strip perimeterRight;
@@ -482,8 +353,8 @@ Lamps::Entry* Lamps::start(Effects& effects, uint8_t key, uint8_t priority, Pain
 template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Paint to) {
     uint16_t refusals = 0;
     for (uint16_t i = 0; i < count; ++i) {
-        Lamps::Entry* e =
-            lamps->start(lamps->playfieldEffects[first + i], key, priority, from, to, effect);
+        Lamps::Entry* e = lamps->start(lamps->playfieldEffects[first + i], layer.key,
+                                       layer.priority, from, to, effect);
         if (e == nullptr) {
             ++refusals;
             continue;
@@ -492,14 +363,17 @@ template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Pa
         e->count = count;
     }
     if (refusals > 0) {
-        DEBUG_LOG("Lamps: %u lamps hold five effects and refuse one of key %u\n", refusals, key);
+        DEBUG_LOG("Lamps: %u lamps hold five effects and refuse one of key %u\n", refusals,
+                  layer.key);
     }
     return *this;
 }
 
 template <typename E> Strip& Strip::play(const E& effect, Paint from, Paint to) {
-    if (lamps->start(lamps->stripEffects[strip], key, priority, from, to, effect) == nullptr) {
-        DEBUG_LOG("Lamps: strip %u holds five effects and refuses one of key %u\n", strip, key);
+    if (lamps->start(lamps->stripEffects[strip], layer.key, layer.priority, from, to, effect) ==
+        nullptr) {
+        DEBUG_LOG("Lamps: strip %u holds five effects and refuses one of key %u\n", strip,
+                  layer.key);
     }
     return *this;
 }

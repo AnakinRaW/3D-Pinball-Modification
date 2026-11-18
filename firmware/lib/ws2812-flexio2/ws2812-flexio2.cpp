@@ -29,7 +29,7 @@ constexpr FlexioPin FLEXIO_PINS[] = {{6, 10}, {7, 17}, {8, 16}, {9, 11},  {10, 0
 #else
 #error "ws2812-flexio2 knows the FlexIO2 pins of the Teensy 4.0, 4.1 and MicroMod only"
 #endif
-constexpr uint8_t NO_SIGNAL = 0xFF;
+constexpr uint8_t NO_SIGNAL = Ws2812Flexio2::NO_SIGNAL;
 constexpr uint32_t ALT_FLEXIO2 = 4;   // RM IOMUXC, SW_MUX_CTL_PAD_GPIO_B0 and B1: ALT4 is FlexIO2
 // the pad's drive strength as pinMode(OUTPUT) sets it in PJRC's core, digital.c
 constexpr uint32_t PAD_OUTPUT = IOMUXC_PAD_DSE(7);
@@ -101,16 +101,6 @@ volatile uint32_t& shiftcfg(uint8_t n) {
 uint32_t shifterCtl(uint8_t signal) {
     return FLEXIO_SHIFTCTL_TIMSEL(0) | FLEXIO_SHIFTCTL_PINCFG(SHIFTER_OUTPUT) |
            FLEXIO_SHIFTCTL_PINSEL(signal) | FLEXIO_SHIFTCTL_SMOD(SHIFTER_TRANSMIT);
-}
-
-// the FlexIO2 signal a Teensy pin carries, NO_SIGNAL for a pin that does not reach FlexIO2
-uint8_t signalOf(uint8_t pin) {
-    for (const FlexioPin& p : FLEXIO_PINS) {
-        if (p.pin == pin) {
-            return p.signal;
-        }
-    }
-    return NO_SIGNAL;
 }
 
 // the DCHPRI byte of a channel, laid out as PJRC's DMAChannel.cpp addresses it
@@ -216,7 +206,7 @@ bool Ws2812Flexio2::begin(const Lane* lanes, uint8_t count) {
         }
         uint16_t longest = 0;
         for (uint8_t lane = 0; lane < count; ++lane) {
-            const uint8_t signal = signalOf(lanes[lane].pin);
+            const uint8_t signal = Ws2812Flexio2::signalOf(lanes[lane].pin);
             if (signal == NO_SIGNAL) {
                 DEBUG_LOG("Ws2812Flexio2::begin: pin %u does not reach FlexIO2\n", lanes[lane].pin);
                 return false;
@@ -323,4 +313,13 @@ bool Ws2812Flexio2::send(const uint8_t* const* rgb, uint8_t brightness) {
     FLEXIO2_TIMCTL0 = TIMER_CTL;
     sending = true;
     return true;
+}
+
+uint8_t Ws2812Flexio2::signalOf(uint8_t pin) {
+    for (const FlexioPin& p : FLEXIO_PINS) {
+        if (p.pin == pin) {
+            return p.signal;
+        }
+    }
+    return NO_SIGNAL;
 }
