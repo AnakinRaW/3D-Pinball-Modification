@@ -67,6 +67,16 @@ dec("n_queue", 32, "", src="the depth of the device monitor's event queue, error
 ds("n_capture", 16, "bytes", src="what a driver tick callback may capture, the size "
    f"teensy::inplace_function takes in {CORE}/IntervalTimer.h")
 
+dec("n_producers", 11, "", src="the queues the event queue takes at most, PRODUCERS in "
+    "firmware/lib/event-queue: one for each driver that publishes events, as input-handling.md "
+    "estimates them")
+dec("b_event", 12, "bytes", src="sizeof(DriverEvent) in firmware/lib/event-queue: its time, "
+    "type, source and payload, the payload aligned to four bytes", stated=False)
+# the device monitor's queue, DMAMEM in firmware/lib/device-monitor/device-monitor.cpp
+fig("ram_monitor_queue", "bytes", "n_queue.raw * b_event", moves="+n_queue +b_event",
+    stated=False)
+MODEL.draws("ram_monitor_queue", pool="RAM2")
+
 MODEL.supplies("n_tick_slots", pool="driver tick")
 MODEL.supplies("n_monitor_slots", pool="device monitor")
 MODEL.draws(pool="driver tick")   # the device monitor's own check

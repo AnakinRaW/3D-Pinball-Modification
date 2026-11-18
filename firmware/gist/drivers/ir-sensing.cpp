@@ -1,6 +1,6 @@
 /*
 begin():
-    out = events.attach(queue, kQueueDepth)
+    events.attach(queue, kQueueDepth, out)
     csA, csB = HIGH, HIGH          # before SPI, or both converters answer at once
     ledGate  = LOW                 # never INPUT_PULLUP, the isolator reads that as a high
     SPI.begin()                    # the pins and the clock; the driver feeds LPSPI4 itself from here on

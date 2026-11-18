@@ -24,8 +24,8 @@ A driver event carries its type, its source inside the subsystem, its timestamp 
 
 ```cpp
 enum class DriverEventType : uint16_t {
-    DeviceFailed,       // a part of a device has failed; the source packs device and part, the payload is the driver's error code
-    DeviceRecovered,    // that part works again; the source as for DeviceFailed, no payload
+    DEVICE_FAILED,      // a part of a device has failed; the source packs device and part, the payload is the driver's error code
+    DEVICE_RECOVERED,   // that part works again; the source as for DEVICE_FAILED, no payload
     // List of events ...
 };
 
@@ -36,12 +36,15 @@ struct DriverEvent {
     uint32_t        payload;   // interpreted according to the type
 };
 
+// the payload of a type without one
+struct NoPayload {};
+
 // one payload per type
-template <DriverEventType Tag> struct DriverPayloadOf;
-template <DriverEventType Tag> typename DriverPayloadOf<Tag>::type payload(const DriverEvent&);
+template <DriverEventType TAG> struct DriverPayloadOf;
+template <DriverEventType TAG> typename DriverPayloadOf<TAG>::type payload(const DriverEvent&);
 ```
 
-Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. A read searches the front of every queue for the oldest event and compares their times with [`before()`](general-design.md#time-measurement). At an estimated size of eleven producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports.
+Each queue has one writer and one reader, so none needs a lock and no interrupt is ever disabled for one. A read searches the front of every queue for the oldest event and compares their times with [`before()`](general-design.md#time-measurement). At an estimated size of eleven producers maximum the lookup cost is acceptable. A queue with no room left drops the newest event and counts it, which is what `dropped()` reports. `attach()` returns false for a queue past the eleventh and for a depth that is no power of two. Its out parameter then points at a queue that drops every event and counts it, so an interrupt that publishes needs no check.
 
 > A real-time event is handled by the subsystem that detects it, and the message that it happened is reported afterwards. A sensed solenoid triggering is such an event.
 
@@ -49,23 +52,27 @@ Device faults reach the queue through the device monitor, which [error-handling]
 
 ## API
 
+[`firmware/lib/event-queue`](../../firmware/lib/event-queue/event-queue.h) holds the queue.
+
 ```cpp
 class EventQueue {
 public:
+    static constexpr uint8_t PRODUCERS = 11;
+
     class Producer {
     public:
         // ISR-safe, false when full
         bool publish(const DriverEvent& e);
-        template <DriverEventType Tag>
-        bool publish(uint32_t now, uint8_t source, typename DriverPayloadOf<Tag>::type value);
+        template <DriverEventType TAG>
+        bool publish(uint32_t now, uint8_t source, typename DriverPayloadOf<TAG>::type value);
         uint32_t dropped() const;
     };
 
     // before the main loop only, depth a power of two
-    Producer& attach(DriverEvent* storage, size_t depth);
+    bool attach(DriverEvent* storage, uint32_t depth, Producer*& out);
 
     // up to max, oldest first
-    size_t    read(DriverEvent* out, size_t max);
+    uint32_t read(DriverEvent* out, uint32_t max);
 };
 
 extern EventQueue events;

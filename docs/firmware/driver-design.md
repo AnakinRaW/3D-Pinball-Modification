@@ -10,7 +10,7 @@ Drivers report their state changes, not their current state. A state that persis
 
 The current state stays queryable regardless.
 
-Device faults reach the event queue through the [device monitor](error-handling.md#device-faults). It asks every driver every 100 ms which parts of its device have failed, and it publishes `DeviceFailed` and `DeviceRecovered` whenever that answer changes.
+Device faults reach the event queue through the [device monitor](error-handling.md#device-faults). It asks every driver every 100 ms which parts of its device have failed, and it publishes `DEVICE_FAILED` and `DEVICE_RECOVERED` whenever that answer changes.
 
 `begin()` returns false when it fails. Every later call to that driver answers at once with either `false` or empty data. This lets a game run without an SD card or a display installed, for example.
 
@@ -37,22 +37,24 @@ public:
 
 `Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum. Every device has an entry, also one whose driver reports no faults.
 
+[`firmware/lib/device-monitor`](../../firmware/lib/device-monitor/device-monitor.h) holds `Device`.
+
 ```cpp
 // the devices of the machine; a device of one part has only part 0
 enum class Device : uint8_t {
-    RotarySensor,
-    BreakBeam,
-    Solenoids,
-    IrSensing,
-    SdCard,
-    Display,
-    Touch,
-    Servo,
-    Amplifier,
-    LedChains,
-    ToggleSwitch,
-    Contacts,
-    Count,        // the number of devices
+    ROTARY_SENSOR,
+    BREAK_BEAM,
+    SOLENOIDS,
+    IR_SENSING,
+    SD_CARD,
+    DISPLAY_MODULE,   // DISPLAY is a macro of the Teensy core
+    TOUCH,
+    SERVO,
+    AMPLIFIER,
+    LED_CHAINS,
+    TOGGLE_SWITCH,
+    CONTACTS,
+    COUNT,            // the number of devices
 };
 ```
 

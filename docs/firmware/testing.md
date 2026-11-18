@@ -135,6 +135,7 @@ The program `event-queue` checks the [event queue](input-handling.md).
 | `across-wrap` | computer | Do the same with times on both sides of the wrap of `nowUs()` | The order holds across the wrap |
 | `full` | computer | Publish into a queue until it is full, and once more | The last publish returns false and counts in `dropped()`, and the queued events come out unchanged |
 | `payload` | computer | Publish an event of every type with `publish<Tag>()` | `payload<Tag>()` gives every payload back unchanged |
+| `refused` | computer | Attach a depth of three, a depth of zero and no storage, then queues until every one is taken, and one more. Publish through each refused queue | `attach()` returns false for each refusal, and the queue it points at drops the event and counts it in `dropped()` |
 | `from-interrupts` | Teensy | Publish numbered events from two interrupts of different priorities for ten minutes while the main loop reads | Every event arrives once and whole, and each queue's events arrive in their order, while `dropped()` stays 0 |
 
 ### Driver tick
@@ -156,7 +157,7 @@ The program `device-monitor` checks the [device monitor](error-handling.md#devic
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `changes` | computer | Let the fake driver report parts failing and recovering, with error codes | Each change gives one `DeviceFailed` with the device, the part and the code, or one `DeviceRecovered`, and an unchanged answer gives nothing |
+| `changes` | computer | Let the fake driver report parts failing and recovering, with error codes | Each change gives one `DEVICE_FAILED` with the device, the part and the code, or one `DEVICE_RECOVERED`, and an unchanged answer gives nothing |
 | `full-queue` | computer | Let parts fail while the monitor's queue is full, then empty it | Each part is reported at the first check after the queue has room |
 | `source` | computer | Pack the source of every device and part | `faultDevice()` and `faultPart()` give back what `faultSource()` packed |
 
@@ -564,7 +565,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `stopped` | computer | Dispatch events and update while no game runs | No game gets a call |
 | `mode-end` | computer | Start two test modes whose `stop()` is empty, each lighting a lamp, taking a slide with a video and playing a track, then let one end itself and stop the other | Each time, the lamp shows the effect below, the slide below shows, the video stops and the track below goes on |
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
-| `faults` | computer | Dispatch `DeviceFailed` and `DeviceRecovered` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
+| `faults` | computer | Dispatch `DEVICE_FAILED` and `DEVICE_RECOVERED` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
 | `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, the id of b is written, and b starts only once the screen has settled |
 | `last-game` | Teensy | Start game b, then restart | Game b starts again |

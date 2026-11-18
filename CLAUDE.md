@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. The core libraries in `firmware/lib/` are the clock, the driver tick in `driver-base`, the event queue and the device monitor. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 

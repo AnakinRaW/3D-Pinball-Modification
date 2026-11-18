@@ -8,7 +8,9 @@ The device monitor is a firmware component that attaches to the [driver tick](dr
 
 The main task registers each watched driver with the monitor right after the driver's `begin()`. On every tick the device monitor calls `Fault failed()` of every registered driver. The driver returns a `Fault`, which holds a bitmask with one bit per failed part and the driver's error code. The bits count from the LSB, and the error code is 0 for a driver without error codes.
 
-For every part whose bit error status, the monitor publishes `DeviceFailed` or `DeviceRecovered` into its event queue. The event's source packs the device and the part. The device is an entry of [`Device`](driver-design.md#devices). The payload of `DeviceFailed` is the driver's error code, and `DeviceRecovered` has no payload. When the queue is full, the part keeps the state it was last reported in, and the next check tries again.
+For every part whose bit changed, the monitor publishes `DEVICE_FAILED` or `DEVICE_RECOVERED` into its queue of the event queue. The event's source packs the device and the part. The device is an entry of [`Device`](driver-design.md#devices). The payload of `DEVICE_FAILED` is the driver's error code, and `DEVICE_RECOVERED` has no payload. When the queue is full, the part keeps the state it was last reported in, and the next check tries again. The monitor's queue lies in RAM2.
+
+[`firmware/lib/device-monitor`](../../firmware/lib/device-monitor/device-monitor.h) holds the monitor.
 
 ```cpp
 // the source of a fault event: the device in the upper four bits and the part in the lower
@@ -44,8 +46,11 @@ public:
 // monitors the devices of the registered drivers and reports every part that fails or recovers
 class DeviceMonitor {
 public:
+    // takes the queue's events from storage, which watch() attaches to queue on its first call
+    DeviceMonitor(EventQueue& queue, DriverTick& tick, DriverEvent (&storage)[DEPTH]);
+
     // registers a driver, whose failed() every check asks; before the main loop only, and the first call
-    // attaches the queue and the check to the driver tick. False when every slot is taken
+    // attaches the queue and the check to the driver tick. False when every slot is taken or the driver tick refuses the check
     bool watch(Device device, const Driver& driver);
 };
 
