@@ -28,11 +28,12 @@ extern const Program WS2812_FLEXIO2;
 extern const Program LIGHTING;
 extern const Program SERVO;
 extern const Program EVERY_DRIVER;
+extern const Program LAMPS;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
-static const Program* const PROGRAMS[] = {&CLOCK,    &DRIVER_TICK, &PSRAM,        &WS2812_FLEXIO2,
-                                          &LIGHTING, &SERVO,       &EVERY_DRIVER, &START_UP};
+static const Program* const PROGRAMS[] = {&CLOCK, &DRIVER_TICK,  &PSRAM, &WS2812_FLEXIO2, &LIGHTING,
+                                          &SERVO, &EVERY_DRIVER, &LAMPS, &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line

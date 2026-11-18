@@ -60,45 +60,4 @@ Each bit the driver sends is a pulse followed by a pause on the data line. The p
 
 ## Interface
 
-The driver is the library [`firmware/lib/lighting/`](../../../firmware/lib/lighting/). A bench program configures only the LEDs it has.
-
-```cpp
-// what the lighting may light and how bright, for one adapter rating
-struct Profile {
-    uint8_t  perimeterStep;   // 2 lights every second perimeter LED, 1 lights every one
-    uint8_t  ambientMax;      // the brightness the perimeters and the ceiling may reach
-    uint8_t  playfieldMax;    // the brightness the playfield lights may reach
-    uint32_t capMa;           // the lighting's cap, in mA at 5 V
-};
-
-class Lighting : public Driver {
-public:
-    // the config's lighting.adapter_a, and each chain's LEDs from the lamp groups
-    struct Settings {
-        uint8_t  adapterA;
-        uint16_t leds[CHAINS];
-    };
-
-    // takes the adapter's rating and the LEDs of each chain; the main task, before begin()
-    void configure(const Settings& settings);
-
-    // selects the profile for the config's adapter, sets FastLED's power model, takes the colors
-    // and the frame's words from the heap and hands the pins of the chains with LEDs to FlexIO2;
-    // false when the heap has no room or no DMA channel is free. A later call keeps the chains of
-    // the first
-    bool begin() override;
-
-    const Profile& profile() const;   // gets the profile the lighting runs with
-
-    uint16_t leds(uint8_t c) const;   // gets how many LEDs chain c, 0 to 5, holds
-    CRGB* chain(uint8_t c);           // gets the LEDs of chain c, 0 to 5, whose colors the next show() sends
-
-    // scales the colors under the cap and starts sending them; returns at once, and false while
-    // the last frame still goes out
-    bool show();
-    uint8_t brightness() const;       // gets the brightness the last show() scaled the colors by
-
-    // gets the brightness at which the LEDs stay under a cap, by FastLED's power model
-    static uint8_t brightnessUnder(const CRGB* leds, uint16_t count, uint32_t capMa);
-};
-```
+The driver is the library [`firmware/lib/lighting/`](../../../firmware/lib/lighting/). Its interface stands in [`lighting.h`](../../../firmware/lib/lighting/lighting.h). A bench program configures only the LEDs it has.

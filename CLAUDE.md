@@ -96,6 +96,8 @@ The firmware builds with PlatformIO, installed with `python -m pip install platf
 
 The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache finds an object file by its command line, its source and its place in the build folder, so it serves only the project that compiled the file. Worktrees share each project's build folder. A build after another worktree's build therefore takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's own code `-Wall -Wextra -Werror` and every library `-w`.
 
+FastLED 3.10.9 does not build for PlatformIO's `native` platform. The MP3 decoder it bundles, `src/third_party/minimp3/minimp3.h`, uses `uint64_t` without including `<stdint.h>`, and the computer's gcc rejects that. The `computer` tests therefore take FastLED's colors, palettes and curves from `firmware/tests/fakes/FastLED.h` and the lighting driver from `firmware/tests/fakes/lighting.h`, and the `computer` environment keeps the real lighting library out with `lib_ignore`.
+
 ## Conventions
 
 - **Once a subsystem's code runs on the Teensy, the code holds how it works.** Its document then keeps what changes rarely: what the subsystem is for and has to achieve, the decisions with their reasons, its interface, the derived figures with their sources, and its known limitations. The implementation moves into `firmware/`, one subsystem at a time as each comes up on hardware.

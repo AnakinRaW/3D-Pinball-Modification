@@ -433,13 +433,18 @@ The program `config` checks the [config component](components/config.md). It han
 
 ### Lamps
 
-The program `lamps` checks the [lamps component](components/lamps.md).
+The program `lamps` checks the [lamps component](components/lamps.md). Its computer tests run on a fake lighting driver and a stand-in of FastLED's colors, palettes and curves.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `effects` | computer | Start every effect on a fake lighting driver and step the clock through it | Each lamp shows the color its [effect](components/lamps.md#effects) gives at every moment, and `run()` moves its pattern one lamp per step in its direction |
+| `effects` | computer | Start every effect on a fake lighting driver and step the clock through it | Each lamp shows the color its [effect](components/lamps.md#effects) gives at every moment, `run()` moves its pattern one lamp per step in its direction, and a brightness outside 0 to 1 counts as the nearer end |
 | `overlap` | computer | Blink a lamp for one mode, lay effects of two modes of higher priority over it, then remove those modes one by one | Each removal shows the effect below, and the blink goes on in its old rhythm |
 | `six-modes` | computer | Set one lamp for six modes | The sixth effect is refused and counted, and the five before it stay |
+| `separate` | computer | Give two playfield lamps of one mode a blink and a steady color, then clear the steady one | Each lamp shows the effect set on it, and the blink goes on in its rhythm after the other lamp's clear |
+| `spans` | computer | Configure the lamps of two playfield sections with lamps of several LEDs, a count past a chain's end, a count of 0 and fewer counts than LEDs, and set each lamp to a different color | Each LED shows its lamp's color: a long count is cut at its chain's end, a 0 takes one LED, and the LEDs past the counts are one lamp each |
+| `chains` | computer | Place the playfield's lower section on chain A, the ceiling on a chain past F and the upper section on chain A as well, then light the lower section's lamps | `chainLeds()` refuses the two misplaced groups, they hold no lamps, and the lower section lights on chain A |
+| `gaps` | computer | Configure the right perimeter with two hidden stretches and run a chase along it on both profiles | The chase lights the visible LEDs one after the other at an even pace, no hidden LED lights, and the smaller adapter's profile takes every second visible LED |
+| `groups` | computer | Configure chains of different lengths, read every group's size on both profiles, take parts of the playfield at and past its end, and run a wipe along `ambient` | Each group holds the lamps its chains and the profile's perimeter step give, a part past the end is cut there, and the wipe starts at the left perimeter's first lamp |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 

@@ -46,7 +46,7 @@ With the 3 A adapter the perimeters light only every second LED, as the [current
 
 The LEDs are organized in chains by where they sit and by how the game uses them. There are two kinds:
 
-1. Playfield lights are single lights that stand for something in the game, such as a bumper or a score star. A component switches each of them. They share chains by location, which keeps the chains and their wiring short.
+1. Playfield lights are single lights that stand for something in the game, such as a bumper or a score star. A component switches each of them. They share chains by location, which keeps the chains and their wiring short. A playfield light may take several LEDs in a row of its chain for more brightness. Each of those LEDs counts in the table above and in the [current ceiling](#current-ceiling).
 2. Ambient lights along the perimeter and in the ceiling act as strips. Effects run along a strip as a whole, so the game never needs to know which LED is which. Each strip forms a chain, since the three together hold 184 of the 244 LEDs.
 
 Chains A to C are the three ambient strips. Chain D covers the lower playfield, chain E the middle and chain F the upper playfield.

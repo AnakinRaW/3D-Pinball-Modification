@@ -102,6 +102,10 @@ private:
 - **A comment says why.** A register value names its datasheet section.
 - **A file's opening comment stands alone.** Its first sentence says what the code is and does, without pointing to a document. A reference to the design document may close the comment.
 
+## Bench
+
+- **A program that runs at the bench lights at most ten LEDs**, unless a larger number is asked for. It configures the lighting driver with only the LEDs it lights.
+
 ## Tools
 
 - **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `lib/` and the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
