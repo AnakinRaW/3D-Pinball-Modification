@@ -267,9 +267,10 @@ bool Lamps::begin() {
     return true;
 }
 
-// A count of a section's lamps takes that many LEDs of its chain for one lamp. A count past the
-// chain's end is cut there. The LEDs past the last count are one lamp each, and the counts past
-// the last LED go unused.
+// A count of a section's lamps takes that many LEDs of its chain for one lamp. A hidden LED
+// belongs to no lamp: a lamp starts at the next LED that is not hidden, and a gap or the chain's
+// end cuts a lamp short. The LEDs past the last count are one lamp each, and the counts past the
+// last LED go unused.
 uint16_t Lamps::walk(Span* out) const {
     uint16_t lamps = 0;
     for (uint8_t g = FIRST_SECTION; g < GROUPS; ++g) {
@@ -277,6 +278,10 @@ uint16_t Lamps::walk(Span* out) const {
         uint16_t next = 0;   // the next count of the section
         uint16_t led = 0;
         while (led < groupLeds[g]) {
+            if (hidden(g, led)) {
+                ++led;
+                continue;
+            }
             uint16_t leds = 1;
             if (next < section.lampCount) {
                 leds = section.lamps[next++];
@@ -285,11 +290,14 @@ uint16_t Lamps::walk(Span* out) const {
                     leds = 1;
                 }
             }
-            const uint16_t left = groupLeds[g] - led;
-            if (leds > left) {
-                DEBUG_LOG("Lamps: playfield lamp %u ends with its chain, at %u LEDs\n", lamps,
-                          left);
-                leds = left;
+            uint16_t run = 0;
+            while (run < leds && led + run < groupLeds[g] && !hidden(g, led + run)) {
+                ++run;
+            }
+            if (run < leds) {
+                DEBUG_LOG("Lamps: playfield lamp %u ends at a gap or its chain's end, at %u LEDs\n",
+                          lamps, run);
+                leds = run;
             }
             if (out != nullptr) {
                 out[lamps] = {groupChain[g], led, leds};
@@ -409,7 +417,7 @@ uint16_t Lamps::sideLamps(uint8_t group) const {
     return (visibleCount[group] + step() - 1) / step();
 }
 
-// Gets whether one of a strip group's gaps holds led.
+// Gets whether one of a group's gaps holds led.
 bool Lamps::hidden(uint8_t group, uint16_t led) const {
     const GroupSettings& g = settings.groups[group];
     for (uint16_t k = 0; k < g.gapCount; ++k) {

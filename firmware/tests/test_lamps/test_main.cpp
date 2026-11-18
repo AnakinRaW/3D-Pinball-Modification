@@ -13,6 +13,8 @@
 //   chains     a group lies on the chain the config names, and a chain two groups name goes to
 //              the first
 //   gaps       a strip's hidden LEDs stay dark, and a run steps over them at an even pace
+//   playfield-gaps  a playfield section's hidden LEDs stay dark and belong to no lamp, and a gap
+//              ends the lamp it meets
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -51,10 +53,10 @@ public:
 static Lighting lighting;
 static Lamps lamps(lighting);
 // spans: the playfield LEDs of TEST_LEDS cut into lamps. The lower section's 8 LEDs take 2, 1, 3
-// and the 2 left of the 4 asked for. The middle section's 2 take 1 for the 0 asked for and 1. The
-// upper section's 3 LEDs are one lamp each, with no counts.
+// and the 2 left of the 4 asked for. The middle section's 2 take 1 for the 0 asked for and 1, and
+// its third count finds no LED. The upper section's 3 LEDs are one lamp each, with no counts.
 const uint16_t SPAN_LOWER[] = {2, 1, 3, 4};
-const uint16_t SPAN_MIDDLE[] = {0, 1};
+const uint16_t SPAN_MIDDLE[] = {0, 1, 5};
 constexpr uint16_t SPAN_LAMPS = 9;
 static Lamps spanned(lighting);
 
@@ -77,6 +79,18 @@ constexpr uint16_t VISIBLE_COUNT = sizeof VISIBLE / sizeof VISIBLE[0];
 constexpr uint32_t GAP_LAMP_MS = 50;
 static Lighting gapLighting;
 static Lamps gapLamps(gapLighting);
+// playfield-gaps: the lower section on chain D, 10 LEDs with LED 2 and LEDs 5 and 6 hidden, cut
+// into lamps of 2, 1 and 2 LEDs. The third lamp meets the gap after one LED, and LEDs 7 to 9 are
+// one lamp each.
+constexpr uint8_t CHAIN_D = 3;
+constexpr uint16_t PF_GAP_LEDS = 10;
+const uint16_t PF_GAP_COUNTS[] = {2, 1, 2};
+const uint16_t PF_GAPS[] = {2, 1, 5, 2};
+constexpr uint16_t PF_GAP_LAMPS = 6;
+constexpr uint8_t DARK = 0xFF;   // an LED no lamp takes
+const uint8_t PF_LAMP_OF[PF_GAP_LEDS] = {0, 0, DARK, 1, 2, DARK, DARK, 3, 4, 5};
+static Lighting pfGapLighting;
+static Lamps pfGapLamps(pfGapLighting);
 static uint32_t startUs = 0;
 
 void setUp() {
@@ -486,6 +500,26 @@ static void testGaps() {
     TEST_ASSERT_EQUAL_UINT16((VISIBLE_COUNT + 1) / 2, g.perimeterRight.size());
 }
 
+// playfield-gaps: hidden LEDs of a playfield section belong to no lamp and stay dark, a lamp
+// starts after a gap, and a gap cuts the lamp it meets.
+static void testPlayfieldGaps() {
+    Layer mode = {0, 1};
+    LampGroups g = pfGapLamps.groups(mode);
+    TEST_ASSERT_EQUAL_UINT16(PF_GAP_LAMPS, g.playfield.size());
+    const Color colors[PF_GAP_LAMPS] = {Color::RED,   Color::GREEN, Color::BLUE,
+                                        Color::WHITE, Color::AMBER, Color::RED.dim(50)};
+    for (uint16_t i = 0; i < PF_GAP_LAMPS; ++i) {
+        g.playfield[i].set(colors[i]);
+    }
+    at(0);
+    TEST_ASSERT_TRUE(pfGapLamps.update(GPT2_CNT));
+    for (uint16_t led = 0; led < PF_GAP_LEDS; ++led) {
+        const CRGB wanted = PF_LAMP_OF[led] == DARK ? CRGB(0, 0, 0) : crgb(colors[PF_LAMP_OF[led]]);
+        expect(wanted, pfGapLighting.chain(CHAIN_D)[led],
+               "each LED shows its lamp, a hidden one dark");
+    }
+}
+
 int main() {
     Lamps::Settings layout;
     for (uint8_t c = 0; c < Lighting::CHAINS; ++c) {
@@ -510,9 +544,17 @@ int main() {
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).leds = GAP_LEDS;
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).gaps = GAPS;
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).gapCount = 2;
+    Lamps::Settings pfGapGroups;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).chain = CHAIN_D;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).leds = PF_GAP_LEDS;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).lamps = PF_GAP_COUNTS;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).lampCount = 3;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).gaps = PF_GAPS;
+    pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).gapCount = 2;
     // the layout and the spans place every group, the bench's groups two of them
     if (!start(lighting, lamps, layout) || !start(lighting, spanned, spans) ||
-        start(bench, benchLamps, benchGroups) || !start(gapLighting, gapLamps, gapGroups)) {
+        start(bench, benchLamps, benchGroups) || !start(gapLighting, gapLamps, gapGroups) ||
+        !start(pfGapLighting, pfGapLamps, pfGapGroups)) {
         return 1;
     }
     UNITY_BEGIN();
@@ -524,5 +566,6 @@ int main() {
     RUN_TEST(testSpans);
     RUN_TEST(testChains);
     RUN_TEST(testGaps);
+    RUN_TEST(testPlayfieldGaps);
     return UNITY_END();
 }

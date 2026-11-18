@@ -23,6 +23,8 @@ The [config](#config) places each group on a chain and gives it its LEDs. The pl
 
 A strip may run hidden for a stretch. Its hidden LEDs stay dark and are no lamps. A run counts only the strip's lamps, so it crosses a hidden stretch at an even pace, without a pause.
 
+A playfield section may hold hidden LEDs as well, such as LEDs left between two lights on an uncut strip. They stay dark and belong to no lamp. A lamp starts at the next LED that is not hidden, and a hidden LED inside its count ends it there.
+
 Each perimeter's chain starts at the playfield's lower end. The ceiling's chain starts at its left end. A path through several strips leaves one lamp spacing between them.
 
 The groups come in three types.
@@ -115,9 +117,11 @@ lamps:
 | `chain` | none | A to F |
 | `leds` | none | 0 to 160 LEDs |
 | `lamps` | none | playfield sections only: one count per lamp, each 1 to 160 LEDs |
-| `gaps` | none | strips only: the hidden stretches, each as its first LED and its count |
+| `gaps` | none | the hidden stretches, each as its first LED and its count |
 
 A group without a chain holds no lamps. A chain carries one group, so a later group that names a taken chain holds no lamps. The lighting driver takes each chain's LEDs from the groups.
+
+`begin()` writes a line to the [log](../logging.md) for each mistake it finds in the groups, and goes on. A group on a chain past F or on a taken chain holds no lamps. A lamp count of 0 takes 1 LED. A gap or the chain's end cuts a lamp short. A count past a section's last LED goes unused. Until the logger stands as code, a debug build prints these lines.
 
 On the playfield, every LED past a section's last count is one lamp. A count past the chain's end is cut there.
 

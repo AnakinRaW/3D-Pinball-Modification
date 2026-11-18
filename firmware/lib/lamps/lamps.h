@@ -310,7 +310,7 @@ public:
         uint16_t leds = 0;                 // the LEDs on that chain
         const uint16_t* lamps = nullptr;   // playfield only: each lamp's LEDs, read until begin()
         uint16_t lampCount = 0;            // how many counts lamps holds
-        const uint16_t* gaps = nullptr;    // strips only: hidden LEDs, first and count in pairs
+        const uint16_t* gaps = nullptr;    // hidden LEDs, first and count in pairs
         uint16_t gapCount = 0;             // how many pairs gaps holds
     };
     struct Settings {
@@ -342,6 +342,7 @@ public:
     void remove(Layer layer);
     // Gets how many effects a lamp or strip with five effects has refused.
     uint32_t refused() const { return refusedCount; }
+
     // Removes every effect from every lamp and strip and sets both brightnesses to 1. The host
     // calls it between two games.
     void clear();
