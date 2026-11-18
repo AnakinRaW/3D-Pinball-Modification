@@ -180,6 +180,13 @@ MODEL.flexio("FlexIO3", (19, 0), (18, 1), (14, 2), (15, 3), (40, 4), (41, 5), (1
              (22, 8), (23, 9), (20, 10), (21, 11), (38, 12), (39, 13), (26, 14), (27, 15),
              (8, 16), (7, 17), (36, 18), (37, 19), (35, 28), (34, 29), src=FLEXIO_RM)
 
+# FlexIO2 carries signals 0 to 15 on the pads of GPIO2_IO00 to 15 and 16 to 31 on those of
+# GPIO2_IO16 to 31, and the Teensy brings out the pins below
+FLEXIO2_RM = ("IMXRT1060RM Rev. 3, IOMUXC, FLEXIO2_FLEXIO00 to 31 on ALT4; the Teensy pin of "
+              f"each pad from {CORE}/core_pins.h")
+MODEL.flexio("FlexIO2", (10, 0), (12, 1), (11, 2), (13, 3), (6, 10), (9, 11), (32, 12), (8, 16),
+             (7, 17), (36, 18), (37, 19), (35, 28), (34, 29), src=FLEXIO2_RM)
+
 # the pins of A0 to A17, in order
 MODEL.analog(*range(14, 28), 38, 39, 40, 41, src=CARD_PINS)
 
