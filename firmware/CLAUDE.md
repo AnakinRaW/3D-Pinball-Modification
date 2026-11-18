@@ -60,7 +60,7 @@ All of the firmware's code stands in `src/`, in four folders that follow `docs/f
 | `components/` | the components between the drivers and the game |
 | `game/` | the game: modes and their layers |
 
-`lib/` holds only libraries the firmware takes from outside, such as PWMServoT4.
+Code taken from another project and changed here stands beside the code that uses it, as PWMServoT4 in `drivers/`. Libraries used unchanged come from PlatformIO's registry or Teensyduino, pinned in `platformio.ini`.
 
 - **The firmware's own headers are included in quotes, by their path from `src/`**, as `#include "drivers/lighting.h"`. A `.cpp` file includes its own header by name. A library's header and a system header stand in angle brackets.
 - **Every build reaches `src/` by its path.** The firmware builds it as its source. The computer tests build it with `test_build_src`, and `build_src_filter` in `[env:computer]` names the files that build without the Teensy, so a new file that does is added there. The test image and the bench programs take it as the library `firmware` through `firmware=symlink://${PROJECT_DIR}/../../src`. [`tools/firmware-src.py`](tools/firmware-src.py) gives that library every file but `main.cpp`, and a bench program names the files it needs in `custom_firmware_src`.
@@ -93,7 +93,7 @@ private:
 - Braces open on the line of the statement. `if`, `for` and `while` always take braces.
 - `public:` and `private:` stand at the class's indentation.
 - A comment stands on its own line above the code it explains, as full sentences. A comment at the end of a line is kept to a few words, as for a constant's source.
-- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/` and `lib/` against it with clang-format 18.
+- [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/`, `include/` and `tests/` against it with clang-format 18.
 
 ## Run time and memory
 
@@ -125,7 +125,7 @@ private:
 
 ## Tools
 
-- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `src/` where a project takes it as a library, to `lib/` and to the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
+- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `src/` where a project takes it as a library and to the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
 - **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in the `computer` environment and run in CI. PlatformIO builds that environment for the computer itself, with its platform `native`. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.

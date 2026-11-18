@@ -48,7 +48,6 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `firmware/gist/` — code notes, not firmware
 - `firmware/src/` — the firmware's code, in `core/`, `drivers/`, `components/` and `game/`, which the test image, the computer tests and the bench programs build from there. [`firmware/CLAUDE.md`](firmware/CLAUDE.md#layout) gives how
 - `firmware/include/` — the settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings
-- `firmware/lib/` — the libraries this repository holds besides the firmware, one folder each, such as PWMServoT4, which `platformio.ini` names in `lib_deps`
 - `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md): the computer tests in `test_<program>`, and every Teensy test in the one test image `teensy/`
 - `firmware/bench/` — the measurement programs the bench figures in the models come from
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`

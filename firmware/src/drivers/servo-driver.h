@@ -1,6 +1,6 @@
 // The servo driver moves the SER0049 in the drain between its start and end position at the
 // config's speed, one step per frame on the driver tick, with PWMServoT4 from
-// firmware/lib/pwm-servo-t4.
+// drivers/pwm-servo-t4.h.
 //
 // Driver and the driver tick come from drivers/driver-base.h. The main task hands the angles and
 // the speed from the config to configure() before begin().
@@ -9,7 +9,7 @@
 #pragma once
 #include <Arduino.h>
 #include "drivers/driver-base.h"
-#include <pwm-servo-t4.h>   // this repository's copy of PWMServo, firmware/lib/pwm-servo-t4
+#include "drivers/pwm-servo-t4.h"   // this repository's copy of PWMServo
 
 class ServoDriver : public Driver {
 public:

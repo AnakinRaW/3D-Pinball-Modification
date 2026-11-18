@@ -2,12 +2,12 @@
 # firmware's own code. The Teensy platform compiles everything with -Wall.
 #
 # A file of a library or of the Teensy core compiles with -w. A file of the firmware's own source,
-# headers, tests or libraries takes every include folder outside them as a system folder as well,
+# headers or tests takes every include folder outside them as a system folder as well,
 # because GCC stays silent about a system header. A header of a library then raises no warning in the
 # firmware's own files either.
 #
-# A file of the firmware's own libraries and tests also takes the flags build_src_flags gives the
-# source, so DEBUG and the warning flags reach it. PlatformIO itself hands them to the source only,
+# A file of the firmware's source taken as a library, and a file of the tests, also takes the flags
+# build_src_flags gives the source, so DEBUG and the warning flags reach it. PlatformIO itself hands them to the source only,
 # and DEBUG has to stay out of the other libraries: freertos-teensy names a constant DEBUG.
 #
 # A pre script, because the libraries take their build environment from the default one when the
@@ -17,13 +17,10 @@ from os.path import abspath, dirname, join, normcase
 
 Import("env")
 
-# the firmware's own source, headers and tests, and its libraries in firmware/lib, whose folder
-# only the project configuration holds, relative to the project. firmware/src stands beside this
-# script's folder, which the test image and the bench programs take as a library
+# the project's own source, headers and tests, and firmware/src beside this script's folder, which
+# the test image and the bench programs take as a library
 OWN_DIRS = [normcase(env.subst(d))
             for d in ("$PROJECT_SRC_DIR", "$PROJECT_INCLUDE_DIR", "$PROJECT_TEST_DIR")]
-OWN_DIRS.append(normcase(abspath(join(env.subst("$PROJECT_DIR"),
-                                      env.GetProjectConfig().get("platformio", "lib_dir")))))
 OWN_DIRS.append(normcase(abspath(join(dirname(getframeinfo(currentframe()).filename),
                                       "..", "src"))))
 SRC_DIR = normcase(env.subst("$PROJECT_SRC_DIR"))
