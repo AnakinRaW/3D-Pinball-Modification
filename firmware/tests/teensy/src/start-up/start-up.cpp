@@ -1,5 +1,5 @@
-// The start-up program of docs/firmware/testing.md. It tests on the Teensy whether the start-up
-// leaves the firmware in the state the main program expects.
+// Tests on the Teensy whether the start-up leaves the firmware in the state the main program
+// expects.
 //
 //   heap  a block from malloc() before main() and one in the main task both lie in RAM2, apart
 //

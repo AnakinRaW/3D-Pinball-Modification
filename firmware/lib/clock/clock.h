@@ -1,7 +1,9 @@
-// The firmware's time measurement of docs/firmware/general-design.md. GPT2 counts microseconds
-// from the board's crystal, and nowUs() reads it. Every time in the firmware comes from nowUs(),
+// The firmware's time measurement. GPT2 counts microseconds from the board's crystal, and nowUs()
+// reads it. Every time in the firmware comes from nowUs(),
 // every span goes through elapsedUs() or elapsedMs(), and every comparison of two times through
 // before(). nowUs() wraps every 71.6 minutes, and all three keep their answers across the wrap.
+//
+// Design: docs/firmware/general-design.md, Time measurement.
 #pragma once
 #include <Arduino.h>
 

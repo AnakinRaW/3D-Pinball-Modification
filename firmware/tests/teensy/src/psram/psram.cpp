@@ -1,5 +1,5 @@
-// The psram program of docs/firmware/testing.md. It tests on the Teensy whether the PSRAM on the
-// Teensy's underside is found and keeps every byte written to it.
+// Tests on the Teensy whether the PSRAM on the Teensy's underside is found and keeps every byte
+// written to it.
 //
 //   found     Teensyduino found a chip of the size the PSRAM design names
 //   patterns  fixed patterns and pseudo-random sequences written over the whole PSRAM read back
