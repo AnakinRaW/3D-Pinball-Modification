@@ -169,10 +169,13 @@ bool clockAt120() {
         DEBUG_LOG("Ws2812Flexio2::begin: FlexIO3 runs on the shared clock root at another rate\n");
         return false;
     }
+    // RM CCM: the gate stays off while the root changes, and comes back on for a FlexIO2 that
+    // runs already
     CCM_CCGR3 &= ~CCM_CCGR3_FLEXIO2(CCM_CCGR_ON);
     CCM_CSCMR2 = (CCM_CSCMR2 & ~CLK_SEL_MASK) | CLK_SEL;
     CCM_CS1CDR = (CCM_CS1CDR & ~CLK_DIV_MASK) | CLK_DIV;
     (void)CCM_CS1CDR;
+    CCM_CCGR3 |= CCM_CCGR3_FLEXIO2(CCM_CCGR_ON);
     return rootAt120();
 }
 

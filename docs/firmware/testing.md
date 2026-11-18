@@ -241,7 +241,7 @@ The program `ws2812-flexio2` checks the [FlexIO2 output](drivers/lighting.md#how
 | `long` | Teensy | Send one frame of the longest chain the lighting allows on chain F, where no LED is wired, and check each bit as it comes back | Every bit of the frame comes back as sent, each high within the reading's tolerance, and the line is low after the frame |
 | `load` | Teensy | Do the same frame after frame, at the lamps' frame period, while a second DMA channel copies between two buffers in RAM2 without a pause. A soak run sends ten times as many frames | Every frame comes back whole |
 | `latch` | Teensy | Send a short frame on chain F and the next one the moment the output is free again | The line stays low between the two frames for longer than the reset time that ends a frame for the LEDs |
-| `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts |
+| `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts, and a frame goes out afterwards |
 
 ### Lighting
 

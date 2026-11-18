@@ -573,7 +573,8 @@ static void testLatch() {
 }
 
 // clock: the shared root moved to 60 MHz. With FlexIO3 enabled, begin() refuses and leaves the
-// root alone. With FlexIO3 off, begin() sets the root back to 120 MHz and starts. The registers
+// root alone. With FlexIO3 off, begin() sets the root back to 120 MHz and starts, and a frame
+// still goes out afterwards. The registers
 // stand as they did before the test at its end. PJRC's start-up has FlexIO3's clock gate on.
 static void testClock() {
     const uint32_t flexio3 = FLEXIO3_CTRL;
@@ -589,11 +590,18 @@ static void testClock() {
     const bool set = (CCM_CS1CDR & PODF_MASK) == PODF_120;
     CCM_CS1CDR = divider;
     FLEXIO3_CTRL = flexio3;
-    if (!refused || !left || !started || !set) {
-        char seen[80];
-        snprintf(seen, sizeof seen, "refused %d, root left %d, then started %d, root set %d",
-                 refused, left, started, set);
-        test::fail(seen, "refused 1, root left 1, then started 1, root set 1");
+    // FlexIO2 still answers after the change: a dark frame goes out
+    const uint8_t dark[COLORS] = {};
+    const uint8_t* rgb[1] = {dark};
+    const bool sent = slowAlone.send(rgb, FULL);
+    delay(SETTLE_MS);
+    const bool done = !slowAlone.busy();
+    if (!refused || !left || !started || !set || !sent || !done) {
+        char seen[96];
+        snprintf(seen, sizeof seen,
+                 "refused %d, root left %d, then started %d, root set %d, sent %d, done %d",
+                 refused, left, started, set, sent, done);
+        test::fail(seen, "every one 1");
         return;
     }
     test::pass();
