@@ -105,7 +105,7 @@ The two `elapsed` functions read the noted time before the current one, so an in
 
 ## Priority lists
 
-A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. [`firmware/gist/priority-list.h`](../../firmware/gist/priority-list.h) holds it as `PriorityList`.
+A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. The library [`firmware/lib/priority-list/`](../../firmware/lib/priority-list/) holds it as `PriorityList`.
 
 Four parts of the firmware order their entries with a priority list. The [lamps component](components/lamps.md#overlapping-effects) orders the effects on each lamp, so the lamp shows the effect on top. The [screen](components/screen.md#slides) orders the game's slides, so the slide on top shows. The [sounds](components/sounds.md#music) order the game's tracks of music, so the track on top plays. A game's [mode stack](game-abstraction.md#modes) orders the running modes, so the mode on top sees an event first.
 

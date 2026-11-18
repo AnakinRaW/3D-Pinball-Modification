@@ -103,6 +103,16 @@ The program `clock` checks the [time measurement](general-design.md#time-measure
 | `wrap` | computer | Compare times on both sides of the wrap of `nowUs()` with `before()`, `elapsedUs()` and `elapsedMs()` | Every answer equals the one the same span gives away from the wrap |
 | `rate` | Teensy | Read `nowUs()` and the processor's cycle counter side by side for a minute | The two agree to within the time the reads take |
 
+### Priority list
+
+The program `priority-list` checks the [priority list](general-design.md#priority-lists).
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `order` | computer | Put entries of three priorities into a list, two of them at equal priority | The list holds them highest first, the later of the two equal ones above the earlier |
+| `full` | computer | Put one entry more into a list than it has room for | `insert()` refuses the extra entry, and the list keeps the others in their order |
+| `remove` | computer | Remove the top entry and one from the middle, then put two new ones in, while holding pointers to the entries that stay | The others keep their order, and each pointer still reaches its entry |
+
 ### Event queue
 
 The program `event-queue` checks the [event queue](input-handling.md).

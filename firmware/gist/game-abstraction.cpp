@@ -1,4 +1,4 @@
-#include "priority-list.h"
+#include "../lib/priority-list/priority-list.h"
 
 // the events a game gets: those the components make, and those of the services
 enum class EventType : uint16_t {
