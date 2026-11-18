@@ -3,7 +3,7 @@ public:
     // attaches the queue, sets the pin as an input with the Teensy's pull-up and puts both
     // edges on the pin interrupt; always true
     bool begin() override {
-        out_  = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         self_ = this;
         pinMode(kPin, INPUT_PULLUP);
         reported_ = position();
@@ -17,7 +17,7 @@ public:
     }
 
 private:
-    static constexpr uint8_t  kPin     = 32;     // pin-assignment.md: Toggle switch
+    static constexpr uint8_t  kPin     = 5;      // pin-assignment.md: Toggle switch
     static constexpr uint8_t  kClosed  = 1;      // the position that closes the contact
     static constexpr uint32_t kQuietUs = 50000;  // edges this soon after a report are bounce
 

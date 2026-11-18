@@ -1,4 +1,4 @@
-#include "priority-list.h"
+#include "../lib/priority-list/priority-list.h"
 
 // the events a game gets: those the components make, and those of the services
 enum class EventType : uint16_t {
@@ -203,10 +203,10 @@ void GameHost::begin(Machine& machine, bool touch) {
 }
 
 void GameHost::dispatch(const DriverEvent& e) {
-    if (e.type == DriverEventType::DeviceFailed)    { failed_.set(faultDevice(e.source), faultPart(e.source), e.payload); return; }     // the list the menu shows; no game sees it
-    if (e.type == DriverEventType::DeviceRecovered) {
+    if (e.type == DriverEventType::DEVICE_FAILED)    { failed_.set(faultDevice(e.source), faultPart(e.source), e.payload); return; }     // the list the menu shows; no game sees it
+    if (e.type == DriverEventType::DEVICE_RECOVERED) {
         failed_.clear(faultDevice(e.source), faultPart(e.source));
-        if (faultDevice(e.source) == Device::Touch) machine_->screen.restart();   // the module's supervisor reset the panel with the touch controller
+        if (faultDevice(e.source) == Device::TOUCH) machine_->screen.restart();   // the module's supervisor reset the panel with the touch controller
         return;
     }
     PinballEvents t;
@@ -379,7 +379,7 @@ private:
         uint8_t priority() const override { return 2; }
         void start(Machine& m) override {
             m_ = &m; started_ = false; over_ = false; waiting_ = false;
-            m.drain.lamp(*this).set(Color::green);                                // lit while the save holds
+            m.drain.lamp(*this).set(Color::GREEN);                                // lit while the save holds
         }
         bool event(const PinballEvent& e) override {
             if (e.type == EventType::Drained) { waiting_ = true; return true; }   // the base mode never sees this ball

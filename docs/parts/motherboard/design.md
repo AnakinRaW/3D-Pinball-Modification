@@ -38,7 +38,7 @@ The GND rail joins the Teensy's three GND pins, the DFR0954's GND and the incomi
 
 ### Toggle switch
 
-R1 sits on the motherboard in series between pin [32](../../pin-assignment.md "Toggle switch") and the toggle switch. The [controls design](../controls/design.md) sets its value.
+R1 sits on the motherboard in series between pin [5](../../pin-assignment.md "Toggle switch") and the toggle switch. The [controls design](../controls/design.md) sets its value.
 
 ### Break beam
 

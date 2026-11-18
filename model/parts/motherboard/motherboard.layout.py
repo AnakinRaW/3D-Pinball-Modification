@@ -2,15 +2,18 @@
 
     python tools/perfboard/build.py model/parts/motherboard/motherboard.layout.py
 
-The Teensy lies across the middle with its USB end toward the left edge. Every line of its top
-row runs up to a header on the top edge and every line of its bottom row straight down to one on
-the bottom edge, the headers of the top edge one free column apart. The IR isolator board's
-header takes lines from both rows and sits in pieces, one piece per row. The coil board's trigger
-3 and the display's D/C, CS, D7 and D6 leave the bottom row and reach their headers on the top
-edge in insulated wires around the Teensy's right end, the display's four on the top side, so
-they never pass between the Teensy and its sockets. The lines that have to leave at an end run
-under the Teensy between its rows of pins: to the left the bus to the port expander board and the
-servo's signal, to the right ground and 3.3 V for the sense board and the break beam.
+The Teensy lies across the middle with its USB end toward the left edge. Every line of its top row
+runs up to a header on the top edge and every line of its bottom row straight down to one on the
+bottom edge, the headers of the top edge one free column apart. Chain A and the toggle switch leave
+the bottom row each at the other's end, so each crosses over in an insulated wire: chain A from the
+right end along row Z to the ambient header, the switch from among the chains along row R to its
+resistor and header at the right end. The IR isolator board's header takes lines from both rows and
+sits in pieces, one piece per row. The coil board's trigger 3 and the display's D/C, CS, D7 and D6
+leave the bottom row and reach their headers on the top edge in insulated wires around the Teensy's
+right end, the display's four on the top side, so they never pass between the Teensy and its
+sockets. The lines that have to leave at an end run under the Teensy between its rows of pins: to
+the left the bus to the port expander board and the servo's signal, to the right ground and 3.3 V
+for the sense board and the break beam.
 """
 from layout import Layout
 
@@ -158,8 +161,14 @@ L.part("J-MB-AMBIENT", "header_male", ["AD20", "AD21", "AD22"], title="J-MB-AMBI
        sub="chains A to C")
 L.part("J-MB-PLAYFIELD", "header_male", ["AD23", "AD24", "AD25"], title="J-MB-PLAYFIELD",
        sub="chains D to F")
-for c in range(20, 26):
+for c in range(21, 26):
     L.bare(f"P{c}", f"AD{c}")
+# chain A leaves the bottom row at the Teensy's right end, runs straight down column 37 under R3
+# and crosses in an insulated wire left along row Z and down column 20 to the ambient header
+L.bare("P37", "Y37")
+L.tin("Y37", "Z37")
+L.wire("Z37", "AC20", via=["Z20"])
+L.tin("AC20", "AD20")
 # the IR isolator board's second housing: MOSI, MISO and 3V3, one row in from the edge
 L.piece("J-IR-TEENSY", "b", "header_male", ["X26", "X27", "X28"], pins=[2, 6, 7],
         title="J-IR-TEENSY", sub="second housing")
@@ -197,9 +206,13 @@ L.part("J-MB-RECEIVER", "header_male", ["AD36", "AD37"], title="J-MB-RECEIVER",
        sub="the receiver")
 L.bare("P36", "AD36")
 L.part("R3", "resistor", ["U36", "U42"])
-L.bare("P37", "W37")
-L.part("R1", "resistor", ["W37", "W41"])
-L.bare("W41", "AD41")
+# the toggle switch leaves the bottom row among the chains in an insulated wire along row R,
+# across chain A's column, and down column 41 to R1, which lies in that column above the header
+L.tin("P20", "Q20")
+L.wire("Q20", "W41", via=["R20", "R41"])
+L.tin("W41", "X41")
+L.part("R1", "resistor", ["X41", "AB41"])
+L.bare("AB41", "AD41")
 L.piece("J-MB-SWITCH", "a", "header_male", ["AD40", "AD41"], pins=[2, 1],
         title="J-MB-SWITCH", sub="the toggle switch")
 L.bare("AD37", "AD40")

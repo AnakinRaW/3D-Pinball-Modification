@@ -12,7 +12,7 @@ public:
     // the AS5600 at RAW ANGLE, attaches its read to the driver tick and registers with
     // the device monitor; false when the AS5600 does not answer or either of the two is full
     bool begin() override {
-        out_ = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         io::wireBus.attach(setup_);
         io::wireBus.attach(read_);
 
@@ -38,7 +38,7 @@ public:
         lastGood_         = nowUs();                         // the first working read
 
         if (!driverTick.attach([this] { io::wireBus.request(read_); }, DriverTick::kPeriodUs)) return false;   // a read every 5 ms from here on
-        return deviceMonitor.watch(Device::RotarySensor, *this);
+        return deviceMonitor.watch(Device::ROTARY_SENSOR, *this);
     }
 
     // steps since begin(), 4096 to a turn

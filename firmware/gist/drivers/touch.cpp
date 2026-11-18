@@ -44,7 +44,7 @@ private:
 };
 
 bool Touch::begin() {
-    touchOut_ = &events.attach(touchQueue_, kQueueDepth);        // the touch events, which the reads publish
+    events.attach(touchQueue_, kQueueDepth, touchOut_);        // the touch events, which the reads publish
     io::wire2Bus.attach(probe_);
     io::wire2Bus.attach(touch_);
     while (nowUs() < kTouchReadyMs * 1000) {}
@@ -52,7 +52,7 @@ bool Touch::begin() {
     lastGood_ = nowUs();
 
     if (!driverTick.attach([this] { if (present_) io::wire2Bus.request(touch_); }, kTickUs)) return false;
-    return deviceMonitor.watch(Device::Touch, *this);
+    return deviceMonitor.watch(Device::TOUCH, *this);
 }
 
 void Touch::done(uint32_t errors) {

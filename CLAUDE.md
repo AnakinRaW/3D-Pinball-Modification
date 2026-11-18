@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. The core libraries in `firmware/lib/` are the clock, the driver tick in `driver-base`, the event queue and the device monitor. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 
@@ -34,7 +34,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | PlatformIO, uploading through PJRC's Teensy Loader (`upload_protocol = teensy-gui`; `teensy-cli` fails to write on this machine). Its own linker script, [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld), keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
 | Teensy core | Always the newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
-| LED library | FastLED 3.10.6 or newer from PlatformIO's registry. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
+| LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/lib/ws2812-flexio2`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus | Chosen |
 | UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
 | RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
@@ -95,6 +95,8 @@ The firmware builds with PlatformIO, installed with `python -m pip install platf
 | `python firmware/tools/teensy-tests.py` | Runs every `Teensy` test of [`docs/firmware/testing.md`](docs/firmware/testing.md) on the test image in `firmware/tests/teensy`, quick, and exits with 1 on a failure, a hang or a crash. `--upload` builds and flashes the image first, a pattern such as `"servo.*"` picks tests, `--soak` takes the durations testing.md states and `--bench` adds the bench tests for a person at the bench. The image takes its tests from `src/<program>`, one folder per section, and `src/main.cpp` lists the programs. A test reports through `test-harness.h`. The Results section of testing.md holds the lines and commands between the runner and the image |
 
 The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache finds an object file by its command line, its source and its place in the build folder, so it serves only the project that compiled the file. Worktrees share each project's build folder. A build after another worktree's build therefore takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's own code `-Wall -Wextra -Werror` and every library `-w`.
+
+FastLED 3.10.9 does not build for PlatformIO's `native` platform. The MP3 decoder it bundles, `src/third_party/minimp3/minimp3.h`, uses `uint64_t` without including `<stdint.h>`, and the computer's gcc rejects that. The `computer` tests therefore take FastLED's colors, palettes and curves from `firmware/tests/fakes/FastLED.h` and the lighting driver from `firmware/tests/fakes/lighting.h`, and the `computer` environment keeps the real lighting library out with `lib_ignore`.
 
 ## Conventions
 

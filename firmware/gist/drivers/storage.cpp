@@ -276,8 +276,8 @@ static bool mayCall() {
 // mount finds, so after a failure there every request ends at once. Without a place in the device
 // monitor no task starts, and every request fails at once
 bool Storage::begin() {
-    if (!deviceMonitor.watch(Device::SdCard, *this)) return false;   // before the mount, so a missing card is reported too
-    out_ = &events.attach(queue_, kQueueDepth);
+    if (!deviceMonitor.watch(Device::SD_CARD, *this)) return false;   // before the mount, so a missing card is reported too
+    events.attach(queue_, kQueueDepth, out_);
     self_  = this;
     owner_ = xTaskGetCurrentTaskHandle();          // the main task, which the storage task tells of the mount
     xTaskCreateStatic([](void*) { self_->run(); }, "storage", kStack / sizeof(StackType_t), nullptr,

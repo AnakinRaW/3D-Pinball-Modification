@@ -215,7 +215,7 @@ with MODEL.block("Used inputs", section=BUFFERS):
     LED = "WS2812B datasheet, older revision, data transfer time; the strip's own sheet is an open point"
     ds("t0h", 0.4, "µs", src=f"{LED}: T0H, the high of a 0", group=BUFFERS, stated=False)
     ds("t1h", 0.8, "µs", src=f"{LED}: T1H, the high of a 1", group=BUFFERS, stated=False)
-    ds("t_bit_tol", 150, "ns", src=f"{LED}: the tolerance on T0H and T1H", group=BUFFERS,
+    ds("t_bit_tol", 150, "ns", src=f"{LED}: the tolerance on T0H, T1H, T0L and T1L", group=BUFFERS,
        stated=False)
     asm("edge_low", 10, "%", stated=False, src="the lower mark TI's logic sheets time an edge "
         "from; SCHS415A draws its marks in a figure the text search cannot read")
@@ -363,34 +363,13 @@ fig("pm_blue", "mW", "ceil_to(i_blue * v_rail, 'mW', mw_grain.to('mW'))", "up",
 fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
     moves="+i_strip_dark +v_rail", stated=False)
 
-# FastLED's limiter sums more than the LEDs' own draw. Besides every LED's color and dark draw
-# from the power model, it charges the processor and a reserve of a few codes on every lit channel
-# for dithering, all at the cap's voltage. power_mgt.cpp.hpp of FastLED 3.10.9.
-FASTLED_POWER = "power_mgt.cpp.hpp in FastLED 3.10.9"
-ds("p_fastled_mcu", 125, "mW", src=f"{FASTLED_POWER}: gMCU_mW, the 25 mA at 5 V its limiter "
-   "charges for the processor in every frame", stated=False)
-ds("n_dither_codes", 2, "", src=f"{FASTLED_POWER}: kDitherReserveCodes, the codes its limiter "
-   "reserves on every lit channel for dithering", stated=False)
-ds("power_codes", 256, "", src=f"{FASTLED_POWER}: the >> 8 that turns a channel's value times its "
-   "mW into mW", stated=False)
+# The driver holds the lighting under the cap with FastLED's calculate_max_brightness_for_power_mW(),
+# which charges every LED's dark draw at any brightness and scales the colors' draw by the
+# brightness, power_mgt.cpp.hpp in FastLED 3.10.9.
 fig("pm_white", "mW", "pm_red + pm_green + pm_blue", "up",
     moves="+i_bench_red +i_bench_green +i_bench_blue -i_bench_dark +v_rail", stated=False)
-
-
-# What FastLED charges for a layout whatever its brightness: the processor, every LED's dark draw
-# and the dithering reserve on each lit LED's three channels.
-def _fastled_fixed(p_mcu, n_leds, pm_dark, n_codes, n_lit, pm_white, codes):
-    return p_mcu + n_leds.raw * pm_dark + n_codes.raw * n_lit.raw * pm_white / codes.raw
-
-
-fig("p_fixed_3a", "mW", lambda p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield,
-    n_ambient_lit_3a, pm_white, power_codes: _fastled_fixed(
-        p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield + n_ambient_lit_3a, pm_white,
-        power_codes), "up", stated=False)
-fig("p_fixed_6a", "mW", lambda p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield,
-    n_ambient, pm_white, power_codes: _fastled_fixed(
-        p_fastled_mcu, n_leds, pm_dark, n_dither_codes, n_playfield + n_ambient, pm_white,
-        power_codes), "up", stated=False)
+fig("p_fixed", "mW", "n_leds.raw * pm_dark", "up", moves="+n_leds +i_strip_dark +v_rail",
+    stated=False)
 
 
 # The ambient lights take what is left of the cap in FastLED's sum once the fixed part and the
@@ -401,21 +380,21 @@ def _ambient_max(cap_mw, fixed, n_playfield, pm_white, frac_playfield, n_lit, sc
     return Q.of(min(floor(left.raw * scale_steps.raw) - 1, ceiling.raw), "")
 
 
-fig("ambient_max_3a", "", lambda i_budget, v_rail, p_fixed_3a, n_playfield, pm_white,
+fig("ambient_max_3a", "", lambda i_budget, v_rail, p_fixed, n_playfield, pm_white,
     frac_playfield, n_ambient_lit_3a, scale_steps, ambient_ceiling: _ambient_max(
-        i_budget * v_rail, p_fixed_3a, n_playfield, pm_white, frac_playfield, n_ambient_lit_3a,
+        i_budget * v_rail, p_fixed, n_playfield, pm_white, frac_playfield, n_ambient_lit_3a,
         scale_steps, ambient_ceiling), "down",
     group="Ambient lights, brightness at most", section=CEILING)
-fig("ambient_max_6a", "", lambda i_budget_6a, v_rail, p_fixed_6a, n_playfield, pm_white,
+fig("ambient_max_6a", "", lambda i_budget_6a, v_rail, p_fixed, n_playfield, pm_white,
     frac_playfield, n_ambient, scale_steps, ambient_ceiling: _ambient_max(
-        i_budget_6a * v_rail, p_fixed_6a, n_playfield, pm_white, frac_playfield, n_ambient,
+        i_budget_6a * v_rail, p_fixed, n_playfield, pm_white, frac_playfield, n_ambient,
         scale_steps, ambient_ceiling), "down",
     group="Ambient lights, brightness at most", section=CEILING)
 
 # FastLED's sum for the whole layout at full white with each profile
-fig("p_white_3a", "mW", "p_fixed_3a + pm_white * (n_playfield.raw * frac_playfield.raw + "
+fig("p_white_3a", "mW", "p_fixed + pm_white * (n_playfield.raw * frac_playfield.raw + "
     "n_ambient_lit_3a.raw * (ambient_max_3a.raw + 1) / scale_steps.raw)", "up", stated=False)
-fig("p_white_6a", "mW", "p_fixed_6a + pm_white * (n_playfield.raw * frac_playfield.raw + "
+fig("p_white_6a", "mW", "p_fixed + pm_white * (n_playfield.raw * frac_playfield.raw + "
     "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
 
 # what the whole layout draws at full white with each profile
@@ -425,25 +404,73 @@ fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield
     "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
 
 # -- the frame ----------------------------------------------------------------
-OBJECTFLED = "ObjectFLED.h in FastLED"
+DRIVER = "firmware/lib/ws2812-color-encoder/ws2812-color-encoder.h"
 MODEL.uses("n_chain_max", of="firmware")
+MODEL.uses("f_flexio_max", of="display")
 ds("n_bits_led", 24, "", src="WS2812B datasheet, older revision: composition of 24 bit data, "
    "8 bits each of green, red and blue")
 ds("n_bits_color", 8, "", src="WS2812B datasheet, older revision: composition of 24 bit data, G7 "
    "to G0, R7 to R0 and B7 to B0; the lamps component's Color holds them as they are")
 MODEL.aside("30 %", "an example of the brightness Color::dim() takes, in lamps.md")
-ds("t_bit", 1.25, "µs", src=f"{OBJECTFLED}: TH_TL, the period of one bit, 1250 ns by default; the "
-   "WS2812B datasheet's TH+TL")
-ds("t_latch", 300, "µs", src=f"{OBJECTFLED}: LATCH_DELAY, how long it holds the outputs low after "
-   "a frame, 300 µs by default")
+# The lighting driver builds each LED bit from steps of FlexIO2's shift clock: its 120 MHz root
+# divided by 2 * 6 in the timer's baud mode, BAUD_DIV in firmware/lib/ws2812-flexio2.
+dec("t_symbol", 100, "ns", src=f"{DRIVER}: SYMBOL_NS, one step of the shift clock")
+dec("n_symbol_bits", 13, "", src=f"{DRIVER}: SYMBOL_BITS, the steps of one LED bit")
+dec("n_zero_highs", 3, "", src=f"{DRIVER}: ZERO_HIGHS, the high steps of a 0")
+dec("n_one_highs", 7, "", src=f"{DRIVER}: ONE_HIGHS, the high steps of a 1")
+dec("n_symbols_word", 2, "", src=f"{DRIVER}: SYMBOLS_PER_WORD, the LED bits in one 32-bit word "
+    "of a shifter")
+fig("t_bit", "µs", "n_symbol_bits * t_symbol", moves="+n_symbol_bits +t_symbol", stated=False)
+fig("t0h_out", "ns", "n_zero_highs * t_symbol", moves="+n_zero_highs +t_symbol", stated=False)
+fig("t1h_out", "ns", "n_one_highs * t_symbol", moves="+n_one_highs +t_symbol", stated=False)
+fig("t0l_out", "ns", "t_bit - t0h_out", moves="+n_symbol_bits -n_zero_highs +t_symbol",
+    stated=False)
+fig("t1l_out", "ns", "t_bit - t1h_out", moves="+n_symbol_bits -n_one_highs +t_symbol",
+    stated=False)
+fig("t_word", "µs", "n_symbols_word * t_bit", moves="+n_symbols_word +n_symbol_bits +t_symbol",
+    stated=False)
+# what the WS2812B datasheet of the older revision gives beside T0H and T1H
+ds("t0l", 0.85, "µs", src=f"{LED}: T0L, the low of a 0", stated=False)
+ds("t1l", 0.45, "µs", src=f"{LED}: T1L, the low of a 1", stated=False)
+ds("t_period", 1.25, "µs", src=f"{LED}: TH+TL, the period of one bit", stated=False)
+ds("t_period_tol", 600, "ns", src=f"{LED}: the tolerance on TH+TL", stated=False)
+# what the WS2812B-2020 datasheet gives. The chips on both strips are unknown, so the bits keep
+# inside the narrowest windows of the WS2812B datasheets at hand, and this one sets T0H's.
+ds("t0h_v6_min", 220, "ns", sheet=V6, src="Data Transfer Time: T0H, 220ns~380ns", stated=False)
+ds("t0h_v6_max", 380, "ns", sheet=V6, src="Data Transfer Time: T0H, 220ns~380ns", stated=False)
+ds("t_v6_min", 580, "ns", sheet=V6, src="Data Transfer Time: T1H, T0L and T1L, each 580ns~1µs",
+   stated=False)
+ds("t_v6_max", 1, "µs", sheet=V6, src="Data Transfer Time: T1H, T0L and T1L, each 580ns~1µs",
+   stated=False)
+ds("t_period_v6", 1.25, "µs", sheet=V6, src="Data Transfer Time: T0H+T0L and T1H+T1L, each at "
+   "least 1.25µs", stated=False)
+# After the longest chain the driver sends zero words, which hold every line low. When the next
+# frame starts, it cuts off the words a shifter still holds: the one in its buffer and the one it
+# shifts out, RM FlexIO. The rest has to outlast RES.
+dec("n_latch_words", 110, "", src="LATCH_WORDS in firmware/lib/ws2812-flexio2: RES over "
+    "one word, rounded down, plus one, plus the queued words")
+dec("n_words_queued", 2, "", src="WORDS_QUEUED in firmware/lib/ws2812-flexio2: the words "
+    "a shifter still holds when the DMA has written its last word, RM FlexIO")
+fig("t_latch", "µs", "(n_latch_words - n_words_queued) * t_word",
+    moves="+n_latch_words -n_words_queued +n_symbols_word +n_symbol_bits +t_symbol",
+    stated=False)
+fig("t_latch_out", "µs", "n_latch_words * t_word",
+    moves="+n_latch_words +n_symbols_word +n_symbol_bits +t_symbol", stated=False)
 ds("t_reset", 280, "µs", src="WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, "
    "more than 280 µs; the older revision asks for more than 50 µs, and the strip's own sheet gives "
    "none")
 dec("t_frame", 10, "ms", src="the lamps component's frame period, "
-    "docs/firmware/components/lamps.md; 100 frames a second, the gist's kFrameUs")
+    "docs/firmware/components/lamps.md; 100 frames a second, Lamps::FRAME_US in firmware/lib/lamps")
 fig("t_chain_out", "ms", "n_chain_max * n_bits_led * t_bit",
     moves="+n_chain_max +n_bits_led +t_bit", stated=False)
-fig("t_frame_out", "ms", "t_chain_out + t_latch", moves="+t_chain_out +t_latch", stated=False)
+fig("t_frame_out", "ms", "t_chain_out + t_latch_out", moves="+t_chain_out +t_latch_out",
+    stated=False)
+# the most LEDs a chain could hold so that its frame and the zero words after it have gone out
+# before the next frame
+fig("n_chain_frame_limit", "", "(t_frame - t_latch_out) / (n_bits_led * t_bit)", "down",
+    moves="+t_frame -t_latch_out -n_bits_led -t_bit", stated=False)
+dec("n_chain_limit", 160, "", src="one meter of the 160 LEDs/m strip, a decision; the bound of "
+    "the config's lighting.leds and Lighting::MAX_CHAIN_LEDS in firmware/lib/lighting")
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
@@ -499,10 +526,22 @@ _I("the strip draws less per color than the usual budget", "i_red < i_color_usua
    "i_green < i_color_usual and i_blue < i_color_usual")
 _I("green at half its value draws less than at full and more than nothing",
    "Q.of(0, 'mA') < i_green_half < i_green")
-_I("ObjectFLED holds the lines low long enough for the LEDs to take over a frame",
-   "t_latch > t_reset")
+_I("the zero words hold the lines low long enough for the LEDs to take over a frame, even when "
+   "the next frame cuts off the queued words", "t_latch > t_reset")
+_I("a 0's high lies inside T0H of both datasheets",
+   "t0h - t_bit_tol <= t0h_out <= t0h + t_bit_tol and t0h_v6_min <= t0h_out <= t0h_v6_max")
+_I("a 1's high lies inside T1H of both datasheets",
+   "t1h - t_bit_tol <= t1h_out <= t1h + t_bit_tol and t_v6_min <= t1h_out <= t_v6_max")
+_I("a 0's low lies inside T0L of both datasheets",
+   "t0l - t_bit_tol <= t0l_out <= t0l + t_bit_tol and t_v6_min <= t0l_out <= t_v6_max")
+_I("a 1's low lies inside T1L of both datasheets",
+   "t1l - t_bit_tol <= t1l_out <= t1l + t_bit_tol and t_v6_min <= t1l_out <= t_v6_max")
+_I("a bit lasts as long as both datasheets ask",
+   "t_period - t_period_tol <= t_bit <= t_period + t_period_tol and t_bit >= t_period_v6")
 _I("a frame has gone out before the next one is handed on, so show() never waits",
    "t_frame_out < t_frame")
+_I("a chain at the config's bound goes out within the frame period as well",
+   "n_chain_limit <= n_chain_frame_limit")
 
 # -- wiring -------------------------------------------------------------------
 # the two boards, whose chain nets enter the wiring: each chain's pin feeds one buffer input
@@ -510,5 +549,5 @@ _I("a frame has gone out before the next one is handed on, so show() never waits
 # pin's current but never raises the pin
 MODEL.schematic("schematic.py")
 
-MODEL.owns("QuadTimer4", "FastLED's ObjectFLED driver owns channels 0 to 2 of QuadTimer4, "
-                         "ObjectFLED.h in FastLED")
+MODEL.owns("FlexIO2", "the lighting driver programs FlexIO2's six shifters and its timer 0, "
+                      "through firmware/lib/ws2812-flexio2")

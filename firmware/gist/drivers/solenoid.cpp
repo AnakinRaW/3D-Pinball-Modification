@@ -4,14 +4,14 @@ public:
     // device monitor; false when the driver tick or the device monitor is full, and the
     // driver then never energises a coil
     bool begin() override {
-        out_  = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         self_ = this;
         for (uint8_t c = 0; c < kCoils; ++c) {
             pinMode(kTrigger[c], OUTPUT);
             digitalWriteFast(kTrigger[c], LOW);
         }
         if (!driverTick.attach([this] { release(); }, DriverTick::kPeriodUs)) return false;
-        if (!deviceMonitor.watch(Device::Solenoids, *this)) return false;
+        if (!deviceMonitor.watch(Device::SOLENOIDS, *this)) return false;
         ready_ = true;
 
         // every coil pulls once, one after another, before the contacts are watched; they stay

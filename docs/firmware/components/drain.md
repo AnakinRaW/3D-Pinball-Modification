@@ -75,6 +75,6 @@ public:
     uint8_t stored() const;       // gets the balls the store holds, read from front and back
     bool    release();            // releases one ball; false while a release runs or the store is empty
     bool    releasing() const;    // gets whether a release runs, the servo's return to its start position included
-    Lamp    lamp(const Mode& mode);   // gets the drain lamp for the key and priority of mode
+    Lamp    lamp(Layer layer);   // gets the drain lamp for a mode's layer
 };
 ```

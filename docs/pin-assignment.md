@@ -9,6 +9,7 @@
 | 2 | DIN to the DFR0954 | I²S2 data out | [Audio](parts/audio/design.md) |
 | 3 | LRC to the DFR0954 | I²S2 LRCLK | [Audio](parts/audio/design.md) |
 | 4 | BCLK to the DFR0954 | I²S2 BCLK | [Audio](parts/audio/design.md) |
+| 5 | Toggle switch, its function set by each game | plain digital input | [Controls](parts/controls/design.md) |
 | 11 | MOSI, data to the converters | SPI MOSI | [IR ball sensing](parts/ir-reflective/design.md) |
 | 12 | MISO, data from the converters | SPI MISO | [IR ball sensing](parts/ir-reflective/design.md) |
 | 13 | SCK, clock to the converters | SPI SCK | [IR ball sensing](parts/ir-reflective/design.md) |
@@ -30,7 +31,6 @@
 | 29 | D/C to the display | plain digital output | [Display](parts/display/design.md) |
 | 30 | Solenoid trigger 3 | plain digital output | [Solenoids](parts/solenoid/design.md) |
 | 31 | Receiver output of the ball drain gate | plain digital input | [Break beam](parts/break-beam/design.md) |
-| 32 | Toggle switch, its function set by each game | plain digital input | [Controls](parts/controls/design.md) |
 | 33 | MCLK, unused by the amplifier | I²S2 MCLK | [Audio](parts/audio/design.md) |
 | 34 | Solenoid sense 3 | plain digital input | [Solenoids](parts/solenoid/design.md) |
 | 35 | Solenoid sense 2 | plain digital input | [Solenoids](parts/solenoid/design.md) |
@@ -53,7 +53,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 
 | Lost | To |
 |---|---|
-| I²S2 | Audio, pins 2, 3, 4, 33 |
+| I²S2 | Audio, pins 2, 3, 4, 33; controls, pin 5 |
 | The whole SPI bus | Sensors, pins 11, 12, 13, 15 and 16. The IR sensing's isolator drives MISO whenever the Teensy is powered, so no second device can share the bus |
 | QuadTimer3, all four channels | Sensors, pin 14. Channel 3 starts the read block and has no pin, and channels 0 and 1 stay unused because all four share one interrupt |
 | Serial3 and S/PDIF | Sensors, pins 14 and 15 |
@@ -71,7 +71,7 @@ A port or a bus needs all of its pins at once, so taking one of its pins costs t
 | Wire2 and Serial6 | Display, pins 24 and 25 |
 | Serial7 | Display, pins 28 and 29 |
 | FlexSPI2 | PSRAM, pins 48, 49, 50, 52, 53 and 54 |
-| 21 of 27 PWM pins | Audio 2, 3, 4, 33; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; port expander 1; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
+| 22 of 27 PWM pins | Audio 2, 3, 4, 33; controls 5; sensors 11, 12, 13, 14, 15; rotary sensor 18, 19; servo 0; port expander 1; solenoids 36, 37; display 22, 23, 24, 25, 28, 29 |
 | 18 of 18 analog inputs | A0, A1, A2 sensors; A3, A6 to A15 display; A4, A5 rotary sensor; A16, A17 solenoids |
 
 CLOCK takes pin 14 because it sits beside SCK on 13 and the chip selects on 15 and 16, so the whole sensor cable leaves the Teensy from one group of pins. The price is QuadTimer3, which drives pin 14. No other code may use QuadTimer3, `analogWrite()` on pins 14, 15, 18 and 19 included, as [`general-design.md`](firmware/general-design.md#exclusive-peripherals) sets out for the firmware.
@@ -84,17 +84,18 @@ A reserved pin is held for a subsystem whose design is not finished yet. It is n
 
 | Pin | Signal | Peripheral | Subsystem |
 |---|---|---|---|
-| 5 | LED chain A | plain digital output | [Lighting](parts/lighting/design.md) |
-| 6 | LED chain B | plain digital output | [Lighting](parts/lighting/design.md) |
-| 7 | LED chain C | plain digital output | [Lighting](parts/lighting/design.md) |
-| 8 | LED chain D | plain digital output | [Lighting](parts/lighting/design.md) |
-| 9 | LED chain E | plain digital output | [Lighting](parts/lighting/design.md) |
-| 10 | LED chain F | plain digital output | [Lighting](parts/lighting/design.md) |
+| 6 | LED chain B | FlexIO2 pin 10 | [Lighting](parts/lighting/design.md) |
+| 7 | LED chain C | FlexIO2 pin 17 | [Lighting](parts/lighting/design.md) |
+| 8 | LED chain D | FlexIO2 pin 16 | [Lighting](parts/lighting/design.md) |
+| 9 | LED chain E | FlexIO2 pin 11 | [Lighting](parts/lighting/design.md) |
+| 10 | LED chain F | FlexIO2 pin 0 | [Lighting](parts/lighting/design.md) |
+| 32 | LED chain A | FlexIO2 pin 12 | [Lighting](parts/lighting/design.md) |
 
 ### What the reserved pins cost
 
 | Lost | To |
 |---|---|
+| FlexIO2 | Lighting, pins 6, 7, 8, 9, 10 and 32 |
 | Serial2 | Lighting, pins 7 and 8 |
 
 A second AS5600 needs a TCA9548A multiplexer on pins 18 and 19, because the AS5600's address 0x36 is fixed. The multiplexer carries up to eight sensors and costs no further pin.
@@ -186,6 +187,7 @@ The bracket names the FlexIO3 signal a pin carries.
 | FlexIO | Pins, with the signal each carries | Used by |
 |---|---|---|
 | FlexIO3 | 19 (0), 18 (1), 14 (2), 15 (3), 40 (4), 41 (5), 17 (6), 16 (7), 22 (8), 23 (9), 20 (10), 21 (11), 38 (12), 39 (13), 26 (14), 27 (15), 8 (16), 7 (17), 36 (18), 37 (19), 35 (28), 34 (29) | Display |
+| FlexIO2 | 10 (0), 12 (1), 11 (2), 13 (3), 6 (10), 9 (11), 32 (12), 8 (16), 7 (17), 36 (18), 37 (19), 35 (28), 34 (29) | Lighting, reserved |
 
 ## Sources
 

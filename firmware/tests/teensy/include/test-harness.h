@@ -1,6 +1,6 @@
-// The harness of the test image: a program's table of tests, and the lines a test prints, in the
-// format of the Results section of docs/firmware/testing.md. Every check is written into the test
-// as a condition, and the test reports PASS, FAIL or SKIP exactly once.
+// The harness of the test image: a program's table of tests, and the PASS, FAIL and SKIP lines a
+// test prints. The Results section of docs/firmware/testing.md holds their format. Every check is
+// written into the test as a condition, and the test reports PASS, FAIL or SKIP exactly once.
 #pragma once
 #include <Arduino.h>
 

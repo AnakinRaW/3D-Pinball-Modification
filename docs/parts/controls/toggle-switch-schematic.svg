@@ -1,7 +1,7 @@
 <svg data-boards="motherboard:main" viewBox="0 0 820 456" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
   <rect x="0" y="0" width="820" height="456" fill="#ffffff"/>
   <text x="30" y="34" font-size="20" font-weight="700" fill="#1a1a1a">Toggle switch</text>
-  <text x="30" y="56" font-size="13" fill="#666" data-pin="Toggle switch">The stock toggle switch closes pin 32 to ground, and each game decides what it does</text>
+  <text x="30" y="56" font-size="13" fill="#666" data-pin="Toggle switch">The stock toggle switch closes pin 5 to ground, and each game decides what it does</text>
 
   <!-- ===== board outline ===== -->
   <rect x="30" y="72" width="440" height="246" rx="12" fill="none" stroke="#8a6d0b" stroke-width="1.5"/>
@@ -12,7 +12,7 @@
   <text x="64" y="128" font-size="16" font-weight="700" fill="#2c3e50">Teensy 4.1</text>
 
   <text x="230" y="174" text-anchor="end" font-size="13" font-weight="700" fill="#1f7a33">SWITCH</text>
-  <text x="230" y="190" text-anchor="end" font-size="11.5" fill="#777" data-pin="Toggle switch">pin 32</text>
+  <text x="230" y="190" text-anchor="end" font-size="11.5" fill="#777" data-pin="Toggle switch">pin 5</text>
 
   <circle cx="240" cy="260" r="6" fill="#1a1a1a"/>
   <text x="230" y="264" text-anchor="end" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
@@ -31,8 +31,8 @@
   <circle cx="600" cy="236" r="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
   <line x1="600" y1="240" x2="600" y2="260" stroke="#1a1a1a" stroke-width="2.5" data-part="toggle switch"/>
   <line x1="540" y1="260" x2="600" y2="260" stroke="#1a1a1a" stroke-width="2.5" data-part="toggle switch"/>
-  <text x="640" y="214" font-size="11.5" fill="#666" data-pin="Toggle switch">closed: pin 32 reads low</text>
-  <text x="640" y="230" font-size="11.5" fill="#666" data-pin="Toggle switch">open: pin 32 reads high</text>
+  <text x="640" y="214" font-size="11.5" fill="#666" data-pin="Toggle switch">closed: pin 5 reads low</text>
+  <text x="640" y="230" font-size="11.5" fill="#666" data-pin="Toggle switch">open: pin 5 reads high</text>
 
   <!-- R1, in series with the switch pin -->
   <rect x="355" y="160" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R1"/>

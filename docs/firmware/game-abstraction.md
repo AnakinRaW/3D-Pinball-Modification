@@ -50,7 +50,7 @@ A game splits its rules into modes. A mode is a part of the rules that runs for 
 
 The game keeps the modes that run in a mode stack. All modes in the stack run at the same time. Each mode has a priority, which sets its place in the stack. The place matters only where two modes want the same event: the higher one decides first whether it takes it. Between equal priorities the mode started later lies higher. The stack is a [priority list](general-design.md#priority-lists).
 
-The mode stack gives each mode a key when it starts the mode. No two running modes share a key. A mode that lights [lamps](components/lamps.md#overlapping-effects), shows a [slide](components/screen.md#slides) or plays a [track](components/sounds.md#music) hands itself to the component, which takes the mode's key and priority. When the mode ends, the stack hands the mode to each of those components again, and each removes what the mode holds there. The mode's `stop()` ends whatever else it started.
+The mode stack gives each mode a key when it starts the mode. No two running modes share a key. A mode's key and priority form its layer, the type `Layer` of [`firmware/lib/layer/`](../../firmware/lib/layer/). A mode that lights [lamps](components/lamps.md#overlapping-effects), shows a [slide](components/screen.md#slides) or plays a [track](components/sounds.md#music) hands its layer to the component. The components know no modes. When the mode ends, the stack hands its layer to each of those components again. Each removes what the layer holds there. The mode's `stop()` ends whatever else it started.
 
 The game hands every event to its modes from the highest priority down. A mode that takes an event returns true from `event()`, and the modes below it never see that event. The game's `update()` reaches every mode.
 
@@ -156,6 +156,7 @@ public:
 
     virtual uint8_t priority() const = 0;           // its place in the stack
     uint8_t key() const;                            // the key the mode stack gave it at its start; no other running mode has it
+    Layer layer() const;                            // its key and priority, which the lamps, the screen and the sounds take
 
     virtual void start(Machine& machine) = 0;       // sets the mode up
     virtual void stop() {}                          // ends what the mode started beyond its lamps, slide and track

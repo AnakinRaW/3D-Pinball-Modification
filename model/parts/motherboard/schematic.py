@@ -76,9 +76,9 @@ MB.unconnected("A2.VCC", "A2.GND#2", why="the module joins its two VCC pins and 
                "pins, DFR0954-DFRobot-schematic.pdf")
 
 # -- lighting -----------------------------------------------------------------------------------
-for i, chain in enumerate("ABCDEF"):
+for i, (chain, pin) in enumerate(zip("ABCDEF", (32, 6, 7, 8, 9, 10))):
     conn = "J-MB-AMBIENT" if i < 3 else "J-MB-PLAYFIELD"
-    MB.net(f"CHAIN{chain}", f"A1.{5 + i}", f"{conn}.{i % 3 + 1}", color="blue",
+    MB.net(f"CHAIN{chain}", f"A1.{pin}", f"{conn}.{i % 3 + 1}", color="blue",
            label=f"chain {chain}", teensy=f"LED chain {chain}")
 
 # -- IR sensing ---------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ MB.net("RECEIVER", "A1.31", "R3.1", "J-MB-RECEIVER.1", color="green", label="rec
        teensy="Receiver output of the ball drain gate")
 
 # -- toggle switch ------------------------------------------------------------------------------
-MB.net("SWITCH", "A1.32", "R1.1", color="green", label="switch", teensy="Toggle switch")
+MB.net("SWITCH", "A1.5", "R1.1", color="green", label="switch", teensy="Toggle switch")
 MB.net("SWITCH-R1", "R1.2", "J-MB-SWITCH.1", color="green", label="switch behind R1")
 
 # -- the port expander board ------------------------------------------------------------------

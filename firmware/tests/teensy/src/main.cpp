@@ -1,7 +1,6 @@
-// The test image of docs/firmware/testing.md: every Teensy test of every program in one firmware.
-// The host picks the tests with a command line over USB serial, and the image prints each run in
-// the lines of the testing document's Results section. firmware/tools/teensy-tests.py is that
-// host.
+// The test image: every Teensy test of every program in one firmware. The host picks the tests
+// with a command line over USB serial, and the image prints each run in the lines of the Results
+// section of docs/firmware/testing.md. firmware/tools/teensy-tests.py is that host.
 //
 // Commands, one to a line:
 //   list                       TEST <name> <runs on> <quick s> <soak s> for every test, then
@@ -23,16 +22,20 @@
 #include "test-harness.h"
 
 extern const Program CLOCK;
+extern const Program EVENT_QUEUE;
 extern const Program DRIVER_TICK;
 extern const Program PSRAM;
+extern const Program WS2812_FLEXIO2;
 extern const Program LIGHTING;
 extern const Program SERVO;
 extern const Program EVERY_DRIVER;
+extern const Program LAMPS;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
-static const Program* const PROGRAMS[] = {&CLOCK, &DRIVER_TICK,  &PSRAM,   &LIGHTING,
-                                          &SERVO, &EVERY_DRIVER, &START_UP};
+static const Program* const PROGRAMS[] = {
+    &CLOCK,    &EVENT_QUEUE, &DRIVER_TICK,  &PSRAM, &WS2812_FLEXIO2,
+    &LIGHTING, &SERVO,       &EVERY_DRIVER, &LAMPS, &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
