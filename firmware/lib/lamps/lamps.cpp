@@ -328,7 +328,9 @@ bool Lamps::chainLeds(const Settings& settings, uint16_t (&leds)[Lighting::CHAIN
     return placed;
 }
 
-LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
+LampGroups Lamps::groups(Layer layer) {
+    const uint8_t key = layer.key;
+    const uint8_t priority = layer.priority;
     LampGroups g;
     g.perimeterLeft = Strip(this, LEFT, key, priority);
     g.perimeterRight = Strip(this, RIGHT, key, priority);
@@ -339,7 +341,8 @@ LampGroups Lamps::groups(uint8_t key, uint8_t priority) {
     return g;
 }
 
-void Lamps::remove(uint8_t key) {
+void Lamps::remove(Layer layer) {
+    const uint8_t key = layer.key;
     const auto ofKey = [key](const Entry& e) { return e.key == key; };
     for (uint16_t lamp = 0; lamp < playfieldLamps; ++lamp) {
         playfieldEffects[lamp].removeIf(ofKey);

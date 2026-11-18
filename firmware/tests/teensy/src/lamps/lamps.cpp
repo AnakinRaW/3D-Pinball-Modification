@@ -60,7 +60,7 @@ static void testFrames() {
     const uint16_t longest = Lighting::MAX_CHAIN_LEDS;
     const uint32_t chainUs = longest * BITS_PER_LED * BIT_NS / NS_PER_US;
 
-    LampGroups g = lamps.groups(KEY, PRIORITY);
+    LampGroups g = lamps.groups({KEY, PRIORITY});
     lamps.clear();
     lamps.brightness(SHARE, SHARE);
     g.playfield.run(Pattern::ASTEROID, Direction::UP, Color::AMBER, STEP_MS);

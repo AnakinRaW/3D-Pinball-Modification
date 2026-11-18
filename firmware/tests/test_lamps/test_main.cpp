@@ -42,12 +42,6 @@ const TProgmemRGBPalette16 TEST_PALETTE = {
     0x000010, 0x000020, 0x000030, 0x000040, 0x000050, 0x000060, 0x000070, 0x000080,
 };
 
-// a mode as the lamps see it: the key the mode stack gives it and its priority
-struct TestMode {
-    uint8_t key;
-    uint8_t priority;
-};
-
 // an effect a game writes: the first color for 50 ms, then the second
 class Late : public Effect {
 public:
@@ -136,8 +130,8 @@ static void expectLamp(uint16_t lamp, const CRGB& wanted, const char* what) {
 // effects: each built-in effect, a palette of each kind, the brightness, lasting() and an
 // effect of the test's own on the first playfield lamps, and runs on a range and a strip.
 static void testEffects() {
-    TestMode mode = {0, 1};
-    LampGroups g = lamps.groups(mode.key, mode.priority);
+    Layer mode = {0, 1};
+    LampGroups g = lamps.groups(mode);
     Lamp lamp = g.playfield[0];
 
     lamp.set(Color::RED);
@@ -289,18 +283,18 @@ static void testEffects() {
 // overlap: a blink of the lowest mode, two modes over it, removed one after the other, on a
 // playfield lamp and on the ambient lights over the left perimeter's blink.
 static void testOverlap() {
-    TestMode low = {1, 1};
-    TestMode middle = {2, 2};
-    TestMode high = {3, 3};
-    Lamp lamp = lamps.groups(low.key, low.priority).playfield[0];
+    Layer low = {1, 1};
+    Layer middle = {2, 2};
+    Layer high = {3, 3};
+    Lamp lamp = lamps.groups(low).playfield[0];
     lamp.blink(Color::GREEN, 100, 100, Off::DARK);
-    lamps.groups(low.key, low.priority).perimeterLeft.blink(Color::GREEN, 100, 100, Off::DARK);
+    lamps.groups(low).perimeterLeft.blink(Color::GREEN, 100, 100, Off::DARK);
     at(30);
-    lamps.groups(middle.key, middle.priority).playfield[0].set(Color::RED);
-    lamps.groups(middle.key, middle.priority).ambient.set(Color::RED);
+    lamps.groups(middle).playfield[0].set(Color::RED);
+    lamps.groups(middle).ambient.set(Color::RED);
     at(60);
-    lamps.groups(high.key, high.priority).playfield[0].blink(Color::BLUE, 20, 20);
-    lamps.groups(high.key, high.priority).ambient.blink(Color::BLUE, 20, 20);
+    lamps.groups(high).playfield[0].blink(Color::BLUE, 20, 20);
+    lamps.groups(high).ambient.blink(Color::BLUE, 20, 20);
     frame(60);
     expectLamp(0, crgb(Color::BLUE), "high on");
     expect(scaled(crgb(Color::BLUE), AMBIENT_SCALE_3A), leftLamp(0), "high on, strip");
@@ -309,10 +303,10 @@ static void testOverlap() {
     expect(scaled(crgb(Color::RED), AMBIENT_SCALE_3A), leftLamp(0), "middle, strip");
 
     at(90);
-    lamps.remove(high.key);
+    lamps.remove(high);
     frame(90);
     expectLamp(0, crgb(Color::RED), "middle after high left");
-    lamps.remove(middle.key);
+    lamps.remove(middle);
     frame(150);
     expectLamp(0, CRGB(0, 0, 0), "blink off in its rhythm");
     expect(CRGB(0, 0, 0), leftLamp(0), "strip blink off");
@@ -321,12 +315,12 @@ static void testOverlap() {
     expect(scaled(crgb(Color::GREEN), AMBIENT_SCALE_3A), leftLamp(0), "strip blink on");
 
     // equal priorities: the later call shows, and clear() shows the one below again
-    TestMode same = {4, 1};
+    Layer same = {4, 1};
     at(210);
-    lamps.groups(same.key, same.priority).playfield[0].set(Color::WHITE);
+    lamps.groups(same).playfield[0].set(Color::WHITE);
     frame(210);
     expectLamp(0, crgb(Color::WHITE), "later of equal priorities");
-    lamps.groups(same.key, same.priority).playfield[0].clear();
+    lamps.groups(same).playfield[0].clear();
     frame(220);
     expectLamp(0, crgb(Color::GREEN), "clear shows the blink");
 }
@@ -334,12 +328,12 @@ static void testOverlap() {
 // six-modes: a playfield lamp and the ceiling, set for six modes.
 static void testSixModes() {
     const uint32_t before = lamps.refused();
-    TestMode modes[] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}};
+    Layer modes[] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}};
     const Color colors[] = {Color::RED,   Color::GREEN, Color::BLUE,
                             Color::WHITE, Color::AMBER, Color::RED.dim(50)};
     for (uint8_t m = 0; m < 6; ++m) {
-        lamps.groups(modes[m].key, modes[m].priority).playfield[0].set(colors[m]);
-        lamps.groups(modes[m].key, modes[m].priority).ceiling.set(colors[m]);
+        lamps.groups(modes[m]).playfield[0].set(colors[m]);
+        lamps.groups(modes[m]).ceiling.set(colors[m]);
     }
     TEST_ASSERT_EQUAL_UINT32(before + 2, lamps.refused());
     uint32_t t = 0;
@@ -348,7 +342,7 @@ static void testSixModes() {
         expectLamp(0, crgb(colors[m]), "the top of the five");
         expect(scaled(crgb(colors[m]), AMBIENT_SCALE_3A), lighting.chain(CEILING_CHAIN)[0],
                "the top of the five, ceiling");
-        lamps.remove(modes[m].key);
+        lamps.remove(modes[m]);
         t += 10;
     }
     frame(t);
@@ -359,7 +353,7 @@ static void testSixModes() {
 // groups: the sizes of every group on both profiles, with the chains of TEST_LEDS, and the parts
 // of a range at and past its end.
 static void testGroups() {
-    TestMode mode = {0, 1};
+    Layer mode = {0, 1};
     const uint16_t ceiling = TEST_LEDS[2];
     const uint16_t playfield = TEST_LEDS[3] + TEST_LEDS[4] + TEST_LEDS[5];
     const Profile profiles[] = {Lighting::PROFILE_3A, Lighting::PROFILE_6A};
@@ -367,7 +361,7 @@ static void testGroups() {
         lighting.current = p;
         const uint16_t left = (TEST_LEDS[0] + p.perimeterStep - 1) / p.perimeterStep;
         const uint16_t right = (TEST_LEDS[1] + p.perimeterStep - 1) / p.perimeterStep;
-        LampGroups g = lamps.groups(mode.key, mode.priority);
+        LampGroups g = lamps.groups(mode);
         TEST_ASSERT_EQUAL_UINT16(left, g.perimeterLeft.size());
         TEST_ASSERT_EQUAL_UINT16(right, g.perimeterRight.size());
         TEST_ASSERT_EQUAL_UINT16(ceiling, g.ceiling.size());
@@ -375,7 +369,7 @@ static void testGroups() {
         TEST_ASSERT_EQUAL_UINT16(left + ceiling + right, g.ambient.size());
         TEST_ASSERT_EQUAL_UINT16(playfield, g.playfield.size());
     }
-    LampGroups g = lamps.groups(mode.key, mode.priority);
+    LampGroups g = lamps.groups(mode);
     TEST_ASSERT_EQUAL_UINT16(3, g.playfield.sub(playfield - 3, 10).size());
     TEST_ASSERT_EQUAL_UINT16(0, g.playfield.sub(playfield, 1).size());
     g.playfield[playfield].set(Color::RED);
@@ -395,8 +389,8 @@ static void testGroups() {
 
 // separate: two playfield lamps of one mode with different effects, then one of them cleared.
 static void testSeparate() {
-    TestMode mode = {0, 1};
-    LampGroups g = lamps.groups(mode.key, mode.priority);
+    Layer mode = {0, 1};
+    LampGroups g = lamps.groups(mode);
     g.playfield[0].blink(Color::GREEN, 100, 100, Off::DARK);
     g.playfield[1].set(Color::RED);
     frame(0);
@@ -414,8 +408,8 @@ static void testSeparate() {
 
 // spans: each lamp of spanned lights every LED of its span and no other.
 static void testSpans() {
-    TestMode mode = {0, 1};
-    LampGroups g = spanned.groups(mode.key, mode.priority);
+    Layer mode = {0, 1};
+    LampGroups g = spanned.groups(mode);
     TEST_ASSERT_EQUAL_UINT16(SPAN_LAMPS, g.playfield.size());
     const Color colors[SPAN_LAMPS] = {
         Color::RED,           Color::GREEN,        Color::BLUE,
@@ -453,8 +447,8 @@ static bool start(Lighting& driver, Lamps& lamps, const Lamps::Settings& groups)
 // chains: the groups land on the chains the settings give, and the second group on chain A and
 // the group past F hold no lamps.
 static void testChains() {
-    TestMode mode = {0, 1};
-    LampGroups g = benchLamps.groups(mode.key, mode.priority);
+    Layer mode = {0, 1};
+    LampGroups g = benchLamps.groups(mode);
     TEST_ASSERT_EQUAL_UINT16(2, g.playfield.size());
     TEST_ASSERT_EQUAL_UINT16(0, g.ceiling.size());
     TEST_ASSERT_EQUAL_UINT16(0, g.perimeterLeft.size());
@@ -472,9 +466,9 @@ static void testChains() {
 // gaps: a chase along the right perimeter lights the visible LEDs one after the other, one per
 // GAP_LAMP_MS, and never a hidden one; on the 3 A profile every second visible LED is a lamp.
 static void testGaps() {
-    TestMode mode = {0, 1};
+    Layer mode = {0, 1};
     gapLighting.current = Lighting::PROFILE_6A;
-    LampGroups g = gapLamps.groups(mode.key, mode.priority);
+    LampGroups g = gapLamps.groups(mode);
     TEST_ASSERT_EQUAL_UINT16(VISIBLE_COUNT, g.perimeterRight.size());
     at(0);
     g.perimeterRight.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S, Color::BLACK);

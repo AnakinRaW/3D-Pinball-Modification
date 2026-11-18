@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <clock.h>
 #include <debug-log.h>
+#include <layer.h>
 #include <lighting.h>
 #include <priority-list.h>
 
@@ -334,12 +335,11 @@ public:
     // when the heap has no room.
     bool begin();
 
-    // Gets the groups to which a mode's effects go. key tells the mode's effects from those of
-    // every other running mode. priority places them: a higher one lies above a lower one.
-    LampGroups groups(uint8_t key, uint8_t priority);
+    // Gets the groups to which the effects of a layer go.
+    LampGroups groups(Layer layer);
 
-    // Removes every effect with key from every lamp and strip, so the ones below show.
-    void remove(uint8_t key);
+    // Removes every effect of a layer from every lamp and strip, so the ones below show.
+    void remove(Layer layer);
     // Gets how many effects a lamp or strip with five effects has refused.
     uint32_t refused() const { return refusedCount; }
     // Removes every effect from every lamp and strip and sets both brightnesses to 1. The host

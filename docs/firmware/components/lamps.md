@@ -73,9 +73,9 @@ Each effect has the priority of its mode. The effect with the highest priority s
 
 A mode uses the lamps in three steps.
 
-1. When the mode starts, it takes its groups from `lamps.groups(key, priority)`, with the key the [mode stack](../game-abstraction.md#modes) gave it and its priority.
+1. When the mode starts, it takes its groups from `lamps.groups(layer())`. Its [layer](../game-abstraction.md#modes) holds its key and its priority.
 2. While the mode runs, it starts effects on those groups.
-3. When the mode ends, the mode stack calls `lamps.remove(key)`. Every effect of the mode leaves every lamp, and the effects below show again.
+3. When the mode ends, the mode stack calls `lamps.remove(layer)`. Every effect of the mode leaves every lamp, and the effects below show again.
 
 A lamp that already holds five effects refuses a sixth and counts it.
 
