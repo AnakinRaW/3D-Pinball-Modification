@@ -43,11 +43,28 @@ Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output 
 #endif
 ```
 
-[`lib/driver-base/debug-log.h`](lib/driver-base/debug-log.h) holds the macro.
+[`src/core/debug-log.h`](src/core/debug-log.h) holds the macro.
 
 **Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 
 CI builds and tests the release code: every project in CI builds with `-e release`.
+
+## Layout
+
+All of the firmware's code stands in `src/`, in four folders that follow `docs/firmware/`:
+
+| Folder | Holds |
+|---|---|
+| `core/` | what every part uses: the clock, the event queue, the device monitor, `DEBUG_LOG()`, the priority list |
+| `drivers/` | one driver per pair of files, the driver tick in `driver-base`, and the code a driver alone uses |
+| `components/` | the components between the drivers and the game |
+| `game/` | the game: modes and their layers |
+
+`lib/` holds only libraries the firmware takes from outside, such as PWMServoT4.
+
+- **The firmware's own headers are included in quotes, by their path from `src/`**, as `#include "drivers/lighting.h"`. A `.cpp` file includes its own header by name. A library's header and a system header stand in angle brackets.
+- **Every build reaches `src/` by its path.** The firmware builds it as its source. The computer tests build it with `test_build_src`, and `build_src_filter` in `[env:computer]` names the files that build without the Teensy, so a new file that does is added there. The test image and the bench programs take it as the library `firmware` through `firmware=symlink://${PROJECT_DIR}/../../src`. [`tools/firmware-src.py`](tools/firmware-src.py) gives that library every file but `main.cpp`, and a bench program names the files it needs in `custom_firmware_src`.
+- **A fake for the computer tests stands at the path of the header it replaces**, below `tests/fakes/`, such as `tests/fakes/drivers/lighting.h`. The computer build looks up quoted headers in `tests/fakes` first.
 
 ## Code style
 
@@ -108,7 +125,7 @@ private:
 
 ## Tools
 
-- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `lib/` and the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
+- **Warnings are errors for the firmware's own code**, with `-Wall -Wextra -Werror` in `build_src_flags`. [`tools/quiet-libraries.py`](tools/quiet-libraries.py) hands those flags to `src/` where a project takes it as a library, to `lib/` and to the tests as well, and compiles the other libraries and the Teensy core with `-w`, so a build reports only the firmware's own warnings.
 - **Static analysis** with clang-tidy runs in CI.
 - **Tests that need no hardware run on the computer.** The `computer` tests of [`testing.md`](../docs/firmware/testing.md) build in the `computer` environment and run in CI. PlatformIO builds that environment for the computer itself, with its platform `native`. Tests that need the Teensy run on the bench.
 - **Every dependency is pinned** to an exact version or commit.

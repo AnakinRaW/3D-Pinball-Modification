@@ -47,7 +47,7 @@ The servo counts as failed when its timer has not taken the no-pulse setting in 
 
 ## Driver Code
 
-The driver is the library [`firmware/lib/servo-driver/`](../../../firmware/lib/servo-driver/).
+The driver's interface stands in [`firmware/src/drivers/servo-driver.h`](../../../firmware/src/drivers/servo-driver.h).
 
 ```cpp
 class ServoDriver : public Driver {

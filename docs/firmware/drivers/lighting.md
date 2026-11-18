@@ -8,7 +8,7 @@ The driver sends the colors of the six LED chains, all chains at the same time. 
 
 FastLED's ObjectFLED driver, the usual way to drive many chains from a Teensy 4.1, sets every edge with a DMA write to the pin. Traffic on the peripheral bus delays those writes and stretches bits. On the bench its LEDs flickered whenever the main loop read the clock. FastLED's FlexIO2 driver sends a single chain only.
 
-The lighting therefore sends its frames through a FlexIO2 output of this repository, the library [`firmware/lib/ws2812-flexio2/`](../../../firmware/lib/ws2812-flexio2/). FlexIO2 times every bit in hardware and sends all six chains at once. Neither the processor nor other work on the Teensy can disturb a frame. The main loop never waits for one. Every frame stays under the current the machine's adapter allows.
+The lighting therefore sends its frames through a FlexIO2 output of this repository, [`firmware/src/drivers/ws2812-flexio2.h`](../../../firmware/src/drivers/ws2812-flexio2.h). FlexIO2 times every bit in hardware and sends all six chains at once. Neither the processor nor other work on the Teensy can disturb a frame. The main loop never waits for one. Every frame stays under the current the machine's adapter allows.
 
 ## Non-blocking output
 
@@ -40,7 +40,7 @@ The adapter's rated current stands in the [machine config](../components/config.
 
 ## How a frame goes out
 
-FlexIO2 is a part of the processor that shifts prepared bit patterns out on its pins, timed by its clock. Before each frame, `show()` turns every color into such a pattern. While the frame goes out, DMA hands FlexIO2 the patterns piece by piece. Every bit therefore leaves exactly on time, on all chains at once, with no code running. The library [`firmware/lib/ws2812-flexio2/`](../../../firmware/lib/ws2812-flexio2/) does the sending. The library [`firmware/lib/ws2812-color-encoder/`](../../../firmware/lib/ws2812-color-encoder/) turns the colors into patterns. FlexIO2 belongs to the lighting driver, as [`general-design.md`](../general-design.md#exclusive-peripherals) records.
+FlexIO2 is a part of the processor that shifts prepared bit patterns out on its pins, timed by its clock. Before each frame, `show()` turns every color into such a pattern. While the frame goes out, DMA hands FlexIO2 the patterns piece by piece. Every bit therefore leaves exactly on time, on all chains at once, with no code running. [`firmware/src/drivers/ws2812-flexio2.h`](../../../firmware/src/drivers/ws2812-flexio2.h) does the sending. [`firmware/src/drivers/ws2812-color-encoder.h`](../../../firmware/src/drivers/ws2812-color-encoder.h) turns the colors into patterns. FlexIO2 belongs to the lighting driver, as [`general-design.md`](../general-design.md#exclusive-peripherals) records.
 
 A 0 is 300 ns high and a 1 is 700 ns high. The chips on the two strips are unknown, so these lie inside the windows of every WS2812B datasheet at hand, the older WS2812B revision and the [WS2812B-2020](../../datasheets/WS2812B-2020-V6-Worldsemi.pdf) datasheet.
 
@@ -60,4 +60,4 @@ Each bit the driver sends is a pulse followed by a pause on the data line. The p
 
 ## Interface
 
-The driver is the library [`firmware/lib/lighting/`](../../../firmware/lib/lighting/). Its interface stands in [`lighting.h`](../../../firmware/lib/lighting/lighting.h). A bench program configures only the LEDs it has.
+The driver's interface stands in [`firmware/src/drivers/lighting.h`](../../../firmware/src/drivers/lighting.h). A bench program configures only the LEDs it has.

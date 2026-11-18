@@ -39,7 +39,7 @@ MODEL.as_written("t_wdt_s", of="t_wdt", unit="s")
 ds("n_clock_range", 4294967296, "", src="GPT2's counter, 32 bits, i.MX RT1060 reference manual "
    "Rev. 3, General Purpose Timer, GPT_CNT")
 dec("t_clock_step", 1, "µs", src="GPT2 counts the 24 MHz crystal divided by 24, its two prescalers "
-    "in startClock() of firmware/lib/clock/clock.cpp")
+    "in startClock() of firmware/src/core/clock.cpp")
 fig("t_clock_wrap", "minutes", "n_clock_range * t_clock_step", moves="+n_clock_range +t_clock_step",
     stated=False)
 
@@ -68,11 +68,11 @@ ds("n_capture", 16, "bytes", src="what a driver tick callback may capture, the s
    f"teensy::inplace_function takes in {CORE}/IntervalTimer.h")
 
 dec("n_producers", 11, "", src="the queues the event queue takes at most, PRODUCERS in "
-    "firmware/lib/event-queue: one for each driver that publishes events, as input-handling.md "
+    "firmware/src/core/event-queue.h: one for each driver that publishes events, as input-handling.md "
     "estimates them")
-dec("b_event", 12, "bytes", src="sizeof(DriverEvent) in firmware/lib/event-queue: its time, "
+dec("b_event", 12, "bytes", src="sizeof(DriverEvent) in firmware/src/core/event-queue.h: its time, "
     "type, source and payload, the payload aligned to four bytes", stated=False)
-# the device monitor's queue, DMAMEM in firmware/lib/device-monitor/device-monitor.cpp
+# the device monitor's queue, DMAMEM in firmware/src/core/device-monitor.cpp
 fig("ram_monitor_queue", "bytes", "n_queue.raw * b_event", moves="+n_queue +b_event",
     stated=False)
 MODEL.draws("ram_monitor_queue", pool="RAM2")
@@ -171,13 +171,13 @@ dec("n_chain_max", 79, "", src="the longest LED chain, a perimeter segment, in t
 fig("ram_usb", "KB", "ram_usb_tx + ram_usb_rx", moves="+ram_usb_tx +ram_usb_rx", stated=False)
 # The lighting driver takes from the heap, which lies in RAM2 by PJRC's Teensy 4.1 page, the
 # colors of every LED and the frame's words: each chain's words for the longest chain and the zero
-# words after it, firmware/lib/lighting and firmware/lib/ws2812-flexio2. The budget takes every
+# words after it, firmware/src/drivers/lighting.h and firmware/src/drivers/ws2812-flexio2.h. The budget takes every
 # chain at the bound the config allows, so no config can leave the lighting without memory.
 MODEL.uses("n_bits_led", of="lighting")
 MODEL.uses("n_symbols_word", of="lighting")
 MODEL.uses("n_latch_words", of="lighting")
 MODEL.uses("n_chain_limit", of="lighting")
-dec("n_led_chains", 6, "", src="Lighting::CHAINS in firmware/lib/lighting/lighting.h, the chains "
+dec("n_led_chains", 6, "", src="Lighting::CHAINS in firmware/src/drivers/lighting.h, the chains "
     "whose words alternate in the frame")
 dec("b_word", 4, "bytes", src="one word of a FlexIO shifter's 32-bit buffer, RM FlexIO SHIFTBUF")
 dec("b_crgb", 3, "bytes", src="FastLED's CRGB, one byte each of red, green and blue")

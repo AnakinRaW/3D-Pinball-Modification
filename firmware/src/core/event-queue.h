@@ -7,13 +7,13 @@
 #pragma once
 #include <Arduino.h>
 #include <atomic>
-#include <clock.h>
+#include "core/clock.h"
 #include <string.h>
 #include <type_traits>
 
 enum class DriverEventType : uint16_t {
     // A part of a device has failed. The source packs device and part, as faultSource() of
-    // firmware/lib/device-monitor does, and the payload is the driver's error code.
+    // core/device-monitor.h does, and the payload is the driver's error code.
     DEVICE_FAILED,
     // That part works again. The source as for DEVICE_FAILED, no payload.
     DEVICE_RECOVERED,

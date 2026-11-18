@@ -9,9 +9,9 @@
 // ambient brightness and go dark at the end.
 
 #include <Arduino.h>
-#include <clock.h>
-#include <lamps.h>
-#include <ws2812-color-encoder.h>
+#include "core/clock.h"
+#include "components/lamps.h"
+#include "drivers/ws2812-color-encoder.h"
 #include "test-harness.h"
 
 // the frame: a WS2812B takes 24 bits, and the lighting driver sends a bit as one symbol

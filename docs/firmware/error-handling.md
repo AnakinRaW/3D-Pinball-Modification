@@ -10,7 +10,7 @@ The main task registers each watched driver with the monitor right after the dri
 
 For every part whose bit changed, the monitor publishes `DEVICE_FAILED` or `DEVICE_RECOVERED` into its queue of the event queue. The event's source packs the device and the part. The device is an entry of [`Device`](driver-design.md#devices). The payload of `DEVICE_FAILED` is the driver's error code, and `DEVICE_RECOVERED` has no payload. When the queue is full, the part keeps the state it was last reported in, and the next check tries again. The monitor's queue lies in RAM2.
 
-[`firmware/lib/device-monitor`](../../firmware/lib/device-monitor/device-monitor.h) holds the monitor.
+[`firmware/src/core/device-monitor.h`](../../firmware/src/core/device-monitor.h) holds the monitor.
 
 ```cpp
 // the source of a fault event: the device in the upper four bits and the part in the lower

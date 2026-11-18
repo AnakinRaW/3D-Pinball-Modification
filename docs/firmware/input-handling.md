@@ -52,7 +52,7 @@ Device faults reach the queue through the device monitor, which [error-handling]
 
 ## API
 
-[`firmware/lib/event-queue`](../../firmware/lib/event-queue/event-queue.h) holds the queue.
+[`firmware/src/core/event-queue.h`](../../firmware/src/core/event-queue.h) holds the queue.
 
 ```cpp
 class EventQueue {

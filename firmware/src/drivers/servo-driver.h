@@ -2,13 +2,13 @@
 // config's speed, one step per frame on the driver tick, with PWMServoT4 from
 // firmware/lib/pwm-servo-t4.
 //
-// Driver and the driver tick come from firmware/lib/driver-base. The main task hands the angles
-// and the speed from the config to configure() before begin().
+// Driver and the driver tick come from drivers/driver-base.h. The main task hands the angles and
+// the speed from the config to configure() before begin().
 //
 // Design: docs/firmware/drivers/servo.md.
 #pragma once
 #include <Arduino.h>
-#include <driver-base.h>
+#include "drivers/driver-base.h"
 #include <pwm-servo-t4.h>   // this repository's copy of PWMServo, firmware/lib/pwm-servo-t4
 
 class ServoDriver : public Driver {

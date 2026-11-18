@@ -1,11 +1,11 @@
 // The lighting driver sends the colors of six LED chains under the cap of the adapter's profile.
 // FastLED provides the colors and the strip's measured power model, by which the driver dims a
-// frame that would draw past the cap. firmware/lib/ws2812-flexio2 sends the frames, all six
-// chains at once, each on its pin.
+// frame that would draw past the cap. drivers/ws2812-flexio2.h sends the frames, all six chains
+// at once, each on its pin.
 //
-// Driver comes from firmware/lib/driver-base. The main task hands the adapter's rating and the
-// LEDs of each chain from the config to configure() before begin(). A bench program configures
-// the LEDs it has. A chain of no LEDs leaves its pin as it is.
+// Driver comes from drivers/driver-base.h. The main task hands the adapter's rating and the LEDs
+// of each chain from the config to configure() before begin(). A bench program configures the
+// LEDs it has. A chain of no LEDs leaves its pin as it is.
 //
 // Design: docs/firmware/drivers/lighting.md.
 #pragma once
@@ -15,9 +15,9 @@
 #pragma GCC diagnostic push
 #include <FastLED.h>
 #pragma GCC diagnostic pop
-#include <debug-log.h>
-#include <driver-base.h>
-#include <ws2812-flexio2.h>
+#include "core/debug-log.h"
+#include "drivers/driver-base.h"
+#include "drivers/ws2812-flexio2.h"
 
 // what the lighting may light and how bright, for one adapter rating
 struct Profile {

@@ -12,16 +12,20 @@
 #
 # A pre script, because the libraries take their build environment from the default one when the
 # platform's builder runs, and a middleware added later would not reach them.
-from os.path import abspath, join, normcase
+from inspect import currentframe, getframeinfo
+from os.path import abspath, dirname, join, normcase
 
 Import("env")
 
 # the firmware's own source, headers and tests, and its libraries in firmware/lib, whose folder
-# only the project configuration holds, relative to the project
+# only the project configuration holds, relative to the project. firmware/src stands beside this
+# script's folder, which the test image and the bench programs take as a library
 OWN_DIRS = [normcase(env.subst(d))
             for d in ("$PROJECT_SRC_DIR", "$PROJECT_INCLUDE_DIR", "$PROJECT_TEST_DIR")]
 OWN_DIRS.append(normcase(abspath(join(env.subst("$PROJECT_DIR"),
                                       env.GetProjectConfig().get("platformio", "lib_dir")))))
+OWN_DIRS.append(normcase(abspath(join(dirname(getframeinfo(currentframe()).filename),
+                                      "..", "src"))))
 SRC_DIR = normcase(env.subst("$PROJECT_SRC_DIR"))
 
 # the flags build_src_flags gives the source, split as SCons splits them

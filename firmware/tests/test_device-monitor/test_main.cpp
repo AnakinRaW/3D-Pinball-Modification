@@ -8,7 +8,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <device-monitor.h>
+#include "core/device-monitor.h"
 #include <unity.h>
 
 constexpr uint32_t CHECK_TICKS = DeviceMonitor::CHECK_US / DriverTick::PERIOD_US;

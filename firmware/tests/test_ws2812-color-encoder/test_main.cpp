@@ -11,7 +11,7 @@
 // Run: pio test -e computer, which runs in CI as well.
 
 #include <unity.h>
-#include <ws2812-color-encoder.h>
+#include "drivers/ws2812-color-encoder.h"
 
 using namespace ws2812;
 

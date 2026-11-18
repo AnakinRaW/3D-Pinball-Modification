@@ -10,7 +10,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <event-queue.h>
+#include "core/event-queue.h"
 #include <unity.h>
 
 constexpr uint32_t DEPTH = 8;

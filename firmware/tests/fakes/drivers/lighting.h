@@ -1,5 +1,5 @@
-// The lighting driver of firmware/lib/lighting for the tests that run on the computer: the same
-// interface and profiles, with show() counting the frames instead of sending them.
+// The lighting driver of firmware/src/drivers/lighting.h for the tests that run on the computer:
+// the same interface and profiles, with show() counting the frames instead of sending them.
 #pragma once
 #include <FastLED.h>
 #include <cstdint>

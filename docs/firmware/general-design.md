@@ -99,11 +99,11 @@ The firmware takes its times from GPT2, a hardware counter that counts microseco
 
 The two `elapsed` functions read the noted time before the current one, so an interrupt in between cannot make the difference negative. `nowUs()` wraps every 71.6 minutes. `before()` keeps two times in order across the wrap.
 
-[`firmware/lib/clock`](../../firmware/lib/clock/clock.h) holds the four functions and `startClock()`.
+[`firmware/src/core/clock.h`](../../firmware/src/core/clock.h) holds the four functions and `startClock()`.
 
 ## Priority lists
 
-A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. The library [`firmware/lib/priority-list/`](../../firmware/lib/priority-list/) holds it as `PriorityList`.
+A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. [`firmware/src/core/priority-list.h`](../../firmware/src/core/priority-list.h) holds it as `PriorityList`.
 
 Four parts of the firmware order their entries with a priority list. The [lamps component](components/lamps.md#overlapping-effects) orders the effects on each lamp, so the lamp shows the effect on top. The [screen](components/screen.md#slides) orders the game's slides, so the slide on top shows. The [sounds](components/sounds.md#music) order the game's tracks of music, so the track on top plays. A game's [mode stack](game-abstraction.md#modes) orders the running modes, so the mode on top sees an event first.
 

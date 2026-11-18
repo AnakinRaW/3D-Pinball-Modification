@@ -18,7 +18,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <lamps.h>
+#include "components/lamps.h"
 #include <unity.h>
 
 constexpr uint32_t US_PER_MS = 1000;

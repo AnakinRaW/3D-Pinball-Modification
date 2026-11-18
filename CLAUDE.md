@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
 
-The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. The core libraries in `firmware/lib/` are the clock, the driver tick in `driver-base`, the event queue and the device monitor. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. Its code stands in `firmware/src/`: the clock, the event queue and the device monitor in `core/`, the driver tick, the lighting and the servo in `drivers/`, the lamps in `components/`. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 
@@ -34,7 +34,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
 | Firmware build | PlatformIO, uploading through PJRC's Teensy Loader (`upload_protocol = teensy-gui`; `teensy-cli` fails to write on this machine). Its own linker script, [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld), keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
 | Teensy core | Always the newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
-| LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/lib/ws2812-flexio2`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus | Chosen |
+| LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/src/drivers/ws2812-flexio2.h`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus | Chosen |
 | UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
 | RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
@@ -46,9 +46,9 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 
 - `firmware/` — the firmware for the Teensy 4.1: its source, its tests, its measurement programs and code notes. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
 - `firmware/gist/` — code notes, not firmware
-- `firmware/src/` — the firmware's source
+- `firmware/src/` — the firmware's code, in `core/`, `drivers/`, `components/` and `game/`, which the test image, the computer tests and the bench programs build from there. [`firmware/CLAUDE.md`](firmware/CLAUDE.md#layout) gives how
 - `firmware/include/` — the settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings
-- `firmware/lib/` — the libraries this repository holds, one folder each, which `platformio.ini` names in `lib_deps` and a bench program takes with `symlink://`
+- `firmware/lib/` — the libraries this repository holds besides the firmware, one folder each, such as PWMServoT4, which `platformio.ini` names in `lib_deps`
 - `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md): the computer tests in `test_<program>`, and every Teensy test in the one test image `teensy/`
 - `firmware/bench/` — the measurement programs the bench figures in the models come from
 - `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`

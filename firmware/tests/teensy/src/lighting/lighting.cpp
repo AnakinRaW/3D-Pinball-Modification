@@ -20,7 +20,7 @@
 #pragma GCC diagnostic push
 #include <FastLED.h>
 #pragma GCC diagnostic pop
-#include <lighting.h>
+#include "drivers/lighting.h"
 #include "test-harness.h"
 
 constexpr uint16_t BENCH_LEDS = 3;   // the three LEDs on chain A at the bench
