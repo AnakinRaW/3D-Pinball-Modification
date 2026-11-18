@@ -76,12 +76,12 @@ The adapter's rating is set in the [machine config](../../firmware/components/co
 |---|---|---|
 | Perimeter LEDs lit | every second, 80 | all, 158 |
 | Playfield lights, brightness at most | 255 | 255 |
-| Ambient lights, brightness at most |96 | 126 |
+| Ambient lights, brightness at most | 102 | 128 |
 | Cap | 2 A | 2.93 A |
 
 The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves in FastLED's sum with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
 
-FastLED holds the cap with its `setMaxPowerInVoltsAndMilliamps` function. Before each `show()` it dims every light until the sum fits the set max current. It works out the sum from the measured currents, which the lighting driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap in that sum, so FastLED dims nothing in play.
+The lighting driver holds the cap with FastLED's `calculate_max_brightness_for_power_mW()`. Before each frame it dims every light until the sum fits the cap. FastLED works out the sum from the measured currents, which the driver hands it as its power model. Inside the brightness limits above the whole layout stays under the cap in that sum, so the driver dims nothing in play.
 
 ## Circuit
 
@@ -125,7 +125,7 @@ C2 is a 1000 µF electrolytic within 20 mm of the board's power input. It carrie
 
 | Signal | What the pin has to be |
 |---|---|
-| Data of chains A to F | A plain digital output for each chain. |
+| Data of chains A to F | A FlexIO2 output for each chain, so one FlexIO2 timer clocks all six. |
 
 [`pin-assignment.md`](../../pin-assignment.md) lists the pins and what they cost elsewhere in the build.
 
@@ -149,8 +149,7 @@ The [lighting driver](../../firmware/drivers/lighting.md) sends the frames to th
 
 - [SEZO WS2812B LED strip](https://amzn.eu/d/0jcgB8mw): the strip's length, its 2.7 mm width and its 160 LEDs/m, as the supplier states them
 - [OctoWS2811](https://www.pjrc.com/teensy/td_libs_OctoWS2811.html): buffer chip and series resistor guidance
-- [FastLED's ObjectFLED driver](https://fastled.io/docs/de/d7a/_object_f_l_e_d_8h_source.html): parallel DMA output on any pins of the Teensy 4.x, channels 0 to 2 of QuadTimer4
-- [PJRC: FastLED adds massive parallel LED output](https://www.pjrc.com/fastled-adds-massive-parallel-led-output/): ObjectFLED as FastLED's driver on the Teensy 4.x
+- [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3, FlexIO and IOMUXC: the shifters and the timer that send the chains, and the FlexIO2 signals on the chains' pins
 - [TI CD74HCT125 datasheet](https://www.ti.com/lit/ds/symlink/cd74hct125.pdf), document SCHS415A: pin functions, 4.5 to 5.5 V supply range, active low OE, output voltage at 4 mA, the input levels, the input clamp diodes and their current, the input capacitance and the longest input edge
 - [Rubycon ZLH datasheet](https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/ZLH.pdf): C2's impedance, 16ZLH1000MEFC8X20, read from [DigiKey's listing](https://www.digikey.de/en/products/result?keywords=16ZLH1000MEFC8X20)
 - [`parts/solenoid/design.md`](../solenoid/design.md): the feed's inductance

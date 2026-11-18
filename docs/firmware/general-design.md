@@ -63,7 +63,6 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT | the pin interrupt, one for every pin | milliseconds | no | 96 |
 | Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
-| Lighting, refilling the half of the LED bit buffer that has gone out | FastLED's DMA | the next half of the bit buffer | no | 128 |
 | I²C buses, running every transfer on Wire and Wire2 | LPI2C1 and LPI2C4 | none, a late start only delays the next transfer | no | 160 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
@@ -83,12 +82,11 @@ Each peripheral below belongs to one driver, and no other code or library may us
 |---|---|---|
 | SPI | IR ball sensing | reads the converters |
 | QuadTimer3, all four channels | IR ball sensing | counts the sensor phases and starts the read block |
-| QuadTimer4 | Lighting | FastLED's ObjectFLED driver times the LED data |
+| FlexIO2 | Lighting | ws2812-flexio2 clocks the six LED chains out, one shifter a chain |
 | I²S2 | Audio | the Audio library hands every block to the amplifier |
 | Wire | I²C bus | runs every transfer of the rotary sensor and the port expander |
 | FlexPWM1.1 | Servo | PWMServoT4, this repository's copy of PWMServo, repeats the servo pulse |
 | FlexIO3 | Display | clocks the 8-bit bus out to the display |
-| FlexIO2 | Display | runs on FlexIO3's clock, which the driver sets |
 | Wire2 | I²C bus | runs every transfer of the touch driver |
 | GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
 | FlexSPI2 | PSRAM | Teensyduino's start-up code connects the PSRAM through it |
