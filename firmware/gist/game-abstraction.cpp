@@ -1,4 +1,4 @@
-#include "priority-list.h"
+#include "../lib/priority-list/priority-list.h"
 
 // the events a game gets: those the components make, and those of the services
 enum class EventType : uint16_t {
@@ -379,7 +379,7 @@ private:
         uint8_t priority() const override { return 2; }
         void start(Machine& m) override {
             m_ = &m; started_ = false; over_ = false; waiting_ = false;
-            m.drain.lamp(*this).set(Color::green);                                // lit while the save holds
+            m.drain.lamp(*this).set(Color::GREEN);                                // lit while the save holds
         }
         bool event(const PinballEvent& e) override {
             if (e.type == EventType::Drained) { waiting_ = true; return true; }   // the base mode never sees this ball

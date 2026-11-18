@@ -53,7 +53,7 @@
   <text x="1254" y="1124" font-size="12" font-weight="700" fill="#1f4fd1" data-pin="BCLK to the DFR0954">4</text>
   <text x="1228" y="1112" text-anchor="end" font-size="11" font-weight="700" fill="#1f4fd1">BCLK</text>
   <circle cx="1240" cy="1184" r="6" fill="#1f4fd1"/>
-  <text x="1254" y="1188" font-size="12" font-weight="700" fill="#1f4fd1" data-pin="LED chain A">5</text>
+  <text x="1254" y="1188" font-size="12" font-weight="700" fill="#1f4fd1" data-pin="LED chain A">32</text>
   <text x="1228" y="1176" text-anchor="end" font-size="11" font-weight="700" fill="#1f4fd1">chain A</text>
   <circle cx="1240" cy="1248" r="6" fill="#1f4fd1"/>
   <text x="1254" y="1252" font-size="12" font-weight="700" fill="#1f4fd1" data-pin="LED chain B">6</text>
@@ -103,7 +103,7 @@
   <text x="1254" y="2212" font-size="12" font-weight="700" fill="#1f7a33" data-pin="Receiver output of the ball drain gate">31</text>
   <text x="1228" y="2200" text-anchor="end" font-size="11" font-weight="700" fill="#1f7a33">receiver</text>
   <circle cx="1240" cy="2272" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
-  <text x="1254" y="2276" font-size="12" font-weight="700" fill="#1f7a33" data-pin="Toggle switch">32</text>
+  <text x="1254" y="2276" font-size="12" font-weight="700" fill="#1f7a33" data-pin="Toggle switch">5</text>
   <text x="1228" y="2264" text-anchor="end" font-size="11" font-weight="700" fill="#1f7a33">switch</text>
   <circle cx="1520" cy="800" r="6" fill="#c0392b"/>
   <text x="1506" y="804" text-anchor="end" font-size="11" font-weight="700" fill="#c0392b">VIN</text>
@@ -288,8 +288,8 @@
   <text x="152" y="1273.0" font-size="11" fill="#666">data to the board</text>
   <circle cx="380" cy="1184" r="6" fill="#1f4fd1"/>
   <text x="322" y="1188" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">chain A</text>
-  <text x="368" y="1188" text-anchor="end" font-size="11" fill="#777" data-pin="LED chain A">pin 5</text>
-  <line x1="1234" y1="1184" x2="386" y2="1184" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square" data-net="CHAINA" data-ends="A1.5 J-MB-AMBIENT.1"/>
+  <text x="368" y="1188" text-anchor="end" font-size="11" fill="#777" data-pin="LED chain A">pin 32</text>
+  <line x1="1234" y1="1184" x2="386" y2="1184" stroke="#1f4fd1" stroke-width="2.5" stroke-linecap="square" data-net="CHAINA" data-ends="A1.32 J-MB-AMBIENT.1"/>
   <circle cx="380" cy="1248" r="6" fill="#1f4fd1"/>
   <text x="322" y="1252" text-anchor="end" font-size="12" font-weight="700" fill="#1f4fd1">chain B</text>
   <text x="368" y="1252" text-anchor="end" font-size="11" fill="#777" data-pin="LED chain B">pin 6</text>
@@ -644,7 +644,7 @@
   <text x="2412" y="2562" font-size="13" font-weight="700" fill="#333333">Toggle switch</text>
   <circle cx="2400" cy="2590" r="6" fill="#3cbf4e" stroke="#23862f" stroke-width="1.5"/>
   <text x="2414" y="2594" font-size="12" font-weight="700" fill="#1f7a33">switch</text>
-  <text x="2608" y="2594" text-anchor="end" font-size="11" fill="#777" data-pin="Toggle switch">pin 32</text>
+  <text x="2608" y="2594" text-anchor="end" font-size="11" fill="#777" data-pin="Toggle switch">pin 5</text>
   <circle cx="2400" cy="2618" r="6" fill="#1a1a1a"/>
   <text x="2414" y="2622" font-size="12" font-weight="700" fill="#1a1a1a">GND</text>
   <line x1="2680" y1="2525" x2="2370" y2="2525" stroke="#23862f" stroke-width="5.0" stroke-linecap="square" data-net="SWITCH-R1"/>
@@ -677,7 +677,7 @@
   <line x1="1234" y1="2208" x2="1086" y2="2208" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square" data-net="RECEIVER" data-ends="A1.31"/>
   <line x1="1086" y1="2208" x2="1086" y2="2714" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square" data-net="RECEIVER"/>
   <line x1="1234" y1="2272" x2="1180" y2="2272" stroke="#23862f" stroke-width="5.0" stroke-linecap="square" data-net="SWITCH"/>
-  <line x1="1234" y1="2272" x2="1180" y2="2272" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square" data-net="SWITCH" data-ends="A1.32 R1.1"/>
+  <line x1="1234" y1="2272" x2="1180" y2="2272" stroke="#3cbf4e" stroke-width="2.5" stroke-linecap="square" data-net="SWITCH" data-ends="A1.5 R1.1"/>
   <rect x="1110" y="2262" width="70" height="20" fill="#fff" stroke="#1a1a1a" stroke-width="2" data-part="R1"/>
   <text x="1145" y="2256" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">R1</text>
   <text x="1145" y="2276" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a" data-fig="r_s">1.2 kΩ</text>

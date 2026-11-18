@@ -96,7 +96,7 @@ with MODEL.block(section=IRQ):
     dec("prio_tick", 96, "", src="the driver tick, kPriority in driver-design.md",
         group="Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work")
     dec("prio_i2c", 160, "", src="the I²C buses' LPI2C1 and LPI2C4 interrupts, which have no "
-        "deadline: below the DMA refills, which have one, and above FreeRTOS's limit, since they "
+        "deadline: below the audio DMA refill, which has one, and above FreeRTOS's limit, since they "
         "never call the kernel; docs/firmware/io/i2c-bus.md",
         group="I²C buses, running every transfer on Wire and Wire2")
     ds("prio_update", 208, "", src=f"{CORE}/AudioStream.cpp, NVIC_SET_PRIORITY(IRQ_SOFTWARE, 208), "
@@ -142,11 +142,6 @@ with MODEL.block(section=IRQ):
     fig("prio_dma", "", "prio_default",
         group="Audio, refilling the half of the output buffer that has played")
 
-    # FastLED's ObjectFLED driver, adapted from OctoWS2811, attaches its refill interrupt without a priority, so it
-    # keeps the default; OctoWS2811_imxrt.cpp sets none, and ObjectFLED's own source is read at bring-up
-    fig("prio_led", "", "prio_default",
-        group="Lighting, refilling the half of the LED bit buffer that has gone out")
-
 # -- the log, docs/firmware/drivers/storage.md and docs/firmware/logging.md ---
 dec("log_size", 1, "MB", src="the size /log.txt reaches before the logger empties it and starts it "
     "over, kSize in docs/firmware/logging.md")
@@ -171,22 +166,28 @@ ds("ram_usb_tx", 8, "KB", src=f"{CORE}/usb_serial.c: txbuffer, TX_SIZE 2048 time
    "in DMAMEM, with the USB type Serial")
 ds("ram_usb_rx", 4, "KB", src=f"{CORE}/usb_serial.c and usb_desc.h: rx_buffer, RX_NUM 8 times "
    "CDC_RX_SIZE_480 512 bytes in DMAMEM, with the USB type Serial")
-ds("ram_objectfled", 10, "KB", src="ObjectFLED.h in FastLED: bitdata, the bit buffer of 10 KB for "
-   "80 LED bytes that all chains share")
-asm("b_fastled_led", 24, "bytes", src="an upper bound for FastLED's color buffers and ObjectFLED's "
-    "frame buffer per LED of the longest chain: eight lanes of 3 bytes each, from malloc(), whose "
-    "heap lies in RAM2 by PJRC's Teensy 4.1 page; ObjectFLED's own figure is read at bring-up")
 dec("n_chain_max", 79, "", src="the longest LED chain, a perimeter segment, in the light layout "
-    "table of docs/parts/lighting/design.md; FastLED sizes its buffers by it")
+    "table of docs/parts/lighting/design.md; the lighting driver sizes the frame's words by it")
 fig("ram_usb", "KB", "ram_usb_tx + ram_usb_rx", moves="+ram_usb_tx +ram_usb_rx", stated=False)
-dec("n_led_buffers", 2, "", src="FastLED's color buffers and ObjectFLED's frame buffer, each "
-    "b_fastled_led bytes per LED of the longest chain")
-fig("ram_fastled", "KB", "n_led_buffers.raw * n_chain_max * b_fastled_led",
-    moves="+b_fastled_led +n_chain_max +n_led_buffers", stated=False)
+# The lighting driver takes from the heap, which lies in RAM2 by PJRC's Teensy 4.1 page, the
+# colors of every LED and the frame's words: each chain's words for the longest chain and the zero
+# words after it, firmware/lib/lighting and firmware/lib/ws2812-flexio2. The budget takes every
+# chain at the bound the config allows, so no config can leave the lighting without memory.
+MODEL.uses("n_bits_led", of="lighting")
+MODEL.uses("n_symbols_word", of="lighting")
+MODEL.uses("n_latch_words", of="lighting")
+MODEL.uses("n_chain_limit", of="lighting")
+dec("n_led_chains", 6, "", src="Lighting::CHAINS in firmware/lib/lighting/lighting.h, the chains "
+    "whose words alternate in the frame")
+dec("b_word", 4, "bytes", src="one word of a FlexIO shifter's 32-bit buffer, RM FlexIO SHIFTBUF")
+dec("b_crgb", 3, "bytes", src="FastLED's CRGB, one byte each of red, green and blue")
+fig("ram_lighting", "KB", "(n_chain_limit * n_bits_led / n_symbols_word + n_latch_words) * "
+    "n_led_chains.raw * b_word + n_led_chains.raw * n_chain_limit.raw * b_crgb",
+    moves="+n_chain_limit +n_bits_led -n_symbols_word +n_latch_words +n_led_chains +b_word +b_crgb",
+    stated=False)
 
 MODEL.draws("ram_usb", pool="RAM2")
-MODEL.draws("ram_objectfled", pool="RAM2")
-MODEL.draws("ram_fastled", pool="RAM2")
+MODEL.draws("ram_lighting", pool="RAM2")
 
 # -- the bench, firmware/bench/load and firmware/bench/watchdog ----------------
 _LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
@@ -211,20 +212,20 @@ _I("the Audio library's two interrupts sit below the IR, pin and driver-tick int
    "min(prio_dma, prio_update) > max(prio_ir, prio_pins, prio_tick)")
 _I("the SD controller's interrupt sits beneath both, the lowest of all",
    "prio_card > max(prio_dma, prio_update, prio_ir, prio_pins, prio_tick, prio_display, prio_i2c)")
-_I("the I²C bus's interrupt, which has no deadline, sits below the DMA refills, which have one",
-   "prio_i2c > max(prio_dma, prio_led)")
+_I("the I²C bus's interrupt, which has no deadline, sits below the audio DMA refill, which has one",
+   "prio_i2c > prio_dma")
 _I("the display's FlexIO3 interrupt sits below the Audio library's two, so a refill never delays a "
    "block", "prio_display > max(prio_dma, prio_update)")
 _I("the kernel never masks the IR driver's interrupts",
    "prio_ir < prio_kernel and prio_ir_spi < prio_kernel")
 _I("the kernel never masks an interrupt that does not call it: the pins, the driver tick, the DMA "
    "interrupts and the I²C bus",
-   "max(prio_pins, prio_tick, prio_dma, prio_led, prio_i2c) < prio_kernel")
+   "max(prio_pins, prio_tick, prio_dma, prio_i2c) < prio_kernel")
 _I("every interrupt that calls the kernel lies at its threshold or below it: the audio update and "
    "FlexIO3 start reads, and the SD controller wakes the storage task",
    "prio_kernel <= min(prio_update, prio_display, prio_card)")
 _I("the kernel's tick and task switch wait for every other interrupt", "prio_kernel_irq >= "
-   "max(prio_ir, prio_pins, prio_tick, prio_dma, prio_led, prio_i2c, prio_update, prio_display, "
+   "max(prio_ir, prio_pins, prio_tick, prio_dma, prio_i2c, prio_update, prio_display, "
    "prio_card)")
 _I("the device monitor checks on whole driver ticks", "(t_monitor / t_tick).raw.is_integer()")
 _I("the device monitor's queue has a depth the event queue accepts, a power of two",
@@ -235,7 +236,7 @@ _I("SdFat's longest wait, which stops the main loop in the cases storage.md's li
 _I("SdFat's longest wait ends before the watchdog warns, so a wait the main loop survives leaves "
    "no note", "t_sdfat < t_wdt - t_wdt_warn")
 _I("the watchdog's warning preempts every driver interrupt, so a hang in any of them is noted",
-   "prio_wdt_warn < min(prio_ir, prio_ir_spi, prio_pins, prio_tick, prio_dma, prio_led, prio_i2c, "
+   "prio_wdt_warn < min(prio_ir, prio_ir_spi, prio_pins, prio_tick, prio_dma, prio_i2c, "
    "prio_update, prio_display, prio_card)")
 _I("FreeRTOS never masks the watchdog's warning, which does not call it",
    "prio_wdt_warn < prio_kernel")

@@ -103,6 +103,28 @@ The program `clock` checks the [time measurement](general-design.md#time-measure
 | `wrap` | computer | Compare times on both sides of the wrap of `nowUs()` with `before()`, `elapsedUs()` and `elapsedMs()` | Every answer equals the one the same span gives away from the wrap |
 | `rate` | Teensy | Read `nowUs()` and the processor's cycle counter side by side for a minute | The two agree to within the time the reads take |
 
+### Priority list
+
+The program `priority-list` checks the [priority list](general-design.md#priority-lists).
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `order` | computer | Put entries of three priorities into a list, two of them at equal priority | The list holds them highest first, the later of the two equal ones above the earlier |
+| `full` | computer | Put one entry more into a list than it has room for | `insert()` refuses the extra entry, and the list keeps the others in their order |
+| `remove` | computer | Remove the top entry and one from the middle, then put two new ones in, while holding pointers to the entries that stay | The others keep their order, and each pointer still reaches its entry |
+
+### LED color encoder
+
+The program `ws2812-color-encoder` checks the encoding the [lighting driver](drivers/lighting.md#how-a-frame-goes-out) sends its bits with.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `symbols` | computer | Read the highs, the lows and the length of a 0 and a 1 | Each lies inside the windows of the older WS2812B revision and of the WS2812B-2020 datasheet |
+| `order` | computer | Encode one LED and decode its words | The LED goes out green, red, blue, each most significant bit first |
+| `lanes` | computer | Encode two LEDs into one lane of three alternating lanes | The words land every third word, and the other lanes' words stay |
+| `padding` | computer | Encode fewer LEDs than the lane holds, then more | Zero words follow the last LED, and an LED that does not fit whole stays out |
+| `scale` | computer | Encode colors at a brightness under full | Every color is scaled as FastLED's `scale8()` scales it |
+
 ### Event queue
 
 The program `event-queue` checks the [event queue](input-handling.md).
@@ -207,6 +229,22 @@ The program `solenoid` checks the [solenoid driver](drivers/solenoid.md).
 | `power-on` | machine | Switch the machine on | Every coil pulls once, one after another |
 | `play-only` | machine | Shoot a ball at the bumpers before a game, during its Play phase and after it | The bumpers fire only during Play |
 
+### LED output
+
+The program `ws2812-flexio2` checks the [FlexIO2 output](drivers/lighting.md#how-a-frame-goes-out) the lighting driver sends its frames through. It needs no wiring.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `wave` | Teensy | Send one frame of ten LEDs over six lanes on the lighting's pins, each LED a different color, and read the pins back through FlexIO2's pin register while the frame goes out | Every lane carries exactly its LEDs' bits, each high lies within the reading's tolerance of the encoder's high for a 0 or a 1, and every line is low before and after the frame |
+| `two-lanes` | Teensy | Do the same with two lanes, chain F's pin first and chain A's second | The same |
+| `busy` | Teensy | Send a frame, send a second one right after it, and send a third after the first has gone out | The output is busy while the first frame goes out and refuses the second at once. Then it is free again and takes the third |
+| `refusals` | Teensy | Start outputs with no lane, with one lane more than FlexIO2 has shifters, with a pin that does not reach FlexIO2 and with one pin for two lanes, then send on one of them, and ask for the FlexIO2 signal of that pin | Each start and the send return false, and the pin has no signal |
+| `long` | Teensy | Send one frame of the longest chain the lighting allows on chain F, where no LED is wired, and check each bit as it comes back | Every bit of the frame comes back as sent, each high within the reading's tolerance, and the line is low after the frame |
+| `load` | Teensy | Do the same frame after frame, at the lamps' frame period, while a second DMA channel copies between two buffers in RAM2 without a pause. A soak run sends ten times as many frames | Every frame comes back whole |
+| `latch` | Teensy | Send a short frame on chain F and the next one the moment the output is free again | The line stays low between the two frames for longer than the reset time that ends a frame for the LEDs |
+| `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts, and a frame goes out afterwards |
+| `shared` | Teensy | Send a frame through one output, then send through a second output while the frame goes out, and again once it is out | The second output is busy while the first one's frame goes out and refuses its send at once. Afterwards its send goes through |
+
 ### Lighting
 
 The program `lighting` checks the [lighting driver](drivers/lighting.md). Its tests up to `layout-6a` need LEDs on chain A alone.
@@ -214,11 +252,12 @@ The program `lighting` checks the [lighting driver](drivers/lighting.md). Its te
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `profiles` | Teensy | Start a driver without chains with `lighting.adapter_a` absent, below, inside and above its range | Each start selects the larger adapter's profile from that adapter's rating on, and the smaller adapter's profile below it |
-| `begin` | Teensy | Start the driver without `configure()` | `begin()` returns true with the smaller adapter's profile, and FastLED holds the strip's power model |
-| `colors` | bench | Show red, green, blue and white on chain A, then a rainbow | Each LED shows each color, and the limiter dims none of them |
+| `begin` | Teensy | Start the driver without `configure()`, then show | `begin()` returns true with the smaller adapter's profile and no chain, FastLED holds the strip's power model, and `show()` returns false |
+| `counts` | Teensy | Configure chain A with more LEDs than a chain may hold and the other chains with none, start the driver, then configure three LEDs and start it again | Chain A holds the bound's LEDs, all dark, the other chains hold none, and the second start keeps the chains of the first |
+| `colors` | bench | Show red, green, blue and white on chain A, then a rainbow | Each LED shows each color, and the cap dims none of them |
 | `limits` | bench | Show white at the profile's playfield brightness and at its ambient brightness, then its perimeter pattern | The LEDs step down to the ambient brightness, and the pattern lights the LEDs the profile's perimeter step names |
-| `cap` | bench | Show full white under the profile's cap, then under a cap the LEDs exceed | The limiter dims nothing under the profile's cap. Under the lower one it dims to the brightness the program's sum gives, and its estimate stays within that cap |
-| `layout-3a` | Teensy | Sum the whole light layout at full white within the limits of the smaller adapter's profile with FastLED's power functions | The sum stays under the profile's cap, so the limiter dims nothing |
+| `cap` | Teensy | Work out the brightness of three LEDs at full white under the profile's cap, then under a cap they exceed | Under the profile's cap the brightness is full. Under the lower one it is the brightness the program's sum gives, and the LEDs' draw at it stays within that cap |
+| `layout-3a` | Teensy | Sum the whole light layout at full white within the limits of the smaller adapter's profile with FastLED's power functions | The sum stays under the profile's cap, so the driver dims nothing |
 | `layout-6a` | Teensy | Do the same with the larger adapter's profile | The same |
 | `chains` | bench | Run one lit device along each chain from its start, chain after chain, with the chain's number on the serial monitor | Each chain lights all its devices in order, and no device of another chain lights |
 | `current` | bench | Limit the bench supply to just above the [budget](../parts/lighting/design.md#current-ceiling), connect every chain and set every device to full white | The supply never reaches its limit |
@@ -368,7 +407,7 @@ The program `every-driver` checks the [rules every driver follows](driver-design
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `begin-fails` | Teensy | Take every slot of the driver tick, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
-| `at-once` | Teensy | Make every driver call that starts a long transfer, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs |
+| `at-once` | Teensy | Make every driver call that starts a long transfer, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs, and a second light frame right after the first returns false at once |
 
 ## Components
 
@@ -396,13 +435,19 @@ The program `config` checks the [config component](components/config.md). It han
 
 ### Lamps
 
-The program `lamps` checks the [lamps component](components/lamps.md).
+The program `lamps` checks the [lamps component](components/lamps.md). Its computer tests run on a fake lighting driver and a stand-in of FastLED's colors, palettes and curves.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `effects` | computer | Start every effect on a fake lighting driver and step the clock through it | Each lamp shows the color its [effect](components/lamps.md#effects) gives at every moment, and `run()` moves its pattern one lamp per step in its direction |
+| `effects` | computer | Start every effect on a fake lighting driver and step the clock through it | Each lamp shows the color its [effect](components/lamps.md#effects) gives at every moment, `run()` moves its pattern one lamp per step in its direction, and a brightness outside 0 to 1 counts as the nearer end |
 | `overlap` | computer | Blink a lamp for one mode, lay effects of two modes of higher priority over it, then remove those modes one by one | Each removal shows the effect below, and the blink goes on in its old rhythm |
 | `six-modes` | computer | Set one lamp for six modes | The sixth effect is refused and counted, and the five before it stay |
+| `separate` | computer | Give two playfield lamps of one mode a blink and a steady color, then clear the steady one | Each lamp shows the effect set on it, and the blink goes on in its rhythm after the other lamp's clear |
+| `spans` | computer | Configure the lamps of two playfield sections with lamps of several LEDs, a count past a chain's end, a count of 0 and fewer counts than LEDs, and set each lamp to a different color | Each LED shows its lamp's color: a long count is cut at its chain's end, a 0 takes one LED, and the LEDs past the counts are one lamp each |
+| `chains` | computer | Place the playfield's lower section on chain A, the ceiling on a chain past F and the upper section on chain A as well, then light the lower section's lamps | `chainLeds()` refuses the two misplaced groups, they hold no lamps, and the lower section lights on chain A |
+| `gaps` | computer | Configure the right perimeter with two hidden stretches and run a chase along it on both profiles | The chase lights the visible LEDs one after the other at an even pace, no hidden LED lights, and the smaller adapter's profile takes every second visible LED |
+| `playfield-gaps` | computer | Configure a playfield section with a hidden LED and a hidden stretch, cut into lamps of 2, 1 and 2 LEDs, and give every lamp a different color | Every hidden LED stays dark, a lamp starts after a gap, the lamp that meets a gap ends there, and the LEDs past the counts are one lamp each |
+| `groups` | computer | Configure chains of different lengths, read every group's size on both profiles, take parts of the playfield at and past its end, and run a wipe along `ambient` | Each group holds the lamps its chains and the profile's perimeter step give, a part past the end is cut there, and the wipe starts at the left perimeter's first lamp |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 

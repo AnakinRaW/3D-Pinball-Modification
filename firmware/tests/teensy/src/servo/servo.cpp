@@ -1,5 +1,4 @@
-// The servo program of docs/firmware/testing.md. It tests on the bench whether the servo driver
-// sends the right pulses and moves the seesaw.
+// Tests on the bench whether the servo driver sends the right pulses and moves the seesaw.
 //
 //   first-pulse  from before begin() on, every pulse lies inside the SER0049's range
 //   pulses       angles handed to configure() give the pulses of those angles

@@ -100,6 +100,11 @@ private:
 - **A gist is deleted once its driver stands as code.** When a driver runs as code in `firmware/` and its gist holds nothing that the code and the documents lack, the gist goes, and every reference to it points to the code.
 - **A library is used through its API.** Code never reaches past a library into its internals, whether registers, private members or raw sectors.
 - **A comment says why.** A register value names its datasheet section.
+- **A file's opening comment stands alone.** Its first sentence says what the code is and does, without pointing to a document. A reference to the design document may close the comment.
+
+## Bench
+
+- **A program that runs at the bench lights at most ten LEDs**, unless a larger number is asked for. It configures the lighting driver with only the LEDs it lights.
 
 ## Tools
 

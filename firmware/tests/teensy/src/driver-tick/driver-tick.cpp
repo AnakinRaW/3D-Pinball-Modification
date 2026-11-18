@@ -1,5 +1,4 @@
-// The driver-tick program of docs/firmware/testing.md. It tests on the Teensy whether the driver
-// tick calls its callbacks on time.
+// Tests on the Teensy whether the driver tick calls its callbacks on time.
 //
 //   periods   callbacks every 1, 2 and 20 ticks run on, each one exactly on time
 //   refusals  attach() turns down a bad period and a ninth callback, and the others run on
