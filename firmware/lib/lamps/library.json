@@ -1,0 +1,10 @@
+{
+  "name": "lamps",
+  "version": "1.0.0",
+  "description": "The lamps component: the lamp groups, the effects on them, up to five at once by the priority of their modes, and the frames it hands the lighting driver",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}

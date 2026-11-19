@@ -3,9 +3,9 @@ public:
     // attaches the queue, registers with the device monitor and arms the pin interrupt;
     // false when the device monitor is full, and the driver then does nothing
     bool begin() override {
-        out_  = &events.attach(queue_, kQueueDepth);
+        events.attach(queue_, kQueueDepth, out_);
         self_ = this;
-        if (!deviceMonitor.watch(Device::BreakBeam, *this)) return false;
+        if (!deviceMonitor.watch(Device::BREAK_BEAM, *this)) return false;
         pinMode(kPin, INPUT);                              // R3 pulls the pin up
         *portControlRegister(kPin) |= IOMUXC_PAD_HYS;      // hysteresis, which INPUT leaves off
         attachInterrupt(digitalPinToInterrupt(kPin), [] { self_->edge(); }, CHANGE);

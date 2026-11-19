@@ -48,6 +48,6 @@ public:
     bool     holding() const;     // gets whether a ball rests in the scoop
     uint32_t heldMs() const;      // gets how long the ball has rested there, in milliseconds; 0 without one
     bool     fire();              // pulls the coil once; false while it is still on or cooling down
-    Lamp     lamp(const Mode& mode);   // gets the scoop lamp for the key and priority of mode
+    Lamp     lamp(Layer layer);   // gets the scoop lamp for a mode's layer
 };
 ```

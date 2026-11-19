@@ -22,7 +22,7 @@ A sound is named by its file name in the game's audio directory, such as `bumper
 
 The music plays one track at a time. Several modes can each start a track. Only the track of the mode with the highest [priority](../game-abstraction.md#modes) plays. Between equal priorities, the later track plays. The other tracks are paused. When the track on top ends or is stopped, the next one resumes where it was paused. A track started with `loop` repeats.
 
-A mode starts a track with `music(*this, name)`. A new track of the same mode replaces the one before, so a mode plays its tracks one after another. `stopMusic(*this)` ends the track while the mode runs on. When the mode ends, [`ModeStack::stop()`](../game-abstraction.md#modes) calls `stopMusic(mode)`, and the paused track below resumes.
+A mode starts a track with `music(layer(), name)`. A new track of the same mode replaces the one before, so a mode plays its tracks one after another. `stopMusic(layer())` ends the track while the mode runs on. When the mode ends, [`ModeStack::stop()`](../game-abstraction.md#modes) calls `stopMusic(mode)`, and the paused track below resumes.
 
 A video's sound is a track as well. It lies over every track of the game, whatever their priorities. A track started while the video's sound plays stays paused under it. Once the video's sound has ended, the track on top resumes, or starts from its beginning when it has not played yet.
 
@@ -74,12 +74,12 @@ public:
     // plays a track of the running game by its file name for mode at the mode's priority, from its
     // beginning, over and over with loop; it replaces the mode's track, and on top it pauses the track
     // below
-    void music(const Mode& mode, const char* name, bool loop = false);
+    void music(Layer layer, const char* name, bool loop = false);
 
     // ends the mode's track, and the mode stack calls it when the mode ends; on top, the paused track
     // below resumes
-    void stopMusic(const Mode& mode);
-    bool musicEnded(const Mode& mode) const;   // gets whether the mode holds no track that plays or is paused
+    void stopMusic(Layer layer);
+    bool musicEnded(Layer layer) const;   // gets whether the layer holds no track that plays or is paused
 
     void musicVolume(float percent);       // sets the volume of the music and of a video's sound, 0 to 1 as a percentage
     void effectsVolume(float percent);     // sets the volume of the effects, 0 to 1 as a percentage

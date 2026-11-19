@@ -6,6 +6,9 @@
 // document gives the default and the range
 namespace ConfigKey {
 constexpr const char* kAdapterA      = "lighting.adapter_a";     // lighting driver
+constexpr const char* kLampGroups[] = {   // lamps component, each with chain, leds, lamps and gaps
+    "lamps.perimeter_left", "lamps.perimeter_right", "lamps.ceiling",
+    "lamps.playfield_lower", "lamps.playfield_middle", "lamps.playfield_upper"};
 constexpr const char* kMusicVolume   = "audio.music_volume";     // sounds component
 constexpr const char* kEffectsVolume = "audio.effects_volume";   // sounds component
 constexpr const char* kServoStart    = "servo.start_deg";        // servo driver

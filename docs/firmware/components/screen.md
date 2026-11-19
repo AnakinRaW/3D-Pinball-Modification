@@ -22,7 +22,7 @@ The screen keeps the slides in a [priority list](../general-design.md#priority-l
 
 A mode uses its slide in three steps.
 
-1. When the mode starts, it takes its slide from `slide(*this)`. A second call for the same mode gets the same slide.
+1. When the mode starts, it takes its slide from `slide(layer())`. A second call for the same mode gets the same slide.
 2. While the mode runs, it puts its objects on that slide. A [video](video-player.md) plays in a viewport on it.
 3. When the mode ends, the [mode stack](../game-abstraction.md#modes) calls `remove(mode)`. The slide leaves with its objects. The slide below then shows.
 
@@ -90,8 +90,8 @@ public:
 
     // gets the slide of mode, the parent of its objects; a new slide lies at the mode's priority,
     // above the slides of equal priority
-    lv_obj_t* slide(const Mode& mode);
-    void      remove(const Mode& mode);      // deletes the slide of mode with its objects, so the slide below shows
+    lv_obj_t* slide(Layer layer);
+    void      remove(Layer layer);      // deletes the slide of a layer with its objects, so the slide below shows
 
 private:
     friend class GameHost;

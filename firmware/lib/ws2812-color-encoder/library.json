@@ -1,0 +1,10 @@
+{
+  "name": "ws2812-color-encoder",
+  "version": "1.0.0",
+  "description": "Turns the colors of WS2812B LEDs into the words a FlexIO shifter sends, 13 steps of 100 ns for each bit, into a buffer in which the words of several chains alternate",
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcDir": "."
+  }
+}

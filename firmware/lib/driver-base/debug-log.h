@@ -1,5 +1,5 @@
-// DEBUG_LOG() of firmware/CLAUDE.md: prints in a debug build, and the compiler removes it in a
-// release build, so no Serial.print() stays behind in the firmware for the machine.
+// DEBUG_LOG() prints in a debug build, and the compiler removes it in a release build, so no
+// Serial.print() stays behind in the firmware for the machine. firmware/CLAUDE.md sets its use.
 #pragma once
 #include <Arduino.h>
 

@@ -1,7 +1,8 @@
-// What every driver shares, as docs/firmware/driver-design.md and docs/firmware/error-handling.md
-// design it: the Driver interface, the Fault a driver reports and the driver tick.
+// What every driver shares: the Driver interface, the Fault a driver reports and the driver tick.
 //
 // driverTick is the one DriverTick every driver attaches to.
+//
+// Design: docs/firmware/driver-design.md and docs/firmware/error-handling.md.
 #pragma once
 #include <Arduino.h>
 #include <IntervalTimer.h>

@@ -10,7 +10,7 @@ In this build it gets connected directly to the Teensy.
 
 ![Toggle switch schematic](toggle-switch-schematic.svg)
 
-A lead with the matching receptacle takes the switch to pin [32](../../pin-assignment.md "Toggle switch"), which the switch closes to ground. The Teensy's internal pull-up holds the pin high while the switch is open.
+A lead with the matching receptacle takes the switch to pin [5](../../pin-assignment.md "Toggle switch"), which the switch closes to ground. The Teensy's internal pull-up holds the pin high while the switch is open.
 
 R1, 1.2 kΩ, sits on the [Teensy motherboard](../motherboard/design.md) in series with the pin. It protects coding errors if the firmware ever drives the pin high against the closed switch. R1 limits the current to 2.93 mA.
 
@@ -25,8 +25,8 @@ Each game decides what the switch does. The firmware reports only its position.
 
 | Qty | Part | Where |
 |---|---|---|
-| 1 | stock toggle switch (P26) | its two wires on pin [32](../../pin-assignment.md "Toggle switch") and GND of the Teensy |
-| 1 | 1.2 kΩ resistor, 5 % or better | R1, on the Teensy motherboard, in series between pin [32](../../pin-assignment.md "Toggle switch") and the switch |
+| 1 | stock toggle switch (P26) | its two wires on pin [5](../../pin-assignment.md "Toggle switch") and GND of the Teensy |
+| 1 | 1.2 kΩ resistor, 5 % or better | R1, on the Teensy motherboard, in series between pin [5](../../pin-assignment.md "Toggle switch") and the switch |
 
 ## Appendix: derivations
 

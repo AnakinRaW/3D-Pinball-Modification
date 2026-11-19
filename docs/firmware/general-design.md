@@ -63,7 +63,6 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT | the pin interrupt, one for every pin | milliseconds | no | 96 |
 | Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
-| Lighting, refilling the half of the LED bit buffer that has gone out | FastLED's DMA | the next half of the bit buffer | no | 128 |
 | I²C buses, running every transfer on Wire and Wire2 | LPI2C1 and LPI2C4 | none, a late start only delays the next transfer | no | 160 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
@@ -83,12 +82,11 @@ Each peripheral below belongs to one driver, and no other code or library may us
 |---|---|---|
 | SPI | IR ball sensing | reads the converters |
 | QuadTimer3, all four channels | IR ball sensing | counts the sensor phases and starts the read block |
-| QuadTimer4 | Lighting | FastLED's ObjectFLED driver times the LED data |
+| FlexIO2 | Lighting | ws2812-flexio2 clocks the six LED chains out, one shifter a chain |
 | I²S2 | Audio | the Audio library hands every block to the amplifier |
 | Wire | I²C bus | runs every transfer of the rotary sensor and the port expander |
 | FlexPWM1.1 | Servo | PWMServoT4, this repository's copy of PWMServo, repeats the servo pulse |
 | FlexIO3 | Display | clocks the 8-bit bus out to the display |
-| FlexIO2 | Display | runs on FlexIO3's clock, which the driver sets |
 | Wire2 | I²C bus | runs every transfer of the touch driver |
 | GPT2 | Time measurement | counts the microseconds that `nowUs()` reads |
 | FlexSPI2 | PSRAM | Teensyduino's start-up code connects the PSRAM through it |
@@ -105,7 +103,7 @@ The two `elapsed` functions read the noted time before the current one, so an in
 
 ## Priority lists
 
-A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. [`firmware/gist/priority-list.h`](../../firmware/gist/priority-list.h) holds it as `PriorityList`.
+A priority list holds a fixed number of entries ordered by priority, the highest first. Between equal priorities the entry put in later lies higher. An entry stays where it was put until it is removed, so a pointer to it stays valid. The list takes no memory from the heap. The library [`firmware/lib/priority-list/`](../../firmware/lib/priority-list/) holds it as `PriorityList`.
 
 Four parts of the firmware order their entries with a priority list. The [lamps component](components/lamps.md#overlapping-effects) orders the effects on each lamp, so the lamp shows the effect on top. The [screen](components/screen.md#slides) orders the game's slides, so the slide on top shows. The [sounds](components/sounds.md#music) order the game's tracks of music, so the track on top plays. A game's [mode stack](game-abstraction.md#modes) orders the running modes, so the mode on top sees an event first.
 
@@ -119,6 +117,6 @@ Four parts of the firmware order their entries with a priority list. The [lamps 
 4. the logger's `begin()`, and then the [report of the last restart](error-handling.md#restart-causes);
 5. the [config's](components/config.md) `begin()`, which reads the machine's settings, and the solenoids' `configure()`, which hands them their pull times;
 6. the `configure()` and `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
-7. the `begin()` of the screen, which starts LVGL, and of the video player;
+7. the `begin()` of the screen, which starts LVGL, and of the video player, then the lamps' `configure()` and `begin()`, which size the lamps to the lighting's chains;
 8. the game host's `begin()`;
 9. the main loop, which hands the queued events to the host, updates the host, the logger, the screen and the lamps, calls `yield()` and feeds the watchdog. The screen runs the video player through LVGL.

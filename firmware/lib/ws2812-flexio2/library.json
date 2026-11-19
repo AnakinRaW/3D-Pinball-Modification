@@ -1,0 +1,10 @@
+{
+  "name": "ws2812-flexio2",
+  "version": "1.0.0",
+  "description": "Sends the colors of up to eight WS2812B LED chains from a Teensy 4.x, one chain per pin, all chains at once. FlexIO2 times every bit in hardware, so the LEDs show the right colors however busy the processor is.",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": "."
+  }
+}

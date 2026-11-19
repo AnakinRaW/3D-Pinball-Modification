@@ -1,22 +1,23 @@
-// The lighting driver of docs/firmware/drivers/lighting.md. FastLED sends the six LED chains in
-// parallel by DMA through ObjectFLED, its only driver, and holds the lighting under the cap of the
-// adapter's profile with the strip's measured power model.
+// The lighting driver sends the colors of six LED chains under the cap of the adapter's profile.
+// FastLED provides the colors and the strip's measured power model, by which the driver dims a
+// frame that would draw past the cap. firmware/lib/ws2812-flexio2 sends the frames, all six
+// chains at once, each on its pin.
 //
-// Driver comes from firmware/lib/driver-base. The main task hands the adapter's rating from the
-// config to configure() before begin().
+// Driver comes from firmware/lib/driver-base. The main task hands the adapter's rating and the
+// LEDs of each chain from the config to configure() before begin(). A bench program configures
+// the LEDs it has. A chain of no LEDs leaves its pin as it is.
 //
-// LightingChains takes the length of each chain, so a bench program can drive the LEDs it has.
-// A chain of no LEDs stays out of FastLED, and its pin is left as it is. Lighting is the driver
-// with the chains of the light layout.
+// Design: docs/firmware/drivers/lighting.md.
 #pragma once
 #include <Arduino.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
 #pragma GCC diagnostic push
-#include <FastLED.h>   // FastLED 3.10.6 or newer, which names ObjectFLED slot 0 of FLEX_IO
+#include <FastLED.h>
 #pragma GCC diagnostic pop
 #include <debug-log.h>
 #include <driver-base.h>
+#include <ws2812-flexio2.h>
 
 // what the lighting may light and how bright, for one adapter rating
 struct Profile {
@@ -26,17 +27,17 @@ struct Profile {
     uint32_t capMa;          // the lighting's cap, in mA at 5 V
 };
 
-template <uint16_t LEDS_A, uint16_t LEDS_B, uint16_t LEDS_C, uint16_t LEDS_D, uint16_t LEDS_E,
-          uint16_t LEDS_F>
-class LightingChains : public Driver {
+class Lighting : public Driver {
 public:
-    static constexpr uint8_t CHAINS = 6;
-    static constexpr uint16_t CHAIN_LEDS[CHAINS] = {LEDS_A, LEDS_B, LEDS_C, LEDS_D, LEDS_E, LEDS_F};
+    static constexpr uint8_t CHAINS = 6;   // design.md: chains A to F
+    static_assert(CHAINS <= Ws2812Flexio2::MAX_LANES, "every chain takes a FlexIO2 shifter");
+    // the lighting model's n_chain_limit: one meter of the 160 LEDs/m strip
+    static constexpr uint16_t MAX_CHAIN_LEDS = 160;
 
     // The two profiles of design.md, Current ceiling: the playfield at full brightness, the
     // ambient lights at what the cap leaves in FastLED's sum with the whole layout at full white.
-    static constexpr Profile PROFILE_3A = {2, 96, 255, 2000};
-    static constexpr Profile PROFILE_6A = {1, 126, 255, 2930};
+    static constexpr Profile PROFILE_3A = {2, 102, 255, 2000};
+    static constexpr Profile PROFILE_6A = {1, 128, 255, 2930};
 
     // What one LED of the strip draws at full value, in mW at 5 V and rounded up, from the
     // currents measured in docs/research/Custom/sezo-ws2812b-strip.md.
@@ -50,88 +51,53 @@ public:
     static constexpr uint8_t ADAPTER_MIN_A = 3;
     static constexpr uint8_t ADAPTER_MAX_A = 6;
 
-    // the config's lighting.adapter_a, 3 A by default
+    // the config's lighting.adapter_a, 3 A by default, and each chain's LEDs, which the main task
+    // takes from the lamp groups of the config
     struct Settings {
         uint8_t adapterA = ADAPTER_MIN_A;
+        uint16_t leds[CHAINS] = {};
     };
 
-    // Takes the adapter's rating. A rating outside the range counts as the nearer end. The main
-    // task calls it before begin(), and without it begin() takes the default.
-    void configure(const Settings& settings) {
-        if (settings.adapterA < ADAPTER_MIN_A || settings.adapterA > ADAPTER_MAX_A) {
-            DEBUG_LOG("Lighting::configure: %u A lies outside %u to %u A\n", settings.adapterA,
-                      ADAPTER_MIN_A, ADAPTER_MAX_A);
-        }
-        adapterA = settings.adapterA;
-    }
+    // Takes the adapter's rating and the LEDs of each chain. A value outside its range counts as
+    // the nearer end. The main task calls it before begin(). Without it, begin() takes the 3 A
+    // profile and no chain.
+    void configure(const Settings& settings);
 
-    // Selects the profile for the adapter, adds the chains to FastLED on their pins and sets the
-    // power model and the cap.
-    bool begin() override {
-        current = adapterA >= ADAPTER_MAX_A ? PROFILE_6A : PROFILE_3A;
-        // ObjectFLED on QuadTimer4. Slot 1 is FlexIO2, which the display owns.
-        FastLED.setExclusiveDriver<fl::Bus::FLEX_IO, 0>();
-        if constexpr (LEDS_A > 0) {
-            FastLED.addLeds<WS2812B, PIN_A, GRB>(chainA, LEDS_A);
-        }
-        if constexpr (LEDS_B > 0) {
-            FastLED.addLeds<WS2812B, PIN_B, GRB>(chainB, LEDS_B);
-        }
-        if constexpr (LEDS_C > 0) {
-            FastLED.addLeds<WS2812B, PIN_C, GRB>(chainC, LEDS_C);
-        }
-        if constexpr (LEDS_D > 0) {
-            FastLED.addLeds<WS2812B, PIN_D, GRB>(chainD, LEDS_D);
-        }
-        if constexpr (LEDS_E > 0) {
-            FastLED.addLeds<WS2812B, PIN_E, GRB>(chainE, LEDS_E);
-        }
-        if constexpr (LEDS_F > 0) {
-            FastLED.addLeds<WS2812B, PIN_F, GRB>(chainF, LEDS_F);
-        }
-        FastLED.setPowerModel(PowerModelRGB(RED_MW, GREEN_MW, BLUE_MW, DARK_MW));
-        FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, current.capMa);
-        return true;
-    }
+    // Selects the profile for the adapter, sets FastLED's power model, takes the colors from the
+    // heap and starts the output on the chains with LEDs. Returns false when the heap has no room
+    // or the output does not start. A later call keeps the chains of the first.
+    bool begin() override;
 
     // Gets the profile the lighting runs with.
     const Profile& profile() const { return current; }
 
-    // Gets the LEDs of chain c, 0 to 5, whose colors the next show() sends. Gets nullptr for any
-    // other c.
-    CRGB* chain(uint8_t c) {
-        if (c >= CHAINS) {
-            DEBUG_LOG("Lighting::chain: no chain %u\n", c);
-            return nullptr;
-        }
-        return chains[c];
-    }
+    // Gets how many LEDs chain c, 0 to 5, holds. Gets 0 for any other c.
+    uint16_t leds(uint8_t c) const;
 
-    // Sends the colors of every LED by DMA. Returns at once.
-    void show() { FastLED.show(); }
+    // Gets the LEDs of chain c, 0 to 5, whose colors the next show() sends. Gets nullptr for any
+    // other c and for a chain without LEDs.
+    CRGB* chain(uint8_t c);
+
+    // Scales the colors of every LED under the profile's cap and starts sending them. Returns at
+    // once. Returns false, and sends nothing, before begin(), without LEDs and while the last
+    // frame still goes out.
+    bool show();
+
+    // Gets the brightness the last show() scaled every color by, 255 where the cap dimmed nothing.
+    uint8_t brightness() const { return shown; }
+
+    // Gets the brightness of 0 to 255 at which the LEDs stay under a cap, by FastLED's power
+    // model: 255 where they stay under it at full value.
+    static uint8_t brightnessUnder(const CRGB* leds, uint16_t count, uint32_t capMa);
 
 private:
-    static constexpr uint8_t PIN_A = 5;    // pin-assignment.md: LED chain A
-    static constexpr uint8_t PIN_B = 6;    // pin-assignment.md: LED chain B
-    static constexpr uint8_t PIN_C = 7;    // pin-assignment.md: LED chain C
-    static constexpr uint8_t PIN_D = 8;    // pin-assignment.md: LED chain D
-    static constexpr uint8_t PIN_E = 9;    // pin-assignment.md: LED chain E
-    static constexpr uint8_t PIN_F = 10;   // pin-assignment.md: LED chain F
-
-    // A chain of no LEDs keeps one LED's room, which no show() sends.
-    static constexpr uint16_t room(uint16_t leds) { return leds > 0 ? leds : 1; }
-
-    uint8_t adapterA = ADAPTER_MIN_A;   // the rating configure() took
+    Settings settings;   // what configure() took
     Profile current = PROFILE_3A;
-    CRGB chainA[room(LEDS_A)];
-    CRGB chainB[room(LEDS_B)];
-    CRGB chainC[room(LEDS_C)];
-    CRGB chainD[room(LEDS_D)];
-    CRGB chainE[room(LEDS_E)];
-    CRGB chainF[room(LEDS_F)];
-    CRGB* const chains[CHAINS] = {chainA, chainB, chainC, chainD, chainE, chainF};
+    bool allocated = false;
+    uint16_t counts[CHAINS] = {};
+    CRGB* chains[CHAINS] = {};
+    CRGB* colors = nullptr;   // the LEDs of every chain, chain after chain
+    uint16_t total = 0;       // the LEDs of every chain together
+    uint8_t shown = 255;
+    Ws2812Flexio2 output;
 };
-
-// The chains of the light layout table in docs/parts/lighting/design.md. D to F grow by the
-// playfield action lights once their places are fixed.
-using Lighting = LightingChains<79, 79, 26, 21, 12, 7>;

@@ -1,5 +1,4 @@
-// The clock program of docs/firmware/testing.md. It tests on the Teensy whether nowUs() counts
-// microseconds.
+// Tests on the Teensy whether nowUs() counts microseconds.
 //
 //   rate  nowUs() and the processor's cycle counter agree over the run, read side by side
 //
