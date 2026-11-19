@@ -2,26 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Safety
+
+These come before every other consideration, in every design, document and bench run.
+
+- **The Teensy 4.1's pins are not 5 V tolerant.** PJRC states that no digital or analog pin may be driven above 3.3 V. Anything that meets 5 V is level shifted. Every design that touches a Teensy pin flags this, since it is the most likely way to destroy the board.
+- **A Teensy 4.1 pin carries 4 mA at most.** PJRC's [4.1 product page](https://www.pjrc.com/store/teensy41.html) gives 4 mA as the recommended maximum. The [comparison table](https://www.pjrc.com/teensy/techspecs.html) says 10 mA because it spans every generation. Design against 4 mA, as [`docs/research/teensy-4.1.md`](docs/research/teensy-4.1.md) sets out.
+- **The build stays within SELV**, at USB 5 V or a low-voltage DC supply of 24 V at most (rule 4). Mains needs an explicit decision and a qualified electrician.
+- **A bench program lights at most ten LEDs**, unless a larger number is asked for, and configures the lighting driver with only those LEDs. A whole chain at full white trips the bench supply. Before any flash or test run that lights LEDs, the chat names which LEDs light, how bright, for how long and what should show.
+- **A substitute part is usable only once its datasheet is checked against everything the current part satisfies**: supply voltage, its current against the budget it draws from (`figcheck --graph` gives the other consumers), clock or timing, package and pinout. The verdict includes that check.
+- **An electrical value carries its source**, a datasheet page, a standard or a measurement. An estimate is stated as one (rule 2), since a fabricated number will not be caught here.
+
 ## Rules
 
-[`RULES.md`](RULES.md) is the working agreement for this repository and takes precedence over anything below. Read it before acting. Its load-bearing points:
+[`RULES.md`](RULES.md) is the working agreement for this repository and takes precedence over anything below. These are its points that sessions have broken most often:
 
-- **Never push.** Commit only when explicitly told, or the conditions of `RULES.md` allow it.
-- **The modification is reversible** (rule 12). No stock board is re-soldered and no part is cut or drilled past its original purpose. Electrical access to a stock board is therefore limited to its connectors, or the board is swapped out whole and kept intact.
-- **The build is through-hole** (rule 17). No document, drawing or model carries an SMD variant. A part that exists only as SMD sits on an adapter.
-- **Do not create or modify design artifacts** — schematics, PCB, CAD, firmware, BOM — without being asked. Documentation is the exception and is kept in sync automatically once a matter is settled.
-- **Assume a software-engineering background, not an electrical one.** Explain the failure mode behind each choice, cite datasheet sources for electrical values, and never present an estimate as a measured fact.
-- **Re-evaluation means re-deriving from sources**, not restating an earlier answer.
-- **Rule 14 grades every finding.** Critical and Important are reported at once, in plain words first, with an alternative in the same message. Medium warns, Low is corrected and reported collected. The derivation is finished before a Critical finding is raised, and a review task is always completed first.
-- **A derived figure is computed in a model and written into the documents from there** (rule 15). Every subsystem that derives figures has its own `model/parts/<subsystem>/figures.py`, and `tools/figcheck.py` fails the run when a document, an appendix block or an SVG disagrees with it. Change the input in the model, let `--write` put the result in the files, and never type a figure into a document by hand. A green run means consistent, so the direction declarations, the invariants and the datasheet lookup carry what makes it correct.
-- **Rule 10 bans a specific writing tic**: meta-commentary about what a document is or is not, and antithesis used for rhythm. Check prose against it before writing a file.
-- **Search with the model number** — "Teensy 4.1", never "Teensy". Rule 11 gives the source ranking; pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
+- **Never push.** Commit only when told, and only the named files after `git diff --cached` (rule 5).
+- **Design artifacts change only on an explicit instruction** (rule 8). They are schematics, PCB, CAD, firmware with the bench programs, and the BOM. A question such as "why not X?" gets an answer and no edit. A quick bench demo is built from a copy in the scratchpad. Documentation is the exception and follows a settled matter without being asked (rule 7).
+- **A settled change is swept in one pass** (rules 3 and 7). Grep the old and the new number across `docs/`, `firmware/` and `model/`. A settled fact has no number to grep, so every derivation that took it as an input is re-run. Findings arrive together, never one per session.
+- **A settled fact loses its caveat**, and an open figure that nothing depends on gets no measurement (rule 3). A cheap part that makes a measurement unnecessary is the answer.
+- **The modification is reversible** (rule 12). No stock board is re-soldered and no part is cut or drilled past its original purpose, so a stock board is reached through its connectors or swapped out whole.
+- **The build is through-hole** (rule 17). A part that exists only as SMD sits on an adapter.
+- **A software developer reads this** (rule 2). Name the failure mode behind each choice, and explain a quantity's idea before its number.
+- **Re-evaluation re-derives from the sources** (rule 9). Rewriting a passage means reading its sources again, never restoring sentences from the conversation.
+- **Rule 14 grades every finding.** Critical and Important are reported at once, in plain words first, with an alternative. A Critical finding waits until its derivation is finished, and a review is completed before anything is reported.
+- **A derived figure lives in a model** (rule 15). Each subsystem's `model/parts/<subsystem>/figures.py` computes it, `--write` puts it into the files, and `tools/figcheck.py` fails a document or a drawing that disagrees. A figure is never typed into a document by hand.
+- **Rule 10 governs every sentence written**, in documents, code comments and chat. Check a draft against its bans before writing a file. "Its own" and "on its own" are never written.
+- **Search with the model number**, such as "Teensy 4.1" and never "Teensy" (rule 11). pjrc.com outranks the forum, where only Paul Stoffregen is authoritative.
+- **A rule that binds the work goes into the CLAUDE.md beside what it governs**, such as [`firmware/CLAUDE.md`](firmware/CLAUDE.md). `docs/` holds the design. A sub-directory's `README.md` describes its folder for a visitor.
 
 @RULES.md
 
 ## Project
 
-Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware/code, custom PCB designs (schematics + layout), 3D CAD files, the part list (BOM), research notes, documentation, and media assets.
+Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware, custom PCB designs, 3D CAD files, the part list (BOM), research notes, documentation and media.
 
 The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
@@ -30,63 +44,46 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | Area | Tool | Status |
 |---|---|---|
 | Microcontroller | Teensy 4.1 (NXP i.MX RT1062) | Chosen |
-| Schematic + netlist | Declared pin by pin in the subsystem's `schematic.py` under `model/`. KiCad is opt-in: `tools/netlist.py` writes a board out as a KiCad netlist and compares one KiCad exported | Chosen |
-| 3D CAD | FreeCAD **or** Fusion | **Undecided** — do not assume one |
-| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader (`upload_protocol = teensy-gui`; `teensy-cli` fails to write on this machine). Its own linker script, [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld), keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
-| Teensy core | Always the newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
+| Schematic and netlist | Declared pin by pin in the subsystem's `schematic.py` under `model/`. KiCad is opt-in: `tools/netlist.py` writes a board out as a KiCad netlist and compares one KiCad exported | Chosen |
+| 3D CAD | FreeCAD **or** Fusion | **Undecided**, assume neither |
+| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader with `upload_protocol = teensy-gui`, since `teensy-cli` fails to write on this machine. The linker script [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld) keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
+| Teensy core | The newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
 | LED library | FastLED 3.10.6 or newer from PlatformIO's registry. Teensyduino 1.62 ships FastLED 3.4.0, which has neither the ObjectFLED driver nor `setPowerModel`, and before 3.10.6 FastLED names the ObjectFLED driver differently | Chosen |
-| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets; the screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
-| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds; the tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
-
-**The Teensy 4.1 runs 3.3 V logic and its pins are not 5 V tolerant** — PJRC states plainly that no digital or analog pin may be driven above 3.3 V. Anything interfacing with 5 V needs level shifting. Flag this on every design that touches a Teensy pin; it is the most likely way to destroy the board.
-
-**Per-pin output current is 4 mA, not 10 mA.** PJRC's [4.1 product page](https://www.pjrc.com/store/teensy41.html) gives 4 mA as the recommended maximum; the [comparison table](https://www.pjrc.com/teensy/techspecs.html) says 10 mA because that grid spans every generation. Design against 4 mA — see [`docs/research/teensy-4.1.md`](docs/research/teensy-4.1.md).
+| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets. The screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
+| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds. The tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
 
 ## Repository layout
 
-- `firmware/` — the firmware for the Teensy 4.1: its source, its tests, its measurement programs and code notes. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
-- `firmware/gist/` — code notes, not firmware
-- `firmware/src/` — the firmware's source
-- `firmware/include/` — the settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings
-- `firmware/lib/` — the libraries this repository holds, one folder each, which `platformio.ini` names in `lib_deps` and a bench program takes with `symlink://`
-- `firmware/tests/` — the tests of the firmware's code, one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md): the computer tests in `test_<program>`, and every Teensy test in the one test image `teensy/`
-- `firmware/bench/` — the measurement programs the bench figures in the models come from
-- `hardware/pcb/` — a board made as a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
-- `hardware/cad/` — 3D models: source model plus a neutral export (STEP for mating parts, STL/3MF for printed ones)
-- `docs/` — documentation of the mod
-- `docs/firmware/` — the firmware's design, one document per driver and component
-- `docs/parts/` — the design itself, one directory per subsystem, each holding its circuit document and schematic SVGs
-- `model/` — the Python files the checks read, in folders that mirror those under `docs/`: a subsystem's `figures.py`, its `schematic.py` and its perfboard layouts, the Teensy's figures in `model/research/teensy-4.1.py` and the firmware's in `model/firmware/figures.py`
-- `docs/research/` — investigation of the stock machine and per-component notes
-- `docs/datasheets/` — manufacturer datasheets, referenced from the research and design documents
-- `docs/parts-list.md` — bill of materials
-- `docs/pin-assignment.md` — Teensy pins spent, and what each one locks out
-- `assets/` — photos, renders, and other media
-- `tools/perfboard/` — the perfboard inventory (boards, edge pads, connection kinds, every part's size and pinout with its datasheet location, the breakout boards' outlines and pin rows) and the SVG library that draws those parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `.claude/skills/` — repository-local skills for schematic work (see below)
-
-Sub-directory `README.md` files describe their contents **for a repository visitor**. Maintenance conventions belong here or in `RULES.md`, never in those files.
+- `firmware/`: the firmware for the Teensy 4.1, with its source in `src/`, the shared settings headers in `include/`, the libraries in `lib/` (one folder each, named in `lib_deps` of `platformio.ini`, taken by a bench program with `symlink://`), the tests in `tests/`, the measurement programs in `bench/` and code notes in `gist/`. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
+- `firmware/tests/`: one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md), the computer tests in `test_<program>` and every Teensy test in the one test image `teensy/`
+- `hardware/pcb/`: a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
+- `hardware/cad/`: 3D models, a source model plus a neutral export (STEP for mating parts, STL or 3MF for printed ones)
+- `docs/firmware/`: the firmware's design, one document per driver and component
+- `docs/parts/`: the design, one directory per subsystem with its circuit document and schematic SVGs
+- `docs/research/`: the stock machine and one note per component. `docs/datasheets/` holds the manufacturer datasheets they cite
+- `docs/parts-list.md` is the bill of materials, and `docs/pin-assignment.md` the Teensy pins spent and what each locks out
+- `model/`: the Python files the checks read, in folders that mirror those under `docs/`. A subsystem's `figures.py`, `schematic.py` and perfboard layouts sit there, the Teensy's figures in `model/research/teensy-4.1.py` and the firmware's in `model/firmware/figures.py`
+- `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
+- `assets/`: photos, renders and other media
+- `.claude/skills/`: the repository's skills, listed below
 
 ## Commands
 
 | | |
 |---|---|
-| `python tools/figcheck.py --sheets` | Recomputes every figure every subsystem derives, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`. Each model also declares its subsystem's nets, the peripherals its driver owns and what it draws from a shared budget, such as the Teensy's 3V3 pin or a slot of the driver tick, and the run checks that wiring and those budgets across all models. A model path such as `model/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark. The path reads from the root of the checkout whose `tools/figcheck.py` runs. Fourteen subsystems have a model so far: `ir-reflective`, `break-beam`, `solenoid`, `audio`, `magnetic-rotary`, `controls`, `servo`, `lighting`, `display`, `power`, `psram`, `port-expander`, `contacts` and `motherboard`. The motherboard model derives nothing and only takes the values of the parts it carries from their subsystems. The lighting model governs only the Level shifting, Signal wiring and Supply sections of its document, plus the lamps component's document. Two more hold what the subsystems share: `model/research/teensy-4.1.py` the board's and the chip's figures, `model/firmware/figures.py` the firmware's periods, watchdog, interrupt priorities and slots. A figure is declared in one model, and every other model takes it with `MODEL.uses(key, of=...)`, so a Teensy or firmware figure is never declared twice. A drawing anchors another model's figure directly as `data-fig="model:key"` and needs no `uses` for it. Rule 15 governs when it runs and what it is worth; [`tools/CLAUDE.md`](tools/CLAUDE.md) lists the twenty-eight checks it reports and what a model declares, [`tools/README.md`](tools/README.md) the flags. Run it after any change to a value, and extend the model when a derivation is added. CI runs it on each push touching `docs/`, `firmware/` or `tools/` |
-| `… ` prose pass | Every number in the prose, not only the ones in blocks and tables, is matched against every declared quantity with its unit converted. What the model does not compute is declared in it as `MODEL.aside(text, why)`, which is what stops a figure going stale where nothing anchors it |
-| `… --groups` | Dumps the groups, sections and tokens the parser found. This is how a block's or a declaration's `group` and `section` are written; guessing them wastes a run |
-| `… --graph <key>` | One quantity in full: value, source, formula, the value of each input to it, what it rests on and what it feeds. This is how a derivation is read back without opening the model |
-| `… --provenance` | Every input by kind, each with its source. `graph` is a reading off a plotted curve, which no text search can confirm |
-| `… --sheets` | Looks every `datasheet` reading up in the PDF it cites, decrypting the empty-password sheets the way a viewer does. A sheet this reader cannot decode is reported unread rather than passed. A `graph` reading is exempt and checked against its declared curve instead |
-| `… --mutate` | Self-test: moves every token a figure could land on and requires the run to report that figure. A twice-printed value that only moves once lands on its other occurrence and hides the break |
-| `… --base <ref>` | The ref the stale-number report diffs against and `--write` takes the old figures from. CI passes the pull request's base |
-| `… --write` | Writes the model's figures into the document and the SVGs, so a figure is typed in the model only. A bound goes in on the side that keeps it true, and a figure the writer cannot place is reported rather than guessed. A figure that moved off its line is found on the line that still reads its value at `--base`. Where figures that print different values could each take the same lines, those lines stay as they are until a `label` in the model tells the figures apart. A label is a phrase that only the figure's own line carries. A block in which a figure found no separate line is left unwritten: place the reported figures by hand, then run `--write` again for the rest. It also records the checksum of each cited datasheet that has none yet |
-| `python tools/svgcheck.py` | Measures every label in every drawing under `docs/` and reports the ones that leave the viewBox, leave the box they sit in, or land on another label, and it reports two boxes that cross where one of them is an outline. figcheck checks what a drawing says, this checks whether it can be read. **Run it after moving or adding any text or any box in an SVG.** It stays out of CI: widths are estimated from character classes rather than measured from a font, so a report is a place to look and not a verdict |
-| `python tools/perfboard/build.py <layout.py> [out.svg]` | Checks a perfboard layout against the hard rules and the house style that [`tools/perfboard/CLAUDE.md`](tools/perfboard/CLAUDE.md) lists, the netlist and the distance limits included, and draws it once no error is left |
-| `python tools/netlist.py model/parts/<subsystem>/figures.py [board]` | Prints the netlist a model declares for each board. `--kicad <out.net>` writes one board as a KiCad netlist, and `--diff <kicad.net>` compares a netlist KiCad exported with the declaration, net by net and part by part |
-| `… --blind` | The brief for an independent second derivation: every quantity, its unit and its inputs, with no formula and no derived value. A later session derives from it without reading `figures.py`, and the two are diffed. Rule 15 keeps this for larger reviews |
-| `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. One without is stored opaque. [`assets/media.md`](assets/media.md) holds how pictures, videos and sounds are made |
+| `python tools/figcheck.py --sheets` | Recomputes every figure of every model, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`, the wiring and the shared budgets across all models. A model path such as `model/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark, read from the root of the checkout whose `figcheck.py` runs. Every directory under `model/parts/` holds a model. The motherboard model derives nothing and takes the values of its parts from their subsystems. The lighting model governs only the Level shifting, Signal wiring and Supply sections of its document, plus the lamps component's document. A figure is declared in one model and taken by every other with `MODEL.uses(key, of=...)`. Run it after any change to a value. CI runs it on each push touching `docs/`, `firmware/` or `tools/`. [`tools/CLAUDE.md`](tools/CLAUDE.md) gives what a model declares and the twenty-eight checks, [`tools/README.md`](tools/README.md) the flags |
+| `… --groups` | Dumps the groups, sections and tokens the parser found. A block's or a declaration's `group` and `section` are taken from here, since a guess wastes a run |
+| `… --graph <key>` | One quantity in full, which is how a derivation is read back without opening the model |
+| `… --write` | Writes the model's figures into the documents and the SVGs. [`tools/CLAUDE.md`](tools/CLAUDE.md#writing-the-figures) gives what it does where it cannot place a figure |
+| `… --mutate` | The self-test: every figure is moved, and the run has to report it |
+| `… --base <ref>` | The ref the stale-number report diffs against and `--write` takes old figures from. CI passes the pull request's base |
+| `… --blind` | The brief for an independent second derivation, which rule 15 keeps for larger reviews |
+| `python tools/svgcheck.py` | Reports labels in the drawings under `docs/` that leave the viewBox or their box, or land on another label, and boxes that cross an outline. **Run it after moving or adding any text or box in an SVG.** It stays out of CI, since its widths are estimated from character classes, so a report is a place to look |
+| `python tools/perfboard/build.py <layout.py> [out.svg]` | Checks a perfboard layout against [`tools/perfboard/CLAUDE.md`](tools/perfboard/CLAUDE.md), the netlist and the distance limits included, and draws it once no error is left |
+| `python tools/netlist.py model/parts/<subsystem>/figures.py [board]` | Prints the netlist a model declares for each board. `--kicad <out.net>` writes one board as a KiCad netlist, and `--diff <kicad.net>` compares a netlist KiCad exported with the declaration |
+| `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. [`assets/media.md`](assets/media.md) gives how pictures, videos and sounds are made |
 
-The firmware builds with PlatformIO, installed with `python -m pip install platformio`. The firmware's [`platformio.ini`](platformio.ini) stands in the repository's root, where PlatformIO finds the project when the repository is opened. The commands run there. CI builds the release firmware, checks its code with clang-tidy, runs the `computer` tests and checks the tests against testing.md on each push touching `firmware/` or testing.md:
+The firmware builds with PlatformIO, installed with `python -m pip install platformio`. Its [`platformio.ini`](platformio.ini) stands in the repository's root, where the commands run. CI builds the release firmware, checks its code with clang-tidy, runs the `computer` tests and checks the tests against testing.md on each push touching `firmware/` or testing.md:
 
 | | |
 |---|---|
@@ -96,28 +93,28 @@ The firmware builds with PlatformIO, installed with `python -m pip install platf
 | `python firmware/tools/tidy.py` | Runs clang-tidy with the checks of `firmware/.clang-tidy` over `firmware/src` and `firmware/lib`, on the release build's compile commands turned into ones clang reads, and exits with 1 on any finding in `firmware/`. A pattern such as `servo` picks files, `--fix` applies the fixes clang-tidy offers, and `--self-test` requires a clean planted file to pass and a flawed one to fail. It needs `python -m pip install clang-tidy==18.1.8` |
 | `python firmware/tools/test-coverage.py` | Counts for each program of testing.md the rows the code has a test for, by place, and writes the table to the summary page of a CI run. `--missing` names each row without a test, and `--computer-results <json>` counts the computer tests from the report of `pio test -e computer --json-output-path <json>`, as CI does. It exits with 1 when the code and testing.md disagree. `--self-test` breaks a copy each way the check guards and requires each verdict. The Test programs section of testing.md gives how a test's name maps to its row and what fails the run |
 
-The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache finds an object file by its command line, its source and its place in the build folder, so it serves only the project that compiled the file. Worktrees share each project's build folder. A build after another worktree's build therefore takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's own code `-Wall -Wextra -Werror` and every library `-w`.
+The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache serves an object file only to the project that compiled it, since it finds the file by its command line, its source and its place in the build folder. Worktrees share each project's build folder, so a build after another worktree's build takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's code `-Wall -Wextra -Werror` and every other library `-w`.
 
 ## Conventions
 
-- **Once a subsystem's code runs on the Teensy, the code holds how it works.** Its document then keeps what changes rarely: what the subsystem is for and has to achieve, the decisions with their reasons, its interface, the derived figures with their sources, and its known limitations. The implementation moves into `firmware/`, one subsystem at a time as each comes up on hardware.
-- Update `docs/parts-list.md` whenever a hardware design change adds or removes a component (subject to rule 8 — the BOM is a design artifact, so ask first). Keep it to identification plus a spec link; specs and rationale go in `docs/research/`, one file per component. Every BOM row must resolve to its specification — local notes where they exist, manufacturer datasheet otherwise.
-- **Check [`docs/pin-assignment.md`](docs/pin-assignment.md) before committing any Teensy pin, and add a row there once a design settles on one.** It is the single record of which pins this build has spent, and the only way a conflict gets caught across sessions. Its shared-resource tables are what a candidate pin must be checked against — taking one pin of a bus or serial port commits the whole group. Those tables are written from `model/research/teensy-4.1.py` by `--write`, and figcheck checks the two cost tables against what the allocation takes, so a re-allocation that leaves a cost table stale fails the run. Keep it to occupation: which pin, which signal, which peripheral, which subsystem. Rationale for a choice belongs in the subsystem document, and a re-allocation is discussed in chat and then written straight into the table. Every other mention of a Teensy pin is marked with the signal it carries, figcheck checks the mark against the table, and `--write` carries a moved pin into every place that marks it. After a move, the run lists under Worth knowing every place where the old number still stands without a mark. A subsystem's pins sit together on one edge of the board, in one run where the peripherals it needs allow. [`tools/CLAUDE.md`](tools/CLAUDE.md#teensy-pins) gives the markers.
-- Reference designators follow IEEE 315: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
-- **A board's circuit is declared pin by pin in its subsystem's `model/parts/<subsystem>/schematic.py`**, with its parts and nets, and `figures.py` loads it with `MODEL.schematic("schematic.py")`. A part's value names the model's figure that sets it. The nets that reach a Teensy pin enter the wiring check from there, so such a subsystem declares no `MODEL.net`. The perfboard layouts take their nets from there, and figcheck holds the netlist to the part list, to the connector tables and to the annotated schematic drawings. [`tools/CLAUDE.md`](tools/CLAUDE.md#boards) gives the format. Nothing in the repository needs KiCad installed.
-- FreeCAD `.FCStd`, Fusion `.f3d`/`.f3z`, STL and 3MF are opaque binaries. STEP is text but very large. `.gitattributes` classifies these; Git LFS has **not** been enabled — raise it before a large volume of binaries lands in history, since removing them later means rewriting history.
-- Cite the source for electrical figures. PJRC's published Teensy 4.1 numbers live at <https://www.pjrc.com/store/teensy41.html> and <https://www.pjrc.com/teensy/techspecs.html>.
+- **Once a subsystem's code runs on the Teensy, the code holds how it works.** Its document then keeps what changes rarely: its purpose and requirements, the decisions with their reasons, its interface, the derived figures with their sources, and its known limitations. The implementation moves into `firmware/`, one subsystem at a time as each comes up on hardware.
+- **A document links the header once production code holds its interface complete.** A driver or component document under `docs/firmware/` then copies no interface into a code block. It links the `.h` file instead.
+- **`docs/parts-list.md` changes with every hardware change that adds or removes a part**, after asking, since the BOM is a design artifact. A row holds identification and a spec link that resolves to the part's note in `docs/research/` or to its datasheet.
+- **A Teensy pin is checked against [`docs/pin-assignment.md`](docs/pin-assignment.md) before it is committed, and gets a row there once a design settles on it.** The file is the one record of the pins this build has spent. A candidate pin is checked against its shared-resource tables, since one pin of a bus or a serial port commits the whole group. `--write` writes those tables from `model/research/teensy-4.1.py`, and figcheck fails a cost table that the allocation has left stale. The file holds occupation only: pin, signal, peripheral, subsystem. The reason for a choice goes into the subsystem document, and a re-allocation is agreed in chat and then written into the table. Every other mention of a Teensy pin is marked with the signal it carries, as [`tools/CLAUDE.md`](tools/CLAUDE.md#teensy-pins) gives, and `--write` carries a moved pin into every mark. A subsystem's pins sit together on one edge of the board, in one run where its peripherals allow.
+- **Reference designators follow IEEE 315**: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
+- **A board's circuit is declared pin by pin in `model/parts/<subsystem>/schematic.py`**, with its parts and nets, and `figures.py` loads it with `MODEL.schematic("schematic.py")`. A part's value names the model's figure that sets it. The nets that reach a Teensy pin enter the wiring check from there, so such a subsystem declares no `MODEL.net`. The perfboard layouts take their nets from there, and figcheck holds the netlist to the part list, the connector tables and the annotated drawings. [`tools/CLAUDE.md`](tools/CLAUDE.md#boards) gives the format. Nothing in the repository needs KiCad installed.
+- **CAD files are opaque binaries**: FreeCAD `.FCStd`, Fusion `.f3d` and `.f3z`, STL and 3MF. STEP is text but very large. `.gitattributes` classifies them. Git LFS is **not** enabled, and it is raised before a large volume of binaries lands in history, since removing them later rewrites history.
 
 ## Skills
 
-Repository-local, in `.claude/skills/`, so they version with the project.
+The repository's skills live in `.claude/skills/`, so they version with the project.
 
 | Skill | Fires when |
 |---|---|
-| `review-circuit` | A circuit is about to be built or committed. Loads constraints from `docs/research/`, `docs/parts/`, `docs/datasheets/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time rather than hardcoding them |
-| `draw-schematic` | A circuit documented in markdown needs an SVG diagram. Encodes the house style — net colors, module blocks, pin markers |
+| `review-circuit` | A circuit is about to be built or committed. It loads its constraints from `docs/research/`, `docs/parts/`, `docs/datasheets/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time |
+| `draw-schematic` | A circuit documented in markdown needs an SVG diagram in the house style: net colors, module blocks, pin markers |
 | `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
-| `revise-document` | A document has to be shortened or made readable. Structure first, then paragraphs, then sentences, deletions accounted for against the diff |
-| `design-review` | A design is correct and now has to be *good* — derating, thermal, schematic craft, testability, failure behavior. Operationalises rule 3 |
+| `revise-document` | A document has to be shortened or made readable: structure first, then paragraphs, then sentences, with the deletions accounted for against the diff |
+| `design-review` | A design is correct and now has to be good: derating, thermal, schematic craft, testability, failure behavior (rule 3) |
 
-`review-circuit` asks whether the circuit survives, `design-review` whether it is good. Neither substitutes for the other.
+`review-circuit` asks whether the circuit survives, `design-review` whether it is good, and each needs the other.

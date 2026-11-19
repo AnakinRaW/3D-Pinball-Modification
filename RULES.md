@@ -1,6 +1,6 @@
 # Project Rules
 
-The working agreement for this repository. This file is the authority; it is committed so it is shared with every session and every collaborator.
+This file is the working agreement for this repository and outranks every other instruction in it.
 
 ## 1. Language
 
@@ -12,51 +12,48 @@ The working agreement for this repository. This file is the authority; it is com
 
 Expect a **software developer's** background, not an electrician's or an electrical engineer's:
 
-- Little experience reading or judging electrical schematics; no feel for what a good, professional schematic looks like.
-- Little experience with electrical safety
-- No intuition for what will destroy a component (over-voltage, reversed polarity, missing current limiting, floating inputs, inrush, ESD, thermal limits).
-- Strong software-engineering intuition — analogies to software concepts land well; hardware conventions do not.
+- Little experience reading or judging schematics, and no feel for what a professional one looks like.
+- Little experience with electrical safety.
+- No intuition for what destroys a component: over-voltage, reversed polarity, missing current limiting, floating inputs, inrush, ESD, thermal limits.
+- Strong software-engineering intuition. Analogies to software land well, hardware conventions do not.
 
 **Therefore:**
 
 - Name the failure mode a design choice prevents.
-- Never present a guess as a fact. State confidence, and separate "this is from the datasheet" from "this is my estimate."
-- Cite the source for electrical values (datasheet page, standard, measurement). A fabricated number will not be caught here, so it must not be produced in the first place.
+- Never present a guess as a fact. State confidence, and separate "from the datasheet" from "my estimate".
+- Cite the source of an electrical value: datasheet page, standard or measurement. A fabricated number will not be caught here.
 - Proactively flag anything that can destroy hardware or injure a person, even when not asked.
 - Expect many questions. Answer them fully.
 - **A question about a quantity is answered conceptually before it is answered numerically.** What the quantity is, what it governs, and what it is good for come first, in ordinary words. The derivation follows as a separate step, once the idea has landed. A calculation offered in place of the concept answers a question that was not asked.
 
 ## 3. Quality bar
 
-The goal is a modification that is **as professional as it reasonably can be** — explicitly *not* "ready to market," but far above a quick-and-dirty hack.
-
-Concretely, that means:
+The goal is a modification that is **as professional as it reasonably can be**: far above a quick hack, short of ready to market.
 
 - Component choices trace back to a requirement and a datasheet.
-- Schematics follow conventional practice: sensible reference designators, net names, power symbols, decoupling, readable sheet layout — a schematic another engineer could review without explanation.
-- Design decisions are written down. A **rejected alternative is recorded only where its reason is not already derivable from the requirements** — an approach someone would otherwise propose again, or a trade that was judged rather than computed. A part that simply misses a stated figure is filtered by that figure and earns no entry.
-- Margins are calculated — ratings, tolerances and worst cases.
-- **Every derived bound names the input extreme it was computed from.** Which direction of a parameter is the worst case is part of the derivation, and picking the wrong one leaves no trace in the result — a minimum series resistor taken from V_F max rather than V_F min gives 40 Ω where the answer is 46 Ω.
-- **Write the intermediate quantity on a separate line, with its extremes named.** A bound stated as a single division hides which values went into it, and a wrong extreme then reads as correct arithmetic. The voltage across a resistor is derived first, from a named supply extreme and a named device extreme, and only then divided by the current. Supply tolerance is one of those extremes: a bound taken at the nominal rail is not a bound.
-- **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part means re-deriving every bound, margin, current and time constant that took it as an input, not only the figure that prompted the change. The re-derivation follows rule 9 — back to the sources, never to the earlier result. Finish by grepping the old number across the repository, as rule 7 requires for the documents.
-- **No pin or part is loaded past its specified figure, transients included.** Where a published figure covers only sustained operation, it still governs: a brief peak above it is designed out rather than argued away. The worst case is computed from the external circuit alone — internal current limiting that no datasheet states does not enter the calculation, however real it is.
+- Schematics follow conventional practice, so another engineer could review one without explanation: sensible reference designators, net names, power symbols, decoupling, a readable sheet.
+- Design decisions are written down. A **rejected alternative is recorded only where its reason is not derivable from the requirements**: an approach someone would propose again, or a trade that was judged rather than computed. A part that misses a stated figure earns no entry.
+- Margins are calculated: ratings, tolerances and worst cases.
+- **Every derived bound names the input extreme it was computed from.** Picking the wrong direction leaves no trace in the result. A minimum series resistor taken from V_F max instead of V_F min gives 40 Ω where the answer is 46 Ω.
+- **Write the intermediate quantity on a separate line, with its extremes named.** A single division hides which values went into it, so a wrong extreme reads as correct arithmetic. The voltage across a resistor is derived first, from a named supply extreme and a named device extreme, and only then divided by the current. A bound taken at the nominal rail is not a bound.
+- **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part re-derives every bound, margin, current and time constant that took it as an input, from the sources under rule 9. A settled fact that carries no number, such as a mode or a mechanism, re-runs every derivation that took it. The sweep across the repository follows rule 7, in one pass.
+- **No pin or part is loaded past its specified figure, transients included.** A figure published for sustained operation still governs a brief peak, which is designed out. The worst case is computed from the external circuit alone, and internal current limiting that no datasheet states does not enter it.
 - Reproducible: someone else could rebuild this from the repository alone.
-- **An open measurement blocks only what actually depends on it.** A design decision and the build detail that follows from it are separate things, and an unresolved figure usually sits in the second. Settle the decision, name the detail it defers, and carry on. Presenting a pending measurement as a fork in the design stalls work that was never waiting on it. Where nothing depends on it, it gets no entry at all: a worst case bounded by a datasheet that the design survives is settled by that bound, and the measurement that would only refine it is left unwritten.
+- **An open measurement blocks only what depends on it.** An unresolved figure usually sits in a build detail. The design decision above it is settled now, and the detail it defers is named. Where nothing depends on the figure, it gets no entry, since a worst case from a datasheet that the design survives settles it. A cheap part that makes the figure irrelevant beats measuring it.
+- **A fact confirmed on the bench loses its caveat** in every file and is not raised again.
 
-When a shortcut is taken deliberately, record it as a known limitation rather than leaving it silent.
+A shortcut taken on purpose is recorded as a known limitation.
 
 ## 4. Safety
 
-- **Prefer low voltage.** Unless explicitly decided otherwise, the modification stays within SELV (USB 5 V or a low-voltage DC supply, ≤ 24 V). Anything touching mains voltage requires an explicit, deliberate decision — it is not to be introduced casually.
-- Mains-side work, if ever in scope, is called out as requiring a qualified electrician.
-- Safety-relevant reasoning (fusing, isolation, thermal limits, battery handling) is written into the documentation, not just discussed.
+- **Prefer low voltage.** The modification stays within SELV, at USB 5 V or a low-voltage DC supply of 24 V at most. Mains voltage needs an explicit decision, and mains-side work is called out as needing a qualified electrician.
+- Safety-relevant reasoning (fusing, isolation, thermal limits, battery handling) is written into the documentation.
 
 ## 5. Git
 
-- **Never push. Under no circumstances.** No `git push`, no remote creation with intent to push, no PR creation.
-- **Commit only when explicitly told to** — or these rules define scenarios give allowance.
-- Everything else stays in the working tree until a commit is explicitly requested.
-- **Commit only the named files.** `git commit` writes the whole index, including files staged from outside the session. Name the paths — `git commit -- <path>` — and run `git diff --cached` first to see what is actually there. Anything staged elsewhere stays uncommitted. A file staged in part is the exception, because `git commit -- <path>` commits a named file as the working tree holds it. There `git diff --cached` has to show the intended hunks and nothing staged elsewhere, and `git commit` without paths then commits the index.
+- **Never push, under any circumstances.** No `git push`, no remote created to push to, no pull request.
+- **Commit only when told to**, or where these rules allow it. Everything else stays in the working tree.
+- **Commit only the named files.** `git commit` writes the whole index, including files staged from outside the session. Run `git diff --cached` first to see what is there, and name the paths with `git commit -- <path>`. Anything staged elsewhere stays uncommitted. A file staged in part is the exception, because `git commit -- <path>` commits a named file as the working tree holds it. There `git diff --cached` has to show the intended hunks and nothing staged elsewhere, and `git commit` without paths then commits the index.
 - No force operations, no history rewriting, no branch deletion without an explicit request.
 
 ## 6. Privacy
@@ -69,9 +66,9 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
 
 - **Fundamental structural change to the repository → update [`README.md`](README.md).**
 - **Something worth knowing for future sessions → add it to [`CLAUDE.md`](CLAUDE.md).**
-- **A fact referenced in a document changes → update the documentation without asking** — but only once the matter is *settled*. Do not churn documentation over in-progress discussion or an idea still being weighed.
+- **A fact referenced in a document changes → update the documentation without asking**, once the matter is *settled*. An idea still being weighed changes no document.
 - **A newly stated rule → add it to this file** and commit it.
-- **A design change touches every file that repeats the fact.** Editing the subsystem document is not the change; it is the first file of it. What moves together:
+- **A design change touches every file that repeats the fact.** The subsystem document is the first file of the change. What moves together:
 
   | Changed | Also update |
   |---|---|
@@ -80,53 +77,48 @@ When a shortcut is taken deliberately, record it as a known limitation rather th
   | A Teensy pin | [`docs/pin-assignment.md`](docs/pin-assignment.md), allocation table and cost table both |
   | A part or a quantity | [`docs/parts-list.md`](docs/parts-list.md) |
   | A component's specification | its file in `docs/research/`, and its datasheet into `docs/datasheets/` |
-  | A channel count or a connector width | the connector tables, and the pin rows in the figures — geometry, not only text |
+  | A channel count or a connector width | the connector tables, and the pin rows in the figures, as geometry as well as text |
 
-  Finish by grepping the changed number and the old number across the whole repository, not only the subsystem directory: a value derived in one subsystem is repeated in the budgets of another. The figures are where a stale value survives longest, because a wrong number there still renders.
-- **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". Where a decision is not yet made, it is made before it is written down. Rejected alternatives stay, per rule 3, but as rejected and with the reason they lost. A figure that is genuinely unverified is stated as unverified with the measurement that would settle it — that is a known limitation, not an open option.
+  Finish by grepping the old and the new number across the whole repository, since a value derived in one subsystem is repeated in the budgets of another. A stale value survives longest in the figures, where a wrong number still renders.
+- **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". A decision is made before it is written down. A rejected alternative stays, per rule 3, as rejected with the reason it lost. An unverified figure is stated as unverified with the measurement that would settle it, as a known limitation.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 
-- **`docs/parts-list.md`** — one row per part: reference designator, short name, quantity, one-line description, spec link, supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no notes exist yet. Every part must be findable from the list. Specifications, datasheet figures and rationale go in the linked document.
-- **Sub-directory `README.md` files** — what a repository visitor finds in the folder. Instructions aimed at the assistant belong in `CLAUDE.md` or in this file.
-- **`docs/research/`** — one file per component or investigation, holding the specifications and the reasoning.
-- **`docs/pin-assignment.md`** — which pins are occupied, by what, and what each one locks out. Scanned to answer "is this pin free". Reasoning for a given allocation belongs in the subsystem document, and no reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives, the pin number stands in this file alone, so a re-allocation costs no edit there either.
-- **Schematic SVGs in `docs/`** — a part whose type designation depends on its package is named by its through-hole type. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
+- **`docs/parts-list.md`**: one row per part with reference designator, short name, quantity, one-line description, spec link, supplier. The spec link resolves to the part's notes in `docs/research/`, or to the manufacturer's datasheet where no notes exist. Every part is findable from the list. Specifications, datasheet figures and rationale go in the linked document.
+- **Sub-directory `README.md` files**: what a repository visitor finds in the folder. A rule that binds the work goes into this file or into the `CLAUDE.md` beside what it governs, never into `docs/`.
+- **`docs/research/`**: one file per component or investigation, holding the specifications and the reasoning.
+- **`docs/pin-assignment.md`**: which pins are occupied, by what, and what each one locks out. The reason for an allocation belongs in the subsystem document. No reference designator appears here, so renumbering a part costs no edit in this file. A firmware document names the peripheral it drives and no pin number, so a re-allocation costs no edit there.
+- **Schematic SVGs in `docs/`**: a part whose type designation depends on its package is named by its through-hole type. Passives whose designation is package-independent, such as a 220 Ω resistor or a 100 nF ceramic, carry their value only.
 
   Every pin of an IC carries its pin number beside its name, taken from the datasheet's pinout for the package the build uses.
 
   An IC of the modification is drawn with every pin of its package, in every drawing that shows it. Each pin is a separate marker and shows its connection, either a wire to its net or the gray marker of an unconnected pin. Pins on the same net are drawn one by one and joined by wires. A note that lists pins never stands in for drawing them.
 
-  Where components must sit physically close to one another — a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator, a gate resistor at its gate — the diagram marks the group, the maximum distance and the reason.
+  Where components must sit close to one another, as a decoupling capacitor at its supply pin, a regulator's capacitors at the regulator or a gate resistor at its gate, the diagram marks the group, the maximum distance and the reason.
 
 ## 8. Design artifacts require explicit instruction
 
-Documentation follows reality automatically (rule 7). **Design artifacts do not.** Do not create or modify without being told:
+Documentation follows reality automatically (rule 7). **Design artifacts change only on an instruction**: schematics, PCB layouts, CAD models, the firmware's source with its bench programs, the bill of materials and published Artifacts.
 
-- Schematics, PCB layouts, CAD models
-- Firmware source
-- The bill of materials
-- Published Artifacts
-
-Propose changes freely. Implement only when asked.
+Changes are proposed freely and implemented only when asked. A question such as "why not X?" is answered and changes nothing. A quick demo on the bench is built from a copy outside the repository.
 
 ## 9. Re-evaluation protocol
 
-When asked to re-evaluate, reconsider or double-check something, **re-derive it from the facts — never from memory or from earlier statements in the conversation.**
-
-That means:
+When asked to re-evaluate, reconsider or double-check something, **re-derive it from the facts, never from memory or from earlier statements in the conversation**:
 
 1. Re-read the actual sources: datasheets, standards, the current file contents. Do not trust an earlier summary of them, including one produced earlier in the same session.
 2. Redo every calculation from scratch. Show the working and the units so it can be checked.
 3. State the assumptions the result depends on.
-4. **Actively attack the previous design choice**, including one made earlier by the assistant. The question "is this still right?" must be capable of the answer "no."
-5. Report honestly when re-evaluation changes the conclusion — and say what the earlier error was.
+4. **Actively attack the previous design choice**, including one made earlier by the assistant. "Is this still right?" must be able to get the answer "no".
+5. Report honestly when the conclusion changes, and say what the earlier error was.
+
+A passage that is to be rewritten is formulated from its sources again, never restored from the conversation.
 
 Consistency with a previous answer is not evidence that the previous answer was correct.
 
 ## 10. Writing style
 
-Applies to documentation, commit messages and conversation alike. Say a thing once and move on: the same fact is not stated twice, which is not a license to write a fact in fewer words than it needs.
+This rule governs documentation, code comments, commit messages and conversation alike. A fact is stated once, in the words it needs.
 
 **A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
 
@@ -138,46 +130,46 @@ Applies to documentation, commit messages and conversation alike. Say a thing on
 Banned:
 
 - **Meta-commentary about a document.** No sentence explaining what a file is, what it is for, or what it deliberately leaves out. The structure already shows that. The sentence that prompted this rule: *"The list identifies parts; it does not describe them. Specifications and the reasoning behind a choice live in the linked documents."*
-- **Antithesis used as decoration** — "X; it does not Y", "not A, but B", "not merely P, but Q", "the two are not the same thing" — wherever the negated half carries no information. Permitted only where the negation corrects a mistake the reader is likely to make, such as *"10 mA is a rating, not an operating point."*
-- **Argument by exclusion in an explanation.** What a part is for, and why a design is as it is, is stated forward — from what the part does and what the design achieves. A purpose is never established by ruling out a purpose the part does not serve. The sentence that prompted this rule: *"Coil current is not among their jobs: holding 2.04 A within 0.25 V costs 8 160 µF for every millisecond of pulse."* Written forward: *"Sustained current comes from the adapter: a 0.25 V hold at 2.04 A costs 8 160 µF for every millisecond."*
+- **Antithesis used as decoration**, such as "X; it does not Y", "not A, but B", "not merely P, but Q" or "the two are not the same thing", wherever the negated half carries no information. Permitted only where the negation corrects a mistake the reader is likely to make, such as *"10 mA is a rating, not an operating point."*
+- **Argument by exclusion in an explanation.** What a part is for and why a design is as it is are stated forward, from what the part does and what the design achieves. A purpose is never established by ruling out a purpose the part does not serve. The sentence that prompted this rule: *"Coil current is not among their jobs: holding 2.04 A within 0.25 V costs 8 160 µF for every millisecond of pulse."* Written forward: *"Sustained current comes from the adapter: a 0.25 V hold at 2.04 A costs 8 160 µF for every millisecond."*
 
   Negative reasoning belongs one level down, in the proof: a measurement that rules out one of several candidate parts, or a calculation that eliminates a value, stays.
 - **A sentence that restates the heading above it.**
 - **Closing paragraphs that summarize what was just written.**
-- **Portentous phrasing for mundane facts** — "deliberately", "worth noting", "it is important to understand that", "by design".
+- **Portentous phrasing for mundane facts**, such as "deliberately", "worth noting", "it is important to understand that" or "by design".
+- **"Its own", "of its own" and "on its own".** The possessive carries nothing, and the noun alone says it: *"Each mode has a key."* Where uniqueness matters, a separate sentence states it: *"No two modes share a key."* This holds in code comments and in chat as much as in documents.
 - **Teaching electronics to the reader.** A document assumes a reader who knows the fundamentals. State the fact and stop; do not add the sentence explaining why it matters or what would otherwise go wrong. The sentence that prompted this rule: *"The reference matters here, because the sensor board has no ground pin of its own."* What is banned is the added explanatory sentence. A short clause inside a sentence that names the consequence and keeps it readable stays, as in *"An open sense line has to be held at a defined level, or the bumper fires on noise."*
 
-  Defining the notation and the signal names a document's own tables use is exempt — a table that cannot be read has failed at its job. Keep such a legend to definitions and to how the notation is to be read.
-- **Dates.** No date in a document — no year, no month, no day, no time. Not when a measurement was taken, not when a page was checked, not when a decision was reached, and not when a source was published. A document states what is known, not when it became known. A source is identified by its document or revision number instead.
-- **Revision narrative.** No account of what a passage said before, what was corrected, or why it changed. Git carries that. A document reads as though its current content had always stood there.
-- **Personal references.** Requirements are stated impersonally. No "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
-
+  A legend that defines the notation and the signal names of a document's tables is exempt. It is kept to definitions and to how the notation is read.
+- **Dates.** No year, month, day or time in a document, whether for a measurement, a checked page, a decision or a source's publication. A source is identified by its document or revision number.
+- **Revision narrative.** No account of what a passage said before or why it changed, and no "so far". A document reads as though its content had always stood there.
+- **Personal references.** Requirements are stated impersonally: no "the maintainer", no "the user", no second person, in this file and `CLAUDE.md` as much as in documentation. The sentence that prompted this rule: *"The maintainer cannot catch a fabricated number, so it must not be produced in the first place."*
 - **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula, the hyphen inside a compound word and the dash spanning a numeric range, as in 18–20 mA, stay.
 - **Inserted asides.** No clause, appositive or example set into the middle of a sentence, whether commas, parentheses or dashes set it off. The inserted fact goes into a separate sentence. The sentence that prompted this rule: *"The SD specification allows a card at most 100 ms for each block it reads and 250 ms for each block it writes, so the longest transfer, one stream chunk, takes 800 ms at most."*
-- **Two clauses joined by a comma and "and".** Each clause becomes its own sentence, or one clause gives the reason for the other. The sentence that prompted this rule: *"Playback depends on the card's read speed, and the file channel's ring buffer only bridges short delays."*
+- **Two clauses joined by a comma and "and".** Each clause becomes a separate sentence, or one clause gives the reason for the other. The sentence that prompted this rule: *"Playback depends on the card's read speed, and the file channel's ring buffer only bridges short delays."*
 
 **The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
 
 Prefer the table or the link over a paragraph introducing the table or the link.
 
-**Reading flow is not meta-commentary.** A sentence that leads from the text into a table, or that carries the reader from one section to the next, stays. What the rule above bans is the sentence about the document itself: what a file is, what it is for, what it leaves out. A paragraph of build-up before a table is still one sentence too many, and a document that reads as a list of disconnected assertions has overshot the rule.
+**Reading flow is not meta-commentary.** A sentence that leads into a table or carries the reader to the next section stays. A paragraph of build-up before a table is one sentence too many. A document that reads as disconnected assertions has overshot the ban.
 
-**Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven, or will be recomputed by someone else — a bound, a margin, a rating, a figure that has to hold up. There the wording carries the units, the extremes and the source, and nothing is simplified away for readability.
+**Plain language wherever plain language works.** A point that can be made in ordinary words is made in ordinary words. Exactness is owed where something is derived, proven or recomputed, as a bound, a margin or a rating. There the wording carries the units, the extremes and the source.
 
-The explanations rule 2 asks for, naming the failure mode, spelling out what destroys a part, belong in **conversation**, not in the repository's documents. A document's own terms and the mechanism it describes are not such an explanation and are written out where they first appear. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
+The explanations rule 2 asks for, naming the failure mode, spelling out what destroys a part, belong in **conversation**, not in the repository's documents. A document's terms and the mechanism it describes are not such an explanation and are written out where they first appear. Reasoning that establishes a *finding* stays: how a value was derived, why one reading beats a contradictory one, what a measurement rules out.
 
 ## 11. Research and sourcing
 
 Teensy documentation is thin and scattered across the web. Treat every claim as unconfirmed until sourced.
 
-**Always search with the exact model number** — "Teensy 4.1", never "Teensy". Generations contradict each other on points that destroy hardware. PJRC writes of the [3.2](https://www.pjrc.com/store/teensy32.html): "Teensy 3.2 pins accept 0 to 5V signals. The pins are 5V tolerant." Of the [4.1](https://www.pjrc.com/store/teensy41.html): "The pins are not 5V tolerant." A result about the wrong board looks authoritative and will wreck the part. Critical for electrical and pin-level questions, less so for software APIs.
+**Always search with the exact model number**, "Teensy 4.1" and never "Teensy". Generations contradict each other on points that destroy hardware. PJRC writes of the [3.2](https://www.pjrc.com/store/teensy32.html): "Teensy 3.2 pins accept 0 to 5V signals. The pins are 5V tolerant." Of the [4.1](https://www.pjrc.com/store/teensy41.html): "The pins are not 5V tolerant." A result about the wrong board looks authoritative and will wreck the part. Critical for electrical and pin-level questions, less so for software APIs.
 
 Source ranking:
 
-1. **pjrc.com, excluding the forum** — primary authority. Correct unless several independent sources contradict it.
-2. **PJRC forum posts by Paul Stoffregen** — creator of the Teensy and operator of PJRC. Authoritative. Other regulars may be equally reliable; none are identified yet.
-3. **[TeensyUser wiki](https://github.com/TeensyUser/doc/wiki)** — community-maintained, upkeep unknown. Worth checking, unconfirmed until corroborated.
-4. Everything else — corroborate before use.
+1. **pjrc.com, excluding the forum**: the primary authority. Correct unless several independent sources contradict it.
+2. **PJRC forum posts by Paul Stoffregen**, the Teensy's creator and PJRC's operator: authoritative. Other regulars may be equally reliable; none are identified yet.
+3. **[TeensyUser wiki](https://github.com/TeensyUser/doc/wiki)**: community-maintained, upkeep unknown. Worth checking, unconfirmed until corroborated.
+4. Everything else: corroborated before use.
 
 Cross-checking:
 
@@ -261,7 +253,7 @@ The severity tables of the review skills map onto these levels:
 
 ## 15. Figures are checked against a model
 
-**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, and [`tools/figcheck.py`](tools/figcheck.py) checks the subsystem's document, any further document the model names and its drawings against it. The models and every other Python file the checks read live under `model/`, in folders that mirror those under `docs/`, so `docs/` holds prose and drawings only. IR sensing is the first consumer, in [`model/parts/ir-reflective/figures.py`](model/parts/ir-reflective/figures.py). A subsystem that starts deriving figures gets its own model in its own directory, and CI finds it there without being told.
+**A derived figure is computed in a model file and written into the documents from there.** Each subsystem that derives figures carries one model, and [`tools/figcheck.py`](tools/figcheck.py) checks the subsystem's document, any further document the model names and its drawings against it. The models and every other Python file the checks read live under `model/`, in folders that mirror those under `docs/`, so `docs/` holds prose and drawings only. A subsystem that starts deriving figures gets a model in its directory under `model/parts/`, and CI finds it there without being told.
 
 **A calculation is finished when it stands in the model.** A figure worked out in conversation, or typed straight into a document, has nothing checking it. Until it is declared with its inputs, its unit and its source, it counts as unverified under rule 3, and an answer that reports it says so.
 
@@ -274,7 +266,7 @@ What a request touches:
 | Wording, structure, an explanation | the document. A figure is addressed by its value, so rewording costs nothing, and the check has to pass afterwards |
 | A figure that looks wrong | a re-derivation in the model under rule 9. What the check reports is the answer |
 
-**No figure is edited by hand in a document or in a drawing.** `--write` is what puts it there, which is what keeps it typed in one place. A hand edit is what the check then reports.
+**No figure is edited by hand in a document or in a drawing.** `--write` puts it there, so it is typed in one place, and the check reports a hand edit.
 
 - **Every number in the document is a declared quantity.** The check reads the whole file, main body as much as appendix: a value in a fenced block or a table has to be a figure the model computes or a quantity it declares, and one that is neither fails the run as an orphan. A figure stated in prose is located by the section that holds it.
 - **A formula holds no literal constant.** Only 0, 1 and 2 may stand in one, as algebra. Every other number is a declared input with a source, checked when the model loads. A factor written into a derivation, such as the ln(9) between a 10-to-90 % rise time and a time constant, appears in no provenance list and in no document.
@@ -289,7 +281,7 @@ What a request touches:
 | | |
 |---|---|
 | `--sheets` | Looks every datasheet reading up in the PDF it cites. A reading the extractor misses is re-read by hand, and a sheet it cannot read at all is reported as unread rather than counted as passing. A found figure is weak evidence, since a subset font can map a code to the wrong glyph. |
-| `--mutate` | Moves each figure's value and requires the run to report it. A figure that survives its own mutation is one the checker would not have caught, and fails the self-test. |
+| `--mutate` | Moves each figure's value and requires the run to report it. A figure that survives the mutation of its value is one the checker would not have caught, and fails the self-test. |
 | `--blind` | Prints every quantity, its unit and its inputs, with no formula and no value. A later session derives them from the schematic and the datasheets without reading the model, and the two derivations are diffed. |
 
 **`--blind` is for larger reviews**: a design review, a subsystem whose supply or part choice changed, a run of figures that moved together. A single changed value is re-derived under rule 9 instead.
