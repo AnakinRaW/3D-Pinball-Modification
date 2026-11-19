@@ -41,10 +41,10 @@ uint8_t Fade::value(uint32_t ms, const Spot&) const {
 // millimeter on a strip. A lamp lights once the head has reached it.
 uint8_t Run::value(uint32_t ms, const Spot& at) const {
     const bool up = direction == Direction::UP;
-    uint64_t travelled;   // how far the head has gone since the effect began
-    uint32_t x;           // where the lamp lies from the start of the run
-    uint32_t pitch;       // how far the head covers a lamp
-    uint32_t round;       // how far the head goes before it starts over
+    uint64_t travelled = 0;   // how far the head has gone since the effect began
+    uint32_t x = 0;           // where the lamp lies from the start of the run
+    uint32_t pitch = 0;       // how far the head covers a lamp
+    uint32_t round = 0;       // how far the head goes before it starts over
     if (at.pitchQ == 0) {
         travelled = step == 0 ? 0 : ms / step;
         x = up ? at.index : uint32_t(at.count - 1 - at.index);

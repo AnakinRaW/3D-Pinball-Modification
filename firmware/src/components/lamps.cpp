@@ -328,6 +328,8 @@ uint16_t Lamps::stripSize(uint8_t strip) const {
         return sideLamps(GROUP_LEFT) + sideLamps(GROUP_RIGHT);
     case AMBIENT:
         return sideLamps(GROUP_LEFT) + visibleCount[GROUP_CEILING] + sideLamps(GROUP_RIGHT);
+    default:
+        break;
     }
     return 0;
 }
@@ -354,6 +356,8 @@ Lamps::Place Lamps::locate(uint8_t strip, uint16_t i) const {
         return {uint16_t(rightLed + rightLeds[i * s]), i * pitch};
     case CEILING:
         return {uint16_t(ceilingLed + ceilingLeds[i]), i * PITCH_Q};
+    default:
+        break;
     }
     if (i < left) {
         return {leftLeds[i * s], i * pitch};
@@ -468,8 +472,8 @@ void Lamps::paintStrips(uint32_t ms) {
 // most.
 void Lamps::write() {
     const Profile& profile = lighting.profile();
-    const uint8_t playfieldScale = uint8_t(profile.playfieldMax * playfieldShare + HALF);
-    const uint8_t ambientScale = uint8_t(profile.ambientMax * ambientShare + HALF);
+    const uint8_t playfieldScale = uint8_t(float(profile.playfieldMax) * playfieldShare + HALF);
+    const uint8_t ambientScale = uint8_t(float(profile.ambientMax) * ambientShare + HALF);
     uint16_t led = 0;
     for (uint8_t g = GROUP_LEFT; g < FIRST_SECTION; ++g) {
         CRGB* chain = groupLeds[g] > 0 ? lighting.chain(groupChain[g]) : nullptr;
