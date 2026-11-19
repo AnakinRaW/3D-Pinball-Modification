@@ -79,3 +79,14 @@ jobs:
           else
             python firmware/tools/test-coverage.py --missing
           fi
+
+      # firmware/.clang-tidy names the checks, and the run fails on any finding in firmware/. The
+      # self-test first shows that a clean file passes and a flawed one is caught
+      - name: Check the firmware's code with clang-tidy
+        if: success() || failure()
+        env:
+          LOCALAPPDATA: ${{ runner.temp }}
+        run: |
+          python -m pip install clang-tidy==18.1.8
+          python firmware/tools/tidy.py --self-test
+          python firmware/tools/tidy.py

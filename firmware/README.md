@@ -21,6 +21,7 @@ python -m platformio run               builds the debug firmware, run in the rep
 python -m platformio run -t upload     builds it and flashes it onto the Teensy
 python -m platformio run -e release    builds the firmware for the machine
 python -m platformio test -e computer  runs the tests that need no hardware
+python firmware/tools/tidy.py          checks the code with clang-tidy
 ```
 
 The firmware links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.
