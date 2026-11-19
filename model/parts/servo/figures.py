@@ -25,7 +25,7 @@ with MODEL.block("PULSE", section=PULSE):
     ds("t_max", 2500, "µs", sheet=SERVO, src="Pulse Width Range, the long end, the other end of "
        "the travel")
     dec("n_duty", 4096, "steps", src="PWMServoT4's write() sets the pulse through analogWrite() at "
-        "12-bit resolution, 4096 steps to the frame, as PJRC's PWMServo.cpp does, firmware/lib/pwm-servo-t4")
+        "12-bit resolution, 4096 steps to the frame, as PJRC's PWMServo.cpp does, firmware/src/drivers/pwm-servo-t4.cpp")
     ds("t_min_default", 544, "µs", stated=False, src="PWMServo.h, the pulse for 0 degrees "
        "attach(pin) takes when no range is given")
     ds("t_max_default", 2400, "µs", stated=False, src="PWMServo.h, the pulse for 180 degrees "

@@ -16,7 +16,7 @@
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
-#include <clock.h>
+#include "core/clock.h"
 #include <string.h>
 #include <task.h>
 #include "test-harness.h"

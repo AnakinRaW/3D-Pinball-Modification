@@ -1,5 +1,5 @@
 #include "event-queue.h"
-#include <debug-log.h>
+#include "core/debug-log.h"
 #include <inttypes.h>
 
 EventQueue events;

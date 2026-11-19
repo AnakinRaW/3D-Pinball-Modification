@@ -1,7 +1,7 @@
 #include "ws2812-flexio2.h"
 #include <DMAChannel.h>
 #include <new>
-#include <ws2812-color-encoder.h>
+#include "drivers/ws2812-color-encoder.h"
 
 namespace {
 

@@ -130,4 +130,4 @@ On the playfield, every LED past a section's last count is one lamp. A count pas
 
 ## Interface
 
-The component is the library [`firmware/lib/lamps/`](../../../firmware/lib/lamps/). Its interface stands in [`lamps.h`](../../../firmware/lib/lamps/lamps.h), the colors and the effects in [`lamp-effects.h`](../../../firmware/lib/lamps/lamp-effects.h).
+The component's interface stands in [`firmware/src/components/lamps.h`](../../../firmware/src/components/lamps.h), the colors and the effects in [`lamp-effects.h`](../../../firmware/src/components/lamp-effects.h).

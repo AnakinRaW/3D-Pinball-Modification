@@ -1,4 +1,4 @@
-// nowUs(), elapsedUs(), elapsedMs(), before() and startClock() stand in firmware/lib/clock
+// nowUs(), elapsedUs(), elapsedMs(), before() and startClock() stand in firmware/src/core/clock.h
 
 EventQueue       events;
 DriverTick       driverTick;             // the drivers attach to it in their begin()

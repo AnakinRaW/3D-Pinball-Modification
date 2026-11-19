@@ -4,8 +4,8 @@
 //
 // Each chain is a lane. Its bits leave through a FlexIO2 shifter, one timer clocks every lane, and
 // DMA hands each shifter its next word, so no code runs while a frame goes out.
-// firmware/lib/ws2812-color-encoder computes the words. After the longest lane the lines stay low
-// for longer than a WS2812B needs to take over the frame.
+// drivers/ws2812-color-encoder.h computes the words. After the longest lane the lines stay low for
+// longer than a WS2812B needs to take over the frame.
 //
 // The DMA channel takes the highest priority of PJRC's DMAChannel channels, so a channel that asks
 // without a pause cannot keep it from refilling the shifters.
@@ -20,7 +20,7 @@
 // Design: docs/firmware/drivers/lighting.md.
 #pragma once
 #include <Arduino.h>
-#include <debug-log.h>
+#include "core/debug-log.h"
 
 class Ws2812Flexio2 {
 public:

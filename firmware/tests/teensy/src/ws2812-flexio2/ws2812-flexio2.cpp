@@ -21,9 +21,9 @@
 
 #include <Arduino.h>
 #include <DMAChannel.h>
-#include <lighting.h>
-#include <ws2812-flexio2.h>
-#include <ws2812-color-encoder.h>
+#include "drivers/lighting.h"
+#include "drivers/ws2812-flexio2.h"
+#include "drivers/ws2812-color-encoder.h"
 #include "test-harness.h"
 
 using Lane = Ws2812Flexio2::Lane;

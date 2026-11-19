@@ -404,7 +404,7 @@ fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield
     "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
 
 # -- the frame ----------------------------------------------------------------
-DRIVER = "firmware/lib/ws2812-color-encoder/ws2812-color-encoder.h"
+DRIVER = "firmware/src/drivers/ws2812-color-encoder.h"
 MODEL.uses("n_chain_max", of="firmware")
 MODEL.uses("f_flexio_max", of="display")
 ds("n_bits_led", 24, "", src="WS2812B datasheet, older revision: composition of 24 bit data, "
@@ -413,7 +413,7 @@ ds("n_bits_color", 8, "", src="WS2812B datasheet, older revision: composition of
    "to G0, R7 to R0 and B7 to B0; the lamps component's Color holds them as they are")
 MODEL.aside("30 %", "an example of the brightness Color::dim() takes, in lamps.md")
 # The lighting driver builds each LED bit from steps of FlexIO2's shift clock: its 120 MHz root
-# divided by 2 * 6 in the timer's baud mode, BAUD_DIV in firmware/lib/ws2812-flexio2.
+# divided by 2 * 6 in the timer's baud mode, BAUD_DIV in firmware/src/drivers/ws2812-flexio2.cpp.
 dec("t_symbol", 100, "ns", src=f"{DRIVER}: SYMBOL_NS, one step of the shift clock")
 dec("n_symbol_bits", 13, "", src=f"{DRIVER}: SYMBOL_BITS, the steps of one LED bit")
 dec("n_zero_highs", 3, "", src=f"{DRIVER}: ZERO_HIGHS, the high steps of a 0")
@@ -447,9 +447,9 @@ ds("t_period_v6", 1.25, "µs", sheet=V6, src="Data Transfer Time: T0H+T0L and T1
 # After the longest chain the driver sends zero words, which hold every line low. When the next
 # frame starts, it cuts off the words a shifter still holds: the one in its buffer and the one it
 # shifts out, RM FlexIO. The rest has to outlast RES.
-dec("n_latch_words", 110, "", src="LATCH_WORDS in firmware/lib/ws2812-flexio2: RES over "
+dec("n_latch_words", 110, "", src="LATCH_WORDS in firmware/src/drivers/ws2812-flexio2.cpp: RES over "
     "one word, rounded down, plus one, plus the queued words")
-dec("n_words_queued", 2, "", src="WORDS_QUEUED in firmware/lib/ws2812-flexio2: the words "
+dec("n_words_queued", 2, "", src="WORDS_QUEUED in firmware/src/drivers/ws2812-flexio2.cpp: the words "
     "a shifter still holds when the DMA has written its last word, RM FlexIO")
 fig("t_latch", "µs", "(n_latch_words - n_words_queued) * t_word",
     moves="+n_latch_words -n_words_queued +n_symbols_word +n_symbol_bits +t_symbol",
@@ -460,7 +460,7 @@ ds("t_reset", 280, "µs", src="WS2812B datasheet Ver. No. V5: RES, the low time 
    "more than 280 µs; the older revision asks for more than 50 µs, and the strip's own sheet gives "
    "none")
 dec("t_frame", 10, "ms", src="the lamps component's frame period, "
-    "docs/firmware/components/lamps.md; 100 frames a second, Lamps::FRAME_US in firmware/lib/lamps")
+    "docs/firmware/components/lamps.md; 100 frames a second, Lamps::FRAME_US in firmware/src/components/lamps.h")
 fig("t_chain_out", "ms", "n_chain_max * n_bits_led * t_bit",
     moves="+n_chain_max +n_bits_led +t_bit", stated=False)
 fig("t_frame_out", "ms", "t_chain_out + t_latch_out", moves="+t_chain_out +t_latch_out",
@@ -470,7 +470,7 @@ fig("t_frame_out", "ms", "t_chain_out + t_latch_out", moves="+t_chain_out +t_lat
 fig("n_chain_frame_limit", "", "(t_frame - t_latch_out) / (n_bits_led * t_bit)", "down",
     moves="+t_frame -t_latch_out -n_bits_led -t_bit", stated=False)
 dec("n_chain_limit", 160, "", src="one meter of the 160 LEDs/m strip, a decision; the bound of "
-    "the config's lighting.leds and Lighting::MAX_CHAIN_LEDS in firmware/lib/lighting")
+    "the config's lighting.leds and Lighting::MAX_CHAIN_LEDS in firmware/src/drivers/lighting.h")
 
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
@@ -550,4 +550,4 @@ _I("a chain at the config's bound goes out within the frame period as well",
 MODEL.schematic("schematic.py")
 
 MODEL.owns("FlexIO2", "the lighting driver programs FlexIO2's six shifters and its timer 0, "
-                      "through firmware/lib/ws2812-flexio2")
+                      "through firmware/src/drivers/ws2812-flexio2.h")

@@ -1,5 +1,5 @@
 #include "servo-driver.h"
-#include <debug-log.h>
+#include "core/debug-log.h"
 #include <inttypes.h>
 
 constexpr uint8_t PIN = 0;                // pin-assignment.md: Servo signal

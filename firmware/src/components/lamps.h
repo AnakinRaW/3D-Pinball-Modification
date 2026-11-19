@@ -14,12 +14,12 @@
 #include <Arduino.h>
 #include <new>
 #include <type_traits>
-#include <clock.h>
-#include <debug-log.h>
-#include <lamp-effects.h>
-#include <layer.h>
-#include <lighting.h>
-#include <priority-list.h>
+#include "core/clock.h"
+#include "core/debug-log.h"
+#include "components/lamp-effects.h"
+#include "game/layer.h"
+#include "drivers/lighting.h"
+#include "core/priority-list.h"
 
 class Lamps;
 class Lamp;
