@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-2.99 -12.84 5.98 25.68" width="5.98mm" height="25.68mm">
+<title>separator</title>
+<style>
+  .post { fill: #17171b; stroke: #44444c; stroke-width: 0.37; }
+  .rail { fill: #c42c38; stroke: #5d1018; stroke-width: 0.56; }
+</style>
+<path class="rail" d="M-1.49 -9.85Q-1.49 -11.34 0 -11.34L0 -11.34Q1.49 -11.34 1.49 -9.85L1.49 9.85Q1.49 11.34 0 11.34L0 11.34Q-1.49 11.34 -1.49 9.85Z" />
+<circle class="post" cx="0" cy="-9.48" r="1.3" />
+<circle class="post" cx="0" cy="9.48" r="1.3" />
+</svg>

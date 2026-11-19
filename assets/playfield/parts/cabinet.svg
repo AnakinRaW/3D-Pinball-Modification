@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-124.88 -223.58 249.76 447.09" width="249.76mm" height="447.09mm">
+ <title>Cabinet walls and the playfield board with its holes</title>
+ <style>
+  .wall { fill: #b3242d; stroke: #5e1016; stroke-width: 0.56; }
+  .wall-top { fill: #3b3f4a; }
+  .surface { fill: url(#wood); }
+  .hole { fill: #141416; }
+  .hole-rim { fill: none; stroke: #6d5a2a; stroke-width: 0.47; }
+</style>
+ <defs>
+  <radialGradient id="wood" cx="50%" cy="55%" r="65%">
+   <stop offset="0" stop-color="#e2c76b" />
+   <stop offset="0.7" stop-color="#cfae55" />
+   <stop offset="1" stop-color="#b39344" />
+  </radialGradient>
+ </defs>
+ <rect class="wall" x="-123.38" y="-222.08" width="8.38" height="444.09" />
+ <rect class="wall" x="115" y="-222.08" width="8.38" height="444.09" />
+ <rect class="wall-top" x="-115" y="-222.08" width="230" height="8.38" />
+ <rect class="wall" x="-115" y="213.63" width="230" height="8.38" />
+ <rect class="surface" x="-115" y="-213.7" width="230" height="427.33" />
+ <g data-name="center-ramp-slot" inkscape:label="Slot under the center ramp" transform="translate(25.1 -72.5)">
+  <path class="hole" d="M-13.65 -2.8Q-13.65 -4.31 -12.25 -4.31L12.33 -4.31Q13.73 -4.31 13.73 -2.8L13.73 2.83Q13.73 4.35 12.33 4.35L-12.25 4.35Q-13.65 4.35 -13.65 2.83Z" />
+  <path class="hole-rim" d="M-13.65 -2.8Q-13.65 -4.31 -12.25 -4.31L12.33 -4.31Q13.73 -4.31 13.73 -2.8L13.73 2.83Q13.73 4.35 12.33 4.35L-12.25 4.35Q-13.65 4.35 -13.65 2.83Z" />
+ </g>
+ <g data-name="ramp-entry-left" inkscape:label="Ramp entry left" transform="translate(-49.3 -31.4)">
+  <path class="hole" d="M-13.07 -0.09Q-13.58 -2.13 -11.79 -2.71L8.79 -9.43Q10.58 -10 11.09 -7.97L13.15 0.16Q13.66 2.21 11.88 2.79L-8.71 9.5Q-10.5 10.09 -11.01 8.05Z" />
+  <path class="hole-rim" d="M-13.07 -0.09Q-13.58 -2.13 -11.79 -2.71L8.79 -9.43Q10.58 -10 11.09 -7.97L13.15 0.16Q13.66 2.21 11.88 2.79L-8.71 9.5Q-10.5 10.09 -11.01 8.05Z" />
+ </g>
+ <g data-name="ramp-entry-right" inkscape:label="Ramp entry right" transform="translate(58.3 -42.7)">
+  <path class="hole" d="M-7.9 -5.65Q-7.3 -7.41 -5.54 -6.81L8.55 -1.95Q10.31 -1.35 9.7 0.41L7.89 5.7Q7.28 7.46 5.52 6.85L-8.57 2Q-10.33 1.4 -9.72 -0.37Z" />
+  <path class="hole-rim" d="M-7.9 -5.65Q-7.3 -7.41 -5.54 -6.81L8.55 -1.95Q10.31 -1.35 9.7 0.41L7.89 5.7Q7.28 7.46 5.52 6.85L-8.57 2Q-10.33 1.4 -9.72 -0.37Z" />
+ </g>
+ <g data-name="slots" inkscape:label="Ramp mount slots" transform="translate(25.1 -96.9)">
+  <rect class="hole" x="-11.88" y="-8.26" width="2.42" height="9.85" rx="1.21" />
+  <rect class="hole" x="-5.82" y="-1.52" width="2.42" height="9.68" rx="1.21" />
+  <rect class="hole" x="3.49" y="-1.52" width="2.42" height="9.68" rx="1.21" />
+  <rect class="hole" x="9.54" y="-8.26" width="2.42" height="9.85" rx="1.21" />
+ </g>
+ <g data-name="scoop-hole" inkscape:label="Scoop hole" transform="translate(-83.1 -90)">
+  <circle class="hole" cx="-0.03" cy="-0.04" r="5.5" />
+  <circle class="hole-rim" cx="-0.03" cy="-0.04" r="5.5" />
+ </g>
+</svg>

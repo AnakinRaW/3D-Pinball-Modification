@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-23.43 -71.59 46.88 143.16" width="46.88mm" height="143.16mm">
+<title>Left guides (from the manual's lower track map)</title>
+<style>
+  .post { fill: #17171b; stroke: #44444c; stroke-width: 0.37; }
+  .blade-wood { stroke: #7a4a26; stroke-width: 2.42; stroke-linecap: round; }
+  .sleeve { fill: #e9eef2; fill-opacity: 0.85; stroke: #e9eef2; stroke-width: 5.96; stroke-linecap: round; stroke-opacity: 0.9; }
+</style>
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="left-link-1" inkscape:label="Rubber link 1">
+  <line class="sleeve" x1="20.09" y1="-68.23" x2="1.5" y2="-55.21" />
+  <circle class="post" cx="20.09" cy="-68.23" r="1.86" />
+  <circle class="post" cx="1.5" cy="-55.21" r="1.86" />
+</g>
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="left-link-2" inkscape:label="Rubber link 2">
+  <line class="sleeve" x1="-5.39" y1="-48.45" x2="-5.02" y2="-22.77" />
+  <circle class="post" cx="-5.39" cy="-48.45" r="1.86" />
+  <circle class="post" cx="-5.02" cy="-22.77" r="1.86" />
+</g>
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="left-link-3" inkscape:label="Rubber link 3">
+  <line class="sleeve" x1="-6.59" y1="-13.57" x2="-17.89" y2="-3.84" />
+  <circle class="post" cx="-6.59" cy="-13.57" r="1.86" />
+  <circle class="post" cx="-17.89" cy="-3.84" r="1.86" />
+</g>
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="left-link-4" inkscape:label="Rubber link 4">
+  <line class="sleeve" x1="-20.07" y1="5.6" x2="-15.13" y2="20.03" />
+  <circle class="post" cx="-20.07" cy="5.6" r="1.86" />
+  <circle class="post" cx="-15.13" cy="20.03" r="1.86" />
+</g>
+<line class="blade-wood" x1="3.38" y1="35.76" x2="19.79" y2="70.07" />
+<line class="blade-wood" x1="3.38" y1="35.76" x2="-2.14" y2="34.8" />
+</svg>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-18.3 -67.42 36.63 134.85" width="36.63mm" height="134.85mm">
+<title>Right guide</title>
+<style>
+  .plastic { fill: #eef3f6; fill-opacity: 0.78; stroke: #9fb3bf; stroke-width: 0.47; }
+  .post { fill: #17171b; stroke: #44444c; stroke-width: 0.37; }
+  .rubber { fill: none; stroke: #f4f1ea; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<path class="plastic" d="M16.83 -63.9Q16.83 -65.92 14.98 -65.61L6.56 -64.21Q4.72 -63.9 3.83 -62.13L-6.15 -41.49Q-7.04 -39.62 -7.31 -37.54L-8.16 -31.13Q-8.44 -29.07 -7.19 -27.62L-5.49 -25.64Q-4.25 -24.18 -4.6 -22.26L-7.67 -5.58Q-8.03 -3.66 -8.03 -1.7L-8.04 3.34Q-8.05 5.3 -7.23 7.06L9.05 42.3Q9.86 44.05 8.45 45.28L7.53 46.08Q6.14 47.31 6.48 49.13L7.19 52.92Q7.53 54.76 8.47 56.37L9.85 58.74Q10.79 60.35 11.93 61.82L12.56 62.63Q13.68 64.07 15.25 65L15.25 65Q16.83 65.93 16.83 64.11Z" />
+<path class="rubber" d="M-9.55 -26.14C-10.49 -22.48 -14.56 -9.38 -15.2 -4.15C-15.83 1.1 -16.8 -2.98 -13.35 5.3C-9.9 13.58 2.35 38.83 5.48 45.45" />
+<circle class="post" cx="-7.51" cy="-26.14" r="1.86" />
+<circle class="post" cx="-13.15" cy="-4.15" r="1.86" />
+<circle class="post" cx="-11.3" cy="5.3" r="1.86" />
+<circle class="post" cx="7.53" cy="45.45" r="1.86" />
+</svg>

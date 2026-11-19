@@ -1,0 +1,2244 @@
+{
+ "title": "Playfield",
+ "units": "mm",
+ "origin": "the playfield's inner top-left corner; x to the right, y down the playfield",
+ "viewBox": [
+  -52.0,
+  -198.4,
+  334.0,
+  635.03
+ ],
+ "style": [
+  ".lamp { fill: url(#glow); opacity: 0.55; }",
+  ".lamp-strip { fill: url(#glow); opacity: 0.4; }",
+  ".shadow { filter: url(#shadow); }"
+ ],
+ "defs": [
+  "<radialGradient id=\"glow\">\n    <stop offset=\"0\" stop-color=\"#fff6d8\" stop-opacity=\"1\" /><stop offset=\"0.45\" stop-color=\"#ffe08a\" stop-opacity=\"0.7\" />\n    <stop offset=\"1\" stop-color=\"#ffd25a\" stop-opacity=\"0\" />\n  </radialGradient>",
+  "<radialGradient id=\"glow\">\n    <stop offset=\"0\" stop-color=\"#fff6d8\" stop-opacity=\"1\" /><stop offset=\"0.45\" stop-color=\"#ffe08a\" stop-opacity=\"0.7\" />\n    <stop offset=\"1\" stop-color=\"#ffd25a\" stop-opacity=\"0\" />\n  </radialGradient>",
+  "<filter id=\"shadow\" x=\"-10%\" y=\"-10%\" width=\"130%\" height=\"130%\">\n    <feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"1.3\" result=\"b\" /><feOffset in=\"b\" dx=\"1.49\" dy=\"2.23\" result=\"o\" />\n    <feComponentTransfer in=\"o\" result=\"s\"><feFuncA type=\"linear\" slope=\"0.45\" /></feComponentTransfer>\n    <feMerge><feMergeNode in=\"s\" /><feMergeNode in=\"SourceGraphic\" /></feMerge>\n  </filter>"
+ ],
+ "frames": {
+  "diorama-photo": {
+   "scale": 1.0,
+   "about": [
+    115.0,
+    -18.4
+   ],
+   "note": "The diorama's frame and scene are traced from a photo whose scale is estimated. Scaling about the middle of the stage floor corrects all of it at once."
+  }
+ },
+ "layers": [
+  {
+   "group": "layer-0",
+   "label": "Layer 0: playfield",
+   "layer": true,
+   "children": [
+    {
+     "id": "cabinet",
+     "part": "cabinet",
+     "at": [
+      115.0,
+      213.7
+     ],
+     "label": "Cabinet walls and the playfield board with its holes",
+     "layer": true
+    },
+    {
+     "id": "bumper-plate",
+     "part": "bumper-plate",
+     "at": [
+      87.3,
+      75.0
+     ],
+     "label": "Bumper plate",
+     "layer": true
+    },
+    {
+     "id": "arch-clear",
+     "part": "arch-clear",
+     "at": [
+      115.0,
+      36.6
+     ],
+     "label": "Clear corner plates at the top (under the gray panels)",
+     "layer": true
+    },
+    {
+     "id": "orbit-wall",
+     "part": "orbit-wall",
+     "at": [
+      105.9,
+      80.7
+     ],
+     "label": "Wooden wall of the U lane (from the manual's lower track map)",
+     "layer": true
+    },
+    {
+     "id": "lane-guides-left",
+     "part": "lane-guides-left",
+     "at": [
+      43.0,
+      90.9
+     ],
+     "label": "Left guides (from the manual's lower track map)",
+     "layer": true
+    },
+    {
+     "group": "inserts",
+     "label": "Light inserts",
+     "layer": true,
+     "children": [
+      {
+       "group": "stars",
+       "label": "Score stars",
+       "children": [
+        {
+         "group": "score-1000",
+         "label": "Score star 1000 with its number",
+         "children": [
+          {
+           "id": "score-1000-star",
+           "part": "score-star",
+           "at": [
+            108.554,
+            257.384
+           ],
+           "scale": 1.57,
+           "attrs": {
+            "class": "score-star-big"
+           }
+          },
+          {
+           "id": "score-1000-label",
+           "part": "score-label",
+           "at": [
+            108.56,
+            245.65
+           ],
+           "text": {
+            "text": "1000"
+           },
+           "attrs": {
+            "class": "score-big"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-100",
+         "label": "Score star 100 with its number",
+         "children": [
+          {
+           "id": "score-100-star",
+           "part": "score-star",
+           "at": [
+            108.512,
+            350.056
+           ]
+          },
+          {
+           "id": "score-100-label",
+           "part": "score-label",
+           "at": [
+            108.51,
+            360.76
+           ],
+           "text": {
+            "text": "100"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-800",
+         "label": "Score star 800 with its number",
+         "children": [
+          {
+           "id": "score-800-star",
+           "part": "score-star",
+           "at": [
+            90.054,
+            269.92
+           ]
+          },
+          {
+           "id": "score-800-label",
+           "part": "score-label",
+           "at": [
+            76.55,
+            276.22
+           ],
+           "text": {
+            "text": "800"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-900",
+         "label": "Score star 900 with its number",
+         "children": [
+          {
+           "id": "score-900-star",
+           "part": "score-star",
+           "at": [
+            127.102,
+            270.024
+           ]
+          },
+          {
+           "id": "score-900-label",
+           "part": "score-label",
+           "at": [
+            140.61,
+            276.32
+           ],
+           "text": {
+            "text": "900"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-600",
+         "label": "Score star 600 with its number",
+         "children": [
+          {
+           "id": "score-600-star",
+           "part": "score-star",
+           "at": [
+            93.54,
+            290.396
+           ]
+          },
+          {
+           "id": "score-600-label",
+           "part": "score-label",
+           "at": [
+            80.03,
+            296.45
+           ],
+           "text": {
+            "text": "600"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-700",
+         "label": "Score star 700 with its number",
+         "children": [
+          {
+           "id": "score-700-star",
+           "part": "score-star",
+           "at": [
+            123.376,
+            290.562
+           ]
+          },
+          {
+           "id": "score-700-label",
+           "part": "score-label",
+           "at": [
+            136.88,
+            296.62
+           ],
+           "text": {
+            "text": "700"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-400",
+         "label": "Score star 400 with its number",
+         "children": [
+          {
+           "id": "score-400-star",
+           "part": "score-star",
+           "at": [
+            97.092,
+            310.806
+           ]
+          },
+          {
+           "id": "score-400-label",
+           "part": "score-label",
+           "at": [
+            83.59,
+            316.86
+           ],
+           "text": {
+            "text": "400"
+           },
+           "attrs": {
+            "class": "score-red"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-500",
+         "label": "Score star 500 with its number",
+         "children": [
+          {
+           "id": "score-500-star",
+           "part": "score-star",
+           "at": [
+            119.768,
+            310.832
+           ]
+          },
+          {
+           "id": "score-500-label",
+           "part": "score-label",
+           "at": [
+            133.27,
+            316.89
+           ],
+           "text": {
+            "text": "500"
+           },
+           "attrs": {
+            "class": "score-red"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-200",
+         "label": "Score star 200 with its number",
+         "children": [
+          {
+           "id": "score-200-star",
+           "part": "score-star",
+           "at": [
+            100.846,
+            331.332
+           ]
+          },
+          {
+           "id": "score-200-label",
+           "part": "score-label",
+           "at": [
+            87.34,
+            337.38
+           ],
+           "text": {
+            "text": "200"
+           },
+           "attrs": {
+            "class": "score-blue"
+           }
+          }
+         ]
+        },
+        {
+         "group": "score-300",
+         "label": "Score star 300 with its number",
+         "children": [
+          {
+           "id": "score-300-star",
+           "part": "score-star",
+           "at": [
+            116.046,
+            331.37
+           ]
+          },
+          {
+           "id": "score-300-label",
+           "part": "score-label",
+           "at": [
+            129.54,
+            337.42
+           ],
+           "text": {
+            "text": "300"
+           },
+           "attrs": {
+            "class": "score-blue"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "group": "arrows",
+       "label": "Track arrows",
+       "children": [
+        {
+         "id": "arrow-left-outer",
+         "part": "arrow",
+         "at": [
+          40.45,
+          199.857
+         ],
+         "rotate": -10.25
+        },
+        {
+         "id": "arrow-left-inner",
+         "part": "arrow",
+         "at": [
+          73.04,
+          207.466
+         ],
+         "rotate": -10.25
+        },
+        {
+         "id": "arrow-center",
+         "part": "arrow",
+         "at": [
+          141.38,
+          172.183
+         ],
+         "rotate": 13.49
+        },
+        {
+         "id": "arrow-right",
+         "part": "arrow",
+         "at": [
+          160.917,
+          199.833
+         ],
+         "rotate": 37.29
+        }
+       ]
+      },
+      {
+       "group": "round-inserts",
+       "label": "Round inserts",
+       "children": [
+        {
+         "id": "insert-1",
+         "part": "insert",
+         "at": [
+          82.03,
+          74.21
+         ]
+        },
+        {
+         "id": "insert-2",
+         "part": "insert",
+         "at": [
+          121.06,
+          99.54
+         ]
+        },
+        {
+         "id": "insert-3",
+         "part": "insert",
+         "at": [
+          87.04,
+          123.55
+         ]
+        },
+        {
+         "id": "insert-4",
+         "part": "insert",
+         "at": [
+          108.41,
+          117.75
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "group": "diffusers-mod",
+     "label": "Diffusers at the scoop and in the inlanes",
+     "layer": true,
+     "children": [
+      {
+       "id": "diffuser-scoop",
+       "part": "diffuser",
+       "at": [
+        51.49,
+        113.46
+       ]
+      },
+      {
+       "id": "diffuser-inlane-left-outer",
+       "part": "diffuser",
+       "at": [
+        28.01,
+        290.91
+       ],
+       "scale": 0.817,
+       "attrs": {
+        "class": "diffuser-small"
+       }
+      },
+      {
+       "id": "diffuser-inlane-left-inner",
+       "part": "diffuser",
+       "at": [
+        42.68,
+        290.91
+       ],
+       "scale": 0.817,
+       "attrs": {
+        "class": "diffuser-small"
+       }
+      },
+      {
+       "id": "diffuser-inlane-right-inner",
+       "part": "diffuser",
+       "at": [
+        174.4,
+        290.91
+       ],
+       "scale": 0.817,
+       "attrs": {
+        "class": "diffuser-small"
+       }
+      },
+      {
+       "id": "diffuser-inlane-right-outer",
+       "part": "diffuser",
+       "at": [
+        189.07,
+        290.91
+       ],
+       "scale": 0.817,
+       "attrs": {
+        "class": "diffuser-small"
+       }
+      }
+     ]
+    },
+    {
+     "group": "top-lanes",
+     "label": "Top lanes: three guides in a row, three diffusers",
+     "layer": true,
+     "children": [
+      {
+       "id": "diffuser-top-lane-1",
+       "part": "diffuser",
+       "at": [
+        138.74,
+        52.67
+       ]
+      },
+      {
+       "id": "diffuser-top-lane-2",
+       "part": "diffuser",
+       "at": [
+        164.81,
+        58.79
+       ]
+      },
+      {
+       "id": "diffuser-top-lane-3",
+       "part": "diffuser",
+       "at": [
+        190.58,
+        65.14
+       ]
+      },
+      {
+       "id": "top-lane-guide-1",
+       "part": "top-lane-guide",
+       "at": [
+        123.65,
+        42.59
+       ],
+       "rotate": -15.5,
+       "label": "Top lane guide 1"
+      },
+      {
+       "id": "top-lane-guide-2",
+       "part": "top-lane-guide",
+       "at": [
+        149.395,
+        48.395
+       ],
+       "rotate": -18.624,
+       "label": "Top lane guide 2"
+      },
+      {
+       "id": "top-lane-guide-3",
+       "part": "top-lane-guide",
+       "at": [
+        175.08,
+        54.97
+       ],
+       "rotate": -21.093,
+       "label": "Top lane guide 3"
+      }
+     ]
+    },
+    {
+     "group": "bumpers",
+     "label": "Pop bumpers",
+     "layer": true,
+     "children": [
+      {
+       "id": "bumper-1",
+       "part": "bumper",
+       "at": [
+        69.644,
+        56.117
+       ],
+       "label": "bumper-1"
+      },
+      {
+       "id": "bumper-2",
+       "part": "bumper",
+       "at": [
+        104.989,
+        75.241
+       ],
+       "label": "bumper-2"
+      },
+      {
+       "id": "bumper-3",
+       "part": "bumper",
+       "at": [
+        71.228,
+        96.1
+       ],
+       "label": "bumper-3"
+      }
+     ]
+    },
+    {
+     "group": "bells",
+     "label": "Bells, each with its foil ring",
+     "layer": true,
+     "children": [
+      {
+       "id": "bell-top",
+       "part": "bell",
+       "at": [
+        89.978,
+        26.704
+       ],
+       "label": "Bell 1 (top)"
+      },
+      {
+       "id": "bell-right",
+       "part": "bell",
+       "at": [
+        196.063,
+        88.37
+       ],
+       "label": "Bell 2 (right)"
+      }
+     ]
+    },
+    {
+     "group": "side-guides",
+     "label": "Side guides",
+     "layer": true,
+     "children": [
+      {
+       "id": "guide-left",
+       "part": "guide-left",
+       "at": [
+        15.9,
+        203.1
+       ],
+       "label": "Left guide"
+      },
+      {
+       "id": "guide-right",
+       "part": "guide-right",
+       "at": [
+        202.0,
+        231.4
+       ],
+       "label": "Right guide"
+      },
+      {
+       "id": "lane-piece-right",
+       "part": "lane-piece-right",
+       "at": [
+        207.6,
+        145.4
+       ],
+       "label": "Right lane guide"
+      },
+      {
+       "id": "shooter-wall-red",
+       "part": "shooter-wall-red",
+       "at": [
+        217.8,
+        221.6
+       ],
+       "label": "Red wall along the shooter lane's inner edge"
+      }
+     ]
+    },
+    {
+     "id": "apron-base",
+     "part": "apron-base",
+     "at": [
+      109.3,
+      380.1
+     ],
+     "label": "Wooden base under the apron",
+     "layer": true
+    },
+    {
+     "id": "drain-wall-lower",
+     "part": "drain-wall-lower",
+     "at": [
+      162.1,
+      408.2
+     ],
+     "label": "Wooden wall along the ball return's lower curve (planned; from the pencil curve in the photo)",
+     "layer": true
+    },
+    {
+     "group": "outlanes",
+     "label": "Clear guides under the apron",
+     "layer": true,
+     "children": [
+      {
+       "id": "outlane-left",
+       "part": "outlane-left",
+       "at": [
+        50.3,
+        376.5
+       ],
+       "label": "Clear guide left"
+      },
+      {
+       "id": "outlane-right",
+       "part": "outlane-right",
+       "at": [
+        168.0,
+        373.9
+       ],
+       "label": "Clear guide right"
+      }
+     ]
+    },
+    {
+     "id": "drain-ball-store",
+     "part": "drain-ball-store",
+     "at": [
+      197.5,
+      397.3
+     ],
+     "label": "Ball store: seesaw fingers and exit IR sensor (places not measured)",
+     "layer": true
+    },
+    {
+     "id": "drain",
+     "part": "drain",
+     "at": [
+      108.5,
+      387.0
+     ],
+     "label": "Drain",
+     "layer": true
+    },
+    {
+     "group": "inlane-separators",
+     "label": "Inlane separators",
+     "layer": true,
+     "children": [
+      {
+       "id": "separator-left",
+       "part": "separator",
+       "at": [
+        35.61,
+        292.35
+       ],
+       "label": "separator-left"
+      },
+      {
+       "id": "separator-right",
+       "part": "separator",
+       "at": [
+        181.47,
+        292.35
+       ],
+       "label": "separator-right"
+      }
+     ]
+    },
+    {
+     "group": "inlane-rails",
+     "label": "Inlane rails",
+     "layer": true,
+     "children": [
+      {
+       "id": "inlane-rail-left",
+       "part": "inlane-rail",
+       "at": [
+        40.102,
+        336.656
+       ],
+       "label": "inlane-rail-left"
+      },
+      {
+       "id": "inlane-rail-right",
+       "part": "inlane-rail",
+       "at": [
+        176.973,
+        336.656
+       ],
+       "mirror": true,
+       "label": "inlane-rail-right"
+      }
+     ]
+    },
+    {
+     "group": "flippers",
+     "label": "Flippers",
+     "layer": true,
+     "children": [
+      {
+       "group": "flipper-left",
+       "label": "Flipper left",
+       "children": [
+        {
+         "id": "slingshot-left",
+         "part": "slingshot",
+         "at": [
+          57.617,
+          313.587
+         ],
+         "label": "Slingshot left"
+        },
+        {
+         "id": "flipper-left-bat",
+         "part": "flipper",
+         "at": [
+          85.046,
+          371.46
+         ],
+         "label": "Flipper left"
+        }
+       ]
+      },
+      {
+       "group": "flipper-right",
+       "label": "Flipper right",
+       "children": [
+        {
+         "id": "slingshot-right",
+         "part": "slingshot",
+         "at": [
+          159.46,
+          313.587
+         ],
+         "mirror": true,
+         "label": "Slingshot right"
+        },
+        {
+         "id": "flipper-right-bat",
+         "part": "flipper",
+         "at": [
+          132.029,
+          371.46
+         ],
+         "mirror": true,
+         "label": "Flipper right"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "group": "shooter-lane",
+     "label": "Shooter lane",
+     "layer": true,
+     "children": [
+      {
+       "id": "shooter-lane-floor",
+       "part": "shooter-lane",
+       "at": [
+        224.4,
+        264.0
+       ],
+       "label": "Shooter lane floor and plunger"
+      },
+      {
+       "id": "shooter-arrow-1",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        271.455
+       ]
+      },
+      {
+       "id": "shooter-arrow-2",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        279.36
+       ]
+      },
+      {
+       "id": "shooter-arrow-3",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        287.09
+       ]
+      },
+      {
+       "id": "shooter-arrow-4",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        294.82
+       ]
+      },
+      {
+       "id": "shooter-arrow-5",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        302.55
+       ]
+      },
+      {
+       "id": "shooter-arrow-6",
+       "part": "shooter-arrow",
+       "at": [
+        224.415,
+        310.275
+       ]
+      }
+     ]
+    },
+    {
+     "group": "ir-sensors",
+     "label": "IR ball sensors (planned places)",
+     "layer": true,
+     "children": [
+      {
+       "id": "ir-orbit-top",
+       "part": "ir",
+       "at": [
+        70.064,
+        5.702
+       ],
+       "rotate": -14.25,
+       "label": "U lane, top left"
+      },
+      {
+       "id": "ir-left-lane",
+       "part": "ir",
+       "at": [
+        38.628,
+        135.15
+       ],
+       "rotate": 80.093,
+       "label": "Left lane, between the U lane's wall and the plate"
+      },
+      {
+       "id": "ir-top-lane-1",
+       "part": "ir",
+       "at": [
+        134.315,
+        38.328
+       ],
+       "rotate": 72.968,
+       "label": "Top lane 1"
+      },
+      {
+       "id": "ir-top-lane-2",
+       "part": "ir",
+       "at": [
+        159.669,
+        44.58
+       ],
+       "rotate": 70.24,
+       "label": "Top lane 2"
+      },
+      {
+       "id": "ir-top-lane-3",
+       "part": "ir",
+       "at": [
+        185.258,
+        51.369
+       ],
+       "rotate": 68.999,
+       "label": "Top lane 3"
+      },
+      {
+       "id": "ir-inlane-left-outer",
+       "part": "ir",
+       "at": [
+        28.01,
+        308.182
+       ],
+       "rotate": 90.11,
+       "label": "Left inlane, outer lane"
+      },
+      {
+       "id": "ir-inlane-left-inner",
+       "part": "ir",
+       "at": [
+        42.675,
+        308.182
+       ],
+       "rotate": 90.11,
+       "label": "Left inlane, inner lane"
+      },
+      {
+       "id": "ir-inlane-right-inner",
+       "part": "ir",
+       "at": [
+        174.4,
+        308.182
+       ],
+       "rotate": 90.11,
+       "label": "Right inlane, inner lane"
+      },
+      {
+       "id": "ir-inlane-right-outer",
+       "part": "ir",
+       "at": [
+        189.065,
+        308.182
+       ],
+       "rotate": 90.11,
+       "label": "Right inlane, outer lane"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "group": "balls",
+   "label": "Balls: one layer per resting place, shown while a ball is there",
+   "layer": true,
+   "children": [
+    {
+     "id": "ball-store-front",
+     "part": "ball-store",
+     "at": [
+      191.645,
+      396.955
+     ],
+     "label": "Ball in the store, front",
+     "layer": true,
+     "attrs": {
+      "style": "display:none"
+     }
+    },
+    {
+     "id": "ball-store-back",
+     "part": "ball-store",
+     "at": [
+      182.675,
+      400.205
+     ],
+     "label": "Ball in the store, back",
+     "layer": true,
+     "attrs": {
+      "style": "display:none"
+     }
+    }
+   ]
+  },
+  {
+   "group": "lights",
+   "label": "Lights",
+   "layer": true,
+   "attrs": {
+    "style": "mix-blend-mode:screen"
+   },
+   "children": [
+    {
+     "strip": "lights-perimeter-left",
+     "label": "Perimeter left (chain A, 79)",
+     "layer": true,
+     "firmware": "perimeterLeft",
+     "chain": "A",
+     "prefix": "led-a-",
+     "count": 79,
+     "pitch": 6.25,
+     "r": 2.05,
+     "class": "lamp-strip",
+     "route": [
+      {
+       "points": [
+        [
+         97.308,
+         397.526
+        ],
+        [
+         0.466,
+         332.809
+        ],
+        [
+         0.466,
+         297.33
+        ],
+        [
+         1.397,
+         295.468
+        ],
+        [
+         4.284,
+         291.743
+        ],
+        [
+         7.544,
+         286.156
+        ],
+        [
+         8.94,
+         278.706
+        ],
+        [
+         5.216,
+         275.447
+        ],
+        [
+         23.117,
+         236.7
+        ],
+        [
+         23.101,
+         227.746
+        ],
+        [
+         19.319,
+         207.216
+        ],
+        [
+         23.509,
+         202.323
+        ],
+        [
+         22.112,
+         191.77
+        ]
+       ],
+       "note": "along the clear guide under the apron and the lower side guide"
+      },
+      {
+       "points": [
+        [
+         22.112,
+         191.77
+        ],
+        [
+         4.748,
+         71.057
+        ]
+       ],
+       "hidden": true,
+       "note": "along the wall without a plastic edge; route assumed straight"
+      },
+      {
+       "points": [
+        [
+         4.748,
+         71.057
+        ],
+        [
+         4.865,
+         69.562
+        ],
+        [
+         4.983,
+         68.068
+        ],
+        [
+         5.064,
+         67.071
+        ],
+        [
+         5.194,
+         65.577
+        ],
+        [
+         5.342,
+         64.085
+        ],
+        [
+         5.514,
+         62.595
+        ],
+        [
+         5.698,
+         61.107
+        ],
+        [
+         5.878,
+         59.619
+        ],
+        [
+         5.99,
+         58.625
+        ],
+        [
+         6.124,
+         57.132
+        ],
+        [
+         6.192,
+         56.134
+        ],
+        [
+         6.294,
+         54.638
+        ],
+        [
+         6.438,
+         53.146
+        ],
+        [
+         6.665,
+         51.664
+        ],
+        [
+         6.964,
+         50.195
+        ],
+        [
+         7.193,
+         49.221
+        ],
+        [
+         7.574,
+         47.771
+        ],
+        [
+         7.993,
+         46.331
+        ],
+        [
+         8.443,
+         44.901
+        ],
+        [
+         8.923,
+         43.48
+        ],
+        [
+         9.439,
+         42.073
+        ],
+        [
+         9.805,
+         41.142
+        ],
+        [
+         10.391,
+         39.762
+        ],
+        [
+         11.023,
+         38.402
+        ],
+        [
+         11.697,
+         37.063
+        ],
+        [
+         12.163,
+         36.178
+        ],
+        [
+         12.884,
+         34.863
+        ],
+        [
+         13.633,
+         33.564
+        ],
+        [
+         14.426,
+         32.292
+        ],
+        [
+         15.321,
+         31.09
+        ],
+        [
+         16.308,
+         29.961
+        ],
+        [
+         17.357,
+         28.89
+        ],
+        [
+         18.449,
+         27.863
+        ],
+        [
+         19.488,
+         26.782
+        ],
+        [
+         20.36,
+         25.564
+        ],
+        [
+         21.143,
+         24.285
+        ],
+        [
+         22.015,
+         23.066
+        ],
+        [
+         22.94,
+         21.886
+        ],
+        [
+         23.93,
+         20.76
+        ],
+        [
+         25.004,
+         19.714
+        ],
+        [
+         26.136,
+         18.73
+        ],
+        [
+         27.296,
+         17.781
+        ],
+        [
+         28.077,
+         17.156
+        ],
+        [
+         29.263,
+         16.238
+        ],
+        [
+         30.465,
+         15.342
+        ],
+        [
+         31.674,
+         14.455
+        ],
+        [
+         32.876,
+         13.558
+        ],
+        [
+         34.061,
+         12.64
+        ],
+        [
+         35.294,
+         11.788
+        ],
+        [
+         36.602,
+         11.056
+        ],
+        [
+         37.499,
+         10.613
+        ],
+        [
+         38.865,
+         9.996
+        ],
+        [
+         40.251,
+         9.423
+        ],
+        [
+         41.651,
+         8.885
+        ],
+        [
+         43.065,
+         8.387
+        ],
+        [
+         44.49,
+         7.921
+        ],
+        [
+         45.923,
+         7.477
+        ],
+        [
+         47.36,
+         7.05
+        ],
+        [
+         48.801,
+         6.636
+        ],
+        [
+         49.765,
+         6.37
+        ],
+        [
+         51.215,
+         5.988
+        ],
+        [
+         52.672,
+         5.633
+        ],
+        [
+         54.136,
+         5.311
+        ],
+        [
+         55.116,
+         5.112
+        ],
+        [
+         56.59,
+         4.838
+        ],
+        [
+         57.577,
+         4.676
+        ],
+        [
+         59.061,
+         4.462
+        ],
+        [
+         60.549,
+         4.282
+        ],
+        [
+         62.046,
+         4.185
+        ],
+        [
+         63.544,
+         4.13
+        ],
+        [
+         65.043,
+         4.073
+        ],
+        [
+         66.539,
+         3.979
+        ],
+        [
+         68.027,
+         3.796
+        ],
+        [
+         69.468,
+         3.395
+        ],
+        [
+         70.737,
+         2.604
+        ],
+        [
+         71.794,
+         1.544
+        ],
+        [
+         72.727,
+         0.37
+        ],
+        [
+         73.062,
+         0.0
+        ]
+       ],
+       "note": "along the clear top plate"
+      }
+     ]
+    },
+    {
+     "strip": "lights-perimeter-right",
+     "label": "Perimeter right (chain B, 79)",
+     "layer": true,
+     "firmware": "perimeterRight",
+     "chain": "B",
+     "prefix": "led-b-",
+     "count": 79,
+     "pitch": 6.25,
+     "r": 2.05,
+     "class": "lamp-strip",
+     "route": [
+      {
+       "points": [
+        [
+         118.259,
+         399.015
+        ],
+        [
+         217.709,
+         335.696
+        ],
+        [
+         217.709,
+         297.33
+        ],
+        [
+         215.679,
+         295.468
+        ],
+        [
+         212.791,
+         291.743
+        ],
+        [
+         209.532,
+         286.156
+        ],
+        [
+         208.135,
+         278.706
+        ],
+        [
+         211.86,
+         275.447
+        ],
+        [
+         193.959,
+         236.7
+        ],
+        [
+         193.975,
+         227.746
+        ],
+        [
+         197.757,
+         207.216
+        ],
+        [
+         193.567,
+         202.323
+        ],
+        [
+         194.963,
+         191.77
+        ],
+        [
+         206.721,
+         167.497
+        ],
+        [
+         218.826,
+         165.483
+        ]
+       ],
+       "note": "along the clear guide under the apron and the lower side guide"
+      },
+      {
+       "points": [
+        [
+         218.826,
+         165.483
+        ],
+        [
+         225.252,
+         73.167
+        ]
+       ],
+       "hidden": true,
+       "note": "along the shooter lane's wall; route assumed straight"
+      },
+      {
+       "points": [
+        [
+         225.252,
+         73.167
+        ],
+        [
+         224.197,
+         70.002
+        ],
+        [
+         222.087,
+         62.617
+        ],
+        [
+         219.45,
+         55.232
+        ],
+        [
+         216.812,
+         47.846
+        ],
+        [
+         214.174,
+         40.461
+        ],
+        [
+         209.954,
+         33.076
+        ],
+        [
+         206.789,
+         28.328
+        ],
+        [
+         203.624,
+         24.635
+        ],
+        [
+         200.459,
+         21.47
+        ],
+        [
+         192.018,
+         14.612
+        ],
+        [
+         185.161,
+         9.865
+        ],
+        [
+         179.358,
+         7.227
+        ],
+        [
+         175.665,
+         5.644
+        ],
+        [
+         171.972,
+         4.062
+        ],
+        [
+         168.807,
+         3.007
+        ],
+        [
+         164.587,
+         1.952
+        ],
+        [
+         163.532,
+         0.0
+        ]
+       ],
+       "note": "along the clear top plate"
+      }
+     ]
+    },
+    {
+     "group": "lights-stars",
+     "label": "Score stars (chain D, 10)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-star-1000",
+       "on": "score-1000-star",
+       "at": [
+        0.004,
+        0.01
+       ],
+       "r": 12.81,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-100",
+       "on": "score-100-star",
+       "at": [
+        -0.002,
+        0.004
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-800",
+       "on": "score-800-star",
+       "at": [
+        -0.004,
+        0.0
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-900",
+       "on": "score-900-star",
+       "at": [
+        0.008,
+        -0.004
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-600",
+       "on": "score-600-star",
+       "at": [
+        0.0,
+        0.004
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-700",
+       "on": "score-700-star",
+       "at": [
+        0.004,
+        -0.002
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-400",
+       "on": "score-400-star",
+       "at": [
+        -0.002,
+        0.004
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-500",
+       "on": "score-500-star",
+       "at": [
+        0.002,
+        0.008
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-200",
+       "on": "score-200-star",
+       "at": [
+        0.004,
+        -0.002
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-star-300",
+       "on": "score-300-star",
+       "at": [
+        -0.006,
+        0.0
+       ],
+       "r": 8.34,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-drain",
+     "label": "Drain (chain D, 1)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-drain",
+       "on": "drain",
+       "at": [
+        0.04,
+        0.04
+       ],
+       "r": 10.24,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-shooter",
+     "label": "Shooter lane (chain D, 6)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-shooter-1",
+       "on": "shooter-arrow-1",
+       "at": [
+        -0.005,
+        0.195
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-shooter-2",
+       "on": "shooter-arrow-2",
+       "at": [
+        -0.005,
+        0.19
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-shooter-3",
+       "on": "shooter-arrow-3",
+       "at": [
+        -0.005,
+        0.19
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-shooter-4",
+       "on": "shooter-arrow-4",
+       "at": [
+        -0.005,
+        0.19
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-shooter-5",
+       "on": "shooter-arrow-5",
+       "at": [
+        -0.005,
+        0.18
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-shooter-6",
+       "on": "shooter-arrow-6",
+       "at": [
+        -0.005,
+        0.185
+       ],
+       "r": 4.19,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-arrows",
+     "label": "Track arrows (chain E, 4)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-arrow-left-outer",
+       "on": "arrow-left-outer",
+       "at": [
+        -0.293,
+        -1.188
+       ],
+       "r": 9.31,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-arrow-left-inner",
+       "on": "arrow-left-inner",
+       "at": [
+        -0.297,
+        -1.167
+       ],
+       "r": 9.31,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-arrow-center",
+       "on": "arrow-center",
+       "at": [
+        -0.332,
+        -1.384
+       ],
+       "r": 9.31,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-arrow-right",
+       "on": "arrow-right",
+       "at": [
+        -0.274,
+        -1.19
+       ],
+       "r": 9.31,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-top-lanes",
+     "label": "Top lane rollovers (chain F, 3)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-top-lane-1",
+       "on": "diffuser-top-lane-1",
+       "at": [
+        0.0,
+        -0.01
+       ],
+       "r": 7.45,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-top-lane-2",
+       "on": "diffuser-top-lane-2",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 7.45,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-top-lane-3",
+       "on": "diffuser-top-lane-3",
+       "at": [
+        0.0,
+        -0.01
+       ],
+       "r": 7.45,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-bumper-section",
+     "label": "Bumper section (chain F, 4)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-insert-1",
+       "on": "insert-1",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 9.22,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-insert-2",
+       "on": "insert-2",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 9.22,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-insert-3",
+       "on": "insert-3",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 9.22,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-insert-4",
+       "on": "insert-4",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 9.22,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-inlanes",
+     "label": "Inner and outer lane lights (chain D, 4)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-inlane-left-outer",
+       "on": "diffuser-inlane-left-outer",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-inlane-left-inner",
+       "on": "diffuser-inlane-left-inner",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-inlane-right-inner",
+       "on": "diffuser-inlane-right-inner",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-inlane-right-outer",
+       "on": "diffuser-inlane-right-outer",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      }
+     ]
+    },
+    {
+     "group": "lights-scoop",
+     "label": "Scoop (chain E, 1)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-scoop",
+       "on": "diffuser-scoop",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 7.78,
+       "class": "lamp"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "group": "layer-1",
+   "label": "Layer 1: ramps and apron",
+   "layer": true,
+   "attrs": {
+    "class": "shadow"
+   },
+   "children": [
+    {
+     "id": "block-top-left",
+     "part": "block-top-left",
+     "at": [
+      21.1,
+      63.7
+     ],
+     "label": "Red plate J4, top left, with the slot for its tab",
+     "layer": true
+    },
+    {
+     "id": "cover-left",
+     "part": "cover-left",
+     "at": [
+      36.5,
+      145.3
+     ],
+     "label": "Wooden cover left (G24): outline, ornaments, chevrons, flourish",
+     "layer": true
+    },
+    {
+     "id": "panel-corner-right",
+     "part": "panel-corner-right",
+     "at": [
+      196.8,
+      36.6
+     ],
+     "label": "Painted corner panel right: outline, ornaments",
+     "layer": true
+    },
+    {
+     "id": "panel-guide-right",
+     "part": "panel-guide-right",
+     "at": [
+      206.2,
+      231.4
+     ],
+     "label": "Painted side panel right: outline, flourish",
+     "layer": true
+    },
+    {
+     "id": "ramp-orbit-left",
+     "part": "ramp-orbit-left",
+     "at": [
+      107.6,
+      101.8
+     ],
+     "label": "Green ring ramp: left entry, over the top, out above the right bell",
+     "layer": true
+    },
+    {
+     "id": "ramp-orbit-right",
+     "part": "ramp-orbit-right",
+     "at": [
+      179.0,
+      85.6
+     ],
+     "label": "Gray launch ramp: shooter lane over the green ramp to the top lanes",
+     "layer": true
+    },
+    {
+     "id": "ramp-blue",
+     "part": "ramp-blue",
+     "at": [
+      77.7,
+      165.4
+     ],
+     "label": "Blue ramp",
+     "layer": true
+    },
+    {
+     "id": "wire-ramp",
+     "part": "wire-ramp",
+     "at": [
+      195.0,
+      247.2
+     ],
+     "label": "Red wire ramp",
+     "layer": true
+    },
+    {
+     "id": "ramp-kicker",
+     "part": "ramp-kicker",
+     "at": [
+      179.4,
+      153.9
+     ],
+     "label": "Crocodile",
+     "layer": true
+    },
+    {
+     "id": "apron",
+     "part": "apron",
+     "at": [
+      104.3,
+      387.4
+     ],
+     "label": "Apron",
+     "layer": true
+    },
+    {
+     "group": "ir-sensors-top",
+     "label": "IR ball sensors on the ramps (planned places)",
+     "layer": true,
+     "children": [
+      {
+       "id": "ir-ramp-green",
+       "part": "ir",
+       "at": [
+        91.579,
+        15.344
+       ],
+       "rotate": 1.791,
+       "label": "Green ramp, top"
+      },
+      {
+       "id": "ir-ramp-blue",
+       "part": "ir",
+       "at": [
+        12.916,
+        222.745
+       ],
+       "rotate": 91.742,
+       "label": "Blue ramp, left ring"
+      },
+      {
+       "id": "ir-ramp-red",
+       "part": "ir-ramp-red",
+       "at": [
+        198.9,
+        310.3
+       ],
+       "label": "Red ramp: on the wood beside the lane, looking sideways at it, sees a ball drop into the lane"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "group": "backbox",
+   "label": "Backbox: sky, display, B20, scene, ceiling strip and diorama frame",
+   "layer": true,
+   "children": [
+    {
+     "id": "sky",
+     "part": "sky",
+     "at": [
+      115.0,
+      -69.1
+     ],
+     "label": "Back wall with the sky"
+    },
+    {
+     "id": "display",
+     "part": "display",
+     "at": [
+      118.1,
+      -67.4
+     ],
+     "label": "Display (Adafruit 2090): window in the back wall, glass, active area 320 x 240"
+    },
+    {
+     "id": "dio-b20",
+     "part": "dio-b20",
+     "at": [
+      115.0,
+      -25.6
+     ],
+     "label": "New part B20 behind the stock scene part (outline from the CAD)"
+    },
+    {
+     "id": "dio-scene",
+     "part": "dio-scene",
+     "at": [
+      105.4,
+      -36.3
+     ],
+     "label": "Stock scene part: ground, wheel, pins and balls (in front of the CAD's parts)",
+     "frame": "diorama-photo"
+    },
+    {
+     "strip": "lights-ceiling",
+     "label": "Diorama ceiling (chain C, 26)",
+     "firmware": "ceiling",
+     "chain": "C",
+     "prefix": "led-c-",
+     "count": 26,
+     "pitch": 6.25,
+     "r": 3.4,
+     "class": "lamp-strip",
+     "frame": "diorama-photo",
+     "route": [
+      {
+       "points": [
+        [
+         33.745,
+         -116.4
+        ],
+        [
+         196.255,
+         -116.4
+        ]
+       ],
+       "note": "glued to the ceiling, centered under the roof (estimated)"
+      }
+     ]
+    },
+    {
+     "id": "dio-frame",
+     "part": "dio-frame",
+     "at": [
+      115.0,
+      -18.4
+     ],
+     "frame": "diorama-photo",
+     "label": "Diorama frame: columns, towers, curtains, swags, valance, roof, crest and the stage floor"
+    }
+   ]
+  }
+ ]
+}

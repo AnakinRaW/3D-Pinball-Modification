@@ -65,7 +65,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `docs/parts-list.md` is the bill of materials, and `docs/pin-assignment.md` the Teensy pins spent and what each locks out
 - `model/`: the Python files the checks read, in folders that mirror those under `docs/`. A subsystem's `figures.py`, `schematic.py` and perfboard layouts sit there, the Teensy's figures in `model/research/teensy-4.1.py` and the firmware's in `model/firmware/figures.py`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `assets/`: photos, renders and other media
+- `assets/`: photos, renders and other media. `assets/playfield/` holds the vector drawing of the machine, one file per part plus `playfield.json`, which places them. [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md) holds its rules
 - `.claude/skills/`: the repository's skills, listed below
 
 ## Commands
@@ -82,6 +82,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | `python tools/svgcheck.py` | Reports labels in the drawings under `docs/` that leave the viewBox or their box, or land on another label, and boxes that cross an outline. **Run it after moving or adding any text or box in an SVG.** It stays out of CI, since its widths are estimated from character classes, so a report is a place to look |
 | `python tools/perfboard/build.py <layout.py> [out.svg]` | Checks a perfboard layout against [`tools/perfboard/CLAUDE.md`](tools/perfboard/CLAUDE.md), the netlist and the distance limits included, and draws it once no error is left |
 | `python tools/netlist.py model/parts/<subsystem>/figures.py [board]` | Prints the netlist a model declares for each board. `--kicad <out.net>` writes one board as a KiCad netlist, and `--diff <kicad.net>` compares a netlist KiCad exported with the declaration |
+| `python tools/playfield/compose.py` | Writes `assets/playfield/playfield.svg` from the part files and `playfield.json`. `--check` exits with 1 when the drawing differs from what they compose |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. [`assets/media.md`](assets/media.md) gives how pictures, videos and sounds are made |
 
 The firmware builds with PlatformIO, installed with `python -m pip install platformio`. Its [`platformio.ini`](platformio.ini) stands in the repository's root, where the commands run. CI builds the release firmware, checks its code with clang-tidy, runs the `computer` tests and checks the tests against testing.md on each push touching `firmware/` or testing.md:

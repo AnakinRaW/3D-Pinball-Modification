@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-27.132 -45.536 59.22 74.12" width="59.22mm" height="74.12mm">
+<title>inlane-rail</title>
+<style>
+  .rail { fill: #c42c38; stroke: #5d1018; stroke-width: 0.56; }
+  .rail-gem { fill: #8e99a6; }
+  .rail-gem-y { fill: #f1c94a; }
+</style>
+<defs>
+  <clipPath id="clip-inlane-rail"><path d="M-23.772 -44.036Q-25.632 -44.036 -25.632 -42.176L-25.632 -10.706Q-25.632 -8.846 -24.092 -7.796L24.828 26.014Q26.358 27.084 27.418 25.544L29.528 22.484Q30.588 20.954 29.068 19.894L-16.642 -11.696Q-18.182 -12.756 -18.182 -14.616L-18.182 -42.176Q-18.182 -44.036 -20.042 -44.036Z" /></clipPath>
+</defs>
+<path class="rail" d="M-23.772 -44.036Q-25.632 -44.036 -25.632 -42.176L-25.632 -10.706Q-25.632 -8.846 -24.092 -7.796L24.828 26.014Q26.358 27.084 27.418 25.544L29.528 22.484Q30.588 20.954 29.068 19.894L-16.642 -11.696Q-18.182 -12.756 -18.182 -14.616L-18.182 -42.176Q-18.182 -44.036 -20.042 -44.036Z" />
+<g clip-path="url(#clip-inlane-rail)" data-name="details"><polygon class="rail-gem" points="-15.602,-8.316 -13.742,-6.456 -15.602,-4.586 -17.462,-6.456" /><polygon class="rail-gem" points="-9.312,-3.956 -7.442,-2.096 -9.312,-0.236 -11.172,-2.096" /><polygon class="rail-gem-y" points="-3.012,0.394 -1.152,2.254 -3.012,4.114 -4.872,2.254" /><polygon class="rail-gem" points="3.288,4.744 5.158,6.604 3.288,8.464 1.428,6.604" /><polygon class="rail-gem" points="9.588,9.094 11.448,10.964 9.588,12.824 7.728,10.964" /><polygon class="rail-gem-y" points="15.878,13.444 17.738,15.314 15.878,17.174 14.018,15.314" /><polygon class="rail-gem" points="22.178,17.794 24.038,19.654 22.178,21.524 20.308,19.654" /></g>
+</svg>

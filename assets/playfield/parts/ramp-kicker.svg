@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-20.51 -31.59 40.96 63.12" width="40.96mm" height="63.12mm">
+<title>Crocodile</title>
+<style>
+  .hole { fill: #141416; }
+  .kicker { fill: #9fc0a6; stroke: #4f6f57; stroke-width: 0.56; }
+  .kicker-slat { stroke: #6f8f77; stroke-width: 0.56; }
+</style>
+<defs>
+  <clipPath id="clip-ramp-kicker"><path d="M-1.1 -30.09L18.95 -22.18L6.1 21.37L5.44 22.92L4.58 24.38L3.55 25.71L2.35 26.91L1 27.92L-0.47 28.76L-2.04 29.39L-3.68 29.82L-5.35 30.03L-7.05 30.02L-8.73 29.78L-10.35 29.33L-11.91 28.68L-13.36 27.82L-14.7 26.78L-15.89 25.57L-16.91 24.22L-17.74 22.75L-18.38 21.19L-18.8 19.55L-19.01 17.87L-19 16.19L-18.76 14.51L-18.32 12.88Z" /></clipPath>
+</defs>
+<path class="kicker" d="M-1.1 -30.09L18.95 -22.18L6.1 21.37L5.44 22.92L4.58 24.38L3.55 25.71L2.35 26.91L1 27.92L-0.47 28.76L-2.04 29.39L-3.68 29.82L-5.35 30.03L-7.05 30.02L-8.73 29.78L-10.35 29.33L-11.91 28.68L-13.36 27.82L-14.7 26.78L-15.89 25.57L-16.91 24.22L-17.74 22.75L-18.38 21.19L-18.8 19.55L-19.01 17.87L-19 16.19L-18.76 14.51L-18.32 12.88Z" />
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="ramp-kicker-details" inkscape:label="Details" clip-path="url(#clip-ramp-kicker)"><line class="kicker-slat" x1="-0.91" y1="-27.04" x2="16.96" y2="-20.04" /><line class="kicker-slat" x1="-2.03" y1="-24.21" x2="16.1" y2="-17.19" /><line class="kicker-slat" x1="-3.14" y1="-21.38" x2="15.23" y2="-14.33" /><line class="kicker-slat" x1="-4.26" y1="-18.55" x2="14.38" y2="-11.47" /><line class="kicker-slat" x1="-5.37" y1="-15.73" x2="13.51" y2="-8.61" /><line class="kicker-slat" x1="-6.48" y1="-12.9" x2="12.65" y2="-5.75" /><line class="kicker-slat" x1="-7.6" y1="-10.08" x2="11.79" y2="-2.88" /><line class="kicker-slat" x1="-8.72" y1="-7.25" x2="10.93" y2="-0.02" /><circle class="hole" cx="-11.65" cy="17.91" r="1.49" /><circle class="hole" cx="-2.15" cy="21.35" r="1.49" /></g>
+</svg>
