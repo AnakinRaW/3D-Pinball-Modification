@@ -24,8 +24,19 @@
   <!-- A4, the FPC board at the module -->
   <rect x="900" y="176" width="60" height="754" rx="8" fill="#f8f4ee" stroke="#8a6d0b" stroke-width="2" data-part="A4"/>
   <text x="930" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#5c4a00">A4</text>
+  <!-- pins 13 to 20 swap within their pairs at both FPC boards -->
+  <rect x="690" y="639" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="910" y="639" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="690" y="711" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="910" y="711" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="690" y="783" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="910" y="783" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="690" y="855" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
+  <rect x="910" y="855" width="40" height="62" rx="5" fill="#fdebd0" stroke="#d35400" stroke-width="1.2"/>
   <text x="930" y="950" text-anchor="middle" font-size="11" fill="#666">FPC board</text>
   <text x="930" y="964" text-anchor="middle" font-size="11" fill="#666">at the module</text>
+  <text x="820" y="994" text-anchor="middle" font-size="12" font-weight="700" fill="#d35400">pins 13 to 20 swap in pairs at A3 and A4</text>
+  <text x="820" y="1010" text-anchor="middle" font-size="11.5" fill="#d35400">13 with 14, 15 with 16, 17 with 18, 19 with 20</text>
   <text x="820" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#666">flat flex cable</text>
   <text x="820" y="176" text-anchor="middle" font-size="11.5" fill="#777">pin n to pin n</text>
   <text x="1000" y="176" text-anchor="middle" font-size="11.5" fill="#777">wires</text>
@@ -121,7 +132,7 @@
   <circle cx="510" cy="760" r="6" fill="#1f4fd1"/>
   <text x="475" y="764" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">WR</text>
   <text x="475" y="778" text-anchor="middle" font-size="11.5" fill="#777">pin 6</text>
-  <line x1="516" y1="760" x2="674" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="J-DISP-BUS.6 A3.16"/>
+  <line x1="516" y1="760" x2="674" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="J-DISP-BUS.6 A3.15"/>
   <circle cx="270" cy="796" r="6" fill="#1f4fd1"/>
   <text x="258" y="795" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">D/C</text>
   <text x="258" y="810" text-anchor="end" font-size="11.5" fill="#777" data-pin="D/C to the display">pin 29</text>
@@ -130,7 +141,7 @@
   <circle cx="510" cy="796" r="6" fill="#1f4fd1"/>
   <text x="475" y="800" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">D/C</text>
   <text x="475" y="814" text-anchor="middle" font-size="11.5" fill="#777">pin 9</text>
-  <line x1="516" y1="796" x2="674" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="J-DISP-BUS.9 A3.17"/>
+  <line x1="516" y1="796" x2="674" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="J-DISP-BUS.9 A3.18"/>
   <circle cx="270" cy="832" r="6" fill="#1f4fd1"/>
   <text x="258" y="831" text-anchor="end" font-size="13" font-weight="700" fill="#1f4fd1">CS</text>
   <text x="258" y="846" text-anchor="end" font-size="11.5" fill="#777" data-pin="CS to the display controller">pin 28</text>
@@ -139,70 +150,70 @@
   <circle cx="510" cy="832" r="6" fill="#1f4fd1"/>
   <text x="475" y="836" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f4fd1">CS</text>
   <text x="475" y="850" text-anchor="middle" font-size="11.5" fill="#777">pin 10</text>
-  <line x1="516" y1="832" x2="674" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="J-DISP-BUS.10 A3.18"/>
+  <line x1="516" y1="832" x2="674" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="J-DISP-BUS.10 A3.17"/>
   <!-- the cable from A3 to A4, the wires from A4 to the 8-bit header -->
-  <text x="710" y="908" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">20</text>
-  <text x="930" y="908" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">20</text>
+  <text x="710" y="908" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">19</text>
+  <text x="930" y="908" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">19</text>
   <circle cx="680" cy="904" r="6" fill="#1a1a1a"/>
   <circle cx="740" cy="904" r="6" fill="#1a1a1a"/>
   <circle cx="900" cy="904" r="6" fill="#1a1a1a"/>
   <circle cx="960" cy="904" r="6" fill="#1a1a1a"/>
-  <line x1="746" y1="904" x2="894" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A3.20 A4.20"/>
-  <line x1="966" y1="904" x2="1034" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A4.20 A1.GND"/>
-  <text x="710" y="872" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">19</text>
-  <text x="930" y="872" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">19</text>
+  <line x1="746" y1="904" x2="894" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A3.19 A4.19"/>
+  <line x1="966" y1="904" x2="1034" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A4.19 A1.GND"/>
+  <text x="710" y="872" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">20</text>
+  <text x="930" y="872" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">20</text>
   <circle cx="680" cy="868" r="6" fill="#c0392b"/>
   <circle cx="740" cy="868" r="6" fill="#c0392b"/>
   <circle cx="900" cy="868" r="6" fill="#c0392b"/>
   <circle cx="960" cy="868" r="6" fill="#c0392b"/>
-  <line x1="746" y1="868" x2="894" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.19 A4.19"/>
-  <line x1="966" y1="868" x2="1034" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A4.19 A1.Vin"/>
-  <text x="710" y="836" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">18</text>
-  <text x="930" y="836" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">18</text>
+  <line x1="746" y1="868" x2="894" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.20 A4.20"/>
+  <line x1="966" y1="868" x2="1034" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A4.20 A1.Vin"/>
+  <text x="710" y="836" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">17</text>
+  <text x="930" y="836" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">17</text>
   <circle cx="680" cy="832" r="6" fill="#1f4fd1"/>
   <circle cx="740" cy="832" r="6" fill="#1f4fd1"/>
   <circle cx="900" cy="832" r="6" fill="#1f4fd1"/>
   <circle cx="960" cy="832" r="6" fill="#1f4fd1"/>
-  <line x1="746" y1="832" x2="894" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="A3.18 A4.18"/>
-  <line x1="966" y1="832" x2="1034" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="A4.18 A1.CS"/>
-  <text x="710" y="800" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">17</text>
-  <text x="930" y="800" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">17</text>
+  <line x1="746" y1="832" x2="894" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="A3.17 A4.17"/>
+  <line x1="966" y1="832" x2="1034" y2="832" stroke="#1f4fd1" stroke-width="2.5" data-net="CS" data-ends="A4.17 A1.CS"/>
+  <text x="710" y="800" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">18</text>
+  <text x="930" y="800" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">18</text>
   <circle cx="680" cy="796" r="6" fill="#1f4fd1"/>
   <circle cx="740" cy="796" r="6" fill="#1f4fd1"/>
   <circle cx="900" cy="796" r="6" fill="#1f4fd1"/>
   <circle cx="960" cy="796" r="6" fill="#1f4fd1"/>
-  <line x1="746" y1="796" x2="894" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="A3.17 A4.17"/>
-  <line x1="966" y1="796" x2="1034" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="A4.17 A1.C/D"/>
-  <text x="710" y="764" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">16</text>
-  <text x="930" y="764" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">16</text>
+  <line x1="746" y1="796" x2="894" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="A3.18 A4.18"/>
+  <line x1="966" y1="796" x2="1034" y2="796" stroke="#1f4fd1" stroke-width="2.5" data-net="D/C" data-ends="A4.18 A1.C/D"/>
+  <text x="710" y="764" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">15</text>
+  <text x="930" y="764" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">15</text>
   <circle cx="680" cy="760" r="6" fill="#1f4fd1"/>
   <circle cx="740" cy="760" r="6" fill="#1f4fd1"/>
   <circle cx="900" cy="760" r="6" fill="#1f4fd1"/>
   <circle cx="960" cy="760" r="6" fill="#1f4fd1"/>
-  <line x1="746" y1="760" x2="894" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="A3.16 A4.16"/>
-  <line x1="966" y1="760" x2="1034" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="A4.16 A1.WR"/>
-  <text x="710" y="728" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">15</text>
-  <text x="930" y="728" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">15</text>
+  <line x1="746" y1="760" x2="894" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="A3.15 A4.15"/>
+  <line x1="966" y1="760" x2="1034" y2="760" stroke="#1f4fd1" stroke-width="2.5" data-net="WR" data-ends="A4.15 A1.WR"/>
+  <text x="710" y="728" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">16</text>
+  <text x="930" y="728" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">16</text>
   <circle cx="680" cy="724" r="6" fill="#c0392b"/>
   <circle cx="740" cy="724" r="6" fill="#c0392b"/>
   <circle cx="900" cy="724" r="6" fill="#c0392b"/>
   <circle cx="960" cy="724" r="6" fill="#c0392b"/>
-  <line x1="746" y1="724" x2="894" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.15 A4.15"/>
-  <line x1="966" y1="724" x2="1034" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A4.15 A1.RD"/>
-  <text x="710" y="692" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">14</text>
-  <text x="930" y="692" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">14</text>
+  <line x1="746" y1="724" x2="894" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.16 A4.16"/>
+  <line x1="966" y1="724" x2="1034" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A4.16 A1.RD"/>
+  <text x="710" y="692" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">13</text>
+  <text x="930" y="692" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">13</text>
   <circle cx="680" cy="688" r="6" fill="#9a9a9a"/>
   <line x1="746" y1="688" x2="894" y2="688" stroke="#808080" stroke-width="5" data-net="RST"/>
-  <line x1="746" y1="688" x2="894" y2="688" stroke="#ffffff" stroke-width="2.5" data-net="RST" data-ends="A3.14 A4.14"/>
+  <line x1="746" y1="688" x2="894" y2="688" stroke="#ffffff" stroke-width="2.5" data-net="RST" data-ends="A3.13 A4.13"/>
   <line x1="966" y1="688" x2="1034" y2="688" stroke="#808080" stroke-width="5" data-net="RST"/>
-  <line x1="966" y1="688" x2="1034" y2="688" stroke="#ffffff" stroke-width="2.5" data-net="RST" data-ends="A4.14 A1.RST"/>
-  <text x="710" y="656" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">13</text>
-  <text x="930" y="656" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">13</text>
+  <line x1="966" y1="688" x2="1034" y2="688" stroke="#ffffff" stroke-width="2.5" data-net="RST" data-ends="A4.13 A1.RST"/>
+  <text x="710" y="656" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">14</text>
+  <text x="930" y="656" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d35400">14</text>
   <circle cx="680" cy="652" r="6" fill="#9a9a9a"/>
   <line x1="746" y1="652" x2="894" y2="652" stroke="#808080" stroke-width="5" data-net="LITE"/>
-  <line x1="746" y1="652" x2="894" y2="652" stroke="#ffffff" stroke-width="2.5" data-net="LITE" data-ends="A3.13 A4.13"/>
+  <line x1="746" y1="652" x2="894" y2="652" stroke="#ffffff" stroke-width="2.5" data-net="LITE" data-ends="A3.14 A4.14"/>
   <line x1="966" y1="652" x2="1034" y2="652" stroke="#808080" stroke-width="5" data-net="LITE"/>
-  <line x1="966" y1="652" x2="1034" y2="652" stroke="#ffffff" stroke-width="2.5" data-net="LITE" data-ends="A4.13 A1.Lite"/>
+  <line x1="966" y1="652" x2="1034" y2="652" stroke="#ffffff" stroke-width="2.5" data-net="LITE" data-ends="A4.14 A1.Lite"/>
   <text x="710" y="620" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">12</text>
   <text x="930" y="620" text-anchor="middle" font-size="11.5" font-weight="700" fill="#777">12</text>
   <circle cx="680" cy="616" r="6" fill="#9a9a9a"/>
@@ -504,15 +515,15 @@
   <!-- 5 V and GND to the converter and up to A3: Vin's line on pin 2, ground on pin 1 -->
   <line x1="376" y1="1210" x2="640" y2="1210" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="J-DISP-PWR.1"/>
   <line x1="640" y1="1210" x2="640" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V"/>
-  <line x1="640" y1="868" x2="674" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.19"/>
+  <line x1="640" y1="868" x2="674" y2="868" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.20"/>
   <line x1="640" y1="868" x2="640" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V"/>
-  <line x1="640" y1="724" x2="674" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.15"/>
+  <line x1="640" y1="724" x2="674" y2="724" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A3.16"/>
   <circle cx="640" cy="868" r="4" fill="#c0392b"/>
   <line x1="566" y1="1118" x2="640" y2="1118" stroke="#c0392b" stroke-width="2.5" data-net="5V" data-ends="A2.HV"/>
   <circle cx="640" cy="1118" r="4" fill="#c0392b"/>
   <line x1="376" y1="1240" x2="660" y2="1240" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="J-DISP-PWR.2"/>
   <line x1="660" y1="1240" x2="660" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND"/>
-  <line x1="660" y1="904" x2="674" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A3.20"/>
+  <line x1="660" y1="904" x2="674" y2="904" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A3.19"/>
   <line x1="566" y1="1154" x2="660" y2="1154" stroke="#1a1a1a" stroke-width="2.5" data-net="GND" data-ends="A2.GND#2"/>
   <circle cx="660" cy="1154" r="4" fill="#1a1a1a"/>
   <!-- ===== pins of the edged wires, on top ===== -->
