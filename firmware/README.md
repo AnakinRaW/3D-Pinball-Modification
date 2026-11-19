@@ -9,7 +9,7 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 | `lib/` | The libraries this repository holds, such as PWMServoT4. |
 | `tests/` | The tests of the firmware's code, with every Teensy test in the test image `tests/teensy/`. |
 | `bench/` | The measurement programs behind the bench figures. |
-| `tools/` | Sketches that prepare the bench, such as formatting the SD card, the build's scripts, and `teensy-tests.py`, which runs the Teensy tests. |
+| `tools/` | Sketches that prepare the bench, such as formatting the SD card, the build's scripts, `teensy-tests.py`, which runs the Teensy tests, and `test-coverage.py`, which counts the rows of testing.md that have a test. |
 | [`gist/`](gist/) | Code notes for the drivers and components not yet written as code. |
 
 ## Building
@@ -36,4 +36,5 @@ python firmware/tools/teensy-tests.py --upload     builds and flashes the test i
 python firmware/tools/teensy-tests.py "servo.*"    runs the servo program on the image already flashed
 python firmware/tools/teensy-tests.py --soak       runs them for the durations testing.md states
 python firmware/tools/teensy-tests.py --bench      adds the bench tests, for a person at the bench
+python firmware/tools/test-coverage.py --missing   counts the rows of testing.md that have a test, and names the others
 ```

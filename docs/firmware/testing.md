@@ -6,17 +6,15 @@ A test on the Teensy judges what it can from inside the firmware and prints its 
 
 ## Test programs
 
-Each section below is one test program. The `computer` tests of a section build for the computer, in the folder `firmware/tests/test_<program>` of the `computer` environment. Its other tests are part of the test image, one firmware for the Teensy that holds the tests of every program. The image is the PlatformIO project in `firmware/tests/teensy`. Each program's code stands in its folder `src/<program>`. A test is named by its program and its row, such as `solenoid.pull-length`. A program runs its tests in the order of its table. The programs run in the order the sections stand, since a test relies on the sections above it.
+Each section below is one test program. Its tests run in the order of its table. The programs run in the order of the sections, since a test relies on the sections above it. A test is named by its program and its row, such as `solenoid.pull-length`. Where a row links a figure, the test takes the figure from the firmware's constant.
 
-Where a row links a figure, the test takes that figure from the firmware's own constant, so a changed figure changes the test with it.
+A `computer` test builds from `firmware/tests/test_<program>` in the `computer` environment. Code that touches no register is kept apart from code that does, so that it builds there. Fakes stand in for the hardware and for the drivers below the code under test. A fake has the interface of the part it replaces, records every call it gets and answers as its test sets it up.
 
-The test image is the test build. It adds the counters and hooks its tests read, and the normal build carries none of them. The image runs its tests in a FreeRTOS task, as the firmware runs its main loop.
+Every other test is part of the test image `firmware/tests/teensy`, one firmware that holds the Teensy tests of every program in `src/<program>`. The image adds the counters and hooks its tests read, which the normal build lacks. It runs its tests in a FreeRTOS task, as the firmware runs its main loop.
 
-Code that touches no register is kept apart from code that does, so that it builds for the computer. There, fakes stand in for the hardware and for the drivers below the code under test. A fake has the interface of the part it replaces, records every call it gets, and answers as its test sets it up.
+The runner `firmware/tools/teensy-tests.py` flashes the image once and sends it the tests one at a time over USB serial. The Teensy restarts before each program, so every program starts from power-up. Every check is a condition in the test's code. The runner reads only the result lines. A quick run, the default, shortens every duration a row states to a few seconds. `--soak` takes the durations as stated, with the same checks. `--bench` adds the `bench` tests, which need a person at the bench.
 
-The runner `firmware/tools/teensy-tests.py` runs the image's tests from the computer. The image is built and flashed once. The runner then sends the tests one at a time over USB serial. The Teensy restarts before each program, so every program starts from the state after power-up. Every check stands in the test's code as a condition. The runner only reads the result lines.
-
-A run comes in two lengths with the same checks. The default is a quick run, which shortens every duration a row states to a few seconds. With `--soak`, a soak run takes the durations the rows state. A run leaves out the `bench` tests unless `--bench` is given, so nobody needs to be at the bench.
+A row counts as covered once the code holds a test of its name that runs where the row says: `test<Row>` in its computer test, such as `testOldestFirst` for `oldest-first`, or `{"<program>.<row>", RunsOn::...}` in its program's folder of the image. `firmware/tools/test-coverage.py` counts the covered rows in CI and fails the run where the code and this document disagree.
 
 ## Where a test runs
 
