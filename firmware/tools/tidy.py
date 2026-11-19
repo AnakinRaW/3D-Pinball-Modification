@@ -1,18 +1,18 @@
 """Runs clang-tidy over the firmware's code with the checks of firmware/.clang-tidy.
 
 PlatformIO writes the release build's compile commands, and the run takes those of the files in
-firmware/src and firmware/lib. They are commands for the ARM GCC of the Teensy core, so the run
+firmware/src. They are commands for the ARM GCC of the Teensy core, so the run
 turns each into one clang understands: the target becomes arm-none-eabi, the include folders of
 that GCC are added, and the flags only GCC knows are dropped. Headers in firmware/ are checked
 where a checked file includes them.
 
-    python firmware/tools/tidy.py              every file of firmware/src and firmware/lib
+    python firmware/tools/tidy.py              every file of firmware/src
     python firmware/tools/tidy.py servo        the files whose path holds "servo"
     python firmware/tools/tidy.py --fix        applies the fixes clang-tidy offers
     python firmware/tools/tidy.py --self-test  checks two planted files, one clean, one not
 
 The self-test writes its files into firmware/.tidy-self-test/ and compiles them like the first
-file of firmware/src or firmware/lib. The clean file includes Arduino.h and has to come through
+file of firmware/src. The clean file includes Arduino.h and has to come through
 with no finding and no error in any header, which proves the commands clang reads. The other file
 has to report the checks it plants.
 
@@ -31,7 +31,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-OWN = ("firmware/src/", "firmware/lib/")
+OWN = ("firmware/src/",)
 ENV = "release"
 
 # flags of GCC that clang does not take, with the number of arguments that follow each
@@ -213,14 +213,14 @@ def main():
 
     entries = [e for e in compile_commands() if e["file"].replace("\\", "/").startswith(OWN)]
     if not entries:
-        sys.stderr.write("the compile commands hold no file of firmware/src or firmware/lib\n")
+        sys.stderr.write("the compile commands hold no file of firmware/src\n")
         return 2
     if args.self_test:
         return self_test(tidy, entries[0])
     if args.patterns:
         entries = [e for e in entries if any(p in e["file"].replace("\\", "/") for p in args.patterns)]
     if not entries:
-        sys.stderr.write("no file of firmware/src or firmware/lib matches\n")
+        sys.stderr.write("no file of firmware/src matches\n")
         return 2
 
     seen, foreign = check(tidy, entries, fix=args.fix)

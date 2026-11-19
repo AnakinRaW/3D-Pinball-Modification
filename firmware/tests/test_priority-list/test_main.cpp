@@ -8,7 +8,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <priority-list.h>
+#include "core/priority-list.h"
 #include <unity.h>
 
 constexpr size_t ROOM = 4;   // the entries a test list holds

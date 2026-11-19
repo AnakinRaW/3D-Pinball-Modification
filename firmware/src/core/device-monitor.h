@@ -6,8 +6,8 @@
 // DeviceMonitor of the firmware, on events and driverTick.
 #pragma once
 #include <Arduino.h>
-#include <driver-base.h>
-#include <event-queue.h>
+#include "drivers/driver-base.h"
+#include "core/event-queue.h"
 
 // the devices of the machine; a device of one part has only part 0
 enum class Device : uint8_t {

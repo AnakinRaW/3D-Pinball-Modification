@@ -11,8 +11,8 @@
 
 #include <Arduino.h>
 #include <IntervalTimer.h>
-#include <clock.h>
-#include <event-queue.h>
+#include "core/clock.h"
+#include "core/event-queue.h"
 #include "test-harness.h"
 
 constexpr uint32_t QUICK_RUN_MS = 5000;

@@ -8,7 +8,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <driver-base.h>
+#include "drivers/driver-base.h"
 #include <unity.h>
 #include <vector>
 

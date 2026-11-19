@@ -15,7 +15,7 @@
 
 #include <Arduino.h>
 #include "test-harness.h"
-#include <servo-driver.h>
+#include "drivers/servo-driver.h"
 
 constexpr uint8_t CAPTURE_PIN = 1;   // the wire from the servo pin lands here
 constexpr uint32_t EDGES = 1024;     // edges kept between two drains

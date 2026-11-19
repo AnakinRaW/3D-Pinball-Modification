@@ -13,9 +13,9 @@
 #pragma GCC diagnostic push
 #include <FastLED.h>
 #pragma GCC diagnostic pop
-#include <lighting.h>
-#include <servo-driver.h>
-#include <ws2812-color-encoder.h>
+#include "drivers/lighting.h"
+#include "drivers/servo-driver.h"
+#include "drivers/ws2812-color-encoder.h"
 #include "test-harness.h"
 
 // the frame: a WS2812B takes 24 bits, and the lighting driver sends a bit as one symbol

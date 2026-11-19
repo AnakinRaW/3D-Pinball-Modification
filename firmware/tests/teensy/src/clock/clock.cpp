@@ -7,7 +7,7 @@
 // those two bound the microseconds that may have passed.
 
 #include <Arduino.h>
-#include <clock.h>
+#include "core/clock.h"
 #include "test-harness.h"
 
 constexpr uint32_t QUICK_RUN_MS = 5000;

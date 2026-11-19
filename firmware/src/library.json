@@ -1,0 +1,12 @@
+{
+  "name": "firmware",
+  "version": "1.0.0",
+  "description": "The firmware's code without main.cpp, for a project that brings its own setup() and loop(). firmware-src.py picks the files: every file but main.cpp, or those the project names in custom_firmware_src",
+  "frameworks": "arduino",
+  "platforms": "teensy",
+  "build": {
+    "srcDir": ".",
+    "includeDir": ".",
+    "extraScript": "../tools/firmware-src.py"
+  }
+}

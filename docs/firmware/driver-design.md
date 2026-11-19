@@ -37,7 +37,7 @@ public:
 
 `Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum. Every device has an entry, also one whose driver reports no faults.
 
-[`firmware/lib/device-monitor`](../../firmware/lib/device-monitor/device-monitor.h) holds `Device`.
+[`firmware/src/core/device-monitor.h`](../../firmware/src/core/device-monitor.h) holds `Device`.
 
 ```cpp
 // the devices of the machine; a device of one part has only part 0
@@ -74,7 +74,7 @@ For example, on every tick the rotary sensor reads values, the solenoid driver c
 
 The timer starts on the very first attached driver. Attaching does not need to be in any special order. The driver tick calls only the callbacks that are due.
 
-The library [`firmware/lib/driver-base/`](../../firmware/lib/driver-base/) holds the driver tick, `Driver` and `Fault`.
+[`firmware/src/drivers/driver-base.h`](../../firmware/src/drivers/driver-base.h) holds the driver tick, `Driver` and `Fault`.
 
 ```cpp
 // one IntervalTimer, shared by every driver that needs a regular period

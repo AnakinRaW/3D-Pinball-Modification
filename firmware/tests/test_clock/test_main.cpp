@@ -5,7 +5,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include <clock.h>
+#include "core/clock.h"
 #include <unity.h>
 
 constexpr uint32_t AWAY_US = 1000000;   // a time far from the wrap
