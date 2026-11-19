@@ -12,6 +12,7 @@
 
 - **Code lands with its tests.** A new library gets its test program, and a changed behavior gets its row in [`testing.md`](../docs/firmware/testing.md) and its test, in the same step as the code. Before code is reported done, each public function it touched is named with the test that covers it. Coverage through another component's tests does not count.
 - **Tests that need no hardware run on the computer**, in the `computer` environment, which PlatformIO builds with its platform `native`. CI runs them. Tests that need the Teensy run on the bench from the test image.
+- **A new driver joins the register of `every-driver`** in `tests/teensy/src/every-driver/`, with a case for each row its rules reach.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
 
 ## Layout

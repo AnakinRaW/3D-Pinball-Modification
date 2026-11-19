@@ -400,12 +400,14 @@ The program `touch` checks the [touch driver](drivers/touch.md).
 
 ### Every driver
 
-The program `every-driver` checks the [rules every driver follows](driver-design.md).
+The program `every-driver` checks the [rules every driver follows](driver-design.md) on every driver in `firmware/src/drivers/`. Each driver stands in the program's register with a case for each row, and a row runs every driver's case. A driver without a case for a row is named in the run's output.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `before-begin` | Teensy | Call each driver's members before its `begin()` | Every call answers at once with false or empty data |
+| `out-of-range` | Teensy | Configure each driver with settings past both ends of their ranges, beside a twin configured at the nearer ends | Each driver behaves as its twin |
+| `at-once` | Teensy | Make every driver call that starts a long transfer or a move, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs, and a second light frame right after the first returns false at once |
 | `begin-fails` | Teensy | Take every slot of the driver tick, then call every driver's `begin()` | Each `begin()` that needs a slot returns false, and every later call of that driver answers at once with false or empty data |
-| `at-once` | Teensy | Make every driver call that starts a long transfer, such as a large read, a full light frame, a full screen or a sound | Each call returns while its transfer still runs, and a second light frame right after the first returns false at once |
 
 ## Components
 
