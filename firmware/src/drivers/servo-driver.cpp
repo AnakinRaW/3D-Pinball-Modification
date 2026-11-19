@@ -6,6 +6,8 @@ constexpr uint8_t PIN = 0;                // pin-assignment.md: Servo signal
 constexpr uint16_t PULSE_MIN_US = 500;    // servo.md: the SER0049's pulse at 0 degrees
 constexpr uint16_t PULSE_MAX_US = 2500;   // servo.md: its pulse at 180 degrees
 constexpr uint32_t FRAME_MS = 20;         // the servo's frame, one step per frame
+constexpr uint32_t US_PER_MS = 1000;
+constexpr uint32_t MDEG_PER_DEG = 1000;   // thousandths of a degree in a degree
 
 // Holds a value inside its range. A value it moves is named in a debug build.
 static uint32_t held(const char* name, uint32_t value, uint32_t lowest, uint32_t highest) {
@@ -24,7 +26,7 @@ void ServoDriver::configure(const Settings& s) {
 }
 
 bool ServoDriver::begin() {
-    if (!driverTick.attach([this] { step(); }, FRAME_MS * 1000)) {
+    if (!driverTick.attach([this] { step(); }, FRAME_MS * US_PER_MS)) {
         DEBUG_LOG("ServoDriver::begin: the driver tick refused its step\n");
         return false;
     }
@@ -64,7 +66,7 @@ uint32_t ServoDriver::travelMs() const {
     if (stepMdeg == 0) {
         return 0;
     }
-    return (spanDeg * 1000 + stepMdeg - 1) / stepMdeg * FRAME_MS;
+    return (spanDeg * MDEG_PER_DEG + stepMdeg - 1) / stepMdeg * FRAME_MS;
 }
 
 // The servo itself always runs at full speed to the angle its pulse names, so the speed is limited
@@ -80,11 +82,11 @@ void ServoDriver::step() {
         return;
     }
     carryMdeg += stepMdeg;
-    const uint32_t deg = carryMdeg / 1000;
+    const uint32_t deg = carryMdeg / MDEG_PER_DEG;
     if (deg == 0) {
         return;
     }
-    carryMdeg %= 1000;
+    carryMdeg %= MDEG_PER_DEG;
     const uint8_t leftDeg = toDeg > nowDeg ? toDeg - nowDeg : nowDeg - toDeg;
     if (deg >= leftDeg) {
         // The last step stops on the target.

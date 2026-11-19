@@ -29,7 +29,8 @@ constexpr FlexioPin FLEXIO_PINS[] = {{6, 10}, {7, 17}, {8, 16}, {9, 11},  {10, 0
 #else
 #error "ws2812-flexio2 knows the FlexIO2 pins of the Teensy 4.0, 4.1 and MicroMod only"
 #endif
-constexpr uint8_t NO_SIGNAL = Ws2812Flexio2::NO_SIGNAL;
+constexpr uint8_t DCHPRI_REGISTER = 0x1C;   // the bits of a channel that pick its register
+constexpr uint8_t DCHPRI_BYTE = 0x03;       // the bits that pick its byte in the register
 constexpr uint32_t ALT_FLEXIO2 = 4;   // RM IOMUXC, SW_MUX_CTL_PAD_GPIO_B0 and B1: ALT4 is FlexIO2
 // the pad's drive strength as pinMode(OUTPUT) sets it in PJRC's core, digital.c
 constexpr uint32_t PAD_OUTPUT = IOMUXC_PAD_DSE(7);
@@ -103,9 +104,10 @@ uint32_t shifterCtl(uint8_t signal) {
            FLEXIO_SHIFTCTL_PINSEL(signal) | FLEXIO_SHIFTCTL_SMOD(SHIFTER_TRANSMIT);
 }
 
-// the DCHPRI byte of a channel, laid out as PJRC's DMAChannel.cpp addresses it
+// the DCHPRI byte of a channel, laid out as PJRC's DMAChannel.cpp addresses it: four channels to a
+// register, the lowest channel in the register's highest byte
 volatile uint8_t& dchpri(uint8_t channel) {
-    return (&DMA_DCHPRI3)[(channel & 0x1C) | (3 - (channel & 0x03))];
+    return (&DMA_DCHPRI3)[(channel & DCHPRI_REGISTER) | (DCHPRI_BYTE - (channel & DCHPRI_BYTE))];
 }
 
 // Gives the channel the highest priority, so no other channel keeps it from refilling the

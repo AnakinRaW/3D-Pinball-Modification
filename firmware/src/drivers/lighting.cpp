@@ -3,6 +3,7 @@
 
 constexpr uint8_t PINS[] = {32, 6, 7, 8, 9, 10};   // pin-assignment.md: LED chain A to F
 static_assert(sizeof PINS == Lighting::CHAINS, "a pin for every chain");
+constexpr uint8_t FULL_BRIGHTNESS = 255;   // FastLED's brightness at full value
 // show() hands the output each chain's colors as bytes, three to an LED, red, green, blue
 static_assert(sizeof(CRGB) == 3, "FastLED's CRGB holds an LED in three bytes");
 
@@ -75,7 +76,7 @@ CRGB* Lighting::chain(uint8_t c) {
 }
 
 uint8_t Lighting::brightnessUnder(const CRGB* leds, uint16_t count, uint32_t capMa) {
-    return calculate_max_brightness_for_power_mW(leds, count, 255, capMa * VOLTS);
+    return calculate_max_brightness_for_power_mW(leds, count, FULL_BRIGHTNESS, capMa * VOLTS);
 }
 
 bool Lighting::show() {

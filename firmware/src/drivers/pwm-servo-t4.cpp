@@ -78,7 +78,7 @@ void PWMServoT4::write(uint8_t angleDeg) {
     // interrupts off, as PWMServo does
     noInterrupts();
     const uint32_t oldBits = analogWriteResolution(DUTY_BITS);
-    analogWrite(pin, duty);
+    analogWrite(pin, static_cast<int>(duty));   // duty is at most DUTY_STEPS
     analogWriteResolution(oldBits);
     interrupts();
 }

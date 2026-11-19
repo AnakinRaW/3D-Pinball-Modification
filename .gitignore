@@ -17,6 +17,8 @@ build/
 .pioenvs/
 *.hex
 *.elf
+# the release build's compile commands, which firmware/tools/tidy.py and an editor's clangd read
+compile_commands.json
 # the .gitignore PlatformIO's VS Code setup writes into every project folder
 firmware/**/.gitignore
 

@@ -1,6 +1,7 @@
 #include "driver-base.h"
 #include "core/debug-log.h"
 #include <inttypes.h>
+#include <utility>
 
 DriverTick driverTick;
 
@@ -24,7 +25,7 @@ bool DriverTick::attach(Callback fn, uint32_t periodUs) {
     }
     // The tick must not see a half-written slot.
     noInterrupts();
-    slots[count] = Slot{fn, every, every};
+    slots[count] = Slot{std::move(fn), every, every};
     count = count + 1;
     interrupts();
     return true;

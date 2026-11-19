@@ -5,11 +5,13 @@ on:
     paths:
       - "firmware/**"
       - "platformio.ini"
+      - "docs/firmware/testing.md"
       - ".github/workflows/firmware.yml"
   pull_request:
     paths:
       - "firmware/**"
       - "platformio.ini"
+      - "docs/firmware/testing.md"
       - ".github/workflows/firmware.yml"
 
 jobs:
@@ -60,5 +62,31 @@ jobs:
           LOCALAPPDATA: ${{ runner.temp }}
         run: |
           if compgen -G "firmware/tests/test_*" > /dev/null; then
-            python -m platformio test -e computer
+            python -m platformio test -e computer --json-output-path "${{ runner.temp }}/computer-tests.json"
           fi
+
+      # Fails when a test in the code has no row in testing.md or runs somewhere other than its row
+      # says, after the self-test has shown that the check catches each case. The computer tests
+      # count as they ran, from the report of the step above. The table of every program's coverage
+      # goes to the run's summary page.
+      - name: Match every test with its row and count the rows that have a test
+        if: success() || failure()
+        run: |
+          python firmware/tools/test-coverage.py --self-test
+          results="${{ runner.temp }}/computer-tests.json"
+          if [ -f "$results" ]; then
+            python firmware/tools/test-coverage.py --missing --computer-results "$results"
+          else
+            python firmware/tools/test-coverage.py --missing
+          fi
+
+      # firmware/.clang-tidy names the checks, and the run fails on any finding in firmware/. The
+      # self-test first shows that a clean file passes and a flawed one is caught
+      - name: Check the firmware's code with clang-tidy
+        if: success() || failure()
+        env:
+          LOCALAPPDATA: ${{ runner.temp }}
+        run: |
+          python -m pip install clang-tidy==18.1.8
+          python firmware/tools/tidy.py --self-test
+          python firmware/tools/tidy.py
