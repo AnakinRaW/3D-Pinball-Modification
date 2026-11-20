@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -6 20 12" width="20mm" height="12mm">
+<title>Score label</title>
+<style>
+  .score { font-family: 'Georgia', 'Times New Roman', serif; font-size: 4.84px; text-anchor: middle; font-weight: bold; fill: #efe6c4; stroke: #a99a63; stroke-width: 0.23; }
+  .score-red .score { fill: #d8423f; stroke: none; }
+  .score-blue .score { fill: #3f86c9; stroke: none; }
+  .score-big .score { font-size: 6.15px; }
+</style>
+<text class="score" data-name="text" x="0" y="0">100</text>
+</svg>

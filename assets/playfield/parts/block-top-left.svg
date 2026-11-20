@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-13.16 -21.96 26.28 43.98" width="26.28mm" height="43.98mm">
+<title>Red plate J4, top left, with the slot for its tab</title>
+<style>
+  .block { fill: #a3232c; stroke: #5e1016; stroke-width: 0.47; }
+  .block-slot { fill: #6d141b; stroke: #4a0c11; stroke-width: 0.37; }
+</style>
+<path class="block" d="M-3.94 -11.67Q-3.28 -13.01 -2.16 -13.99L4 -19.46Q5.1 -20.46 6.57 -20.2L9.22 -19.77Q10.69 -19.53 10.74 -18.04L11.57 7.86Q11.62 9.34 10.62 10.44L2.38 19.43Q1.38 20.52 -0.11 20.52L-6.44 20.52Q-7.93 20.52 -8.48 19.14L-11.1 12.59Q-11.66 11.2 -11.34 9.75L-9.17 -0.37Q-8.86 -1.83 -8.19 -3.16Z" />
+<path id="block-top-left-slot" class="block-slot" d="M5.13 -0.77Q5.04 -1.23 5.49 -1.32L8.79 -2.03Q9.25 -2.12 9.34 -1.67L10.66 4.56Q10.76 5.02 10.31 5.11L7.01 5.82Q6.56 5.91 6.45 5.46Z" />
+</svg>

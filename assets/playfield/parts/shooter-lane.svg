@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-7.07 -164.77 14.17 329.6" width="14.17mm" height="329.6mm">
+ <title>Shooter lane</title>
+ <style>
+  .shooter { fill: #3a3f4b; stroke: #22252c; stroke-width: 0.47; }
+  .plunger { fill: #b7bcc3; stroke: #5a5f66; stroke-width: 0.37; }
+</style>
+ <rect class="shooter" x="-5.57" y="-163.27" width="11.17" height="326.6" />
+ <rect class="plunger" x="-1.76" y="128.87" width="3.54" height="27.94" rx="1.12" />
+</svg>

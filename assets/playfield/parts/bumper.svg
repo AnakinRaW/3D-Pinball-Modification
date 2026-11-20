@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-12.68 -13.123 26.466 26.65" width="26.466mm" height="26.65mm">
+<title>bumper</title>
+<style>
+  .bumper-base { fill: #8e1d27; stroke: #4c0d13; stroke-width: 0.56; }
+  .bumper-skirt { fill: #2a2a30; }
+  .bumper-ring { fill: #e7d9a8; }
+  .bumper-cap { fill: #2f5b46; stroke: #c8a84a; stroke-width: 0.47; }
+  .bumper-star { fill: #f6e7a1; }
+  .bumper-dot { fill: #e8c04a; }
+</style>
+<circle class="bumper-skirt" cx="0.736" cy="0.477" r="11.55" />
+<circle class="bumper-base" cx="-0.01" cy="-0.453" r="11.17" />
+<polygon class="bumper-dot" points="8.416,2.001 9.256,3.027 8.416,4.041 7.58,3.027" />
+<polygon class="bumper-dot" points="3.483,6.937 4.32,7.997 3.483,9.057 2.643,7.997" />
+<polygon class="bumper-dot" points="-3.504,6.937 -2.664,7.997 -3.504,9.057 -4.34,7.997" />
+<polygon class="bumper-dot" points="-8.44,2.001 -7.604,3.027 -8.44,4.041 -9.277,3.027" />
+<polygon class="bumper-dot" points="-8.44,-5.043 -7.604,-3.963 -8.44,-2.913 -9.277,-3.963" />
+<polygon class="bumper-dot" points="-3.504,-10.256 -2.664,-9.169 -3.504,-8.096 -4.34,-9.169" />
+<polygon class="bumper-dot" points="3.483,-10.256 4.32,-9.169 3.483,-8.096 2.643,-9.169" />
+<polygon class="bumper-dot" points="8.416,-5.043 9.256,-3.963 8.416,-2.913 7.58,-3.963" />
+<circle class="bumper-ring" cx="-0.01" cy="-0.453" r="7.64" />
+<circle class="bumper-cap" cx="-0.01" cy="-0.453" r="6.33" />
+<polygon class="bumper-star" points="-0.01,-4.303 0.65,-2.666 2.38,-2.526 1.063,-1.403 1.466,0.274 -0.01,-0.626 -1.49,0.274 -1.09,-1.403 -2.404,-2.526 -0.674,-2.666" />
+<polygon class="bumper-star" points="-2.154,0.567 -1.834,1.331 -1,1.401 -1.634,1.937 -1.444,2.747 -2.154,2.314 -2.864,2.747 -2.674,1.937 -3.307,1.401 -2.474,1.331" />
+<polygon class="bumper-star" points="2.13,0.567 2.446,1.331 3.283,1.401 2.65,1.937 2.84,2.747 2.13,2.314 1.423,2.747 1.61,1.937 0.976,1.401 1.813,1.331" />
+</svg>

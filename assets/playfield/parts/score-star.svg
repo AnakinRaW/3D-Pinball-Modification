@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6.242 -6.242 12.485 12.485" width="12.485mm" height="12.485mm">
+<title>Score star</title>
+<style>
+  .insert-star { fill: #7d8a9a; stroke: #59636f; stroke-width: 0.37; }
+  .score-star-big .insert-star { stroke-width: 0.236; }
+</style>
+<polygon class="insert-star" points="0,-5.242 1.386,-1.908 4.986,-1.62 2.243,0.729 3.081,4.241 0,2.358 -3.081,4.241 -2.243,0.729 -4.986,-1.62 -1.386,-1.908" />
+</svg>

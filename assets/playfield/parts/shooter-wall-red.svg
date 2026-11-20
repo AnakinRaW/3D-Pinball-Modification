@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-2.48 -93.86 5 187.76" width="5mm" height="187.76mm">
+<title>Red wall along the shooter lane's inner edge</title>
+<style>
+  .wall-red { fill: #b8323a; stroke: #6d141b; stroke-width: 0.37; }
+</style>
+<rect class="wall-red" x="-0.98" y="-92.36" width="2" height="184.76" rx="0.4" />
+</svg>

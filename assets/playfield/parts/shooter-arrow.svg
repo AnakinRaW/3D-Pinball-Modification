@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4.075 -3.628 8.15 7.257" width="8.15mm" height="7.257mm">
+<title>Shooter lane arrow</title>
+<style>
+  .shooter-light { fill: #c9b9a3; stroke: #7d6f5d; stroke-width: 0.28; }
+</style>
+<polygon class="shooter-light" points="0,-2.628 3.075,2.628 -3.075,2.628" />
+</svg>

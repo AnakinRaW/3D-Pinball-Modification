@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-13.01 -8.28 25.97 16.54" width="25.97mm" height="16.54mm">
+<title>Ball store: seesaw fingers and exit IR sensor (places not measured)</title>
+<style>
+  .seesaw { stroke: #2f6fc0; stroke-width: 1.3; stroke-linecap: round; }
+  .exit-sensor { fill: #dff0dd; stroke: #3d8a4a; stroke-width: 0.47; }
+</style>
+<line class="seesaw" x1="1.46" y1="3.59" x2="-1.61" y2="-5.98" />
+<line class="seesaw" x1="-8.11" y1="6.76" x2="-11.51" y2="-2.71" />
+<path id="ir-exit" class="exit-sensor" d="M6.72 -4.79Q6.46 -5.5 7.17 -5.74L9.45 -6.54Q10.16 -6.78 10.4 -6.09L11.2 -3.8Q11.46 -3.1 10.75 -2.85L8.47 -2.05Q7.76 -1.8 7.52 -2.51Z" />
+</svg>
