@@ -18,7 +18,7 @@ public:
 
     // the driver's two profiles
     static constexpr Profile PROFILE_3A = {2, 102, 255, 2000};
-    static constexpr Profile PROFILE_6A = {1, 128, 255, 2930};
+    static constexpr Profile PROFILE_6A = {1, 128, 255, 2920};
 
     struct Settings {
         uint8_t adapterA = 3;

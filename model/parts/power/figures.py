@@ -29,6 +29,7 @@ with MODEL.block("LOADS", section=LOADS):
     MODEL.uses("i_coil", of="solenoid")
     MODEL.uses("t_on_max", of="solenoid")
     MODEL.uses("i_stall", of="servo")
+    MODEL.uses("i_rest", of="servo")
     MODEL.uses("i_amp", of="audio")
     MODEL.uses("i_teensy_40", of="teensy-4.1")
     MODEL.uses("i_teensy_3v3", of="teensy-4.1")
@@ -222,8 +223,9 @@ fig("v_ir_end", "V", "v_bus_6a - 2 * i_ir_max * r_lead - v_f1", "down",
 with MODEL.block("LOADS", section=LOADS):
     fig("i_ir_in", "mA", "i_tot * v_mod_max / (eta_u1 * v_ir_end)", "up",
         moves="+i_tot +v_mod_max +i_supply_6a -eta_u1 -v_jack_min")
-    fig("i_permanent", "mA", "i_teensy_vin + i_amp + i_ir_in + i_disp", "up",
-        moves="+i_teensy_40 +i_teensy_3v3 +i_amp +i_tot +i_disp -eta_u1")
+    # The servo draws its rest current whenever it does not move.
+    fig("i_permanent", "mA", "i_teensy_vin + i_amp + i_ir_in + i_disp + i_rest", "up",
+        moves="+i_teensy_40 +i_teensy_3v3 +i_amp +i_tot +i_disp +i_rest -eta_u1")
 
     # The most that draws at once: the lighting's cap, the permanent consumers and the coil
     # case the solenoid model declares, two bumpers and the scoop. The servo moves only while

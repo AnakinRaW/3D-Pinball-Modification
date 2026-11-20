@@ -17,12 +17,12 @@ The adapter needs short-circuit and overload protection. A short on any output i
 
 | Load | Current |
 |---|---|
-| The Teensy, the amplifier, the IR board and the display, which draw all the time | 902 mA |
+| The Teensy, the amplifier, the IR board, the display and the servo at rest, which draw all the time | 910 mA |
 | The lighting at its cap, with the 3 A adapter | 2.0 A |
-| The lighting at its cap, with the 6 A adapter | 2.93 A |
+| The lighting at its cap, with the 6 A adapter | 2.92 A |
 | Three coils pulling at once, for at most 30 ms | 2.17 A |
 | The servo stalled | 0.8 A |
-| The most that draws at once, with the 3 A adapter's cap | 5.07 A |
+| The most that draws at once, with the 3 A adapter's cap | 5.08 A |
 | The most that draws at once, with the 6 A adapter's cap | 6.0 A |
 
 One ball triggers at most two bumpers within one pull-in, however fast it is, while a second ball may sit in the scoop and be ejected at the same moment. Three coils are therefore the most that pull at once: two bumpers and the scoop. The servo moves only while no coil pulls, which the game holds to.
@@ -58,7 +58,7 @@ With the Teensy on USB, the USB cable connects the machine's ground to the compu
 
 | Output | To | Current at most |
 |---|---|---|
-| J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 2.93 A with the 6 A adapter, each |
+| J-LIGHT1, J-LIGHT2 | the ambient and the playfield lighting board | 2.0 A with the 3 A adapter, 2.92 A with the 6 A adapter, each |
 | J-SOL | the solenoids' coil board | 2.85 A |
 | J-SERVO | the servo board | 0.8 A |
 | J-MAIN | the Teensy motherboard, with the Teensy and the amplifier module | 504 mA |
@@ -94,7 +94,7 @@ For better performance, thicker wires can be used for DC-IN-to-board, the two J-
 For better convenience, thinner wires such as 26 AWG can be used for low current consumers.
 
 
-The 3 A adapter delivers less than the machine draws at its peak. With it, the lighting at its cap leaves no room for a coil. The lighting at its cap and three coils together ask for 2.07 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops. With the 6 A adapter, the lighting's cap leaves room for three coils at once.
+The 3 A adapter delivers less than the machine draws at its peak. With it, the lighting at its cap leaves no room for a coil. The lighting at its cap and three coils together ask for 2.08 A more than the adapter delivers, for at most 30 ms. For that moment the adapter limits its current, so the voltage drops. With the 6 A adapter, the lighting's cap leaves room for three coils at once.
 
 ## Part list
 
@@ -115,7 +115,7 @@ The 3 A adapter delivers less than the machine draws at its peak. With it, the l
 LOADS     the smaller adapter                      3 A
           the larger adapter                       6 A
           the lighting's cap with the 3 A adapter  2.0 A
-          and with the 6 A adapter                 2.93 A
+          and with the 6 A adapter                 2.92 A
           all four coils at once                   2.85 A
           one bumper coil                          0.68 A
           one pull-in, at most                     30 ms
@@ -135,12 +135,13 @@ LOADS     the smaller adapter                      3 A
           lowest input, which bounds J-IR's drop = 281 mA
           the module's input current             = 201 mA
           the display                              198 mA
-          the permanent consumers                = 902 mA
+          the servo at rest                        8 mA
+          the permanent consumers                = 910 mA
           the most that draws at once, with the
-          3 A adapter                            = 5.07 A
+          3 A adapter                            = 5.08 A
           with the 6 A adapter                   = 6.0 A
           the lighting at its 3 A cap with three
-          coils, past the adapter                = 2.07 A
+          coils, past the adapter                = 2.08 A
 ```
 
 ### Input path
@@ -252,7 +253,7 @@ FLOORS    what the lighting's buffers need         4.5 V
 ALLOW     the least bulk at J-IN that holds the
           6 A release under VIN's maximum       = 1325 µF
           the impedance at which the lighting's
-          buffers touch their floor at 6 A      = 55.3 mΩ
+          buffers touch their floor at 6 A      = 55.6 mΩ
           at which the solenoid board touches
           the coils' floor                      = 49.8 mΩ
           at which the servo's buffer touches

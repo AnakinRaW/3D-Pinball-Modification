@@ -37,7 +37,7 @@ public:
     // The two profiles of design.md, Current ceiling: the playfield at full brightness, the
     // ambient lights at what the cap leaves in FastLED's sum with the whole layout at full white.
     static constexpr Profile PROFILE_3A = {2, 102, 255, 2000};
-    static constexpr Profile PROFILE_6A = {1, 128, 255, 2930};
+    static constexpr Profile PROFILE_6A = {1, 128, 255, 2920};
 
     // What one LED of the strip draws at full value, in mW at 5 V and rounded up, from the
     // currents measured in docs/research/Custom/sezo-ws2812b-strip.md.
