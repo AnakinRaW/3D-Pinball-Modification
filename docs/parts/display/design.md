@@ -142,7 +142,8 @@ FRAME     the panel in landscape, pixels across  = 320
 LVGL      its two buffers of the whole screen in
           RAM2                                   = 300 KB
           its refresh period                       33 ms
-          the picture memory, the whole PSRAM    = 8 MB
+          the picture memory, the PSRAM the log's
+          and the debug buffers leave            = 8 MB
           the opaque full-screen pictures it
           holds                                  = 54
 MOVIE     the frame rate of every movie            25 Hz

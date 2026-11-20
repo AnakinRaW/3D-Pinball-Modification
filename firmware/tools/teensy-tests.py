@@ -2,7 +2,9 @@
 
 The image holds every Teensy test. This runner asks it for its tests over USB serial, sends one
 "run <test>" line per test and reads the lines of the testing document's Results section back.
-Every check is written into the test on the Teensy, so the runner judges nothing itself. It
+Every check is written into the test on the Teensy, so the runner judges nothing itself, except
+the debug lines a CHECK line asks it to check: those it counts, with the losses the debug
+output states, and answers with "checked". It
 fails a test that ends in FAIL or ERROR, outlasts its limit, or loses the serial port, and it reads
 PJRC's CrashReport, which the image prints as CRASH lines after a crash.
 
@@ -24,6 +26,7 @@ import argparse
 import fnmatch
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
@@ -37,6 +40,46 @@ IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "test
 TEENSY_VID = 0x16C0          # PJRC's USB vendor id
 BAUD = 115200                # ignored by USB serial, needed by pyserial
 LIST_TIMEOUT_S = 5           # an idle image answers list at once
+
+# The debug lines a CHECK line counts: "<ms> D <tag> <n> <payload>" from DEBUG_LOG() and
+# "<ms> D trace <tag> <n> <b> at <us> us" from DEBUG_TRACE(), n counting up from 0.
+DEBUG_LINE = re.compile(r"^\d+ D (\S+) (\d+) ([0-9a-f]{8})$")
+TRACE_LINE = re.compile(r"^\d+ D trace (\S+) (-?\d+) (-?\d+) at \d+ us$")
+# the notices of dropped debug lines and lost trace notes: "<ms> D debug <n> lines lost" and
+# "<ms> D trace <n> notes lost"
+LOST_LINE = re.compile(r"^\d+ D (?:debug \d+ lines|trace \d+ notes) lost$")
+LOST_COUNT = re.compile(r" (\d+) (?:lines|notes) lost$")
+
+
+def debug_payload(n):
+    """The payload of debug line n, as the image's round-trip test computes it."""
+    return f"{(n * 2654435761) & 0xFFFFFFFF:08x}"
+
+
+def trace_payload(n):
+    """The second number of trace note n, as the image's round-trip test computes it."""
+    return n * 3 + 1
+
+
+def check_lines(lines, tag, count):
+    """Counts the lines of tag that came whole and in order, every line of tag, and the lines and
+    notes the loss notices state."""
+    good = total = lost = 0
+    for line in lines:
+        if LOST_LINE.match(line):
+            lost += int(LOST_COUNT.search(line).group(1))
+            continue
+        debug = DEBUG_LINE.match(line)
+        trace = TRACE_LINE.match(line)
+        if debug and debug.group(1) == tag:
+            total += 1
+            n = int(debug.group(2))
+            good += n == good and debug.group(3) == debug_payload(n)
+        elif trace and trace.group(1) == tag:
+            total += 1
+            n = int(trace.group(2))
+            good += n == good and int(trace.group(3)) == trace_payload(n)
+    return min(good, count), total, lost
 RECONNECT_TIMEOUT_S = 20     # a restart, or a crash report's wait of 8 s before it
 LIMIT_MARGIN_S = 5           # added to a test's limit for the USB round trips
 READ_TIMEOUT_S = 0.1
@@ -189,6 +232,7 @@ class Runner:
         link.send(self.command("run", name))
         deadline = start + limit_s + LIMIT_MARGIN_S
         result, detail = None, ""
+        seen = []                # the lines of this test that are no protocol line
         while True:
             try:
                 line = link.read_line(deadline)
@@ -225,7 +269,12 @@ class Runner:
                     link.send(answer)
             elif word == "RUN":
                 continue
+            elif word == "CHECK":
+                _, tag, count = rest.split()
+                good, total, lost = check_lines(seen, tag, int(count))
+                link.send(f"checked {good} {total} {lost}")
             else:
+                seen.append(line)
                 print(f"      | {line}")
 
     def wait_answer(self, deadline):

@@ -4,11 +4,12 @@
 //   found     Teensyduino found a chip of the size the PSRAM design names
 //   patterns  fixed patterns and pseudo-random sequences written over the whole PSRAM read back
 //
-// Wiring: none, the Teensy with its PSRAM chip. The image keeps no EXTMEM variable, so patterns
-// may overwrite the whole PSRAM. Every pattern takes about half a second, so a quick run writes
-// them all as a soak run does.
+// Wiring: none, the Teensy with its PSRAM chip. patterns erases whatever the PSRAM holds. The
+// debug output's buffer lies there, so patterns sends every waiting debug line first. Every pattern
+// takes about half a second, so a quick run writes them all as a soak run does.
 
 #include <Arduino.h>
+#include "logging/debug-log.h"
 #include "test-harness.h"
 
 // docs/parts/psram/design.md, Chip: the chip's size
@@ -28,6 +29,8 @@ constexpr uint32_t SEED_COUNT = sizeof SEEDS / sizeof SEEDS[0];
 // the linker script's EXTMEM section, which starts at the beginning of the PSRAM
 extern "C" uint32_t _extram_start;
 extern "C" uint32_t _extram_end;
+constexpr uint32_t DRAIN_MS = 5000;   // the longest the runner takes to read the waiting lines
+constexpr uint32_t IDLE_MS = 3;       // ms without a sent byte that end the drain
 // startup.c of the Teensy core: the PSRAM's size in MB, 0 without a chip
 extern "C" uint8_t external_psram_size;
 
@@ -37,6 +40,16 @@ static uint32_t* words() {
 
 static uint32_t wordCount() {
     return external_psram_size * BYTES_PER_MB / sizeof(uint32_t);
+}
+
+// Sends every waiting debug line, so no line waits in the buffer the patterns erase.
+static void drainDebugOutput() {
+    uint32_t idleMs = 0;
+    const uint32_t startMs = millis();
+    while (idleMs < IDLE_MS && millis() - startMs < DRAIN_MS) {
+        idleMs = sendDebugLog() == 0 ? idleMs + 1 : 0;
+        delay(1);
+    }
 }
 
 // Marsaglia's xorshift32: a sequence that every value fixes, so the check can rebuild it
@@ -113,10 +126,7 @@ static void testPatterns() {
         test::skip("no PSRAM chip found");
         return;
     }
-    if (&_extram_end != &_extram_start) {
-        test::fail("EXTMEM variables in the image", "none, the test overwrites the whole PSRAM");
-        return;
-    }
+    drainDebugOutput();
     const uint32_t t0Ms = millis();
     for (uint32_t k = 0; k < PATTERN_COUNT; ++k) {
         if (!fixedPattern(PATTERNS[k])) {

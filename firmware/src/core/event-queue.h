@@ -1,9 +1,11 @@
-// The event queue of docs/firmware/input-handling.md. Every driver publishes the events it detects
+// Carries the events the drivers detect to the main loop, oldest first. Every driver publishes
 // into its queue, each event stamped with nowUs() at detection. The main loop reads all queues as
-// one stream, oldest first.
+// one stream.
 //
-// Each queue has one writer, the driver's interrupt, and one reader, the main loop, so it needs no
-// lock and no interrupt is ever disabled for it. events is the one EventQueue of the firmware.
+// Each queue has one writer, the driver's interrupt, and one reader, the main loop. It therefore
+// needs no lock. No interrupt is ever disabled for it. events is the firmware's one queue.
+//
+// Design: docs/firmware/input-handling.md.
 #pragma once
 #include <Arduino.h>
 #include <atomic>

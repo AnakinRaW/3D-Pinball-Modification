@@ -15,7 +15,7 @@
 #include <new>
 #include <type_traits>
 #include "core/clock.h"
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 #include "components/lamp-effects.h"
 #include "game/layer.h"
 #include "drivers/lighting.h"

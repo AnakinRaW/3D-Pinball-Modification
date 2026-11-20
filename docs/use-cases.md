@@ -155,7 +155,7 @@
 | The operator retunes a sensor that misses balls by swapping one resistor on its board. | [Adjustment knobs](parts/ir-reflective/design.md#adjustment-knobs) |
 | The operator sets the servo's end positions and speed, the coils' pull times, the adapter and the starting volumes in the config. | [Servo](firmware/drivers/servo.md#config), [solenoids](firmware/drivers/solenoid.md#config), [lighting](firmware/drivers/lighting.md#config), [sounds](firmware/components/sounds.md#config) |
 | The operator checks at every start whether the seal's magnet sits at the right gap. | [Rotary sensor driver](firmware/drivers/magnetic-rotary.md#start-up) |
-| The operator reads the machine's log on a computer. The log keeps the latest lines and never outgrows its limit. | [Logging](firmware/logging.md), [size limit](firmware/logging.md#size-limit) |
+| The operator reads the machine's log on a computer. The log keeps the latest lines and never outgrows its limit. | [Logging](firmware/logging.md), [its two files](firmware/logging.md#files) |
 | The operator makes pictures, videos and sounds for a game from ordinary files. | [Media](../assets/media.md) |
 | The operator adds a game, whose code is built into the firmware and whose files lie on the SD card. | [Game abstraction](firmware/game-abstraction.md) |
 | The operator updates the firmware. | **Not covered.** The firmware's build and flash toolchain is not chosen yet. |

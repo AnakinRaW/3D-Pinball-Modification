@@ -50,6 +50,14 @@ void step(const char* text);
 // Prints the ASK line and waits up to timeoutMs for y or n over the serial port.
 Answer ask(const char* question, uint32_t timeoutMs);
 
+// Sends the waiting debug lines, then asks the runner over the serial port to check the debug lines
+// of tag this test sent, numbered from 0, and waits up to timeoutMs for its answer.
+// good is set to the lines that came whole and in order, total to every line of tag, lost to the
+// lines and notes that the debug output's loss notices state.
+// Returns false when no answer came in time.
+bool check(const char* tag, uint32_t count, uint32_t& good, uint32_t& total, uint32_t& lost,
+           uint32_t timeoutMs);
+
 // Prints the RESTART line and restarts the Teensy. The runner then sends "resume <test>", which
 // calls the test's resume function, so the Teensy keeps no state across the restart.
 [[noreturn]] void restart();
