@@ -126,8 +126,9 @@ public:
 
     // Copies up to max events into out, oldest first across all queues, and returns how many. The
     // times are compared with before(), so the order holds across the wrap of nowUs(). A queue
-    // that dropped events since the last read() gets a warning in the log, and a debug build
-    // shows every event it copies. The main loop calls it.
+    // that dropped events since the last read() gets a warning in the log. A debug build notes
+    // every event it copies in the debug trace, with the type above the source and the payload. The
+    // main loop calls it.
     uint32_t read(DriverEvent* out, uint32_t max);
 
 private:
