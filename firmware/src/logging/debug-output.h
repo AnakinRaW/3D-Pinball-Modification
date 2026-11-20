@@ -2,7 +2,7 @@
 // and lines from two tasks never mix. The main loop hands USB only as many bytes as it takes
 // without waiting. When the buffer is full, the oldest waiting lines give way to the new one.
 #pragma once
-#include "core/byte-ring.h"
+#include "core/ring.h"
 #include <atomic>
 #include <stdarg.h>
 #include <stddef.h>
@@ -48,7 +48,7 @@ private:
 
     // Both the writers and send() hold the lock while they move the ring, since a full ring makes
     // a writer drop lines from the reader's end.
-    ByteRing ring;
+    Ring<uint8_t> ring;
     std::atomic<uint32_t> lostCount{0};
     uint32_t reportedLost = 0;   // the dropped lines the notices have stated, moved by send()
 };

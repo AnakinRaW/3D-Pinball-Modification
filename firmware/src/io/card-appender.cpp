@@ -27,7 +27,7 @@ bool CardAppender::start(AppendFile& f) {
 bool CardAppender::append(const void* data, size_t n) {
     if (!hasFile) {
         DEBUG_LOG("CardAppender::append: no file yet\n");
-    } else if (ring.append(data, n)) {
+    } else if (ring.append(static_cast<const uint8_t*>(data), n)) {
         nextFileBytes = nextFileBytes + static_cast<uint32_t>(n);
         return true;
     } else {
