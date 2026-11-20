@@ -5,6 +5,7 @@
 - **No dynamic memory after the start.** No `new`, no `malloc()` and no container that grows, in the main loop or in an interrupt. Every buffer and every object is allocated statically or during the start.
 - **An interrupt is short and never waits.** It calls no `Serial`, no `delay()` and allocates nothing. It calls FreeRTOS only through the `FromISR` functions, and only at a priority of 208 or higher, as [`general-design.md`](../docs/firmware/general-design.md#interrupts) sets. A variable shared with an interrupt is `volatile` or atomic.
 - **The main loop never waits.** No `delay()` and no busy loop. A time comes from `nowUs()` and is compared with `before()` and the `elapsed` functions, which survive the counter's wrap.
+- **A time in milliseconds that only counts on, such as the time in front of a log line, comes from `millis()`.** It counts the milliseconds since the start and wraps after 49.7 days, so a span taken as the difference of two readings stays right across the wrap.
 - **No recursion and no variable-length arrays**, so every stack's depth can be computed.
 - **A buffer names its memory**, `DMAMEM` or `EXTMEM`. Where DMA reads or writes a buffer the cache serves, the cache over it is cleaned or invalidated around the transfer.
 
@@ -17,11 +18,13 @@
 
 ## Layout
 
-All of the firmware's code stands in `src/`, in four folders that follow `docs/firmware/`:
+All of the firmware's code stands in `src/`, in six folders that follow `docs/firmware/`:
 
 | Folder | Holds |
 |---|---|
-| `core/` | what every part uses: the clock, the event queue, the device monitor, `DEBUG_LOG()`, the priority list |
+| `core/` | what every part uses: the clock, the event queue, the device monitor, the priority list, the task lock, the firmware's version |
+| `logging/` | the machine's log on the card, `DEBUG_LOG()` and `DEBUG_TRACE()` |
+| `io/` | what reaches a device or a file for the parts above it, such as the card appender |
 | `drivers/` | one driver per pair of files, the driver tick in `driver-base`, and the code a driver alone uses |
 | `components/` | the components between the drivers and the game |
 | `game/` | the game: modes and their layers |
@@ -42,6 +45,7 @@ Code taken from another project and changed here stands beside the code that use
 - **Only a driver touches its hardware.** Registers and pins belong to the driver that owns them, and everything above it goes through the driver's interface.
 - **A library is used through its API.** Code never reaches past a library into its internals, whether registers, private members or raw sectors. A problem is solved with the library's settings and its correct use first.
 - **No exceptions and no RTTI**, built with `-fno-exceptions` and `-fno-rtti`. A failure is a return value, and every return value of a call that reaches hardware is checked.
+- **The firmware's version stands in [`src/core/version.h`](src/core/version.h)** and is raised by hand with every release build that goes into the machine. The log writes it at every start.
 - **`src/` takes nothing from `gist/`.** A gist is a note to read. Code in `src/` neither includes a gist nor copies one.
 - **A gist is deleted once its driver stands as code** and holds nothing that the code and the documents lack. Every reference to it then points to the code.
 
@@ -109,7 +113,13 @@ Debug code reaches only a debug build. The firmware that runs in the machine is 
 
 `DEBUG` reaches the firmware's code and none of the libraries, because freertos-teensy names a constant `DEBUG`. `NDEBUG` reaches the libraries as well. A plain `python -m platformio run` or `-t upload` therefore builds the debug firmware, and the release firmware needs `-e release`.
 
-Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output goes through `DEBUG_LOG()` from [`src/core/debug-log.h`](src/core/debug-log.h), which the compiler removes without `DEBUG`, so no `Serial.print()` stays behind in the release firmware. The call stands behind `if (false)`, so a variable that only a log line reads raises no warning in the release build.
+Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output goes through `DEBUG_LOG()` from [`src/logging/debug-log.h`](src/logging/debug-log.h), which the compiler removes without `DEBUG`, so no `Serial.print()` stays behind in the release firmware. The call stands behind `if (false)`, so a variable that only a log line reads raises no warning in the release build.
+
+**No code in `src/` prints to `Serial` directly.** `Serial.printf()` waits for USB once its buffers are full. Two tasks printing at once corrupt its state, since the Teensy core's `usb_serial_write()` takes no lock. `DEBUG_LOG()` puts the line into a buffer. The main loop's `sendDebugLog()` hands USB only what it takes without waiting. Any task may call `DEBUG_LOG()`. In an interrupt the line is dropped and counted, so an interrupt notes an event with `DEBUG_TRACE()` from [`src/logging/debug-trace.h`](src/logging/debug-trace.h), which the main loop turns into a debug line.
+
+**A log line formats no floating-point value.** On the Teensy 4.1 the C library took 200 bytes from the heap for the first two floats a task formatted with `%f`, so a float in a line breaks the rule against dynamic memory after the start. A value is written as an integer in a unit that keeps its digits, such as `%ld` mV, or as the text it was read from, such as a setting from the config file.
+
+The machine's log on the card goes through the [logger](../docs/firmware/logging.md), with `logWarning()` and `logInfo()` from [`src/logging/logger.h`](src/logging/logger.h). A line worth keeping in the machine goes there, such as a setting out of its range or a failure at the start. A debug build shows it on USB as well, also before the log has begun.
 
 **Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 

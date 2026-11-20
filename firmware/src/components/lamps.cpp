@@ -1,4 +1,5 @@
 #include "lamps.h"
+#include "logging/logger.h"
 #include <new>
 
 // the lighting model's pitch_strip: 6.25 mm from LED to LED at 160 LEDs/m, in quarter millimeters
@@ -117,8 +118,8 @@ bool Lamps::begin() {
             continue;
         }
         if (chain >= Lighting::CHAINS || taken[chain]) {
-            DEBUG_LOG("Lamps::begin: group %u finds chain %u past F or taken, and holds no lamps\n",
-                      g, chain);
+            logWarning("lamps", "group %u finds chain %u past F or taken, and holds no lamps", g,
+                       chain);
             continue;
         }
         taken[chain] = true;
@@ -130,7 +131,7 @@ bool Lamps::begin() {
     for (uint8_t g = GROUP_LEFT; g < FIRST_SECTION; ++g) {
         visible[g] = new (std::nothrow) uint16_t[groupLeds[g] > 0 ? groupLeds[g] : 1];
         if (visible[g] == nullptr) {
-            DEBUG_LOG("Lamps::begin: no room for the LEDs of group %u\n", g);
+            logWarning("lamps", "no room for the LEDs of group %u", g);
             return false;
         }
         visibleCount[g] = 0;
@@ -147,8 +148,8 @@ bool Lamps::begin() {
     ambientFrame = new (std::nothrow) CRGB[ambientLeds]();
     if (playfieldEffects == nullptr || playfieldFrame == nullptr || spans == nullptr ||
         ambientFrame == nullptr) {
-        DEBUG_LOG("Lamps::begin: no room for %u playfield lamps and %u ambient LEDs\n", lamps,
-                  ambientLeds);
+        logWarning("lamps", "no room for %u playfield lamps and %u ambient LEDs", lamps,
+                   ambientLeds);
         return false;
     }
     walk(spans);
@@ -175,7 +176,11 @@ uint16_t Lamps::walk(Span* out) const {
             if (next < section.lampCount) {
                 leds = section.lamps[next++];
                 if (leds == 0) {
-                    DEBUG_LOG("Lamps: playfield lamp %u counts as 1 LED in place of 0\n", lamps);
+                    // walk() runs twice, once to count and once to place, so it warns once.
+                    if (out == nullptr) {
+                        logWarning("lamps", "playfield lamp %u counts as 1 LED in place of 0",
+                                   lamps);
+                    }
                     leds = 1;
                 }
             }
@@ -184,8 +189,11 @@ uint16_t Lamps::walk(Span* out) const {
                 ++run;
             }
             if (run < leds) {
-                DEBUG_LOG("Lamps: playfield lamp %u ends at a gap or its chain's end, at %u LEDs\n",
-                          lamps, run);
+                if (out == nullptr) {
+                    logWarning("lamps",
+                               "playfield lamp %u ends at a gap or its chain's end, at %u LEDs",
+                               lamps, run);
+                }
                 leds = run;
             }
             if (out != nullptr) {
@@ -194,9 +202,9 @@ uint16_t Lamps::walk(Span* out) const {
             led += leds;
             ++lamps;
         }
-        if (next < section.lampCount) {
-            DEBUG_LOG("Lamps: %u lamp counts of group %u find no LEDs\n", section.lampCount - next,
-                      g);
+        if (next < section.lampCount && out == nullptr) {
+            logWarning("lamps", "%u lamp counts of group %u find no LEDs", section.lampCount - next,
+                       g);
         }
     }
     return lamps;
@@ -237,6 +245,7 @@ LampGroups Lamps::groups(Layer layer) {
 }
 
 void Lamps::remove(Layer layer) {
+    DEBUG_LOG("lamps: key %u removes its effects\n", layer.key);
     const uint8_t key = layer.key;
     const auto ofKey = [key](const Entry& e) { return e.key == key; };
     for (uint16_t lamp = 0; lamp < playfieldLamps; ++lamp) {

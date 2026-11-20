@@ -1,9 +1,11 @@
-// The event queue of docs/firmware/input-handling.md. Every driver publishes the events it detects
+// Carries the events the drivers detect to the main loop, oldest first. Every driver publishes
 // into its queue, each event stamped with nowUs() at detection. The main loop reads all queues as
-// one stream, oldest first.
+// one stream.
 //
-// Each queue has one writer, the driver's interrupt, and one reader, the main loop, so it needs no
-// lock and no interrupt is ever disabled for it. events is the one EventQueue of the firmware.
+// Each queue has one writer, the driver's interrupt, and one reader, the main loop. It therefore
+// needs no lock. No interrupt is ever disabled for it. events is the firmware's one queue.
+//
+// Design: docs/firmware/input-handling.md.
 #pragma once
 #include <Arduino.h>
 #include <atomic>
@@ -113,6 +115,7 @@ public:
             0};   // the events written so far, moved by the writer alone
         std::atomic<uint32_t> readCount{0};   // the events read so far, moved by the reader alone
         volatile uint32_t droppedCount = 0;
+        uint32_t reportedDrops = 0;   // the drops read() has written into the log, moved by read()
     };
 
     // Attaches a queue of depth events in storage and points out at it. Before the main loop only.
@@ -122,7 +125,10 @@ public:
     bool attach(DriverEvent* storage, uint32_t depth, Producer*& out);
 
     // Copies up to max events into out, oldest first across all queues, and returns how many. The
-    // times are compared with before(), so the order holds across the wrap of nowUs().
+    // times are compared with before(), so the order holds across the wrap of nowUs(). A queue
+    // that dropped events since the last read() gets a warning in the log. A debug build notes
+    // every event it copies in the debug trace, with the type above the source and the payload. The
+    // main loop calls it.
     uint32_t read(DriverEvent* out, uint32_t max);
 
 private:

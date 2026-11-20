@@ -143,15 +143,27 @@ with MODEL.block(section=IRQ):
         group="Audio, refilling the half of the output buffer that has played")
 
 # -- the log, docs/firmware/drivers/storage.md and docs/firmware/logging.md ---
-dec("log_size", 1, "MB", src="the size /log.txt reaches before the logger empties it and starts it "
-    "over, kSize in docs/firmware/logging.md")
+dec("log_size", 1, "MB", src="the size a log file reaches before the logger turns to its other "
+    "file, Logger::FILE_LIMIT_BYTES in firmware/src/logging/logger.h")
 asm("log_line", 64, "bytes", src="an average line with its time, its writer and a short message, "
-    "such as 52310 host game started")
-dec("t_log_flush", 1, "s", src="the time from one write of the collected log lines to the next, "
-    "kFlushUs in docs/firmware/logging.md")
+    "such as 52310 I host game started")
+dec("t_log_flush", 1, "s", src="the time from one write of the waiting log lines to the next, "
+    "CardAppender::WRITE_PERIOD_MS in firmware/src/io/card-appender.h")
 MODEL.as_written("t_log_flush_us", of="t_log_flush", unit="µs")
-dec("log_buffer", 2, "KB", src="the lines the logger collects in RAM between two writes, kBuffer "
-    "in docs/firmware/logging.md")
+dec("log_buffer", 64, "KB", src="the lines the logger holds in the PSRAM until they are on the "
+    "card, Logger::BUFFER_BYTES in firmware/src/logging/logger.h, a decision: a burst of about a "
+    "thousand lines, or a card that stalls for several seconds, loses none")
+dec("log_line_max", 160, "bytes", src="the longest line with its line break, LOG_LINE_BYTES in "
+    "firmware/src/logging/log-line.h; a longer line is cut")
+dec("n_trace_records", 256, "", src="the notes the debug trace holds in a debug build, "
+    "TRACE_RECORDS in firmware/src/logging/debug-trace.cpp, a burst of interrupts while the main "
+    "loop is away")
+dec("debug_buffer", 16, "KB", src="the debug lines waiting for USB in a debug build, "
+    "DEBUG_BUFFER_BYTES in firmware/src/logging/debug-log.cpp, in the PSRAM")
+fig("n_buffer_lines", "", "log_buffer / log_line", "down", moves="+log_buffer -log_line",
+    stated=False)
+MODEL.draws("log_buffer", pool="PSRAM")
+MODEL.draws("debug_buffer", pool="PSRAM")
 MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
 MODEL.uses("t_sdfat", of="audio")
@@ -243,5 +255,7 @@ _I("FreeRTOS never masks the watchdog's warning, which does not call it",
 
 for _text, _why in [
     ("0", "a loop's start, an empty count or mask, and a pure virtual function in the listings"),
+    ("73021 W", "the time of an example log line in logging.md, where W is the level, no unit"),
+    ("80211 W", "the time of an example log line in logging.md, where W is the level, no unit"),
 ]:
     MODEL.aside(_text, _why)

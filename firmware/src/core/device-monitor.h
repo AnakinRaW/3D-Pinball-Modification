@@ -1,9 +1,9 @@
-// The device monitor of docs/firmware/error-handling.md. Every 100 ms on the driver tick it asks
-// each registered driver which parts of its device have failed, and publishes DEVICE_FAILED or
-// DEVICE_RECOVERED into its queue of the event queue for every part whose answer changed.
+// Watches the drivers for failed parts and tells the main loop when a part fails or works again.
+// Every 100 ms the driver tick lets it ask each registered driver which parts of its device have
+// failed. For every part whose answer changed, it publishes DEVICE_FAILED or DEVICE_RECOVERED into
+// the event queue. deviceMonitor is the firmware's one monitor.
 //
-// Device names the devices of docs/firmware/driver-design.md. deviceMonitor is the one
-// DeviceMonitor of the firmware, on events and driverTick.
+// Design: docs/firmware/error-handling.md, Device faults.
 #pragma once
 #include <Arduino.h>
 #include "drivers/driver-base.h"

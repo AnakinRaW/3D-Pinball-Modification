@@ -15,7 +15,7 @@ The firmware uses the card at start-up, while it runs and for the streams of sou
 | Reads small files and single sectors at chosen places and may wait for them | drivers, the logger and the game host at start-up |
 | Reads and writes small files without waiting, and learns later whether a write worked. A further save waits until the previous one has ended | a game and the host after start-up |
 | Reads a picture into the screen's picture memory without waiting | a game through the screen |
-| Writes once a second at a chosen place of the log without waiting | the logger |
+| Writes the log's lines at a chosen place of a file, or starts a log file anew, without waiting, at most once a second unless the log's buffer is half full | the logger |
 | Reads up to four files at once and restarts any of them at any moment, and no sound runs dry | the audio driver's interrupt |
 | Reads one file at 25 frames a second, once or in a loop, and every frame arrives in time | the video player |
 | Turns a name into a file without touching the card | the sounds and the screen components |

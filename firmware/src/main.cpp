@@ -6,6 +6,7 @@
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
+#include "logging/debug-log.h"
 #include <lvgl.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
@@ -69,6 +70,7 @@ static void runMainTask(void*) {
             toggledUs += BLINK_MS * US_PER_MS;
             digitalToggleFast(LED_BUILTIN);
         }
+        sendDebugLog();
         yield();
     }
 }

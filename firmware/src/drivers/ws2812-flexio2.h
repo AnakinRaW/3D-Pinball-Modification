@@ -20,7 +20,7 @@
 // Design: docs/firmware/drivers/lighting.md.
 #pragma once
 #include <Arduino.h>
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 
 class Ws2812Flexio2 {
 public:

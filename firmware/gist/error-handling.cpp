@@ -89,7 +89,7 @@ void Watchdog::report(Logger& logger) {
     if (!CrashReport && !(SRC_SRSR & ~SRC_SRSR_IPP_RESET_B)) return;
     struct Lines : Print {
         Logger& log;
-        char    line[Logger::kBuffer];
+        char    line[LOG_LINE_BYTES];
         size_t  n = 0;
         explicit Lines(Logger& l) : log(l) {}
         size_t write(uint8_t c) override {
