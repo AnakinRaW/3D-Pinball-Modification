@@ -37,7 +37,7 @@ These come before every other consideration, in every design, document and bench
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware, custom PCB designs, 3D CAD files, the part list (BOM), research notes, documentation and media.
 
-The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. Its code stands in `firmware/src/`: the clock, the event queue and the device monitor in `core/`, the driver tick, the lighting and the servo in `drivers/`, the lamps in `components/`. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
+The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. Its code stands in `firmware/src/`: the clock, the event queue and the device monitor in `core/`, the log and the debug output in `logging/`, the card appender in `io/`, the driver tick, the lighting and the servo in `drivers/`, the lamps in `components/`. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
 
 ## Toolchain
 
@@ -55,7 +55,7 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 ## Repository layout
 
 - `firmware/`: the firmware for the Teensy 4.1, with its code in `src/`, the shared settings headers in `include/`, the tests in `tests/`, the measurement programs in `bench/` and code notes in `gist/`. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
-- `firmware/src/`: the firmware's code, in `core/`, `drivers/`, `components/` and `game/`, which the test image, the computer tests and the bench programs build from there, as [`firmware/CLAUDE.md`](firmware/CLAUDE.md#layout) gives
+- `firmware/src/`: the firmware's code, in `core/`, `logging/`, `io/`, `drivers/`, `components/` and `game/`, which the test image, the computer tests and the bench programs build from there, as [`firmware/CLAUDE.md`](firmware/CLAUDE.md#layout) gives
 - `firmware/tests/`: one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md), the computer tests in `test_<program>` and every Teensy test in the one test image `teensy/`
 - `hardware/pcb/`: a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
 - `hardware/cad/`: 3D models, a source model plus a neutral export (STEP for mating parts, STL or 3MF for printed ones)

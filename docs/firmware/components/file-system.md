@@ -30,7 +30,7 @@ private:
     friend class Logger;
     friend class Config;
 
-    // gets a file by its full path, such as "/log.txt"; the host, the logger and the config only. No card access
+    // gets a file by its full path, such as "/log-a.txt"; the host, the logger and the config only. No card access
     FileWriter openFull(const char* path);
 
     // sets the game in whose directory open() opens files; the host only

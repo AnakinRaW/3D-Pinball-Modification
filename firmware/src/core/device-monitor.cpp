@@ -1,5 +1,5 @@
 #include "device-monitor.h"
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 
 // The monitor's queue lies in RAM2. Its events are written before they are read, so it needs no
 // start value.

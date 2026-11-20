@@ -121,7 +121,7 @@ lamps:
 
 A group without a chain holds no lamps. A chain carries one group, so a later group that names a taken chain holds no lamps. The lighting driver takes each chain's LEDs from the groups.
 
-`begin()` writes a line to the [log](../logging.md) for each mistake it finds in the groups, and goes on. A group on a chain past F or on a taken chain holds no lamps. A lamp count of 0 takes 1 LED. A gap or the chain's end cuts a lamp short. A count past a section's last LED goes unused. Until the logger stands as code, a debug build prints these lines.
+`begin()` writes a line to the [log](../logging.md) for each mistake it finds in the groups, and goes on. A group on a chain past F or on a taken chain holds no lamps. A lamp count of 0 takes 1 LED. A gap or the chain's end cuts a lamp short. A count past a section's last LED goes unused.
 
 On the playfield, every LED past a section's last count is one lamp. A count past the chain's end is cut there.
 

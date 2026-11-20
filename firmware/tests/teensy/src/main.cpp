@@ -17,11 +17,15 @@
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include "core/clock.h"
+#include "logging/debug-log.h"
 #include <string.h>
 #include <task.h>
 #include "test-harness.h"
 
 extern const Program CLOCK;
+extern const Program TASK_LOCK;
+extern const Program DEBUG_OUTPUT;
+extern const Program DEBUG_TRACE_PROGRAM;
 extern const Program EVENT_QUEUE;
 extern const Program DRIVER_TICK;
 extern const Program PSRAM;
@@ -30,16 +34,20 @@ extern const Program LIGHTING;
 extern const Program SERVO;
 extern const Program EVERY_DRIVER;
 extern const Program LAMPS;
+extern const Program LOGGER;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
 static const Program* const PROGRAMS[] = {
-    &CLOCK,    &EVENT_QUEUE, &DRIVER_TICK,  &PSRAM, &WS2812_FLEXIO2,
-    &LIGHTING, &SERVO,       &EVERY_DRIVER, &LAMPS, &START_UP};
+    &CLOCK,       &TASK_LOCK,   &DEBUG_OUTPUT, &DEBUG_TRACE_PROGRAM,
+    &EVENT_QUEUE, &DRIVER_TICK, &PSRAM,        &WS2812_FLEXIO2,
+    &LIGHTING,    &SERVO,       &EVERY_DRIVER, &LAMPS,
+    &LOGGER,      &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
 constexpr uint32_t RESTART_FLUSH_MS = 100;   // lets the last line leave over USB before a restart
+constexpr uint32_t DRAIN_IDLE_PASSES = 3;    // ms in a row without a sent debug byte
 // the stack of the task the tests run in, enough for the largest test's local variables
 constexpr uint32_t TEST_STACK_BYTES = 32768;
 
@@ -83,7 +91,10 @@ private:
     bool lineStart = true;
 };
 
+static void drainDebugLog();
+
 [[noreturn]] static void restartNow() {
+    drainDebugLog();
     Serial.flush();
     delay(RESTART_FLUSH_MS);
     SCB_AIRCR = AIRCR_VECTKEY | AIRCR_SYSRESETREQ;
@@ -91,8 +102,19 @@ private:
     }
 }
 
+// Sends the waiting debug lines, so they stand ahead of the line printed next. It waits until
+// USB serial has taken them or has stopped taking any.
+static void drainDebugLog() {
+    uint32_t idle = 0;
+    while (idle < DRAIN_IDLE_PASSES) {
+        idle = sendDebugLog() == 0 ? idle + 1 : 0;
+        delay(1);
+    }
+}
+
 // Notes that the current test has reported. A second result is a fault of the test.
 static bool firstResult() {
+    drainDebugLog();
     if (current == nullptr) {
         Serial.printf("ERROR a result outside a test\n");
         return false;
@@ -159,6 +181,42 @@ Answer ask(const char* question, uint32_t timeoutMs) {
     return Answer::NONE;
 }
 
+bool check(const char* tag, uint32_t count, uint32_t& good, uint32_t& total, uint32_t& lost,
+           uint32_t timeoutMs) {
+    drainDebugLog();
+    while (Serial.available()) {
+        Serial.read();
+    }
+    Serial.printf("CHECK %s %s %lu\n", current->name, tag, count);
+    char answer[LINE_BYTES];
+    uint32_t length = 0;
+    const uint32_t t0 = millis();
+    while (millis() - t0 < timeoutMs) {
+        const int c = Serial.read();
+        if (c < 0 || c == '\r') {
+            continue;
+        }
+        if (c != '\n') {
+            if (length + 1 < LINE_BYTES) {
+                answer[length++] = char(c);
+            }
+            continue;
+        }
+        answer[length] = '\0';
+        unsigned long g = 0;
+        unsigned long t = 0;
+        unsigned long l = 0;
+        if (sscanf(answer, "checked %lu %lu %lu", &g, &t, &l) == 3) {
+            good = g;
+            total = t;
+            lost = l;
+            return true;
+        }
+        length = 0;
+    }
+    return false;
+}
+
 void restart() {
     Serial.printf("RESTART %s\n", current->name);
     restartNow();
@@ -214,6 +272,7 @@ static void startCount() {
 }
 
 static void endCount() {
+    drainDebugLog();
     Serial.printf("END %lu %lu %lu\n", passed, failed, skipped);
 }
 
@@ -297,6 +356,7 @@ static void command() {
 // Reads the command lines and carries them out, for good.
 static void testTask(void*) {
     for (;;) {
+        sendDebugLog();
         while (Serial.available()) {
             const int c = Serial.read();
             if (c == '\r') {
