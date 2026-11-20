@@ -403,6 +403,18 @@ fig("i_white_3a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield
 fig("i_white_6a", "A", "i_idle + i_led_white * (n_playfield.raw * frac_playfield.raw + "
     "n_ambient.raw * (ambient_max_6a.raw + 1) / scale_steps.raw)", "up", stated=False)
 
+# -- the lighting driver's constants: the power model it hands FastLED and the two profiles ---------
+LIGHTING_H = "firmware/src/drivers/lighting.h"
+for _key, _name, _unit in (("pm_red", "RED_MW", "mW"), ("pm_green", "GREEN_MW", "mW"),
+                           ("pm_blue", "BLUE_MW", "mW"), ("pm_dark", "DARK_MW", "mW"),
+                           ("v_rail", "VOLTS", "V"),
+                           ("i_supply_3a", "ADAPTER_MIN_A", "A"), ("i_supply_6a", "ADAPTER_MAX_A", "A"),
+                           ("ambient_max_3a", "PROFILE_3A[1]", ""), ("playfield_max", "PROFILE_3A[2]", ""),
+                           ("i_budget", "PROFILE_3A[3]", "mA"),
+                           ("ambient_max_6a", "PROFILE_6A[1]", ""), ("playfield_max", "PROFILE_6A[2]", ""),
+                           ("i_budget_6a", "PROFILE_6A[3]", "mA")):
+    MODEL.in_code(_key, file=LIGHTING_H, name=_name, unit=_unit)
+
 # -- the frame ----------------------------------------------------------------
 DRIVER = "firmware/src/drivers/ws2812-color-encoder.h"
 MODEL.uses("n_chain_max", of="firmware")

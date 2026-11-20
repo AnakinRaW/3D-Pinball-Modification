@@ -776,3 +776,51 @@ def pass_extremes(model: Model, rep: Report):
             rep.error(f"{f.key} is printed {f.prints} and takes {what} {d}, where {want} "
                       f"keeps it on that side", kind="extreme", key=f.key)
     return checked
+
+
+CODED_NAME_RE = re.compile(r"^(\w+)(?:\[(\d+)\])?$")
+NUMBER_RE = re.compile(r"^-?\d+(?:\.\d+)?[uUlLfF]*$")
+
+
+def _code_value(text: str, name: str):
+    """The number a source file assigns to a constant, or to one value of its brace initializer,
+    with the comments left out. None where the file assigns no such number."""
+    m = CODED_NAME_RE.match(name)
+    if not m:
+        return None
+    const, index = m.group(1), m.group(2)
+    code = re.sub(r"//[^\n]*|/\*.*?\*/", "", text, flags=re.S)
+    if index is None:
+        found = re.search(rf"\b{const}\s*=\s*([^;,}}\s]+)", code)
+        cell = found.group(1) if found else None
+    else:
+        found = re.search(rf"\b{const}\s*=\s*\{{([^}}]*)\}}", code)
+        cells = [c.strip() for c in found.group(1).split(",")] if found else []
+        cell = cells[int(index)] if int(index) < len(cells) else None
+    if cell is None or not NUMBER_RE.match(cell):
+        return None
+    return float(cell.rstrip("uUlLfF"))
+
+
+def pass_code(model: Model, rep: Report) -> int:
+    """Each constant a source file holds for a figure is that figure, in the unit the model names."""
+    for key, file, name, unit in model.coded:
+        path = ROOT / file
+        f = model.figs.get(key)
+        if f is None:
+            rep.error(f"{model.name} holds {key} in {file} as {name}, and declares no {key}",
+                      kind="code", key=key)
+            continue
+        if not path.is_file():
+            rep.error(f"{key} is held in {file}, which does not exist", kind="code", key=key)
+            continue
+        got = _code_value(path.read_text(encoding="utf-8"), name)
+        want = f.value.raw if unit == "" else f.value.to(unit)
+        if got is None:
+            rep.error(f"{file} assigns no number to {name}, which holds {key}", kind="code",
+                      key=key)
+        elif not math.isclose(got, want, rel_tol=1e-9, abs_tol=1e-9):
+            shown = f"{want:g}" + (f" {unit}" if unit else "")
+            rep.error(f"{file}: {name} = {got:g}, and the model computes {key} = {shown}",
+                      kind="code", key=key)
+    return len(model.coded)

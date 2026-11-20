@@ -8,7 +8,7 @@ import sys
 
 from .checks import (pass_anchored, pass_curves, pass_datasheets, pass_designators,
                      pass_direction, pass_drawings, pass_extremes, pass_invariants, pass_mutate,
-                     pass_orphans, pass_sources, pass_stale, pass_sums, write_sums)
+                     pass_code, pass_orphans, pass_sources, pass_stale, pass_sums, write_sums)
 from .circuit import pass_circuits, pass_schematics, write_part_list
 from .coverage import run_coverage
 from .document import NEVER, headings, parse_document
@@ -207,6 +207,14 @@ def _sources(run: Run):
                f"source names")
 
 
+def _code(run: Run):
+    """Each constant the code holds for a figure is that figure."""
+    held = pass_code(run.model, run.rep)
+    if held:
+        status(not run.rep.count("code"), "constants in the code",
+               f"{held - run.rep.count('code')} of {held} hold the figure the model computes")
+
+
 def _designators(run: Run):
     """Each part the document names is one its part list or a linked design holds."""
     seen = pass_designators(run.model, run.rep)
@@ -293,7 +301,7 @@ def _stale(run: Run):
 
 
 CHECKS = (_figures, _numbers, _skipped, _drawings, _pins, _direction, _extremes, _curves, _invariants,
-          _sources, _designators, _circuits, _unlinted, _sheets, _sums, _mutate, _stale)
+          _sources, _code, _designators, _circuits, _unlinted, _sheets, _sums, _mutate, _stale)
 
 
 def _verdict(rep: Report) -> int:

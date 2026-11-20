@@ -216,6 +216,7 @@ class Model:
         self.skipped: list = []       # (path, heading, why) of sections of its documents it leaves out
         self.named: dict = {}         # designators of other boards and modules, with why
         self.ranges: list = []        # (nominal, low, high) of a quantity that varies
+        self.coded: list = []         # (key, path, name, unit) of a figure a source file holds
         self.path: pathlib.Path | None = None
         self.pin_data: PinData | None = None
         self._blocks: list[dict] = []
@@ -309,6 +310,12 @@ class Model:
         """The figure `of` as a listing writes it, a bare number of `unit`."""
         return self._add(Fig(key, "", "derived", fn=lambda x: Q.of(x.to(unit), ""),
                              deps=(of,), stated=False, body=f"{of} as a number of {unit}"))
+
+    def in_code(self, key, *, file, name, unit):
+        """The figure `key` as a constant of a source file, a bare number of `unit`. `name` is
+        the constant, as in `RED_MW`, or one value of a brace initializer, as in `PROFILE_3A[3]`
+        for the fourth. `file` reads from the repository root."""
+        self.coded.append((key, file, name, unit))
 
     # -- the pins, which the board's model alone declares ------------------
     def _pins(self) -> PinData:
