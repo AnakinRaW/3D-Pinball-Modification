@@ -27,10 +27,10 @@
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint32_t TEST_GAP_US = 1000000;   // between two tests, so their frames never meet
 constexpr uint32_t TEST_GAP_MS = TEST_GAP_US / US_PER_MS;
-constexpr uint32_t WRAP_LEAD_MS = 100;      // millis-wrap starts this long before millis() wraps
-constexpr uint8_t PLAYFIELD_CHAIN = 3;      // chain D, which holds the first playfield lamps
-constexpr uint8_t LEFT_CHAIN = 0;           // chain A, the left perimeter
-constexpr uint8_t RIGHT_CHAIN = 1;          // chain B, the right perimeter
+constexpr uint32_t WRAP_LEAD_MS = 100;   // millis-wrap starts this long before millis() wraps
+constexpr uint8_t PLAYFIELD_CHAIN = 3;   // chain D, which holds the first playfield lamps
+constexpr uint8_t LEFT_CHAIN = 0;        // chain A, the left perimeter
+constexpr uint8_t RIGHT_CHAIN = 1;       // chain B, the right perimeter
 constexpr uint8_t CEILING_CHAIN = 2;
 constexpr uint8_t AMBIENT_SCALE_3A = 102;   // the 3 A profile's ambientMax at the brightness 1
 constexpr uint8_t RANGE = 4;                // the lamps a range run covers
