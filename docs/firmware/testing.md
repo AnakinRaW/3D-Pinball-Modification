@@ -140,15 +140,17 @@ The program `debug-trace` checks the [debug trace](logging.md#debug-output), whi
 | `round-trip` | Teensy | Note 100 numbered events with `DEBUG_TRACE()` from an `IntervalTimer` and let the runner check the debug lines that arrive over USB | The runner counts all 100 lines, each whole and in its order |
 | `lost-notice` | Teensy | Note 300 numbered events with `DEBUG_TRACE()` while nothing sends, then let the runner check the debug lines | The runner counts the first 256 notes, each whole and in its order, and a notice of 44 lost notes |
 
-### Byte ring
+### Ring
 
-The program `byte-ring` checks the ring of bytes that the debug output and the card appender keep their lines in.
+The program `ring` checks the ring that the debug output and the card appender keep their lines in and that each queue of the [event queue](input-handling.md) keeps its events in.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `wrap` | computer | Append records that run past the end of the buffer and read them back | They come back in order, the piece up to the buffer's end first and the rest after it |
+| `wrap` | computer | Append records of bytes that run past the end of the buffer and read them back | They come back in order, the piece up to the buffer's end first and the rest after it |
 | `whole-or-nothing` | computer | Append a record larger than the free space | It is refused. The ring keeps what it held |
 | `power-of-two` | computer | Make rings of 1000 bytes, of 0 bytes and of no buffer | The first holds 512 bytes, the others refuse every record |
+| `elements` | computer | Append records of several structs to a ring of 8, the second running past the end, and read them back | `size()`, `used()` and `peek()` count structs. Every struct comes back whole and in order, the second record in two pieces |
+| `begin` | computer | Append to a ring made without a buffer, then give it a buffer of 6 with `begin()`, append, and call `begin()` again | The first record is refused. The ring holds 4 elements, and the second `begin()` leaves it empty with both counts at 0 |
 
 ### Card appender
 

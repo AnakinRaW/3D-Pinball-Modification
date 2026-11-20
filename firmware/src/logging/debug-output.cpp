@@ -29,7 +29,7 @@ bool DebugOutput::writeLine(const char* line, size_t n) {
     while (ring.size() - ring.used() < n && dropOldestLine()) {
         lostCount.fetch_add(1, std::memory_order_relaxed);
     }
-    if (!ring.append(line, n)) {
+    if (!ring.append(reinterpret_cast<const uint8_t*>(line), n)) {
         // Only a line longer than the whole buffer is left.
         lostCount.fetch_add(1, std::memory_order_relaxed);
         return false;
@@ -74,7 +74,7 @@ void DebugOutput::addLossNotice() {
     char line[LOG_LINE_BYTES];
     const size_t n = formatOwnLine(line, "debug %" PRIu32 " lines lost", lost - reportedLost);
     // The notice makes no room for itself, which would drop the lines it is about to count.
-    if (ring.append(line, n)) {
+    if (ring.append(reinterpret_cast<const uint8_t*>(line), n)) {
         reportedLost = lost;
     }
 }

@@ -3,7 +3,7 @@
 // sooner once half the buffer is taken. A write that fails keeps its records and is tried again, so
 // a record is lost only when the buffer is full.
 #pragma once
-#include "core/byte-ring.h"
+#include "core/ring.h"
 #include <atomic>
 #include <stddef.h>
 #include <stdint.h>
@@ -89,7 +89,7 @@ private:
     // Starts the next write if one is due.
     void startWrite();
 
-    ByteRing ring;
+    Ring<uint8_t> ring;
 
     // The reader's side, moved by update() alone once begin() or start() has handed it a file.
     AppendFile* file = nullptr;   // the file the oldest waiting records go to

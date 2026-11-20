@@ -24,8 +24,7 @@ bool EventQueue::attach(DriverEvent* storage, uint32_t depth, Producer*& out) {
         return false;
     }
     Producer& p = producers[count];
-    p.storage = storage;
-    p.depth = depth;
+    p.ring.begin(storage, depth);
     count = count + 1;
     out = &p;
     return true;

@@ -8,8 +8,8 @@
 // Design: docs/firmware/input-handling.md.
 #pragma once
 #include <Arduino.h>
-#include <atomic>
 #include "core/clock.h"
+#include "core/ring.h"
 #include <string.h>
 #include <type_traits>
 
@@ -63,14 +63,10 @@ public:
         // Puts the event at the end of the queue. Safe in an interrupt. Returns false and counts
         // the event in dropped() when the queue is full.
         bool publish(const DriverEvent& e) {
-            const uint32_t head = writtenCount.load(std::memory_order_relaxed);
-            if (head - readCount.load(std::memory_order_acquire) == depth) {
+            if (!ring.append(&e, 1)) {
                 droppedCount = droppedCount + 1;
                 return false;
             }
-            storage[head & (depth - 1)] = e;
-            // The event is whole before the reader sees it.
-            writtenCount.store(head + 1, std::memory_order_release);
             return true;
         }
 
@@ -96,24 +92,17 @@ public:
 
         // Gets the oldest event of the queue, nullptr when it is empty.
         const DriverEvent* front() const {
-            const uint32_t tail = readCount.load(std::memory_order_relaxed);
-            if (writtenCount.load(std::memory_order_acquire) == tail) {
-                return nullptr;
-            }
-            return &storage[tail & (depth - 1)];
+            size_t n = 0;
+            const DriverEvent* e = ring.peek(n);
+            return n == 0 ? nullptr : e;
         }
 
         // Frees the oldest event's slot once read() has copied it.
-        void pop() {
-            readCount.store(readCount.load(std::memory_order_relaxed) + 1,
-                            std::memory_order_release);
-        }
+        void pop() { ring.consume(1); }
 
-        DriverEvent* storage = nullptr;
-        uint32_t depth = 0;   // a power of two; 0 drops every event
-        std::atomic<uint32_t> writtenCount{
-            0};   // the events written so far, moved by the writer alone
-        std::atomic<uint32_t> readCount{0};   // the events read so far, moved by the reader alone
+        // The queue's events. The driver's interrupt adds them and read() takes them. attach()
+        // hands the ring the storage.
+        Ring<DriverEvent> ring;
         volatile uint32_t droppedCount = 0;
         uint32_t reportedDrops = 0;   // the drops read() has written into the log, moved by read()
     };
