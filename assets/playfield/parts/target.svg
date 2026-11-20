@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -3.6 10 7.2" width="10mm" height="7.2mm">
+<title>Stand-up target: the ball hits the face on its +y side</title>
+<style>
+  .target-base { fill: #2b2d33; stroke: #111114; stroke-width: 0.3; }
+  .target-face { fill: #f2c230; stroke: #8a6a10; stroke-width: 0.35; }
+</style>
+<rect class="target-base" x="-3.2" y="-2.6" width="6.4" height="1.7" rx="0.3" />
+<rect class="target-face" data-name="face" x="-4" y="-1" width="8" height="2" rx="0.5" />
+</svg>

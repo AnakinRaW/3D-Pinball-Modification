@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-58.1 -14.59 116.14 29.19" width="116.14mm" height="29.19mm">
+<title>Wooden wall along the ball return's lower curve (planned; from the pencil curve in the photo)</title>
+<style>
+  .wood-wall { fill: none; stroke: #8a6a3c; stroke-width: 2.23; stroke-linecap: round; stroke-linejoin: round; }
+  .wood-wall-top { fill: none; stroke: #d9bf8a; stroke-width: 1.12; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<path class="wood-wall" d="M-56.6 9.44C-54.16 9.88 -47.89 11.46 -41.98 12.05C-36.07 12.63 -26.68 13.1 -21.12 12.98C-15.56 12.86 -12.46 12.17 -8.64 11.3C-4.82 10.44 -1.69 9.19 1.79 7.76C5.26 6.34 8.49 4.43 12.22 2.74C15.94 1.04 19.82 -0.76 24.13 -2.39C28.45 -4.01 33.75 -5.6 38.1 -7.04C42.45 -8.48 47.13 -10.04 50.21 -11.04C53.28 -12.05 55.49 -12.75 56.54 -13.09" />
+<path class="wood-wall-top" d="M-56.6 9.44C-54.16 9.88 -47.89 11.46 -41.98 12.05C-36.07 12.63 -26.68 13.1 -21.12 12.98C-15.56 12.86 -12.46 12.17 -8.64 11.3C-4.82 10.44 -1.69 9.19 1.79 7.76C5.26 6.34 8.49 4.43 12.22 2.74C15.94 1.04 19.82 -0.76 24.13 -2.39C28.45 -4.01 33.75 -5.6 38.1 -7.04C42.45 -8.48 47.13 -10.04 50.21 -11.04C53.28 -12.05 55.49 -12.75 56.54 -13.09" />
+</svg>

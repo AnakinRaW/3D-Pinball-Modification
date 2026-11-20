@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-36.38 -26.78 72.7 53.5" width="72.7mm" height="53.5mm">
+<title>Display (Adafruit 2090): window in the back wall, glass, active area 320 x 240</title>
+<style>
+  .dio-window { fill: #0c0c0e; }
+  .display-glass { fill: #131317; stroke: #000; stroke-width: 0.28; }
+  .display-screen { fill: #1d2330; stroke: #2c3446; stroke-width: 0.28; }
+</style>
+<rect class="dio-window" x="-34.88" y="-25.28" width="69.7" height="50.5" rx="0" />
+<rect id="display-glass" class="display-glass" x="-34.43" y="-24.78" width="68.75" height="49.5" rx="0.8" />
+<rect id="display-screen" class="display-screen" x="-31.63" y="-21.63" width="57.6" height="43.2" rx="0" />
+</svg>

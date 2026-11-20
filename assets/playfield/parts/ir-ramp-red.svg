@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-3.66 -4.31 7.28 8.59" width="7.28mm" height="8.59mm">
+<title>Red ramp: on the wood beside the lane, looking sideways at it, sees a ball drop into the lane</title>
+<style>
+  .ir-sensor { fill: #1f9d55; fill-opacity: 0.85; stroke: #0d5c30; stroke-width: 0.37; }
+  .ir-eye { fill: #0b2e1a; }
+</style>
+<path class="ir-sensor" d="M-2.16 -1.97Q-2.16 -2.81 -1.32 -2.81L1.28 -2.81Q2.12 -2.81 2.12 -1.97L2.12 1.94Q2.12 2.78 1.28 2.78L-1.32 2.78Q-2.16 2.78 -2.16 1.94Z" />
+<circle class="ir-eye" cx="-1.23" cy="-0.01" r="0.84" />
+</svg>

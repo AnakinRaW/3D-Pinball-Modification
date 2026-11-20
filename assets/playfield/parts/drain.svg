@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-9.19 -9.19 18.46 18.46" width="18.46mm" height="18.46mm">
+<title>Drain</title>
+<style>
+  .drain { fill: #c9d3da; stroke: #8b98a2; stroke-width: 0.47; }
+</style>
+<circle id="drain-hole" class="drain" cx="0.04" cy="0.04" r="7.73" />
+</svg>

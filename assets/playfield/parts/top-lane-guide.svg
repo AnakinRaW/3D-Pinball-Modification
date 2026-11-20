@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-3.366 -10.821 6.732 21.642" width="6.732mm" height="21.642mm">
+<title>top-lane-guide</title>
+<style>
+  .post { fill: #17171b; stroke: #44444c; stroke-width: 0.37; }
+  .sleeve { fill: #e9eef2; fill-opacity: 0.85; stroke: #e9eef2; stroke-width: 5.96; stroke-linecap: round; stroke-opacity: 0.9; }
+</style>
+<line class="sleeve" x1="-0.006" y1="-7.461" x2="0.006" y2="7.461" />
+<circle class="post" cx="-0.006" cy="-7.461" r="1.86" />
+<circle class="post" cx="0.006" cy="7.461" r="1.86" />
+</svg>

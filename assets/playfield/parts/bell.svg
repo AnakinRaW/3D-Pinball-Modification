@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-32.85 -18.717 73.435 38.22" width="73.435mm" height="38.22mm">
+<title>bell</title>
+<style>
+  .dome { fill: url(#dome); stroke: #000; stroke-width: 0.37; }
+  .screw { fill: #d9dde2; }
+  .foil { fill: #c98a3c; fill-opacity: 0.75; fill-rule: evenodd; stroke: #8a5a1e; stroke-width: 0.28; }
+</style>
+<defs>
+  <radialGradient id="dome" cx="40%" cy="35%" r="70%">
+    <stop offset="0" stop-color="#55555c" /><stop offset="0.5" stop-color="#1a1a1e" /><stop offset="1" stop-color="#050506" />
+  </radialGradient>
+</defs>
+<path class="foil" d="M-13.74 0.393A17.61 17.61 0 1 0 21.475 0.393A17.61 17.61 0 1 0 -13.74 0.393ZM-7.735 0.393A11.6 11.6 0 1 1 15.475 0.393A11.6 11.6 0 1 1 -7.735 0.393Z" data-name="foil" />
+<g data-name="post-dome"><circle class="dome" cx="3.865" cy="0.388" r="11.55" /><circle class="screw" cx="2.135" cy="-2.747" r="2.54" /></g>
+</svg>
