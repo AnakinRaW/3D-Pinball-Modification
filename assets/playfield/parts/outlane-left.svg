@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-51.33 -45.19 102.72 90.35" width="102.72mm" height="90.35mm">
+<title>Clear guide left</title>
+<style>
+  .hole { fill: #141416; }
+  .wood-tab { fill: #a8875a; stroke: #6b5231; stroke-width: 0.28; }
+  .clear { fill: #f4f8fa; fill-opacity: 0.5; stroke: #ffffff; stroke-opacity: 0.9; stroke-width: 0.84; stroke-linejoin: round; }
+  .clear-boss { fill: #ffffff; fill-opacity: 0.55; stroke: #b9c5cc; stroke-width: 0.28; }
+</style>
+<defs>
+  <clipPath id="clip-outlane-left"><path d="M-49.83 -42.85Q-49.83 -43.69 -49.14 -43.22L46.31 20.56Q47.01 21.03 47.56 21.66L49.25 23.65Q49.8 24.29 49.8 25.12L49.8 25.78Q49.8 26.61 48.96 26.61L37.14 26.61Q36.3 26.61 36.3 27.45L36.3 31.92Q36.3 32.76 37.14 32.76L49.06 32.76Q49.89 32.76 49.89 33.6L49.89 38.35Q49.89 39.19 49.06 39.19L41.79 39.19Q40.96 39.19 40.96 40.02L40.96 42.82Q40.96 43.66 40.12 43.66L26.34 43.66Q25.5 43.66 25.44 42.82L24.72 31.36Q24.66 30.53 23.97 30.05L-49.15 -20.87Q-49.83 -21.34 -49.83 -22.18Z" /></clipPath>
+</defs>
+<path class="clear" d="M-49.83 -42.85Q-49.83 -43.69 -49.14 -43.22L46.31 20.56Q47.01 21.03 47.56 21.66L49.25 23.65Q49.8 24.29 49.8 25.12L49.8 25.78Q49.8 26.61 48.96 26.61L37.14 26.61Q36.3 26.61 36.3 27.45L36.3 31.92Q36.3 32.76 37.14 32.76L49.06 32.76Q49.89 32.76 49.89 33.6L49.89 38.35Q49.89 39.19 49.06 39.19L41.79 39.19Q40.96 39.19 40.96 40.02L40.96 42.82Q40.96 43.66 40.12 43.66L26.34 43.66Q25.5 43.66 25.44 42.82L24.72 31.36Q24.66 30.53 23.97 30.05L-49.15 -20.87Q-49.83 -21.34 -49.83 -22.18Z" />
+<g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="outlane-left-details" inkscape:label="Details" clip-path="url(#clip-outlane-left)"><polygon class="hole" points="-49.09,-25.53 -44.99,-28.42 -40.9,-25.53 -44.99,-22.64" /><path class="wood-tab" d="M-28.92 -16.98Q-28.6 -17.44 -28.15 -17.12L-22.58 -13.22Q-22.12 -12.9 -22.44 -12.45L-23.72 -10.61Q-24.04 -10.16 -24.5 -10.47L-30.07 -14.38Q-30.52 -14.69 -30.21 -15.15Z" /><path class="wood-tab" d="M3.67 8.07Q3.99 7.61 4.44 7.93L10.01 11.83Q10.47 12.14 10.15 12.6L8.87 14.43Q8.55 14.89 8.09 14.57L2.53 10.67Q2.07 10.36 2.39 9.9Z" /><circle class="clear-boss" cx="-36.43" cy="-28.32" r="2.14" /><circle class="hole" cx="-36.43" cy="-28.32" r="1.12" /><circle class="clear-boss" cx="-8.63" cy="-7.93" r="2.14" /><circle class="hole" cx="-8.63" cy="-7.93" r="1.12" /><circle class="clear-boss" cx="28.94" cy="20" r="2.14" /><circle class="hole" cx="28.94" cy="20" r="1.12" /><path class="hole" d="M28.41 31.6Q28.41 30.48 29.53 30.48L31.72 30.48Q32.84 30.48 32.84 31.6L32.84 35.79Q32.84 36.9 31.72 36.9L29.53 36.9Q28.41 36.9 28.41 35.79Z" /></g>
+</svg>

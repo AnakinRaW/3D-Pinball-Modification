@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-6.9 -6.9 13.8 13.8" width="13.8mm" height="13.8mm">
+<title>insert</title>
+<style>
+  .insert { fill: #d9e4ea; fill-opacity: 0.9; stroke: #a9b8c0; stroke-width: 0.37; }
+</style>
+<circle class="insert" cx="0" cy="0" r="5.4" />
+</svg>

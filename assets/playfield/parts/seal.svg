@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12.339 -12.339 24.679 24.679" width="24.679mm" height="24.679mm">
+<title>Rotating seal: the blue rotor with its rubber band and the crossbar with the seal</title>
+<style>
+  .seal-rubber { fill: none; stroke: #f1eee4; stroke-width: 1.3; stroke-linejoin: round; }
+  .seal-rotor { fill: #3d8fd6; stroke: #23598a; stroke-width: 0.37; }
+  .seal-hole { fill: #17171b; }
+  .seal-bar { fill: #eef3f6; fill-opacity: 0.75; stroke: #9aa7ae; stroke-width: 0.3; }
+  .seal-figure { fill: #d8423f; stroke: #7a1d1b; stroke-width: 0.3; }
+  .seal-pivot { fill: #8a9099; stroke: #44484f; stroke-width: 0.3; }
+</style>
+<path class="seal-rubber" d="M8.939 -3.118A3.6 3.6 0 0 1 8.939 3.118L-1.77 9.301A3.6 3.6 0 0 1 -7.17 6.183L-7.17 -6.183A3.6 3.6 0 0 1 -1.77 -9.301Z" />
+<path class="seal-rotor" data-name="rotor" d="M8.339 -2.771A3.2 3.2 0 0 1 8.339 2.771L-1.77 8.608A3.2 3.2 0 0 1 -6.57 5.837L-6.57 -5.837A3.2 3.2 0 0 1 -1.77 -8.608Z" />
+<circle class="seal-hole" cx="7.333" cy="0" r="1.1" />
+<circle class="seal-hole" cx="-3.666" cy="6.35" r="1.1" />
+<circle class="seal-hole" cx="-3.666" cy="-6.35" r="1.1" />
+<rect class="seal-bar" data-name="bar" x="-9.865" y="-1.5" width="19.729" height="3" rx="0.6" />
+<rect class="seal-figure" x="-1.8" y="-1.5" width="3.6" height="3" rx="0.4" />
+<circle class="seal-pivot" cx="0" cy="0" r="1.2" />
+</svg>

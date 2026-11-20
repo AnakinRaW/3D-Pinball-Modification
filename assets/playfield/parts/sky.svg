@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-116.5 -52.1 233 104.3" width="233mm" height="104.3mm">
+<title>Back wall with the sky</title>
+<style>
+  .dio-sky { fill: #4f97e6; }
+  .dio-cloud { fill: #f4f6f8; }
+</style>
+<rect class="dio-sky" x="-115" y="-50.6" width="230" height="101.3" rx="0" />
+<ellipse class="dio-cloud" cx="-17" cy="-31.3" rx="7.5" ry="2.55" />
+<ellipse class="dio-cloud" cx="-20.3" cy="-30.1" rx="4.5" ry="2.55" />
+<ellipse class="dio-cloud" cx="-14" cy="-30.3" rx="4.95" ry="2.55" />
+<ellipse class="dio-cloud" cx="53" cy="-26.3" rx="13" ry="4.42" />
+<ellipse class="dio-cloud" cx="47.28" cy="-25.1" rx="7.8" ry="4.42" />
+<ellipse class="dio-cloud" cx="58.2" cy="-25.3" rx="8.58" ry="4.42" />
+<ellipse class="dio-cloud" cx="22" cy="-33.8" rx="6.5" ry="2.21" />
+<ellipse class="dio-cloud" cx="19.14" cy="-32.6" rx="3.9" ry="2.21" />
+<ellipse class="dio-cloud" cx="24.6" cy="-32.8" rx="4.29" ry="2.21" />
+</svg>

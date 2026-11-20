@@ -23,7 +23,7 @@ The part B20 from the stock machine either needs to be cut, removed or replicate
 
 ## Circuit
 
-A display board carries the Adafruit 757 and the FPC board A3. A flat flex cable runs from A3 to a second FPC board, A4, which lies flat beside the module. A4 is wired to the module's 8-bit header in reverse order, its pin 1 to the header's pin 20, so the wires run straight across without crossing.
+A display board carries the Adafruit 757 and the FPC board A3. A flat flex cable runs from A3 to a second FPC board, A4, which lies flat beside the module. A4 is wired to the module's 8-bit header in reverse order, its pin 1 to the header's pin 20. Pins 13 to 20 also swap within their pairs, 13 with 14 and on to 19 with 20, so the wires that run down to the header do not cross.
 
 ![Display schematic](display-schematic.svg)
 

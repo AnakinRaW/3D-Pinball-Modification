@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-17 -17 34 34" width="34mm" height="34mm">
+<title>Speaker (stock, 8 ohm), under the apron</title>
+<style>
+  .speaker-frame { fill: #2b2d33; stroke: #111114; stroke-width: 0.5; }
+  .speaker-cone { fill: #1b1c20; stroke: #3c3f47; stroke-width: 0.4; }
+  .speaker-ring { fill: none; stroke: #3c3f47; stroke-width: 0.35; }
+  .speaker-cap { fill: #34373f; stroke: #4a4e57; stroke-width: 0.35; }
+</style>
+<circle class="speaker-frame" cx="0" cy="0" r="15.5" />
+<circle class="speaker-cone" cx="0" cy="0" r="13.3" />
+<circle class="speaker-ring" cx="0" cy="0" r="9.0" />
+<circle class="speaker-cap" cx="0" cy="0" r="4.2" />
+</svg>
