@@ -50,7 +50,7 @@ LampRange& LampRange::run(Pattern p, Direction d, Paint c, uint16_t stepMs, Pain
 }
 
 void LampRange::lasting(uint16_t ms) {
-    const uint32_t endMs = lamps->clockAt(nowUs()) + ms;
+    const uint32_t endMs = millis() + ms;
     for (uint16_t i = 0; i < count; ++i) {
         Lamps::Entry* e = lamps->playfieldEffects[first + i].find(
             [this](const Lamps::Entry& x) { return x.key == layer.key; });
@@ -89,7 +89,7 @@ void Strip::lasting(uint16_t ms) {
         [this](const Lamps::Entry& x) { return x.key == layer.key; });
     if (e != nullptr) {
         e->ends = true;
-        e->endMs = lamps->clockAt(nowUs()) + ms;
+        e->endMs = millis() + ms;
     }
 }
 
@@ -281,7 +281,7 @@ bool Lamps::update(uint32_t now) {
     }
     framed = true;
     shownUs = now;
-    const uint32_t ms = clockAt(now);
+    const uint32_t ms = millis();
     expire(ms);
     paintPlayfield(ms);
     paintStrips(ms);
@@ -379,19 +379,6 @@ uint32_t Lamps::stripLength(uint8_t strip) const {
     return size == 0 ? 0 : locate(strip, uint16_t(size - 1)).q;
 }
 
-uint32_t Lamps::clockAt(uint32_t now) {
-    if (!clockStarted) {
-        clockStarted = true;
-        clockUs = now;
-    }
-    if (!before(now, clockUs)) {
-        const uint32_t passedMs = (now - clockUs) / US_PER_MS;
-        clockMs += passedMs;
-        clockUs += passedMs * US_PER_MS;
-    }
-    return clockMs;
-}
-
 Lamps::Entry* Lamps::claim(Effects& effects, uint8_t key, uint8_t priority) {
     // A mode's new effect takes the place of its own one.
     effects.removeIf([key](const Entry& e) { return e.key == key; });
@@ -399,7 +386,7 @@ Lamps::Entry* Lamps::claim(Effects& effects, uint8_t key, uint8_t priority) {
     e.key = key;
     e.priority = priority;
     e.seq = ++seq;
-    e.startMs = clockAt(nowUs());
+    e.startMs = millis();
     Entry* placed = effects.insert(e);
     if (placed == nullptr) {
         ++refusedCount;

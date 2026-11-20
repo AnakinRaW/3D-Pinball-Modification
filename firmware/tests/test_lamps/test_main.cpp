@@ -1,5 +1,6 @@
 // Tests on the computer whether the lamps show what their effects give, on a fake lighting driver
-// whose chains the tests read. The tests set the time through the fake GPT2 counter.
+// whose chains the tests read. The tests set the time through the fake GPT2 counter, which
+// update() takes for the frame period, and through the fake millis(), which the effects run by.
 //
 //   effects    every effect shows its color at every moment, run() moves its pattern one lamp
 //              per step in its direction, and a brightness outside 0 to 1 takes the nearer end
@@ -15,6 +16,8 @@
 //   gaps       a strip's hidden LEDs stay dark, and a run steps over them at an even pace
 //   playfield-gaps  a playfield section's hidden LEDs stay dark and belong to no lamp, and a gap
 //              ends the lamp it meets
+//   millis-wrap  a blink, a fade and lasting() keep their rhythm, their pace and their end across
+//              the wrap of millis()
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -23,6 +26,8 @@
 
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint32_t TEST_GAP_US = 1000000;   // between two tests, so their frames never meet
+constexpr uint32_t TEST_GAP_MS = TEST_GAP_US / US_PER_MS;
+constexpr uint32_t WRAP_LEAD_MS = 100;      // millis-wrap starts this long before millis() wraps
 constexpr uint8_t PLAYFIELD_CHAIN = 3;      // chain D, which holds the first playfield lamps
 constexpr uint8_t LEFT_CHAIN = 0;           // chain A, the left perimeter
 constexpr uint8_t RIGHT_CHAIN = 1;          // chain B, the right perimeter
@@ -92,12 +97,15 @@ const uint8_t PF_LAMP_OF[PF_GAP_LEDS] = {0, 0, DARK, 1, 2, DARK, DARK, 3, 4, 5};
 static Lighting pfGapLighting;
 static Lamps pfGapLamps(pfGapLighting);
 static uint32_t startUs = 0;
+static uint32_t startMs = 0;
 
 void setUp() {
     lamps.clear();
     lighting.current = Lighting::PROFILE_3A;
     startUs = GPT2_CNT + TEST_GAP_US;
     GPT2_CNT = startUs;
+    startMs = fakeMillis + TEST_GAP_MS;
+    fakeMillis = startMs;
 }
 
 void tearDown() {}
@@ -105,6 +113,7 @@ void tearDown() {}
 // Sets the time to ms after the test's start.
 static void at(uint32_t ms) {
     GPT2_CNT = startUs + ms * US_PER_MS;
+    fakeMillis = startMs + ms;
 }
 
 // Hands on the frame at ms after the test's start. Frames lie at least a frame period apart.
@@ -520,6 +529,37 @@ static void testPlayfieldGaps() {
     }
 }
 
+// millis-wrap: a blink, a fade and a color lasting 150 ms, started 90 ms before millis() wraps,
+// on the first three playfield lamps.
+static void testMillisWrap() {
+    startMs = uint32_t(0) - WRAP_LEAD_MS;   // millis() gives 0 at 100 ms
+    Layer mode = {0, 1};
+    LampGroups g = lamps.groups(mode);
+    Lamp blinking = g.playfield[0];
+    Lamp fading = g.playfield[1];
+    Lamp lasting = g.playfield[2];
+
+    fading.set(Color::BLUE);
+    frame(0);
+    at(10);
+    blinking.blink(Color::GREEN, 100, 50, Off::DARK);
+    fading.fade(Color::RED, 200);
+    lasting.set(Color::RED).lasting(150);
+
+    frame(95);
+    expectLamp(0, crgb(Color::GREEN), "blink on before the wrap");
+    frame(110);
+    expectLamp(0, CRGB(0, 0, 0), "blink off after the wrap");
+    expectLamp(1, blend(crgb(Color::BLUE), crgb(Color::RED), ease8InOutCubic(127)),
+               "fade half across the wrap");
+    expectLamp(2, crgb(Color::RED), "lasting before its end");
+    frame(165);
+    expectLamp(0, crgb(Color::GREEN), "blink on again after the wrap");
+    expectLamp(2, CRGB(0, 0, 0), "lasting after its end");
+    frame(210);
+    expectLamp(1, crgb(Color::RED), "fade end");
+}
+
 int main() {
     Lamps::Settings layout;
     for (uint8_t c = 0; c < Lighting::CHAINS; ++c) {
@@ -567,5 +607,6 @@ int main() {
     RUN_TEST(testChains);
     RUN_TEST(testGaps);
     RUN_TEST(testPlayfieldGaps);
+    RUN_TEST(testMillisWrap);
     return UNITY_END();
 }
