@@ -18,7 +18,7 @@
 
 ## Layout
 
-All of the firmware's code stands in `src/`, in six folders that follow `docs/firmware/`:
+All of the firmware's code stands in `src/`, in folders that follow `docs/firmware/`:
 
 | Folder | Holds |
 |---|---|

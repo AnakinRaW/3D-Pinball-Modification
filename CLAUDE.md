@@ -37,42 +37,34 @@ These come before every other consideration, in every design, document and bench
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics. This repository hosts everything for the mod: firmware, custom PCB designs, 3D CAD files, the part list (BOM), research notes, documentation and media.
 
-The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds with every library the design names. Its code stands in `firmware/src/`: the clock, the event queue and the device monitor in `core/`, the log and the debug output in `logging/`, the card appender in `io/`, the driver tick, the lighting and the servo in `drivers/`, the lamps in `components/`. No board design or CAD model exists yet. IR ball sensing, the break beam at the drain and the solenoids are designed and documented under `docs/parts/`, one directory each. The lighting design is in progress there.
-
 ## Toolchain
 
-| Area | Tool | Status |
-|---|---|---|
-| Microcontroller | Teensy 4.1 (NXP i.MX RT1062) | Chosen |
-| Schematic and netlist | Declared pin by pin in the subsystem's `schematic.py` under `model/`. KiCad is opt-in: `tools/netlist.py` writes a board out as a KiCad netlist and compares one KiCad exported | Chosen |
-| 3D CAD | FreeCAD **or** Fusion | **Undecided**, assume neither |
-| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader with `upload_protocol = teensy-gui`, since `teensy-cli` fails to write on this machine. The linker script [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld) keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project | Chosen |
-| Teensy core | The newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package (1.162.0 for Teensyduino 1.62), pinned in each `platformio.ini` | Chosen |
-| LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/src/drivers/ws2812-flexio2.h`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus | Chosen |
-| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets. The screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it | Chosen |
-| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and four changed settings, which [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds. The tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) | Chosen |
+| Area | Tool |
+|---|---|
+| Microcontroller | Teensy 4.1 (NXP i.MX RT1062) |
+| Schematic and netlist | Declared pin by pin in the subsystem's `schematic.py` under `model/`. KiCad is opt-in: `tools/netlist.py` writes a board out as a KiCad netlist and compares one KiCad exported |
+| 3D CAD | FreeCAD **or** Fusion, **undecided**: assume neither |
+| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader with `upload_protocol = teensy-gui`, since `teensy-cli` fails to write on this machine. The linker script [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld) keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project |
+| Teensy core | The newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package, pinned in each `platformio.ini` |
+| LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/src/drivers/ws2812-flexio2.h`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus |
+| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets. The screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it |
+| RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and the changed settings that [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds. The tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) |
 
 ## Repository layout
 
-- `firmware/`: the firmware for the Teensy 4.1, with its code in `src/`, the shared settings headers in `include/`, the tests in `tests/`, the measurement programs in `bench/` and code notes in `gist/`. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows
-- `firmware/src/`: the firmware's code, in `core/`, `logging/`, `io/`, `drivers/`, `components/` and `game/`, which the test image, the computer tests and the bench programs build from there, as [`firmware/CLAUDE.md`](firmware/CLAUDE.md#layout) gives
+- `firmware/`: the firmware for the Teensy 4.1. [`firmware/CLAUDE.md`](firmware/CLAUDE.md) holds the rules its code follows and where each part of it goes
 - `firmware/tests/`: one program per section of [`docs/firmware/testing.md`](docs/firmware/testing.md), the computer tests in `test_<program>` and every Teensy test in the one test image `teensy/`
 - `hardware/pcb/`: a printed circuit board, one directory each, its netlist taken from the subsystem's model and its manufacturing outputs in `fab/`
 - `hardware/cad/`: 3D models, a source model plus a neutral export (STEP for mating parts, STL or 3MF for printed ones)
-- `docs/firmware/`: the firmware's design, one document per driver and component
-- `docs/parts/`: the design, one directory per subsystem with its circuit document and schematic SVGs
-- `docs/research/`: the stock machine and one note per component. `docs/datasheets/` holds the manufacturer datasheets they cite
-- `docs/parts-list.md` is the bill of materials, and `docs/pin-assignment.md` the Teensy pins spent and what each locks out
-- `model/`: the Python files the checks read, in folders that mirror those under `docs/`. A subsystem's `figures.py`, `schematic.py` and perfboard layouts sit there, the Teensy's figures in `model/research/teensy-4.1.py` and the firmware's in `model/firmware/figures.py`
+- `model/`: the Python files the checks read, in folders that mirror those under `docs/`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `assets/`: photos, renders and other media. `assets/playfield/` holds the vector drawing of the machine, one file per part plus `playfield.json`, which places them. [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md) holds its rules
-- `.claude/skills/`: the repository's skills, listed below
+- `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
 
 ## Commands
 
 | | |
 |---|---|
-| `python tools/figcheck.py --sheets` | Recomputes every figure of every model, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`, the wiring and the shared budgets across all models. A model path such as `model/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark, read from the root of the checkout whose `figcheck.py` runs. Every directory under `model/parts/` holds a model. The motherboard model derives nothing and takes the values of its parts from their subsystems. The lighting model governs only the Level shifting, Signal wiring and Supply sections of its document, plus the lamps component's document. A figure is declared in one model and taken by every other with `MODEL.uses(key, of=...)`. Run it after any change to a value. CI runs it on each push touching `docs/`, `firmware/` or `tools/`. [`tools/CLAUDE.md`](tools/CLAUDE.md) gives what a model declares and the twenty-eight checks, [`tools/README.md`](tools/README.md) the flags |
+| `python tools/figcheck.py --sheets` | Recomputes every figure of every model, checks the documents and the SVGs against them, and checks every marked Teensy pin against `docs/pin-assignment.md`, the wiring and the shared budgets across all models. A model path such as `model/parts/solenoid/figures.py` restricts the run to that subsystem and the pins its files mark, read from the root of the checkout whose `figcheck.py` runs. Every directory under `model/parts/` holds a model. A figure is declared in one model and taken by every other with `MODEL.uses(key, of=...)`. Run it after any change to a value. CI runs it on each push touching `docs/`, `firmware/` or `tools/`. [`tools/CLAUDE.md`](tools/CLAUDE.md) gives what a model declares and what the run checks, [`tools/README.md`](tools/README.md) the flags |
 | `… --groups` | Dumps the groups, sections and tokens the parser found. A block's or a declaration's `group` and `section` are taken from here, since a guess wastes a run |
 | `… --graph <key>` | One quantity in full, which is how a derivation is read back without opening the model |
 | `… --write` | Writes the model's figures into the documents and the SVGs. [`tools/CLAUDE.md`](tools/CLAUDE.md#writing-the-figures) gives what it does where it cannot place a figure |
@@ -107,18 +99,4 @@ FastLED 3.10.9 does not build for PlatformIO's `native` platform. The MP3 decode
 - **A Teensy pin is checked against [`docs/pin-assignment.md`](docs/pin-assignment.md) before it is committed, and gets a row there once a design settles on it.** The file is the one record of the pins this build has spent. A candidate pin is checked against its shared-resource tables, since one pin of a bus or a serial port commits the whole group. `--write` writes those tables from `model/research/teensy-4.1.py`, and figcheck fails a cost table that the allocation has left stale. The file holds occupation only: pin, signal, peripheral, subsystem. The reason for a choice goes into the subsystem document, and a re-allocation is agreed in chat and then written into the table. Every other mention of a Teensy pin is marked with the signal it carries, as [`tools/CLAUDE.md`](tools/CLAUDE.md#teensy-pins) gives, and `--write` carries a moved pin into every mark. A subsystem's pins sit together on one edge of the board, in one run where its peripherals allow.
 - **Reference designators follow IEEE 315**: `A` for a separable sub-assembly such as a plug-in module, `U` for an inseparable one such as a bare IC.
 - **A board's circuit is declared pin by pin in `model/parts/<subsystem>/schematic.py`**, with its parts and nets, and `figures.py` loads it with `MODEL.schematic("schematic.py")`. A part's value names the model's figure that sets it. The nets that reach a Teensy pin enter the wiring check from there, so such a subsystem declares no `MODEL.net`. The perfboard layouts take their nets from there, and figcheck holds the netlist to the part list, the connector tables and the annotated drawings. [`tools/CLAUDE.md`](tools/CLAUDE.md#boards) gives the format. Nothing in the repository needs KiCad installed.
-- **CAD files are opaque binaries**: FreeCAD `.FCStd`, Fusion `.f3d` and `.f3z`, STL and 3MF. STEP is text but very large. `.gitattributes` classifies them. Git LFS is **not** enabled, and it is raised before a large volume of binaries lands in history, since removing them later rewrites history.
-
-## Skills
-
-The repository's skills live in `.claude/skills/`, so they version with the project.
-
-| Skill | Fires when |
-|---|---|
-| `review-circuit` | A circuit is about to be built or committed. It loads its constraints from `docs/research/`, `docs/parts/`, `docs/datasheets/`, `docs/pin-assignment.md` and `docs/parts-list.md` at run time |
-| `draw-schematic` | A circuit documented in markdown needs an SVG diagram in the house style: net colors, module blocks, pin markers |
-| `review-schematic-svg` | A drawn SVG needs checking against its source document and for read-ambiguity |
-| `revise-document` | A document has to be shortened or made readable: structure first, then paragraphs, then sentences, with the deletions accounted for against the diff |
-| `design-review` | A design is correct and now has to be good: derating, thermal, schematic craft, testability, failure behavior (rule 3) |
-
-`review-circuit` asks whether the circuit survives, `design-review` whether it is good, and each needs the other.
+- **Git LFS is not enabled.** It is raised before a large volume of CAD binaries lands in history, since removing them later rewrites history.
