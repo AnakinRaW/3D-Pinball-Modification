@@ -223,7 +223,8 @@ public:
     void brightness(float playfield, float ambient);
 
     // Works out every effect and hands the driver a frame once a frame period has passed since
-    // the last one. Gets whether it handed one. The main loop calls it in every pass.
+    // the last one. Gets whether it handed one. The main loop calls it in every pass with
+    // nowUs(). The effects take their time from millis().
     bool update(uint32_t now);
 
 private:
@@ -284,10 +285,6 @@ private:
     Place locate(uint8_t strip, uint16_t i) const;
     uint32_t stripLength(uint8_t strip) const;
 
-    // Advances the component's millisecond clock to now and gets it. The clock counts on across
-    // the wrap of nowUs().
-    uint32_t clockAt(uint32_t now);
-
     // Takes a new entry for key at its priority in place of the key's own entry. Gets nullptr
     // when the lamp holds five effects of other keys, which counts as refused.
     Entry* claim(Effects& effects, uint8_t key, uint8_t priority);
@@ -323,9 +320,6 @@ private:
     Effects stripEffects[STRIPS];
     uint32_t seq = 0;
     uint32_t refusedCount = 0;
-    bool clockStarted = false;
-    uint32_t clockUs = 0;   // the nowUs() at which clockMs last counted a millisecond
-    uint32_t clockMs = 0;
     bool framed = false;
     uint32_t shownUs = 0;   // the update() of the last frame
     float playfieldShare = 1;
