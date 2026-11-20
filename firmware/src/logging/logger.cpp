@@ -23,6 +23,9 @@ constexpr char BUILD[] = "debug";
 constexpr char BUILD[] = "release";
 #endif
 
+// The logger whose begin() ran last. The firmware's logger lives for the whole run.
+static std::atomic<Logger*> firmwareLog{nullptr};
+
 // Formats a line of the logger itself.
 static size_t formatOwnLine(char* out, uint32_t ms, const char* tag, const char* format, ...)
     __attribute__((format(printf, 4, 5)));
@@ -81,6 +84,7 @@ void Logger::begin(const LogFileStart& first, const LogFileStart& second) {
         appender.begin(*files[current], sizeBytes[current]);
         ready = true;
     }
+    firmwareLog.store(this, std::memory_order_release);
     // A start stands out in the log.
     write(LogLevel::INFO, "logger", "%s", BANNER_RULE);
     write(LogLevel::INFO, "logger", "%s", MACHINE_NAME);
@@ -88,7 +92,53 @@ void Logger::begin(const LogFileStart& first, const LogFileStart& second) {
     write(LogLevel::INFO, "logger", "%s", BANNER_RULE);
 }
 
+// Gets the tag of a line: the level's letter and the writer's name, such as "W lamps".
+static void formatTag(char (&tag)[TAG_BYTES], LogLevel level, const char* who) {
+    snprintf(tag, sizeof(tag), "%c %s", level == LogLevel::WARNING ? 'W' : 'I', who);
+}
+
+// Writes a line into the firmware's log, or before it has begun into the debug output.
+static void logArgs(LogLevel level, const char* who, const char* format, va_list args)
+    __attribute__((format(printf, 3, 0)));
+
+void logInfo(const char* who, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    logArgs(LogLevel::INFO, who, format, args);
+    va_end(args);
+}
+
+void logWarning(const char* who, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    logArgs(LogLevel::WARNING, who, format, args);
+    va_end(args);
+}
+
+static void logArgs(LogLevel level, const char* who, const char* format, va_list args) {
+    Logger* const log = firmwareLog.load(std::memory_order_acquire);
+    if (log != nullptr) {
+        log->writeArgs(level, who, format, args);
+        return;
+    }
+    if (inInterrupt()) {
+        return;
+    }
+    char tag[TAG_BYTES];
+    formatTag(tag, level, who);
+    char line[LOG_LINE_BYTES];
+    debugLogLine(line, formatLogLine(line, millis(), tag, format, args));
+}
+
 bool Logger::write(LogLevel level, const char* who, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    const bool added = writeArgs(level, who, format, args);
+    va_end(args);
+    return added;
+}
+
+bool Logger::writeArgs(LogLevel level, const char* who, const char* format, va_list args) {
     if (inInterrupt()) {
         // An interrupt may stop the task that holds the lock, so it never takes it.
         lostTotal.fetch_add(1, std::memory_order_relaxed);
@@ -96,13 +146,10 @@ bool Logger::write(LogLevel level, const char* who, const char* format, ...) {
         return false;
     }
     char tag[TAG_BYTES];
-    snprintf(tag, sizeof(tag), "%c %s", level == LogLevel::WARNING ? 'W' : 'I', who);
+    formatTag(tag, level, who);
     const uint32_t ms = millis();
     char line[LOG_LINE_BYTES];
-    va_list args;
-    va_start(args, format);
     const size_t n = formatLogLine(line, ms, tag, format, args);
-    va_end(args);
     debugLogLine(line, n);
 
     bool added = false;

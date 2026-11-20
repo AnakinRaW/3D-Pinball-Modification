@@ -196,6 +196,7 @@ The program `event-queue` checks the [event queue](input-handling.md).
 | `oldest-first` | computer | Publish into several queues in turn, each queue in time order | `read()` gives every event once, oldest first across all queues |
 | `across-wrap` | computer | Do the same with times on both sides of the wrap of `nowUs()` | The order holds across the wrap |
 | `full` | computer | Publish into a queue until it is full, and once more | The last publish returns false and counts in `dropped()`, and the queued events come out unchanged |
+| `drop-warning` | computer | Let a queue drop two events, then read twice with a log begun | The log holds one warning that names the queue and the two dropped events |
 | `payload` | computer | Publish an event of every type with `publish<Tag>()` | `payload<Tag>()` gives every payload back unchanged |
 | `refused` | computer | Attach a depth of three, a depth of zero and no storage, then queues until every one is taken, and one more. Publish through each refused queue | `attach()` returns false for each refusal, and the queue it points at drops the event and counts it in `dropped()` |
 | `from-interrupts` | Teensy | Publish numbered events from two interrupts of different priorities for ten minutes while the main loop reads | Every event arrives once and whole, and each queue's events arrive in their order, while `dropped()` stays 0 |
@@ -598,6 +599,7 @@ The program `logger` checks the [logger](logging.md).
 | `turn` | computer | Write a line that fits into a nearly full file, then one that does not | The second line starts the other file anew, behind a head line one number higher. The full file stays within its limit |
 | `no-card` | computer | Write two lines without `begin()`, as the firmware does without a card | Both lines are lost and counted |
 | `interrupt` | computer | Write a line while posing as an interrupt | The line is lost and counted. The lock is never taken |
+| `free-lines` | computer | Begin a log, then write a line through `logInfo()` and one through `logWarning()` | Both lines stand in that log with their level and writer |
 | `two-tasks` | Teensy | Write numbered lines from a task above the test task's priority in bursts while the test task writes its own and runs `update()`, into files in RAM | Every line stands whole in the file, each writer's lines in their order. None is lost |
 | `order` | Teensy | Write numbered lines, restart twice, then read the log back | The lines stand in the order they were written. The lines of each restart follow those before |
 | `files` | Teensy | Put a log file at the [size limit](logging.md#files) on the card, then start and write | The other file starts anew with a higher number. The full file stays as it was |

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5.1 -5.1 10.2 10.2" width="10.2mm" height="10.2mm">
+<title>Diffuser</title>
+<style>
+  .insert { fill: #d9e4ea; fill-opacity: 0.9; stroke: #a9b8c0; stroke-width: 0.37; }
+  .diffuser-small .insert { stroke-width: 0.453; }
+</style>
+<circle class="insert" cx="0" cy="0" r="4.1" />
+</svg>

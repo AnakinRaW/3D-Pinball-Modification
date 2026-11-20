@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-5.92 -11.667 11.237 21.222" width="11.237mm" height="21.222mm">
+<title>arrow</title>
+<style>
+  .insert-arrow { fill: #8f9aa6; stroke: #66717d; stroke-width: 0.37; }
+</style>
+<polygon class="insert-arrow" points="-2.424,-10.167 3.817,-2.27 1.713,-1.744 3.812,7.052 -0.183,8.055 -2.315,-0.727 -4.42,-0.198" />
+</svg>

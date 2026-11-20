@@ -2,6 +2,26 @@
 
 Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit with custom electronics.
 
+## Features
+
+<img src="assets/playfield/features.svg" width="560" alt="The modified machine from above, with numbered features">
+
+1. **Multiball:** two balls may be in play at the same time.
+2. **Scoop:** a scoop catches the ball and holds it until the game throws it out with a coil.
+3. **Rotating seal:** a shot that turns the seal scores, by how far and in which direction it turns.
+4. **Stand-up targets:** the playfield gets stand-up targets, and the game sees every hit on one.
+5. **Tracks:** all four tracks see the ball.
+6. **Top lanes:** three top lanes each have a sensor and a light.
+7. **Inlanes:** each of the four inlanes gets a light and a sensor.
+8. **Bells:** each bell becomes a hit target.
+9. **Screen and touch:** a 2.8 inch touch display shows the score, pictures, animations and videos. A game reacts to a tap on it.
+10. **Ambient light:** RGB strips along the sides of the playfield and the diorama's ceiling run effects and palettes.
+11. **Speaker:** the music and up to three effects play at once. The music goes on where an effect interrupted it.
+
+[`docs/features.md`](docs/features.md) lists every feature, with the ball save, the games and the light effects.
+
+## Repository
+
 This repository hosts everything for the project:
 
 | Content | Location |

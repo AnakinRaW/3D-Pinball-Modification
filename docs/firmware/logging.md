@@ -12,7 +12,7 @@ A debug line carries the milliseconds, the letter `D` and the text, such as `730
 
 ## Writers
 
-Every task may write a line, the main task and the storage task alike. Writing a line only puts it into the buffer. The file on the card is written by the storage task alone, once `update()` hands it the waiting lines. Lines from two tasks never mix, because a line enters the buffer whole under a lock. An interrupt never writes: its line is lost and counted. A driver reports a fault as an event. The host writes the line.
+Every task may write a line, the main task and the storage task alike, through `logWarning()` or `logInfo()`. Before the log has begun, a debug build shows such a line on USB alone. Writing a line only puts it into the buffer. The file on the card is written by the storage task alone, once `update()` hands it the waiting lines. Lines from two tasks never mix, because a line enters the buffer whole under a lock. An interrupt never writes: its line is lost and counted. A driver reports a fault as an event. The host writes the line.
 
 ## Buffer
 

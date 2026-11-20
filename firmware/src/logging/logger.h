@@ -36,7 +36,8 @@ public:
     // life. bytes is its size, of which the largest power of two is used.
     Logger(AppendFile& first, AppendFile& second, uint8_t* buffer, size_t bytes);
 
-    // Finds the file the log goes on in and its end, then writes the banner of a start: the
+    // Finds the file the log goes on in and its end, makes the logger the one logInfo() and
+    // logWarning() write to, then writes the banner of a start: the
     // machine's name, the firmware's version and whether a debug or a release build runs. Never
     // waits. The main task, once at start-up, before the main loop. Without a card the main task
     // does not call it, and every line is lost.
@@ -52,6 +53,10 @@ public:
     // separate line once a line fits again.
     bool write(LogLevel level, const char* who, const char* format, ...)
         __attribute__((format(printf, 4, 5)));
+
+    // Writes one line as write() does, with its arguments in args.
+    bool writeArgs(LogLevel level, const char* who, const char* format, va_list args)
+        __attribute__((format(printf, 4, 0)));
 
     // Writes the waiting lines to the card once a second, or sooner once half the buffer is
     // taken. Never waits. The main loop calls it in every pass.
@@ -83,3 +88,12 @@ private:
     std::atomic<uint32_t> lostTotal{0};
     std::atomic<uint32_t> lostUnreported{0};   // lost lines no line of the log states yet
 };
+
+// Writes a line of the level INFO into the firmware's log, the Logger whose begin() ran last, as
+// Logger::write() does. Before any Logger has begun, a debug build shows the line on USB in the
+// same form, and a release build drops it. Any task, never an interrupt. Never waits.
+// who names the writer in a word, such as "lamps". format is formatted like printf.
+void logInfo(const char* who, const char* format, ...) __attribute__((format(printf, 2, 3)));
+
+// Writes a line of the level WARNING, otherwise as logInfo().
+void logWarning(const char* who, const char* format, ...) __attribute__((format(printf, 2, 3)));

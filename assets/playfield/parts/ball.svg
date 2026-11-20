@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5.325 -5.215 12 12" width="12mm" height="12mm">
+<title>Steel ball, 9 mm</title>
+<style>
+  .ball { fill: #c3c8d0; stroke: #4f555f; stroke-width: 0.47; }
+  .ball-shine { fill: #ffffff; fill-opacity: 0.75; }
+</style>
+<circle class="ball" cx="0.675" cy="0.785" r="4.5" />
+<circle class="ball-shine" cx="-0.675" cy="-0.785" r="1.26" />
+</svg>

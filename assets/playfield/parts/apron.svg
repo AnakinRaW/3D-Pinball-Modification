@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-105.8 -55.62 221.83 97.05" width="221.83mm" height="97.05mm">
+<title>Apron</title>
+<style>
+  .apron { fill: url(#stripes); stroke: #1d1d22; stroke-width: 0.93; }
+  .apron-band { fill: #3c4250; stroke: #1d1d22; stroke-width: 0.56; }
+  .apron-side { fill: #555c69; }
+  .apron-star { fill: #d9b65a; stroke: #6d5a2a; stroke-width: 0.28; }
+</style>
+<defs>
+  <pattern id="stripes" patternUnits="userSpaceOnUse" width="14.9" height="14.9">
+    <rect width="7.45" height="14.9" fill="#e2505b" /><rect x="7.45" width="7.45" height="14.9" fill="#c8323f" />
+  </pattern>
+</defs>
+<path class="apron" d="M-104.3 -54.12L-7.46 8.82A15.43 15.43 0 0 0 15.93 8.82L114.53 -54.12L114.53 27.82L-104.3 27.82Z" />
+<rect class="apron-side" x="-102.44" y="-42.95" width="5.59" height="65.18" rx="1.86" />
+<rect class="apron-side" x="107.08" y="-42.95" width="5.59" height="65.18" rx="1.86" />
+<rect class="apron-band" x="-104.3" y="27.82" width="218.83" height="12.11" />
+<polygon class="apron-star" points="-95.92,30.15 -94.93,32.51 -92.38,32.72 -94.33,34.39 -93.73,36.89 -95.92,35.55 -98.11,36.89 -97.51,34.39 -99.46,32.72 -96.91,32.51" />
+<polygon class="apron-star" points="4.24,30.15 5.22,32.51 7.78,32.72 5.83,34.39 6.43,36.89 4.24,35.55 2.05,36.89 2.65,34.39 0.7,32.72 3.25,32.51" />
+<polygon class="apron-star" points="106.15,30.15 107.13,32.51 109.68,32.72 107.74,34.39 108.33,36.89 106.15,35.55 103.96,36.89 104.55,34.39 102.61,32.72 105.16,32.51" />
+</svg>

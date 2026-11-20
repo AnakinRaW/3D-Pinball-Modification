@@ -115,6 +115,7 @@ public:
             0};   // the events written so far, moved by the writer alone
         std::atomic<uint32_t> readCount{0};   // the events read so far, moved by the reader alone
         volatile uint32_t droppedCount = 0;
+        uint32_t reportedDrops = 0;   // the drops read() has written into the log, moved by read()
     };
 
     // Attaches a queue of depth events in storage and points out at it. Before the main loop only.
@@ -124,7 +125,9 @@ public:
     bool attach(DriverEvent* storage, uint32_t depth, Producer*& out);
 
     // Copies up to max events into out, oldest first across all queues, and returns how many. The
-    // times are compared with before(), so the order holds across the wrap of nowUs().
+    // times are compared with before(), so the order holds across the wrap of nowUs(). A queue
+    // that dropped events since the last read() gets a warning in the log, and a debug build
+    // shows every event it copies. The main loop calls it.
     uint32_t read(DriverEvent* out, uint32_t max);
 
 private:

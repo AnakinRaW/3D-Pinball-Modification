@@ -345,6 +345,8 @@ Lamps::Entry* Lamps::start(Effects& effects, uint8_t key, uint8_t priority, Pain
 }
 
 template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Paint to) {
+    DEBUG_LOG("lamps: key %u starts an effect on lamps %u to %u\n", layer.key, first,
+              first + count - 1);
     uint16_t refusals = 0;
     for (uint16_t i = 0; i < count; ++i) {
         Lamps::Entry* e = lamps->start(lamps->playfieldEffects[first + i], layer.key,
@@ -364,6 +366,7 @@ template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Pa
 }
 
 template <typename E> Strip& Strip::play(const E& effect, Paint from, Paint to) {
+    DEBUG_LOG("lamps: key %u starts an effect on strip %u\n", layer.key, strip);
     if (lamps->start(lamps->stripEffects[strip], layer.key, layer.priority, from, to, effect) ==
         nullptr) {
         DEBUG_LOG("Lamps: strip %u holds five effects and refuses one of key %u\n", strip,

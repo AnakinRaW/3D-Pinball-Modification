@@ -7,6 +7,7 @@
 | [`netlist.py`](netlist.py) | Prints the netlist a subsystem's model declares for each board, writes one board as a KiCad netlist, and compares a netlist KiCad exported with it |
 | [`svgcheck.py`](svgcheck.py) | Measures every label in a drawing and reports the ones that run off the canvas, out of their box, or onto each other, and the boxes that cross one another |
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
+| [`playfield/compose.py`](playfield/compose.py) | Composes the playfield drawing in [`assets/playfield/`](../assets/playfield/) from its part files and `playfield.json`, writes the same drawing with the README's feature bubbles, and checks both against them |
 | [`picture.py`](picture.py) | Turns PNGs of at most 320 × 240 pixels into picture files for the screen, in LVGL's image format and dithered to RGB565, as [`media.md`](../assets/media.md) describes |
 
 Python 3, standard library only, no build step.

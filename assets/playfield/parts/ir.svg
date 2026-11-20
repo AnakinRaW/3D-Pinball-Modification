@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-3.647 -4.297 7.294 8.592" width="7.294mm" height="8.592mm">
+<title>ir</title>
+<style>
+  .ir-sensor { fill: #1f9d55; fill-opacity: 0.85; stroke: #0d5c30; stroke-width: 0.37; }
+  .ir-eye { fill: #0b2e1a; }
+</style>
+<path class="ir-sensor" d="M1.298 -2.796Q2.135 -2.797 2.137 -1.962L2.143 1.954Q2.147 2.79 1.31 2.792L-1.298 2.795Q-2.135 2.795 -2.137 1.961L-2.147 -1.952Q-2.147 -2.788 -1.307 -2.792Z" />
+<circle class="ir-eye" cx="0" cy="-0.001" r="0.84" />
+</svg>

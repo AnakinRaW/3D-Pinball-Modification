@@ -119,7 +119,7 @@ Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output 
 
 **A log line formats no floating-point value.** On the Teensy 4.1 the C library took 200 bytes from the heap for the first two floats a task formatted with `%f`, so a float in a line breaks the rule against dynamic memory after the start. A value is written as an integer in a unit that keeps its digits, such as `%ld` mV, or as the text it was read from, such as a setting from the config file.
 
-The machine's log on the card goes through the [logger](../docs/firmware/logging.md). A line worth keeping in the machine goes there, such as a setting out of its range. A debug build shows it on USB as well.
+The machine's log on the card goes through the [logger](../docs/firmware/logging.md), with `logWarning()` and `logInfo()` from [`src/logging/logger.h`](src/logging/logger.h). A line worth keeping in the machine goes there, such as a setting out of its range or a failure at the start. A debug build shows it on USB as well, also before the log has begun.
 
 **Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 
