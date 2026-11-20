@@ -1,0 +1,33 @@
+# The machine config the simulator runs with, in the format of /config.yml on the memory card
+# (docs/firmware/components/config.md). The lamp groups follow the light layout of the drawing in
+# assets/playfield/. The IR calibration values and the pull times are invented until the machine's
+# card supplies a config.
+
+lighting:
+  adapter_a: 3
+
+lamps:
+  perimeter_left:   { chain: A, leds: 79, gaps: [[43, 19]] }
+  perimeter_right:  { chain: B, leds: 79, gaps: [[50, 15]] }
+  ceiling:          { chain: C, leds: 26 }
+  playfield_lower:  { chain: D, leds: 21, lamps: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] }
+  playfield_middle: { chain: E, leds: 7, lamps: [1, 1, 1, 1, 1, 1, 1] }
+  playfield_upper:  { chain: F, leds: 7, lamps: [1, 1, 1, 1, 1, 1, 1] }
+
+ir:
+  channels:
+    - { channel: 0, clear_build: 180, ball_build: 720, order: 0 }
+    - { channel: 1, clear_build: 175, ball_build: 705, order: 1 }
+    - { channel: 2, clear_build: 190, ball_build: 730, order: 2 }
+    - { channel: 3, clear_build: 185, ball_build: 715, order: 3 }
+    - { channel: 4, clear_build: 170, ball_build: 700, order: 4 }
+    - { channel: 5, clear_build: 182, ball_build: 722, order: 5 }
+    - { channel: 6, clear_build: 178, ball_build: 710, order: 6 }
+    - { channel: 7, clear_build: 188, ball_build: 725, order: 7 }
+    - { channel: 8, clear_build: 176, ball_build: 708, order: 8 }
+    - { channel: 9, clear_build: 184, ball_build: 718, order: 9 }
+    - { channel: 10, clear_build: 172, ball_build: 702, order: 10 }
+    - { channel: 11, clear_build: 186, ball_build: 728, order: 11 }
+
+solenoid:
+  pull_ms: [30, 30, 30, 30]

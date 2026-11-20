@@ -1,0 +1,30 @@
+{
+  "name": "pinball-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@preact/signals": "2.11.4",
+    "preact": "10.29.8",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.13",
+    "@preact/preset-vite": "2.10.6",
+    "@types/node": "24.19.2",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "vitest": "4.1.12"
+  }
+}

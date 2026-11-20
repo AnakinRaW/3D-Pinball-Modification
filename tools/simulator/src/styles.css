@@ -1,0 +1,357 @@
+:root {
+  --bg: #16171b;
+  --bar: #101115;
+  --panel: #1f2127;
+  --line: #262932;
+  --text: #e6e8ee;
+  --muted: #9aa1b2;
+  --faint: #6b7180;
+  --accent: #4fa3ff;
+  --inspect: #ffb02e;
+  color-scheme: dark;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.brand {
+  font-weight: 700;
+  font-size: 16px;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+.tab {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--muted);
+}
+.tab.active {
+  color: var(--text);
+  background: var(--line);
+}
+.tab:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+.spacer {
+  flex: 1;
+}
+.build {
+  color: var(--faint);
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+/* the view's three columns */
+.features-view {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 380px;
+}
+
+.list,
+.side {
+  overflow-y: auto;
+  padding: 16px;
+}
+.list {
+  border-right: 1px solid var(--line);
+}
+.side {
+  border-left: 1px solid var(--line);
+}
+.list h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.list h3 {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.muted {
+  color: var(--muted);
+}
+.list > .muted {
+  margin: 2px 0 12px;
+  font-size: 12px;
+}
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.feature {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+}
+.feature:hover {
+  background: var(--panel);
+}
+.feature.selected {
+  background: var(--panel);
+  border-color: var(--accent);
+}
+.feature .num {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  color: #1d1d22;
+  font-weight: 700;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+}
+.feature.selected .num {
+  background: var(--accent);
+}
+.feature .text {
+  display: flex;
+  flex-direction: column;
+}
+.feature .name {
+  font-weight: 600;
+}
+.feature .summary,
+.feature .section {
+  color: var(--muted);
+  font-size: 12px;
+}
+.feature.small {
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 8px;
+}
+
+/* the drawing */
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: #0d0f14;
+}
+.drawing-host,
+.overlay {
+  position: absolute;
+  inset: 12px;
+}
+.drawing-host svg.drawing,
+.overlay {
+  width: 100%;
+  height: 100%;
+}
+.drawing-host svg.drawing {
+  display: block;
+}
+.overlay {
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  pointer-events: none;
+}
+
+/* the feature's state in the drawing */
+svg.sim-features .lamp,
+svg.sim-features .lamp-strip {
+  opacity: 0.18;
+}
+svg.sim-features .lamp.sim-lit,
+svg.sim-features .sim-lit .lamp-strip,
+svg.sim-features .lamp-strip.sim-lit {
+  opacity: 1;
+}
+.sim-reveal {
+  display: inline !important;
+}
+.sim-through {
+  opacity: 0.3;
+}
+.sim-hidden {
+  display: none;
+}
+
+.overlay .dim {
+  fill: #08090c;
+  opacity: 0.55;
+}
+.overlay .ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.overlay .leader {
+  stroke: var(--accent);
+  stroke-width: 0.5;
+}
+.overlay .plate {
+  fill: #0b1220;
+  fill-opacity: 0.9;
+  stroke: var(--accent);
+  stroke-width: 0.35;
+}
+.overlay .label {
+  fill: var(--text);
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+}
+.overlay .inspect-ring {
+  fill: none;
+  stroke: var(--inspect);
+  stroke-width: 1.1;
+  stroke-dasharray: 2 1;
+}
+
+/* cards */
+.card h2 {
+  margin: 2px 0 6px;
+  font-size: 20px;
+}
+.card h3 {
+  margin: 18px 0 0;
+  font-size: 15px;
+}
+.card h4 {
+  margin: 16px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.card p {
+  margin: 0;
+  line-height: 1.45;
+}
+.eyebrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+.lead {
+  color: var(--text);
+  font-size: 15px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.chip:hover {
+  border-color: var(--accent);
+}
+.nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.nav button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--muted);
+}
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 14px 0 0;
+}
+dt {
+  color: var(--muted);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+code {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+/* narrow windows stack the columns */
+@media (max-width: 960px) {
+  .features-view {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 70vh auto;
+    overflow-y: auto;
+  }
+  .list,
+  .side {
+    border: none;
+    overflow: visible;
+  }
+}
