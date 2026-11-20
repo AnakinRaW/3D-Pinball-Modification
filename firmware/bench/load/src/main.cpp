@@ -2,7 +2,9 @@
 //
 // Runs the firmware's timing-critical work side by side and measures:
 // 1. how late the IR driver's interrupt (priority 64, every 600 us) and the driver tick
-//    (priority 96, every 5 ms) come, without load and under load
+//    (priority 96, every 5 ms) come, without load and under load, and what the IR driver's 16
+//    conversions a phase cost: the time each conversion takes beyond its clocks, the block of 16
+//    against its budget, and the share of the processor their interrupts take
 // 2. how long the four audio streams' reads wait while video frames, LVGL and FastLED run, against
 //    the 325 ms an audio ring reads ahead
 // 3. how long saves and log writes take under FreeRTOS, from the PSRAM and from RAM2, and whether
@@ -20,6 +22,7 @@
 #include <SdFat.h>
 #include <lvgl.h>
 #include <FastLED.h>
+#include <SPI.h>
 
 extern "C" uint8_t external_psram_size;
 
@@ -72,7 +75,110 @@ struct Lateness {
 static Lateness irLate, tickLate;
 static IntervalTimer irTimer;
 
-FASTRUN static void irIsr() { irLate.hit(); }
+// -- the IR driver's conversions -------------------------------------------------
+// Each phase runs the IR driver's read block on LPSPI4: 16 transfers of 24 clocks at 1.35 MHz,
+// each started by the receive interrupt of the one before, at the IR's priority 64. No converter
+// is attached, so the data is junk, but the interrupts come at the real rate. Only pins 11 to 13
+// are given to LPSPI4. Pin 10, its chip select, carries LED chain F. IR_SPI=0 builds the test
+// without the conversions, for the comparison.
+#ifndef IR_SPI
+#define IR_SPI 1
+#endif
+constexpr uint32_t kConversions = 16;        // n_channels, model/parts/ir-reflective
+constexpr uint32_t kSpiHz       = 1350000;   // f_clk, MCP3008 DS21295D at VDD = 2.7 V
+constexpr uint32_t kFrameBits   = 24;        // clocks_frame, DS21295D section 6.1
+constexpr float    kBudgetUs    = 320.0f;    // budget_16, model/parts/ir-reflective
+constexpr float    kOvhUs       = 2.0f;      // t_ovh, model/parts/ir-reflective
+
+struct Conversions {
+    volatile uint32_t n = 0, blockStart = 0, lastStart = 0;
+    volatile uint32_t blocks = 0, unfinished = 0, stepMax = 0, blockMax = 0, isrMax = 0;
+    volatile uint64_t isrSum = 0;
+    volatile bool     running = false;
+    uint32_t          sinceUs = 0;
+    void reset() {
+        blocks = 0; unfinished = 0; stepMax = 0; blockMax = 0; isrMax = 0; isrSum = 0;
+        sinceUs = micros();
+    }
+};
+static Conversions conv;
+
+FASTRUN static void startBlock() {
+    const uint32_t t0 = ARM_DWT_CYCCNT;
+    if (conv.running) conv.unfinished = conv.unfinished + 1;   // the last phase's block still runs
+    conv.running = true;
+    conv.n = 0;
+    LPSPI4_TDR = 0;
+    const uint32_t t1 = ARM_DWT_CYCCNT;
+    conv.blockStart = t1; conv.lastStart = t1;
+    conv.isrSum = conv.isrSum + (t1 - t0);
+}
+
+FASTRUN static void spiIsr() {
+    const uint32_t t0 = ARM_DWT_CYCCNT;
+    (void)LPSPI4_RDR;                        // the reply; reading it clears the receive flag
+    const uint32_t n = conv.n + 1;
+    conv.n = n;
+    uint32_t t1;
+    if (n < kConversions) {
+        LPSPI4_TDR = 0;                      // the next conversion
+        t1 = ARM_DWT_CYCCNT;
+    } else {
+        t1 = ARM_DWT_CYCCNT;
+        conv.running = false;
+        const uint32_t block = t1 - conv.blockStart;
+        if (block > conv.blockMax) conv.blockMax = block;
+        conv.blocks = conv.blocks + 1;
+    }
+    const uint32_t step = t1 - conv.lastStart;
+    if (step > conv.stepMax) conv.stepMax = step;
+    conv.lastStart = t1;
+    const uint32_t isr = ARM_DWT_CYCCNT - t0;
+    if (isr > conv.isrMax) conv.isrMax = isr;
+    conv.isrSum = conv.isrSum + isr;
+    asm volatile("dsb");
+}
+
+// The SCK the SPI library set, from the LPSPI clock root and the dividers, as SPI.h computes it
+static float sckHz() {
+    static const uint32_t clkSel[4] = {664615384, 720000000, 528000000, 396000000};
+    const uint32_t cbcmr = CCM_CBCMR;
+    const uint32_t clkhz = clkSel[(cbcmr >> 4) & 0x03] / (((cbcmr >> 26) & 0x07) + 1);
+    const uint32_t div = LPSPI4_CCR & 0xFF, prescale = (LPSPI4_TCR >> 27) & 0x07;
+    return clkhz / (float)(1u << prescale) / (div + 2);
+}
+
+static void startConversions() {
+    SPI.begin();                             // pins 11 to 13 and the clock, no chip select
+    SPI.beginTransaction(SPISettings(kSpiHz, MSBFIRST, SPI_MODE0));
+    LPSPI4_TCR = (LPSPI4_TCR & ~LPSPI_TCR_FRAMESZ(0xFFF)) | LPSPI_TCR_FRAMESZ(kFrameBits - 1);
+    LPSPI4_FCR = LPSPI_FCR_RXWATER(0);       // a receive interrupt for every reply
+    attachInterruptVector(IRQ_LPSPI4, spiIsr);
+    NVIC_SET_PRIORITY(IRQ_LPSPI4, 64);
+    NVIC_ENABLE_IRQ(IRQ_LPSPI4);
+    LPSPI4_IER = LPSPI_IER_RDIE;
+}
+
+static void printConversions(const char* when) {
+    const float mhz = F_CPU_ACTUAL / 1e6f, tConv = kFrameBits / sckHz() * 1e6f;
+    const float blockUs = conv.blockMax / mhz, stepUs = conv.stepMax / mhz;
+    const float cpu = conv.isrSum / mhz / (float)(micros() - conv.sinceUs) * 100.0f;
+    Serial.printf("  %-22s IR conversions: %lu blocks, %lu not finished in their phase\n", when,
+                  conv.blocks, conv.unfinished);
+    Serial.printf("  %-22s   SCK %.4f MHz, t_conv %.2f us; longest conversion %.2f us, %.2f us past t_conv\n", "",
+                  sckHz() / 1e6f, tConv, stepUs, stepUs - tConv);
+    Serial.printf("  %-22s   longest block %.2f us of the %.0f us budget, block / 16 - t_conv = %.2f us against t_ovh %.1f us\n", "",
+                  blockUs, kBudgetUs, blockUs / kConversions - tConv, kOvhUs);
+    Serial.printf("  %-22s   their interrupts take %.2f %% of the processor, the longest %.2f us\n", "",
+                  cpu, conv.isrMax / mhz);
+}
+
+FASTRUN static void irIsr() {
+    irLate.hit();
+#if IR_SPI
+    startBlock();
+#endif
+}
 FASTRUN static void tickIsr() { GPT1_SR = GPT_SR_OF1; tickLate.hit(); asm volatile("dsb"); }
 
 // -- storage requests ---------------------------------------------------------
@@ -276,6 +382,9 @@ static void flush(lv_display_t* d, const lv_area_t*, uint8_t*) { lv_display_flus
 static void printLateness(const char* when) {
     Serial.printf("  %-22s IR jitter %6.2f us over %lu interrupts, tick jitter %6.2f us over %lu\n", when,
                   irLate.jitterUs(), irLate.n, tickLate.jitterUs(), tickLate.n);
+#if IR_SPI
+    printConversions(when);
+#endif
 }
 
 static void waitWrite() { while (writeWanted != kNone) vTaskDelay(1); }
@@ -308,6 +417,9 @@ static void runMainTask(void*) {
 
     irLate.period   = kIrUs * (F_CPU_ACTUAL / 1000000);
     tickLate.period = kTickUs * (F_CPU_ACTUAL / 1000000);
+#if IR_SPI
+    startConversions();
+#endif
     irTimer.priority(64);
     irTimer.begin(irIsr, kIrUs);
     startGpt1(kTickUs, 96);
@@ -315,13 +427,13 @@ static void runMainTask(void*) {
 
     // 1. without load
     vTaskDelay(100);
-    irLate.reset(); tickLate.reset();
+    irLate.reset(); tickLate.reset(); conv.reset();
     vTaskDelay(3000);
     Serial.println("\n1. interrupt jitter, the spread between the earliest and the latest interrupt");
     printLateness("without load");
 
     // 2. under load: audio, a frame every 40 ms, LVGL, FastLED, a log line a second
-    irLate.reset(); tickLate.reset();
+    irLate.reset(); tickLate.reset(); conv.reset();
     audioOn = true;
     const uint32_t start = millis();
     uint32_t nextFrame = start, nextLog = start + 1000, seed = 1;
@@ -372,6 +484,9 @@ static void runMainTask(void*) {
     (void)audioMaxBefore;
 
     irTimer.end();
+#if IR_SPI
+    NVIC_DISABLE_IRQ(IRQ_LPSPI4);
+#endif
     NVIC_DISABLE_IRQ(IRQ_GPT1);
     NVIC_DISABLE_IRQ(IRQ_GPT2);
     frames.close(); saves.close(); logFile.close();
