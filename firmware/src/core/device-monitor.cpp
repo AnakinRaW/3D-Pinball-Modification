@@ -1,4 +1,5 @@
 #include "device-monitor.h"
+#include "logging/logger.h"
 #include "logging/debug-log.h"
 
 // The monitor's queue lies in RAM2. Its events are written before they are read, so it needs no
@@ -9,20 +10,20 @@ DeviceMonitor deviceMonitor(events, driverTick, monitorQueue);
 
 bool DeviceMonitor::watch(Device device, const Driver& driver) {
     if (count == SLOTS) {
-        DEBUG_LOG("DeviceMonitor::watch: all %u slots taken\n", SLOTS);
+        logWarning("monitor", "all %u slots taken", SLOTS);
         return false;
     }
     if (out == nullptr) {
         EventQueue::Producer* attached = nullptr;
         if (!queue.attach(storage, DEPTH, attached)) {
-            DEBUG_LOG("DeviceMonitor::watch: the event queue refused the monitor's queue\n");
+            logWarning("monitor", "the event queue refused the monitor's queue");
             return false;
         }
         out = attached;
     }
     if (!checking) {
         if (!tick.attach([this] { check(); }, CHECK_US)) {
-            DEBUG_LOG("DeviceMonitor::watch: the driver tick refused the check\n");
+            logWarning("monitor", "the driver tick refused the check");
             return false;
         }
         checking = true;
@@ -32,6 +33,7 @@ bool DeviceMonitor::watch(Device device, const Driver& driver) {
     slots[count] = Slot{device, &driver, 0};
     count = count + 1;
     interrupts();
+    DEBUG_LOG("monitor: watches device %u\n", unsigned(device));
     return true;
 }
 

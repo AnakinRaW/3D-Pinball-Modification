@@ -15,6 +15,7 @@
 //                 with a head line one number higher
 //   no-card       without a card the main task calls no begin(). Every line is lost and counted
 //   interrupt     a line from an interrupt is lost and counted
+//   free-lines    logInfo() and logWarning() write into the logger whose begin() ran last
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -266,6 +267,21 @@ static void testInterrupt() {
     TEST_ASSERT_EQUAL_UINT32(1, logger.lost());
 }
 
+// free-lines: the free functions reach the logger that began last.
+static void testFreeLines() {
+    FakeFile a;
+    FakeFile b;
+    Logger logger(a, b, buffer, sizeof(buffer));
+    logger.begin(startOf(a), startOf(b));
+    const std::string t = nowText();
+    logInfo("host", "game %d", 2);
+    logWarning("lamps", "no lamp %u", 7u);
+    writeNow(logger);
+    const std::string expected = t + " I host game 2\n" + t + " W lamps no lamp 7\n";
+    TEST_ASSERT_EQUAL_STRING(expected.c_str(),
+                             a.content.substr(a.content.size() - expected.size()).c_str());
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testFormat);
@@ -276,5 +292,6 @@ int main() {
     RUN_TEST(testTurn);
     RUN_TEST(testNoCard);
     RUN_TEST(testInterrupt);
+    RUN_TEST(testFreeLines);
     return UNITY_END();
 }
