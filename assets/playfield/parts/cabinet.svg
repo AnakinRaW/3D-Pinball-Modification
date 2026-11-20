@@ -20,14 +20,6 @@
  <rect class="wall-top" x="-115" y="-222.08" width="230" height="8.38" />
  <rect class="wall" x="-115" y="213.63" width="230" height="8.38" />
  <rect class="surface" x="-115" y="-213.7" width="230" height="427.33" />
- <g data-name="center-ramp-slot" inkscape:label="Slot under the center ramp" transform="translate(25.1 -72.5)">
-  <path class="hole" d="M-13.65 -2.8Q-13.65 -4.31 -12.25 -4.31L12.33 -4.31Q13.73 -4.31 13.73 -2.8L13.73 2.83Q13.73 4.35 12.33 4.35L-12.25 4.35Q-13.65 4.35 -13.65 2.83Z" />
-  <path class="hole-rim" d="M-13.65 -2.8Q-13.65 -4.31 -12.25 -4.31L12.33 -4.31Q13.73 -4.31 13.73 -2.8L13.73 2.83Q13.73 4.35 12.33 4.35L-12.25 4.35Q-13.65 4.35 -13.65 2.83Z" />
- </g>
- <g data-name="ramp-entry-left" inkscape:label="Ramp entry left" transform="translate(-49.3 -31.4)">
-  <path class="hole" d="M-13.07 -0.09Q-13.58 -2.13 -11.79 -2.71L8.79 -9.43Q10.58 -10 11.09 -7.97L13.15 0.16Q13.66 2.21 11.88 2.79L-8.71 9.5Q-10.5 10.09 -11.01 8.05Z" />
-  <path class="hole-rim" d="M-13.07 -0.09Q-13.58 -2.13 -11.79 -2.71L8.79 -9.43Q10.58 -10 11.09 -7.97L13.15 0.16Q13.66 2.21 11.88 2.79L-8.71 9.5Q-10.5 10.09 -11.01 8.05Z" />
- </g>
  <g data-name="ramp-entry-right" inkscape:label="Ramp entry right" transform="translate(58.3 -42.7)">
   <path class="hole" d="M-7.9 -5.65Q-7.3 -7.41 -5.54 -6.81L8.55 -1.95Q10.31 -1.35 9.7 0.41L7.89 5.7Q7.28 7.46 5.52 6.85L-8.57 2Q-10.33 1.4 -9.72 -0.37Z" />
   <path class="hole-rim" d="M-7.9 -5.65Q-7.3 -7.41 -5.54 -6.81L8.55 -1.95Q10.31 -1.35 9.7 0.41L7.89 5.7Q7.28 7.46 5.52 6.85L-8.57 2Q-10.33 1.4 -9.72 -0.37Z" />

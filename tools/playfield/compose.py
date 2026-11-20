@@ -3,7 +3,8 @@
 assets/playfield/playfield.json holds the drawing's tree: layers, groups, where each part sits, the LED strips and the single
 lamps. Each file in assets/playfield/parts/ is one physical part, drawn around its anchor with the styles and definitions it
 needs, so it also opens alone. This script places every part, lays the LEDs of each strip along its route at the strip's
-pitch, sets each lamp onto its part and writes assets/playfield/playfield.svg.
+pitch, sets each lamp onto its part and writes assets/playfield/playfield.svg. It also writes assets/playfield/features.svg,
+the same drawing with a numbered bubble for each feature the JSON lists, joined by lines to the parts that show it.
 
     python tools/playfield/compose.py            writes the drawing
     python tools/playfield/compose.py --check    exits with 1 when the drawing differs from what the parts compose
@@ -48,6 +49,7 @@ class Composer:
         self.placed = {}           # placement id -> placement node
         self.errors = []
         self.report = []
+        self.points = {}           # placement or LED id -> its point in the drawing
 
     # ---------------------------------------------------------------- part files
     def part(self, name):
@@ -168,6 +170,7 @@ class Composer:
             c = ET.SubElement(g, tag("circle"))
             c.set("id", f"{node['prefix']}{i}"); c.set("class", node["class"])
             c.set("cx", fmt(x)); c.set("cy", fmt(y)); c.set("r", fmt(node["r"]))
+            self.points[c.get("id")] = (x, y)
             if run[4] or beyond:
                 c.set("style", "display:none"); hidden.append(i)
         for i in hidden:
@@ -187,8 +190,117 @@ class Composer:
         c.set("id", node["lamp"]); c.set("class", node["class"])
         c.set("cx", fmt(x)); c.set("cy", fmt(y)); c.set("r", fmt(node["r"]))
 
+    # ---------------------------------------------------------------- feature bubbles
+    BUBBLE_R = 5.5             # mm
+    BUBBLE_GAP = 13.0          # mm between two bubbles of one column
+    CLUSTER = 60.0             # mm: places of one feature further apart than this get bubbles of their own
+
+    def features(self, svg):
+        """A layer of numbered bubbles in the margins, each with lines to the parts that show its feature."""
+        vb = self.doc["viewBox"]
+        left_x = vb[0] + 12.0
+        right_x = vb[0] + vb[2] - 12.0
+        middle = vb[0] + vb[2] / 2
+        cols = {"left": [], "right": []}
+        for f in self.doc.get("features", []):
+            pts = []
+            for t in f["targets"]:
+                if t not in self.points: self.errors.append(f"feature {f['n']} points at {t}, which the drawing does not hold")
+                else: pts.append(self.points[t])
+            # A feature gets a bubble for each side it has places on, so no line crosses the playfield, and a further
+            # bubble wherever its places on one side lie far apart, so every line stays short.
+            for side in ("left", "right"):
+                near = sorted((p for p in pts if (p[0] < middle) == (side == "left")), key=lambda p: p[1])
+                groups = []
+                for p in near:
+                    if groups and p[1] - groups[-1][0][1] <= self.CLUSTER: groups[-1].append(p)
+                    else: groups.append([p])
+                for grp in groups:
+                    cols[side].append(dict(f=f, pts=grp, y=sum(p[1] for p in grp) / len(grp)))
+        layer = ET.SubElement(svg, tag("g"))
+        layer.set("id", "features"); layer.set(LABEL, "Feature bubbles"); layer.set(MODE, "layer")
+        for side, items in cols.items():
+            items.sort(key=lambda it: it["y"])
+            # bubbles keep their gap: pushed down where they crowd, then back up where they ran past the bottom
+            for k in range(1, len(items)):
+                items[k]["y"] = max(items[k]["y"], items[k - 1]["y"] + self.BUBBLE_GAP)
+            bottom = vb[1] + vb[3] - self.BUBBLE_R - 2
+            for k in range(len(items) - 1, -1, -1):
+                limit = bottom if k == len(items) - 1 else items[k + 1]["y"] - self.BUBBLE_GAP
+                items[k]["y"] = min(items[k]["y"], limit)
+            x = left_x if side == "left" else right_x
+            seen = {}
+            for it in items:
+                n = it["f"]["n"]; seen[n] = seen.get(n, 0) + 1
+                g = ET.SubElement(layer, tag("g"))
+                g.set("id", f"feature-{n}-{side}-{seen[n]}"); g.set(LABEL, it["f"]["feature"])
+                for px, py in it["pts"]:
+                    d = math.dist((x, it["y"]), (px, py))
+                    sx = x + (px - x) * self.BUBBLE_R / d; sy = it["y"] + (py - it["y"]) * self.BUBBLE_R / d
+                    for cls in ("feature-leader-halo", "feature-leader"):
+                        ln = ET.SubElement(g, tag("line")); ln.set("class", cls)
+                        ln.set("x1", fmt(sx)); ln.set("y1", fmt(sy)); ln.set("x2", fmt(px)); ln.set("y2", fmt(py))
+                    dot = ET.SubElement(g, tag("circle")); dot.set("class", "feature-dot")
+                    dot.set("cx", fmt(px)); dot.set("cy", fmt(py)); dot.set("r", "1.2")
+                c = ET.SubElement(g, tag("circle")); c.set("class", "feature-bubble")
+                c.set("cx", fmt(x)); c.set("cy", fmt(it["y"])); c.set("r", fmt(self.BUBBLE_R))
+                t = ET.SubElement(g, tag("text")); t.set("class", "feature-number")
+                t.set("x", fmt(x)); t.set("y", fmt(it["y"] + 2.3)); t.text = str(it["f"]["n"])
+        style = svg.find(tag("style"))
+        style.text += "".join(f"  {r}\n" for r in self.doc.get("feature_style", []))
+        self.windows(svg)
+
+    WINDOW_SHADE = "#4d4d4d"   # what is left of a part inside a window: 30 % of its opacity
+
+    def windows(self, svg):
+        """Round windows that look through the parts above a feature: one mask per part, holding every window it lies under."""
+        holes, rings = {}, []
+        for w in self.doc.get("feature_windows", []):
+            pts = [self.points[t] for t in w["around"] if t in self.points]
+            missing = [t for t in w["around"] if t not in self.points]
+            if missing: self.errors.append(f"a window looks at {missing}, which the drawing does not hold")
+            if not pts: continue
+            c = (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+            r = max(math.dist(c, p) for p in pts) + w["margin"]
+            rings.append((c, r))
+            for pid in w["through"]:
+                if pid not in self.placed: self.errors.append(f"a window cuts through {pid}, which no placement names"); continue
+                holes.setdefault(pid, []).append((self.to_local(self.placed[pid], c), r / self.placed[pid].get("scale", 1.0)))
+        defs, style = svg.find(tag("defs")), svg.find(tag("style"))
+        for pid, circles in holes.items():
+            m = ET.SubElement(defs, tag("mask")); m.set("id", f"window-{pid}"); m.set("maskUnits", "userSpaceOnUse")
+            for k, v in (("x", "-2000"), ("y", "-2000"), ("width", "4000"), ("height", "4000")): m.set(k, v)
+            full = ET.SubElement(m, tag("rect"))
+            for k, v in (("x", "-2000"), ("y", "-2000"), ("width", "4000"), ("height", "4000"), ("fill", "#ffffff")): full.set(k, v)
+            for (x, y), r in circles:
+                c = ET.SubElement(m, tag("circle"))
+                c.set("cx", fmt(x)); c.set("cy", fmt(y)); c.set("r", fmt(r)); c.set("fill", self.WINDOW_SHADE)
+            style.text += f"  #{pid} {{ mask: url(#window-{pid}); }}\n"
+        # a thin ring marks each window as a cutout, over everything the window looks through
+        rims = ET.Element(tag("g")); rims.set("id", "feature-windows"); rims.set(LABEL, "Feature windows")
+        for c, r in rings:
+            ring = ET.SubElement(rims, tag("circle")); ring.set("class", "feature-window-rim")
+            ring.set("cx", fmt(c[0])); ring.set("cy", fmt(c[1])); ring.set("r", fmt(r))
+        if rings:
+            layer = svg.find(f"{tag('g')}[@id='features']")
+            layer.insert(0, rims)
+
+    def to_local(self, node, p):
+        """A point of the drawing, carried back into a placement's coordinates."""
+        x, y = p
+        fr = self.frame(node)
+        if fr:
+            s, (cx, cy) = fr; x, y = cx + (x - cx) / s, cy + (y - cy) / s
+        x, y = x - node["at"][0], y - node["at"][1]
+        a = -math.radians(node.get("rotate", 0.0))
+        x, y = x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
+        s = node.get("scale", 1.0); x, y = x / s, y / s
+        if node.get("mirror"): x = -x
+        return x, y
+
     # ---------------------------------------------------------------- document
     def compose(self):
+        """The drawing, and the drawing with the feature bubbles over it."""
         doc = self.doc
         for n in doc["layers"]: self.collect(n)
         body = ET.Element("body")
@@ -208,9 +320,17 @@ class Composer:
         defs = ET.SubElement(svg, tag("defs"))
         for _, d, _ in self.defs.values(): defs.append(d)
         for e in body: svg.append(e)
+        for node in self.placed.values():
+            self.points[node["id"]] = self.to_world(node, (0.0, 0.0))
+        bubbles = copy.deepcopy(svg)
+        self.features(bubbles)
+        return self.text(svg), self.text(bubbles)
+
+    @staticmethod
+    def text(svg):
         ET.indent(svg, space=" ")
         text = ET.tostring(svg, encoding="unicode")
-        if f"xmlns:inkscape" not in text.split(">", 1)[0]:
+        if "xmlns:inkscape" not in text.split(">", 1)[0]:
             text = text.replace("<svg ", f'<svg xmlns:inkscape="{INK_NS}" ', 1)
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + text + "\n"
 
@@ -220,19 +340,22 @@ def main():
     ap.add_argument("--check", action="store_true", help="compare with the drawing instead of writing it")
     ap.add_argument("--json", default=str(ASSETS / "playfield.json"))
     ap.add_argument("--out", default=str(ASSETS / "playfield.svg"))
+    ap.add_argument("--features", default=str(ASSETS / "features.svg"), help="the drawing with the feature bubbles")
     a = ap.parse_args()
     doc = json.loads(Path(a.json).read_text(encoding="utf-8"))
     c = Composer(doc, Path(a.json).parent / "parts")
-    text = c.compose()
+    outputs = dict(zip((Path(a.out), Path(a.features)), c.compose()))
     for line in c.report: print(line)
     for line in c.errors: print("error:", line)
-    out = Path(a.out)
     if a.check:
-        same = out.exists() and out.read_text(encoding="utf-8") == text
-        print("the drawing matches its parts" if same else f"{out} differs from what the parts compose")
-        return 0 if same and not c.errors else 1
-    out.write_text(text, encoding="utf-8", newline="\n")
-    print(f"wrote {out}: {len(c.placed)} placements from {len(c.parts)} part files")
+        stale = [p for p, text in outputs.items() if not p.exists() or p.read_text(encoding="utf-8") != text]
+        for p in stale: print(f"{p} differs from what the parts compose")
+        if not stale: print("the drawings match their parts")
+        return 0 if not stale and not c.errors else 1
+    for p, text in outputs.items():
+        p.write_text(text, encoding="utf-8", newline="\n")
+        print(f"wrote {p}")
+    print(f"{len(c.placed)} placements from {len(c.parts)} part files, {len(doc.get('features', []))} feature bubbles")
     return 1 if c.errors else 0
 
 

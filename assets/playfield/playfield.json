@@ -447,6 +447,17 @@
      ]
     },
     {
+     "id": "seal",
+     "part": "seal",
+     "at": [
+      120.43,
+      169.65
+     ],
+     "rotate": 36.6,
+     "label": "Rotating seal; rotate is the crossbar's angle",
+     "layer": true
+    },
+    {
      "group": "diffusers-mod",
      "label": "Diffusers at the scoop and in the inlanes",
      "layer": true,
@@ -673,6 +684,54 @@
      ]
     },
     {
+     "id": "target-left",
+     "part": "target",
+     "at": [
+      29.46,
+      232.4
+     ],
+     "rotate": -36.41,
+     "label": "Stand-up target between the left guide's rubber rings, facing the opposite flipper (planned, size drawn)",
+     "layer": true
+    },
+    {
+     "id": "target-right",
+     "part": "target",
+     "at": [
+      187.62,
+      232.4
+     ],
+     "rotate": 36.41,
+     "label": "Stand-up target between the right guide's rubber rings, facing the opposite flipper (planned, size drawn)",
+     "layer": true
+    },
+    {
+     "id": "diffuser-target-left",
+     "part": "diffuser",
+     "at": [
+      32.93,
+      237.11
+     ],
+     "scale": 0.817,
+     "attrs": {
+      "class": "diffuser-small"
+     },
+     "label": "Diffuser in front of the left stand-up target"
+    },
+    {
+     "id": "diffuser-target-right",
+     "part": "diffuser",
+     "at": [
+      184.15,
+      237.11
+     ],
+     "scale": 0.817,
+     "attrs": {
+      "class": "diffuser-small"
+     },
+     "label": "Diffuser in front of the right stand-up target"
+    },
+    {
      "id": "apron-base",
      "part": "apron-base",
      "at": [
@@ -680,6 +739,16 @@
       380.1
      ],
      "label": "Wooden base under the apron",
+     "layer": true
+    },
+    {
+     "id": "speaker",
+     "part": "speaker",
+     "at": [
+      33.0,
+      394.0
+     ],
+     "label": "Speaker under the apron (place approximate)",
      "layer": true
     },
     {
@@ -1015,7 +1084,7 @@
    "children": [
     {
      "id": "ball-store-front",
-     "part": "ball-store",
+     "part": "ball",
      "at": [
       191.645,
       396.955
@@ -1028,12 +1097,25 @@
     },
     {
      "id": "ball-store-back",
-     "part": "ball-store",
+     "part": "ball",
      "at": [
       182.675,
       400.205
      ],
      "label": "Ball in the store, back",
+     "layer": true,
+     "attrs": {
+      "style": "display:none"
+     }
+    },
+    {
+     "id": "ball-scoop",
+     "part": "ball",
+     "at": [
+      31.87,
+      123.66
+     ],
+     "label": "Ball in the scoop",
      "layer": true,
      "attrs": {
       "style": "display:none"
@@ -2010,6 +2092,33 @@
        "class": "lamp"
       }
      ]
+    },
+    {
+     "group": "lights-targets",
+     "label": "Stand-up targets (2)",
+     "layer": true,
+     "children": [
+      {
+       "lamp": "lamp-target-left",
+       "on": "diffuser-target-left",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      },
+      {
+       "lamp": "lamp-target-right",
+       "on": "diffuser-target-right",
+       "at": [
+        0.0,
+        0.0
+       ],
+       "r": 6.37,
+       "class": "lamp"
+      }
+     ]
     }
    ]
   },
@@ -2017,9 +2126,6 @@
    "group": "layer-1",
    "label": "Layer 1: ramps and apron",
    "layer": true,
-   "attrs": {
-    "class": "shadow"
-   },
    "children": [
     {
      "id": "block-top-left",
@@ -2029,7 +2135,10 @@
       63.7
      ],
      "label": "Red plate J4, top left, with the slot for its tab",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "cover-left",
@@ -2039,7 +2148,10 @@
       145.3
      ],
      "label": "Wooden cover left (G24): outline, ornaments, chevrons, flourish",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "panel-corner-right",
@@ -2049,7 +2161,10 @@
       36.6
      ],
      "label": "Painted corner panel right: outline, ornaments",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "panel-guide-right",
@@ -2059,7 +2174,10 @@
       231.4
      ],
      "label": "Painted side panel right: outline, flourish",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "ramp-orbit-left",
@@ -2079,7 +2197,10 @@
       85.6
      ],
      "label": "Gray launch ramp: shooter lane over the green ramp to the top lanes",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "ramp-blue",
@@ -2099,7 +2220,10 @@
       247.2
      ],
      "label": "Red wire ramp",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "ramp-kicker",
@@ -2109,7 +2233,10 @@
       153.9
      ],
      "label": "Crocodile",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "id": "apron",
@@ -2119,7 +2246,10 @@
       387.4
      ],
      "label": "Apron",
-     "layer": true
+     "layer": true,
+     "attrs": {
+      "class": "shadow"
+     }
     },
     {
      "group": "ir-sensors-top",
@@ -2155,13 +2285,16 @@
        ],
        "label": "Red ramp: on the wood beside the lane, looking sideways at it, sees a ball drop into the lane"
       }
-     ]
+     ],
+     "attrs": {
+      "class": "shadow"
+     }
     }
    ]
   },
   {
    "group": "backbox",
-   "label": "Backbox: sky, display, B20, scene, ceiling strip and diorama frame",
+   "label": "Backbox: sky, display, B20, scene, diorama frame and the ceiling strip's glow",
    "layer": true,
    "children": [
     {
@@ -2202,8 +2335,18 @@
      "frame": "diorama-photo"
     },
     {
+     "id": "dio-frame",
+     "part": "dio-frame",
+     "at": [
+      115.0,
+      -18.4
+     ],
+     "frame": "diorama-photo",
+     "label": "Diorama frame: columns, towers, curtains, swags, valance, roof, crest and the stage floor"
+    },
+    {
      "strip": "lights-ceiling",
-     "label": "Diorama ceiling (chain C, 26)",
+     "label": "Diorama ceiling (chain C, 26): hidden behind the valance, its glow drawn in front",
      "firmware": "ceiling",
      "chain": "C",
      "prefix": "led-c-",
@@ -2226,19 +2369,182 @@
        ],
        "note": "glued to the ceiling, centered under the roof (estimated)"
       }
-     ]
-    },
-    {
-     "id": "dio-frame",
-     "part": "dio-frame",
-     "at": [
-      115.0,
-      -18.4
      ],
-     "frame": "diorama-photo",
-     "label": "Diorama frame: columns, towers, curtains, swags, valance, roof, crest and the stage floor"
+     "attrs": {
+      "style": "mix-blend-mode:screen"
+     }
     }
    ]
+  }
+ ],
+ "features": [
+  {
+   "n": 1,
+   "feature": "Multiball",
+   "targets": [
+    "drain-ball-store"
+   ]
+  },
+  {
+   "n": 2,
+   "feature": "Scoop",
+   "targets": [
+    "ball-scoop",
+    "ir-left-lane",
+    "diffuser-scoop"
+   ]
+  },
+  {
+   "n": 3,
+   "feature": "Rotating seal",
+   "targets": [
+    "seal"
+   ]
+  },
+  {
+   "n": 4,
+   "feature": "Stand-up targets",
+   "targets": [
+    "target-left",
+    "target-right"
+   ]
+  },
+  {
+   "n": 5,
+   "feature": "Tracks",
+   "targets": [
+    "ir-ramp-green",
+    "ir-ramp-blue",
+    "ir-ramp-red",
+    "ir-orbit-top"
+   ]
+  },
+  {
+   "n": 6,
+   "feature": "Top lanes",
+   "targets": [
+    "diffuser-top-lane-1",
+    "diffuser-top-lane-2",
+    "diffuser-top-lane-3"
+   ]
+  },
+  {
+   "n": 7,
+   "feature": "Inlanes",
+   "targets": [
+    "diffuser-inlane-left-outer",
+    "diffuser-inlane-left-inner",
+    "diffuser-inlane-right-inner",
+    "diffuser-inlane-right-outer"
+   ]
+  },
+  {
+   "n": 8,
+   "feature": "Bells",
+   "targets": [
+    "bell-top",
+    "bell-right"
+   ]
+  },
+  {
+   "n": 9,
+   "feature": "Screen and touch",
+   "targets": [
+    "display"
+   ]
+  },
+  {
+   "n": 10,
+   "feature": "Ambient light",
+   "targets": [
+    "led-a-21",
+    "led-b-21",
+    "led-c-1",
+    "led-c-24"
+   ]
+  },
+  {
+   "n": 11,
+   "feature": "Speaker",
+   "targets": [
+    "speaker"
+   ]
+  }
+ ],
+ "feature_style": [
+  ".feature-bubble { fill: #ffffff; stroke: #1d1d22; stroke-width: 0.7; }",
+  ".feature-number { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 6.4px; font-weight: bold; text-anchor: middle; fill: #1d1d22; }",
+  ".feature-leader-halo { stroke: #1d1d22; stroke-width: 1.4; stroke-linecap: round; }",
+  ".feature-leader { stroke: #ffffff; stroke-width: 0.6; stroke-linecap: round; }",
+  ".feature-dot { fill: #ffffff; stroke: #1d1d22; stroke-width: 0.5; }",
+  "#apron { opacity: 0.3; }",
+  ".lamp-strip { opacity: 0.95; }",
+  "#ball-store-front, #ball-store-back, #ball-scoop { display: inline !important; }",
+  ".feature-window-rim { fill: none; stroke: #ffffff; stroke-opacity: 0.7; stroke-width: 0.45; }"
+ ],
+ "feature_windows": [
+  {
+   "around": [
+    "ball-scoop",
+    "ir-left-lane"
+   ],
+   "through": [
+    "ramp-orbit-left",
+    "cover-left"
+   ],
+   "margin": 8.0
+  },
+  {
+   "around": [
+    "diffuser-top-lane-1"
+   ],
+   "through": [
+    "ramp-blue",
+    "ramp-orbit-left",
+    "ramp-orbit-right"
+   ],
+   "margin": 7.0
+  },
+  {
+   "around": [
+    "bell-top"
+   ],
+   "through": [
+    "ramp-blue",
+    "ramp-orbit-left"
+   ],
+   "margin": 15.0
+  },
+  {
+   "around": [
+    "diffuser-inlane-left-outer",
+    "diffuser-inlane-left-inner"
+   ],
+   "through": [
+    "ramp-blue"
+   ],
+   "margin": 6.0
+  },
+  {
+   "around": [
+    "diffuser-inlane-right-inner",
+    "diffuser-inlane-right-outer"
+   ],
+   "through": [
+    "wire-ramp"
+   ],
+   "margin": 6.0
+  },
+  {
+   "around": [
+    "ir-orbit-top"
+   ],
+   "through": [
+    "ramp-orbit-left",
+    "cover-left",
+    "block-top-left"
+   ],
+   "margin": 5.0
   }
  ]
 }
