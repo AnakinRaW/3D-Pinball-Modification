@@ -5,6 +5,7 @@ A browser tool that shows the machine as the drawing in [`assets/playfield/`](..
 - **Features** lists the features of the root README. Selecting one lights its lamps, marks and labels its parts in the drawing, and shows its rows of [`docs/features.md`](../../docs/features.md).
 - **A part's card** opens on a click into the drawing: the part's place, its driver, channel and component, and a lamp's chain and LEDs.
 - **Studio** runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count, and the ramps can be hidden so the lamps under them show.
+- **The current readout** in the Studio adds up what the machine draws from the selected adapter in each frame: the LEDs by FastLED's power model over the colors the driver sent, with the cap's dimming, the loads that always draw, and each coil for its pull time and the servo for its longest move while their buttons have fired them. A total past the adapter's rating turns red. Below it stand the design's worst cases for that adapter: the lighting at its cap with two bumpers and the scoop pulling, and the whole layout at full white.
 
 The app stands alone and links to no document of the repository. It follows the system's light or dark setting, and a switch in the top bar picks the other theme for this browser.
 
@@ -21,6 +22,7 @@ The commands run in this folder and need Node.js 22 or newer.
 | `npm run dev` | Starts the app on http://localhost:5173 and reloads it on every change, to the drawing and the texts as well |
 | `npm test` | Runs the Vitest tests. Without `npm run wasm` the tests of the firmware's lamps are skipped |
 | `npm run build` | Checks the types and writes the app to `dist/`, which opens from any folder through a static server such as `npm run preview` |
+| `python scripts/figures.py` | Writes the figures the current readout takes from the models into `config/figures.json`. `--check` exits with 1 where the file differs from the models, and `npm test` runs that check |
 
 `npm run wasm` takes Emscripten from an emsdk in `EMSDK`, `%LOCALAPPDATA%\emsdk` or `~/emsdk`, at the version [`firmware/sim/emsdk-version`](../../firmware/sim/emsdk-version) names, and CMake and Ninja from the PATH or from Python's `cmake` and `ninja` packages:
 
@@ -43,14 +45,17 @@ The app reads these files of the repository when it builds and holds no copy of 
 | `docs/features.md` | What the stock machine has and what the mod adds, without the links |
 | `firmware/src` | The lamps component and the lighting driver, through `npm run wasm` |
 
+[`config/figures.json`](config/figures.json) holds every current the readout shows or adds, each with the model that computes it. `scripts/figures.py` evaluates the models under `model/` and writes it, so the app types no figure.
+
 [`config/config.yml`](config/config.yml) is a machine config in the format of `/config.yml` on the memory card, as [`config.md`](../../docs/firmware/components/config.md) gives it. Its lamp groups follow the drawing, and its IR calibration and pull times are invented. The Studio sets the firmware's lamps up from it, as the main task does at the start. [`config/machine.yml`](config/machine.yml) maps the drawing's parts to their lamps, drivers and channels, and names the covers the view hides. The tests hold both files to the drawing and to the firmware: each strip's LEDs and hidden stretches, each lamp on the chain and LED the firmware lights for it, and each device on a part the drawing holds.
 
 ## Layout
 
 | Path | Holds |
 |---|---|
-| `src/model/` | Reading the sources, the lamps on their chains, the highlight of a feature and a part's card, with no browser needed |
+| `src/model/` | Reading the sources, the lamps on their chains, the highlight of a feature, a part's card and the current the machine draws, with no browser needed |
 | `src/sim/` | Loading the WebAssembly module, setting it up from the config, and the colors of the drawing's lamps and LEDs |
-| `src/ui/` | The drawing with its overlay and its glow, the list, the cards and the Studio |
+| `src/ui/` | The drawing with its overlay and its glow, the list, the cards, the Studio and its current readout |
 | `scripts/build-wasm.mjs` | What `npm run wasm` runs |
-| `tests/` | `model.test.ts` for the models against the repository's files, `lights.test.ts` for the firmware's lamps in WebAssembly, `app.test.tsx` for the views in jsdom |
+| `scripts/figures.py` | Writes `config/figures.json` from the models |
+| `tests/` | `model.test.ts` for the models against the repository's files, `current.test.ts` for the current's arithmetic and the design's worst cases, `lights.test.ts` for the firmware's lamps in WebAssembly, `app.test.tsx` and `readout.test.tsx` for the views in jsdom |

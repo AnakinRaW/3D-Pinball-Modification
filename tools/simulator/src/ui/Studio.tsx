@@ -1,8 +1,10 @@
 // The studio for lights: the firmware's lamps component and lighting driver run in the browser on a
 // simulated clock. The left panel starts effects on the lamps and strips, the drawing shows the
-// colors the chains carry, and the right panel shows the clock, the profile and the running layers.
+// colors the chains carry, and the right panel shows the clock, the profile, the running layers and
+// the current the machine draws.
 import { signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
+import { ADAPTERS, type Adapter } from "../model/current";
 import { shortName, type Item } from "../model/playfield";
 import {
   drawingColors,
@@ -17,11 +19,11 @@ import {
   type Target,
 } from "../sim/lights";
 import type { Model, State } from "../state";
+import { CurrentReadout } from "./CurrentReadout";
 
 const MAX_STEP_MS = 100; // a pass of the loop never advances the clock further, so a hidden tab does not jump
 const LAST_KEY = 255; // a layer's key is one byte
 const SPEEDS = [0.25, 1, 4];
-const ADAPTERS = [3, 6]; // the two adapters the lighting design derives
 
 type Status = "loading" | "missing" | "failed" | "ready";
 
@@ -32,6 +34,8 @@ const running = signal(true);
 const speed = signal(1);
 const nowMs = signal(0);
 const cap = signal(255);
+const chains = signal<Uint8Array[]>([]); // the colors of the frame shown
+const adapter = signal<Adapter>(3);
 const layers = signal<{ key: number; label: string }[]>([]);
 let nextKey = 1;
 let loading: Promise<void> | null = null;
@@ -43,7 +47,8 @@ function ensureLoaded(model: Model) {
         status.value = "missing";
         return;
       }
-      if (!m.setUp(model.hw.config.adapterA, groupSetups(model.hw.config))) {
+      adapter.value = model.hw.config.adapterA as Adapter;
+      if (!m.setUp(adapter.value, groupSetups(model.hw.config))) {
         status.value = "failed";
         return;
       }
@@ -155,7 +160,6 @@ export function StudioControls({ model, state }: { model: Model; state: State })
   const [step, setStep] = useState(60);
   const [priority, setPriority] = useState(1);
   const [lastingMs, setLastingMs] = useState(0);
-  const [adapter, setAdapter] = useState(model.hw.config.adapterA);
   const [playfield, setPlayfield] = useState(1);
   const [ambient, setAmbient] = useState(1);
   const lamps = m?.playfieldLamps() ?? 0;
@@ -214,10 +218,9 @@ export function StudioControls({ model, state }: { model: Model; state: State })
             {ADAPTERS.map((v) => (
               <button
                 key={v}
-                class={v === adapter ? "on" : ""}
+                class={v === adapter.value ? "on" : ""}
                 onClick={() => {
-                  setAdapter(v);
-                  m.setAdapter(v);
+                  if (m.setAdapter(v)) adapter.value = v;
                 }}
               >
                 {v} A
@@ -428,12 +431,19 @@ export function StudioStatus({ model, state }: { model: Model; state: State }) {
   );
 }
 
-// Runs the main loop for ms of simulated time and hands the drawing the colors.
+// What the machine draws in the frame shown, beside the coils and the servo the readout fires.
+export function StudioCurrent({ model }: { model: Model }) {
+  if (status.value !== "ready") return null;
+  return <CurrentReadout hw={model.hw} adapter={adapter.value} chains={chains.value} capBrightness={cap.value} nowMs={nowMs.value} />;
+}
+
+// Runs the main loop for ms of simulated time and hands the drawing and the readout the colors.
 function advance(m: LightsModule, model: Model, state: State, ms: number) {
   m.step(ms);
   nowMs.value = m.nowMs();
   cap.value = m.capBrightness();
-  state.glow.value = drawingColors(model.pf, model.hw, readChains(m));
+  chains.value = readChains(m);
+  state.glow.value = drawingColors(model.pf, model.hw, chains.value);
 }
 
 // Loads the module as the app starts, so the studio opens ready, and runs its clock in real time
@@ -471,5 +481,5 @@ export function useStudioClock(model: Model, state: State) {
   }, [active]);
 }
 
-// the studio's module, its status, its layers and its pace
-export const studio = { lights, status, layers, running };
+// the studio's module, its status, its layers, its pace and its adapter
+export const studio = { lights, status, layers, running, adapter };

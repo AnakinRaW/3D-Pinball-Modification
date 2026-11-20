@@ -1,9 +1,9 @@
 // The app: the Features view with the list, the drawing and the feature's or the part's card, and the
-// studio with its controls, the drawing in the firmware's colors and the clock with the layers.
+// studio with its controls, the drawing in the firmware's colors, the clock with the layers and the current.
 import type { Model, State } from "./state";
 import { Drawing } from "./ui/Drawing";
 import { FeatureCard, FeatureList, PartCard, TopBar } from "./ui/Panels";
-import { StudioControls, StudioStatus, useStudioClock } from "./ui/Studio";
+import { StudioControls, StudioCurrent, StudioStatus, useStudioClock } from "./ui/Studio";
 
 export function App({ model, state }: { model: Model; state: State }) {
   useStudioClock(model, state);
@@ -16,7 +16,10 @@ export function App({ model, state }: { model: Model; state: State }) {
         <Drawing model={model} state={state} />
         <div class="side">
           {studio ? (
-            <StudioStatus model={model} state={state} />
+            <>
+              <StudioStatus model={model} state={state} />
+              <StudioCurrent model={model} />
+            </>
           ) : state.inspected.value ? (
             <PartCard model={model} state={state} />
           ) : (

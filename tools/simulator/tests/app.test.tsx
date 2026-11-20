@@ -10,6 +10,8 @@ import { createState, loadModel, type State } from "../src/state";
 import { prepareSvg } from "../src/ui/Drawing";
 import { studio } from "../src/ui/Studio";
 import { lightsOptions, loadLights } from "../src/sim/lights";
+import { FIGURES as f } from "../src/model/current";
+import { amps } from "../src/ui/CurrentReadout";
 
 // the module's bytes from disk, since the test environment cannot fetch them
 const wasm = resolve("src/wasm/simulator.wasm");
@@ -226,6 +228,45 @@ describe.runIf(built)("the studio", () => {
     advance();
     expect([...state.glow.value!.values()].every(([r, g, b]) => r + g + b === 0)).toBe(true);
     expect(studio.layers.value).toEqual([]);
+  });
+
+  it("reads the current of the frame the driver sent", async () => {
+    await open();
+    advance();
+    // every LED of the config's lamp groups dark, at its dark draw
+    const leds = Object.values(model.hw.config.groups).reduce((n, g) => n + g.leds, 0);
+    expect($('[data-testid="current-led"]')!.textContent).toBe(amps((leds * f.pm_dark.value) / f.v_rail.value));
+    expect($('[data-testid="current-cap"]')!.textContent).toBe("under cap");
+  });
+
+  it("marks the whole layout at full white with three coils past the 3 A adapter and inside the 6 A one", async () => {
+    await open();
+    const choose = (sel: string, value: string) =>
+      act(() => {
+        const el = $(sel) as HTMLSelectElement | HTMLInputElement;
+        el.value = value;
+        el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
+      });
+    const adapter = (a: number) => click([...root.querySelectorAll(".studio-controls .seg button")].find((b) => b.textContent === `${a} A`)!);
+    adapter(3);
+    choose(".studio-controls .field:has(> select option[value=set]) select", "set");
+    choose('.studio-controls .paint input[type="color"]', "#ffffff");
+    for (const target of ["playfield", "ambient"]) {
+      choose('[data-field="target"]', target);
+      click($('[data-action="start"]'));
+    }
+    advance();
+    const led = () => $('[data-testid="current-led"]')!.textContent!;
+    expect(led()).not.toBe(amps(0));
+    expect($('[data-testid="current-cap"]')!.textContent).toBe("under cap");
+    click($('[data-testid="coil-most"]'));
+    expect($('[data-testid="current-coils"]')!.textContent).toBe(amps(f.i_coils_at_once.value));
+    expect($('[data-testid="current-over"]')).not.toBeNull();
+    adapter(6);
+    advance();
+    expect($('[data-testid="current-over"]')).toBeNull();
+    expect($('[data-testid="current-worst"]')!.textContent).toContain(amps(f.i_most_6a.value));
+    adapter(3);
   });
 
   it("goes back to the features without the firmware's colors", async () => {
