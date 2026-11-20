@@ -65,7 +65,8 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 - `docs/parts-list.md` is the bill of materials, and `docs/pin-assignment.md` the Teensy pins spent and what each locks out
 - `model/`: the Python files the checks read, in folders that mirror those under `docs/`. A subsystem's `figures.py`, `schematic.py` and perfboard layouts sit there, the Teensy's figures in `model/research/teensy-4.1.py` and the firmware's in `model/firmware/figures.py`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `tools/simulator/`: the browser simulator, a TypeScript app with Vite and Preact. It shows the drawing of `assets/playfield/` with the features and a card for every part a click selects. Its machine config lies in `tools/simulator/config/`
+- `tools/simulator/`: the browser simulator, a TypeScript app with Vite and Preact. It shows the drawing of `assets/playfield/` with the features and a card for every part a click selects, and its Studio runs the firmware's lamps in WebAssembly. Its machine config lies in `tools/simulator/config/`
+- `firmware/sim/`: the simulator's WebAssembly build, CMake with Emscripten, of the lamps component and the lighting driver from `firmware/src`, with a simulated output stage in `fakes/` in place of the FlexIO2 one
 - `assets/`: photos, renders and other media. `assets/playfield/` holds the vector drawing of the machine, one file per part plus `playfield.json`, which places them. [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md) holds its rules
 - `.claude/skills/`: the repository's skills, listed below
 
@@ -86,7 +87,8 @@ The firmware is a skeleton in `firmware/src/` that starts FreeRTOS and builds wi
 | `python tools/playfield/compose.py` | Writes `assets/playfield/playfield.svg` from the part files and `playfield.json`, and `features.svg`, the same drawing with the README's numbered feature bubbles. `--check` exits with 1 when a drawing differs from what they compose |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. [`assets/media.md`](assets/media.md) gives how pictures, videos and sounds are made |
 | `npm install`, then `npm run dev` in `tools/simulator/` | Installs the simulator's pinned dependencies and starts it on http://localhost:5173, where it reloads on every change to its code, the drawing or the feature texts. It needs Node.js 22 or newer |
-| `npm test` in `tools/simulator/` | Runs the simulator's Vitest tests, which hold its machine config and its part map to the drawing |
+| `npm run wasm` in `tools/simulator/` | Builds the firmware's lamps component and lighting driver from `firmware/sim` as a WebAssembly module for the simulator's Studio. It needs Emscripten at the version `firmware/sim/emsdk-version` names, in `%LOCALAPPDATA%\emsdk`, and CMake and Ninja, here from Python's `cmake` and `ninja` packages |
+| `npm test` in `tools/simulator/` | Runs the simulator's Vitest tests, which hold its machine config and its part map to the drawing and run the firmware's lamps in WebAssembly, skipped without `npm run wasm` |
 | `npm run build` in `tools/simulator/` | Checks the simulator's types and writes the app to `tools/simulator/dist/` |
 
 The firmware builds with PlatformIO, installed with `python -m pip install platformio`. Its [`platformio.ini`](platformio.ini) stands in the repository's root, where the commands run. CI builds the release firmware, checks its code with clang-tidy, runs the `computer` tests and checks the tests against testing.md on each push touching `firmware/` or testing.md:

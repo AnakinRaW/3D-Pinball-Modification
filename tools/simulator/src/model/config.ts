@@ -39,6 +39,8 @@ export interface MachineMap {
   strips: Record<string, string>; // drawing strip id → lamp group
   devices: Record<string, Device>;
   covers: Record<string, string[]>; // cover part → the parts under it
+  reveals: Record<string, string[]>; // part → the balls at rest shown with it
+  ramps: string[]; // the ramps the studio can hide
 }
 
 // where a playfield lamp's LEDs sit
@@ -91,6 +93,8 @@ export function loadMachineMap(text: string): MachineMap {
     strips: (y.strips ?? {}) as Record<string, string>,
     devices: (y.devices ?? {}) as Record<string, Device>,
     covers: (y.covers ?? {}) as Record<string, string[]>,
+    reveals: (y.reveals ?? {}) as Record<string, string[]>,
+    ramps: (y.ramps ?? []) as string[],
   };
 }
 
@@ -98,8 +102,9 @@ function hidden(g: GroupSettings, led: number): boolean {
   return g.gaps.some(([first, count]) => led >= first && led < first + count);
 }
 
-// Cuts the playfield's sections into lamps, as the lamps component does: a lamp starts at the next LED that
-// is not hidden, and a hidden LED inside its count ends it there.
+// Cuts the playfield's sections into lamps, as the lamps component walks them: LED by LED, a lamp
+// starting at each LED that is not hidden. A lamp takes the section's next count of LEDs, 1 once the
+// counts run out or for a count of 0, and ends early at a hidden LED or the chain's end.
 export function lampSpans(config: MachineConfig): LampSpan[][] {
   const out: LampSpan[][] = [];
   let index = 0;
@@ -107,16 +112,18 @@ export function lampSpans(config: MachineConfig): LampSpan[][] {
     const g = config.groups[section];
     const spans: LampSpan[] = [];
     if (g) {
+      let next = 0;
       let led = 0;
-      for (const want of g.lamps) {
-        while (led < g.leds && hidden(g, led)) led++;
-        const first = led;
-        let count = 0;
-        while (count < want && led < g.leds && !hidden(g, led)) {
-          count++;
+      while (led < g.leds) {
+        if (hidden(g, led)) {
           led++;
+          continue;
         }
-        spans.push({ section, chain: g.chain, index: index++, first, count });
+        const want = next < g.lamps.length ? g.lamps[next++] || 1 : 1;
+        let count = 0;
+        while (count < want && led + count < g.leds && !hidden(g, led + count)) count++;
+        spans.push({ section, chain: g.chain, index: index++, first: led, count });
+        led += count;
       }
     }
     out.push(spans);

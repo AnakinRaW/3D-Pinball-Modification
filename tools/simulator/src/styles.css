@@ -7,12 +7,64 @@
   --muted: #9aa1b2;
   --faint: #6b7180;
   --accent: #4fa3ff;
+  --on-accent: #0b1220;
   --inspect: #ffb02e;
+  --badge: #ffffff;
+  --on-badge: #1d1d22;
+  --stage: #0d0f14;
+  --dim: #08090c;
+  --dim-opacity: 0.55;
+  --plate: #0b1220;
+  --plate-text: #e6e8ee;
   color-scheme: dark;
   font-family: "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 14px;
   color: var(--text);
   background: var(--bg);
+}
+
+/* the light theme: chosen in the top bar, or the system's when nothing is chosen */
+:root[data-theme="light"] {
+  --bg: #f4f5f7;
+  --bar: #ffffff;
+  --panel: #eaecf0;
+  --line: #d6d9e0;
+  --text: #1c2029;
+  --muted: #545b6b;
+  --faint: #8a90a0;
+  --accent: #1f6fd6;
+  --on-accent: #ffffff;
+  --inspect: #c26f00;
+  --badge: #1c2029;
+  --on-badge: #ffffff;
+  --stage: #e2e5ea;
+  --dim: #f4f5f7;
+  --dim-opacity: 0.62;
+  --plate: #ffffff;
+  --plate-text: #1c2029;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f5f7;
+    --bar: #ffffff;
+    --panel: #eaecf0;
+    --line: #d6d9e0;
+    --text: #1c2029;
+    --muted: #545b6b;
+    --faint: #8a90a0;
+    --accent: #1f6fd6;
+    --on-accent: #ffffff;
+    --inspect: #c26f00;
+    --badge: #1c2029;
+    --on-badge: #ffffff;
+    --stage: #e2e5ea;
+    --dim: #f4f5f7;
+    --dim-opacity: 0.62;
+    --plate: #ffffff;
+    --plate-text: #1c2029;
+    color-scheme: light;
+  }
 }
 
 * {
@@ -153,8 +205,8 @@ a {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #fff;
-  color: #1d1d22;
+  background: var(--badge);
+  color: var(--on-badge);
   font-weight: 700;
   font-size: 12px;
   display: grid;
@@ -186,7 +238,7 @@ a {
   position: relative;
   min-width: 0;
   min-height: 0;
-  background: #0d0f14;
+  background: var(--stage);
 }
 .drawing-host,
 .overlay {
@@ -228,8 +280,8 @@ svg.sim-features .lamp-strip.sim-lit {
 }
 
 .overlay .dim {
-  fill: #08090c;
-  opacity: 0.55;
+  fill: var(--dim);
+  opacity: var(--dim-opacity);
 }
 .overlay .ring {
   fill: none;
@@ -241,13 +293,13 @@ svg.sim-features .lamp-strip.sim-lit {
   stroke-width: 0.5;
 }
 .overlay .plate {
-  fill: #0b1220;
+  fill: var(--plate);
   fill-opacity: 0.9;
   stroke: var(--accent);
   stroke-width: 0.35;
 }
 .overlay .label {
-  fill: var(--text);
+  fill: var(--plate-text);
   font-family: "Segoe UI", Helvetica, Arial, sans-serif;
   font-weight: 600;
 }
@@ -342,6 +394,153 @@ code {
   font-size: 12px;
 }
 
+/* the studio */
+.drawing-host,
+.overlay,
+.glow {
+  position: absolute;
+  inset: 12px;
+}
+.glow {
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+svg.sim-studio .lamp,
+svg.sim-studio .lamp-strip {
+  opacity: 0;
+}
+svg.sim-studio {
+  filter: brightness(0.62);
+}
+.studio-controls h3 {
+  margin: 18px 0 8px;
+}
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.field {
+  display: grid;
+  grid-template-columns: 78px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.field > span {
+  color: var(--muted);
+}
+.field.paint {
+  grid-template-columns: 78px 1fr auto;
+}
+.field select,
+.field input[type="number"] {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+  min-width: 0;
+}
+.field input[type="color"] {
+  width: 36px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+}
+.field input[type="checkbox"] {
+  justify-self: start;
+}
+.field output {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 40px;
+  text-align: right;
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg button {
+  background: var(--panel);
+  border: none;
+  padding: 4px 10px;
+}
+.seg button.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.actions button,
+.pace > button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 14px;
+}
+.actions button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.pace {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.studio-status dd {
+  font-variant-numeric: tabular-nums;
+}
+.layers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.layers li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 4px 2px 10px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.lamp-numbers text {
+  fill: var(--plate-text);
+  stroke: var(--plate);
+  stroke-width: 1.1px;
+  paint-order: stroke;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
 /* narrow windows stack the columns */
 @media (max-width: 960px) {
   .features-view {
@@ -354,4 +553,12 @@ code {
     border: none;
     overflow: visible;
   }
+}
+
+.theme {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  color: var(--muted);
 }

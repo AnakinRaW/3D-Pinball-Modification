@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -6,6 +8,13 @@ import { App } from "../src/app";
 import { sources } from "../src/sources";
 import { createState, loadModel, type State } from "../src/state";
 import { prepareSvg } from "../src/ui/Drawing";
+import { studio } from "../src/ui/Studio";
+import { lightsOptions, loadLights } from "../src/sim/lights";
+
+// the module's bytes from disk, since the test environment cannot fetch them
+const wasm = resolve("src/wasm/simulator.wasm");
+if (existsSync(wasm)) lightsOptions.wasmBinary = readFileSync(wasm);
+const built = (await loadLights()) !== null;
 
 const model = loadModel(sources);
 let root: HTMLElement;
@@ -36,6 +45,17 @@ describe("the drawing", () => {
     expect(head.startsWith("<svg")).toBe(true);
     expect(head).not.toMatch(/\swidth="/);
     expect(head).toContain('class="drawing"');
+  });
+});
+
+describe("the theme", () => {
+  it("switches between light and dark", () => {
+    const button = () => $(".theme") as HTMLButtonElement;
+    const first = button().dataset.themeSwitch!;
+    click(button());
+    expect(document.documentElement.dataset.theme).toBe(first);
+    click(button());
+    expect(document.documentElement.dataset.theme).not.toBe(first);
   });
 });
 
@@ -77,6 +97,9 @@ describe("the Features view", () => {
     const apron = () => svg().querySelector('[id="apron"]')!.classList.contains("sim-hidden");
     click($('[data-key="feature-1"]'));
     expect(apron()).toBe(true);
+    for (const ball of ["ball-store-front", "ball-store-back"])
+      expect(svg().querySelector(`[id="${ball}"]`)!.classList.contains("sim-reveal"), ball).toBe(true);
+    expect($(".feature-card")!.textContent).toContain("seesaw separates the two balls");
     click($('[data-key="feature-11"]'));
     expect(apron()).toBe(true);
     click($('[data-key="feature-2"]'));
@@ -132,5 +155,83 @@ describe("a part's card", () => {
     click($('[data-key="feature-3"]'));
     expect($(".feature-card h2")!.textContent).toBe("Rotating seal");
     expect(state.inspected.value).toBeNull();
+  });
+});
+
+describe.runIf(built)("the studio", () => {
+  const open = async () => {
+    click($('[data-view="studio"]'));
+    for (let i = 0; i < 100 && studio.status.value === "loading"; i++) await new Promise((r) => setTimeout(r, 10));
+    await act(async () => {});
+    studio.running.value = false;
+    click([...root.querySelectorAll(".actions button")].find((b) => b.textContent === "Clear")!);
+  };
+  const advance = () => click([...root.querySelectorAll(".pace button")].find((b) => b.textContent === "+10 ms")!);
+
+  it("runs the firmware's lamps and paints the playfield in the effect's color", async () => {
+    await open();
+    expect(studio.status.value).toBe("ready");
+    expect($(".studio-controls")).not.toBeNull();
+    click($('[data-action="start"]'));
+    advance();
+    const colors = state.glow.value!;
+    expect(colors.get("lamp-scoop")!.some((v) => v > 0)).toBe(true);
+    expect($(".studio-status")!.textContent).toContain("pulse");
+  });
+
+  it("numbers every playfield lamp as the firmware counts them", async () => {
+    await open();
+    const numbers = [...root.querySelectorAll(".lamp-numbers text")];
+    expect(numbers.length).toBe(model.hw.spans.size);
+    const scoop = numbers.find((t) => t.getAttribute("data-lamp") === "lamp-scoop")!;
+    expect(scoop.textContent).toBe(String(model.hw.spans.get("lamp-scoop")!.index));
+    click($('[data-view="features"]'));
+    expect(root.querySelectorAll(".lamp-numbers text").length).toBe(0);
+  });
+
+  it("clears the pick on a click into nothing", async () => {
+    await open();
+    click(svg().querySelector('[id="lamp-scoop"]'));
+    expect($(".overlay .inspect-ring")).not.toBeNull();
+    click(svg().querySelector('[id="cabinet"]')!.firstElementChild);
+    expect(state.picked.value).toBeNull();
+    expect($(".overlay .inspect-ring")).toBeNull();
+    click(svg().querySelector('[id="lamp-scoop"]'));
+    click($(".drawing-host"));
+    expect(state.picked.value).toBeNull();
+  });
+
+  it("hides a ramp and shows it again", async () => {
+    await open();
+    const box = () => $('[data-ramp="ramp-blue"]') as HTMLInputElement;
+    const hidden = () => svg().querySelector('[id="ramp-blue"]')!.classList.contains("sim-hidden");
+    click(box());
+    expect(hidden()).toBe(true);
+    click(box());
+    expect(hidden()).toBe(false);
+  });
+
+  it("takes a lamp clicked in the drawing as the target", async () => {
+    await open();
+    click(svg().querySelector('[id="lamp-scoop"]'));
+    const select = $('[data-field="target"]') as HTMLSelectElement;
+    expect(select.value).toBe("range");
+    expect($(".studio-status")!.textContent).toContain(`Lamp scoop · playfield lamp ${model.hw.spans.get("lamp-scoop")!.index}`);
+  });
+
+  it("removes a layer and leaves the lamps dark", async () => {
+    await open();
+    click($('[data-action="start"]'));
+    click($(".layers .close"));
+    advance();
+    expect([...state.glow.value!.values()].every(([r, g, b]) => r + g + b === 0)).toBe(true);
+    expect(studio.layers.value).toEqual([]);
+  });
+
+  it("goes back to the features without the firmware's colors", async () => {
+    await open();
+    click($('[data-view="features"]'));
+    expect(state.glow.value).toBeNull();
+    expect($(".feature-card")).not.toBeNull();
   });
 });

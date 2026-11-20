@@ -15,8 +15,14 @@ export interface Highlight {
   hidden: string[]; // covers over the targets that the drawing leaves out
 }
 
-// covers maps a cover part to the parts under it, as config/machine.yml gives it
-export function planHighlight(pf: Playfield, targets: string[], covers: Record<string, string[]> = {}): Highlight {
+// covers maps a cover part to the parts under it, reveals a part to the balls at rest shown with it,
+// as config/machine.yml gives both
+export function planHighlight(
+  pf: Playfield,
+  targets: string[],
+  covers: Record<string, string[]> = {},
+  reveals: Record<string, string[]> = {},
+): Highlight {
   const marks: Mark[] = [];
   const labels = new Set<string>();
   const lit = new Set<string>();
@@ -33,6 +39,7 @@ export function planHighlight(pf: Playfield, targets: string[], covers: Record<s
     if (item.kind === "placement") {
       lampsOn(pf, id).forEach((l) => lit.add(l.id));
       if (item.hidden) reveal.push(id);
+      for (const ball of reveals[id] ?? []) if (!reveal.includes(ball)) reveal.push(ball);
     }
   }
   const hidden = Object.keys(covers).filter((c) => covers[c].some((p) => targets.includes(p)));

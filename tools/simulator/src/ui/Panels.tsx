@@ -1,5 +1,7 @@
 // The top bar, the feature list, the feature card and a part's card.
 import { Fragment } from "preact";
+import { useState } from "preact/hooks";
+import { applyTheme, storedTheme, systemTheme, type Theme } from "./theme";
 import type { Inline } from "../model/markdown";
 import { card } from "../model/part-card";
 import { shortName } from "../model/playfield";
@@ -19,16 +21,31 @@ export function InlineText({ tokens }: { tokens: Inline[] }) {
   );
 }
 
-const LATER = ["Rules", "Play", "Studio", "Replays"];
+const VIEWS = [
+  { value: "features", label: "Features" },
+  { value: "studio", label: "Studio" },
+] as const;
+const LATER = ["Rules", "Play", "Replays"];
 
-export function TopBar() {
+export function TopBar({ state }: { state: State }) {
+  const view = state.view.value;
+  const [theme, setTheme] = useState<Theme>(storedTheme() ?? systemTheme());
+  const other: Theme = theme === "light" ? "dark" : "light";
   return (
     <header class="topbar">
       <span class="brand">Pinball Simulator</span>
       <nav class="tabs">
-        <button class="tab active" aria-current="page">
-          Features
-        </button>
+        {VIEWS.map((v) => (
+          <button
+            key={v.value}
+            class={`tab${view === v.value ? " active" : ""}`}
+            aria-current={view === v.value ? "page" : undefined}
+            data-view={v.value}
+            onClick={() => (state.view.value = v.value)}
+          >
+            {v.label}
+          </button>
+        ))}
         {LATER.map((t) => (
           <button key={t} class="tab" disabled title="Comes with a later phase">
             {t}
@@ -36,6 +53,17 @@ export function TopBar() {
         ))}
       </nav>
       <span class="spacer" />
+      <button
+        class="theme"
+        data-theme-switch={other}
+        title={`Switch to the ${other} theme`}
+        onClick={() => {
+          applyTheme(other);
+          setTheme(other);
+        }}
+      >
+        {other === "light" ? "Light" : "Dark"}
+      </button>
       <span class="build" title="The commit the app was built from">
         build {__COMMIT__}
       </span>

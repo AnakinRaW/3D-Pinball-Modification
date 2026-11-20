@@ -79,6 +79,13 @@ devices:
   display:               { driver: Display and touch, component: Screen }
   speaker:               { driver: Audio, component: Sounds }
 
+# The ramps the studio can hide, so the lamps under them show.
+ramps: [ramp-orbit-left, ramp-orbit-right, ramp-blue, wire-ramp]
+
+# The balls at rest the Features view shows with a part.
+reveals:
+  drain-ball-store: [ball-store-front, ball-store-back]
+
 # The parts that cover others: the Features view hides a cover while a feature shows a part under it.
 covers:
   apron: [drain-ball-store, speaker]

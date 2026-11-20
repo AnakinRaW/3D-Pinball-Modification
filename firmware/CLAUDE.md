@@ -30,6 +30,7 @@ Code taken from another project and changed here stands beside the code that use
 
 - **The firmware's headers are included in quotes, by their path from `src/`**, as `#include "drivers/lighting.h"`. A `.cpp` file includes the header of the same name by name. A library's header and a system header stand in angle brackets.
 - **Every build reaches `src/` by its path.** The firmware builds it as its source. The computer tests build it with `test_build_src`, and `build_src_filter` in `[env:computer]` names the files that build without the Teensy, so a new file that does is added there. The test image and the bench programs take it as the library `firmware` through `firmware=symlink://${PROJECT_DIR}/../../src`. [`tools/firmware-src.py`](tools/firmware-src.py) gives that library every file but `main.cpp`, and a bench program names the files it needs in `custom_firmware_src`.
+- **The browser simulator builds `src/` with Emscripten** from [`sim/`](sim/), which CMake drives. `sim/CMakeLists.txt` names the files of `src/` it takes, and a quoted include finds `sim/fakes` first, so `sim/fakes/drivers/ws2812-flexio2.h` keeps the frames where the browser reads them. Its `Arduino.h` and `IntervalTimer.h` are the computer tests' fakes.
 - **A fake for the computer tests stands at the path of the header it replaces**, below `tests/fakes/`, such as `tests/fakes/drivers/lighting.h`. The computer build looks up quoted headers in `tests/fakes` first.
 
 ## Structure

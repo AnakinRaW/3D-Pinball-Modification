@@ -174,6 +174,17 @@ describe("highlight", () => {
     expect(h.through).toEqual(expect.arrayContaining(["ramp-orbit-left", "cover-left"]));
   });
 
+  it("names ramps the drawing holds", () => {
+    expect(hw.map.ramps.length).toBeGreaterThan(0);
+    for (const r of hw.map.ramps) expect(pf.items.get(r)?.kind, r).toBe("placement");
+  });
+
+  it("shows the two balls in the drain's store with the store", () => {
+    const h = planHighlight(pf, ["drain-ball-store"], hw.map.covers, hw.map.reveals);
+    expect(h.reveal).toEqual(["ball-store-front", "ball-store-back"]);
+    for (const balls of Object.values(hw.map.reveals)) for (const b of balls) expect((pf.items.get(b) as { hidden?: boolean })?.hidden, b).toBe(true);
+  });
+
   it("leaves out the cover over a feature's parts, and only then", () => {
     const covers = hw.map.covers;
     expect(planHighlight(pf, ["drain-ball-store"], covers).hidden).toEqual(["apron"]);

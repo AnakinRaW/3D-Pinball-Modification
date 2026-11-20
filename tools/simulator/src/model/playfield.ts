@@ -27,6 +27,7 @@ interface JsonNode {
   prefix?: string;
   count?: number;
   pitch?: number;
+  r?: number;
   route?: { points: Point[]; hidden?: boolean }[];
 }
 
@@ -67,6 +68,7 @@ export interface Lamp {
   group: string; // the lights group, such as lights-stars
   groupLabel: string;
   point: Point;
+  r: number; // the glow's radius, mm
 }
 
 export interface Led {
@@ -75,6 +77,7 @@ export interface Led {
   strip: string;
   index: number;
   point: Point;
+  r: number; // the glow's radius, mm
   hidden: boolean; // on a stretch of the route the drawing hides, or past its end
 }
 
@@ -145,6 +148,7 @@ function stripLeds(doc: PlayfieldJson, node: JsonNode): Led[] {
       strip: node.strip!,
       index: i,
       point: [run.a[0] + (run.b[0] - run.a[0]) * t, run.a[1] + (run.b[1] - run.a[1]) * t],
+      r: node.r ?? 2,
       hidden: run.hidden || found === undefined,
     });
   }
@@ -209,6 +213,7 @@ export function loadPlayfield(text: string): Playfield {
         group: groups[groups.length - 1] ?? "",
         groupLabel,
         point: toWorld(doc, owner, n.at ?? [0, 0]),
+        r: n.r ?? 5,
       };
       pf.lamps.push(l);
       pf.items.set(l.id, l);
