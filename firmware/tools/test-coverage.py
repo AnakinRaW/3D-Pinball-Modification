@@ -410,11 +410,14 @@ def self_test():
                     return
         raise AssertionError(f"RUN_TEST({function}) not found")
 
-    def drop_case(report_path, function):
+    # drops the function from its program's suite only, since other programs may hold a test of
+    # the same name
+    def drop_case(report_path, program, function):
         with open(report_path, encoding="utf-8") as f:
             run = json.load(f)
         for suite in run["test_suites"]:
-            suite["test_cases"] = [c for c in suite["test_cases"] if c["name"] != function]
+            if suite["test_name"] == f"test_{program}":
+                suite["test_cases"] = [c for c in suite["test_cases"] if c["name"] != function]
         with open(report_path, "w", encoding="utf-8") as f:
             json.dump(run, f)
 
@@ -438,7 +441,7 @@ def self_test():
          False, base - 1),
         ("a RUN_TEST() in a comment", lambda r: comment_run_test(computer[0], function), False,
          base - 1),
-        ("a computer test the report does not list", lambda r: drop_case(r, function), True,
+        ("a computer test the report does not list", lambda r: drop_case(r, computer[0], function), True,
          base - 1),
         ("a RUN_TEST() in a comment that the report lists",
          lambda r: comment_run_test(computer[0], function), True, base),
