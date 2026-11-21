@@ -1,0 +1,8 @@
+# Demo of the perimeter runs: the same white asteroid on the left and the right perimeter, started
+# together and running by height, over and over.
+name: sync-demo
+length: 1000
+loop: false
+steps:
+  - {at: 0, track: 0, strip: perimeter-left, effect: run, pattern: asteroid, a: white, b: black, mm_per_s: 250}
+  - {at: 0, track: 0, strip: perimeter-right, effect: run, pattern: asteroid, a: white, b: black, mm_per_s: 250}

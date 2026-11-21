@@ -6,8 +6,10 @@
 // The config names each group's chain and its LEDs: the two perimeters, the ceiling, and the
 // playfield's lower, middle and upper section. A playfield lamp takes one LED or several in a row.
 // Hidden LEDs stay dark and belong to no lamp. A strip's lamps are the LEDs between them, every
-// one on the ceiling and on the perimeters as the driver's profile steps them. The colors and the
-// effects stand in lamp-effects.h.
+// one on the ceiling and on the perimeters as the driver's profile steps them. A run on a
+// perimeter moves by height, which the config gives for a few of its LEDs, so the same run on
+// both perimeters stays level. It keeps its pace behind hidden LEDs. A run on a path jumps over a
+// hidden stretch without a pause. The colors and the effects stand in lamp-effects.h.
 //
 // Design: docs/firmware/components/lamps.md.
 #pragma once
@@ -120,6 +122,10 @@ public:
 
     // Gets how many lamps the strip holds.
     uint16_t size() const;
+    // Gets the strip with a run that jumps over a hidden stretch without a pause. Without it, a
+    // run on a perimeter moves by height and disappears behind hidden LEDs while it passes them.
+    // A run on a path or on the ceiling always jumps.
+    Strip skipGaps() const;
 
     // Starts an effect that mixes from into to, a built-in one or one a game writes.
     template <typename E> Strip& play(const E& effect, Paint from, Paint to);
@@ -138,6 +144,7 @@ private:
     Lamps* lamps = nullptr;
     uint8_t strip = 0;   // which of the lamps component's strips
     Layer layer = {};
+    bool inRow = false;   // whether skipGaps() counts the lamps in a row
 };
 
 // the lamp groups, to which the effects of one layer go
@@ -183,6 +190,10 @@ public:
         uint16_t lampCount = 0;            // how many counts lamps holds
         const uint16_t* gaps = nullptr;    // hidden LEDs, first and count in pairs
         uint16_t gapCount = 0;             // how many pairs gaps holds
+        // perimeters only: an LED and its height in mm above the playfield's lower end, in pairs
+        // in the order of the LEDs, read until begin()
+        const uint16_t* heights = nullptr;
+        uint16_t heightCount = 0;   // how many pairs heights holds
     };
     struct Settings {
         GroupSettings groups[GROUPS];
@@ -247,6 +258,7 @@ private:
         bool ends = false;    // whether lasting() set an end
         uint16_t index = 0;   // a playfield lamp's place in the range of the call
         uint16_t count = 1;   // how many lamps that range held
+        bool inRow = false;   // a strip's lamps counted in a row, as skipGaps() asks
         uint32_t seq = 0;     // the order of the calls, so the later of equal priorities shows
         uint32_t startMs = 0;
         uint32_t endMs = 0;
@@ -281,9 +293,12 @@ private:
     uint32_t pitchQ() const;
     uint16_t sideLamps(uint8_t group) const;
     bool hidden(uint8_t group, uint16_t led) const;
+    void placeHeights(uint8_t group);
+    uint32_t topQ(uint8_t group) const;
     uint16_t stripSize(uint8_t strip) const;
-    Place locate(uint8_t strip, uint16_t i) const;
-    uint32_t stripLength(uint8_t strip) const;
+    bool byLed(uint8_t strip, bool inRow) const;
+    Place locate(uint8_t strip, uint16_t i, bool inRow) const;
+    uint32_t stripLength(uint8_t strip, bool inRow) const;
 
     // Takes a new entry for key at its priority in place of the key's own entry. Gets nullptr
     // when the lamp holds five effects of other keys, which counts as refused.
@@ -309,6 +324,8 @@ private:
     // from the heap in begin(): each strip group's LEDs outside its gaps, in the chain's order
     uint16_t* visible[FIRST_SECTION] = {};
     uint16_t visibleCount[FIRST_SECTION] = {};
+    // from the heap in begin(): the height of each perimeter LED in quarter millimeters
+    uint32_t* heightQ[GROUP_CEILING] = {};
     uint16_t playfieldLamps = 0;
 
     // from the heap in begin(): the playfield's effects, and the colors of the last frame before
@@ -367,10 +384,13 @@ template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Pa
 
 template <typename E> Strip& Strip::play(const E& effect, Paint from, Paint to) {
     DEBUG_LOG("lamps: key %u starts an effect on strip %u\n", layer.key, strip);
-    if (lamps->start(lamps->stripEffects[strip], layer.key, layer.priority, from, to, effect) ==
-        nullptr) {
+    Lamps::Entry* e =
+        lamps->start(lamps->stripEffects[strip], layer.key, layer.priority, from, to, effect);
+    if (e == nullptr) {
         DEBUG_LOG("Lamps: strip %u holds five effects and refuses one of key %u\n", strip,
                   layer.key);
+        return *this;
     }
+    e->inRow = inRow;
     return *this;
 }

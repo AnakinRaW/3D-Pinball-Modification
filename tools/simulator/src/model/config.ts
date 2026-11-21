@@ -11,6 +11,7 @@ export interface GroupSettings {
   chain: string;
   leds: number;
   gaps: [number, number][];
+  heights: [number, number][]; // perimeters only: an LED and its height in mm, between them evenly
   lamps: number[]; // playfield sections only: each lamp's LEDs
 }
 
@@ -66,6 +67,7 @@ function group(raw: unknown): GroupSettings {
     chain: String(g.chain ?? ""),
     leds: Number(g.leds ?? 0),
     gaps: ((g.gaps as [number, number][]) ?? []).map(([a, b]) => [Number(a), Number(b)]),
+    heights: ((g.heights as [number, number][]) ?? []).map(([a, b]) => [Number(a), Number(b)]),
     lamps: ((g.lamps as number[]) ?? []).map(Number),
   };
 }

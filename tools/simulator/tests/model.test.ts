@@ -144,7 +144,7 @@ describe("config", () => {
   it("cuts the sections into lamps that skip hidden LEDs", () => {
     const spans = lampSpans({
       adapterA: 3,
-      groups: { playfield_lower: { chain: "D", leds: 6, gaps: [[1, 2]], lamps: [1, 2, 1] } },
+      groups: { playfield_lower: { chain: "D", leds: 6, gaps: [[1, 2]], lamps: [1, 2, 1], heights: [] } },
       irChannels: [],
       pullMs: [],
     });

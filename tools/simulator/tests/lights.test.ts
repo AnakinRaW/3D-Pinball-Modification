@@ -78,6 +78,65 @@ describe.runIf(built)("the firmware's lamps in the browser", () => {
     expect(visible.every((i) => chain[3 * i] === p6.ambientMax)).toBe(true);
   });
 
+  // the LED a run's head lights, the brightest of the chain, or -1 while the chain is dark
+  const headOf = (c: Uint8Array) => {
+    let head = -1;
+    for (let i = 0, best = 0; 3 * i < c.length; i++) {
+      if (c[3 * i] > best) [best, head] = [c[3 * i], i];
+    }
+    return head;
+  };
+  // an LED's height on a perimeter, from the config's points, evenly between them
+  const heightOf = (group: "perimeter_left" | "perimeter_right", led: number) => {
+    const pts = hw.config.groups[group].heights;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const [a, ha] = pts[k];
+      const [b, hb] = pts[k + 1];
+      if (led >= a && led <= b) return ha + ((hb - ha) * (led - a)) / (b - a);
+    }
+    return NaN;
+  };
+  // the heads of a run on both perimeters, frame by frame
+  const heads = (frames: number) => {
+    const out: [number, number][] = [];
+    for (let f = 0; f < frames; f++) {
+      m.step(FRAME_MS);
+      const [a, b] = readChains(m);
+      out.push([headOf(a), headOf(b)]);
+    }
+    return out;
+  };
+  const runBoth = (skipGaps: boolean) => {
+    for (const target of ["perimeterLeft", "perimeterRight"] as const) {
+      m.effect({ target, key: 1, priority: 1, kind: "run", pattern: "chase", a: WHITE, b: { r: 0, g: 0, b: 0 }, step: 250, skipGaps });
+    }
+  };
+  const MAX_APART_MM = 15; // the heights read off the drawing hold both heads closer than this
+
+  it("runs both perimeters by height, so both heads stay level and start again together", () => {
+    m.setAdapter(6);
+    runBoth(false);
+    const h = heads(200);
+    for (const [a, b] of h) {
+      if (a >= 0 && b >= 0) expect(Math.abs(heightOf("perimeter_left", a) - heightOf("perimeter_right", b))).toBeLessThan(MAX_APART_MM);
+    }
+    // a head starts again at the bottom in the frame it falls back
+    const restart = (side: 0 | 1) => h.findIndex(([a, b], f) => f > 0 && (side ? b : a) >= 0 && (side ? b : a) < 10 && h.slice(0, f).some((x) => x[side] > 60));
+    expect(restart(0)).toBeGreaterThan(0);
+    expect(restart(0)).toBe(restart(1));
+  });
+
+  it("hides a head behind its gap while it runs by height, and jumps the gap where the run asks for it", () => {
+    m.setAdapter(6);
+    runBoth(false);
+    const byHeight = heads(140).filter(([a]) => a < 0).length;
+    m.clearLamps();
+    runBoth(true);
+    const jumping = heads(140).filter(([a]) => a < 0).length;
+    expect(byHeight).toBeGreaterThan(10);
+    expect(jumping).toBe(0);
+  });
+
   it.each([3, 6])("keeps the whole layout at full white under the %i A profile's cap", (adapter) => {
     m.setAdapter(adapter);
     m.effect({ target: "playfield", key: 1, priority: 1, kind: "set", a: WHITE });

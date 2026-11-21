@@ -34,6 +34,7 @@ Lighting::Settings lightingSettings;
 // the arrays the lamp settings point into, which Lamps::begin() reads
 std::vector<uint16_t> lampCounts[Lamps::GROUPS];
 std::vector<uint16_t> gapPairs[Lamps::GROUPS];
+std::vector<uint16_t> heightPairs[Lamps::GROUPS];
 bool started = false;
 
 bool has(const val& object, const char* key) {
@@ -104,7 +105,8 @@ template <typename Group> bool start(Group group, const val& spec) {
 // Places the lamp groups on their chains and starts the driver and the lamps, as the main task
 // does at the start. groups holds one entry for each group in the order of Lamps::Group, null for
 // a group the config leaves out, else {chain: 0 to 5, leds, lamps: [counts], gaps: [first, count,
-// ...]}. Returns false on a second call, on two groups on one chain and when a start fails.
+// ...], heights: [led, mm, ...]}. Returns false on a second call, on two groups on one chain and
+// when a start fails.
 bool setUp(uint8_t adapterA, val groups) {
     if (started) {
         DEBUG_LOG("simulator: the lamps are set up already\n");
@@ -127,6 +129,11 @@ bool setUp(uint8_t adapterA, val groups) {
             gapPairs[g] = emscripten::vecFromJSArray<uint16_t>(entry["gaps"]);
             s.gaps = gapPairs[g].data();
             s.gapCount = uint16_t(gapPairs[g].size() / 2);
+        }
+        if (has(entry, "heights")) {
+            heightPairs[g] = emscripten::vecFromJSArray<uint16_t>(entry["heights"]);
+            s.heights = heightPairs[g].data();
+            s.heightCount = uint16_t(heightPairs[g].size() / 2);
         }
     }
     if (!Lamps::chainLeds(lampSettings, lightingSettings.leds)) {
@@ -200,7 +207,8 @@ val profile() {
 
 // Starts an effect. spec names the target, "playfield" with first and count or a strip:
 // "perimeterLeft", "perimeterRight", "ceiling", "perimeter" or "ambient". Its key and priority
-// give the layer, kind the effect, a and b the paints. Gets false for an unknown target or kind.
+// give the layer, kind the effect, a and b the paints. skipGaps: true lets a strip's run jump its
+// hidden LEDs. Gets false for an unknown target or kind.
 bool effect(val spec) {
     const Layer layer{spec["key"].as<uint8_t>(), spec["priority"].as<uint8_t>()};
     LampGroups g = lamps.groups(layer);
@@ -219,6 +227,10 @@ bool effect(val spec) {
     if (strip == nullptr) {
         DEBUG_LOG("simulator: no target %s\n", target.c_str());
         return false;
+    }
+    // a run that jumps the hidden LEDs, where the spec asks for it
+    if (has(spec, "skipGaps") && spec["skipGaps"].as<bool>()) {
+        return start(strip->skipGaps(), spec);
     }
     return start(*strip, spec);
 }

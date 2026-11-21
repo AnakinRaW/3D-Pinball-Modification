@@ -31,6 +31,7 @@ export interface EffectSpec {
   down?: boolean;
   step?: number; // run: ms per lamp on the playfield, mm per s along a strip
   lastingMs?: number;
+  skipGaps?: boolean; // a strip's run jumps the hidden LEDs
 }
 
 export interface Profile {
@@ -45,6 +46,7 @@ interface GroupSetup {
   leds: number;
   lamps?: number[];
   gaps?: number[];
+  heights?: number[];
 }
 
 // the module's functions, as firmware/sim/simulator.cpp binds them
@@ -73,7 +75,7 @@ export function groupSetups(config: MachineConfig): (GroupSetup | null)[] {
   return [...STRIP_GROUPS, ...SECTIONS].map((name) => {
     const g = config.groups[name];
     if (!g) return null;
-    return { chain: chainIndex(g.chain), leds: g.leds, lamps: g.lamps.length ? g.lamps : undefined, gaps: g.gaps.flat() };
+    return { chain: chainIndex(g.chain), leds: g.leds, lamps: g.lamps.length ? g.lamps : undefined, gaps: g.gaps.flat(), heights: g.heights.length ? g.heights.flat() : undefined };
   });
 }
 

@@ -22,6 +22,7 @@
 //       pattern: wipe     # chase, asteroid, wipe
 //       mm_per_s: 300     # a strip run's speed; a playfield run takes ms_per_lamp
 //       a: {palette: rainbow, by: position}
+//       skip_gaps: true   # a single perimeter's run jumps its hidden LEDs instead of running by height
 import { parse } from "yaml";
 import type { Hardware } from "../model/config";
 import type { Playfield } from "../model/playfield";
@@ -170,6 +171,7 @@ export function parseSequence(text: string, names: Map<string, number[]>): Parse
       down: s.direction === "down",
       step: strip ? num(s, "mm_per_s") : num(s, "ms_per_lamp"),
       lastingMs: num(s, "for"),
+      skipGaps: s.skip_gaps === true ? true : undefined,
     };
     if (effect === "run" && spec.step === undefined) {
       errors.push(`${where}: a run needs ${strip ? "mm_per_s" : "ms_per_lamp"}`);

@@ -57,6 +57,19 @@ describe("the .lights format", () => {
     ]);
   });
 
+  it("hands skip_gaps on to the effect", () => {
+    const { sequence, errors } = parseSequence(
+      "steps:\n  - {at: 0, strip: perimeter-left, effect: run, pattern: chase, a: white, mm_per_s: 250, skip_gaps: true}",
+      names,
+    );
+    expect(errors).toEqual([]);
+    expect(sequence!.steps[0].spec!.skipGaps).toBe(true);
+  });
+
+  it("reads the perimeter demo without an error", () => {
+    expect(parseSequence(readFileSync(resolve("lights/sync-demo.lights"), "utf8"), names).errors).toEqual([]);
+  });
+
   it("refuses a group whose lamps lie in no single row", () => {
     const split = new Map(names);
     split.set("corners", [0, 5]);

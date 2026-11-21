@@ -13,7 +13,15 @@
 //   spans      a section's lamp counts give a playfield lamp several LEDs, cut at its chain's end
 //   chains     a group lies on the chain the config names, and a chain two groups name goes to
 //              the first
-//   gaps       a strip's hidden LEDs stay dark, and a run steps over them at an even pace
+//   gaps       a perimeter's hidden LEDs stay dark, a run passes them in the time they take, and
+//              after skipGaps() it steps over them at an even pace
+//   sync       the same run on both perimeters, whose hidden stretches differ, keeps its heads
+//              level and reaches both tops in the same frame
+//   path-gaps  a run along the perimeter path crosses both perimeters' hidden stretches without a
+//              pause
+//   heights    the same run on two perimeters of different course lights LEDs of the same height
+//              in every frame and reaches both tops in the same frame, and a height out of order
+//              is left out
 //   playfield-gaps  a playfield section's hidden LEDs stay dark and belong to no lamp, and a gap
 //              ends the lamp it meets
 //   millis-wrap  a blink, a fade and lasting() keep their rhythm, their pace and their end across
@@ -84,6 +92,34 @@ constexpr uint16_t VISIBLE_COUNT = sizeof VISIBLE / sizeof VISIBLE[0];
 constexpr uint32_t GAP_LAMP_MS = 50;
 static Lighting gapLighting;
 static Lamps gapLamps(gapLighting);
+// sync and path-gaps: both perimeters with 79 LEDs, on chains A and B, with hidden stretches as
+// the machine has them: LEDs 43 to 61 on the left, 50 to 64 on the right
+constexpr uint16_t SYNC_LEDS = 79;
+const uint16_t SYNC_LEFT_GAPS[] = {43, 19};
+const uint16_t SYNC_RIGHT_GAPS[] = {50, 15};
+constexpr uint16_t SYNC_LEFT_LAMPS = 60;
+constexpr uint16_t SYNC_RIGHT_LAMPS = 64;
+// the last lamp of both perimeters: LED 78 on the 6 A profile, LED 77 on the 3 A profile, where
+// both perimeters hold an even count of visible LEDs
+constexpr uint16_t SYNC_LAST_6A = 78;
+constexpr uint16_t SYNC_LAST_3A = 77;
+constexpr uint32_t SYNC_PROFILE_MS = 5000;   // the time one profile's run gets
+constexpr int16_t NONE_LIT = -1;
+static Lighting syncLighting;
+static Lamps syncLamps(syncLighting);
+// heights: the perimeters of sync with heights in mm made up for the test. The right perimeter
+// runs sideways from LED 43 to LED 49 and climbs 3 mm there. Both reach 455 mm at LED 78. The
+// left's point for LED 60 comes after LED 72 and is left out.
+const uint16_t HEIGHT_LEFT[] = {0, 0, 72, 450, 60, 500, 78, 455};
+const uint16_t HEIGHT_LEFT_KEPT[] = {0, 0, 72, 450, 78, 455};
+const uint16_t HEIGHT_RIGHT[] = {0, 0, 43, 269, 49, 272, 78, 455};
+constexpr uint16_t HEIGHT_TOP_MM = 455;
+constexpr uint32_t QUARTERS_PER_MM = 4;   // positions count quarter millimeters
+constexpr uint32_t MS_PER_S = 1000;
+constexpr uint32_t PITCH_QUARTERS = 25;   // 6.25 mm from LED to LED
+constexpr uint8_t MAX_LIT = 8;            // the most LEDs a chase lights on a sideways stretch
+static Lighting heightLighting;
+static Lamps heightLamps(heightLighting);
 // playfield-gaps: the lower section on chain D, 10 LEDs with LED 2 and LEDs 5 and 6 hidden, cut
 // into lamps of 2, 1 and 2 LEDs. The third lamp meets the gap after one LED, and LEDs 7 to 9 are
 // one lamp each.
@@ -486,19 +522,49 @@ static void testChains() {
     }
 }
 
-// gaps: a chase along the right perimeter lights the visible LEDs one after the other, one per
-// GAP_LAMP_MS, and never a hidden one; on the 3 A profile every second visible LED is a lamp.
+// Hands on the frame at ms after the test's start to the lamps of.
+static void frameOf(Lamps& of, uint32_t ms) {
+    at(ms);
+    TEST_ASSERT_TRUE_MESSAGE(of.update(GPT2_CNT), "no frame");
+}
+
+// Gets whether the gap test's right perimeter shows led.
+static bool gapVisible(uint16_t led) {
+    for (uint16_t v : VISIBLE) {
+        if (v == led) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// gaps: a chase along the right perimeter takes GAP_LAMP_MS for every LED, hidden or not, and
+// lights only the visible ones. After skipGaps() it lights the visible LEDs one after the other,
+// one per GAP_LAMP_MS. On the 3 A profile every second visible LED is a lamp.
 static void testGaps() {
     Layer mode = {0, 1};
     gapLighting.current = Lighting::PROFILE_6A;
     LampGroups g = gapLamps.groups(mode);
     TEST_ASSERT_EQUAL_UINT16(VISIBLE_COUNT, g.perimeterRight.size());
+    TEST_ASSERT_EQUAL_UINT16(VISIBLE_COUNT, g.perimeterRight.skipGaps().size());
+    const uint8_t scale = Lighting::PROFILE_6A.ambientMax;
     at(0);
     g.perimeterRight.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S, Color::BLACK);
-    const uint8_t scale = Lighting::PROFILE_6A.ambientMax;
+    for (uint16_t head = 0; head < GAP_LEDS; ++head) {
+        frameOf(gapLamps, head * GAP_LAMP_MS + GAP_LAMP_MS / 2);
+        for (uint16_t led = 0; led < GAP_LEDS; ++led) {
+            const bool lit = led == head && gapVisible(led);
+            expect(scaled(lit ? crgb(Color::RED) : CRGB(0, 0, 0), scale),
+                   gapLighting.chain(CHAIN_B)[led], "the chase passes behind the hidden LEDs");
+        }
+    }
+
+    const uint32_t start = GAP_LEDS * GAP_LAMP_MS;
+    at(start);
+    g.perimeterRight.skipGaps().run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S,
+                                    Color::BLACK);
     for (uint16_t k = 0; k < VISIBLE_COUNT; ++k) {
-        at(k * GAP_LAMP_MS + GAP_LAMP_MS / 2);
-        TEST_ASSERT_TRUE(gapLamps.update(GPT2_CNT));
+        frameOf(gapLamps, start + k * GAP_LAMP_MS + GAP_LAMP_MS / 2);
         for (uint16_t led = 0; led < GAP_LEDS; ++led) {
             const bool lit = led == VISIBLE[k];
             expect(scaled(lit ? crgb(Color::RED) : CRGB(0, 0, 0), scale),
@@ -507,6 +573,163 @@ static void testGaps() {
     }
     gapLighting.current = Lighting::PROFILE_3A;
     TEST_ASSERT_EQUAL_UINT16((VISIBLE_COUNT + 1) / 2, g.perimeterRight.size());
+}
+
+// Gets the one LED a chain lights, NONE_LIT for none. A second lit LED fails the test.
+static int16_t litLed(Lighting& driver, uint8_t chain) {
+    int16_t lit = NONE_LIT;
+    for (uint16_t led = 0; led < driver.leds(chain); ++led) {
+        const CRGB& c = driver.chain(chain)[led];
+        if (c.r != 0 || c.g != 0 || c.b != 0) {
+            TEST_ASSERT_EQUAL_INT16_MESSAGE(NONE_LIT, lit, "a chase lights one LED");
+            lit = int16_t(led);
+        }
+    }
+    return lit;
+}
+
+// sync: a chase started on both perimeters in one pass lights the same LED on both sides in
+// every frame where both light one, and lights the last lamp of both in the same frame, on both
+// profiles.
+static void testSync() {
+    Layer mode = {0, 1};
+    const Profile profiles[] = {Lighting::PROFILE_6A, Lighting::PROFILE_3A};
+    const uint16_t lastLeds[] = {SYNC_LAST_6A, SYNC_LAST_3A};
+    const uint32_t frameMs = Lamps::FRAME_US / US_PER_MS;
+    for (uint8_t k = 0; k < 2; ++k) {
+        syncLighting.current = profiles[k];
+        LampGroups g = syncLamps.groups(mode);
+        const uint32_t start = k * SYNC_PROFILE_MS;
+        at(start);
+        g.perimeterLeft.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S,
+                            Color::BLACK);
+        g.perimeterRight.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S,
+                             Color::BLACK);
+        uint32_t leftTopMs = 0;
+        uint32_t rightTopMs = 0;
+        for (uint32_t ms = frameMs; ms < SYNC_LEDS * GAP_LAMP_MS; ms += frameMs) {
+            frameOf(syncLamps, start + ms);
+            const int16_t left = litLed(syncLighting, LEFT_CHAIN);
+            const int16_t right = litLed(syncLighting, RIGHT_CHAIN);
+            if (left != NONE_LIT && right != NONE_LIT) {
+                TEST_ASSERT_EQUAL_INT16_MESSAGE(left, right, "both heads at the same height");
+            }
+            if (left == lastLeds[k] && leftTopMs == 0) {
+                leftTopMs = ms;
+            }
+            if (right == lastLeds[k] && rightTopMs == 0) {
+                rightTopMs = ms;
+            }
+        }
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(lastLeds[k] * GAP_LAMP_MS, leftTopMs,
+                                         "the left head reaches its top lamp");
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(leftTopMs, rightTopMs,
+                                         "both heads reach the top together");
+    }
+}
+
+// Gets the height of led in quarter millimeters from points of an LED and its height in mm, which
+// all lie in order: even between two points, one pitch per LED above the last.
+template <size_t N> static uint32_t heightOf(const uint16_t (&points)[N], uint16_t led) {
+    uint16_t lastLed = points[0];
+    uint32_t lastQ = points[1] * QUARTERS_PER_MM;
+    for (size_t k = 2; k < N; k += 2) {
+        const uint16_t nextLed = points[k];
+        const uint32_t nextQ = points[k + 1] * QUARTERS_PER_MM;
+        if (led <= nextLed) {
+            return lastQ + (nextQ - lastQ) * (led - lastLed) / (nextLed - lastLed);
+        }
+        lastLed = nextLed;
+        lastQ = nextQ;
+    }
+    return lastQ + uint32_t(led - lastLed) * PITCH_QUARTERS;
+}
+
+// Gets the LEDs a chain lights, at most MAX_LIT, into lit. Returns how many it lights.
+static uint8_t litLeds(Lighting& driver, uint8_t chain, uint16_t (&lit)[MAX_LIT]) {
+    uint8_t n = 0;
+    for (uint16_t led = 0; led < driver.leds(chain); ++led) {
+        const CRGB& c = driver.chain(chain)[led];
+        if (c.r != 0 || c.g != 0 || c.b != 0) {
+            TEST_ASSERT_LESS_THAN_UINT8_MESSAGE(MAX_LIT, n, "a chase lights a few LEDs");
+            lit[n++] = led;
+        }
+    }
+    return n;
+}
+
+// heights: a chase started on both perimeters in one pass lights LEDs whose heights lie less than
+// a pitch apart in every frame where both light one, also while the right runs sideways, and
+// lights both top LEDs in the same frame.
+static void testHeights() {
+    Layer mode = {0, 1};
+    heightLighting.current = Lighting::PROFILE_6A;
+    LampGroups g = heightLamps.groups(mode);
+    at(0);
+    g.perimeterLeft.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S, Color::BLACK);
+    g.perimeterRight.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S, Color::BLACK);
+    const uint32_t frameMs = Lamps::FRAME_US / US_PER_MS;
+    // a run at 125 mm/s climbs 1 mm in 8 ms
+    const uint32_t topMs = HEIGHT_TOP_MM * MS_PER_S / STRIP_MM_PER_S;
+    uint32_t leftTopMs = 0;
+    uint32_t rightTopMs = 0;
+    uint16_t left[MAX_LIT];
+    uint16_t right[MAX_LIT];
+    for (uint32_t ms = frameMs; ms < topMs + GAP_LAMP_MS; ms += frameMs) {
+        frameOf(heightLamps, ms);
+        const uint8_t nLeft = litLeds(heightLighting, LEFT_CHAIN, left);
+        const uint8_t nRight = litLeds(heightLighting, RIGHT_CHAIN, right);
+        for (uint8_t a = 0; a < nLeft; ++a) {
+            for (uint8_t b = 0; b < nRight; ++b) {
+                const uint32_t hLeft = heightOf(HEIGHT_LEFT_KEPT, left[a]);
+                const uint32_t hRight = heightOf(HEIGHT_RIGHT, right[b]);
+                const uint32_t apart = hLeft > hRight ? hLeft - hRight : hRight - hLeft;
+                TEST_ASSERT_LESS_THAN_UINT32_MESSAGE(PITCH_QUARTERS, apart,
+                                                     "both heads at the same height");
+            }
+        }
+        if (nLeft > 0 && left[nLeft - 1] == SYNC_LEDS - 1 && leftTopMs == 0) {
+            leftTopMs = ms;
+        }
+        if (nRight > 0 && right[nRight - 1] == SYNC_LEDS - 1 && rightTopMs == 0) {
+            rightTopMs = ms;
+        }
+    }
+    TEST_ASSERT_EQUAL_UINT32_MESSAGE(topMs, leftTopMs, "the left head reaches its top LED");
+    TEST_ASSERT_EQUAL_UINT32_MESSAGE(leftTopMs, rightTopMs, "both heads reach the top together");
+}
+
+// Gets the n-th visible LED of a sync perimeter, whose one hidden stretch gap gives.
+static uint16_t visibleLed(const uint16_t (&gap)[2], uint16_t n) {
+    return n < gap[0] ? n : uint16_t(n + gap[1]);
+}
+
+// path-gaps: a chase along the perimeter path lights its lamps one after the other, one per
+// GAP_LAMP_MS, up the left's visible LEDs and down the right's, without a pause at either hidden
+// stretch.
+static void testPathGaps() {
+    Layer mode = {0, 1};
+    syncLamps.clear();
+    syncLighting.current = Lighting::PROFILE_6A;
+    LampGroups g = syncLamps.groups(mode);
+    TEST_ASSERT_EQUAL_UINT16(SYNC_LEFT_LAMPS + SYNC_RIGHT_LAMPS, g.perimeter.size());
+    at(0);
+    g.perimeter.run(Pattern::CHASE, Direction::UP, Color::RED, STRIP_MM_PER_S, Color::BLACK);
+    for (uint16_t k = 0; k < SYNC_LEFT_LAMPS + SYNC_RIGHT_LAMPS; ++k) {
+        frameOf(syncLamps, k * GAP_LAMP_MS + GAP_LAMP_MS / 2);
+        const int16_t left = litLed(syncLighting, LEFT_CHAIN);
+        const int16_t right = litLed(syncLighting, RIGHT_CHAIN);
+        if (k < SYNC_LEFT_LAMPS) {
+            TEST_ASSERT_EQUAL_INT16_MESSAGE(visibleLed(SYNC_LEFT_GAPS, k), left,
+                                            "up the left without a pause");
+            TEST_ASSERT_EQUAL_INT16(NONE_LIT, right);
+        } else {
+            const uint16_t down = SYNC_RIGHT_LAMPS - 1 - (k - SYNC_LEFT_LAMPS);
+            TEST_ASSERT_EQUAL_INT16(NONE_LIT, left);
+            TEST_ASSERT_EQUAL_INT16_MESSAGE(visibleLed(SYNC_RIGHT_GAPS, down), right,
+                                            "down the right without a pause");
+        }
+    }
 }
 
 // playfield-gaps: hidden LEDs of a playfield section belong to no lamp and stay dark, a lamp
@@ -584,6 +807,22 @@ int main() {
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).leds = GAP_LEDS;
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).gaps = GAPS;
     gapGroups.of(Lamps::Group::PERIMETER_RIGHT).gapCount = 2;
+    Lamps::Settings syncGroups;
+    syncGroups.of(Lamps::Group::PERIMETER_LEFT).chain = LEFT_CHAIN;
+    syncGroups.of(Lamps::Group::PERIMETER_LEFT).leds = SYNC_LEDS;
+    syncGroups.of(Lamps::Group::PERIMETER_LEFT).gaps = SYNC_LEFT_GAPS;
+    syncGroups.of(Lamps::Group::PERIMETER_LEFT).gapCount = 1;
+    syncGroups.of(Lamps::Group::PERIMETER_RIGHT).chain = RIGHT_CHAIN;
+    syncGroups.of(Lamps::Group::PERIMETER_RIGHT).leds = SYNC_LEDS;
+    syncGroups.of(Lamps::Group::PERIMETER_RIGHT).gaps = SYNC_RIGHT_GAPS;
+    syncGroups.of(Lamps::Group::PERIMETER_RIGHT).gapCount = 1;
+    Lamps::Settings heightGroups = syncGroups;
+    heightGroups.of(Lamps::Group::PERIMETER_LEFT).heights = HEIGHT_LEFT;
+    heightGroups.of(Lamps::Group::PERIMETER_LEFT).heightCount =
+        sizeof HEIGHT_LEFT / (2 * sizeof HEIGHT_LEFT[0]);
+    heightGroups.of(Lamps::Group::PERIMETER_RIGHT).heights = HEIGHT_RIGHT;
+    heightGroups.of(Lamps::Group::PERIMETER_RIGHT).heightCount =
+        sizeof HEIGHT_RIGHT / (2 * sizeof HEIGHT_RIGHT[0]);
     Lamps::Settings pfGapGroups;
     pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).chain = CHAIN_D;
     pfGapGroups.of(Lamps::Group::PLAYFIELD_LOWER).leds = PF_GAP_LEDS;
@@ -594,6 +833,8 @@ int main() {
     // the layout and the spans place every group, the bench's groups two of them
     if (!start(lighting, lamps, layout) || !start(lighting, spanned, spans) ||
         start(bench, benchLamps, benchGroups) || !start(gapLighting, gapLamps, gapGroups) ||
+        !start(syncLighting, syncLamps, syncGroups) ||
+        !start(heightLighting, heightLamps, heightGroups) ||
         !start(pfGapLighting, pfGapLamps, pfGapGroups)) {
         return 1;
     }
@@ -606,6 +847,9 @@ int main() {
     RUN_TEST(testSpans);
     RUN_TEST(testChains);
     RUN_TEST(testGaps);
+    RUN_TEST(testSync);
+    RUN_TEST(testPathGaps);
+    RUN_TEST(testHeights);
     RUN_TEST(testPlayfieldGaps);
     RUN_TEST(testMillisWrap);
     return UNITY_END();
