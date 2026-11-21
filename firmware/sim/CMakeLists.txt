@@ -43,7 +43,13 @@ add_executable(simulator
     fastled-platform.cpp
     ${FIRMWARE}/src/components/lamps.cpp
     ${FIRMWARE}/src/components/lamp-effects.cpp
-    ${FIRMWARE}/src/drivers/lighting.cpp)
+    ${FIRMWARE}/src/drivers/lighting.cpp
+    ${FIRMWARE}/src/logging/debug-log.cpp
+    ${FIRMWARE}/src/logging/debug-output.cpp
+    ${FIRMWARE}/src/logging/debug-trace.cpp
+    ${FIRMWARE}/src/logging/log-line.cpp
+    ${FIRMWARE}/src/logging/logger.cpp
+    ${FIRMWARE}/src/io/card-appender.cpp)
 # A quoted include looks in fakes/ before src/, so the simulated output stage takes the place of
 # the FlexIO2 one, as the computer tests' fakes do.
 target_compile_options(simulator PRIVATE

@@ -5,14 +5,13 @@
 #include <FastLED.h>
 #include <platforms/coroutine_runtime.h>
 #include <platforms/time_platform.h>
+#include <Arduino.h>
 #include "core/clock.h"
 
 namespace fl {
 namespace platforms {
 
 namespace {
-
-constexpr fl::u32 US_PER_MS = 1000;
 
 // a runtime with no coroutines, so pumping them does nothing
 class NoCoroutines : public ICoroutineRuntime {
@@ -23,7 +22,7 @@ public:
 }   // namespace
 
 fl::u32 millis() FL_NO_EXCEPT {
-    return nowUs() / US_PER_MS;
+    return fakeMillis;
 }
 
 fl::u32 micros() FL_NO_EXCEPT {
@@ -37,3 +36,8 @@ ICoroutineRuntime& ICoroutineRuntime::instance() FL_NO_EXCEPT {
 
 }   // namespace platforms
 }   // namespace fl
+
+// the firmware's millis(), the milliseconds the simulator sets before every pass
+extern "C" uint32_t millis() {
+    return fakeMillis;
+}

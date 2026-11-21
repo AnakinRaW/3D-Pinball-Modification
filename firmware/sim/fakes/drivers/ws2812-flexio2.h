@@ -5,7 +5,7 @@
 #pragma once
 #include <Arduino.h>
 #include <vector>
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 #include "drivers/ws2812-color-encoder.h"
 
 class Ws2812Flexio2 {

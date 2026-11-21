@@ -7,6 +7,7 @@
 #include <vector>
 #include "components/lamps.h"
 #include "drivers/lighting.h"
+#include "logging/debug-log.h"
 
 using emscripten::val;
 
@@ -157,9 +158,12 @@ uint32_t step(uint32_t ms) {
     uint32_t frames = 0;
     for (uint32_t i = 0; i < ms; ++i) {
         GPT2_CNT = GPT2_CNT + US_PER_MS;
+        fakeMillis = GPT2_CNT / US_PER_MS;
         if (lamps.update(nowUs())) {
             ++frames;
         }
+        // the debug output goes to the browser's console, as the main loop sends it to USB serial
+        sendDebugLog();
     }
     return frames;
 }
