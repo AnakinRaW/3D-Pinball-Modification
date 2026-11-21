@@ -6,7 +6,7 @@ tools/arcade/config/figures.json.
     python tools/arcade/scripts/figures.py --check   exit with 1 where the file differs
 
 Each figure is evaluated by the model that declares it and written in the unit the app reads it in,
-so the app holds no number of its own.
+so every number the app shows comes from a model.
 """
 import argparse
 import json
