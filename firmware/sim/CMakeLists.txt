@@ -16,7 +16,7 @@ set(FIRMWARE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 include(FetchContent)
 FetchContent_Declare(fastled
     GIT_REPOSITORY https://github.com/FastLED/FastLED.git
-    GIT_TAG 3.10.9
+    GIT_TAG 3.10.10
     GIT_SHALLOW TRUE
     # the simulator lists FastLED's files itself, so FastLED's own CMakeLists stays unread
     SOURCE_SUBDIR none)

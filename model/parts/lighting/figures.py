@@ -365,7 +365,7 @@ fig("pm_dark", "mW", "ceil_to(i_ctrl * v_rail, 'mW', mw_grain.to('mW'))", "up",
 
 # The driver holds the lighting under the cap with FastLED's calculate_max_brightness_for_power_mW(),
 # which charges every LED's dark draw at any brightness and scales the colors' draw by the
-# brightness, power_mgt.cpp.hpp in FastLED 3.10.9.
+# brightness, power_mgt.cpp.hpp in FastLED 3.10.10.
 fig("pm_white", "mW", "pm_red + pm_green + pm_blue", "up",
     moves="+i_bench_red +i_bench_green +i_bench_blue -i_bench_dark +v_rail", stated=False)
 fig("p_fixed", "mW", "n_leds.raw * pm_dark", "up", moves="+n_leds +i_strip_dark +v_rail",
