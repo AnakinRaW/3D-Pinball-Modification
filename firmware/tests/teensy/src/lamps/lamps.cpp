@@ -4,8 +4,8 @@
 //   frames  effects on every group for a minute: one frame per frame period, and no frame's
 //           update() takes as long as the longest chain the config allows takes to go out
 //
-// Wiring: three WS2812B on chain A, as for the lighting program. The left perimeter is configured
-// on chain A with those three LEDs alone, which show the left perimeter's effects at half the
+// Wiring: BENCH_LEDS WS2812B on chain A, as for the lighting program. The left perimeter is
+// configured on chain A with those LEDs alone, which show the left perimeter's effects at half the
 // ambient brightness and go dark at the end.
 
 #include <Arduino.h>
@@ -18,7 +18,7 @@
 constexpr uint32_t BITS_PER_LED = ws2812::BITS_PER_LED;
 constexpr uint32_t BIT_NS = ws2812::SYMBOL_BITS * ws2812::SYMBOL_NS;
 constexpr uint32_t NS_PER_US = 1000;
-constexpr uint16_t BENCH_LEDS = 3;   // the three LEDs on chain A at the bench
+constexpr uint16_t BENCH_LEDS = 3;   // the LEDs on chain A at the bench
 constexpr uint8_t CHAIN_A = 0;       // the left perimeter's chain at the bench
 constexpr uint32_t QUICK_MS = 5000;
 constexpr uint32_t SOAK_MS = 60000;   // testing.md: a minute

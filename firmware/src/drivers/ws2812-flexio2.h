@@ -15,7 +15,7 @@
 //
 // One FlexIO2 and one DMA channel serve every object of this class. A frame of one object
 // therefore blocks every other object: busy() holds and send() is refused for all of them until
-// it has gone out. Each send() then sets FlexIO2 up for the lanes of its own object.
+// it has gone out. Each send() then sets FlexIO2 up for the lanes of that object.
 //
 // Design: docs/firmware/drivers/lighting.md.
 #pragma once

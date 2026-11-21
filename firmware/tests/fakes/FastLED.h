@@ -1,4 +1,4 @@
-// What the lamps take from FastLED 3.10.9, for the tests that run on the computer. FastLED's stub
+// What the lamps take from FastLED, for the tests that run on the computer. FastLED's stub
 // platform does not build under PlatformIO's native platform, so this stands in for the colors,
 // the palettes and the curves, each computed as FastLED's lib8tion and colorutils compute them.
 #pragma once

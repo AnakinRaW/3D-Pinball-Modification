@@ -16,7 +16,7 @@
 //              120 MHz while FlexIO3 is not
 //   shared     while one output's frame goes out, another output is busy and refuses to send
 //
-// Wiring: none. LEDs on chain A may stay connected. Its first three show the wave's colors for a
+// Wiring: none. LEDs on chain A may stay connected. Its first LEDs show the wave's colors for a
 // moment and go dark again. long, load and latch send on chain F, where no LED is wired.
 
 #include <Arduino.h>
@@ -33,7 +33,7 @@ constexpr uint8_t SIX = 6;
 constexpr uint8_t TWO = 2;
 constexpr uint16_t MOST_LEDS = 3;
 constexpr uint8_t PINS[SIX] = {32, 6, 7, 8, 9, 10};   // pin-assignment.md: LED chain A to F
-// ten LEDs over six lanes, chain A's three the bench's
+// the LEDs of each lane, chain A with the bench's MOST_LEDS
 constexpr uint8_t SIX_OF[SIX] = {0, 1, 2, 3, 4, 5};
 constexpr uint16_t SIX_LEDS[SIX] = {3, 2, 2, 1, 1, 1};
 // two-lanes: chain F's pin first, then chain A's, two LEDs each
@@ -44,7 +44,7 @@ constexpr uint8_t FULL = 255;        // a brightness that scales nothing
 constexpr uint32_t CPU_MHZ = 600;    // F_CPU_ACTUAL, the cycle counter's rate
 constexpr uint32_t NS_PER_US = 1000;
 constexpr uint32_t US_PER_MS = 1000;
-constexpr uint32_t WATCH_US = 600;     // longer than the frame of three LEDs and its latch
+constexpr uint32_t WATCH_US = 600;     // longer than the frame of MOST_LEDS LEDs and its latch
 constexpr uint32_t WAVE_EDGES = 512;   // three edges a bit at most, for the 72 bits of chain A
 constexpr uint32_t SETTLE_MS = 10;     // longer than any frame of these tests
 constexpr uint32_t AT_ONCE_US = 50;    // what a refused send() may take

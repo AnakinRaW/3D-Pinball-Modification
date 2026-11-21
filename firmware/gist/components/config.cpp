@@ -8,7 +8,8 @@
 
 // the machine's settings from /config.yml, held as a tree of sections, lists and values. A key names
 // a value by its path, such as "servo.start_deg", "solenoid.pull_ms.2" or "ir.channels.0.order". The
-// part that uses a setting reads it with its own default and range. Reading never changes the tree; a
+// part that uses a setting reads it with the default and the range it declares. Reading never changes
+// the tree; a
 // mutex guards it, so any task may read and write, and no interrupt may
 class Config {
 public:
