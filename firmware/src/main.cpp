@@ -1,12 +1,16 @@
 // The firmware's start: setup() starts the clock, creates the main task and starts FreeRTOS. The
-// main task will run the start order of docs/firmware/general-design.md and then the main loop.
-// Until the drivers exist, it brings up LVGL and FastLED and blinks the Teensy's LED once a second.
+// main task runs the start order of docs/firmware/general-design.md and then the main loop: it
+// mounts the card and begins the log on it. Until the other drivers exist, it brings up LVGL and
+// FastLED and blinks the Teensy's LED once a second.
 
 // Keeps Arduino's macros, which FastLED's Teensy 4 code and WDT_T4 use.
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
+#include "core/device-monitor.h"
+#include "drivers/storage.h"
 #include "logging/debug-log.h"
+#include "logging/logger.h"
 #include <lvgl.h>
 // FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
@@ -36,6 +40,10 @@ extern "C" uint8_t _estack[];
 
 static StaticTask_t mainTask;
 
+constexpr char LOG_FIRST[] = "/log-a.txt";    // logging.md: the log's first file
+constexpr char LOG_SECOND[] = "/log-b.txt";   // logging.md: the log's second file
+EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
+
 // true until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
 
@@ -55,10 +63,35 @@ static void guardStack(uintptr_t at) {
     asm volatile("isb");
 }
 
+// Reads the start of a log file for the logger's begin(). It waits for the card, so the main task
+// calls it at start-up only.
+// path is the log file's full path.
+// head takes the file's first bytes.
+static LogFileStart readLogStart(const char* path, uint8_t (&head)[Logger::HEAD_BYTES]) {
+    FileRequest r;
+    storage.open(path).read(0, head, sizeof head, r);
+    r.wait();
+    return {head, r.bytes(), r.fileSize()};
+}
+
 // The main task: sets the machine up, then runs the main loop, which never waits.
 static void runMainTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, TEMPERATURE_PANIC_PRIORITY);
     NVIC_SET_PRIORITY(IRQ_GPIO6789, PIN_PRIORITY);
+
+    // Without a card the log does not begin. Every line is then lost.
+    const bool card = storage.begin();
+    if (!deviceMonitor.watch(Device::SD_CARD, storage)) {
+        logWarning("main", "the device monitor does not watch the card");
+    }
+    static CardFile first(storage.openWriter(LOG_FIRST));
+    static CardFile second(storage.openWriter(LOG_SECOND));
+    static Logger logger(first, second, logBuffer, sizeof logBuffer);
+    if (card) {
+        static uint8_t firstHead[Logger::HEAD_BYTES];
+        static uint8_t secondHead[Logger::HEAD_BYTES];
+        logger.begin(readLogStart(LOG_FIRST, firstHead), readLogStart(LOG_SECOND, secondHead));
+    }
 
     lv_init();
     pinMode(LED_BUILTIN, OUTPUT);
@@ -70,6 +103,7 @@ static void runMainTask(void*) {
             toggledUs += BLINK_MS * US_PER_MS;
             digitalToggleFast(LED_BUILTIN);
         }
+        logger.update();
         sendDebugLog();
         yield();
     }

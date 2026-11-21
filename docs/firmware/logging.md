@@ -40,7 +40,7 @@ In a debug build every line of the log goes to the debug output as well.
 | Header | Holds |
 |---|---|
 | [`logging/logger.h`](../../firmware/src/logging/logger.h) | `Logger`, the log on the card |
-| [`io/card-appender.h`](../../firmware/src/io/card-appender.h) | `CardAppender` and `AppendFile`, the file the storage driver provides |
+| [`io/card-appender.h`](../../firmware/src/io/card-appender.h) | `CardAppender` and `AppendFile`, which the storage driver's `CardFile` provides |
 | [`logging/debug-log.h`](../../firmware/src/logging/debug-log.h) | `DEBUG_LOG()` and `sendDebugLog()` |
 | [`logging/debug-output.h`](../../firmware/src/logging/debug-output.h) | `DebugOutput`, the buffer of debug lines behind them |
 | [`logging/debug-trace.h`](../../firmware/src/logging/debug-trace.h) | `DEBUG_TRACE()`, the notes of interrupts |

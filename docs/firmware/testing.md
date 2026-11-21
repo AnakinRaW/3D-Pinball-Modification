@@ -154,7 +154,7 @@ The program `ring` checks the ring that the debug output and the card appender k
 
 ### Card appender
 
-The program `card-appender` checks the [card appender](../../firmware/src/io/card-appender.h) on fake files whose writes run until the test ends them.
+The program `card-appender` checks the [card appender](../../firmware/src/io/card-appender.h) on fake files whose writes run until the test ends them, and once on the card through the storage driver.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
@@ -166,6 +166,7 @@ The program `card-appender` checks the [card appender](../../firmware/src/io/car
 | `lost` | computer | Append records past the free space | Each is refused and counted. `takeLost()` gives the count once |
 | `no-file` | computer | Append before any file, then `start()` one and append | The first record is refused and counted, the next starts the file anew |
 | `wrap` | computer | Append records that run past the end of the buffer and let a second pass | They reach the card in two writes, the second right after the first |
+| `card-retry` | Teensy | Give the appender a file on the card that is shorter than it believes, append a record, then lengthen the file | The first write fails and keeps the record. A second later the record reaches the card at the place the failed write would have taken, and none is lost |
 
 ### Priority list
 
@@ -244,22 +245,30 @@ The program `storage` checks the [storage driver](drivers/storage.md) against it
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
+| `service-order` | computer | Queue reads of each priority in mixed order | A higher priority goes before a lower one, each priority in the order its requests came |
+| `busy` | computer | Start a second operation on a request that is still pending | Both requests fail, and the request starts afresh once it has ended |
+| `long-path` | computer | Open a file whose path is longer than the [driver allows](drivers/storage.md#files), and one of the longest length | Every request on the first fails at once, and the second works |
+| `read-ends` | computer | Read across the end of a file, at its end and from a missing file | The read stops at the end. The other two bring 0 bytes and succeed |
+| `past-end` | computer | Start a write past the end of a file, then one at its end | The first fails without counting as a card error and leaves the file, the second appends |
+| `open-files` | computer | Read one file more than the driver keeps open, then write a file it read | The file used longest ago is closed, and the write opens its file anew for writing |
+| `card-errors` | computer | Let transfers fail, one at a time and three in a row, and let the card vanish | One error starts the card anew. Three in a row, or a card that does not come back, make it count as failed, and every request then fails at once |
+| `recover` | computer | Let a failed card answer again, first as another card, then as the same | Another card stays unused, the same card works again |
+| `refused` | computer | Start requests as a caller that may not start one, and before the mount | Each fails at once, and a pending request stays as it is |
+| `wait-ends` | computer | Wait for requests, let one go out of scope while pending, and wait where waiting is refused | `wait()` and the destructor return once the request has ended. The refused `wait()` returns false at once |
+| `cache-path` | computer | Ask for reads into RAM1 and into cached memory on and off cache lines | Only RAM1 and whole cache lines at a sector of the file take the bytes straight |
+| `card-file` | computer | Let the card appender write through the storage driver's file, once with a failing card | The records reach the file, and the failed write keeps them |
 | `mount` | Teensy | Start with the card in | `begin()` returns true, and the card is not reported failed |
-| `settings` | Teensy | Let a driver read its `settings` file in `begin()` | The values it prints match the file |
-| `round-trip` | Teensy | Write a file, read it back, rewrite it shorter and read it again | Each read brings what was written last, and `fileSize()` follows |
-| `missing` | Teensy | Read a file the card does not hold, then write it into a directory the card does not hold | The read brings 0 bytes, and the write creates the directory and the file |
-| `past-end` | Teensy | Start a write past the end of a file | The write fails, and the file stays unchanged |
+| `round-trip` | Teensy | Write a file, read it back, rewrite it shorter, read it again and append | Each read brings what was written last, and `fileSize()` follows |
+| `missing` | Teensy | Read a file the card does not hold, then write one into a directory the card does not hold | The read brings 0 bytes, and the write creates the directory and the file |
 | `order` | Teensy | Start a write, then a read of the same place before the write has ended | The read brings the new data |
-| `long-path` | Teensy | Open a file whose path is longer than the [driver allows](drivers/storage.md#files) | Every read and write of that file fails, and every other file works |
-| `busy` | Teensy | Start a second operation on a request that is still `Pending` | Both requests fail |
-| `scope-end` | Teensy | Let a request go out of scope while it is `Pending` | Its destructor returns only once the request has ended, and nothing writes into its buffer afterwards |
-| `interrupts` | Teensy | Call `wait()` from an interrupt and from a task of the storage task's priority, and start a request from an interrupt more urgent than the [limit](general-design.md#interrupts) | Each `wait()` returns false at once while its request ends normally, and the urgent request fails at once |
-| `loop-runs` | Teensy | Write a file of several megabytes and read it back while the main loop counts its passes | No pass of the main loop lasts as long as a driver tick |
-| `writing` | Teensy | Start several writes back to back | One `WritingStarted` comes before the first, and one `WritingEnded` after the last |
-| `yield` | Teensy | Attach an `EventResponder` to `yield()`, trigger it from an interrupt, and read a large file meanwhile | The responder runs in the main task once per pass and never in the storage task, and the read ends normally |
-| `no-card` | Teensy | Start without the card | The start-up completes without a restart, every request fails at once, and the card is reported failed |
-| `pulled` | bench | Pull the card while a long read runs | The read fails, every later request fails at once, and the card stays reported failed until a restart |
-| `back` | bench | Put the card back and restart | The program's `Teensy` tests pass again |
+| `scope-end` | Teensy | Let a request go out of scope while it is pending | Its destructor returns once the request has ended, and nothing writes into its buffer afterwards |
+| `interrupts` | Teensy | Start a request from an interrupt more urgent than the [limit](general-design.md#interrupts), then one from the limit that calls `wait()` | The urgent request fails at once. The other is pending, its `wait()` returns false at once, and it ends normally |
+| `loop-runs` | Teensy | Write a file of several megabytes and read it back while the test task polls like the main loop | No pass lasts as long as a driver tick |
+| `yield` | Teensy | Call `yield()` from the test task and from an interrupt while a large read runs | Each call returns at once, and the read ends normally |
+| `cached-reads` | Teensy | Read into RAM2 and the PSRAM, on cache lines and off them | Each read brings the right bytes, and the bytes around the buffer stay unchanged |
+| `stack` | Teensy | Read how much of its stack the storage task has used after the tests above | A quarter of the stack stays untouched |
+| `card-back` | bench | Pull the card while the program reads, then put it back | The reads fail, every request fails at once, and the card works again once it is back. A quarter of the storage task's stack stays untouched after the card errors |
+| `no-card` | bench | Pull the card and let the Teensy restart without it | `begin()` returns within a tenth of a second, every request fails at once, and the card is reported failed |
 | `readable` | bench | Put the card into the computer after the other tests | The computer's disk check finds no error |
 
 ### File channel
@@ -484,7 +493,7 @@ The program `file-system` checks the [file system component](components/file-sys
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `paths` | computer | Open a path inside a game's directory, an empty path, one from the root, one with `..`, one too long, and one before any game is named | The first gives the file in `/games/<id>/`, and every other gives a file whose requests fail |
+| `paths` | computer | Open a path inside a game's directory, an empty path, one from the root, one with `..`, one too long, one before any game is named, and a full path for the host | The first gives the file in `/games/<id>/`, the last the file at the card's root, and every other a file whose requests fail |
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
 
 ### Config
@@ -605,7 +614,7 @@ The program `logger` checks the [logger](logging.md).
 | `two-tasks` | Teensy | Write numbered lines from a task above the test task's priority in bursts while the test task writes its own and runs `update()`, into files in RAM | Every line stands whole in the file, each writer's lines in their order. None is lost |
 | `order` | Teensy | Write numbered lines, restart twice, then read the log back | The lines stand in the order they were written. The lines of each restart follow those before |
 | `files` | Teensy | Put a log file at the [size limit](logging.md#files) on the card, then start and write | The other file starts anew with a higher number. The full file stays as it was |
-| `card-missing` | Teensy | Start without the card and write | The log does not begin. `write()` returns false at once. `lost()` counts the line |
+| `card-missing` | bench | Start without the card and write | The log does not begin. `write()` returns false at once. `lost()` counts the line |
 
 ### Watchdog
 
@@ -650,7 +659,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |
 | `setting` | bench | Change a setting in the menu, change it again at once, then restart | No save starts while one is written, and after the restart the value saved last stands |
 | `fault-list` | bench | Disconnect the rotary sensor during a game, then connect it again | The menu lists the sensor as failed and later as working, and the game goes on throughout |
-| `card-pulled` | bench | Pull the card during a game that plays music and a movie | The game goes on, the music and the movie stop, and the menu lists the card as failed until a restart |
+| `card-pulled` | bench | Pull the card during a game that plays music and a movie | The game goes on, the music and the movie stop, and the menu lists the card as failed until the same card is back |
 | `ball-carries-on` | machine | Switch games while a ball is on the playfield | The ball's events reach the new game |
 
 ## Whole machine

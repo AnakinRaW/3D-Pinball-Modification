@@ -1,6 +1,6 @@
 # File system component
 
-The file system component gives the games, the host, the logger, the config, the sounds and the screen the files they read and write on the SD card. 
+The file system component turns paths into files on the SD card and keeps a game inside its directory. The games, the host, the logger, the config, the sounds and the screen get their files from it.
 
 Each file is a [`FileWriter`](../drivers/storage.md#files) of the [storage driver](../drivers/storage.md).
 
@@ -14,26 +14,4 @@ A path that is empty, starts with `/`, holds `..` or is too long gives a file wh
 
 ## Interface
 
-```cpp
-// the files on the card, as the games, the host and the logger see them
-class FileSystem {
-public:
-    explicit FileSystem(Storage& storage);
-
-    // gets a file by its path inside the running game's directory, such as "best"; an empty
-    // path, one from the card's root, one with .. or one too long gives a file whose requests
-    // fail. No card access
-    FileWriter open(const char* path);
-
-private:
-    friend class GameHost;
-    friend class Logger;
-    friend class Config;
-
-    // gets a file by its full path, such as "/log-a.txt"; the host, the logger and the config only. No card access
-    FileWriter openFull(const char* path);
-
-    // sets the game in whose directory open() opens files; the host only
-    void use(const char* game);
-};
-```
+[`components/file-system.h`](../../../firmware/src/components/file-system.h) holds `FileSystem`.
