@@ -1,6 +1,6 @@
 # Sounds component
 
-This component allows the game to play its own audio files from the SD card in the `/games/<id>/audio` directory.
+The sounds component plays the game's audio files from the SD card in the `/games/<id>/audio` directory.
 
 The host hands every `SoundEnded` event of the driver to this component.
 
@@ -54,7 +54,7 @@ The two starting volumes squared add up to at most 1, so music and an effect tog
 ## Interface
 
 ```cpp
-// the sounds of the running game, the music on one channel and the effects on the other three;
+// the sounds of the running game, the music on one channel and the effects on the remaining channels;
 // every call returns at once
 class Sounds : public Component {
 public:

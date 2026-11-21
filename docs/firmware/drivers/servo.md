@@ -4,7 +4,7 @@ The driver sets the angle of the servo that [`docs/parts/servo/design.md`](../..
 
 A timer repeats the servo pulse in every frame of 20 ms. A new pulse width written to the timer takes effect at the start of the next frame. Until then, the timer keeps the width it already holds. For the servo's pin, the Teensy core sets that width to the whole frame at boot. PWMServo's first `write()` connects the pin to the timer at once, so the servo first gets a pulse of up to 20 ms and drives to its stop. PWMServoT4's `attach()` therefore sets the timer to no pulse first and waits until the timer has taken that setting. The first pulse the servo gets is then the one the first `write()` names.
 
-`attach()` takes only a pin that a channel X of FlexPWM1 drives, because the no-pulse setting goes into that channel's compare register. Its header is called `pwm-servo-t4.h`. The compiler therefore cannot include the PWMServo that Teensyduino bundles in its place.
+`attach()` takes only a pin that a channel X of FlexPWM1 drives, because the no-pulse setting goes into that channel's compare register. The header name differs from PWMServo's, so the compiler cannot include the PWMServo that Teensyduino bundles in its place.
 
 ## Servo positions
 
@@ -48,34 +48,3 @@ The servo counts as failed when its timer has not taken the no-pulse setting in 
 ## Driver Code
 
 The driver's interface stands in [`firmware/src/drivers/servo-driver.h`](../../../firmware/src/drivers/servo-driver.h).
-
-```cpp
-class ServoDriver : public Driver {
-public:
-    enum class Position : uint8_t { START, END };
-
-    // the two angles and the speed of the config, each with its default
-    struct Settings;
-
-    // takes the angles and the speed, each held inside its range; the main task, before begin()
-    void configure(const Settings& settings);
-
-    // attaches its step to the driver tick, attaches the pin with the SER0049's range, 500 µs to
-    // 2500 µs, sets no pulse and sends the servo to its start position; false when the driver
-    // tick is full or the timer has not taken the no-pulse setting after two frames
-    bool begin() override;
-
-    // moves the servo at the config's speed to one of its two end positions; nothing once begin()
-    // has failed
-    void moveTo(Position target);
-
-    // gets the end position last moved to
-    Position position() const;
-
-    // gets how long a move from one end position to the other takes at the config's speed, in ms
-    uint32_t travelMs() const;
-
-    // gets the servo as failed once its timer has not taken the no-pulse setting in attach()
-    Fault failed() const override;
-};
-```
