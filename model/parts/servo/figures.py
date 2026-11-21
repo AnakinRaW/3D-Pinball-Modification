@@ -191,6 +191,8 @@ with MODEL.block("SUPPLY", section=SUPPLY):
        "180° column, SER0049, stall current at most 650 mA at 6.0 V")
     ds("i_stall", 800, "mA", sheet=SERVO, src="SPECIFICATION list, stall current at most 800 mA at "
        "6.0 V, the larger of the sheet's two figures and the one the design takes")
+    asm("t_move_max", 2, "s", stated=False, src="the longest one move of the servo lasts, from the "
+        "drain's command to the end of its travel, estimated and not measured")
     ds("t_block", 5, "s", sheet=SERVO, stated=False, src="Electronic Protection: after being "
        "blocked for 5 seconds the servo turns off its power")
     MODEL.uses("l_feed", of="solenoid")

@@ -18,7 +18,7 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 10. **Ambient light:** RGB strips along the sides of the playfield and the diorama's ceiling run effects and palettes.
 11. **Speaker:** the music and up to three effects play at once. The music goes on where an effect interrupted it.
 
-[`docs/features.md`](docs/features.md) lists every feature, with the ball save, the games and the light effects.
+[`docs/features.md`](docs/features.md) lists every feature, with the modes, the games and the light effects.
 
 ## Repository
 
@@ -39,6 +39,7 @@ This repository hosts everything for the project:
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
 | Checking tools | [`tools/`](tools/) |
+| Arcade: the machine's features and games in the browser | [`tools/arcade/`](tools/arcade/) |
 
 ## Reversibility
 

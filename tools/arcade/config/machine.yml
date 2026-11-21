@@ -1,0 +1,96 @@
+# Where each part of the drawing in assets/playfield/ sits in the hardware, for the inspector. The
+# firmware's playfield components will hold this map. Until then the values here are invented, in
+# the ranges the drivers' documents give.
+
+# The playfield's lamps in the order of their section's chain, one entry for each entry of
+# lamps.<section>.lamps in config.yml.
+lamps:
+  playfield_lower:
+    - lamp-star-1000
+    - lamp-star-100
+    - lamp-star-800
+    - lamp-star-900
+    - lamp-star-600
+    - lamp-star-700
+    - lamp-star-400
+    - lamp-star-500
+    - lamp-star-200
+    - lamp-star-300
+    - lamp-drain
+    - lamp-shooter-1
+    - lamp-shooter-2
+    - lamp-shooter-3
+    - lamp-shooter-4
+    - lamp-shooter-5
+    - lamp-shooter-6
+    - lamp-inlane-left-outer
+    - lamp-inlane-left-inner
+    - lamp-inlane-right-inner
+    - lamp-inlane-right-outer
+  playfield_middle:
+    - lamp-arrow-left-outer
+    - lamp-arrow-left-inner
+    - lamp-arrow-center
+    - lamp-arrow-right
+    - lamp-scoop
+    - lamp-target-left
+    - lamp-target-right
+  playfield_upper:
+    - lamp-top-lane-1
+    - lamp-top-lane-2
+    - lamp-top-lane-3
+    - lamp-insert-1
+    - lamp-insert-2
+    - lamp-insert-3
+    - lamp-insert-4
+
+# The ambient strips: the drawing's strip and the lamp group that drives it.
+strips:
+  lights-perimeter-left: perimeter_left
+  lights-perimeter-right: perimeter_right
+  lights-ceiling: ceiling
+
+# Each placement that is a device: the driver that serves it, its channel there, and the
+# firmware component a game talks to.
+devices:
+  ir-orbit-top:          { driver: IR sensing, channel: 0, component: Tracks }
+  ir-left-lane:          { driver: IR sensing, channel: 1, component: Scoop }
+  ir-top-lane-1:         { driver: IR sensing, channel: 2, component: Top lanes }
+  ir-top-lane-2:         { driver: IR sensing, channel: 3, component: Top lanes }
+  ir-top-lane-3:         { driver: IR sensing, channel: 4, component: Top lanes }
+  ir-inlane-left-outer:  { driver: IR sensing, channel: 5, component: Inlanes }
+  ir-inlane-left-inner:  { driver: IR sensing, channel: 6, component: Inlanes }
+  ir-inlane-right-inner: { driver: IR sensing, channel: 7, component: Inlanes }
+  ir-inlane-right-outer: { driver: IR sensing, channel: 8, component: Inlanes }
+  ir-ramp-green:         { driver: IR sensing, channel: 9, component: Tracks }
+  ir-ramp-blue:          { driver: IR sensing, channel: 10, component: Tracks }
+  ir-ramp-red:           { driver: IR sensing, channel: 11, component: Tracks }
+  bumper-1:              { driver: Solenoid, channel: 0, component: Bumpers }
+  bumper-2:              { driver: Solenoid, channel: 1, component: Bumpers }
+  bumper-3:              { driver: Solenoid, channel: 2, component: Bumpers }
+  ball-scoop:            { driver: Solenoid, channel: 3, component: Scoop }
+  bell-top:              { driver: Contacts, channel: 0, component: Bells }
+  bell-right:            { driver: Contacts, channel: 1, component: Bells }
+  target-left:           { driver: Contacts, channel: 2, component: Targets }
+  target-right:          { driver: Contacts, channel: 3, component: Targets }
+  seal:                  { driver: Magnetic rotary sensor, component: Rotating seal }
+  drain:                 { driver: Break beam, component: Drain }
+  drain-ball-store:      { driver: Servo, component: Drain }
+  display:               { driver: Display and touch, component: Screen }
+  speaker:               { driver: Audio, component: Sounds }
+
+# The ramps the switch bar over the drawing hides, so the lamps under them show: each with its name on
+# the machine and the color of its pill.
+ramps:
+  ramp-orbit-left: {name: Top ramp, color: "#2f9e5a"}
+  ramp-orbit-right: {name: Launch track, color: "#8a8f98"}
+  ramp-blue: {name: Ramp track, color: "#2f6fd6"}
+  wire-ramp: {name: Crocodile track, color: "#d64545"}
+
+# The balls at rest the Features view shows with a part.
+reveals:
+  drain-ball-store: [ball-store-front, ball-store-back]
+
+# The parts that cover others: the Features view hides a cover while a feature shows a part under it.
+covers:
+  apron: [drain-ball-store, speaker]

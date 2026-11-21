@@ -9,8 +9,9 @@
 | [`pdftext.py`](pdftext.py) | Pulls the shown text out of a datasheet PDF, enough to look a cited reading up |
 | [`playfield/compose.py`](playfield/compose.py) | Composes the playfield drawing in [`assets/playfield/`](../assets/playfield/) from its part files and `playfield.json`, writes the same drawing with the README's feature bubbles, and checks both against them |
 | [`picture.py`](picture.py) | Turns PNGs of at most 320 × 240 pixels into picture files for the screen, in LVGL's image format and dithered to RGB565, as [`media.md`](../assets/media.md) describes |
+| [`arcade/`](arcade/) | The Arcade: the drawing of the machine with its features, the games and the Studio that edits them, as [its README](arcade/README.md) gives |
 
-Python 3, standard library only, no build step.
+The Python tools need Python 3 and its standard library only, with no build step. The Arcade is a Node.js app.
 
 ## figcheck
 

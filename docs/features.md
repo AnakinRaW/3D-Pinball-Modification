@@ -8,9 +8,8 @@ The modification keeps every feature of the stock machine and builds on it.
 
 | Feature | Stock machine | Modification |
 |---|---|---|
-| **Multiball** | None. | **Two balls may be in play at the same time.** [Drain](firmware/components/drain.md) |
-| **Ball save** | None. | **A ball that drains soon after its launch comes back** into the plunger lane. [Example game](firmware/game-abstraction.md#an-example-game) |
-| **Modes** | | A game splits its rules into **modes**, such as **a skill shot**, the ball save or the multiball. **Several modes run at the same time**, each with its own lights, slide and music. [Modes](firmware/game-abstraction.md#modes) |
+| **Multiball** | None. | **Two balls may be in play at the same time.** Sensors in the drain see each ball in the store. A **seesaw separates the two balls** and releases one at a time into the plunger lane. [Drain](firmware/components/drain.md) |
+| **Modes** | None. | A game splits its rules into **modes**, such as **a skill shot**, **the ball save** or the multiball. The ball save returns **a ball that drains soon after its launch** into the plunger lane. **Several modes run at the same time**. Each mode has lights, a slide and music. [Modes](firmware/game-abstraction.md#modes), [example game](firmware/game-abstraction.md#an-example-game) |
 | Rules | One built-in game, which the player wins or loses. | **Several games** can be built into the firmware, each with its own rules, sounds and pictures. Each game **keeps its high score**. [Game abstraction](firmware/game-abstraction.md) |
 
 ## Playfield
@@ -36,8 +35,7 @@ The modification keeps every feature of the stock machine and builds on it.
 
 | Feature | Stock machine | Modification |
 |---|---|---|
-| Lamps | Single-colored LEDs light the playfield, switched only in groups. | Every light is **an RGB LED whose color the game sets on its own**. **New lights** mark the tracks, the scoop, the targets, the top lanes and the goals of the game's modes. [Lighting](parts/lighting/design.md) |
-| **Effects** | | A light **blinks, pulses, fades or runs along several lights**. The effects of several modes **overlap**. [Lamps](firmware/components/lamps.md) |
+| Lamps | Single-colored LEDs light the playfield, switched only in groups. | Every light is **an RGB LED whose color the game sets**. **New lights** mark the tracks, the scoop, the targets, the top lanes and the goals of the game's modes. A light **blinks, pulses, fades or runs along several lights**. The effects of several modes **overlap**. [Lighting](parts/lighting/design.md), [lamps](firmware/components/lamps.md) |
 | Ambient light | White strips light the sides of the playfield and the ceiling of the diorama. | **RGB strips** at the same places run **effects and palettes** along their whole length. |
 
 ## Sound

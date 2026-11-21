@@ -68,7 +68,7 @@ The perimeter segments lie in the transparent trenches along the side panels, li
 
 The strip's currents are [measured](../../research/Custom/sezo-ws2812b-strip.md), the colors on a piece of two LEDs cut from it and the dark draw on the whole strip. At full brightness one LED draws 5.55 mA for red, 6.15 mA for green and 6.1 mA for blue, 17.8 mA for white. Its controller draws 0.42 mA even while the LED is dark, 0.1 A for all 244 LEDs.
 
-This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display and the IR board. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
+This machine is designed for power supplies which deliver 3 to 6 A. The [power design](../power/design.md#adapter) reserves 0.91 A for the permanent consumers, the Teensy with its SD card, the audio, the display, the IR board and the servo at rest. Not counting solenoids here, that leaves at least 2.09 A for the lighting.
 
 The adapter's rating is set in the [machine config](../../firmware/components/config.md). The [lighting driver](../../firmware/drivers/lighting.md) picks the matching profile from that setting at start-up. A brightness is FastLED's value from 0 to 255. The 3 A config is the default and fallback setting for any error case.
 
@@ -77,7 +77,7 @@ The adapter's rating is set in the [machine config](../../firmware/components/co
 | Perimeter LEDs lit | every second, 80 | all, 158 |
 | Playfield lights, brightness at most | 255 | 255 |
 | Ambient lights, brightness at most | 102 | 128 |
-| Cap | 2 A | 2.93 A |
+| Cap | 2 A | 2.92 A |
 
 The playfield lights may reach full brightness. The ambient lights may reach what the cap leaves in FastLED's sum with the whole layout at full white, rounded down to a brightness value. They need no more than 128 in any case. Within these limits a game sets the brightness of both itself, as the [lamps component](../../firmware/components/lamps.md#brightness) describes. With the 6 A adapter the cap leaves room for three coils pulling at once. With the 3 A adapter the lighting at its cap leaves no room for a coil. A pull-in then draws past the adapter, as the power design describes.
 
