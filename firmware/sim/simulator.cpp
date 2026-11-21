@@ -1,4 +1,4 @@
-// The WebAssembly module of the browser simulator: the firmware's lamps component and lighting
+// The WebAssembly module of the Arcade: the firmware's lamps component and lighting
 // driver on a simulated clock. The browser places the lamp groups on their chains, starts effects
 // on them, advances the time and reads each chain's colors as the LEDs would show them.
 #include <emscripten/bind.h>

@@ -55,7 +55,7 @@ export function TopBar({ state }: { state: State }) {
   return (
     <header class="topbar">
       <span class="brand">
-        <span class="brand-name">Pinball Simulator</span>
+        <span class="brand-name">Pinball Arcade</span>
         <span class="build" title="The commit the app was built from">
           build {__COMMIT__}
         </span>

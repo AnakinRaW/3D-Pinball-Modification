@@ -1,6 +1,6 @@
-# The browser simulator's WebAssembly module: the firmware's lamps component and lighting driver
+# The Arcade's WebAssembly module: the firmware's lamps component and lighting driver
 # from firmware/src, with the simulated output stage of fakes/ in place of the FlexIO2 one.
-# Built with Emscripten through emcmake, as tools/simulator's "npm run wasm" runs it.
+# Built with Emscripten through emcmake, as tools/arcade's "npm run wasm" runs it.
 cmake_minimum_required(VERSION 3.24)
 project(pinball_simulator CXX)
 

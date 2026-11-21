@@ -38,7 +38,7 @@ This repository hosts everything for the project:
 | Part list (BOM) | [`docs/parts-list.md`](docs/parts-list.md) |
 | Photos, renders & other assets | [`assets/`](assets/) |
 | Checking tools | [`tools/`](tools/) |
-| Browser simulator of the machine | [`tools/simulator/`](tools/simulator/) |
+| Arcade: the machine's features and games in the browser | [`tools/arcade/`](tools/arcade/) |
 
 ## Reversibility
 

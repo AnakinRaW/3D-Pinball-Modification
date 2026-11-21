@@ -41,7 +41,7 @@ const cap = signal(255);
 const chains = signal<Uint8Array[]>([]); // the colors of the frame shown
 const adapter = signal<Adapter>(3);
 const layers = signal<{ key: number; label: string }[]>([]);
-// the .lights files of the simulator, by their file name
+// the .lights files of the Arcade, by their file name
 const SEQUENCE_FILES = Object.fromEntries(
   Object.entries(import.meta.glob<string>("../../lights/*.lights", { query: "?raw", import: "default", eager: true })).map(
     ([path, text]) => [path.split("/").pop()!.replace(/\.lights$/, ""), text],

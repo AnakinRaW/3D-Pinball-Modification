@@ -2,7 +2,7 @@
 // in the top bar sets data-theme on the page and is remembered in this browser.
 export type Theme = "light" | "dark";
 
-const KEY = "pinball-simulator-theme";
+const KEY = "pinball-arcade-theme";
 
 export function storedTheme(): Theme | null {
   try {

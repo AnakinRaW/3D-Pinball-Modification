@@ -1,4 +1,4 @@
-// The games the simulator lists: each is a folder with a game.yml, on the memory card as /games/<id>/,
+// The games the Arcade lists: each is a folder with a game.yml, on the memory card as /games/<id>/,
 // in the repository as games/<id>/, or built into the firmware. This file reads the folders' game.yml
 // files far enough to name each game and its top-level sections; the rules themselves come later. A
 // picture named thumbnail.png, .jpg or .webp beside the game.yml is the game's thumbnail.

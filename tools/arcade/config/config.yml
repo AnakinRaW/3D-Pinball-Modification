@@ -1,4 +1,4 @@
-# The machine config the simulator runs with, in the format of /config.yml on the memory card
+# The machine config the Arcade runs with, in the format of /config.yml on the memory card
 # (docs/firmware/components/config.md). The lamp groups follow the light layout of the drawing in
 # assets/playfield/, the perimeters' heights at the strips' bends included. The IR calibration
 # values and the pull times are invented until the machine's card supplies a config.

@@ -173,7 +173,7 @@ function GameHero({ game, state }: { game: GameEntry | null; state: State }) {
     return (
       <div class="game-hero empty">
         <div class="hero-body">
-          <p class="hero-kicker">Pinball Simulator</p>
+          <p class="hero-kicker">Pinball Arcade</p>
           <h1>No games yet</h1>
           <button class="hero-play" data-action="open-card" disabled={!picker()} onClick={() => void openCard(state)}>
             Open memory card

@@ -44,7 +44,7 @@ describe.runIf(built)("the firmware's lamps in the browser", () => {
     for (const g of Object.values(hw.config.groups)) expect(chains[CHAINS.indexOf(g.chain as never)].length).toBe(3 * g.leds);
   });
 
-  it("cuts the playfield into the lamps the simulator's walk gives, each on its chain and LED", () => {
+  it("cuts the playfield into the lamps the Arcade's walk gives, each on its chain and LED", () => {
     const spans = lampSpans(hw.config).flat();
     expect(m.playfieldLamps()).toBe(spans.length);
     for (const span of spans) {

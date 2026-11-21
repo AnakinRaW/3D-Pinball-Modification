@@ -1,4 +1,4 @@
-// The machine config in the format of /config.yml on the memory card, and the simulator's map from the
+// The machine config in the format of /config.yml on the memory card, and the Arcade's map from the
 // drawing's parts to the hardware. Together they place every lamp on its chain and every device on its channel.
 import { parse } from "yaml";
 

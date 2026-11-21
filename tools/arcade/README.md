@@ -1,4 +1,4 @@
-# Simulator
+# Arcade
 
 A browser tool that shows the machine as the drawing in [`assets/playfield/`](../../assets/playfield/) and runs the firmware's lamps behind it.
 

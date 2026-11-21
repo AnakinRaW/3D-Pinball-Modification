@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Writes the figures the simulator's current readout takes from the repository's models into
-tools/simulator/config/figures.json.
+"""Writes the figures the Arcade's current readout takes from the repository's models into
+tools/arcade/config/figures.json.
 
-    python tools/simulator/scripts/figures.py           write the file
-    python tools/simulator/scripts/figures.py --check   exit with 1 where the file differs
+    python tools/arcade/scripts/figures.py           write the file
+    python tools/arcade/scripts/figures.py --check   exit with 1 where the file differs
 
 Each figure is evaluated by the model that declares it and written in the unit the app reads it in,
 so the app holds no number of its own.
@@ -19,7 +19,7 @@ sys.modules.setdefault("figcheck", __import__("figcheck"))
 
 from figlib.repo import ROOT, model_named  # noqa: E402
 
-OUT = TOOLS / "simulator" / "config" / "figures.json"
+OUT = TOOLS / "arcade" / "config" / "figures.json"
 
 # key: (model, unit the app reads it in)
 FIGURES = {

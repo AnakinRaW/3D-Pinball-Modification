@@ -4,7 +4,7 @@ import { signal } from "@preact/signals";
 
 export const PANEL_MIN_PX = 220;
 export const PANEL_MAX_PX = 560;
-const KEY = "pinball-simulator-studio-panels";
+const KEY = "pinball-arcade-studio-panels";
 
 function stored(): { left: number; right: number } {
   try {

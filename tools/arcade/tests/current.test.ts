@@ -39,7 +39,7 @@ describe("the figures", () => {
     } catch {
       python = "python3";
     }
-    const out = execFileSync(python, [repo("tools/simulator/scripts/figures.py"), "--check"]).toString();
+    const out = execFileSync(python, [repo("tools/arcade/scripts/figures.py"), "--check"]).toString();
     expect(out).toContain("matches the models");
   });
 });

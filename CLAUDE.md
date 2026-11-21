@@ -58,8 +58,8 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 - `hardware/cad/`: 3D models, a source model plus a neutral export (STEP for mating parts, STL or 3MF for printed ones)
 - `model/`: the Python files the checks read, in folders that mirror those under `docs/`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `tools/simulator/`: the browser simulator, a TypeScript app with Vite and Preact. It shows the drawing with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
-- `firmware/sim/`: the simulator's WebAssembly build of the lamps component and the lighting driver, with a simulated output stage in `fakes/`
+- `tools/arcade/`: the Arcade, a browser app in TypeScript with Vite and Preact. It shows the drawing with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
+- `firmware/sim/`: the Arcade's WebAssembly build of the lamps component and the lighting driver, with a simulated output stage in `fakes/`
 - `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
 
 ## Commands
@@ -78,10 +78,10 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 | `python tools/netlist.py model/parts/<subsystem>/figures.py [board]` | Prints the netlist a model declares for each board. `--kicad <out.net>` writes one board as a KiCad netlist, and `--diff <kicad.net>` compares a netlist KiCad exported with the declaration |
 | `python tools/playfield/compose.py` | Writes `assets/playfield/playfield.svg` from the part files and `playfield.json`, and `features.svg`, the same drawing with the README's numbered feature bubbles. `--check` exits with 1 when a drawing differs from what they compose |
 | `python tools/picture.py <png> ...` | Turns PNGs of at most 320 × 240 pixels into picture files for the screen component, in LVGL's image format and RGB565, dithered after Floyd–Steinberg. A picture with transparent pixels keeps its opacity. [`assets/media.md`](assets/media.md) gives how pictures, videos and sounds are made |
-| `npm install`, then `npm run dev` in `tools/simulator/` | Installs the simulator's pinned dependencies and starts it on http://localhost:5173, where it reloads on every change to its code, the drawing or the feature texts. It needs Node.js 22 or newer |
-| `npm run wasm` in `tools/simulator/` | Builds the firmware's lamps component and lighting driver from `firmware/sim` as a WebAssembly module for the simulator's Studio. It needs Emscripten at the version `firmware/sim/emsdk-version` names, in `%LOCALAPPDATA%\emsdk`, and CMake and Ninja, here from Python's `cmake` and `ninja` packages |
-| `npm test` in `tools/simulator/` | Runs the simulator's Vitest tests, which hold its machine config and its part map to the drawing and run the firmware's lamps in WebAssembly, skipped without `npm run wasm` |
-| `npm run build` in `tools/simulator/` | Checks the simulator's types and writes the app to `tools/simulator/dist/` |
+| `npm install`, then `npm run dev` in `tools/arcade/` | Installs the Arcade's pinned dependencies and starts it on http://localhost:5173, where it reloads on every change to its code, the drawing or the feature texts. It needs Node.js 22 or newer |
+| `npm run wasm` in `tools/arcade/` | Builds the firmware's lamps component and lighting driver from `firmware/sim` as a WebAssembly module for the Arcade's Studio. It needs Emscripten at the version `firmware/sim/emsdk-version` names, in `%LOCALAPPDATA%\emsdk`, and CMake and Ninja, here from Python's `cmake` and `ninja` packages |
+| `npm test` in `tools/arcade/` | Runs the Arcade's Vitest tests, which hold its machine config and its part map to the drawing and run the firmware's lamps in WebAssembly, skipped without `npm run wasm` |
+| `npm run build` in `tools/arcade/` | Checks the Arcade's types and writes the app to `tools/arcade/dist/` |
 
 The firmware builds with PlatformIO, installed with `python -m pip install platformio`. Its [`platformio.ini`](platformio.ini) stands in the repository's root, where the commands run. CI builds the release firmware, checks its code with clang-tidy, runs the `computer` tests and checks the tests against testing.md on each push touching `firmware/` or testing.md:
 

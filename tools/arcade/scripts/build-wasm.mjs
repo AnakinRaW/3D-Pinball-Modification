@@ -1,4 +1,4 @@
-// Builds the simulator's WebAssembly module from firmware/sim with Emscripten, CMake and Ninja, and
+// Builds the Arcade's WebAssembly module from firmware/sim with Emscripten, CMake and Ninja, and
 // copies it to src/wasm/, simulator.mjs and the simulator.wasm it loads, where the app and the tests
 // take it.
 //
