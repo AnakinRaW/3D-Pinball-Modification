@@ -8,7 +8,7 @@ A sensed solenoid fires when a ball closes a circuit between the conductive foil
 
 With its return spring, the scoop's solenoid does not pull upward at the machine's 5 V, as its [measurements](../../research/Custom/adafruit-3992.md#measurements) show. It is built in without the spring and mounted pulling upward. Gravity returns its armature.
 
-Two boards drive and sense them. The coil board carries the four drive channels. The sense board carries the three sense channels. Below the schematic of both boards. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
+Two boards drive and sense them. The coil board carries the four drive channels. The sense board carries the three sense channels. The schematic of both boards follows. The last digit of a component is the channel it belongs to. Q1, D1, R11 and R21 make up drive channel 1, and R31, R41 and C1 make up sense channel 1.
 
 ![Solenoid boards schematic](board-schematic.svg)
 
@@ -36,7 +36,7 @@ Each sensed solenoid's shell reaches the sense board on a separate wire. A pull-
 
 The four coils draw from the central 5 V power distribution. The three sense channels are driven directly from the Teensy, since their current draw is next to nothing. That keeps every sense net dead whenever the Teensy is dead. The two supply rails sit on separate boards.
 
-Each board has its own ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's cable. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over the coil board's supply pair. The coil board's cable to the Teensy carries no ground.
+Each board has a separate ground net. The sense channels sit on the signal ground, which reaches the Teensy over the sense board's cable. The MOSFETs, the flyback diodes, the gate pull-downs and C91 sit on the coil board's power ground, which reaches the distribution over the coil board's supply pair. The coil board's cable to the Teensy carries no ground.
 
 > On the bench, with the Teensy on USB, the coil board's GND must be joined with the Teensy's GND.
 
@@ -111,7 +111,7 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](../../../model/parts/solenoid/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
+[`figures.py`](../../../model/parts/solenoid/figures.py) computes the figures below.
 
 **The drive channel.** What the Teensy pin sees, what the gate sees, and what the drain sees.
 
@@ -315,5 +315,5 @@ HOLD      the watchdog timeout, after which the
 - [Taiwan Semiconductor 1N5817 to 1N5819](../../datasheets/1N5817-1N5819-TSC.pdf), Version H2104: the 1N5819 column of the absolute maximum ratings and the electrical specifications
 - [NXP i.MX RT1060 Crossover Processors for Consumer Products](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: the GPIO high-level input voltage, given as 0.7 × NVCC_XXXX
 - [`research/Custom/adafruit-3992.md`](../../research/Custom/adafruit-3992.md): the scoop's solenoid, its coil resistance and how it pulls with and without its return spring
-- [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what each one costs
+- [`pin-assignment.md`](../../pin-assignment.md): which pins are free, and what each one costs
 - [`docs/firmware/driver-design.md`](../../firmware/driver-design.md): that a sensed solenoid is fired inside its interrupt and reports afterwards

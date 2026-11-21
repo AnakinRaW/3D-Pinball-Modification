@@ -8,7 +8,7 @@ Three bumpers sit on the EG01 playfield. Each is an open-frame push/pull solenoi
 
 A conductive foil glued onto the playfield sits at 5 V whenever the machine runs (measured). Shell, plunger and frame form one conductive node; diode test and resistance from each coil pin to the frame read open, so this node is isolated from the coil.
 
-A ball on the foil touching a shell connects that bumper's frame to 5 V. The conductive path reads 7-30 Ω, measured along the foil and across a closed contact, at various points. Each frame has its own wire to the mainboard, which is how the board tells the three bumpers apart.
+A ball on the foil touching a shell connects that bumper's frame to 5 V. The conductive path reads 7-30 Ω, measured along the foil and across a closed contact, at various points. Each frame has a separate wire to the mainboard, which is how the board tells the three bumpers apart.
 
 ## Trigger behavior
 

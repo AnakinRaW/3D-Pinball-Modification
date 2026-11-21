@@ -13,7 +13,7 @@ The IR channels are how the game knows where the ball is.
 
 ## TL;DR from the stock machine
 
-The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md). Everything below builds on the interface established there:
+The stock board, its measurements and its reconstructed circuit are documented in [`research/Rokr/2_ir-reflective-sensor-p33.md`](../../research/Rokr/2_ir-reflective-sensor-p33.md). The interface established there is:
 
 - Pin 1 supply,
 - Pin 2 phototransistor emitter output,
@@ -33,7 +33,7 @@ Three sensor boards come out of the stock machine. This modification keeps these
 
 ### Central board
 
-It is planned to have a central IR board which provides the whole electrical infrastructure to interconnect sensor boards to the Teensy microcontroller. The IR board therefore connects the sensor boards and carries their supply.
+A central IR board provides the whole electrical infrastructure that interconnects the sensor boards and the Teensy microcontroller. The IR board therefore connects the sensor boards and carries their supply.
 
 ### Power Supply Design: 5 V vs 3.3 V
 
@@ -68,7 +68,7 @@ In permanent darkness (tunnel or under playfield) the design works and delivers 
 
 This follows the principle of the stock machine. The emitter is pulsed and every channel is read twice, once lit and once dark. The difference is what the emitter's own light did, so ambient light cancels out of the reading whatever it happens to be doing.
 
-One transistor switches all emitters together, so a single Teensy pin controls the whole bus. Each phototransistor works into its own pull-down and is read independently in both phases.
+One transistor switches all emitters together, so a single Teensy pin controls the whole bus. Each phototransistor works into a separate pull-down and is read independently in both phases.
 
 ![Chosen variant: pulsed LED with differential measurement](pulsed-schematic.svg)
 
@@ -76,7 +76,7 @@ One transistor switches all emitters together, so a single Teensy pin controls t
 |---|---|
 | Supply | Pin 1 of every sensor board to the board's 3.3 V |
 | Signal, per channel | Pin 2 of each board to an analog input, with a 4.7 kΩ pull-down to GND at the sensor-side node. The pull-down converts the photocurrent into a voltage; without it the output carries no measurable signal |
-| LED drive, common | Pin 3 of each board through its own 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2.2 kΩ from the isolator's CLOCK output, with a 100 kΩ pull-down to GND at the gate |
+| LED drive, common | Pin 3 of each board through a separate 220 Ω to a shared LED bus. The bus goes to the drain of one switching transistor, source to GND, gate driven through a 2.2 kΩ from the isolator's CLOCK output, with a 100 kΩ pull-down to GND at the gate |
 | Ground | No ground line runs to the sensor boards. The returns are Pin 2 through its pull-down and Pin 3 through its 220 Ω and the transistor |
 
 Every value here is derived in [the appendix](#appendix-derivations).
@@ -119,7 +119,7 @@ Both have to pass.
 
 Which pins this subsystem takes, and what each one locks out, is in [`pin-assignment.md`](../../pin-assignment.md). What constrained the choice:
 
-- **The SPI bus is reserved for the converters.** A second device on this bus will not work reliably, because U3 drives MISO whenever the Teensy is powered, even while no converter is selected. Each converter adds only its own chip select.
+- **The SPI bus is reserved for the converters.** A second device on this bus will not work reliably, because U3 drives MISO whenever the Teensy is powered, even while no converter is selected. Each converter adds only a chip select.
 - **Two chip selects need no special function, the clock line takes a PWM channel** so the emitter pulse leaves the timer's compare logic rather than an interrupt.
 
 ## Software
@@ -190,7 +190,7 @@ The channels are digitized on the board and cross to the Teensy over SPI. A Teen
 
 Using N channels read by the Teensy directly would also need N of its eighteen analog pins, and therefore requires sacrificing pins that carry the I²C buses or the serial ports. Two analog-digital converters (ADC) on the IR board bring the pin cost down to one SPI bus and two chip selects.
 
-**The MCP3008** ([datasheet](../../datasheets/MCP3004-3008-Microchip.pdf)) is an eight-channel ten-bit ADC with an SPI interface containing also an internal channel multiplexer and its own sample-and-hold. Two of them cover sixteen positions.
+**The MCP3008** ([datasheet](../../datasheets/MCP3004-3008-Microchip.pdf)) is an eight-channel ten-bit ADC with an SPI interface, an internal channel multiplexer and a sample-and-hold. Two of them cover sixteen positions.
 
 | Converter signal | Wiring |
 |---|---|
@@ -207,7 +207,7 @@ A channel resolves to ten bits, one step of 3.3 mV at V<sub>REF</sub> max.
 
 Populated with sixteen channels the board can draw up to 222 mA. The board takes all of it through the socket of its supply module, from the module in the machine and from the Teensy's 3V3 pin on the bench. The 250 mA that pin allows is what the bench case is sized against, and it is shared with whatever else of this modification hangs on the Teensy.
 
-In normal operation the board will be supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module plugged into that socket, fed with the machine's 5 V from the [power board](../power/design.md). It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
+In normal operation the board is supplied from a [**Pololu D24V5F3**](https://www.pololu.com/product/2842), a step-down module plugged into that socket, fed with the machine's 5 V from the [power board](../power/design.md). It holds 3.3 V within 4 % and carries 500 mA. Its input works down to 3.4 V, which the rail stays above even while the bumper solenoids fire.
 
 On the test bench the module stays out. The Teensy's 3V3 pin then feeds the socket at VOUT and GND.
 
@@ -221,9 +221,9 @@ The two rails differ by the 66 mV R39 drops. 3V3 feeds every sensor board, U3's 
 
 #### Separating power rails
 
-In the machine the board keeps its own rail, so either side can be live while the other is dark, in any order. [Teensy pins must not be driven while the controller is off](../../research/teensy-4.1.md#driving-a-pin-while-the-board-is-unpowered), and a converter input must not be driven while its own supply is off.
+In the machine the board keeps a separate rail, so either side can be live while the other is dark, in any order. [Teensy pins must not be driven while the controller is off](../../research/teensy-4.1.md#driving-a-pin-while-the-board-is-unpowered), and a converter input must not be driven while its supply is off.
 
-**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has its own supply pin: VCC1 from the Teensy's 3V3, VCC2 from the board's rail. Each side also has its own ground. GND1 takes the Teensy's ground and returns side 1 and C3 alone. GND2 takes the IR board's ground, and the IR board takes its ground from the power board alone. The board thus reaches the star point on one path, and the LED bus returns its current without crossing the Teensy's ground. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
+**U3 is an ISO7761F** ([datasheet](../../datasheets/ISO7761-TI.pdf)), a six-channel digital isolator carrying five channels from the Teensy to the board and DOUT back. Each side has a separate supply pin: VCC1 from the Teensy's 3V3, VCC2 from the board's rail. Each side also has a separate ground. GND1 takes the Teensy's ground and returns side 1 and C3 alone. GND2 takes the IR board's ground, and the IR board takes its ground from the power board alone. The board thus reaches the star point on one path, and the LED bus returns its current without crossing the Teensy's ground. The **F** suffix means that the isolator sets each output low, securing both sides don't read HIGH values when the other power rail is off.
 
 The four resistors around U3 keep the DOUT path defined: R37 and R38 bound the current if both converters drive it at once, R36 holds it at a level when neither does, and R34 bounds the current should the Teensy's MISO pin and U3's output ever drive against each other.
 
@@ -231,7 +231,7 @@ The four resistors around U3 keep the DOUT path defined: R37 and R38 bound the c
 
 ### One LED driver for the whole bus
 
-The stock machine gives every channel its own LED driver transistor; this board shares one. That is one transistor and one Teensy pin instead of one of each per channel, and the signal path stays separate per channel either way. Every emitter therefore pulses together. Because the sensor's install locations don't face in another's field of view, nothing is lost by pulsing them at once.
+The stock machine gives every channel a separate LED driver transistor; this board shares one. That is one transistor and one Teensy pin instead of one of each per channel, and the signal path stays separate per channel either way. Every emitter therefore pulses together. Because the sensor's install locations don't face in another's field of view, nothing is lost by pulsing them at once.
 
 ### Connections
 
@@ -346,7 +346,7 @@ On the finished system:
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](../../../model/parts/ir-reflective/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it. The drawn figures carry a `data-fig` anchor and are checked the same way.
+[`figures.py`](../../../model/parts/ir-reflective/figures.py) computes the figures below.
 
 **Base quantities.** Everything below is built from these.
 
@@ -397,7 +397,7 @@ I_ADC     per converter, 550 µA IDD max
           plus 150 µA VREF drain               =  0.7 mA
           both fitted, sixteen channels        =  1.4 mA
 I_ISO     the 3.3 V DC maximums with every input
-          at its own supply, side 2            =  6.9 mA
+          at its supply, side 2            =  6.9 mA
                             side 1             = 10.3 mA
 I_BUS     thirteen × I_LED worst case plus
           three × the stock channels' 22.7 mA  =  202 mA at sixteen channels
@@ -526,13 +526,13 @@ The 6.9 τ_adc are what carries the channel change. The sample capacitor still h
 
 Changing chip costs nothing beyond that. `t_DIS` is 100 ns max, so the deselected converter releases DOUT before the other one is addressed, which is what lets both share one MISO conductor.
 
-**R37 and R38, 1.2 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound. At their low end they hold the two outputs to 1.52 mA, inside the 2 mA the design allows such a fight. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 puts its own drop across R37 on top. With R37 at its high end and R36 at its low end the low sits at 0.76 V, inside the 0.94 V that `0.3 × VCC2 max` leaves as a guaranteed low.
+**R37 and R38, 1.2 kΩ at each converter's DOUT pin.** While either supply passes through the 1.7 to 2.25 V band of the isolator's undervoltage lockout, its outputs are undetermined, so a spurious edge on SCK can start both selected converters clocking data out at once, and the two then hold opposing bits until firmware raises a chip select. DS21295D rates no output current at all, so the resistors set the bound. At their low end they hold the two outputs to 1.52 mA, inside the 2 mA the design allows such a fight. What they cost is the low level. The converter holds DOUT at V<sub>OL</sub> 0.4 V maximum, and R36 adds its drop across R37 on top. With R37 at its high end and R36 at its low end the low sits at 0.76 V, inside the 0.94 V that `0.3 × VCC2 max` leaves as a guaranteed low.
 
 **R36, 10 kΩ from ADC-DOUT to the board's rail.** Both converters release DOUT whenever neither is selected, and the level then comes from the isolator's internal 1.5 MΩ pull-down alone, an impedance the switching LED bus can move. The pull-up puts a defined high there instead, and settles both dark states as well: with the Teensy off it holds the net at the board's rail, which the barrier keeps away from the connector, and with the board off it holds INF near ground through the dead rail. A converter pulling DOUT low sinks 0.33 mA at most, against the 0.4 V its datasheet specifies at I<sub>OL</sub> = 1 mA and VDD = 4.5 V.
 
 **R34, 2.2 kΩ in the MISO line at U3's output.** Should firmware ever configure the MISO pin as an output, the Teensy and U3 drive against each other through R34 at 1.60 mA at most, inside the 2 mA the isolator's outputs are specified at, instead of shorting two outputs. R33 does the same at Q1's gate, where the charging current comes from an isolator output rather than a Teensy pin, and the gate-resistor block below derives it against the gate charge.
 
-**U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's.** Both are maximums of the 3.3 V DC row with every input at its own supply, the worse of the two DC rows. The AC rows bracket the 2.7 Mbps that the 1.35 MHz clock carries, 6.5 and 6.3 mA at 1 Mbps against 7.5 and 8.6 mA at 10 Mbps, which interpolates to 6.7 and 6.7 mA at this rate, under the DC figures on both sides.
+**U3 costs up to 10.3 mA on the Teensy's rail and 6.9 mA on the board's.** Both are maximums of the 3.3 V DC row with every input at the supply of its side, the worse of the two DC rows. The AC rows bracket the 2.7 Mbps that the 1.35 MHz clock carries, 6.5 and 6.3 mA at 1 Mbps against 7.5 and 8.6 mA at 10 Mbps, which interpolates to 6.7 and 6.7 mA at this rate, under the DC figures on both sides.
 
 Reading DOUT crosses the barrier twice.
 
@@ -622,7 +622,7 @@ zero at e^(−t/τ) = (1 + x) / 2, so t     = τ · ln(2 / (1 + x))
 
 Below that instant the decaying dark trace still sits above the rising lit trace and the difference carries the opposite sign. The figures take the LED current as a step; the 99 µs gate edge of the slower variant is 1.41 τ, which makes them slightly optimistic.
 
-**Where the ball signal comes from.** It is measured: a stock sensor board at its installed position over the track, 100 Ω in the emitter line and the 4.7 kΩ pull-down, read with a ball on the track and with the track clear, each against its own dark reading. [The sensor board's notes](../../research/Rokr/2_ir-reflective-sensor-p33.md) hold the four readings. Leaving 172 mV across the pull-down, of which 165 mV stands at the first read.
+**Where the ball signal comes from.** It is measured: a stock sensor board at its installed position over the track, 100 Ω in the emitter line and the 4.7 kΩ pull-down, read with a ball on the track and with the track clear, each against its dark reading. [The sensor board's notes](../../research/Rokr/2_ir-reflective-sensor-p33.md) hold the four readings. Leaving 172 mV across the pull-down, of which 165 mV stands at the first read.
 
 The datasheet characterizes I<sub>C</sub> at 60 µA minimum and 410 µA maximum, at I<sub>F</sub> = 4 mA, V<sub>CE</sub> = 2 V and d = 4 mm against an aluminum-evaporated mirror on glass, and carries no curve of I<sub>C</sub> against forward current, so that condition and this one cannot be computed into each other: the emitters run at 20.5 mA, 5.13× the characterizing current, and the 9 mm ball returns far less than a mirror. Scaled linearly back to 4 mA the measurement is 7.14 µA against that 60 µA minimum, and the ball is what accounts for the gap. It holds at 25 °C; Figure 4 puts the collector current at 92 % of that at the 40 °C the sensors are bounded at, and the LED's falling V<sub>F</sub> gives 1 to 2 % of it back.
 
@@ -644,7 +644,7 @@ The swing column follows the measured τ. Sixteen channels push the first read l
 I_C,max = 3.449 V / 4.7 kΩ ≈ 0.73 mA  ≪ 20 mA (datasheet I_C maximum), V_OUT max
 ```
 
-The pull-down alone limits the phototransistor branch, on a rebuilt board where nothing sits between the collector and the rail as much as on a stock board with its own 1.585 kΩ. Only the LED path on Pin 3 has no limit on the board and needs one externally.
+The pull-down alone limits the phototransistor branch, on a rebuilt board where nothing sits between the collector and the rail as much as on a stock board with its 1.585 kΩ. Only the LED path on Pin 3 has no limit on the board and needs one externally.
 
 **Bounds on the adjustment knobs.** Each is the point at which the design stops being safe or stops working.
 

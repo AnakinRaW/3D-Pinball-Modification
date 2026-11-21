@@ -107,9 +107,9 @@ No edge pin remains. On the underside, pin 51 remains, FlexSPI2's chip select fo
 | Name | What it is |
 |---|---|
 | **RX**, **TX** | Receive and transmit. RX is a pin data arrives on, TX one it leaves on. Two devices are wired crossed, TX to RX and RX to TX |
-| **Serial** (RX, TX) | UART, a byte stream between exactly two devices with one wire per direction. It has no addressing, so each connected device needs its own port |
-| **SPI** (SCK, MOSI, MISO, CS) | Synchronous bus sharing three wires across several devices. SCK carries the clock, MOSI (master out, slave in) the data leaving the Teensy, MISO (master in, slave out) the data arriving. Each device needs its own CS (chip select) in addition, pulled low to address it. Fast, and costs 3 pins plus one per device |
-| **Wire** (SDA, SCL) | I²C, two wires shared by any number of devices, SDA for data and SCL for the clock. Each device answers to its own address. Slower than SPI, and the pin cost stays at two however many devices hang on it |
+| **Serial** (RX, TX) | UART, a byte stream between exactly two devices with one wire per direction. It has no addressing, so each connected device needs a separate port |
+| **SPI** (SCK, MOSI, MISO, CS) | Synchronous bus sharing three wires across several devices. SCK carries the clock, MOSI (master out, slave in) the data leaving the Teensy, MISO (master in, slave out) the data arriving. Each device needs a separate CS (chip select) in addition, pulled low to address it. Fast, and costs 3 pins plus one per device |
+| **Wire** (SDA, SCL) | I²C, two wires shared by any number of devices, SDA for data and SCL for the clock. Each device answers to a separate address. Slower than SPI, and the pin cost stays at two however many devices hang on it |
 | **CAN** (RX, TX) | Automotive differential bus. Needs an external transceiver chip |
 | **PWM** | A square wave the hardware generates at a set duty cycle. LED brightness, motor and solenoid drive |
 | **Analog in** (A0–A17) | The pin reads a voltage between 0 and 3.3 V as a number instead of only high or low |

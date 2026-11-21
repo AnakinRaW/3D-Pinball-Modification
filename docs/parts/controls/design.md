@@ -30,7 +30,7 @@ Each game decides what the switch does. The firmware reports only its position.
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](../../../model/parts/controls/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+[`figures.py`](../../../model/parts/controls/figures.py) computes the figures below.
 
 ### Series resistor
 

@@ -45,7 +45,7 @@ The emitter and the receiver sit 3.9 cm apart in the stock machine's niches on e
 
 ## Appendix: derivations
 
-[`figures.py`](../../../model/parts/break-beam/figures.py) recomputes every figure below from its inputs, and `tools/figcheck.py` checks each one against its line.
+[`figures.py`](../../../model/parts/break-beam/figures.py) computes the figures below.
 
 ### Emitter
 
@@ -129,4 +129,4 @@ BALL      the steel ball                           9 mm
 - [`research/teensy-4.1.md`](../../research/teensy-4.1.md): the 3.3 V rail and its accuracy
 - [`parts/power/design.md`](../power/design.md): VIN's range from the adapter and on USB alone
 - [`parts/ir-reflective/design.md`](../ir-reflective/design.md): the ball, the fastest ball and the ambient the build assumes
-- [`pin-assignment.md`](../../pin-assignment.md): which pins were free, and what pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") costs
+- [`pin-assignment.md`](../../pin-assignment.md): which pins are free, and what pin [31](../../pin-assignment.md "Receiver output of the ball drain gate") costs

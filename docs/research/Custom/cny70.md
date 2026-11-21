@@ -110,7 +110,7 @@ Taken off the plotted curves in document 83751, which prints no table for either
 
 2.19 V across a 220 Ω from Pin 3 to ground at a supply read as 3.37 V, LED lit continuously, collector taken straight to Pin 1 without the stock board's 1.585 kΩ. That is 9.95 mA and **V_F = 1.18 V at 10 mA**.
 
-Figure 3 reads 1.08 V there, so the part sits 0.10 V above its own curve. Half of that is the reading error the figure carries on a logarithmic axis, the rest is ordinary spread between samples. A GP2S700HCP measured on the same bench at the same current gave 1.17 V, within 10 mV of the CNY70.
+Figure 3 reads 1.08 V there, so the part sits 0.10 V above the curve. Half of that is the reading error the figure carries on a logarithmic axis, the rest is ordinary spread between samples. A GP2S700HCP measured on the same bench at the same current gave 1.17 V, within 10 mV of the CNY70.
 
 **A full board of CNY70 emitters costs about 2 mA more on the bus.** At 220 Ω from the rail maximum, the measured V_F of 1.18 V gives (3.449 − 1.15) V / 220 Ω = 10.4 mA per channel against the 10.3 mA the design derives for the GP2S700HCP, taking 2 mV/°C off V_F for the 40 °C the sensors are bounded at. Sixteen of them spend 167 mA of the 222.6 mA the emitters are allowed.
 

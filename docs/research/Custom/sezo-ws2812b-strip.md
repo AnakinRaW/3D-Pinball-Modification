@@ -1,6 +1,6 @@
 # SEZO WS2812B strip
 
-The lighting is cut from a SEZO strip of WS2812B LEDs, 2 m long and 2.7 mm wide. Each LED carries its own controller, which takes the LED's color from the data line.
+The lighting is cut from a SEZO strip of WS2812B LEDs, 2 m long and 2.7 mm wide. Each LED carries a controller, which takes the LED's color from the data line.
 
 ## Current
 

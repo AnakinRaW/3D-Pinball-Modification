@@ -49,7 +49,7 @@ Four readings against the mainboard's power connector, machine unpowered and the
 | Sense lead to ground | 10 kΩ | R11, in parallel with a junction |
 | Sense lead to +5 V | 2 MΩ | No load on that node |
 
-R11 reads 15.76 kΩ across its own ends and 10 kΩ from the sense lead to ground. The difference is 15.76 kΩ in parallel with 27 kΩ, and the 27 kΩ is Q6's base-emitter junction, which the meter's test voltage partly turns on with the positive lead on the sense node. Reversing the leads on that one reading confirms it, since the reverse-biased junction then leaves R11's own 15.76 kΩ.
+R11 reads 15.76 kΩ across its ends and 10 kΩ from the sense lead to ground. The difference is 15.76 kΩ in parallel with 27 kΩ, and the 27 kΩ is Q6's base-emitter junction, which the meter's test voltage partly turns on with the positive lead on the sense node. Reversing the leads on that one reading confirms it, since the reverse-biased junction then leaves R11's 15.76 kΩ.
 
 Q6 and R12 stay a reconstruction, taken from the part values and the board layout. R12 = 6.6 kΩ pulls up Q6's collector. Q6 inverts the sense node to a 0 V to 5 V level for the controller.
 
@@ -100,7 +100,7 @@ The two sessions named the leads independently and the leads carry no designatio
 
 A bare LED reads OL against the meter's reverse bias, and this one reads 0.311 V while the resistance range refuses to settle. Two candidates stand, and neither is confirmed:
 
-- The LED's own photovoltaic response. Ambient light drives an EMF the ohmmeter cannot separate from its own test voltage, and the displayed resistance then moves with the light.
+- The LED's photovoltaic response. Ambient light drives an EMF the ohmmeter cannot separate from the ohmmeter's test voltage, and the displayed resistance then moves with the light.
 - A second element across the two solder points. 0.311 V at 0.86 mA works out to 362 Ω.
 
 Repeating the diode and resistance readings in both polarities with the LED covered separates them, since the photovoltaic response collapses in the dark. Nothing in the reconstruction above rests on the answer. A 362 Ω element would shunt ≈ 3.4 mA around the LED.
