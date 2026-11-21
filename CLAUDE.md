@@ -95,7 +95,7 @@ The firmware builds with PlatformIO, installed with `python -m pip install platf
 
 The root project, the test image and every program in `firmware/bench/` keep their build folders and one `build_cache_dir` under `%LOCALAPPDATA%\pio`. The cache serves an object file only to the project that compiled it, since it finds the file by its command line, its source and its place in the build folder. Worktrees share each project's build folder, so a build after another worktree's build takes back the files it compiled before. `firmware/tools/quiet-libraries.py` gives the firmware's code `-Wall -Wextra -Werror` and every other library `-w`.
 
-FastLED 3.10.9 does not build for PlatformIO's `native` platform. The MP3 decoder it bundles, `src/third_party/minimp3/minimp3.h`, uses `uint64_t` without including `<stdint.h>`, and the computer's gcc rejects that. The `computer` tests therefore take FastLED's colors, palettes and curves from `firmware/tests/fakes/FastLED.h` and the lighting driver from `firmware/tests/fakes/drivers/lighting.h`. `build_src_filter` of the `computer` environment leaves the real lighting driver out.
+FastLED does not build for PlatformIO's `native` platform. The MP3 decoder it bundles, `src/third_party/minimp3/minimp3.h`, uses `uint64_t` without including `<stdint.h>`, and the computer's gcc rejects that. The `computer` tests therefore take FastLED's colors, palettes and curves from `firmware/tests/fakes/FastLED.h` and the lighting driver from `firmware/tests/fakes/drivers/lighting.h`. `build_src_filter` of the `computer` environment leaves the real lighting driver out.
 
 ## Conventions
 

@@ -8,7 +8,7 @@
 #include "core/clock.h"
 #include "logging/debug-log.h"
 #include <lvgl.h>
-// FastLED 3.10.9's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
+// FastLED's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
 #pragma GCC diagnostic push
 #include <FastLED.h>
