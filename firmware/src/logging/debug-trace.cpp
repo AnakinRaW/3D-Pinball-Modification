@@ -5,11 +5,13 @@
 #include <stdarg.h>
 
 #if defined(DEBUG)
-// The notes the firmware's trace holds, a burst of interrupts while the main loop is away.
+/// The notes the firmware's trace holds, a burst of interrupts while the main loop is away.
 constexpr size_t TRACE_RECORDS = 256;
 #endif
 
-// Gets the largest power of two not above n, 0 for 0.
+/// Gets the largest power of two not above @p n, 0 for 0.
+///
+/// @param n  The number to round down.
 static uint32_t floorPow2(size_t n) {
     uint32_t p = 1;
     while (n != 0 && p <= n / 2) {
@@ -72,7 +74,11 @@ bool DebugTrace::take(TraceRecord& out) {
     return true;
 }
 
-// Formats a line of the trace.
+/// Formats a line of the trace.
+///
+/// @param out     Receives the line.
+/// @param ms      The time in front of the line.
+/// @param format  The format of the line, as for printf, followed by the values it takes.
 static size_t formatLine(char* out, uint32_t ms, const char* format, ...)
     __attribute__((format(printf, 3, 4)));
 
@@ -94,7 +100,7 @@ size_t formatTraceLine(char* out, uint32_t ms, const TraceRecord& record) {
 
 #if defined(DEBUG)
 
-// In RAM1, so a note from an urgent interrupt never waits for the PSRAM's cache.
+/// In RAM1, so a note from an urgent interrupt never waits for the PSRAM's cache.
 static TraceRecord traceRecords[TRACE_RECORDS];
 static DebugTrace firmwareTrace(traceRecords, TRACE_RECORDS);
 

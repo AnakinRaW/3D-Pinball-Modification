@@ -27,32 +27,44 @@ public:
     static constexpr uint8_t MAX_LANES = 8;      // RM FlexIO: FlexIO2 has eight shifters
     static constexpr uint8_t NO_SIGNAL = 0xFF;   // what signalOf() gets for a pin without FlexIO2
 
-    // one chain: the Teensy pin its data leaves on and its LEDs
+    /// One chain: the Teensy pin its data leaves on and its LEDs.
     struct Lane {
         uint8_t pin;
         uint16_t leds;
     };
 
-    // Takes up to MAX_LANES lanes. Each lane needs a different pin, and every pin has to reach
-    // FlexIO2. Takes the frame's words from the heap, sets up FlexIO2 and its DMA channel once and
-    // hands the pins of the lanes with LEDs to FlexIO2. A lane without LEDs leaves its pin as it
-    // is. Returns false when a lane is refused, the heap has no room or no DMA channel is free.
-    // It also returns false when FlexIO2's clock cannot run at 120 MHz, which the bit timing needs:
-    // PLL3 runs at another rate, or FlexIO3 is enabled on the shared clock at another rate. A later
-    // call keeps the lanes of the first and hands their pins over again.
+    /// Takes up to MAX_LANES lanes, takes the frame's words from the heap, sets up FlexIO2 and its
+    /// DMA channel once and hands the pins of the lanes with LEDs to FlexIO2.
+    ///
+    /// Each lane needs a different pin, and every pin has to reach FlexIO2. A lane without LEDs
+    /// leaves its pin as it is. A later call keeps the lanes of the first and hands their pins
+    /// over again.
+    ///
+    /// @param lanes  The lanes, one for each chain.
+    /// @param count  How many lanes @p lanes holds, up to MAX_LANES.
+    /// @return       False when a lane is refused, the heap has no room or no DMA channel is
+    ///               free. It also returns false when FlexIO2's clock cannot run at 120 MHz,
+    ///               which the bit timing needs: PLL3 runs at another rate, or FlexIO3 is enabled
+    ///               on the shared clock at another rate.
     bool begin(const Lane* lanes, uint8_t count);
 
-    // Gets whether a frame of any object still goes out.
+    /// Gets whether a frame of any object still goes out.
     bool busy() const;
 
-    // Gets the FlexIO2 signal a pin of this board carries, or NO_SIGNAL for a pin that does not
-    // reach FlexIO2.
+    /// Gets the FlexIO2 signal a pin of this board carries, or NO_SIGNAL for a pin that does not
+    /// reach FlexIO2.
+    ///
+    /// @param pin  The Teensy pin.
     static uint8_t signalOf(uint8_t pin);
 
-    // Encodes each lane's colors, stored red, green, blue as FastLED's CRGB stores them and
-    // scaled by the brightness, and starts sending them. rgb holds one pointer for each lane, in
-    // the order begin() took the lanes. Returns at once. Returns false, and sends nothing, before
-    // begin(), without LEDs and while a frame of any object still goes out.
+    /// Encodes each lane's colors, stored red, green, blue as FastLED's CRGB stores them and
+    /// scaled by the brightness, and starts sending them.
+    ///
+    /// @param rgb         One pointer for each lane, in the order begin() took the lanes.
+    /// @param brightness  The brightness every color is scaled by.
+    /// @return            False, with nothing sent, before begin(), without LEDs and while a
+    ///                    frame of any object still goes out.
+    /// @note              Returns at once.
     bool send(const uint8_t* const* rgb, uint8_t brightness);
 
 private:

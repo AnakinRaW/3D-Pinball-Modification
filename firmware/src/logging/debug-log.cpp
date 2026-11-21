@@ -6,9 +6,9 @@
 
 #if defined(DEBUG)
 
-// Lines waiting for USB. 16 KB hold a burst of a hundred lines and more while no host reads.
+/// Lines waiting for USB. 16 KB hold a burst of a hundred lines and more while no host reads.
 constexpr size_t DEBUG_BUFFER_BYTES = 16384;
-// The trace notes one call of sendDebugLog() turns into lines. It bounds the main loop's pass.
+/// The trace notes one call of sendDebugLog() turns into lines. It bounds the main loop's pass.
 constexpr uint32_t TRACES_PER_SEND = 32;
 
 EXTMEM static uint8_t debugBuffer[DEBUG_BUFFER_BYTES];

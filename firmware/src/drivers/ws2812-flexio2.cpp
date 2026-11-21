@@ -8,10 +8,10 @@ namespace {
 
 constexpr uint8_t MAX_LANES = Ws2812Flexio2::MAX_LANES;
 
-// The pins that reach FlexIO2 on each board with the i.MX RT1062, and the FlexIO2 signal each
-// carries in ALT4. The pads GPIO_B0_00 to 15 carry signals 0 to 15 and GPIO_B1_00 to 15 signals
-// 16 to 31, i.MX RT1060 reference manual, IOMUXC. PJRC's core_pins.h names the pad behind each
-// pin of each board.
+/// The pins that reach FlexIO2 on each board with the i.MX RT1062, and the FlexIO2 signal each
+/// carries in ALT4. The pads GPIO_B0_00 to 15 carry signals 0 to 15 and GPIO_B1_00 to 15 signals
+/// 16 to 31, i.MX RT1060 reference manual, IOMUXC. PJRC's core_pins.h names the pad behind each
+/// pin of each board.
 struct FlexioPin {
     uint8_t pin;
     uint8_t signal;
@@ -33,11 +33,11 @@ constexpr FlexioPin FLEXIO_PINS[] = {{6, 10}, {7, 17}, {8, 16}, {9, 11},  {10, 0
 constexpr uint8_t DCHPRI_REGISTER = 0x1C;   // the bits of a channel that pick its register
 constexpr uint8_t DCHPRI_BYTE = 0x03;       // the bits that pick its byte in the register
 constexpr uint32_t ALT_FLEXIO2 = 4;   // RM IOMUXC, SW_MUX_CTL_PAD_GPIO_B0 and B1: ALT4 is FlexIO2
-// the pad's drive strength as pinMode(OUTPUT) sets it in PJRC's core, digital.c
+/// The pad's drive strength as pinMode(OUTPUT) sets it in PJRC's core, digital.c.
 constexpr uint32_t PAD_OUTPUT = IOMUXC_PAD_DSE(7);
 
-// RM CCM, CSCMR2 and CS1CDR: FLEXIO2_CLK_ROOT from PLL3 at 480 MHz, divided by 2 and by 2, which
-// gives 120 MHz. The root clocks FlexIO3 as well, which the display drives at the same 120 MHz.
+/// RM CCM, CSCMR2 and CS1CDR: FLEXIO2_CLK_ROOT from PLL3 at 480 MHz, divided by 2 and by 2, which
+/// gives 120 MHz. The root clocks FlexIO3 as well, which the display drives at the same 120 MHz.
 constexpr uint32_t CLK_SEL_PLL3 = 3;
 constexpr uint32_t CLK_PRED_2 = 1;
 constexpr uint32_t CLK_PODF_2 = 1;
@@ -47,43 +47,43 @@ constexpr uint32_t CLK_SEL = CCM_CSCMR2_FLEXIO2_CLK_SEL(CLK_SEL_PLL3);
 constexpr uint32_t CLK_DIV =
     CCM_CS1CDR_FLEXIO2_CLK_PRED(CLK_PRED_2) | CCM_CS1CDR_FLEXIO2_CLK_PODF(CLK_PODF_2);
 
-// RM FlexIO, TIMCMP in dual 8-bit baud mode: the shift clock is the 120 MHz root divided by
-// 2 * (5 + 1), 10 MHz, one symbol bit of ws2812::SYMBOL_NS. The upper byte counts the edges of
-// one word, twice its bits less one.
+/// RM FlexIO, TIMCMP in dual 8-bit baud mode: the shift clock is the 120 MHz root divided by
+/// 2 * (5 + 1), 10 MHz, one symbol bit of ws2812::SYMBOL_NS. The upper byte counts the edges of
+/// one word, twice its bits less one.
 constexpr uint32_t BAUD_DIV = 5;
 constexpr uint32_t TIMER_COMPARE = ((ws2812::WORD_BITS * 2 - 1) << 8) | BAUD_DIV;
-// RM FlexIO, TIMCFG: the timer stops at its compare, after each word, and starts again on its
-// trigger, so it never shifts a word that is not there
+/// RM FlexIO, TIMCFG: the timer stops at its compare, after each word, and starts again on its
+/// trigger, so it never shifts a word that is not there.
 constexpr uint32_t TIMER_CFG = FLEXIO_TIMCFG_TIMDIS(2) | FLEXIO_TIMCFG_TIMENA(2);
-// RM FlexIO, TIMCTL: triggered by shifter 0's status flag, active low, so the timer runs while
-// shifter 0 holds a word, in dual 8-bit baud mode
+/// RM FlexIO, TIMCTL: triggered by shifter 0's status flag, active low, so the timer runs while
+/// shifter 0 holds a word, in dual 8-bit baud mode.
 constexpr uint32_t SHIFTER0_STATUS = 1;   // TRGSEL 4 * N + 1 selects shifter N's status flag
 constexpr uint32_t TIMER_CTL = FLEXIO_TIMCTL_TRGSEL(SHIFTER0_STATUS) | FLEXIO_TIMCTL_TRGPOL |
                                FLEXIO_TIMCTL_TRGSRC | FLEXIO_TIMCTL_TIMOD(1);
-// RM FlexIO, SHIFTCTL: transmit mode on timer 0, driving its pin as an output
+/// RM FlexIO, SHIFTCTL: transmit mode on timer 0, driving its pin as an output
 constexpr uint32_t SHIFTER_TRANSMIT = 2;
 constexpr uint32_t SHIFTER_OUTPUT = 3;
 constexpr uint32_t SHIFTER0_DMA = 1;   // SHIFTSDEN: shifter 0's status requests the DMA
 
-// WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, more than 280 µs
+/// WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, more than 280 µs
 constexpr uint32_t RESET_NS = 280000;
 constexpr uint32_t WORD_NS = ws2812::SYMBOLS_PER_WORD * ws2812::SYMBOL_BITS * ws2812::SYMBOL_NS;
-// The words a shifter still holds when the DMA has written its last word: the one in its buffer
-// and the one it shifts out, RM FlexIO. A next send() cuts them off.
+/// The words a shifter still holds when the DMA has written its last word: the one in its buffer
+/// and the one it shifts out, RM FlexIO. A next send() cuts them off.
 constexpr uint32_t WORDS_QUEUED = 2;
-// zero words after the longest lane: more than RES even after the queued words are cut off
+/// The zero words after the longest lane: more than RES even after the queued words are cut off.
 constexpr uint32_t LATCH_WORDS = RESET_NS / WORD_NS + 1 + WORDS_QUEUED;
-// ARM Cortex-M7: the data cache's line, which a DMA buffer aligns to
+/// ARM Cortex-M7: the data cache's line, which a DMA buffer aligns to
 constexpr size_t CACHE_LINE = 32;
 
-// RM eDMA, DCHPRI: under fixed-priority arbitration the channel with the highest CHPRI is served
-// first, and the channels of a group each need a different CHPRI. PJRC's DMAChannel uses group 0,
-// channels 0 to 15, and leaves CHPRI at the channel's number.
+/// RM eDMA, DCHPRI: under fixed-priority arbitration the channel with the highest CHPRI is served
+/// first, and the channels of a group each need a different CHPRI. PJRC's DMAChannel uses group 0,
+/// channels 0 to 15, and leaves CHPRI at the channel's number.
 constexpr uint8_t TOP_PRIORITY = 15;
 constexpr uint8_t PRIORITY_MASK = 0x0F;
 constexpr uint8_t GROUP_CHANNELS = 16;
 
-// One FlexIO2 and one DMA channel serve every object, as the hardware is one.
+/// One FlexIO2 and one DMA channel serve every object, as the hardware is one.
 DMAChannel dma(false);
 bool flexioReady = false;
 bool sending = false;
@@ -105,16 +105,21 @@ uint32_t shifterCtl(uint8_t signal) {
            FLEXIO_SHIFTCTL_PINSEL(signal) | FLEXIO_SHIFTCTL_SMOD(SHIFTER_TRANSMIT);
 }
 
-// the DCHPRI byte of a channel, laid out as PJRC's DMAChannel.cpp addresses it: four channels to a
-// register, the lowest channel in the register's highest byte
+/// Gets the DCHPRI byte of a channel, laid out as PJRC's DMAChannel.cpp addresses it: four
+/// channels to a register, the lowest channel in the register's highest byte.
+///
+/// @param channel  The DMA channel.
 volatile uint8_t& dchpri(uint8_t channel) {
     return (&DMA_DCHPRI3)[(channel & DCHPRI_REGISTER) | (DCHPRI_BYTE - (channel & DCHPRI_BYTE))];
 }
 
-// Gives the channel the highest priority, so no other channel keeps it from refilling the
-// shifters in time, and lets it preempt a lower channel's minor loop. The channel that held the
-// highest priority takes this channel's old one. RM eDMA, CR: HALT keeps any channel from starting
-// while two channels share a priority for a moment.
+/// Gives the channel the highest priority, so no other channel keeps it from refilling the
+/// shifters in time, and lets it preempt a lower channel's minor loop.
+///
+/// The channel that held the highest priority takes this channel's old one. RM eDMA, CR: HALT
+/// keeps any channel from starting while two channels share a priority for a moment.
+///
+/// @param channel  The DMA channel.
 void raisePriority(uint8_t channel) {
     const uint8_t own = dchpri(channel) & PRIORITY_MASK;
     DMA_CR |= DMA_CR_HALT;
@@ -127,10 +132,11 @@ void raisePriority(uint8_t channel) {
     DMA_CR &= ~DMA_CR_HALT;
 }
 
-// Gets whether PLL3 runs at 480 MHz and reaches PLL3_SW_CLK, the source the root takes. RM
-// CCM_ANALOG, PLL_USB1: PLL3 runs at 20 times the 24 MHz crystal while it is powered, enabled,
-// locked and not bypassed, with DIV_SELECT 0. RM CCM, CCSR: PLL3_SW_CLK follows PLL3 while
-// PLL3_SW_CLK_SEL is 0.
+/// Gets whether PLL3 runs at 480 MHz and reaches PLL3_SW_CLK, the source the root takes.
+///
+/// RM CCM_ANALOG, PLL_USB1: PLL3 runs at 20 times the 24 MHz crystal while it is powered,
+/// enabled, locked and not bypassed, with DIV_SELECT 0. RM CCM, CCSR: PLL3_SW_CLK follows PLL3
+/// while PLL3_SW_CLK_SEL is 0.
 bool pll3At480() {
     constexpr uint32_t RUNNING =
         CCM_ANALOG_PLL_USB1_POWER | CCM_ANALOG_PLL_USB1_ENABLE | CCM_ANALOG_PLL_USB1_LOCK;
@@ -144,11 +150,14 @@ bool rootAt120() {
     return (CCM_CSCMR2 & CLK_SEL_MASK) == CLK_SEL && (CCM_CS1CDR & CLK_DIV_MASK) == CLK_DIV;
 }
 
-// Brings FlexIO2's clock root to 120 MHz, which every step of BAUD_DIV is computed for. Returns
-// false, and changes nothing, when PLL3 does not run at 480 MHz, or when the root runs at another
-// rate while FlexIO3 is enabled, since FlexIO3 shares the root and a change would move its rate.
-// PJRC's start-up turns every clock gate on, so FlexIO3's FLEXEN bit says whether it is in use,
-// and its gate only whether that bit can be read.
+/// Brings FlexIO2's clock root to 120 MHz, which every step of BAUD_DIV is computed for.
+///
+/// PJRC's start-up turns every clock gate on, so FlexIO3's FLEXEN bit says whether it is in use,
+/// and its gate only whether that bit can be read.
+///
+/// @return  False, with nothing changed, when PLL3 does not run at 480 MHz, or when the root runs
+///          at another rate while FlexIO3 is enabled, since FlexIO3 shares the root and a change
+///          would move its rate.
 bool clockAt120() {
     if (!pll3At480()) {
         logWarning("leds", "PLL3 does not run at 480 MHz");
@@ -172,7 +181,7 @@ bool clockAt120() {
     return rootAt120();
 }
 
-// Sets up FlexIO2 on its clock: one timer clocks the shifters, which send() sets up.
+/// Sets up FlexIO2 on its clock: one timer clocks the shifters, which send() sets up.
 bool startFlexio() {
     CCM_CCGR3 |= CCM_CCGR3_FLEXIO2(CCM_CCGR_ON);
     FLEXIO2_CTRL = FLEXIO_CTRL_SWRST;

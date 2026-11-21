@@ -7,40 +7,48 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// One noted event.
+/// One noted event.
 struct TraceRecord {
     const char* label;   // a string literal, such as "ir late", nullptr for a loss notice
     int32_t a;           // for a loss notice, the notes lost
     int32_t b;
     uint32_t timeUs;   // nowUs() when it was noted
-    // The record's place in the trace plus one, set once the record is whole. The reader never
-    // takes a record a preempted writer has not finished.
+    /// The record's place in the trace plus one, set once the record is whole. The reader never
+    /// takes a record a preempted writer has not finished.
     std::atomic<uint32_t> sequence{0};
 };
 
-// The ring of notes. Any number of interrupts and tasks write. One task reads. Nobody waits
-// or takes a lock.
+/// The ring of notes. Any number of interrupts and tasks write. One task reads. Nobody waits
+/// or takes a lock.
 class DebugTrace {
 public:
-    // Creates the trace in records.
-    // records hold the notes and stay with the trace for its whole life.
-    // count is their number, of which the largest power of two is used.
+    /// Creates the trace in @p records.
+    ///
+    /// @param records  Hold the notes and stay with the trace for its whole life.
+    /// @param count    Their number, of which the largest power of two is used.
     DebugTrace(TraceRecord* records, size_t count);
 
-    // Notes an event with nowUs() as its time. Any interrupt at any priority and any task may
-    // call it. It never waits.
-    // label is a string literal that stays valid for good. a and b are any two numbers.
-    // Returns false when the trace is full. The event is then lost and counted in lost().
+    /// Notes an event with nowUs() as its time.
+    ///
+    /// @param label  A string literal that stays valid for good.
+    /// @param a      Any number.
+    /// @param b      Any number.
+    /// @return       False when the trace is full. The event is then lost and counted in lost().
+    /// @note         Any interrupt at any priority and any task may call it. It never waits.
     bool note(const char* label, int32_t a, int32_t b);
 
-    // Takes the oldest whole note into out. One task at a time, never an interrupt. Once every
-    // waiting note is taken and notes were lost since the last loss notice, out becomes a loss
-    // notice: no label, and the count of lost notes in a.
-    // Returns false when no whole note waits and no loss is left to report. A note that an
-    // interrupted writer has not finished waits for the next call, with every note behind it.
+    /// Takes the oldest whole note into @p out.
+    ///
+    /// Once every waiting note is taken and notes were lost since the last loss notice, @p out
+    /// becomes a loss notice: no label, and the count of lost notes in a. A note that an
+    /// interrupted writer has not finished waits for the next call, with every note behind it.
+    ///
+    /// @param out  Receives the note.
+    /// @return     False when no whole note waits and no loss is left to report.
+    /// @note       One task at a time, never an interrupt.
     bool take(TraceRecord& out);
 
-    // Gets how many notes found the trace full.
+    /// Gets how many notes found the trace full.
     uint32_t lost() const { return lostCount.load(std::memory_order_relaxed); }
 
     DebugTrace(const DebugTrace&) = delete;
@@ -56,16 +64,30 @@ private:
     uint32_t reportedLost = 0;   // the lost notes the loss notices have stated, moved by the reader
 };
 
-// Formats a note as a debug line, such as "73021 D trace ir late 3 -12 at 73020512 us\n", or a
-// loss notice as "73021 D trace 37 notes lost\n". Gets its length.
-// out takes LOG_LINE_BYTES bytes. ms is the time in front of the line, such as millis().
+/// Formats a note as a debug line, such as "73021 D trace ir late 3 -12 at 73020512 us\n", or a
+/// loss notice as "73021 D trace 37 notes lost\n".
+///
+/// @param out     Takes LOG_LINE_BYTES bytes.
+/// @param ms      The time in front of the line, such as millis().
+/// @return        The line's length.
 size_t formatTraceLine(char* out, uint32_t ms, const TraceRecord& record);
 
-// Notes an event in the firmware's trace. Does nothing in a release build.
+/// Notes an event in the firmware's trace.
+///
+/// Does nothing in a release build.
+///
+/// @param label  A string literal that stays valid for good.
+/// @param a      Any number.
+/// @param b      Any number.
 void debugTrace(const char* label, int32_t a, int32_t b);
 
-// Takes the oldest whole note of the firmware's trace into out. One task at a time, never an
-// interrupt. Returns false when none waits. Returns false always in a release build.
+/// Takes the oldest whole note of the firmware's trace into @p out.
+///
+/// Returns false always in a release build.
+///
+/// @param out  Receives the note.
+/// @return     False when none waits.
+/// @note       One task at a time, never an interrupt.
 bool takeDebugTrace(TraceRecord& out);
 
 #if defined(DEBUG)

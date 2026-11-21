@@ -21,20 +21,20 @@
 constexpr uint32_t BLINK_MS = 500;   // half the LED's blink period
 constexpr uint32_t US_PER_MS = 1000;
 
-// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
-// on a multiple of its size
+/// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
+/// on a multiple of its size
 constexpr uintptr_t GUARD_BYTES = 32;
-// ARMv7-M Architecture Reference Manual, B3.5: region 15 is the last of the 16 and wins over every
-// region PJRC's start-up sets, and SIZE 4 gives 2^(4+1) = 32 bytes
+/// ARMv7-M Architecture Reference Manual, B3.5: region 15 is the last of the 16 and wins over every
+/// region PJRC's start-up sets, and SIZE 4 gives 2^(4+1) = 32 bytes
 constexpr uint32_t GUARD_REGION = 15;
 constexpr uint32_t GUARD_SIZE = 4;
 
-// general-design.md, Interrupts: the pin interrupts' row. tempmon.c of the Teensy core sets the
-// temperature panic to 0, which the start of FreeRTOS resets to 128 with every other interrupt.
+/// general-design.md, Interrupts: the pin interrupts' row. tempmon.c of the Teensy core sets the
+/// temperature panic to 0, which the start of FreeRTOS resets to 128 with every other interrupt.
 constexpr uint8_t PIN_PRIORITY = 96;
 constexpr uint8_t TEMPERATURE_PANIC_PRIORITY = 0;
 
-// PJRC's linker script: the end of the static variables in RAM1, and the top of the stack
+/// PJRC's linker script: the end of the static variables in RAM1, and the top of the stack
 extern "C" uint8_t _ebss[];
 extern "C" uint8_t _estack[];
 
@@ -44,17 +44,20 @@ constexpr char LOG_FIRST[] = "/log-a.txt";    // logging.md: the log's first fil
 constexpr char LOG_SECOND[] = "/log-b.txt";   // logging.md: the log's second file
 EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 
-// true until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
+/// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
 
-// The port's default starts a 1 ms timer and a task for PJRC's MillisTimer and EventResponder,
-// which the firmware does not use.
+/// The port's default starts a 1 ms timer and a task for PJRC's MillisTimer and EventResponder,
+/// which the firmware does not use.
 namespace freertos {
 void setup_event_responder() {}
 }   // namespace freertos
 
-// Blocks the 32 bytes at `at`, as PJRC guards the end of the static variables, so an overflowing
-// stack crashes at once instead of overwriting what lies below it.
+/// Blocks the 32 bytes at @p at, as PJRC guards the end of the static variables.
+///
+/// An overflowing stack then crashes at once instead of overwriting what lies below it.
+///
+/// @param at  The first of the 32 bytes.
 static void guardStack(uintptr_t at) {
     SCB_MPU_RBAR = at | SCB_MPU_RBAR_REGION(GUARD_REGION) | SCB_MPU_RBAR_VALID;
     SCB_MPU_RASR = SCB_MPU_RASR_TEX(0) | SCB_MPU_RASR_AP(0) | SCB_MPU_RASR_XN |
@@ -63,10 +66,11 @@ static void guardStack(uintptr_t at) {
     asm volatile("isb");
 }
 
-// Reads the start of a log file for the logger's begin(). It waits for the card, so the main task
-// calls it at start-up only.
-// path is the log file's full path.
-// head takes the file's first bytes.
+/// Reads the start of a log file for the logger's begin().
+///
+/// @param path  The log file's full path.
+/// @param head  Takes the file's first bytes.
+/// @note        It waits for the card, so the main task calls it at start-up only.
 static LogFileStart readLogStart(const char* path, uint8_t (&head)[Logger::HEAD_BYTES]) {
     FileRequest r;
     storage.open(path).read(0, head, sizeof head, r);
@@ -74,7 +78,7 @@ static LogFileStart readLogStart(const char* path, uint8_t (&head)[Logger::HEAD_
     return {head, r.bytes(), r.fileSize()};
 }
 
-// The main task: sets the machine up, then runs the main loop, which never waits.
+/// The main task: sets the machine up, then runs the main loop, which never waits.
 static void runMainTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, TEMPERATURE_PANIC_PRIORITY);
     NVIC_SET_PRIORITY(IRQ_GPIO6789, PIN_PRIORITY);
@@ -109,8 +113,8 @@ static void runMainTask(void*) {
     }
 }
 
-// The main task's stack is the rest of RAM1, between PJRC's guard behind the static variables and
-// a guard below the interrupts' stack of configMAIN_STACK_DEPTH bytes at the top of RAM1.
+/// The main task's stack is the rest of RAM1, between PJRC's guard behind the static variables and
+/// a guard below the interrupts' stack of configMAIN_STACK_DEPTH bytes at the top of RAM1.
 void setup() {
     startClock();   // before anything takes a time
     const uintptr_t bottom = reinterpret_cast<uintptr_t>(_ebss) + GUARD_BYTES;
@@ -122,5 +126,5 @@ void setup() {
     vTaskStartScheduler();   // sets every interrupt to priority 128 and never returns
 }
 
-// never runs, the main task carries the main loop
+/// Never runs, since the main task carries the main loop.
 void loop() {}

@@ -2,8 +2,8 @@
 #include "logging/debug-log.h"
 #include <string.h>
 
-// RAM1 is the i.MX RT1062's tightly coupled data memory, which no cache serves. PJRC's linker
-// script for the Teensy 4.1 places its 512 KB at 0x20000000
+/// RAM1 is the i.MX RT1062's tightly coupled data memory, which no cache serves. PJRC's linker
+/// script for the Teensy 4.1 places its 512 KB at 0x20000000.
 constexpr uintptr_t RAM1_START = 0x20000000;
 constexpr uintptr_t RAM1_BYTES = 0x80000;
 constexpr uintptr_t CACHE_LINE_BYTES = 32;   // the Cortex-M7's data cache line
@@ -21,7 +21,10 @@ bool readsInPlace(const void* buffer, uint32_t at, size_t n) {
     return address % CACHE_LINE_BYTES == 0 && n % CACHE_LINE_BYTES == 0 && at % SECTOR_BYTES == 0;
 }
 
-// Compares two paths without regard to case, as the card's file system names its files.
+/// Compares two paths without regard to case, as the card's file system names its files.
+///
+/// @param a  The first path.
+/// @param b  The second path.
 static bool samePath(const char* a, const char* b) {
     for (;; ++a, ++b) {
         const char x = *a >= 'A' && *a <= 'Z' ? char(*a - 'A' + 'a') : *a;
@@ -35,7 +38,12 @@ static bool samePath(const char* a, const char* b) {
     }
 }
 
-// Copies a path that fits with its end. A path that does not fit leaves an empty path.
+/// Copies a path that fits with its end.
+///
+/// A path that does not fit leaves an empty path.
+///
+/// @param to    Takes the copy.
+/// @param path  The path to copy.
 static void copyPath(char (&to)[FILE_PATH_BYTES], const char* path) {
     const size_t n = path != nullptr ? strlen(path) : FILE_PATH_BYTES;
     if (n >= FILE_PATH_BYTES) {
@@ -188,8 +196,10 @@ bool StorageService::serveNext() {
     return true;
 }
 
-// A file that does not open reads as empty. A write fails there. A card error that made the file
-// fail to open is told apart by serveNext().
+/// Carries out @p r.
+///
+/// A file that does not open reads as empty. A write fails there. A card error that made the file
+/// fail to open is told apart by serveNext().
 bool StorageService::serve(FileRequest& r, uint8_t& slot) {
     slot = find(r);
     if (slot == NO_SLOT) {
@@ -219,8 +229,10 @@ bool StorageService::serve(FileRequest& r, uint8_t& slot) {
     return false;
 }
 
-// A file open for reading alone is opened anew for a write. A full table closes the slot used
-// longest ago.
+/// Gets the slot that holds the file of @p r, opening it where it is not open.
+///
+/// A file open for reading alone is opened anew for a write. A full table closes the slot used
+/// longest ago.
 uint8_t StorageService::find(const FileRequest& r) {
     const bool writes = r.kind != FileRequest::Kind::READ;
     uint8_t chosen = NO_SLOT;

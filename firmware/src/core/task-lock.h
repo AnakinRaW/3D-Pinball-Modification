@@ -6,10 +6,12 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-// Holds the lock from its construction to the end of its scope. Locks nest. Before FreeRTOS has
-// started, only one task runs. The lock then does nothing.
-// Any task may take it. An interrupt never takes it, since an interrupt of a driver can stop the
-// code that holds it.
+/// Holds the lock from its construction to the end of its scope.
+///
+/// Locks nest. Before FreeRTOS has started, only one task runs. The lock then does nothing.
+///
+/// @note  Any task may take it. An interrupt never takes it, since an interrupt of a driver can
+///        stop the code that holds it.
 class TaskLock {
 public:
     TaskLock() : held(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
@@ -31,7 +33,7 @@ private:
     const bool held;
 };
 
-// Gets whether the code runs in an interrupt rather than in a task.
+/// Gets whether the code runs in an interrupt rather than in a task.
 inline bool inInterrupt() {
     return xPortIsInsideInterrupt() == pdTRUE;
 }

@@ -4,7 +4,7 @@
 #include "logging/debug-trace.h"
 #include <inttypes.h>
 
-// The note of an event read carries its type above its source, eight bits each.
+/// The note of an event read carries its type above its source, eight bits each.
 constexpr uint32_t SOURCE_BITS = 8;
 
 EventQueue events;

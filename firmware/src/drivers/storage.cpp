@@ -8,7 +8,7 @@
 #include <string.h>
 #include <task.h>
 
-// Runs the serial events and PJRC's EventResponder. freertos-teensy defines it.
+/// Runs the serial events and PJRC's EventResponder. freertos-teensy defines it.
 namespace freertos {
 void default_yield();
 }
@@ -24,8 +24,8 @@ constexpr PartMask CARD = 1;               // part 0, the card
 constexpr uint8_t DAT3_PIN = 46;         // PJRC's SD.cpp: _SD_DAT3, DAT3 of the Teensy 4.1's socket
 constexpr uint32_t DAT3_SETTLE_US = 5;   // PJRC's SD.cpp: the wait for the pull-down to settle
 
-// SdFat's card as the file system sees it. It forwards every sector and counts the transfers that
-// fail, which tells a card error from a file that is not there. Each failure goes into the log.
+/// SdFat's card as the file system sees it. It forwards every sector and counts the transfers that
+/// fail, which tells a card error from a file that is not there. Each failure goes into the log.
 class CountingCard : public FsBlockDevice {
 public:
     explicit CountingCard(SdioCard& card) : card(card) {}
@@ -60,8 +60,8 @@ private:
     uint32_t failed = 0;
 };
 
-// The card's files through SdFat in its DMA mode. SdFat's buffers and the file table lie in RAM1
-// with the object, where no cache sits between the processor and the card's DMA.
+/// The card's files through SdFat in its DMA mode. SdFat's buffers and the file table lie in RAM1
+/// with the object, where no cache sits between the processor and the card's DMA.
 class SdCardFiles : public CardFiles {
 public:
     bool mount() override {
@@ -156,8 +156,9 @@ public:
     bool commit(uint8_t slot) override { return files[slot].sync(); }
 
 private:
-    // Starts the card and its file system. SdFat's start sets its interrupt's priority, which the
-    // firmware's table sets back.
+    /// Starts the card and its file system.
+    ///
+    /// SdFat's start sets its interrupt's priority, which the firmware's table sets back.
     bool start() {
         // SdFat looks for a missing card for 3 s. A card pulls its DAT3 line high against the
         // pull-down, which is how PJRC's SD library detects a card. Without a card the start ends
@@ -172,7 +173,9 @@ private:
         return started;
     }
 
-    // Creates the directories above a file where they are missing.
+    /// Creates the directories above a file where they are missing.
+    ///
+    /// @param path  The path of the file.
     bool makeDirectories(const char* path) {
         char directory[FILE_PATH_BYTES];
         const char* last = strrchr(path, '/');
@@ -194,7 +197,7 @@ private:
     alignas(CACHE_LINE_BYTES) uint8_t bounce[BOUNCE_BYTES] = {};
 };
 
-// These lie in RAM1 with the storage task's stack, since SdFat reads some sectors by DMA into it.
+/// These lie in RAM1 with the storage task's stack, since SdFat reads some sectors by DMA into it.
 static SdCardFiles cardFiles;
 static StackType_t stack[Storage::STACK_BYTES / sizeof(StackType_t)];
 static StaticTask_t taskBlock;
@@ -205,7 +208,7 @@ Storage storage;
 
 Storage::Storage() : StorageService(cardFiles) {}
 
-// Gets the exception the caller runs in, 0 in a task.
+/// Gets the exception the caller runs in, 0 in a task.
 static uint32_t exception() {
     uint32_t ipsr = 0;
     asm volatile("mrs %0, ipsr" : "=r"(ipsr));
@@ -307,9 +310,11 @@ void Storage::unlock(uint32_t held) {
     taskEXIT_CRITICAL();
 }
 
-// SdFat calls yield() while it waits for the card. The storage task hands the processor to the
-// main task until the next tick, so the main loop runs while the card works. Every other task
-// runs the serial events, as Teensyduino's yield() does.
+/// Gets called by SdFat while it waits for the card.
+///
+/// The storage task hands the processor to the main task until the next tick, so the main loop
+/// runs while the card works. Every other task runs the serial events, as Teensyduino's yield()
+/// does.
 void yield() {
     if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING || inInterrupt()) {
         return;

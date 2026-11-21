@@ -7,10 +7,10 @@
 #include <cstdio>
 #include <string>
 
-// GPT2's counter, which nowUs() reads. A test sets it to the time it wants nowUs() to give.
+/// GPT2's counter, which nowUs() reads. A test sets it to the time it wants nowUs() to give.
 inline volatile uint32_t GPT2_CNT = 0;
 
-// The milliseconds millis() gives. A test sets it to the time it wants.
+/// The milliseconds millis() gives. A test sets it to the time it wants.
 inline uint32_t fakeMillis = 0;
 
 inline uint32_t millis() {
@@ -25,8 +25,8 @@ inline uint32_t millis() {
 inline void noInterrupts() {}
 inline void interrupts() {}
 
-// Serial prints printf() to the console. write() collects its bytes in sent. It takes no more than
-// room bytes, as USB serial takes no more than its free buffers.
+/// Serial prints printf() to the console. write() collects its bytes in sent. It takes no more than
+/// room bytes, as USB serial takes no more than its free buffers.
 struct FakeSerial {
     std::string sent;
     int room = 1 << 20;

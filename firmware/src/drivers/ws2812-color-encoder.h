@@ -12,9 +12,9 @@
 
 namespace ws2812 {
 
-// One step lasts SYMBOL_NS, and a symbol has SYMBOL_BITS steps. The highs lie inside both WS2812B
-// datasheets at hand, which differ: T0H 220 to 380 ns and T1H 580 to 1000 ns in the
-// WS2812B-2020 V6, T0H 0.4 µs and T1H 0.8 µs, each ±150 ns, in the older WS2812B revision.
+/// One step lasts SYMBOL_NS, and a symbol has SYMBOL_BITS steps. The highs lie inside both WS2812B
+/// datasheets at hand, which differ: T0H 220 to 380 ns and T1H 580 to 1000 ns in the
+/// WS2812B-2020 V6, T0H 0.4 µs and T1H 0.8 µs, each ±150 ns, in the older WS2812B revision.
 constexpr uint32_t SYMBOL_NS = 100;
 constexpr uint32_t SYMBOL_BITS = 13;   // 1300 ns a bit
 constexpr uint32_t ZERO_HIGHS = 3;     // T0H: 300 ns
@@ -29,8 +29,11 @@ constexpr uint32_t BITS_PER_COLOR = 8;
 constexpr uint32_t WORDS_PER_COLOR = BITS_PER_COLOR / SYMBOLS_PER_WORD;
 constexpr uint32_t PAIRS = 1u << SYMBOLS_PER_WORD;   // the values two LED bits can take
 
-// Gets the word that sends two LED bits. pair holds the two bits as a number from 0 to 3, and its
-// upper bit goes out first. Example: pair 0b10 gives the symbol of a 1, then the symbol of a 0.
+/// Gets the word that sends two LED bits.
+///
+/// Example: pair 0b10 gives the symbol of a 1, then the symbol of a 0.
+///
+/// @param pair  The two bits as a number from 0 to 3. Its upper bit goes out first.
 constexpr uint32_t pairWord(uint8_t pair) {
     uint32_t word = 0;
     for (uint32_t k = 0; k < SYMBOLS_PER_WORD; ++k) {
@@ -40,22 +43,30 @@ constexpr uint32_t pairWord(uint8_t pair) {
     return word;
 }
 
-// Gets a color value dimmed by a brightness from 0 to 255. Brightness 255 leaves the value as it
-// is, and 0 gives 0. The arithmetic is FastLED's scale8(), so the driver dims as FastLED would.
+/// Gets a color value dimmed by a brightness from 0 to 255.
+///
+/// Brightness 255 leaves the value as it is, and 0 gives 0. The arithmetic is FastLED's scale8(),
+/// so the driver dims as FastLED would.
+///
+/// @param value       The color value.
+/// @param brightness  Runs from 0 to 255.
 constexpr uint8_t scale(uint8_t value, uint8_t brightness) {
     return uint8_t((uint16_t(value) * (uint16_t(brightness) + 1)) >> BITS_PER_COLOR);
 }
 
-// Writes the words of one chain into the buffer.
-//   rgb         the chain's colors: three bytes for each LED, red, green, blue, as FastLED's CRGB
-//               stores them
-//   leds        how many LEDs the chain has
-//   brightness  0 to 255, applied to every color
-//   words       where the chain's first word goes
-//   stride      how many words apart to write them: 1 writes them one after the other, and 6
-//               leaves 5 words free between two of them
-//   count       how many words to write. Past the last LED they are 0, which keeps the line low.
-// A WS2812B takes green first, then red, then blue, each with its most significant bit first.
+/// Writes the words of one chain into the buffer.
+///
+/// A WS2812B takes green first, then red, then blue, each with its most significant bit first.
+///
+/// @param rgb         The chain's colors: three bytes for each LED, red, green, blue, as FastLED's
+///                    CRGB stores them.
+/// @param leds        How many LEDs the chain has.
+/// @param brightness  Runs from 0 to 255 and applies to every color.
+/// @param words       Where the chain's first word goes.
+/// @param stride      How many words apart to write them. 1 writes them one after the other, and
+///                    6 leaves 5 words free between two of them.
+/// @param count       How many words to write. Past the last LED they are 0, which keeps the line
+///                    low.
 inline void encodeLane(const uint8_t* rgb, uint16_t leds, uint8_t brightness, uint32_t* words,
                        size_t stride, uint32_t count) {
     constexpr uint8_t RED = 0;

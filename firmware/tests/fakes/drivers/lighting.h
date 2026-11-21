@@ -16,7 +16,7 @@ class Lighting {
 public:
     static constexpr uint8_t CHAINS = 6;
 
-    // the driver's two profiles
+    /// The driver's two profiles.
     static constexpr Profile PROFILE_3A = {2, 102, 255, 2000};
     static constexpr Profile PROFILE_6A = {1, 128, 255, 2920};
 
@@ -45,7 +45,7 @@ public:
         return true;
     }
 
-    // what a test sets and reads
+    /// What a test sets and reads.
     Profile current = PROFILE_3A;
     uint32_t shows = 0;
 

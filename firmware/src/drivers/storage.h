@@ -17,16 +17,23 @@ public:
 
     Storage();
 
-    // Starts the storage task and waits until it has mounted the card. The main task calls it once
-    // before the main loop. Returns false when no card sits in the socket or its file system does
-    // not read. Every request then fails at once until a restart.
+    /// Starts the storage task and waits until it has mounted the card.
+    ///
+    /// Every request fails at once until a restart when the call returns false.
+    ///
+    /// @return  False when no card sits in the socket or its file system does not read.
+    /// @note    The main task calls it once before the main loop.
     bool begin() override;
 
-    // Reports the card as failed part 0 with SdFat's error code once begin() has tried the mount.
+    /// Reports the card as failed part 0 with SdFat's error code once begin() has tried the
+    /// mount.
     Fault failed() const override;
 
-    // Gets the least stack the storage task had left since it started, in bytes. It is 0 before
-    // begin(). Any task.
+    /// Gets the least stack the storage task had left since it started, in bytes.
+    ///
+    /// It is 0 before begin().
+    ///
+    /// @note  Any task may call it.
     uint32_t stackLeftBytes() const;
 
 private:
@@ -37,12 +44,14 @@ private:
     uint32_t lock() override;
     void unlock(uint32_t held) override;
 
-    // Runs the storage task. It mounts the card, then serves the requests and tries a failed card
-    // again once a second.
+    /// Runs the storage task, which mounts the card, then serves the requests and tries a failed
+    /// card again once a second.
+    ///
+    /// @param self  The storage driver.
     static void run(void* self);
 
     volatile bool mountTried = false;
 };
 
-// storage is the firmware's one storage driver.
+/// The firmware's one storage driver.
 extern Storage storage;

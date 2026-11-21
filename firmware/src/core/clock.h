@@ -7,25 +7,36 @@
 #pragma once
 #include <Arduino.h>
 
-// Starts GPT2 counting microseconds. setup() calls it before anything takes a time.
+/// Starts GPT2 counting microseconds.
+///
+/// @note  setup() calls it before anything takes a time.
 void startClock();
 
-// gets the microseconds GPT2 has counted since startClock()
+/// Gets the microseconds GPT2 has counted since startClock().
 inline uint32_t nowUs() {
     return GPT2_CNT;
 }
 
-// gets whether at least spanUs microseconds have passed since t, a time from nowUs()
+/// Gets whether at least @p spanUs microseconds have passed since @p t.
+///
+/// @param t       A time from nowUs().
+/// @param spanUs  The span in microseconds.
 inline bool elapsedUs(uint32_t t, uint32_t spanUs) {
     return nowUs() - t >= spanUs;
 }
 
-// gets whether at least spanMs milliseconds have passed since t, a time from nowUs()
+/// Gets whether at least @p spanMs milliseconds have passed since @p t.
+///
+/// @param t       A time from nowUs().
+/// @param spanMs  The span in milliseconds.
 inline bool elapsedMs(uint32_t t, uint32_t spanMs) {
     return nowUs() - t >= spanMs * 1000;
 }
 
-// gets whether time a lies before time b, also across the wrap of nowUs()
+/// Gets whether time @p a lies before time @p b, also across the wrap of nowUs().
+///
+/// @param a  The first time.
+/// @param b  The second time.
 inline bool before(uint32_t a, uint32_t b) {
     return static_cast<int32_t>(a - b) < 0;
 }

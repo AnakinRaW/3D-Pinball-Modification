@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-// The first line of each file numbers it: "<ms> I logger file <number>".
+/// The first line of each file numbers it: "<ms> I logger file <number>".
 constexpr char HEAD_TAG[] = "I logger";
 constexpr char HEAD_TEXT[] = " I logger file ";
-// The level's letter and the writer's name, such as "W lamps". A longer name is cut.
+/// The level's letter and the writer's name, such as "W lamps". A longer name is cut.
 constexpr size_t TAG_BYTES = 24;
-// The banner at every start names the machine, the version and the kind of build that runs.
+/// The banner at every start names the machine, the version and the kind of build that runs.
 constexpr char MACHINE_NAME[] = "AnakinRaW's PINBALL Modification";
 constexpr char BANNER_RULE[] = "====================================";
 #if defined(DEBUG)
@@ -23,10 +23,15 @@ constexpr char BUILD[] = "debug";
 constexpr char BUILD[] = "release";
 #endif
 
-// The logger whose begin() ran last. The firmware's logger lives for the whole run.
+/// The logger whose begin() ran last. The firmware's logger lives for the whole run.
 static std::atomic<Logger*> firmwareLog{nullptr};
 
-// Formats a line of the logger itself.
+/// Formats a line of the logger itself.
+///
+/// @param out     Receives the line.
+/// @param ms      The time in front of the line.
+/// @param tag     Stands between the time and the text.
+/// @param format  The format of the text, as for printf, followed by the values it takes.
 static size_t formatOwnLine(char* out, uint32_t ms, const char* tag, const char* format, ...)
     __attribute__((format(printf, 4, 5)));
 
@@ -38,7 +43,11 @@ static size_t formatOwnLine(char* out, uint32_t ms, const char* tag, const char*
     return n;
 }
 
-// Gets the number in a file's head line, false when the bytes start with no head line.
+/// Gets the number in a file's head line.
+///
+/// @param start   The start of the file.
+/// @param number  Receives the number.
+/// @return        False when the bytes start with no head line.
 static bool readHead(const LogFileStart& start, uint32_t& number) {
     char text[Logger::HEAD_BYTES + 1];
     const size_t n = start.got < Logger::HEAD_BYTES ? start.got : Logger::HEAD_BYTES;
@@ -92,12 +101,21 @@ void Logger::begin(const LogFileStart& first, const LogFileStart& second) {
     write(LogLevel::INFO, "logger", "%s", BANNER_RULE);
 }
 
-// Gets the tag of a line: the level's letter and the writer's name, such as "W lamps".
+/// Gets the tag of a line: the level's letter and the writer's name, such as "W lamps".
+///
+/// @param tag    Receives the tag.
+/// @param level  The line's weight.
+/// @param who    The writer's name.
 static void formatTag(char (&tag)[TAG_BYTES], LogLevel level, const char* who) {
     snprintf(tag, sizeof(tag), "%c %s", level == LogLevel::WARNING ? 'W' : 'I', who);
 }
 
-// Writes a line into the firmware's log, or before it has begun into the debug output.
+/// Writes a line into the firmware's log, or before it has begun into the debug output.
+///
+/// @param level   The line's weight.
+/// @param who     Names the writer in a word.
+/// @param format  The line's format, as for vprintf.
+/// @param args    The values the format takes.
 static void logArgs(LogLevel level, const char* who, const char* format, va_list args)
     __attribute__((format(printf, 3, 0)));
 

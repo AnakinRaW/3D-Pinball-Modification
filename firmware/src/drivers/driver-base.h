@@ -16,15 +16,18 @@ struct Fault {
 
 class Driver {
 public:
-    // Sets the driver up. Returns false when that fails.
+    /// Sets the driver up.
+    ///
+    /// @return  False when the setup fails.
     virtual bool begin() = 0;
 
-    // Gets which parts of the driver's device have failed. The default reports none, for a
-    // driver that notes no fault.
+    /// Gets which parts of the driver's device have failed.
+    ///
+    /// The default reports none, for a driver that notes no fault.
     virtual Fault failed() const { return {}; }
 };
 
-// One IntervalTimer, shared by every driver that needs a regular period.
+/// One IntervalTimer, shared by every driver that needs a regular period.
 class DriverTick {
 public:
     using Callback = teensy::inplace_function<void(void), 16>;   // a lambda capturing this fits
@@ -32,9 +35,15 @@ public:
     static constexpr uint32_t PERIOD_US = 5000;   // driver-design.md: the tick's period
     static constexpr uint8_t SLOTS = 8;           // the callbacks it runs at most
 
-    // Runs fn every periodUs. Before the main loop only, and the first call starts the timer.
-    // Returns false when every slot is taken, periodUs is no multiple of PERIOD_US or no
-    // IntervalTimer is free.
+    /// Runs @p fn every @p periodUs.
+    ///
+    /// The first call starts the timer.
+    ///
+    /// @param fn        The function to run.
+    /// @param periodUs  The period in microseconds, a multiple of PERIOD_US.
+    /// @return          False when every slot is taken, @p periodUs is no multiple of PERIOD_US
+    ///                  or no IntervalTimer is free.
+    /// @note            Before the main loop only.
     bool attach(Callback fn, uint32_t periodUs);
 
 private:
@@ -46,7 +55,9 @@ private:
         uint32_t left;
     };
 
-    // The IntervalTimer's interrupt: counts every slot down and runs the ones that are due.
+    /// Counts every slot down and runs the ones that are due.
+    ///
+    /// @note  Runs in the IntervalTimer's interrupt.
     void tick();
 
     IntervalTimer timer;

@@ -2,8 +2,8 @@
 #include "logging/logger.h"
 #include "logging/debug-log.h"
 
-// The monitor's queue lies in RAM2. Its events are written before they are read, so it needs no
-// start value.
+/// The monitor's queue lies in RAM2. Its events are written before they are read, so it needs no
+/// start value.
 static DMAMEM DriverEvent monitorQueue[DeviceMonitor::DEPTH];
 
 DeviceMonitor deviceMonitor(events, driverTick, monitorQueue);

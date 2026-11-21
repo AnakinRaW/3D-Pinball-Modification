@@ -3,10 +3,10 @@
 
 namespace {
 
-// The pins that a channel X of FlexPWM1 drives, with their submodule, from the table pwm_pin_info
-// in the core's pwm.c of Teensyduino 1.62. The core declares that table in no header, so it is
-// copied here. attach() takes these pins alone, because the no-pulse setting goes into channel
-// X's compare register.
+/// The pins that a channel X of FlexPWM1 drives, with their submodule, from the table pwm_pin_info
+/// in the core's pwm.c of Teensyduino 1.62. The core declares that table in no header, so it is
+/// copied here. attach() takes these pins alone, because the no-pulse setting goes into channel
+/// X's compare register.
 struct XPin {
     uint8_t pin;
     uint8_t submodule;

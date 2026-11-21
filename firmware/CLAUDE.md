@@ -54,12 +54,14 @@ Code taken from another project and changed here stands beside the code that use
 
 - **A public member's comment states its contract.** The contract is what a caller sees: what the member does, what it needs and what it returns. What happens inside is written in the `.cpp`, at the code that does it. "Attaches the pin with the SER0049's range, sets no pulse" on `ServoDriver::begin()` describes the inside and goes into `servo-driver.cpp`.
 - **Inside a function, a comment says why.** A register value names its datasheet section.
-- **A function's comment opens with a plain full sentence saying what the function does.** A line for each parameter follows. Where the meaning of a value is not obvious, an example closes the comment, such as "Pair 0b10 gives the symbol of a 1, then the symbol of a 0."
+- **A comment on a declaration is a Doxygen comment with `///`**, so an IDE shows it on hover and while a call is typed. Its first line is one full sentence saying what the member does. The behavior a caller sees follows after an empty `///` line. A parameter gets `@param` with its name and a full sentence where its name and type leave something open, such as its range or what happens to it. A parameter whose name and type say everything, such as `const Device& d`, gets no `@param`. A returned value gets `@return` where its meaning is not plain, such as what `false` means. Who may call the member, whether it waits, and remarks that concern no single parameter stand in `@note`. `@p name` marks a parameter inside the text. No other tag is used. Where the meaning of a value is not obvious, an example closes the comment, such as "Pair 0b10 gives the symbol of a 1, then the symbol of a 0."
 
   ```cpp
-  // Gets a color dimmed by a brightness.
-  // color is the color at full brightness.
-  // brightness runs from 0 to 255. 0 gives black. 255 gives the color unchanged.
+  /// Gets a color dimmed by a brightness.
+  ///
+  /// @param color       The color at full brightness.
+  /// @param brightness  Runs from 0 to 255. 0 gives black. 255 gives @p color unchanged.
+  /// @return            The dimmed color.
   CRGB dim(CRGB color, uint8_t brightness);
   ```
 
@@ -88,7 +90,10 @@ The code follows the style of PJRC's Teensy core and of Arduino:
 ```cpp
 class SolenoidDriver {
 public:
-    // Fires the coil once. Returns false while the coil cools down.
+    /// Fires a coil once.
+    ///
+    /// @param coil  The coil, counted from 0.
+    /// @return      False while the coil cools down, true once it fires.
     bool fire(uint8_t coil);
 
 private:
@@ -100,7 +105,7 @@ private:
 - Four spaces, no tabs. Lines end at 100 characters.
 - Braces open on the line of the statement. `if`, `for` and `while` always take braces.
 - `public:` and `private:` stand at the class's indentation.
-- A comment stands with `//` on a separate line above the code it explains. It is written in full, plainly built sentences, as [rule 10](../RULES.md#10-writing-style) asks. Only a comment at the end of a line may be a fragment of a few words, as for a constant's source. Doxygen tags such as `@param` or `\brief` are not used.
+- A comment inside a function stands with `//` on a separate line above the code it explains. A comment on a declaration takes `///`, as [Comments and names](#comments-and-names) gives. Every comment is written in full, plainly built sentences, as [rule 10](../RULES.md#10-writing-style) asks. Only a comment at the end of a line may be a fragment of a few words, as for a constant's source.
 - [`.clang-format`](.clang-format) holds this layout, and CI checks every file of `src/`, `include/` and `tests/` against it with clang-format 18.
 
 ## Debug code

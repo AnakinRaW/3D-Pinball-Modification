@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <string.h>
 
-// The most send() hands USB serial under one hold of the lock. It bounds how long the lock holds.
+/// The most send() hands USB serial under one hold of the lock. It bounds how long the lock holds.
 constexpr size_t SEND_PIECE_BYTES = 512;
 
 bool DebugOutput::write(const char* format, va_list args) {
@@ -54,7 +54,10 @@ bool DebugOutput::dropOldestLine() {
     }
 }
 
-// Formats a line of the debug output itself.
+/// Formats a line of the debug output itself.
+///
+/// @param out     Receives the line.
+/// @param format  The format of the line, as for printf, followed by the values it takes.
 static size_t formatOwnLine(char* out, const char* format, ...)
     __attribute__((format(printf, 2, 3)));
 

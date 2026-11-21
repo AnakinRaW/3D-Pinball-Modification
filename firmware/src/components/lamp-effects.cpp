@@ -3,7 +3,7 @@
 constexpr uint8_t FULL = 255;   // the value of an effect's second color
 constexpr uint32_t Q_PER_MM = 4;
 constexpr uint32_t MS_PER_S = 1000;
-// an asteroid's tail is a quarter of the round, and at least two lamps long
+/// An asteroid's tail is a quarter of the round, and at least two lamps long
 constexpr uint32_t TAIL_SHARE = 4;
 constexpr uint32_t TAIL_LEAST_LAMPS = 2;
 
@@ -19,8 +19,8 @@ uint8_t Blink::value(uint32_t ms, const Spot&) const {
     return ms % periodMs < onMs ? FULL : 0;
 }
 
-// FastLED's cubicwave8 rises from 0 to 255 over the first half of its 256 steps and falls back
-// over the second, eased at both ends.
+/// FastLED's cubicwave8 rises from 0 to 255 over the first half of its 256 steps and falls back
+/// over the second, eased at both ends.
 uint8_t Pulse::value(uint32_t ms, const Spot&) const {
     if (periodMs == 0) {
         return 0;
@@ -29,7 +29,7 @@ uint8_t Pulse::value(uint32_t ms, const Spot&) const {
     return cubicwave8(uint8_t(phase));
 }
 
-// FastLED's ease8InOutCubic eases the fade at both ends, as the pulse does.
+/// FastLED's ease8InOutCubic eases the fade at both ends, as the pulse does.
 uint8_t Fade::value(uint32_t ms, const Spot&) const {
     if (ms >= fadeMs) {
         return FULL;
@@ -37,8 +37,8 @@ uint8_t Fade::value(uint32_t ms, const Spot&) const {
     return ease8InOutCubic(uint8_t(ms * FULL / fadeMs));
 }
 
-// The head moves along the lamps' positions: one position a lamp on the playfield, a quarter
-// millimeter on a strip. A lamp lights once the head has reached it.
+/// The head moves along the lamps' positions: one position a lamp on the playfield, a quarter
+/// millimeter on a strip. A lamp lights once the head has reached it.
 uint8_t Run::value(uint32_t ms, const Spot& at) const {
     const bool up = direction == Direction::UP;
     uint64_t travelled = 0;   // how far the head has gone since the effect began

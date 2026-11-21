@@ -10,7 +10,7 @@ template <typename Signature, size_t Capacity> using inplace_function = std::fun
 
 class IntervalTimer;
 
-// what the fake timers have been asked; a test resets it before it starts
+/// What the fake timers have been asked. A test resets it before it starts.
 struct FakeTimers {
     bool refuse = false;                // begin() returns false while it is set
     uint32_t begins = 0;                // calls to begin(), refused ones included
@@ -35,7 +35,7 @@ public:
 
     void priority(uint8_t n) { fakeTimers.priority = n; }
 
-    // Runs the callback once, as one period of the hardware timer would.
+    /// Runs the callback once, as one period of the hardware timer would.
     void fire() { callback(); }
 
 private:

@@ -22,38 +22,48 @@ public:
     static constexpr uint32_t SPEED_MIN_DEG_S = 10;   // the slowest servo.speed_deg_s
     static constexpr uint32_t SPEED_MAX_DEG_S = 200;   // the fastest servo.speed_deg_s
 
-    // the config's servo.start_deg, servo.end_deg and servo.speed_deg_s, each with its default
+    /// The config's servo.start_deg, servo.end_deg and servo.speed_deg_s, each with its default.
     struct Settings {
         uint8_t startDeg = START_DEG;
         uint8_t endDeg = END_DEG;
         uint32_t speedDegS = SPEED_DEG_S;
     };
 
-    // Takes the two angles and the speed. A value outside its range counts as the nearer end. The
-    // main task calls it before begin(), and without it begin() takes the defaults.
+    /// Takes the two angles and the speed.
+    ///
+    /// A value outside its range counts as the nearer end. Without a call, begin() takes the
+    /// defaults.
+    ///
+    /// @param settings  The start angle, the end angle and the speed.
+    /// @note            The main task calls it before begin().
     void configure(const Settings& settings);
 
-    // Attaches its step to the driver tick, attaches the pin with the SER0049's range, sets no
-    // pulse and sends the servo to its start position. Returns false when the driver tick is full
-    // or the timer has not taken the no-pulse setting after two frames.
+    /// Attaches its step to the driver tick, attaches the pin with the SER0049's range, sets no
+    /// pulse and sends the servo to its start position.
+    ///
+    /// @return  False when the driver tick is full or the timer has not taken the no-pulse
+    ///          setting after two frames.
     bool begin() override;
 
-    // Moves the servo at the config's speed to one of its two end positions. Does nothing once
-    // begin() has failed.
+    /// Moves the servo at the config's speed to one of its two end positions.
+    ///
+    /// Does nothing once begin() has failed.
+    ///
+    /// @param target  The end position to move to.
     void moveTo(Position target);
 
-    // Gets the end position last moved to.
+    /// Gets the end position last moved to.
     Position position() const { return lastTarget; }
 
-    // Gets how long a move from one end position to the other takes at the config's speed, in
-    // whole frames, rounded up.
+    /// Gets how long a move from one end position to the other takes at the config's speed, in
+    /// whole frames, rounded up.
     uint32_t travelMs() const;
 
-    // Gets the servo as failed once its timer has not taken the no-pulse setting in attach().
+    /// Gets the servo as failed once its timer has not taken the no-pulse setting in attach().
     Fault failed() const override { return {stuck, 0}; }
 
 private:
-    // Runs on the driver tick once per frame.
+    /// Runs on the driver tick once per frame.
     void step();
 
     PWMServoT4 servo;

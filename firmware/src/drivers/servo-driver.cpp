@@ -10,7 +10,13 @@ constexpr uint32_t FRAME_MS = 20;         // the servo's frame, one step per fra
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint32_t MDEG_PER_DEG = 1000;   // thousandths of a degree in a degree
 
-// Holds a value inside its range. A value it moves is named in the log.
+/// Holds a value inside its range.
+///
+/// A value it moves is named in the log.
+///
+/// @param name     The setting's name.
+/// @param lowest   The lowest value of the range.
+/// @param highest  The highest value of the range.
 static uint32_t held(const char* name, uint32_t value, uint32_t lowest, uint32_t highest) {
     if (value >= lowest && value <= highest) {
         return value;
@@ -74,9 +80,10 @@ uint32_t ServoDriver::travelMs() const {
     return (spanDeg * MDEG_PER_DEG + stepMdeg - 1) / stepMdeg * FRAME_MS;
 }
 
-// The servo itself always runs at full speed to the angle its pulse names, so the speed is limited
-// by moving that angle a little each frame. A speed below one degree per frame gathers its
-// thousandths of a degree over several frames.
+/// Limits the speed by moving the angle the pulse names a little each frame.
+///
+/// The servo itself always runs at full speed to the angle its pulse names. A speed below one
+/// degree per frame gathers its thousandths of a degree over several frames.
 void ServoDriver::step() {
     if (!ready) {
         return;

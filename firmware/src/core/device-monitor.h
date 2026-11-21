@@ -9,7 +9,7 @@
 #include "drivers/driver-base.h"
 #include "core/event-queue.h"
 
-// the devices of the machine; a device of one part has only part 0
+/// The devices of the machine. A device of one part has only part 0.
 enum class Device : uint8_t {
     ROTARY_SENSOR,
     BREAK_BEAM,
@@ -26,8 +26,8 @@ enum class Device : uint8_t {
     COUNT,   // the number of devices
 };
 
-// The source of a fault event packs the device into the upper four bits and the part into the
-// lower four, so a device has at most 16 parts.
+/// The source of a fault event packs the device into the upper four bits and the part into the
+/// lower four, so a device has at most 16 parts.
 constexpr uint8_t PART_BITS = 4;
 constexpr uint8_t PART_MASK = (1u << PART_BITS) - 1;
 static_assert(uint8_t(Device::COUNT) <= (1u << PART_BITS), "every device fits the upper four bits");
@@ -43,28 +43,39 @@ constexpr uint8_t faultPart(uint8_t source) {
     return source & PART_MASK;
 }
 
-// records the failed parts of every device and the error code each device last failed with
+/// Records the failed parts of every device and the error code each device last failed with.
 class FailedDevices {
 public:
-    // Marks a part as failed and keeps the error code it failed with.
+    /// Marks a part as failed and keeps the error code it failed with.
+    ///
+    /// @param part  The part of the device.
+    /// @param code  The error code the part failed with.
     void set(Device d, uint8_t part, uint32_t code) {
         parts[size_t(d)] |= PartMask(1u << part);
         codes[size_t(d)] = code;
     }
 
-    // Marks a part as working again.
+    /// Marks a part as working again.
+    ///
+    /// @param part  The part of the device.
     void clear(Device d, uint8_t part) { parts[size_t(d)] &= PartMask(~(1u << part)); }
 
-    // Gets whether a part has failed.
+    /// Gets whether a part has failed.
+    ///
+    /// @param part  The part of the device.
     bool isFailed(Device d, uint8_t part) const { return (parts[size_t(d)] & (1u << part)) != 0; }
 
-    // Gets whether any part of a device has failed.
+    /// Gets whether any part of a device has failed.
+    ///
     bool anyFailed(Device d) const { return parts[size_t(d)] != 0; }
 
-    // Gets the error code a device last failed with.
+    /// Gets the error code a device last failed with.
+    ///
     uint32_t code(Device d) const { return codes[size_t(d)]; }
 
-    // Calls fn(device, part) for every failed part, device by device.
+    /// Calls @p fn(device, part) for every failed part, device by device.
+    ///
+    /// @param fn  Receives the device and the part.
     template <typename Fn> void forEach(Fn fn) const {
         for (size_t d = 0; d < size_t(Device::COUNT); ++d) {
             // Each round drops the lowest set bit, whose number is the part.
@@ -81,20 +92,31 @@ private:
 
 class DeviceMonitor {
 public:
-    // model/firmware/figures.py, n_monitor_slots: one slot for each device, and a device that
-    // reports nothing leaves its slot empty
+    /// model/firmware/figures.py, n_monitor_slots: one slot for each device, and a device that
+    /// reports nothing leaves its slot empty
     static constexpr uint8_t SLOTS = uint8_t(Device::COUNT);
-    // model/firmware/figures.py, n_queue: eight parts failing at once with room to spare
+    /// model/firmware/figures.py, n_queue: eight parts failing at once with room to spare
     static constexpr uint32_t DEPTH = 32;
     static constexpr uint32_t CHECK_US = 100000;   // model/firmware/figures.py, t_monitor
 
-    // Takes the queue's events from storage, which watch() attaches to queue on its first call.
+    /// Creates a monitor whose queue takes its events from @p storage.
+    ///
+    /// @param queue    The event queue that watch() attaches the monitor's queue to on its first
+    ///                 call.
+    /// @param tick     The driver tick that watch() attaches the check to on its first call.
+    /// @param storage  The events of the monitor's queue.
     DeviceMonitor(EventQueue& queue, DriverTick& tick, DriverEvent (&storage)[DEPTH])
         : queue(queue), tick(tick), storage(storage) {}
 
-    // Registers a driver, whose failed() every check asks. Before the main loop only. The first
-    // call attaches the monitor's queue to the event queue and its check to the driver tick.
-    // Returns false when every slot is taken or the driver tick refuses the check.
+    /// Registers a driver, whose failed() every check asks.
+    ///
+    /// The first call attaches the monitor's queue to the event queue and its check to the driver
+    /// tick.
+    ///
+    /// @param device  The device the driver belongs to.
+    /// @param driver  The driver whose failed() every check asks.
+    /// @return        False when every slot is taken or the driver tick refuses the check.
+    /// @note          Before the main loop only.
     bool watch(Device device, const Driver& driver);
 
 private:
@@ -104,8 +126,11 @@ private:
         PartMask reported;   // the failed parts as last published
     };
 
-    // The driver tick, every CHECK_US: publishes every part whose bit changed. A full queue
-    // leaves the part as it was reported, so the next check tries again.
+    /// Publishes every part whose bit changed.
+    ///
+    /// A full queue leaves the part as it was reported, so the next check tries again.
+    ///
+    /// @note  The driver tick calls it, every CHECK_US.
     void check();
 
     EventQueue& queue;

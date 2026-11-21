@@ -13,16 +13,27 @@ class PWMServoT4 {
 public:
     static constexpr uint8_t MAX_ANGLE_DEG = 180;   // the angle write() maps to maxUs
 
-    // Sets the pin's timer to the 20 ms frame, drives the pin low, takes the pulse range, sets no
-    // pulse and waits until the timer has taken that setting. Runs at start-up only, since it
-    // waits up to two frames. Returns false for a pin that no FlexPWM channel X drives, for a range
-    // whose low end is not below its high end or whose high end exceeds the frame, and when the
-    // timer has not taken the setting after two frames. The pin then gets no pulse.
+    /// Sets the pin's timer to the 20 ms frame, drives the pin low, takes the pulse range, sets
+    /// no pulse and waits until the timer has taken that setting.
+    ///
+    /// The pin gets no pulse when the call returns false.
+    ///
+    /// @param pin    The pin of the servo.
+    /// @param minUs  The pulse for 0 degrees, in microseconds.
+    /// @param maxUs  The pulse for MAX_ANGLE_DEG, in microseconds.
+    /// @return       False for a pin that no FlexPWM channel X drives, for a range whose low end
+    ///               is not below its high end or whose high end exceeds the frame, and when the
+    ///               timer has not taken the setting after two frames.
+    /// @note         Runs at start-up only, since it waits up to two frames.
     bool attach(uint8_t pin, uint16_t minUs, uint16_t maxUs);
 
-    // Sets the pulse for an angle between the two ends of the range, at the nearest of the 4096
-    // steps of the frame. An angle above MAX_ANGLE_DEG counts as MAX_ANGLE_DEG. Does nothing until
-    // attach() has succeeded.
+    /// Sets the pulse for an angle between the two ends of the range, at the nearest of the 4096
+    /// steps of the frame.
+    ///
+    /// An angle above MAX_ANGLE_DEG counts as MAX_ANGLE_DEG. Does nothing until attach() has
+    /// succeeded.
+    ///
+    /// @param angleDeg  The angle, in degrees.
     void write(uint8_t angleDeg);
 
 private:

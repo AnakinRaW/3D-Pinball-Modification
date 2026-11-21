@@ -11,21 +11,32 @@
 #error "DEBUG and NDEBUG are both defined"
 #endif
 
-// Writes one line of debug output, formatted like printf, with the milliseconds since the start and
-// the letter D in front. A line break at the end of the text may be left out. Any task may call it,
-// before and after FreeRTOS starts. It never waits. A line from an interrupt is dropped. When the
-// buffer is full, the oldest waiting lines give way to the new one. Does nothing in a release
-// build.
+/// Writes one line of debug output, formatted like printf, with the milliseconds since the start
+/// and the letter D in front.
+///
+/// A line break at the end of the text may be left out. A line from an interrupt is dropped. When
+/// the buffer is full, the oldest waiting lines give way to the new one. Does nothing in a release
+/// build.
+///
+/// @param format  The format of the line, as for printf, followed by the values it takes.
+/// @note          Any task may call it, before and after FreeRTOS starts. It never waits.
 void debugLog(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
-// Adds a line that is formatted already, such as a line of the machine's log. Otherwise as
-// debugLog().
-// line holds the line with its line break. n is its length.
+/// Adds a line that is formatted already, such as a line of the machine's log.
+///
+/// Otherwise as debugLog().
+///
+/// @param line  The line with its line break.
+/// @param n     The length of the line.
 void debugLogLine(const char* line, size_t n);
 
-// Turns the waiting notes of DEBUG_TRACE() into lines, then sends as many waiting lines to USB
-// serial as it takes without waiting. Gets the count of bytes sent. The main loop calls it in
-// every pass. Never from an interrupt. Does nothing in a release build.
+/// Turns the waiting notes of DEBUG_TRACE() into lines, then sends as many waiting lines to USB
+/// serial as it takes without waiting.
+///
+/// Does nothing in a release build.
+///
+/// @return  The count of bytes sent.
+/// @note    The main loop calls it in every pass. Never from an interrupt.
 size_t sendDebugLog();
 
 #if defined(DEBUG)

@@ -6,12 +6,18 @@
 
 using fract8 = uint8_t;
 
-// lib8tion's scale8 with FASTLED_SCALE8_FIXED: 255 keeps a value whole
+/// Scales @p i like lib8tion's scale8 with FASTLED_SCALE8_FIXED: 255 keeps a value whole.
+///
+/// @param i      The value to scale.
 inline uint8_t scale8(uint8_t i, fract8 scale) {
     return uint8_t((uint16_t(i) * (1 + uint16_t(scale))) >> 8);
 }
 
-// lib8tion's blend8: amountOfB 0 gives a, 255 gives b
+/// Blends @p a and @p b like lib8tion's blend8: @p amountOfB 0 gives @p a, 255 gives @p b.
+///
+/// @param a          The first value.
+/// @param b          The second value.
+/// @param amountOfB  How much of @p b the result holds.
 inline uint8_t blend8(uint8_t a, uint8_t b, uint8_t amountOfB) {
     uint16_t partial = uint16_t((a << 8) | b);
     partial = uint16_t(partial + b * amountOfB);
@@ -65,8 +71,12 @@ inline CRGB blend(const CRGB& p1, const CRGB& p2, fract8 amountOfP2) {
 
 typedef uint32_t TProgmemRGBPalette16[16];
 
-// colorutils' ColorFromPalette at full brightness with LINEARBLEND: the upper four bits pick an
-// entry, the lower four blend it into the next one, and the last entry blends into the first
+/// Gets a palette color like colorutils' ColorFromPalette at full brightness with LINEARBLEND.
+///
+/// The upper four bits of @p index pick an entry, the lower four blend it into the next one, and
+/// the last entry blends into the first.
+///
+/// @param index  The position in the palette.
 inline CRGB ColorFromPalette(const TProgmemRGBPalette16& pal, uint8_t index) {
     const uint8_t hi4 = index >> 4;
     const uint8_t lo4 = index & 0x0F;
