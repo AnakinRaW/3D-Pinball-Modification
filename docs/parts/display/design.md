@@ -134,8 +134,9 @@ FRAME     the panel in landscape, pixels across  = 320
           bytes                                  = 32 bytes
           that burst on the bus                  = 2.67 µs
           the processor's clock                    600 MHz
-          its clocks for one refill, estimated     150 clocks
-          its share while the bus sends          = 9.4 %
+          its clocks for one refill, at most,
+          measured                                 178 clocks
+          its share while the bus sends          = 11.2 %
           the clocks one burst gives a refill    = 1600 clocks
           the display's tick, which steps a
           restart                                  40 ms
@@ -144,7 +145,7 @@ LVGL      its two buffers of the whole screen in
           its refresh period                       33 ms
           the picture memory, the PSRAM the log's
           and the debug buffers and the sound's
-          rings leave                            = 8 MB
+          rings leave                            = 7 MB
           the opaque full-screen pictures it
           holds                                  = 48
 MOVIE     the frame rate of every movie            25 Hz

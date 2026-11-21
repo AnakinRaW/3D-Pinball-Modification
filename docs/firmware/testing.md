@@ -315,6 +315,7 @@ The program `ws2812-flexio2` checks the [FlexIO2 output](drivers/lighting.md#how
 | `refusals` | Teensy | Start outputs with no lane, with one lane more than FlexIO2 has shifters, with a pin that does not reach FlexIO2 and with one pin for two lanes, then send on one of them, and ask for the FlexIO2 signal of that pin | Each start and the send return false, and the pin has no signal |
 | `long` | Teensy | Send one frame of the longest chain the lighting allows on chain F, where no LED is wired, and check each bit as it comes back | Every bit of the frame comes back as sent, each high within the reading's tolerance, and the line is low after the frame |
 | `load` | Teensy | Do the same frame after frame, at the lamps' frame period, while a second DMA channel copies between two buffers in RAM2 without a pause. A soak run sends ten times as many frames | Every frame comes back whole |
+| `flexio3-load` | Teensy | Do as `load`, while the processor writes FlexIO3's eight shifter buffers once every display burst, as a sending [display](drivers/display.md) does, with FlexIO3 disabled | Every frame comes back whole |
 | `latch` | Teensy | Send a short frame on chain F and the next one the moment the output is free again | The line stays low between the two frames for longer than the reset time that ends a frame for the LEDs |
 | `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts, and a frame goes out afterwards |
 | `shared` | Teensy | Send a frame through one output, then send through a second output while the frame goes out, and again once it is out | The second output is busy while the first one's frame goes out and refuses its send at once. Afterwards its send goes through |
@@ -369,7 +370,7 @@ The program `break-beam` checks the [break beam driver](drivers/break-beam.md).
 
 ### I²C bus
 
-The program `i2c-bus` checks the [I²C bus](io/i2c-bus.md) on `Wire`, with the rotary sensor and the port expander connected.
+The program `i2c-bus` checks the [I²C bus](io/i2c-bus.md). The rows on `Wire` need the rotary sensor and the port expander connected, and the rows named `wire2-` need the display module's touch controller on `Wire2`.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
@@ -377,6 +378,10 @@ The program `i2c-bus` checks the [I²C bus](io/i2c-bus.md) on `Wire`, with the r
 | `no-answer` | Teensy | Run a transfer to an address no device answers at, then a read of the rotary sensor | The first ends with the missing answer as its error. The second works |
 | `probe` | Teensy | Run a transfer with neither part, once to the rotary sensor's address and once to an address no device answers at | The first ends without an error. The second ends with the missing answer |
 | `held-low` | bench | Hold SDA at GND with a wire for a moment while transfers run, then let go | The transfers end with the line held low as their error. Transfers work again once SDA is free |
+| `wire2-probe` | Teensy | Run a transfer with neither part on `Wire2`, once to the touch controller's address and once to an address no device answers at | The first ends without an error. The second ends with the missing answer |
+| `wire2-turns` | Teensy | Request a read of the touch controller's five touch bytes every driver tick, and a read of its first register each time the first read ends | Every request is followed by one run and one call of its done function, and no transfer ends with an error |
+| `wire2-repeat` | Teensy | Request a read three times before the bus starts it, then three times more while it runs | The read runs twice |
+| `wire2-held-low` | bench | Request a read of the touch controller every driver tick, hold SCL on `Wire2` at GND with a wire for about a second, then let go | The reads end with the line held low as their error. Reads work again once SCL is free |
 
 ### Magnetic rotary sensor
 
@@ -461,8 +466,10 @@ The program `display` checks the [display driver](drivers/display.md).
 | `start` | bench | Start the Teensy from power-up, then restart it while the display is awake | The screen turns black both times, with no garbage and no white flash |
 | `restart` | bench | Disconnect the 5 V of J-DISP for half a second while a picture shows, then connect it again | The picture returns within two seconds, and the Teensy keeps running |
 | `picture` | bench | Send color bars, a ramp of every level of red, green and blue, and the words TOP LEFT in that corner | The colors are right, the ramps run smoothly, and the words stand upright at the top left |
-| `rectangles` | Teensy | Send rectangles of several sizes and places, then one off the 16-pixel steps, one beyond the screen and one while another is on its way | Each rectangle on the steps lands where it was sent, the function handed in runs once after its last pixel, and the three others are refused |
-| `refills` | Teensy | Send full screens for a minute while the main loop counts how often it runs | The refills take no more of the processor than the [estimate](drivers/display.md#performance--memory-usage), and the bus keeps its speed |
+| `rectangles` | Teensy | Send rectangles of several sizes and places, then one off the 16-pixel steps, one beyond the screen and one while another is on its way | The function handed in runs once per rectangle on the steps, after the rectangle's bus time and close behind it, and the three others are refused |
+| `refills` | Teensy | Send the screen in bands from RAM2 without a pause for a minute while a loop counts its passes, in turns with the same loop while nothing is sent | The refills take no more of the processor than the [measured share](drivers/display.md#performance--memory-usage), and a screen takes its bus time within 5 % |
+| `restart-steps` | Teensy | Send a screen, call `restart()` while it goes out, then send a second screen during the restart | The first screen finishes. `restarting()` is true from the call until the panel shows again, after the panel's waits after its reset and after Sleep Out and at most two of the display's ticks more. The second screen goes out only then |
+| `with-lighting` | Teensy | Start the [lighting](drivers/lighting.md) with the longest chain on chain F beside the display, and send a dark light frame every frame period of the [lamps](components/lamps.md) while the screen goes out in bands without a pause | No light frame is refused, and a screen takes its bus time within 5 % |
 
 ### Touch
 
@@ -471,8 +478,14 @@ The program `touch` checks the [touch driver](drivers/touch.md).
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `touch` | bench | Touch the marks the test draws in the corners and the center, then drag a finger and rest it | Each touch lands inside the mark touched, and `TouchDown`, `TouchMoved`, `TouchHeld` and `TouchUp` come as the [events](drivers/touch.md#driver-events) describe |
-| `no-touch` | bench | Start with the display module disconnected | `present()` is false, no touch event comes, and no fault is reported |
-| `touch-lost` | bench | Disconnect the touch controller while the machine runs | The controller is reported failed after 100 ms |
+| `touch-lost` | bench | Show a picture, then pull the 5 V lead from the module's Vin for about two seconds and plug it back in. On `DEVICE_RECOVERED`, restart the display as the host does and send the picture again | The controller is reported failed with the error flags of its failed reads, then recovered. The picture shows again, and the Teensy keeps running |
+| `tick` | computer | Begin with the controller answering, then step the driver tick | A read is requested once every tick of the touch driver |
+| `orientation` | computer | Answer reads with the readings measured at the picture's edges, between them and beyond them | Each reading lands where the [mapping](drivers/touch.md#reading) puts it, a reading beyond an edge on that edge, in `finger()` and in the events |
+| `events` | computer | Answer reads for a touch that moves by less and by more than 10 pixels, rests and leaves, then for one that rests within 10 pixels of where it came down | `TouchMoved` comes only for a move of 10 pixels from the position last reported, a touch that strayed brings no `TouchHeld`, the resting one brings one `TouchHeld` within a read of 1 s, and `TouchUp` carries the last position |
+| `failed-read` | computer | Let reads fail with a finger on the screen, for less and for more than 100 ms, then let one work | Past 100 ms the controller is reported failed with the flags of the last failed read, one `TouchUp` releases the finger, and the working read recovers it |
+| `absent` | computer | Begin with the controller not answering, then step the driver tick | `present()` is false, no read is requested, no fault is reported and no event comes |
+| `calibration` | computer | Configure other readings at the picture's edges, readings above 4095 beside a twin at 4095, and two readings of each axis less than 100 apart | The edges map onto the new readings, the first driver behaves as its twin, and the axes that lie too close keep their defaults |
+| `reads` | Teensy | Begin with the display module connected and let the driver read for two seconds without a touch | `present()` is true, no fault is reported, no event comes and `finger()` shows no finger |
 
 ### Every driver
 

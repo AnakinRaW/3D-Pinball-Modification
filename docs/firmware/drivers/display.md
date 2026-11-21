@@ -12,13 +12,15 @@ The caller hands `send()` a function. The driver calls it from its interrupt onc
 
 ## Start-up
 
-`begin()` waits until 285 ms after power-up, as [`design.md`](../../parts/display/design.md#appendix-derivations) derives. It then resets the panel by command, since a restart of the Teensy can find the panel awake. It sets the panel to RGB565 in landscape and ends with a black screen.
+`begin()` waits until 285 ms after power-up, as [`design.md`](../../parts/display/design.md#appendix-derivations) derives. It then resets the panel by command, since a restart of the Teensy can find the panel awake. It sends the power, frame rate and gamma setup that the ILI9341 libraries send, sets the panel to RGB565 in landscape and ends with a black screen.
+
+FlexIO3 shares its clock with FlexIO2, which the [lighting](lighting.md) drives at the same 120 MHz. `begin()` returns false when FlexIO2 runs that clock at another rate.
 
 ## Performance & Memory Usage
 
 Sending the whole screen once takes 12.8 ms.
 
-While the driver sends, it takes an estimated 9.4 % of the processor.
+While the driver sends, it takes at most 11.2 % of the processor, as measured on the bench.
 
 The driver needs no memory for pixels. It sends straight from the two buffers LVGL draws into, which the [screen component](../components/screen.md#drawing) keeps in RAM2.
 
@@ -38,20 +40,4 @@ The panel shares the module's supervisor with the touch controller. If the modul
 
 ## Driver
 
-```cpp
-class Display : public Driver {
-public:
-    using Sent = teensy::inplace_function<void(void), 16>;   // a lambda capturing a pointer fits
-
-    // sets up FlexIO3 and the panel, leaves the screen black and attaches to the driver tick;
-    // false when the tick is full
-    bool begin() override;
-    void restart();                                          // sets the panel up again after a supervisor reset, holding rectangles back until it is; returns at once
-    bool restarting() const;                                 // gets whether a restart still holds the bus
-
-    // sends the rectangle at x, y from pixels, RGB565 high byte first, and returns at once; calls
-    // sent from the interrupt once the last pixel is out; false for a rectangle off the 16-pixel
-    // steps, beyond the screen, or while one is on its way
-    bool send(uint16_t x, uint16_t y, uint16_t width, uint16_t height, const uint8_t* pixels, Sent sent);
-};
-```
+[`firmware/src/drivers/display.h`](../../../firmware/src/drivers/display.h) holds the interface.

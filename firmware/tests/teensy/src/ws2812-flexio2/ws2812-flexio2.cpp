@@ -11,6 +11,7 @@
 //   long       a lane as long as the lighting allows sends every bit of its frame
 //   load       frame after frame of that lane comes out whole while a second DMA channel copies
 //              memory without a pause
+//   flexio3-load  the same while the processor writes FlexIO3 as a sending display does
 //   latch      a frame sent the moment the last one is done starts only after the LEDs' reset time
 //   clock      a clock root at another rate is refused while FlexIO3 is enabled on it, and set to
 //              120 MHz while FlexIO3 is not
@@ -21,6 +22,7 @@
 
 #include <Arduino.h>
 #include <DMAChannel.h>
+#include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/ws2812-flexio2.h"
 #include "drivers/ws2812-color-encoder.h"
@@ -72,7 +74,8 @@ constexpr uint32_t LONG_LIMIT_S = 30;
 constexpr uint32_t FRAME_MS = 11;
 constexpr uint32_t LOAD_QUICK_MS = 1100;
 constexpr uint32_t LOAD_SOAK_MS = 11000;
-constexpr uint32_t LOAD_WORDS = 4096;   // each of the two buffers the second DMA copies between
+constexpr uint8_t FLEXIO3_SHIFTERS = 8;   // flexio3-load: the buffers a display burst fills
+constexpr uint32_t LOAD_WORDS = 4096;     // each of the two buffers the second DMA copies between
 // WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, more than 280 µs
 constexpr uint32_t RESET_US = 280;
 constexpr uint32_t LATCH_WATCH_US = 1000;   // two short frames and the zero words between them
@@ -381,8 +384,10 @@ static bool longStarted() {
 
 // Sends one frame of the long lane and checks each bit as it comes back on FLEXIO2_PIN, so no
 // edge has to be stored. The first high may start before the reading does, so its length is left
-// out of the extremes.
-static Reading readLong() {
+// out of the extremes. With flexio3, the reading also writes FlexIO3's eight shifter buffers about
+// once every display burst, as the display driver refills them, so the processor loads the
+// peripheral bus as a sending display does. FlexIO3 stays disabled, so no pin moves.
+static Reading readLong(bool flexio3 = false) {
     Reading r = {0, 0, 0, UINT32_MAX, 0, UINT32_MAX, 0, false};
     const uint32_t pin = 1u << Ws2812Flexio2::signalOf(PINS[CHAIN_F]);
     const uint32_t bits = uint32_t(LONG_LEDS) * ws2812::BITS_PER_LED;
@@ -397,6 +402,7 @@ static Reading readLong() {
         r.errors = UINT32_MAX;
         return r;
     }
+    uint32_t refill = c0;
     while (ARM_DWT_CYCCNT - c0 < LONG_WATCH_US * CPU_MHZ) {
         const bool now = (FLEXIO2_PIN & pin) != 0;
         if (now && !high) {
@@ -419,6 +425,14 @@ static Reading readLong() {
                 hi = ns > hi ? ns : hi;
             }
             ++r.bits;
+            // The writes stall the reading, so they go right after a falling edge, into a low
+            // that lasts longer than they take.
+            if (flexio3 && ARM_DWT_CYCCNT - refill >= Display::BURST_CLOCKS) {
+                refill = ARM_DWT_CYCCNT;
+                for (uint8_t i = 0; i < FLEXIO3_SHIFTERS; ++i) {
+                    IMXRT_FLEXIO3_S.SHIFTBUF[i] = refill + i;
+                }
+            }
         }
         high = now;
     }
@@ -508,6 +522,35 @@ static void testLoad() {
     load.disable();
     Serial.printf("%lu frames under load, 0s high %lu to %lu ns, 1s high %lu to %lu ns\n", frames,
                   zeroMin, zeroMax, oneMin, oneMax);
+    if (whole) {
+        test::pass();
+    }
+}
+
+// flexio3-load: the long lane's frames, one every frame period, each read back whole while the
+// processor writes FlexIO3's buffers at the rate of a sending display.
+static void testFlexio3Load() {
+    if (!longStarted()) {
+        return;
+    }
+    if ((FLEXIO3_CTRL & FLEXIO_CTRL_FLEXEN) != 0) {
+        test::skip("FlexIO3 is enabled");
+        return;
+    }
+    const uint32_t frames = test::durationMs(LOAD_QUICK_MS, LOAD_SOAK_MS) / FRAME_MS;
+    bool whole = true;
+    uint32_t oneMax = 0;
+    uint32_t zeroMax = 0;
+    for (uint32_t f = 0; f < frames && whole; ++f) {
+        fillLong(f);
+        const Reading r = readLong(true);
+        whole = wholeFrame(r, f);
+        zeroMax = r.zeroMax > zeroMax ? r.zeroMax : zeroMax;
+        oneMax = r.oneMax > oneMax ? r.oneMax : oneMax;
+        delay(FRAME_MS - LONG_WATCH_US / US_PER_MS);
+    }
+    Serial.printf("%lu frames beside FlexIO3's writes, 0s high at most %lu ns, 1s %lu ns\n", frames,
+                  zeroMax, oneMax);
     if (whole) {
         test::pass();
     }
@@ -641,6 +684,8 @@ static const Test TESTS[] = {
     {"ws2812-flexio2.refusals", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testRefusals, nullptr},
     {"ws2812-flexio2.long", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLong, nullptr},
     {"ws2812-flexio2.load", RunsOn::TEENSY, LIMIT_S, LONG_LIMIT_S, testLoad, nullptr},
+    {"ws2812-flexio2.flexio3-load", RunsOn::TEENSY, LIMIT_S, LONG_LIMIT_S, testFlexio3Load,
+     nullptr},
     {"ws2812-flexio2.latch", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLatch, nullptr},
     {"ws2812-flexio2.clock", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testClock, nullptr},
     {"ws2812-flexio2.shared", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testShared, nullptr},

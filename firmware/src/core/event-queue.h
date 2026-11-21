@@ -19,6 +19,14 @@ enum class DriverEventType : uint16_t {
     DEVICE_FAILED,
     /// That part works again. The source as for DEVICE_FAILED, no payload.
     DEVICE_RECOVERED,
+    /// A finger touches the screen. The source is 0, and the payload is a TouchPoint.
+    TOUCH_DOWN,
+    /// The finger has moved far enough from the position last reported. Payload as for TOUCH_DOWN.
+    TOUCH_MOVED,
+    /// The finger has rested where it touched down for long enough. Payload as for TOUCH_DOWN.
+    TOUCH_HELD,
+    /// The finger has left the screen. The payload is where it was last.
+    TOUCH_UP,
 };
 
 struct DriverEvent {
@@ -34,6 +42,13 @@ static_assert(sizeof(DriverEvent) == EVENT_BYTES, "the model counts RAM2 with th
 /// The payload of a type without one.
 struct NoPayload {};
 
+/// A position on the screen in the picture's pixels, 0 at the top left. Packed into a payload, x
+/// takes the lower 16 bits and y the upper 16.
+struct TouchPoint {
+    uint16_t x;
+    uint16_t y;
+};
+
 /// Names the payload of each type, one per type.
 template <DriverEventType TAG> struct DriverPayloadOf;
 template <> struct DriverPayloadOf<DriverEventType::DEVICE_FAILED> {
@@ -41,6 +56,18 @@ template <> struct DriverPayloadOf<DriverEventType::DEVICE_FAILED> {
 };
 template <> struct DriverPayloadOf<DriverEventType::DEVICE_RECOVERED> {
     using type = NoPayload;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOUCH_DOWN> {
+    using type = TouchPoint;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOUCH_MOVED> {
+    using type = TouchPoint;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOUCH_HELD> {
+    using type = TouchPoint;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOUCH_UP> {
+    using type = TouchPoint;
 };
 
 /// Gets the payload of an event of type TAG.

@@ -113,9 +113,11 @@ with MODEL.block("FRAME", section=FRAME):
     ds("b_shifter", 4, "bytes", src=f"{RM}: each shifter buffer holds 32 bits, four writes of "
        "8 bits", stated=False)
     MODEL.uses("f_cpu", of="teensy-4.1")
-    asm("n_isr", 150, "clocks", src="the processor clocks one refill takes: eight words read from "
-        "LVGL's buffer in RAM2, one cache line, eight writes to FlexIO3, whose registers answer at its own clock, and the "
-        "interrupt's entry and exit; an estimate, no measurement")
+    msr("n_isr", 178, "clocks", src="the processor clocks one refill costs the main loop: "
+        "firmware/tests/teensy, display.refills, the share of a loop's passes that full screens "
+        "from RAM2 take, at worst 11.1 % of the 1600 clocks of a burst over 13 starts. The FlexIO3 "
+        "handler took 140 clocks in most starts and 171 in the others, where every FlexIO3 access "
+        "takes longer")
     fig("b_frame", "KB", "n_cols * n_rows * b_pixel", moves="+n_cols +n_rows +b_pixel")
     fig("t_frame_bus", "ms", "b_frame * t_wr", "up",
         moves="+n_cols +n_rows +b_pixel +n_div -f_flexio")
@@ -266,6 +268,18 @@ with MODEL.block("TOUCH", section=TOUCH):
 # ---------------------------------------------------------------------------
 # the gestures the touch driver reports
 # ---------------------------------------------------------------------------
+_CAL = ("on the bench with the Adafruit 2090 of this build: nine crosses at picture x 16, 160 and 303 "
+        "and y 16, 120 and 223 touched once each, a least-squares line through the CST026's "
+        "readings, taken at the picture's edges")
+msr("touch_raw_left", 327, "", src=f"{_CAL}: the panel's y at the picture's left edge, 326.8")
+msr("touch_raw_right", 1, "", src=f"{_CAL}: the panel's y at the picture's right edge, 0.7")
+msr("touch_raw_top", 3, "", src=f"{_CAL}: the panel's x at the picture's top edge, 3.2")
+msr("touch_raw_bottom", 254, "", src=f"{_CAL}: the panel's x at the picture's bottom edge, 253.8")
+ds("touch_raw_max", 4095, "", src="the FT6x06 register map the CST026 keeps: a reading has 12 bits, "
+   "the upper four in P1_XH or P1_YH")
+dec("touch_span_min", 100, "", src="the least difference between the readings at two opposite "
+    "edges that the touch driver takes; a smaller one cannot come from a touch layer over the "
+    "whole picture, which spans about 250 readings across and 330 along")
 dec("n_slop", 10, "", src="the pixels a finger may move and still count as resting, which the "
     "touch driver also takes as the step between two TouchMoved")
 dec("t_hold", 1, "s", src="how long a finger has to rest before the touch driver reports TouchHeld")
@@ -548,3 +562,28 @@ MODEL.draws("b_draw", pool="RAM2")
 MODEL.draws(pool="driver tick")      # the display driver: the steps of a restart, every 40 ms
 MODEL.draws(pool="driver tick")      # the touch driver: the touch read, every 20 ms
 MODEL.draws(pool="device monitor")   # the touch driver: the touch controller
+
+# -- the drivers' constants ---------------------------------------------------------------------
+DISPLAY_H = "firmware/src/drivers/display.h"
+DISPLAY_CPP = "firmware/src/drivers/display.cpp"
+TOUCH_H = "firmware/src/drivers/touch.h"
+for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"),
+                                  ("n_isr_budget", DISPLAY_H, "BURST_CLOCKS", "clocks"),
+                                  ("t_frame_bus", DISPLAY_H, "FRAME_BUS_US", "µs"),
+                                  ("n_cols", DISPLAY_H, "WIDTH", ""),
+                                  ("n_rows", DISPLAY_H, "HEIGHT", ""),
+                                  ("n_rect_step", DISPLAY_H, "STEP_PX", ""),
+                                  ("n_div", DISPLAY_CPP, "DIVIDER", "clocks"),
+                                  ("t_dtick", DISPLAY_CPP, "TICK_US", "µs"),
+                                  ("t_end_wait", DISPLAY_CPP, "END_WAIT_NS", "ns"),
+                                  ("t_ttick", TOUCH_H, "TICK_US", "µs"),
+                                  ("n_slop", TOUCH_H, "SLOP_PX", ""),
+                                  ("t_hold", TOUCH_H, "HOLD_MS", "ms"),
+                                  ("t_fail", TOUCH_H, "FAIL_MS", "ms"),
+                                  ("touch_raw_left", TOUCH_H, "RAW_LEFT", ""),
+                                  ("touch_raw_right", TOUCH_H, "RAW_RIGHT", ""),
+                                  ("touch_raw_top", TOUCH_H, "RAW_TOP", ""),
+                                  ("touch_raw_bottom", TOUCH_H, "RAW_BOTTOM", ""),
+                                  ("touch_raw_max", TOUCH_H, "RAW_MAX", ""),
+                                  ("touch_span_min", TOUCH_H, "SPAN_MIN", "")):
+    MODEL.in_code(_key, file=_file, name=_name, unit=_unit)
