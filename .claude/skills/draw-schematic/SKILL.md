@@ -37,7 +37,7 @@ A wire is drawn in the color of the physical wire that carries it, after the wir
 | White, I2C and every line behind a level shifter or a driver | `#ffffff` | `#808080` | `#4d4d4d` |
 | A pin left unconnected | `#9a9a9a` | | `#8a8a8a` |
 
-A wire with an edge color is drawn twice. The edge goes first, 2.5 wider than the wire, then the wire on top. Where the segment joins another segment of its class, the edge reaches half its own width past the end and closes the corner. At any other end that a pin does not cover, it stops half its width short. A pin or a junction dot of such a class takes a rim of 1.5 in the edge color and is drawn after every wire.
+A wire with an edge color is drawn twice. The edge goes first, 2.5 wider than the wire, then the wire on top. Where the segment joins another segment of its class, the edge reaches half the wire width past the end and closes the corner. At any other end that a pin does not cover, it stops half its width short. A pin or a junction dot of such a class takes a rim of 1.5 in the edge color and is drawn after every wire.
 
 A pin where a stock or vendor cable lands shows that cable's color, and its label names it, as `Pin 2 (black)` at a J-S of the IR sensors does.
 
@@ -88,7 +88,7 @@ A net flag, the small box naming a net that leaves the drawing, keeps its net co
 - Orthogonal wires. Diagonals only where a straight run would cross three other nets.
 - No text overlapping a wire or another label.
 - Repeated identical channels: draw one in full, and label the rest as identical rather than drawing seven copies.
-- An IC shows every pin of its package, whatever the drawing is about (RULES.md rule 7). An unused buffer of a quad part, an enable on GND and an NC pin are each drawn as their own pin, with their wire or the gray unconnected marker. Pins on one net, such as four OE pins on GND, are drawn one by one and joined by wires. `docs/parts/lighting/lighting-schematic.svg` and `docs/parts/contacts/contacts-schematic.svg` show the pattern.
+- An IC shows every pin of its package, whatever the drawing is about (RULES.md rule 7). An unused buffer of a quad part, an enable on GND and an NC pin are each drawn as a separate pin, with their wire or the gray unconnected marker. Pins on one net, such as four OE pins on GND, are drawn one by one and joined by wires. `docs/parts/lighting/lighting-schematic.svg` and `docs/parts/contacts/contacts-schematic.svg` show the pattern.
 
 ## Language and notation
 
@@ -152,7 +152,7 @@ A wire stops at a part's body and starts again on the far side, never runs under
 
 ## Known limitation
 
-The white background is fixed, so these render as a bright panel against a dark GitHub theme. Changing it means reworking every existing diagram's contrast, so it stays until that is decided.
+The white background is fixed, so these render as a bright panel against a dark GitHub theme. Changing it means reworking every existing diagram's contrast, so it stays fixed.
 
 ## After drawing
 

@@ -1,4 +1,4 @@
-"""The figures of the port expander on its own board, as inputs plus formulas."""
+"""The figures of the port expander on its board, as inputs plus formulas."""
 from figcheck import *
 
 MODEL = Model.at(__file__, "port-expander",

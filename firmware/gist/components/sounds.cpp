@@ -209,7 +209,7 @@ bool Sounds::translate(const DriverEvent& in, PinballEvents& out) {
     if (in.source != kMusic) return true;                  // an effect's end
     if (tracks_.size() && in.payload == tracks_[0].number) {   // the track that plays, and no older sound
         const Track ended = tracks_[0];
-        if (ended.owner != Owner::Video) {                 // the video player follows its own sound
+        if (ended.owner != Owner::Video) {                 // the video player follows the sound of its video
             ended_ = {in.time, EventType::MusicEnded, ended.key, in.payload};
             out    = {&ended_, 1};
         }

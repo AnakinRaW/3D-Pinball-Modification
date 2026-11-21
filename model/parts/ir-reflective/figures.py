@@ -124,7 +124,7 @@ asm("t_a", 40, "°C", group="T_A", section=BASE, stated=True, src="an open frame
     "source nearby, on a hot day")
 msr("i_photo", 36.6, "µA", src="bench, measurement B at the installed position with 100 Ω in the "
     "emitter line: 171.9 mV across the 4.7 kΩ, from 215 mV with a ball against 46.9 mV on a clear "
-    "track, each minus its own dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
+    "track, each minus its dark reading, research/Rokr/2_ir-reflective-sensor-p33.md")
 asm("rds_irl_est", 0.1, "Ω", src="an estimate above Fig. 1's typical 3.0 V curve, since the "
     "IRL540N specifies R_DS(on) only from V_GS = 4.0 V")
 asm("contact_r", 20, "mΩ", src="one 2.54 mm pin in its socket contact")
@@ -305,7 +305,7 @@ ds("vref_floor", 0.25, "V", src="DS21295D, minimum VREF", sheet=ADC)
 ds("adc_abs_margin", 0.6, "V", src="DS21295D, inputs and outputs rated to VDD + 0.6 V", sheet=ADC)
 
 # -- datasheet: ISO7761F, SLLSER1H --------------------------------------------
-ds("i_iso_s1", 10.3, "mA", src="SLLSER1H, the 3.3 V DC row, side 1, every input at its own supply",
+ds("i_iso_s1", 10.3, "mA", src="SLLSER1H, the 3.3 V DC row, side 1, every input at its supply",
    sheet=ISO)
 ds("i_iso_s2", 6.9, "mA", src="SLLSER1H, the same row, side 2", sheet=ISO)
 ds("i_iso_ac_s1_1m", 6.5, "mA", src="SLLSER1H, side 1 at 1 Mbps", sheet=ISO)
@@ -366,7 +366,7 @@ with MODEL.block("I_LED", section=BASE):
 
 with MODEL.block(section=BASE):
     # Taken on a new board, where nothing sits between the collector and the rail. The three stock
-    # channels draw less through their own 1.585 kΩ, so counting every channel at this figure is the
+    # channels draw less through the 1.585 kΩ of each, so counting every channel at this figure is the
     # safe side of the budget.
     fig("i_c", "mA", "v_out_max / (r_col_new + r_pd)", moves="+v_out_max -r_pd", group="I_C")
     fig("i_adc_one", "mA", "i_adc_idd + i_adc_vref", group="I_ADC")
@@ -421,7 +421,7 @@ fig("i_dout_low", "mA", "v_out_max / (r_dout_lo + r_dout_pu_lo)", "up",
     moves="+v_out_max +kit_tol -r_dout -r_dout_pu", stated=False)
 
 with MODEL.block(section=DISS):
-    # R36 dissipates most at that current with its own low end.
+    # R36 dissipates most at that current with its low end.
     fig("p_r36", "mW", "i_dout_low ** 2 * r_dout_pu_lo", group="R36")
     fig("p_r36_pct", "%", "p_r36 / p_kit", group="R36")
     fig("v_gate_max", "V", "v_out_max * r_gate_pd / (r_gate_pd + r_gate)",
@@ -711,7 +711,7 @@ fig("dout_share_max", "", "(v_il_factor * v_out_min - v_ol_adc) / (v_out_min - v
     moves="+v_il_factor +v_out_min -v_ol_adc", stated=False)
 
 # R36: at its low end, against R37 at its high end, it still leaves that low; at its high end
-# it still holds a high against the isolator's own pull-down at the input.
+# it still holds a high against the isolator's pull-down at the input.
 fig("r_dout_pu_min", "kΩ", "r_dout_hi * (1 - dout_share_max) / (dout_share_max * (1 - kit_tol))",
     "up", moves="+r_dout +kit_tol +v_ol_adc -v_il_factor -v_out_min", stated=False)
 fig("r_dout_pu_max", "kΩ", "r_in_iso * (1 - v_ih_factor) / (v_ih_factor * (1 + kit_tol))", "down",
@@ -834,7 +834,7 @@ fig("signal_at_first_read", "mV", "signal_settled * swing_sensor.raw", group=_SM
     stated="loose")
 
 # -- the swing table ----------------------------------------------------------
-# Each row writes its own keys into the formulas, so one loop body serves every row.
+# Each row writes its keys into the formulas, so one loop body serves every row.
 for _n, _count, _label in ((3, "n_stock", "3, the stock sensors"),
                            (8, "n_eight", "8")):
     fig(f"budget_{_n}", "µs",
@@ -1037,7 +1037,7 @@ _I("signal and measured ambient together stay inside what the node can hold",
 _I("the swing is a fraction of the settled signal", "0 < swing_sensor.raw < 1")
 _I("the acquisition window covers what ten bits need", "window_in_tau > tau_needed")
 _I("the first read sits past the sign inversion", "first_read_16 > sign_inversion")
-_I("the phase clears its own lower bound", "knob_phase_lower <= t_phase")
+_I("the phase clears its lower bound", "knob_phase_lower <= t_phase")
 _I("QuadTimer3's counter spans the longest phase the driver may run",
    "t_phase < t_qt_span and t_phase_fallback < t_qt_span")
 _I("a DOUT bit is home inside the half period", "dout_round_trip < half_period")
@@ -1072,7 +1072,7 @@ _I("and at 50 mA", "vf75_50ma < vf25_50ma")
 # Every other number in the documents has to be a declared quantity. These are
 # named so the rest can be checked, and each one says why it is not a figure.
 # The ones marked "derived in prose" are a debt against rule 15: they belong in
-# the model, and until they are there nothing recomputes them.
+# the model, where they would be recomputed.
 for _text, _why in [
     # quoted from a datasheet, at a condition this design does not run
     ("102.2 kΩ", "R33 and R35 in series, the gate divider's total"),
@@ -1121,7 +1121,7 @@ MODEL.net("CLOCK, board side",
           reads("Q1 gate through R33", src="design.md, R33 limits the current into Q1's gate"),
           pull("R35", "gnd", src="design.md, R35 holds the LED bus off while the board's rail comes up"))
 
-# the converters share DOUT, each driving it only while its own chip select is low
+# the converters share DOUT, each driving it only while its chip select is low
 MODEL.net("ADC-DOUT",
           drives("U1 DOUT through R37", "tri-state", rail="3V3_ADC", select="CS-A",
                  src="design.md, both converters release DOUT whenever neither is selected"),

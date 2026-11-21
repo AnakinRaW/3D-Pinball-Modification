@@ -164,7 +164,7 @@ void Screen::begin() {
 
     lv_indev_t* touch = lv_indev_create();
     lv_indev_set_type(touch, LV_INDEV_TYPE_POINTER);
-    lv_indev_set_read_cb(touch, readTouch);                // LVGL looks at the finger itself, at its own pace
+    lv_indev_set_read_cb(touch, readTouch);                // LVGL looks at the finger itself, at its pace
     lv_indev_set_user_data(touch, this);
 }
 

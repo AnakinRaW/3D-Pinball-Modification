@@ -4,7 +4,7 @@
 //   heap  a block from malloc() before main() and one in the main task both lie in RAM2, apart
 //
 // Wiring: none, the Teensy alone. The image runs its tests in a FreeRTOS task, as the firmware
-// runs its main loop, and freertos-teensy brings its own sbrk() for malloc().
+// runs its main loop, and freertos-teensy brings an sbrk() for malloc().
 
 #include <Arduino.h>
 #include <FreeRTOS.h>

@@ -531,7 +531,7 @@ def pin_labels(o, V):
                 style = ('font-weight="700" fill="#ffffff" stroke="#2a2a2a" '
                          'stroke-width="2.2" paint-order="stroke"')
                 # the number next to the pin, the function after it, as two texts, so the check
-                # of the figures reads a name such as 1A on its own
+                # of the figures reads a name such as 1A alone
                 gap = len(str(pin)) * 8 * 0.62 + 3
                 if abs(xb - xa) > abs(yb - ya):
                     sx = 1 if xb > xa else -1
@@ -614,7 +614,7 @@ def connector_labels(o, V, frame):
             continue
         groups = [list(zip(p.holes, p.pins))]
         if p.kind == "pads":
-            # edge pads on both ends: each end is named on its own side
+            # edge pads on both ends: each end is named on its side
             mid = (x0 + x1) / 2
             groups = [g for g in ([hp for hp in groups[0] if V.px(hp[0])[0] < mid],
                                   [hp for hp in groups[0] if V.px(hp[0])[0] >= mid]) if g]
@@ -794,8 +794,8 @@ def _connector_label(o, V, frame, p, pts, pins, nets, placed):
                 lines[key] = (len(o), t)
                 o.append(d.text(tx, y, t, size=11, anchor=anc, fill=color(L, net)[2]))
     else:
-        # each pin's net stands upright in the pin's own column, pin number first; the
-        # connector's name follows right beyond its own pins' names, placed once every
+        # each pin's net stands upright in the pin's column, pin number first; the
+        # connector's name follows right beyond the pins' names, placed once every
         # connector's pins are drawn
         up = side == "top"
         edge = getattr(V, "ty0", y0) - 22 if up else getattr(V, "ty1", y1) + 24

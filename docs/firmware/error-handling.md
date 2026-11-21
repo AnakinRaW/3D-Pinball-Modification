@@ -12,51 +12,6 @@ For every part whose bit changed, the monitor publishes `DEVICE_FAILED` or `DEVI
 
 [`firmware/src/core/device-monitor.h`](../../firmware/src/core/device-monitor.h) holds the monitor.
 
-```cpp
-// the source of a fault event: the device in the upper four bits and the part in the lower
-// four, so a device has at most 16 parts
-constexpr uint8_t faultSource(Device d, uint8_t part);
-constexpr Device  faultDevice(uint8_t source);
-constexpr uint8_t faultPart(uint8_t source);
-
-// the parts of one device as a set, one bit per part, bit n for part n, started from LSB
-using PartMask = uint16_t;
-
-// what a driver's failed() returns
-struct Fault {
-    PartMask parts;   // one bit per failed part
-    uint32_t code;    // the driver's error code, 0 for a driver without error codes
-};
-
-// records the failed parts of every device and the error code each device last failed with
-class FailedDevices {
-public:
-    // marks a part as failed and keeps the error code it failed with
-    void set(Device d, uint8_t part, uint32_t code);
-
-    void     clear(Device d, uint8_t part);           // marks a part as working again
-    bool     isFailed(Device d, uint8_t part) const;  // gets whether a part has failed
-    bool     anyFailed(Device d) const;               // gets whether any part of a device has failed
-    uint32_t code(Device d) const;                    // gets the error code a device last failed with
-
-    // calls fn(device, part) for every failed part, device by device
-    template <typename Fn> void forEach(Fn fn) const;
-};
-
-// monitors the devices of the registered drivers and reports every part that fails or recovers
-class DeviceMonitor {
-public:
-    // takes the queue's events from storage, which watch() attaches to queue on its first call
-    DeviceMonitor(EventQueue& queue, DriverTick& tick, DriverEvent (&storage)[DEPTH]);
-
-    // registers a driver, whose failed() every check asks; before the main loop only, and the first call
-    // attaches the queue and the check to the driver tick. False when every slot is taken or the driver tick refuses the check
-    bool watch(Device device, const Driver& driver);
-};
-
-extern DeviceMonitor deviceMonitor;
-```
-
 ## Watchdog
 
 The watchdog is a hardware timer in the i.MX RT that resets the Teensy unless the firmware feeds it within a specified time. It keeps counting when the firmware has crashed, so it also catches a failure that stops every line of code. The watchdog is to be used to guard against major malfunctions which are not recoverable, critical to the system or would harm hardware.

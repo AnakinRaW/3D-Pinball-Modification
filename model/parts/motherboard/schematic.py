@@ -153,6 +153,6 @@ PE.contact("J-PE-STORE.1", "J-PE-STORE.3", what="a stored ball between the front
 PE.contact("J-PE-STORE.2", "J-PE-STORE.3", what="a stored ball between the back and the wall foil")
 PE.contact("J-PE-TARGETS.1", "J-PE-TARGETS.3", what="the ball between bell 1 and the bell foil")
 PE.contact("J-PE-TARGETS.2", "J-PE-TARGETS.3", what="the ball between bell 2 and the bell foil")
-# E-5 to E-8 wait for contacts to come; the firmware's pull-up holds them high until then
+# E-5 to E-8 carry no contact; the firmware's pull-up holds them high
 for n in range(5, 9):
     PE.net(f"E-{n}", f"U1.{9 + n}", f"J-PE-SPARE.{n - 4}", color="green", label=f"E-{n}")

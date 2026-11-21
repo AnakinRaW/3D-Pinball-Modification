@@ -36,7 +36,7 @@ When INT goes low, the firmware reads the inputs over `Wire`. The read clears IN
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](../../../model/parts/port-expander/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+[`figures.py`](../../../model/parts/port-expander/figures.py) computes the figures below.
 
 ### Bus
 

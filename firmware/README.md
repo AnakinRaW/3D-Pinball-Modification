@@ -8,8 +8,8 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 | `include/` | The settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings. |
 | `tests/` | The tests of the firmware's code, with every Teensy test in the test image `tests/teensy/`. |
 | `bench/` | The measurement programs behind the bench figures. |
-| `tools/` | Sketches that prepare the bench, such as formatting the SD card, the build's scripts, `teensy-tests.py`, which runs the Teensy tests, and `test-coverage.py`, which counts the rows of testing.md that have a test. |
-| [`gist/`](gist/) | Code notes for the drivers and components not yet written as code. |
+| `tools/` | The build scripts and the sketches that prepare the bench. |
+| [`gist/`](gist/) | Code notes for the drivers and components. |
 
 ## Building
 

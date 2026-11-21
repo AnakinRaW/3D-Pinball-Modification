@@ -1,6 +1,6 @@
 # PSRAM
 
-The PSRAM adds 8 MB of memory to the Teensy. PSRAM is memory that the processor reads and writes like its own RAM, held in a separate chip. The chip is the AP Memory APS6404L-3SQR.
+The PSRAM adds 8 MB of memory to the Teensy. PSRAM is memory that the processor reads and writes like the RAM inside the processor, held in a separate chip. The chip is the AP Memory APS6404L-3SQR.
 
 ## Circuit
 
@@ -28,7 +28,7 @@ PJRC's [`teensy41_psram_memtest`](https://github.com/PaulStoffregen/teensy41_psr
 
 ## Appendix: derivations
 
-Every figure below is recomputed by [`figures.py`](../../../model/parts/psram/figures.py) from the inputs it names, and `tools/figcheck.py` compares each one against the line that states it.
+[`figures.py`](../../../model/parts/psram/figures.py) computes the figures below.
 
 ### Chip
 

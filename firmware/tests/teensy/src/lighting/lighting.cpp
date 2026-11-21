@@ -9,8 +9,8 @@
 //   layout-3a  the whole light layout at the 3 A limits stays under the 3 A cap, in memory
 //   layout-6a  the same at 6 A
 //
-// Wiring: three WS2812B on chain A behind the lighting board's level shifter, and the Teensy's
-// ground joined to the lighting board's. Chains B to F stay empty. A bench test lights the three
+// Wiring: BENCH_LEDS WS2812B on chain A behind the lighting board's level shifter, and the Teensy's
+// ground joined to the lighting board's. Chains B to F stay empty. A bench test lights those
 // LEDs and asks what they showed. The LEDs hold the asked state until the answer comes or the
 // question times out.
 
@@ -23,13 +23,13 @@
 #include "drivers/lighting.h"
 #include "test-harness.h"
 
-constexpr uint16_t BENCH_LEDS = 3;   // the three LEDs on chain A at the bench
+constexpr uint16_t BENCH_LEDS = 3;   // the LEDs on chain A at the bench
 
-// a cap that the three LEDs at full white exceed, so the driver has to dim them
+// a cap that the bench LEDs at full white exceed, so the driver has to dim them
 constexpr uint32_t BENCH_CAP_MA = 40;
-// design.md, Light layout: the playfield action lights, which have no chain yet
+// design.md, Light layout: the playfield action lights, which have no chain
 constexpr uint16_t ACTION_LIGHTS = 20;
-// the chains of the layout tests: the driver's six and the action lights as a seventh
+// the chains of the layout tests: the driver's chains and the action lights as one more
 constexpr uint8_t LAYOUT_CHAINS = Lighting::CHAINS + 1;
 // design.md, Light layout: the LEDs planned on chains A to F
 constexpr uint16_t LAYOUT_LEDS[Lighting::CHAINS] = {79, 79, 26, 21, 12, 7};
@@ -40,7 +40,7 @@ constexpr uint32_t HOLD_MS = 2000;
 // counts: a chain asked for more LEDs than the bound allows
 constexpr uint16_t ABOVE_BOUND_LEDS = Lighting::MAX_CHAIN_LEDS + 1;
 constexpr uint32_t ASK_TIMEOUT_MS = 60000;
-constexpr uint8_t HUE_STEP = 256 / BENCH_LEDS;   // three colors spread over the color wheel
+constexpr uint8_t HUE_STEP = 256 / BENCH_LEDS;   // one color per LED, spread over the color wheel
 // the longest each test takes: its holds and its question with room to spare
 constexpr uint32_t TEENSY_LIMIT_S = 10;
 constexpr uint32_t ASK_LIMIT_S = 90;
@@ -274,7 +274,7 @@ static void testCounts() {
     test::pass();
 }
 
-// colors: the three LEDs show red, green, blue and white at full value, then three colors of the
+// colors: the bench LEDs show red, green, blue and white at full value, then colors of the
 // rainbow, and the cap dims none of them.
 static void testColors() {
     if (!begun()) {
@@ -290,8 +290,8 @@ static void testColors() {
     }
     fill_rainbow(lighting.chain(0), BENCH_LEDS, 0, HUE_STEP);
     lighting.show();
-    ask("Did all three LEDs show red, green, blue and white in turn, and do they now show "
-        "three different colors of the rainbow?");
+    ask("Did all LEDs show red, green, blue and white in turn, and do they now show "
+        "different colors of the rainbow?");
 }
 
 // limits: white at the profile's playfield brightness, then at its ambient brightness, then the
@@ -316,11 +316,11 @@ static void testLimits() {
     lighting.show();
     Serial.printf("the profile: playfield %u, ambient %u of 255, perimeter step %u\n",
                   p.playfieldMax, p.ambientMax, p.perimeterStep);
-    ask("Did the three white LEDs step down to under half their brightness, and do now only "
+    ask("Did the white LEDs step down to under half their brightness, and do now only "
         "the first and the third light?");
 }
 
-// cap: under the profile's cap the three LEDs at full white keep their brightness. Under a cap
+// cap: under the profile's cap the bench LEDs at full white keep their brightness. Under a cap
 // they exceed, the driver's brightness is the one the program's sum gives, and the LEDs' draw at
 // it stays inside that cap. Nothing is shown.
 static void testCap() {
@@ -345,7 +345,7 @@ static void testCap() {
     const Demand demand = demandOf(chains, counts, 1);
     const uint8_t sum = limitedBrightness(demand, capMw);
     const uint8_t live = Lighting::brightnessUnder(white, BENCH_LEDS, BENCH_CAP_MA);
-    Serial.printf("the three LEDs under %lu mA: brightness %u, %lu mW of %lu mW\n", BENCH_CAP_MA,
+    Serial.printf("the bench LEDs under %lu mA: brightness %u, %lu mW of %lu mW\n", BENCH_CAP_MA,
                   live, demandMw(demand, live), capMw);
     if (live == 255) {
         test::fail("no dimming", "dimming");
@@ -368,7 +368,7 @@ static void testCap() {
 
 // layout: the whole light layout at full white within one profile's limits, with the action
 // lights at the playfield brightness, stays under the profile's cap in FastLED's sum, so the
-// driver dims nothing. The action lights have no chain yet, so the test sums the layout with
+// driver dims nothing. The action lights have no chain, so the test sums the layout with
 // FastLED's public power functions.
 static void testLayout(const Profile& p) {
     uint16_t counts[LAYOUT_CHAINS];

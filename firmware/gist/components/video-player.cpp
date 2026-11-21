@@ -196,7 +196,7 @@ void VideoPlayer::end() {
     if (image) lv_obj_delete(image);
     viewport_ = nullptr;
     slide_    = nullptr;
-    lv_timer_resume(lv_display_get_refr_timer(lv_display_get_default()));   // LVGL refreshes on its own again
+    lv_timer_resume(lv_display_get_refr_timer(lv_display_get_default()));   // LVGL refreshes by itself again
     if (reading_ && reads_[which_].status() == FileStatus::Pending) {   // step() gives that room back once the read has landed
         leaving_ = rooms_[into_];
         screen_.pictures_.give(rooms_[into_ ^ 1]);

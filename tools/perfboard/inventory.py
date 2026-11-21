@@ -11,7 +11,7 @@ PITCH = 2.54
 # ---- boards ---------------------------------------------------------------------------------
 # Edge pads sit along both short ends, one per hole column, in line with the grid. The two outer
 # columns carry the corner mounting holes instead, so a short end of n holes has n - 2 pads.
-# Each pad stands on its own, connected to nothing.
+# Each pad stands alone, connected to nothing.
 BOARDS = {
     # name: (short side holes, long side holes, count in stock)
     "6x28": (6, 28, 3),
@@ -245,7 +245,7 @@ PARTS.update({
         kind="fuse_holder", pitch=22.5, body_l=(22.5, 22.5), body_w=(9.6, 9.6),
         body_h=(11.5, 12.7), pin_hole=1.3, color="#1a1a1a",
         source="OGN-Schurter.pdf, page 3 THT variant and drilling diagram, 0031.8201",
-        unverified="reference part, no holder is chosen yet; its 22.5 mm pin distance is 0.36 mm "
+        unverified="reference part with no holder; its 22.5 mm pin distance is 0.36 mm "
                    "off the grid's 22.86, so the holes need drilling out to 1.3 mm"),
     "header_male_90": dict(
         kind="header_90", body_w=(2.50, 2.70), pin=(0.64, 0.64), row_to_face=(4.02, 4.22),
@@ -317,7 +317,7 @@ MODULES = {
                "the even pins on the row at the edge, each odd pin beside its even pin toward the "
                "socket, pin 1 at the end where the socket has contact 1",
         unverified="the maker gives no drawing: the header centered along the 33 mm side, 2 mm "
-                   "in from the edge, is assumed until the board is measured"),
+                   "in from the edge, is assumed"),
     "adafruit1207": dict(
         size=(20.32, 17.78), color="#1d4f91",
         pins=_row(1.27, 16.51, tuple(str(i) for i in range(1, 9)))

@@ -252,7 +252,7 @@ def check(path, slack, margin=0.0):
             continue
         # A filled shape painted after a wire hides it, so a label inside that
         # shape reads cleanly however the wire runs beneath. A resistor value
-        # inside its own body, with its net passing through, is the case.
+        # inside the body, with its net passing through, is the case.
         covers = [ln for _k, x0, y0, x1, y1, ln, hollow in drawn
                   if not hollow and x0 <= t["x0"] and t["x1"] <= x1
                   and y0 <= t["y0"] and t["y1"] <= y1]

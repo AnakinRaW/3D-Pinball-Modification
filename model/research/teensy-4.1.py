@@ -198,7 +198,7 @@ _I("the pin groups hold every digital pin the product page counts, each once",
 _I("and the edge headers the pins a breadboard reaches", "len(_PINS.groups['edge']) == n_edge.raw")
 _I("the timers reach every PWM pin the product page counts, each pin from one channel",
    "len(_PINS.pwm()) == len(set(_PINS.pwm())) == n_pwm.raw")
-_I("the analog inputs are the ones the product page counts, each on its own pin",
+_I("the analog inputs are the ones the product page counts, each on a separate pin",
    "len(_PINS.analog) == len(set(_PINS.analog)) == n_analog.raw")
 _I("every pin a port, a timer or a FlexIO names is one of the board's pins",
    lambda v: {p for sigs in _PINS.ports.values() for _, pins in sigs for p in pins}

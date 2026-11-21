@@ -6,7 +6,7 @@ against the counts in inventory.py.
 A layout that is one of several ways to build the same thing names its family and the variants
 it belongs to, as VARIANT = ("IR sensing", ["16 channels"]). Only one variant of a family is
 built, so a variant takes no stock from the others: every combination of one variant per family,
-with every layout that names no variant, has to fit the stock on its own. The counts shown are
+with every layout that names no variant, has to fit the stock alone. The counts shown are
 the largest any combination takes.
 """
 import itertools
