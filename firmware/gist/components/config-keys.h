@@ -14,6 +14,10 @@ constexpr const char* kEffectsVolume = "audio.effects_volume";   // sounds compo
 constexpr const char* kServoStart    = "servo.start_deg";        // servo driver
 constexpr const char* kServoEnd      = "servo.end_deg";          // servo driver
 constexpr const char* kServoSpeed    = "servo.speed_deg_s";      // servo driver
+constexpr const char* kTouchLeft     = "touch.raw_left";         // touch driver
+constexpr const char* kTouchRight    = "touch.raw_right";        // touch driver
+constexpr const char* kTouchTop      = "touch.raw_top";          // touch driver
+constexpr const char* kTouchBottom   = "touch.raw_bottom";       // touch driver
 constexpr const char* kPullMs        = "solenoid.pull_ms";       // solenoid driver, a list of one value per coil
 constexpr const char* kIrChannels    = "ir.channels";            // IR driver, a list of one entry per channel
 

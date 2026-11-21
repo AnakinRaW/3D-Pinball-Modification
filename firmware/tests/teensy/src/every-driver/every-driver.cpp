@@ -12,18 +12,22 @@
 //
 // Wiring: none. The lighting runs on chain F, which has no LEDs at the bench, and sends dark
 // frames. Chain A and its LEDs stay untouched. A servo on the servo pin stays at its start
-// position.
+// position. The display, where one is connected, shows black and then a dark gray screen.
 
 #include <Arduino.h>
 #include <stdarg.h>
+#include <string.h>
 // FastLED's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
 #pragma GCC diagnostic push
 #include <FastLED.h>
 #pragma GCC diagnostic pop
+#include "core/event-queue.h"
+#include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/servo-driver.h"
 #include "drivers/storage.h"
+#include "drivers/touch.h"
 #include "drivers/ws2812-color-encoder.h"
 #include "test-harness.h"
 
@@ -284,6 +288,119 @@ static bool storageAtOnce(Verdict& v) {
            atOnce(us, "read()", v);
 }
 
+// ---- the display driver
+
+constexpr uint32_t DISPLAY_FRAME_BYTES =
+    uint32_t(Display::WIDTH) * Display::HEIGHT * 2;   // RGB565, two bytes a pixel
+constexpr uint8_t DARK_GRAY = 0x10;                   // both bytes of a dark RGB565 gray
+constexpr uint32_t DISPLAY_DONE_MS = 100;             // far longer than a whole screen's bus time
+static Display displayFresh;                          // before-begin: never begun
+static Display displayStarved;   // begin-fails: begins with the driver tick full
+static Display displaySending;   // at-once
+EXTMEM static uint8_t displayFrame[DISPLAY_FRAME_BYTES] __attribute__((aligned(32)));
+static volatile bool displayOut = false;
+
+// Gets whether a display driver answers every call at once with false or nothing.
+static bool displayEmpty(Display& display, Verdict& v) {
+    bool sent = true;
+    const uint32_t us =
+        timedUs([&] { sent = display.send(0, 0, Display::WIDTH, 1, displayFrame, [] {}); });
+    display.restart();
+    if (sent || display.restarting()) {
+        return v.want("send() false, not restarting")
+            .saw("send() %d, restarting %d", sent, display.restarting());
+    }
+    return atOnce(us, "send()", v);
+}
+
+static bool displayBeforeBegin(Verdict& v) {
+    return displayEmpty(displayFresh, v);
+}
+
+// A whole screen returns while its bytes still go out, and a second rectangle right after it
+// returns false at once.
+static bool displayAtOnce(Verdict& v) {
+    if (!displaySending.begin()) {
+        return v.want("begin() true").saw("begin() false");
+    }
+    memset(displayFrame, DARK_GRAY, sizeof displayFrame);
+    displayOut = false;
+    bool first = false;
+    bool second = true;
+    const uint32_t firstUs = timedUs([&] {
+        first = displaySending.send(0, 0, Display::WIDTH, Display::HEIGHT, displayFrame,
+                                    [] { displayOut = true; });
+    });
+    const bool outAtReturn = displayOut;
+    const uint32_t secondUs = timedUs(
+        [&] { second = displaySending.send(0, 0, Display::STEP_PX, 1, displayFrame, [] {}); });
+    const uint32_t t0 = millis();
+    while (!displayOut && millis() - t0 < DISPLAY_DONE_MS) {
+    }
+    if (!first || second || outAtReturn || !displayOut) {
+        return v.want("true while it goes out, then false, then its end")
+            .saw("send() %d, the next %d, out at return %d, out later %d", first, second,
+                 outAtReturn, displayOut);
+    }
+    return atOnce(firstUs, "send()", v) && atOnce(secondUs, "the second send()", v);
+}
+
+static bool displayBeginFails(Verdict& v) {
+    if (displayStarved.begin()) {
+        return v.want("false").saw("begin() true with the driver tick full");
+    }
+    return displayEmpty(displayStarved, v);
+}
+
+// ---- the touch driver
+
+static EventQueue touchQueue;
+static Touch touchFresh(io::wire2Bus, touchQueue, driverTick);     // before-begin: never begun
+static Touch touchStarved(io::wire2Bus, touchQueue, driverTick);   // begin-fails
+
+// Gets whether a touch driver answers every call at once with empty data.
+static bool touchEmpty(Touch& touch, Verdict& v) {
+    Finger f{};
+    const uint32_t us = timedUs([&] { f = touch.finger(); });
+    if (touch.present() || f.down || f.x != 0 || f.y != 0 || touch.failed().parts != 0) {
+        return v.want("no module, no finger, no failed part")
+            .saw("present %d, finger %d at %u, %u, failed parts %u", touch.present(), f.down, f.x,
+                 f.y, unsigned(touch.failed().parts));
+    }
+    return atOnce(us, "finger()", v);
+}
+
+static bool touchBeforeBegin(Verdict& v) {
+    return touchEmpty(touchFresh, v);
+}
+
+// out-of-range: readings above the range, beside a twin configured at the top of the range
+static Touch touchPast(io::wire2Bus, touchQueue, driverTick);
+static Touch touchNearer(io::wire2Bus, touchQueue, driverTick);
+
+static bool touchOutOfRange(Verdict& v) {
+    constexpr uint16_t ABOVE = Touch::RAW_MAX + 1;
+    touchPast.configure({ABOVE, Touch::RAW_RIGHT, Touch::RAW_TOP, ABOVE});
+    touchNearer.configure({Touch::RAW_MAX, Touch::RAW_RIGHT, Touch::RAW_TOP, Touch::RAW_MAX});
+    const Touch::Settings past = touchPast.settings();
+    const Touch::Settings nearer = touchNearer.settings();
+    if (past.rawLeft != nearer.rawLeft || past.rawRight != nearer.rawRight ||
+        past.rawTop != nearer.rawTop || past.rawBottom != nearer.rawBottom) {
+        return v
+            .want("%u, %u, %u, %u, as at the top of the range", nearer.rawLeft, nearer.rawRight,
+                  nearer.rawTop, nearer.rawBottom)
+            .saw("%u, %u, %u, %u", past.rawLeft, past.rawRight, past.rawTop, past.rawBottom);
+    }
+    return true;
+}
+
+static bool touchBeginFails(Verdict& v) {
+    if (touchStarved.begin()) {
+        return v.want("false").saw("begin() true with the driver tick full");
+    }
+    return touchEmpty(touchStarved, v);
+}
+
 // ---- the register and the rows
 
 static const DriverCase DRIVERS[] = {
@@ -292,6 +409,10 @@ static const DriverCase DRIVERS[] = {
     {"servo", servoBeforeBegin, servoOutOfRange, servoAtOnce, servoBeginFails},
     // the storage driver takes no settings and no slot of the driver tick
     {"storage", storageBeforeBegin, nullptr, storageAtOnce, nullptr},
+    // the display takes no settings
+    {"display", displayBeforeBegin, nullptr, displayAtOnce, displayBeginFails},
+    // the touch driver starts no long transfer
+    {"touch", touchBeforeBegin, touchOutOfRange, nullptr, touchBeginFails},
 };
 
 // Runs a row's case of every driver and reports the first failure, or PASS.

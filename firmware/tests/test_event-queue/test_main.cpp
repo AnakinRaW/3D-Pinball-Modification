@@ -29,6 +29,8 @@ constexpr uint32_t READ_CHUNK = 4;            // read() is asked for fewer event
 constexpr uint32_t WRAP_OFFSET_US = 0 - 20;   // moves the times so they lie across the wrap
 constexpr uint32_t FULL_DEPTH = 4;
 constexpr uint32_t CODE = 0xDEADBEEF;   // an error code that uses every byte of the payload
+constexpr uint16_t TOUCH_X = 0x013F;    // a touch point whose halves differ: x 319
+constexpr uint16_t TOUCH_Y = 0x00EF;    // y 239
 constexpr uint8_t SOURCE = 0xA5;
 constexpr uint32_t REFUSED_DEPTH = 2;
 constexpr uint32_t ODD_DEPTH = 3;   // a depth that is no power of two
@@ -181,6 +183,26 @@ static void testPayload() {
     // A type without a payload leaves the field 0.
     TEST_ASSERT_EQUAL_HEX32(0, out[1].payload);
     (void)payload<DriverEventType::DEVICE_RECOVERED>(out[1]);
+
+    // A touch point packs x into the lower 16 bits and y into the upper 16.
+    const TouchPoint at = {TOUCH_X, TOUCH_Y};
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::TOUCH_DOWN>(3, SOURCE, at));
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::TOUCH_MOVED>(4, SOURCE, at));
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::TOUCH_HELD>(5, SOURCE, at));
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::TOUCH_UP>(6, SOURCE, at));
+    DriverEvent touches[4];
+    TEST_ASSERT_EQUAL_UINT32(4, queue.read(touches, 4));
+    for (const DriverEvent& e : touches) {
+        TEST_ASSERT_EQUAL_HEX32(uint32_t(TOUCH_Y) << 16 | TOUCH_X, e.payload);
+    }
+    const TouchPoint down = payload<DriverEventType::TOUCH_DOWN>(touches[0]);
+    const TouchPoint moved = payload<DriverEventType::TOUCH_MOVED>(touches[1]);
+    const TouchPoint held = payload<DriverEventType::TOUCH_HELD>(touches[2]);
+    const TouchPoint up = payload<DriverEventType::TOUCH_UP>(touches[3]);
+    for (const TouchPoint& q : {down, moved, held, up}) {
+        TEST_ASSERT_EQUAL_UINT16(TOUCH_X, q.x);
+        TEST_ASSERT_EQUAL_UINT16(TOUCH_Y, q.y);
+    }
 }
 
 // Publishes one event through p and checks that p drops it and that read() finds nothing.
