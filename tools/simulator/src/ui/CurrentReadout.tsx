@@ -26,7 +26,7 @@ const PEAK_MS = 1000;
 
 const BASE_LABELS: Record<BaseKey, string> = {
   i_teensy_vin: "Teensy",
-  i_amp: "Amplifier",
+  i_amp: "Audio",
   i_ir_in: "IR board",
   i_disp: "Display",
   i_rest: "Servo at rest",
@@ -90,8 +90,13 @@ export function CurrentReadout({ hw, adapter, chains, capBrightness, nowMs, figu
               {led.dimmed ? `cap ${led.brightness}/255` : "under cap"}
             </td>
           </tr>
+          <tr class="current-group">
+            <th>Always on</th>
+            <td data-testid="current-always">{amps(f.i_permanent.value)}</td>
+            <td />
+          </tr>
           {(Object.keys(BASE_LABELS) as BaseKey[]).map((k) => (
-            <tr key={k} class="muted">
+            <tr key={k} class="muted current-base">
               <th>{BASE_LABELS[k]}</th>
               <td>{amps(f[k].value)}</td>
               <td />
@@ -129,7 +134,8 @@ export function CurrentReadout({ hw, adapter, chains, capBrightness, nowMs, figu
           class={servo ? "on" : ""}
           data-testid="servo"
           title={`${amps(f.i_stall.value)} for ${f.t_move_max.value} ms`}
-          onClick={() => setServoEnds(moveServo(nowMs, f))}
+          // a click starts the longest move, a second click during it stops the servo
+          onClick={() => setServoEnds(servo ? -Infinity : moveServo(nowMs, f))}
         >
           Servo
         </button>

@@ -20,6 +20,7 @@ import {
 } from "../sim/lights";
 import { advanceWith, lampNames, parseSequence, SequencePlayer, type Parsed } from "../sim/sequence";
 import type { Model, State } from "../state";
+import { GameList, GameThumb } from "./Games";
 import { CurrentReadout } from "./CurrentReadout";
 
 const MAX_STEP_MS = 100; // a pass of the loop never advances the clock further, so a hidden tab does not jump
@@ -136,11 +137,31 @@ function NumberField({ label, value, onChange, min = 0, max = 65535 }: { label: 
   );
 }
 
-// a ramp's name, from its placement's label up to the first colon, such as "Green ring ramp"
-function rampName(model: Model, id: string): string {
-  const item = model.pf.items.get(id);
-  const label = item?.kind === "placement" ? item.label.split(":")[0].trim() : "";
-  return label || shortName(model.pf, id);
+// the studio's parts of a game; Lights is the one built so far
+const SUB_TABS = ["Lights", "Slides", "Sounds", "Modes"];
+
+// The game the studio edits, picked from the games of every source as tiles that fold out, and the
+// part of it in view.
+function StudioHeader({ state }: { state: State }) {
+  const [open, setOpen] = useState(false);
+  const game = state.game.value;
+  return (
+    <div class="studio-header">
+      <button class="studio-game" data-action="pick-game" aria-expanded={open} onClick={() => setOpen(!open)}>
+        {game ? <GameThumb game={game} size="small" /> : <span class="game-thumb placeholder small">?</span>}
+        <span class="game-title">{game ? game.title : state.games.value.length ? "Pick a game" : "No games found"}</span>
+        <span class="chevron">{open ? "▴" : "▾"}</span>
+      </button>
+      {open && <GameList state={state} compact onPick={() => setOpen(false)} />}
+      <nav class="sub-tabs">
+        {SUB_TABS.map((t, i) => (
+          <button key={t} class={`tab${i === 0 ? " active" : ""}`} disabled={i > 0} title={i > 0 ? "Comes with a later phase" : undefined}>
+            {t}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
 }
 
 // the playfield lamp or the strip a click in the drawing picked
@@ -175,8 +196,6 @@ export function StudioControls({ model, state }: { model: Model; state: State })
   const [playfield, setPlayfield] = useState(1);
   const [ambient, setAmbient] = useState(1);
   const lamps = m?.playfieldLamps() ?? 0;
-  const ramps = model.hw.map.ramps;
-  const hidden = state.hiddenRamps.value;
 
   // a click in the drawing picks the target
   const picked = state.picked.value;
@@ -188,7 +207,13 @@ export function StudioControls({ model, state }: { model: Model; state: State })
     setCount(t.count);
   }, [picked]);
 
-  if (!m) return <aside class="list studio-controls" />;
+  if (!m) {
+    return (
+      <aside class="list studio-controls">
+        <StudioHeader state={state} />
+      </aside>
+    );
+  }
 
   const strip = target !== "playfield" && target !== "range";
   const start = () => {
@@ -222,7 +247,7 @@ export function StudioControls({ model, state }: { model: Model; state: State })
 
   return (
     <aside class="list studio-controls">
-      <h2>Lights</h2>
+      <StudioHeader state={state} />
       <div class="group">
         <div class="field">
           <span>Adapter</span>
@@ -308,31 +333,6 @@ export function StudioControls({ model, state }: { model: Model; state: State })
             ))}
           </ul>
         )}
-      </div>
-
-      <h3>Ramps</h3>
-      <div class="group ramps">
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={hidden.length === ramps.length}
-            onChange={(e) => (state.hiddenRamps.value = (e.target as HTMLInputElement).checked ? [...ramps] : [])}
-          />
-          Hide all
-        </label>
-        {ramps.map((id) => (
-          <label key={id} class="check">
-            <input
-              type="checkbox"
-              data-ramp={id}
-              checked={hidden.includes(id)}
-              onChange={(e) =>
-                (state.hiddenRamps.value = (e.target as HTMLInputElement).checked ? [...hidden, id] : hidden.filter((r) => r !== id))
-              }
-            />
-            {rampName(model, id)}
-          </label>
-        ))}
       </div>
 
       <h3>Effect</h3>

@@ -2,10 +2,13 @@
 
 A browser tool that shows the machine as the drawing in [`assets/playfield/`](../../assets/playfield/) and runs the firmware's lamps behind it.
 
-- **Features** lists the features of the root README. Selecting one lights its lamps, marks and labels its parts in the drawing, and shows its rows of [`docs/features.md`](../../docs/features.md).
-- **A part's card** opens on a click into the drawing: the part's place, its driver, channel and component, and a lamp's chain and LEDs.
-- **Studio** runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count, and the ramps can be hidden so the lamps under them show. It plays the light sequences of [`lights/`](lights/), `.lights` files of timed effect calls on tracks, which [`src/sim/sequence.ts`](src/sim/sequence.ts) reads; the format there is a prototype.
+- **Features** lists the features of the root README. Selecting one lights its lamps, marks and labels its parts in the drawing, and shows its rows of [`docs/features.md`](../../docs/features.md). A click on a part in the drawing selects the feature that shows it. A part that no feature shows opens its card, and a click on the cabinet or into empty space clears both. The wheel or the buttons at the bottom right zoom the drawing, and a drag pans it, in this view and in the Studio.
+- **A part's card** opens from the feature card's list of parts: the part's place, its driver, channel and component, and a lamp's chain and LEDs.
+- **Games** is the launcher of every game of the three sources: the memory card, opened in the browser through Chrome's or Edge's folder picker, the firmware, and the repository's `games/<id>/game.yml`. The picked game stands large on top, every game of the chosen source as a cover below it. A `thumbnail.png`, `.jpg` or `.webp` beside a game.yml is the game's picture. Its rules and playing it come with the game loader.
+- **Studio** edits a game picked from the same list, one part per tab. Its Lights tab runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count. It plays the light sequences of [`lights/`](lights/), `.lights` files of timed effect calls on tracks, which [`src/sim/sequence.ts`](src/sim/sequence.ts) reads; the format there is a prototype.
 - **The current readout** in the Studio adds up what the machine draws from the selected adapter in each frame: the LEDs by FastLED's power model over the colors the driver sent, with the cap's dimming, the loads that always draw, and each coil for its pull time and the servo for its longest move while their buttons have fired them. A total past the adapter's rating turns red. Below it stand the design's worst cases for that adapter: the lighting at its cap with two bumpers and the scoop pulling, and the whole layout at full white.
+
+In every view a bar of pills over the drawing hides and shows the ramps, so the lamps under them show; `config/machine.yml` names each ramp as on the machine and gives its color.
 
 The app stands alone and links to no document of the repository. It follows the system's light or dark setting, and a switch in the top bar picks the other theme for this browser.
 
@@ -44,6 +47,7 @@ The app reads these files of the repository when it builds and holds no copy of 
 | `README.md` | The numbered feature list with its short texts |
 | `docs/features.md` | What the stock machine has and what the mod adds, without the links |
 | `firmware/src` | The lamps component and the lighting driver, through `npm run wasm` |
+| `games/*/game.yml` | The repository's games |
 
 [`config/figures.json`](config/figures.json) holds every current the readout shows or adds, each with the model that computes it. `scripts/figures.py` evaluates the models under `model/` and writes it, so the app types no figure.
 

@@ -79,8 +79,13 @@ devices:
   display:               { driver: Display and touch, component: Screen }
   speaker:               { driver: Audio, component: Sounds }
 
-# The ramps the studio can hide, so the lamps under them show.
-ramps: [ramp-orbit-left, ramp-orbit-right, ramp-blue, wire-ramp]
+# The ramps the switch bar over the drawing hides, so the lamps under them show: each with its name on
+# the machine and the color of its pill.
+ramps:
+  ramp-orbit-left: {name: Top ramp, color: "#2f9e5a"}
+  ramp-orbit-right: {name: Launch track, color: "#8a8f98"}
+  ramp-blue: {name: Ramp track, color: "#2f6fd6"}
+  wire-ramp: {name: Crocodile track, color: "#d64545"}
 
 # The balls at rest the Features view shows with a part.
 reveals:

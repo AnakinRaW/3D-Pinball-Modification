@@ -74,6 +74,13 @@ describe("the current readout", () => {
     expect(text("current-worst")).not.toContain("for ≤");
   });
 
+  it("lists the loads that always draw, audio and display among them, under their sum", () => {
+    show(0);
+    expect(text("current-always")).toBe(amps(f.i_permanent.value));
+    const rows = [...root.querySelectorAll(".current-base th")].map((t) => t.textContent);
+    expect(rows).toEqual(["Teensy", "Audio", "IR board", "Display", "Servo at rest"]);
+  });
+
   it("draws the servo's stall current for its longest move and flags a coil beside it", () => {
     show(0);
     click("servo");
@@ -84,6 +91,16 @@ describe("the current readout", () => {
     show(f.t_move_max.value - 1);
     expect(text("current-servo")).toBe(amps(f.i_stall.value));
     show(f.t_move_max.value);
+    expect(text("current-servo")).toBe(amps(0));
+  });
+
+  it("stops the servo on a second click during its move", () => {
+    show(0);
+    click("servo");
+    show(10);
+    expect(text("current-servo")).toBe(amps(f.i_stall.value));
+    click("servo");
+    show(20);
     expect(text("current-servo")).toBe(amps(0));
   });
 });

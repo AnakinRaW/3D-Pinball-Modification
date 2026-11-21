@@ -21,53 +21,74 @@ export function InlineText({ tokens }: { tokens: Inline[] }) {
   );
 }
 
-const VIEWS = [
+// the views on the top bar's left in their order, and the studio on its right; a view without a value
+// comes with a later phase
+type View = "features" | "games" | "studio";
+const VIEWS: { value?: View; label: string }[] = [
   { value: "features", label: "Features" },
-  { value: "studio", label: "Studio" },
-] as const;
-const LATER = ["Rules", "Play", "Replays"];
+  { value: "games", label: "Games" },
+  { label: "Replays" },
+];
+
+function ViewTab({ state, value, label }: { state: State; value?: View; label: string }) {
+  if (!value) {
+    return (
+      <button class="tab" disabled title="Comes with a later phase">
+        {label}
+      </button>
+    );
+  }
+  const active = state.view.value === value;
+  return (
+    <button
+      class={`tab${active ? " active" : ""}`}
+      aria-current={active ? "page" : undefined}
+      data-view={value}
+      onClick={() => (state.view.value = value)}
+    >
+      {label}
+    </button>
+  );
+}
 
 export function TopBar({ state }: { state: State }) {
-  const view = state.view.value;
-  const [theme, setTheme] = useState<Theme>(storedTheme() ?? systemTheme());
-  const other: Theme = theme === "light" ? "dark" : "light";
   return (
     <header class="topbar">
-      <span class="brand">Pinball Simulator</span>
+      <span class="brand">
+        <span class="brand-name">Pinball Simulator</span>
+        <span class="build" title="The commit the app was built from">
+          build {__COMMIT__}
+        </span>
+      </span>
       <nav class="tabs">
         {VIEWS.map((v) => (
-          <button
-            key={v.value}
-            class={`tab${view === v.value ? " active" : ""}`}
-            aria-current={view === v.value ? "page" : undefined}
-            data-view={v.value}
-            onClick={() => (state.view.value = v.value)}
-          >
-            {v.label}
-          </button>
-        ))}
-        {LATER.map((t) => (
-          <button key={t} class="tab" disabled title="Comes with a later phase">
-            {t}
-          </button>
+          <ViewTab key={v.label} state={state} value={v.value} label={v.label} />
         ))}
       </nav>
       <span class="spacer" />
-      <button
-        class="theme"
-        data-theme-switch={other}
-        title={`Switch to the ${other} theme`}
-        onClick={() => {
-          applyTheme(other);
-          setTheme(other);
-        }}
-      >
-        {other === "light" ? "Light" : "Dark"}
-      </button>
-      <span class="build" title="The commit the app was built from">
-        build {__COMMIT__}
-      </span>
+      <nav class="tabs studio-tab">
+        <ViewTab state={state} value="studio" label="Studio" />
+      </nav>
     </header>
+  );
+}
+
+// The switch between the light and the dark theme, in the window's bottom right corner.
+export function ThemeSwitch() {
+  const [theme, setTheme] = useState<Theme>(storedTheme() ?? systemTheme());
+  const other: Theme = theme === "light" ? "dark" : "light";
+  return (
+    <button
+      class="theme"
+      data-theme-switch={other}
+      title={`Switch to the ${other} theme`}
+      onClick={() => {
+        applyTheme(other);
+        setTheme(other);
+      }}
+    >
+      {other === "light" ? "Light" : "Dark"}
+    </button>
   );
 }
 
@@ -116,7 +137,13 @@ export function FeatureList({ model, state }: { model: Model; state: State }) {
 
 export function FeatureCard({ model, state }: { model: Model; state: State }) {
   const f = state.feature.value;
-  if (!f) return null;
+  if (!f) {
+    return (
+      <section class="card feature-card empty">
+        <p class="muted">Pick a feature.</p>
+      </section>
+    );
+  }
   const { placed } = model.features;
   const all = model.all;
   const k = all.indexOf(f);

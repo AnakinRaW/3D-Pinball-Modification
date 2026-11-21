@@ -35,13 +35,20 @@ export interface MachineConfig {
   pullMs: number[];
 }
 
+// a ramp the switch bar hides: its placement, its name on the machine and its pill's color
+export interface Ramp {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface MachineMap {
   lamps: Record<string, string[]>; // section → lamp ids in chain order
   strips: Record<string, string>; // drawing strip id → lamp group
   devices: Record<string, Device>;
   covers: Record<string, string[]>; // cover part → the parts under it
   reveals: Record<string, string[]>; // part → the balls at rest shown with it
-  ramps: string[]; // the ramps the studio can hide
+  ramps: Ramp[]; // the ramps the switch bar hides
 }
 
 // where a playfield lamp's LEDs sit
@@ -96,7 +103,11 @@ export function loadMachineMap(text: string): MachineMap {
     devices: (y.devices ?? {}) as Record<string, Device>,
     covers: (y.covers ?? {}) as Record<string, string[]>,
     reveals: (y.reveals ?? {}) as Record<string, string[]>,
-    ramps: (y.ramps ?? []) as string[],
+    ramps: Object.entries((y.ramps ?? {}) as Record<string, { name?: string; color?: string }>).map(([id, r]) => ({
+      id,
+      name: String(r?.name ?? id),
+      color: String(r?.color ?? ""),
+    })),
   };
 }
 

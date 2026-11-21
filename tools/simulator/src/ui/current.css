@@ -110,3 +110,12 @@
 .side > .current {
   margin-top: 16px;
 }
+
+.current-group th,
+.current-group td {
+  padding-top: 8px;
+}
+.current-base th {
+  padding-left: 14px;
+  font-weight: 400;
+}

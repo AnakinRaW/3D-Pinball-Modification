@@ -1,7 +1,7 @@
 // The features the Features view lists: the README's numbered list with the places of playfield.json, the
 // rows of docs/features.md that describe each, and the rows that have no place on the machine.
 import { parseFeatureTables, parseReadmeFeatures, withoutLinks, type FeatureRow } from "./markdown";
-import type { Playfield } from "./playfield";
+import type { Item, Playfield } from "./playfield";
 
 export interface Feature {
   key: string;
@@ -63,4 +63,22 @@ export function loadFeatures(pf: Playfield, featuresMd: string, readmeMd: string
       }),
     );
   return { placed, unplaced };
+}
+
+// The feature on the machine that shows a part of the drawing: the one that names the part, a lamp on
+// it, the part a lamp sits on, or any LED of the strip an LED belongs to. Gets undefined for a part no
+// feature shows.
+export function featureAt(pf: Playfield, placed: Feature[], item: Item | undefined): Feature | undefined {
+  if (!item) return undefined;
+  const related = new Set([item.id]);
+  if (item.kind === "lamp") related.add(item.on);
+  for (const l of pf.lamps) if (l.on === item.id) related.add(l.id);
+  const strip = item.kind === "led" ? item.strip : item.kind === "strip" ? item.id : undefined;
+  return placed.find((f) =>
+    f.targets.some((t) => {
+      if (related.has(t)) return true;
+      const target = pf.items.get(t);
+      return strip !== undefined && target?.kind === "led" && target.strip === strip;
+    }),
+  );
 }

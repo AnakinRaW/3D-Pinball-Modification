@@ -174,9 +174,12 @@ describe("highlight", () => {
     expect(h.through).toEqual(expect.arrayContaining(["ramp-orbit-left", "cover-left"]));
   });
 
-  it("names ramps the drawing holds", () => {
-    expect(hw.map.ramps.length).toBeGreaterThan(0);
-    for (const r of hw.map.ramps) expect(pf.items.get(r)?.kind, r).toBe("placement");
+  it("names ramps the drawing holds, each with its name on the machine and a color", () => {
+    expect(hw.map.ramps.map((r) => r.name)).toEqual(["Top ramp", "Launch track", "Ramp track", "Crocodile track"]);
+    for (const r of hw.map.ramps) {
+      expect(pf.items.get(r.id)?.kind, r.id).toBe("placement");
+      expect(r.color, r.id).toMatch(/^#[0-9a-f]{6}$/i);
+    }
   });
 
   it("shows the two balls in the drain's store with the store", () => {
