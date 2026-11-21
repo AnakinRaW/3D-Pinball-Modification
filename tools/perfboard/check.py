@@ -272,7 +272,7 @@ def check(L):
                     E.append(f"insulated wire {nm(pts[0])}-{nm(pts[-1])} runs over {p.ref}")
                     break
 
-    # a module joins its pins of one name on its own board, such as the Teensy's GND pins
+    # a module joins its pins of one name on one board, such as the Teensy's GND pins
     expected_pins = {pin for pins in L.effective_nets().values() for pin in pins}
     for p in L.parts:
         if p.kind != "module":

@@ -4,6 +4,7 @@
 
 // the lighting model's pitch_strip: 6.25 mm from LED to LED at 160 LEDs/m, in quarter millimeters
 constexpr uint32_t PITCH_Q = 25;
+constexpr uint32_t Q_PER_MM = 4;
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint8_t FULL = 255;   // the value of an effect's second color
 // a palette by time moves one of its 256 steps per frame
@@ -73,11 +74,17 @@ uint16_t Strip::size() const {
     return lamps->stripSize(strip);
 }
 
+Strip Strip::skipGaps() const {
+    Strip s = *this;
+    s.inRow = true;
+    return s;
+}
+
 Strip& Strip::fade(Paint c, uint16_t ms) {
     if (size() == 0) {
         return *this;
     }
-    const Color now = toColor(lamps->ambientFrame[lamps->locate(strip, 0).led]);
+    const Color now = toColor(lamps->ambientFrame[lamps->locate(strip, 0, inRow).led]);
     return play(Fade(ms), now, c);
 }
 
@@ -140,6 +147,14 @@ bool Lamps::begin() {
                 visible[g][visibleCount[g]++] = led;
             }
         }
+    }
+    for (uint8_t g = GROUP_LEFT; g < GROUP_CEILING; ++g) {
+        heightQ[g] = new (std::nothrow) uint32_t[groupLeds[g] > 0 ? groupLeds[g] : 1];
+        if (heightQ[g] == nullptr) {
+            logWarning("lamps", "no room for the heights of group %u", g);
+            return false;
+        }
+        placeHeights(g);
     }
     const uint16_t lamps = walk(nullptr);
     playfieldEffects = new (std::nothrow) Effects[lamps];
@@ -325,6 +340,51 @@ bool Lamps::hidden(uint8_t group, uint16_t led) const {
     return false;
 }
 
+// Works out the height of each LED of a perimeter from the config's points. Between two points
+// the height grows evenly from LED to LED. Below the first point and above the last, each LED lies
+// one pitch above the one before, and none lies below the playfield's lower end. Without points,
+// every LED lies one pitch above the one before. A point past the chain or out of order is left
+// out with a line in the log, since a height that falls would run the head backward.
+void Lamps::placeHeights(uint8_t group) {
+    const GroupSettings& g = settings.groups[group];
+    uint32_t* h = heightQ[group];
+    bool placed = false;   // whether a point has been placed
+    uint16_t lastLed = 0;
+    uint32_t lastQ = 0;
+    for (uint16_t k = 0; k < g.heightCount; ++k) {
+        const uint16_t led = g.heights[2 * k];
+        const uint32_t q = uint32_t(g.heights[2 * k + 1]) * Q_PER_MM;
+        if (led >= groupLeds[group] || (placed && (led <= lastLed || q < lastQ))) {
+            logWarning("lamps",
+                       "group %u leaves out the height of LED %u, past its chain or out of order",
+                       group, led);
+            continue;
+        }
+        if (!placed) {
+            for (uint16_t i = 0; i <= led; ++i) {
+                const uint32_t below = uint32_t(led - i) * PITCH_Q;
+                h[i] = q > below ? q - below : 0;
+            }
+        } else {
+            for (uint16_t i = lastLed + 1; i <= led; ++i) {
+                h[i] = lastQ + (q - lastQ) * (i - lastLed) / (led - lastLed);
+            }
+        }
+        placed = true;
+        lastLed = led;
+        lastQ = q;
+    }
+    const uint16_t from = placed ? lastLed + 1 : 0;
+    for (uint16_t i = from; i < groupLeds[group]; ++i) {
+        h[i] = placed ? lastQ + uint32_t(i - lastLed) * PITCH_Q : uint32_t(i) * PITCH_Q;
+    }
+}
+
+// Gets the height of a perimeter's last LED, 0 for a perimeter without LEDs.
+uint32_t Lamps::topQ(uint8_t group) const {
+    return groupLeds[group] == 0 ? 0 : heightQ[group][groupLeds[group] - 1];
+}
+
 uint16_t Lamps::stripSize(uint8_t strip) const {
     switch (strip) {
     case LEFT:
@@ -343,10 +403,19 @@ uint16_t Lamps::stripSize(uint8_t strip) const {
     return 0;
 }
 
+// Gets whether a strip's lamp position is its LED's height. Both perimeters start at the
+// playfield's lower end, so the same run on the two stays level, also where one perimeter runs
+// sideways. A path counts only its lamps, so a run around the machine never waits. skipGaps() asks
+// the same of a perimeter.
+bool Lamps::byLed(uint8_t strip, bool inRow) const {
+    return !inRow && (strip == LEFT || strip == RIGHT);
+}
+
 // The perimeters' chains start at the playfield's lower end and the ceiling's at its left end. A
-// lamp's position counts the lamps before it, so a run crosses a gap without a pause. A path joins
-// its strips one lamp spacing apart and runs down the right perimeter from its top.
-Lamps::Place Lamps::locate(uint8_t strip, uint16_t i) const {
+// lamp's position counts the lamps before it, so a run crosses a gap without a pause. On a
+// perimeter without skipGaps(), it is the height of its LED. A path joins its
+// strips one lamp spacing apart and runs down the right perimeter from its top.
+Lamps::Place Lamps::locate(uint8_t strip, uint16_t i, bool inRow) const {
     const uint8_t s = step();
     const uint32_t pitch = pitchQ();
     const uint16_t left = sideLamps(GROUP_LEFT);
@@ -358,11 +427,13 @@ Lamps::Place Lamps::locate(uint8_t strip, uint16_t i) const {
     // where the right perimeter and the ceiling begin in the ambient frame
     const uint16_t rightLed = groupLeds[GROUP_LEFT];
     const uint16_t ceilingLed = rightLed + groupLeds[GROUP_RIGHT];
+    const bool atLed = byLed(strip, inRow);
     switch (strip) {
     case LEFT:
-        return {leftLeds[i * s], i * pitch};
+        return {leftLeds[i * s], atLed ? heightQ[GROUP_LEFT][leftLeds[i * s]] : i * pitch};
     case RIGHT:
-        return {uint16_t(rightLed + rightLeds[i * s]), i * pitch};
+        return {uint16_t(rightLed + rightLeds[i * s]),
+                atLed ? heightQ[GROUP_RIGHT][rightLeds[i * s]] : i * pitch};
     case CEILING:
         return {uint16_t(ceilingLed + ceilingLeds[i]), i * PITCH_Q};
     default:
@@ -383,9 +454,19 @@ Lamps::Place Lamps::locate(uint8_t strip, uint16_t i) const {
     return {uint16_t(rightLed + rightLeds[(right - 1 - i) * s]), start + i * pitch};
 }
 
-uint32_t Lamps::stripLength(uint8_t strip) const {
+// A perimeter that runs by height reaches up to the higher of the two perimeters' last LEDs, hidden
+// or not. Both perimeters then share a length, so a run starts over on both at the same moment.
+uint32_t Lamps::stripLength(uint8_t strip, bool inRow) const {
     const uint16_t size = stripSize(strip);
-    return size == 0 ? 0 : locate(strip, uint16_t(size - 1)).q;
+    if (size == 0) {
+        return 0;
+    }
+    if (byLed(strip, inRow)) {
+        const uint32_t left = topQ(GROUP_LEFT);
+        const uint32_t right = topQ(GROUP_RIGHT);
+        return left > right ? left : right;
+    }
+    return locate(strip, uint16_t(size - 1), inRow).q;
 }
 
 Lamps::Entry* Lamps::claim(Effects& effects, uint8_t key, uint8_t priority) {
@@ -454,10 +535,11 @@ void Lamps::paintStrips(uint32_t ms) {
     const uint32_t pitch = pitchQ();
     for (uint8_t k = 0; k < n; ++k) {
         const uint8_t strip = layerStrips[k];
+        const bool inRow = layers[k]->inRow;
         const uint16_t size = stripSize(strip);
-        const uint32_t length = stripLength(strip);
+        const uint32_t length = stripLength(strip, inRow);
         for (uint16_t i = 0; i < size; ++i) {
-            const Place p = locate(strip, i);
+            const Place p = locate(strip, i, inRow);
             CRGB& led = ambientFrame[p.led];
             led = mix(*layers[k], ms, Spot{i, size, p.q, length, pitch}, led);
         }

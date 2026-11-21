@@ -4,7 +4,7 @@ The driver turns the IR channels into ball events, and takes its key information
 
 ## What the driver does
 
-The emitters pulse in two phases, lit and dark, and every registered channel is read in both. A ball changes the difference between the two readings, and the room light drops out of it. A channel reports a ball once that difference crosses its own threshold twice in a row, and reports the ball gone once it falls under the release threshold twice in a row.
+The emitters pulse in two phases, lit and dark, and every registered channel is read in both. A ball changes the difference between the two readings, and the room light drops out of it. A channel reports a ball once that difference crosses its threshold twice in a row, and reports the ball gone once it falls under the release threshold twice in a row.
 
 ## Driver events
 
@@ -34,7 +34,7 @@ D         a ball's dwell over a sensor            = 3 ms, estimated from the sto
 k         readings in a row a hit has to survive  = 2
 f_SPI     the rate the ADCs tick                  = 1.35 MHz
 t_conv    one channel, 24 ticks, three bytes      = 17.78 µs
-t_ovh     the firmware's own cost per channel     = 2 µs, reserved, not yet measured
+t_ovh     the firmware's cost per channel     = 2 µs, reserved, assumed
 t_inv     the earliest a channel may be read, τ · ln 2 = 48.5 µs
 jit       reserve kept at the end of the phase     = 10 µs, a placeholder
 N         channels registered with the driver
@@ -49,7 +49,7 @@ The read sets the shortest possible phase length. Every registered channel has t
 Between the two bounds, a longer phase leaves the sensors more time to settle and returns more signal, and it demands a longer dwell, which is to say a slower ball. `T_max` is a price rather than a wall: it follows from the dwell this design assumes, and the fastest ball a phase still confirms is the ball's diameter over `(2k + 1) · T`, 3 m/s at the phase this design runs. At initialization the driver works through these steps:
 
 1. `T_max`, the longest phase the dwell allows: `D / (2k + 1)`, down to the next 10 µs.
-2. `t_budget`, what reading its own `N` channels costs: `N · (t_conv + t_ovh)`, up to the next 10 µs.
+2. `t_budget`, what reading the `N` channels costs: `N · (t_conv + t_ovh)`, up to the next 10 µs.
 3. The range that works at all, `t_budget + t_inv + jit` up to `T_max`. An empty range means `N` does not fit, and the driver refuses to run.
 4. `T`, by walking that range in steps of 10 µs and keeping the phase where the first channel has settled furthest and a pass still delivers `k` readings.
 5. `t_first`, when the read block starts: `T − t_budget − jit`.
@@ -85,7 +85,7 @@ The MCP3008 limits the SPI clock to **1.35 MHz**, and one conversion takes 24 cl
 
 LPSPI4 is the SPI bus of the converters, and the driver feeds it itself. LPSPI4's receive interrupt takes each conversion's reply and starts the next conversion. The driver sets that interrupt to the IR's priority in [`general-design.md`](../general-design.md#interrupts) after FreeRTOS has started. The SPI library's asynchronous transfer is not used, since it attaches its DMA interrupt without a priority and keeps the channel to itself, so the interrupt would keep the priority that starting FreeRTOS gives every interrupt.
 
-Every conversion runs as its own transfer. The MCP3008 samples only when it is addressed anew, so one transfer spanning the whole block would return a single reading.
+Every conversion runs as a separate transfer. The MCP3008 samples only when it is addressed anew, so one transfer spanning the whole block would return a single reading.
 
 The driver keeps starting conversions while `t_conv + t_ovh` still fits in what is left of the phase, and stops at the first one that does not. The channels after that point go unread, and the driver logs the miss and margin. The evaluation stage is activated regardless.
 

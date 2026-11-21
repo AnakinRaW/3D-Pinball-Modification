@@ -21,7 +21,13 @@ On the perimeters, the [lighting driver](../drivers/lighting.md)'s profile decid
 
 The [config](#config) places each group on a chain and gives it its LEDs. The playfield has three sections, lower, middle and upper, and its lamps follow in that order. A playfield lamp is one LED or several LEDs in a row of its section's chain. The playfield's lamps get named parts, such as the `drain` or `score`.
 
-A strip may run hidden for a stretch. Its hidden LEDs stay dark and are no lamps. A run counts only the strip's lamps, so it crosses a hidden stretch at an even pace, without a pause.
+A strip may run hidden for a stretch. Its hidden LEDs stay dark and are no lamps.
+
+The left and the right perimeter hide different LEDs and take different courses up the machine. The same run started on both in one pass still has to show its light at the same height on both sides at every moment. A run on a perimeter therefore moves by height. The [config](#config) gives the height of a few LEDs of each perimeter, at the places where the strip changes direction. Between two of them, the height grows evenly from LED to LED. While the run passes hidden LEDs, it is out of sight.
+
+A run on one perimeter can jump over the hidden LEDs instead. `perimeterLeft.skipGaps().run(…)` moves from the last lit LED before a hidden stretch straight to the first one after it.
+
+A run on `perimeter`, `ambient` or `ceiling` always jumps over hidden LEDs, so a run around the machine never stalls.
 
 A playfield section may hold hidden LEDs as well, such as LEDs left between two lights on an uncut strip. They stay dark and belong to no lamp. A lamp starts at the next LED that is not hidden, and a hidden LED inside its count ends it there.
 
@@ -108,7 +114,7 @@ Each group's chain and LEDs stand in the [machine config](config.md), under `lam
 
 ```yaml
 lamps:
-  perimeter_left:  { chain: A, leds: …, gaps: [[…, …], …] }
+  perimeter_left:  { chain: A, leds: …, gaps: [[…, …], …], heights: [[…, …], …] }
   playfield_lower: { chain: D, leds: …, lamps: [1, 2, 1, …] }
 ```
 
@@ -118,15 +124,18 @@ lamps:
 | `leds` | none | 0 to 160 LEDs |
 | `lamps` | none | playfield sections only: one count per lamp, each 1 to 160 LEDs |
 | `gaps` | none | the hidden stretches, each as its first LED and its count |
+| `heights` | none | perimeters only: LEDs with their height in mm above the playfield's lower end, each as the LED and its height, in the order of the LEDs |
 
 A group without a chain holds no lamps. A chain carries one group, so a later group that names a taken chain holds no lamps. The lighting driver takes each chain's LEDs from the groups.
 
-`begin()` writes a line to the [log](../logging.md) for each mistake it finds in the groups, and goes on. A group on a chain past F or on a taken chain holds no lamps. A lamp count of 0 takes 1 LED. A gap or the chain's end cuts a lamp short. A count past a section's last LED goes unused.
+`begin()` writes a line to the [log](../logging.md) for each mistake it finds in the groups, and goes on. A group on a chain past F or on a taken chain holds no lamps. A lamp count of 0 takes 1 LED. A gap or the chain's end cuts a lamp short. A count past a section's last LED goes unused. A height past the chain, or one that does not lie after and above the height before it, is left out.
 
 On the playfield, every LED past a section's last count is one lamp. A count past the chain's end is cut there.
 
+A perimeter without heights places its LEDs one LED spacing of the strip apart, its first LED at the playfield's lower end.
+
 > [!TODO]
-> The groups' chains, LEDs, lamps and gaps follow once the [light layout](../../parts/lighting/design.md#light-layout) is final.
+> The groups' chains, LEDs, lamps, gaps and heights follow once the [light layout](../../parts/lighting/design.md#light-layout) is final.
 
 ## Interface
 

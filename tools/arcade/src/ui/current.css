@@ -1,0 +1,121 @@
+/* the current readout */
+.current {
+  --current-over: #e5484d;
+  --current-fill: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.current h2,
+.current h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.current .muted {
+  color: var(--muted);
+}
+
+.current-total output {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.current.over .current-total output,
+.current-over {
+  color: var(--current-over);
+}
+
+.current-over {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.current-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.current-bar > div {
+  height: 100%;
+  background: var(--current-fill);
+  transition: width 80ms linear;
+}
+
+.current.over .current-bar > div {
+  background: var(--current-over);
+}
+
+/* the adapter's rating on the bar */
+.current-bar > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--text);
+}
+
+.current-rows {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.current-rows th {
+  text-align: left;
+  font-weight: 400;
+  padding: 2px 0;
+}
+
+.current-rows td {
+  text-align: right;
+  padding: 2px 0 2px 8px;
+  white-space: nowrap;
+}
+
+.current-dimmed {
+  color: var(--inspect);
+}
+
+.current-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.current-buttons button {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.current-buttons button.on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent, #0b1220);
+}
+
+.side > .current {
+  margin-top: 16px;
+}
+
+.current-group th,
+.current-group td {
+  padding-top: 8px;
+}
+.current-base th {
+  padding-left: 14px;
+  font-weight: 400;
+}

@@ -9,7 +9,7 @@
 // Wiring: the SER0049 on pin 0, and a wire from pin 0 to pin 1, where the program times each
 // pulse edge. Without the wire, the timed tests report SKIP.
 //
-// Each test that hands the driver other settings uses a ServoDriver of its own. The ones before it
+// Each test that hands the driver other settings uses a separate ServoDriver. The ones before it
 // stay at their target and write no pulse, so only the newest one moves the servo. first-pulse
 // times the first pulse since the start, so it runs first after a restart.
 

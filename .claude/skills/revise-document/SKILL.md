@@ -96,7 +96,7 @@ Rewrite for structure, not for polish:
 - No cleft openings: "What a ball changes is the difference" is "A ball changes the difference".
 - No dangling participle, no apposition that attaches to the wrong noun.
 - A term is explained where it first appears, in ordinary words, and named after the explanation.
-- A hardware constraint is stated as the shape it forces on the code, not as the mechanism behind it. "Every conversion runs as its own transfer" lands where "the chip select is toggled per conversion" does not, and the mechanism follows in the same sentence as the reason.
+- A hardware constraint is stated as the shape it forces on the code, not as the mechanism behind it. "Every conversion runs as a separate transfer" lands where "the chip select is toggled per conversion" does not, and the mechanism follows in the same sentence as the reason.
 
 ## After the edit
 

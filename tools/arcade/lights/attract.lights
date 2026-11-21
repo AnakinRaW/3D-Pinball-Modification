@@ -1,0 +1,40 @@
+# The attract sequence before a game: 8 s, repeating.
+# Track 0 breathes in the background, track 1 plays the patterns, track 2 the finale above both.
+name: attract
+length: 8000
+loop: true
+steps:
+  # the background: the ambient strips and the stars breathe, the shooter lane chases upward
+  - {at: 0, track: 0, strip: ambient, effect: pulse, a: "#001040", b: black, period: 2000}
+  - {at: 0, track: 0, lamps: stars, effect: pulse, a: "#402000", b: black, period: 1000}
+  - {at: 0, track: 0, lamps: shooter, effect: run, pattern: chase, a: white, b: below, ms_per_lamp: 80}
+
+  # the stars count up from 100 to 1000
+  - {at: 500, track: 1, lamps: lamp-star-100, effect: set, a: amber, for: 2900}
+  - {at: "+120", track: 1, lamps: lamp-star-200, effect: set, a: amber, for: 2780}
+  - {at: "+120", track: 1, lamps: lamp-star-300, effect: set, a: amber, for: 2660}
+  - {at: "+120", track: 1, lamps: lamp-star-400, effect: set, a: amber, for: 2540}
+  - {at: "+120", track: 1, lamps: lamp-star-500, effect: set, a: amber, for: 2420}
+  - {at: "+120", track: 1, lamps: lamp-star-600, effect: set, a: amber, for: 2300}
+  - {at: "+120", track: 1, lamps: lamp-star-700, effect: set, a: amber, for: 2180}
+  - {at: "+120", track: 1, lamps: lamp-star-800, effect: set, a: amber, for: 2060}
+  - {at: "+120", track: 1, lamps: lamp-star-900, effect: set, a: amber, for: 1940}
+  - {at: "+120", track: 1, lamps: lamp-star-1000, effect: set, a: white, for: 1820}
+
+  # the upper playfield wakes: arrows chase, top lanes alternate, the bumper inserts flicker
+  - {at: 1800, track: 1, lamps: arrows, effect: run, pattern: chase, a: red, b: below, ms_per_lamp: 100, for: 2200}
+  - {at: 1800, track: 1, lamps: top-lanes, effect: alternate, a: blue, b: white, on: 120, off: 120, for: 2200}
+  - {at: 1800, track: 1, lamps: bumper-section, effect: blink, a: amber, b: black, on: 60, off: 60, for: 2200}
+  - {at: 2400, track: 1, lamps: inlanes, effect: run, pattern: asteroid, a: green, b: below, ms_per_lamp: 90, for: 1600}
+  - {at: 2400, track: 1, lamps: [scoop, targets], effect: blink, a: red, b: black, on: 100, off: 100, for: 1600}
+  - {at: 3000, track: 1, lamps: drain, effect: pulse, a: red, b: black, period: 400, for: 1000}
+
+  # a rainbow wipes around the machine
+  - {at: 4000, track: 1, strip: ambient, effect: run, pattern: wipe, a: {palette: rainbow, by: position}, b: below, mm_per_s: 450, for: 2000}
+  - {at: 4000, track: 1, lamps: playfield, effect: pulse, a: {palette: party, by: position}, b: black, period: 700, for: 2000}
+
+  # the finale: everything blinks, then fades out
+  - {at: 6000, track: 2, lamps: playfield, effect: alternate, a: red, b: amber, on: 90, off: 90, for: 1200}
+  - {at: 6000, track: 2, strip: perimeter, effect: blink, a: white, b: black, on: 90, off: 90, for: 1200}
+  - {at: 7200, track: 2, lamps: playfield, effect: fade, a: black, ms: 600}
+  - {at: 7200, track: 2, strip: ambient, effect: fade, a: black, ms: 600}

@@ -1,10 +1,10 @@
-// Sound test for the Teensy 4.1: plays a WAV file from the card in the Teensy's own socket through
+// Sound test for the Teensy 4.1: plays a WAV file from the card in the Teensy's socket through
 // the DFRobot DFR0954 to the speaker, in a loop. Wired as docs/parts/audio/design.md draws it:
 // DIN to pin 2, LRC to pin 3, BCLK to pin 4, VCC to 5 V, GND to GND, R4 with 100 kOhm from GAIN
 // to VCC, the speaker on SPK+ and SPK-.
 //
 // It plays /test.wav where the card holds it, and /tone.wav otherwise. Where /tone.wav is
-// missing too, the program writes it first: three rising notes and a pause, 16-bit PCM at
+// missing too, the program writes it first: the rising notes of NOTES_HZ and a pause, 16-bit PCM at
 // 44.1 kHz, mono, as assets/media.md makes a sound.
 //
 // A file reaches the card over USB without taking the card out. The computer sends "PUT <bytes>"

@@ -39,7 +39,7 @@ The goal is a modification that is **as professional as it reasonably can be**: 
 - **A changed value invalidates every figure derived from it.** Swapping a resistor, a supply or a part re-derives every bound, margin, current and time constant that took it as an input, from the sources under rule 9. A settled fact that carries no number, such as a mode or a mechanism, re-runs every derivation that took it. The sweep across the repository follows rule 7, in one pass.
 - **No pin or part is loaded past its specified figure, transients included.** A figure published for sustained operation still governs a brief peak, which is designed out. The worst case is computed from the external circuit alone, and internal current limiting that no datasheet states does not enter it.
 - Reproducible: someone else could rebuild this from the repository alone.
-- **An open measurement blocks only what depends on it.** An unresolved figure usually sits in a build detail. The design decision above it is settled now, and the detail it defers is named. Where nothing depends on the figure, it gets no entry, since a worst case from a datasheet that the design survives settles it. A cheap part that makes the figure irrelevant beats measuring it.
+- **An open measurement blocks only what depends on it.** An unresolved figure usually sits in a build detail. The design decision above it is settled, and the detail it defers is named. Where nothing depends on the figure, it gets no entry, since a worst case from a datasheet that the design survives settles it. A cheap part that makes the figure irrelevant beats measuring it.
 - **A fact confirmed on the bench loses its caveat** in every file and is not raised again.
 
 A shortcut taken on purpose is recorded as a known limitation.
@@ -167,8 +167,8 @@ Teensy documentation is thin and scattered across the web. Treat every claim as 
 Source ranking:
 
 1. **pjrc.com, excluding the forum**: the primary authority. Correct unless several independent sources contradict it.
-2. **PJRC forum posts by Paul Stoffregen**, the Teensy's creator and PJRC's operator: authoritative. Other regulars may be equally reliable; none are identified yet.
-3. **[TeensyUser wiki](https://github.com/TeensyUser/doc/wiki)**: community-maintained, upkeep unknown. Worth checking, unconfirmed until corroborated.
+2. **PJRC forum posts by Paul Stoffregen**, the Teensy's creator and PJRC's operator: authoritative. Other regulars may be equally reliable.
+3. **[TeensyUser wiki](https://github.com/TeensyUser/doc/wiki)**: community-maintained. A claim from it is corroborated before use.
 4. Everything else: corroborated before use.
 
 Cross-checking:
@@ -190,7 +190,7 @@ The stock machine's original functionality must remain restorable. An alteration
 | Drilling a new hole in the playfield or in a track | Permitted, the original function survives it |
 | Cutting a cable | Permitted once a connector is soldered to each end |
 
-The table sets the default. An alteration it forbids is permitted for a named part once that alteration is decided explicitly. The part's document records the decision. Rule 14 then no longer reports it.
+The table sets the default. An alteration it forbids is permitted for a named part once that alteration is decided explicitly. The part's document records the decision. Rule 14 does not report it.
 
 ## 13. Amending these rules
 
@@ -276,7 +276,7 @@ What a request touches:
 - **A requirement is written as an invariant**, in terms of the quantities and not of the formulas: the emitter current stays under its absolute maximum, a DOUT bit is home inside the half period. An invariant holds whatever the formulas are, which is what catches a slip the arithmetic accepts.
 - **A bound declares the side it is printed on.** A ceiling is rounded down and a floor is rounded up, so a reader who respects the printed figure respects the real one. Rounding a 23.571 kΩ ceiling to the nearest digit states a limit of 24 kΩ that the design does not meet, and where the digit grid is too coarse to floor without losing accuracy the figure is printed to one more digit.
 
-**A green run means the documents agree with the model, not that the model is right.** Three passes narrow that gap:
+**A green run means the documents agree with the model, not that the model is right.** These passes narrow that gap:
 
 | | |
 |---|---|

@@ -2,7 +2,7 @@
 
 ## Models
 
-A subsystem declares its inputs and its formulas in `figures.py`, which names the documents and the drawings that model governs. The file lies in `model/parts/<subsystem>/`, which mirrors `docs/parts/<subsystem>/`, and names its documents and drawings from that folder under `docs/`. Every subsystem that derives figures has one. Two further models hold what several subsystems share: [`model/research/teensy-4.1.py`](../model/research/teensy-4.1.py) the figures of the board and its chip, and [`model/firmware/figures.py`](../model/firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files.
+A subsystem declares its inputs and its formulas in `figures.py`, which names the documents and the drawings that model governs. The file lies in `model/parts/<subsystem>/`, which mirrors `docs/parts/<subsystem>/`, and names its documents and drawings from that folder under `docs/`. Every subsystem that derives figures has one. Further models hold what several subsystems share: [`model/research/teensy-4.1.py`](../model/research/teensy-4.1.py) the figures of the board and its chip, and [`model/firmware/figures.py`](../model/firmware/figures.py) the firmware's periods, watchdog, interrupt priorities and slots. The checker imports each model, evaluates every figure, and compares the results against those files.
 
 A model file opens with its model and the calls it declares with. Each derived figure is one call to `fig` with its key, its unit and its formula. A bound adds the side the document prints it on. The formula is a Python expression over the keys it rests on. A formula that needs statements is a function whose parameter names are those keys. `moves` names each input the figure rises with as `+key` and each input it falls with as `-key`. A requirement is an expression over the keys as well.
 
@@ -53,6 +53,13 @@ A constant a listing writes as a bare number follows the figure it encodes:
 MODEL.as_written("t_tick_us", of="t_tick", unit="µs")    # kPeriodUs = 5000
 ```
 
+A figure the firmware holds as a constant is named with the file and the constant, a bare number of the unit given. An index picks one value of a brace initializer:
+
+```python
+MODEL.in_code("pm_red", file="firmware/src/drivers/lighting.h", name="RED_MW", unit="mW")
+MODEL.in_code("i_budget", file="firmware/src/drivers/lighting.h", name="PROFILE_3A[3]", unit="mA")
+```
+
 Quantities carry a unit and a dimension, as exponents over volt, ampere, second, kelvin and meter. Adding a current to a time raises rather than computing, and a figure declared in mA cannot be printed as µs.
 
 Every number in the prose is checked too, against every declared quantity and with its unit converted. A figure outside a block or a table has nothing else anchoring it. A prose figure that stands for a bound keeps to the side the bound is printed on, so a floor quoted one digit too high fails. What a document states and the model does not compute is declared as an aside, with the reason:
@@ -93,6 +100,7 @@ Each check reports on a separate line, and any of them can fail the run:
 | readings found in their sheet | `--sheets`: each `datasheet` reading is looked up in the PDF it cites, as a separate number. A number of one or two digits has to stand alone, since it turns up inside every longer one, and no trailing zero is dropped. A sheet whose text does not come out is reported unread, not passed. A `graph` reading is exempt, since a plotted curve carries no text |
 | readings in the notes they cite | A `measured` or `datasheet` reading whose source names a markdown file of this repository stands in that file. A bench result no note records is a reading of nothing |
 | the extreme a bound takes | A bound that rests on a quantity declared with `MODEL.range` takes the extreme that keeps it on the side it is printed on: the one that makes a ceiling smallest and a floor largest. The nominal value is never that extreme. A bound that takes the other extreme on purpose, because what it is compared with moves with the same input, names it in `tracks` |
+| constants in the code | Every constant a model names with `MODEL.in_code` is assigned the figure's value in its source file, in the unit the declaration gives. Comments are left out of the search |
 | parts named by designator | Every designator a design names is one the design's part list holds, one a design the same line links holds, or one the model names with `MODEL.names` as a module's or another board's |
 | datasheet files | The datasheets the model cites match the checksums in [`docs/datasheets/SHA256SUMS`](../docs/datasheets/SHA256SUMS) |
 | the check would catch a slip | `--mutate`: every token a figure could land on is moved, and the run has to report that figure. A figure that survives is one the check would not have caught. A value printed twice that moves only once lands on its other occurrence and hides the break |

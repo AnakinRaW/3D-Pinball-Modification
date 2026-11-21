@@ -193,7 +193,7 @@ class Composer:
     # ---------------------------------------------------------------- feature bubbles
     BUBBLE_R = 5.5             # mm
     BUBBLE_GAP = 13.0          # mm between two bubbles of one column
-    CLUSTER = 60.0             # mm: places of one feature further apart than this get bubbles of their own
+    CLUSTER = 60.0             # mm: places of one feature further apart than this get separate bubbles
 
     def features(self, svg):
         """A layer of numbered bubbles in the margins, each with lines to the parts that show its feature."""

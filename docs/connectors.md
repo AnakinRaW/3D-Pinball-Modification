@@ -41,7 +41,7 @@
 | | at the Teensy motherboard | 2 each | Dupont | One plug for the emitter, with the feed behind R2 and GND. One for the receiver, with its output and GND |
 | Controls | toggle switch | 2 | the stock plug's counterpart at the switch, Dupont at the Teensy | A switch has no polarity |
 | Contacts | J-PE-STORE and J-PE-TARGETS, at the port expander board | 3 each | Dupont | Two contact lines into the port expander's E pins and their foil's GND |
-| | J-PE-SPARE, at the port expander board | 5 | Dupont | E-5 to E-8 and GND, for contacts still to come |
+| | J-PE-SPARE, at the port expander board | 5 | Dupont | E-5 to E-8 and GND, spare for further contacts |
 
 ## By pole count
 
@@ -71,6 +71,6 @@
 
 | Where | Colors |
 |---|---|
-| A cable that comes with a part or from the stock machine, as the servo's, the speaker's and the coils' | its own. Black there can carry a signal |
+| A cable that comes with a part or from the stock machine, as the servo's, the speaker's and the coils' | the colors of that cable. Black there can carry a signal |
 | J-S1 to J-S16, the stock sensors' cables and a new sensor board's alike | red 3.3 V, black signal, yellow LED cathode |
 | Display board | white on both sides of the Adafruit 757. The touch cable brings a yellow 3.3 V. J-DISP-PWR brings a red 5 V and a black GND |

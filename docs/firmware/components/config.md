@@ -4,7 +4,7 @@ The machine config holds the settings that change without building and flashing 
 
 ## Settings
 
-The config is a hierarchical key-value store. A key is a path through the file, such as `servo.start_deg` or `ir.channels.0.order`. The part that uses a setting gives its key, its default and its range in its own document.
+The config is a hierarchical key-value store. A key is a path through the file, such as `servo.start_deg` or `ir.channels.0.order`. The part that uses a setting gives its key, its default and its range in that part's document.
 
 Every key is defined in `config-keys.h`.
 
@@ -16,7 +16,7 @@ A part reads a setting with `get(key, fallback, min, max)`. Some settings have n
 
 Reading never changes the tree.
 
-The component writes a line to the [log](../logging.md) in three cases: a key with a default is missing, a value is no number, or a number lies outside its range.
+The component writes a line to the [log](../logging.md) when a key with a default is missing, a value is no number, or a number lies outside its range.
 
 A mutex guards the tree, so any task may read and write it. An interrupt may not, because it cannot wait for a mutex. A value an interrupt needs is therefore read beforehand and kept by its part.
 

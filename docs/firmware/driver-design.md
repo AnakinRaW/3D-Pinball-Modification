@@ -35,28 +35,9 @@ public:
 
 ## Devices
 
-`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the three sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum. Every device has an entry, also one whose driver reports no faults.
+`Device` names the unique devices of the machine. A device may contain multiple parts or channels of the same kind, such as the sensed solenoids or the individual IR reflective channels. However, those parts are not represented by this enum. Every device has an entry, also one whose driver reports no faults.
 
 [`firmware/src/core/device-monitor.h`](../../firmware/src/core/device-monitor.h) holds `Device`.
-
-```cpp
-// the devices of the machine; a device of one part has only part 0
-enum class Device : uint8_t {
-    ROTARY_SENSOR,
-    BREAK_BEAM,
-    SOLENOIDS,
-    IR_SENSING,
-    SD_CARD,
-    DISPLAY_MODULE,   // DISPLAY is a macro of the Teensy core
-    TOUCH,
-    SERVO,
-    AMPLIFIER,
-    LED_CHAINS,
-    TOGGLE_SWITCH,
-    CONTACTS,
-    COUNT,            // the number of devices
-};
-```
 
 ## Interrupts
 
@@ -68,26 +49,10 @@ Every interrupt's priority is set in the table of [general-design](general-desig
 
 ### Driver IntervalTimer
 
-The driver tick is one dedicated `IntervalTimer` that runs every 5 ms and serves every driver that needs a regular period. A driver can attach to this driver tick in its own `begin()`, together with a callback function and the period it needs, a multiple of 5 ms.
+The driver tick is one dedicated `IntervalTimer` that runs every 5 ms and serves every driver that needs a regular period. A driver can attach to this driver tick in its `begin()`, together with a callback function and the period it needs, a multiple of 5 ms.
 
 For example, on every tick the rotary sensor reads values, the solenoid driver checks whether a pull is due to end and the [device monitor](error-handling.md#device-faults) asks the drivers for failed parts every 100 ms. 
 
 The timer starts on the very first attached driver. Attaching does not need to be in any special order. The driver tick calls only the callbacks that are due.
 
 [`firmware/src/drivers/driver-base.h`](../../firmware/src/drivers/driver-base.h) holds the driver tick, `Driver` and `Fault`.
-
-```cpp
-// one IntervalTimer, shared by every driver that needs a regular period
-class DriverTick {
-public:
-    using Callback = teensy::inplace_function<void(void), 16>;   // a lambda capturing this fits
-
-    static constexpr uint32_t PERIOD_US = 5000;    // tick period
-
-    // runs fn every periodUs; before the main loop only, and the first call starts the timer. False
-    // when every slot is taken, periodUs is no multiple of PERIOD_US or no IntervalTimer is free
-    bool attach(Callback fn, uint32_t periodUs);
-};
-
-extern DriverTick driverTick;   // the one driver tick, defined in the library
-```

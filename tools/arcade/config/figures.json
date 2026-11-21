@@ -1,0 +1,164 @@
+{
+  "pm_red": {
+    "value": 28.0,
+    "unit": "mW",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "pm_green": {
+    "value": 31.0,
+    "unit": "mW",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "pm_blue": {
+    "value": 31.0,
+    "unit": "mW",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "pm_dark": {
+    "value": 3.0,
+    "unit": "mW",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "v_rail": {
+    "value": 5.0,
+    "unit": "V",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "i_budget": {
+    "value": 2000.0,
+    "unit": "mA",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "i_budget_6a": {
+    "value": 2920.0,
+    "unit": "mA",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "i_white_3a": {
+    "value": 1930.1292,
+    "unit": "mA",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "i_white_6a": {
+    "value": 2821.380763,
+    "unit": "mA",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "i_supply_3a": {
+    "value": 3000.0,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_supply_6a": {
+    "value": 6000.0,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_teensy_vin": {
+    "value": 375.119617,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_amp": {
+    "value": 128.35,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_ir_in": {
+    "value": 200.311282,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_disp": {
+    "value": 197.8048,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_permanent": {
+    "value": 909.585699,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_rest": {
+    "value": 8.0,
+    "unit": "mA",
+    "model": "servo",
+    "file": "model/parts/servo/figures.py"
+  },
+  "i_stall": {
+    "value": 800.0,
+    "unit": "mA",
+    "model": "servo",
+    "file": "model/parts/servo/figures.py"
+  },
+  "t_move_max": {
+    "value": 2000.0,
+    "unit": "ms",
+    "model": "servo",
+    "file": "model/parts/servo/figures.py"
+  },
+  "i_coil": {
+    "value": 680.0,
+    "unit": "mA",
+    "model": "solenoid",
+    "file": "model/parts/solenoid/figures.py"
+  },
+  "i_coil_scoop": {
+    "value": 806.451613,
+    "unit": "mA",
+    "model": "solenoid",
+    "file": "model/parts/solenoid/figures.py"
+  },
+  "t_on_max": {
+    "value": 30.0,
+    "unit": "ms",
+    "model": "solenoid",
+    "file": "model/parts/solenoid/figures.py"
+  },
+  "n_bumpers_at_once": {
+    "value": 2.0,
+    "unit": "",
+    "model": "solenoid",
+    "file": "model/parts/solenoid/figures.py"
+  },
+  "i_coils_at_once": {
+    "value": 2166.451613,
+    "unit": "mA",
+    "model": "solenoid",
+    "file": "model/parts/solenoid/figures.py"
+  },
+  "i_most_3a": {
+    "value": 5076.037312,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_most_6a": {
+    "value": 5996.037312,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  },
+  "i_over_3a": {
+    "value": 2076.037312,
+    "unit": "mA",
+    "model": "power",
+    "file": "model/parts/power/figures.py"
+  }
+}

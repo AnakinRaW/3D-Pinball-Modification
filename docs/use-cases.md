@@ -29,7 +29,7 @@
 
 | Use case | Realized in |
 |---|---|
-| The game awards points for lanes, shots and hits by its own rules. | [Example game](firmware/game-abstraction.md#an-example-game) |
+| The game awards points for lanes, shots and hits by rules the game sets. | [Example game](firmware/game-abstraction.md#an-example-game) |
 | The score stays on the screen over every mode's slide. | [Screen slides](firmware/components/screen.md#slides) |
 | The post-game phase shows the score and keeps the high score. The high score survives a power cut. | [Game lifecycle](firmware/game-abstraction.md#game-lifecycle), [saved data](firmware/game-abstraction.md#saved-data) |
 | The ball count shows on the lights of the shooter lane, where the stock ball count board sat. | [Light layout](parts/lighting/design.md#light-layout), [lamp groups](firmware/components/lamps.md#groups) |
@@ -66,7 +66,7 @@
 | A skill shot, a ball save and a multiball run as modes of a game, several at the same time. | [Modes](firmware/game-abstraction.md#modes) |
 | Where two modes want the same hit, the mode of higher priority decides first. | [Modes](firmware/game-abstraction.md#modes) |
 | A multiball puts the second ball into play while the first is still on the playfield. | [Modes](firmware/game-abstraction.md#modes), [ball store](firmware/components/drain.md#ball-store) |
-| Each mode shows its own lights, its own slide and its own music. What the mode below set comes back when it ends. | [Overlapping effects](firmware/components/lamps.md#overlapping-effects), [screen slides](firmware/components/screen.md#slides), [music](firmware/components/sounds.md#music) |
+| Each mode shows its lights, its slide and its music. What the mode below set comes back when it ends. | [Overlapping effects](firmware/components/lamps.md#overlapping-effects), [screen slides](firmware/components/screen.md#slides), [music](firmware/components/sounds.md#music) |
 
 ## Lights
 
@@ -85,9 +85,9 @@
 
 | Use case | Realized in |
 |---|---|
-| Background music plays during a game, once or over and over. A win or a loss plays its own music. | [Sounds](firmware/components/sounds.md#music-and-effects), [music](firmware/components/sounds.md#music) |
+| Background music plays during a game, once or over and over. A win or a loss plays music. | [Sounds](firmware/components/sounds.md#music-and-effects), [music](firmware/components/sounds.md#music) |
 | Effects such as a bumper hit or the drain play over the music, several at once. | [Sounds](firmware/components/sounds.md#music-and-effects), [audio driver](firmware/drivers/audio.md#channels) |
-| Each game brings its own sounds on the SD card. | [Sounds](firmware/components/sounds.md) |
+| Each game brings sounds on the SD card. | [Sounds](firmware/components/sounds.md) |
 | Music and effects each have their own volume, which the game sets. No volume overdrives the speaker. | [Volume](firmware/components/sounds.md#volume), [audio](parts/audio/design.md#requirements), [audio driver](firmware/drivers/audio.md#volume) |
 | A sound starts, stops and changes its volume without a click. | [Audio driver](firmware/drivers/audio.md#volume) |
 | No sound drops out while the card writes the log or a high score. | [Channel player](firmware/drivers/audio.md#channel-player), [file channel](firmware/file-channel.md) |
@@ -100,8 +100,8 @@
 |---|---|
 | A game shows pictures from the SD card, such as a background or icons. | [Pictures](firmware/components/screen.md#pictures) |
 | A game shows small animations made of pictures. | [Video player](firmware/components/video-player.md#existing-libraries) |
-| A game shows a message box over its own drawing. | [Layers](firmware/components/screen.md#layers) |
-| A game plays a video in a part of the screen or over the whole screen, with or without its own drawings in front. | [Video player](firmware/components/video-player.md#playing), [display](parts/display/design.md#use-cases) |
+| A game shows a message box over the game's drawing. | [Layers](firmware/components/screen.md#layers) |
+| A game plays a video in a part of the screen or over the whole screen, with or without the game's drawings in front. | [Video player](firmware/components/video-player.md#playing), [display](parts/display/design.md#use-cases) |
 | A full-screen video plays at its full frame rate while the sounds keep playing. A video with sound stays in step with its sound. | [Display](parts/display/design.md#use-cases), [video player](firmware/components/video-player.md#playing) |
 | A video plays only while its mode's slide shows. | [Video owner](firmware/components/video-player.md#owner) |
 | The game learns when a video has played to its end. | [End of a video](firmware/components/video-player.md#end-of-a-video) |

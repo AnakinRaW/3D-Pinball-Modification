@@ -29,7 +29,7 @@ def pass_write(model: Model, tokens: list[Token], rep: Report) -> int:
     """Write every figure the model computes into the line that states it.
 
     A block in which a figure found no separate line is written nowhere, since a line
-    found for another figure of that block may be its own.
+    found for another figure of that block may belong to the other figure.
     """
     placed = {t.claimed_by for t in tokens if t.claimed_by}
     unsure = defaultdict(list)
