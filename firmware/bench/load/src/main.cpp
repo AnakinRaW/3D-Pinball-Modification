@@ -11,9 +11,11 @@
 //    every byte arrives
 //
 // The load is a video frame read whole into the PSRAM every 40 ms, LVGL drawing that frame full
-// screen, FastLED sending 240 LEDs on one chain and a log line once a second. An audio request
+// screen, FastLED sending 240 dark LEDs on one chain and a log line once a second. An audio request
 // comes every 23.2 ms from an interrupt at priority 208, as the Audio library's update starts them.
-// The storage task serves audio first, then the rest in order. The card is formatted FAT32 with
+// The main loop never waits, as in the firmware. The storage task shares its priority and takes
+// turns with it every tick, since its yield() hands the processor on while SdFat waits. It serves
+// audio first, then video, then the writes. The card is formatted FAT32 with
 // 32 KB clusters. The test writes three files and deletes them. It starts once the serial
 // monitor is open.
 
@@ -38,7 +40,6 @@ constexpr uint32_t kFrameMs    = 40;
 constexpr uint32_t kAheadUs    = 278639;          // what an audio ring reads ahead, docs/parts/audio
 constexpr uint32_t kLoadMs     = 20000;
 constexpr uint32_t kSaves      = 50;
-constexpr UBaseType_t kCard    = 1;               // the storage task's notification of the SD interrupt
 constexpr UBaseType_t kWork    = 0;               // and of new work
 
 EXTMEM static uint8_t picture[kFrame] __attribute__((aligned(32)));
@@ -53,7 +54,6 @@ static CRGB leds[240];
 static SdFs   sd;
 static FsFile frames, saves, logFile;
 static TaskHandle_t mainTask = nullptr, storageTask = nullptr;
-static void (*sdfatIsr)() = nullptr;
 
 static inline uint32_t us() { return micros(); }   // the cycle counter divided down would wrap every 7 s
 
@@ -239,36 +239,12 @@ static void startGpt2(uint32_t periodUs, uint8_t prio) {
 // -- the storage task, as in the stack test ----------------------------------
 static bool inInterrupt() { uint32_t ipsr; asm volatile("mrs %0, ipsr" : "=r"(ipsr)); return ipsr != 0; }
 
-// kSpinUs 0 sleeps on every wait, as the storage driver's yield() does. Above 0, a wait with no
-// data transfer running, such as SdFat asking a busy card for its status between two commands,
-// spins that long before it sleeps, since no interrupt ends such a wait and a sleep lasts a tick
-#ifndef SPIN_US
-#define SPIN_US 0
-#endif
-constexpr uint32_t kSpinUs   = SPIN_US;
-constexpr uint32_t kDataBusy = 1u << 1;   // PRES_STATE CDIHB, a data transfer runs
-static volatile uint32_t sleeps = 0, timeouts = 0, timeoutsInTransfer = 0;   // the storage task's sleeps in yield(), those that ran out the tick, and those of them during a transfer
-
+// SdFat calls yield() while it waits for the card. The storage task hands the processor to the main
+// task until the next tick, as the storage driver's yield() does
 void yield() {
     if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING || inInterrupt()) return;
     if (storageTask == nullptr || xTaskGetCurrentTaskHandle() != storageTask) { freertos::default_yield(); return; }
-    if (kSpinUs && !(USDHC1_PRES_STATE & kDataBusy)) {
-        static uint32_t since = 0, last = 0;
-        const uint32_t now = micros();
-        if (now - last > 50) since = now;   // a new wait
-        last = now;
-        if (now - since < kSpinUs) return;
-    }
-    const uint32_t woke = ulTaskNotifyTakeIndexed(kCard, pdTRUE, 1);
-    sleeps = sleeps + 1;
-    if (woke == 0) { timeouts = timeouts + 1; if (USDHC1_PRES_STATE & kDataBusy) timeoutsInTransfer = timeoutsInTransfer + 1; }
-}
-
-static void sdInterrupt() {
-    sdfatIsr();
-    BaseType_t woken = pdFALSE;
-    vTaskNotifyGiveIndexedFromISR(storageTask, kCard, &woken);
-    portYIELD_FROM_ISR(woken);
+    taskYIELD();
 }
 
 static void pattern(uint8_t* p, uint32_t n, uint32_t seed) {
@@ -320,8 +296,6 @@ static void storageMain(void*) {
     sd.end();
     ok = ok && sd.begin(SdioConfig(DMA_SDIO));
     if (ok) storageStep = 3;
-    sdfatIsr = _VectorsRam[IRQ_SDHC1 + 16];
-    attachInterruptVector(IRQ_SDHC1, sdInterrupt);
     NVIC_SET_PRIORITY(IRQ_SDHC1, 240);
     storageTask = xTaskGetCurrentTaskHandle();
     ok = ok && frames.open("load.bin", O_RDONLY) && saves.open("save.bin", O_RDWR | O_CREAT | O_TRUNC)
@@ -393,8 +367,7 @@ static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     ARM_DEMCR |= ARM_DEMCR_TRCENA; ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
     Serial.printf("Load test, PSRAM %d MB\nwriting the test file ...\n", external_psram_size);
-    Serial.printf("status waits spin %lu us before the storage task sleeps\n", kSpinUs);
-    xTaskCreate(storageMain, "storage", 8192 / sizeof(StackType_t), nullptr, 2, nullptr);
+    xTaskCreate(storageMain, "storage", 8192 / sizeof(StackType_t), nullptr, 1, nullptr);
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     if (storageStep != 4) {
         Serial.printf("the card failed at step %d, cluster %lu bytes, SdFat error 0x%02X, stopped\n", storageStep, clusterBytes, sd.sdErrorCode());
@@ -437,6 +410,8 @@ static void runMainTask(void*) {
     audioOn = true;
     const uint32_t start = millis();
     uint32_t nextFrame = start, nextLog = start + 1000, seed = 1;
+    uint32_t lastPass = us(), passN = 0, passMax = 0;
+    uint64_t passSum = 0;
     while (millis() - start < kLoadMs) {
         if ((int32_t)(millis() - nextFrame) >= 0 && !frameWanted) {
             frameIssued = us(); frameWanted = true;
@@ -450,15 +425,19 @@ static void runMainTask(void*) {
         }
         lv_obj_invalidate(img);
         lv_refr_now(d);
-        for (auto& l : leds) l = CRGB(seed, 0, 0);
+        for (auto& l : leds) l = CRGB::Black;   // the data goes out, nothing lights
         FastLED.show();
-        vTaskDelay(1);
+        const uint32_t now = us();
+        const uint32_t pass = now - lastPass;
+        lastPass = now;
+        passN = passN + 1; passSum = passSum + pass;
+        if (pass > passMax) passMax = pass;
     }
     printLateness("under load");
     Serial.printf("\n2. audio reads: %lu, waited mean %.2f ms, max %.2f ms, %lu past the %.0f ms read-ahead, %lu dropped\n",
                   audioN, audioN ? audioSum / audioN / 1000.0f : 0.0f, audioMax / 1000.0f, audioLate,
                   kAheadUs / 1000.0f, audioDropped);
-    Serial.printf("   storage task: %lu sleeps in yield(), %lu ran out their tick, %lu of those during a transfer\n", sleeps, timeouts, timeoutsInTransfer);
+    Serial.printf("   main loop: %lu passes, mean %.2f ms, longest %.2f ms\n", passN, passN ? passSum / passN / 1000.0f : 0.0f, passMax / 1000.0f);
     Serial.printf("   video frames: %lu of %lu due, from request to end mean %.2f ms, max %.2f ms, %lu past 40 ms\n",
                   frameN, kLoadMs / kFrameMs, frameN ? frameSum / frameN / 1000.0f : 0.0f, frameMax / 1000.0f,
                   frameOver);

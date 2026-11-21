@@ -164,6 +164,10 @@ _SAVES = ("a sketch on the Teensy 4.1 saving 4 KB in SdFat's DMA mode, written a
           "in turn")
 msr("t_save_new", 15.80, "ms", src=f"{_SAVES}: the longer of the two first saves into a new file")
 msr("t_save_over", 4.69, "ms", src=f"{_SAVES}: the longest save over an existing file")
+msr("t_card_stall", 953, "ms", src="firmware/bench/stream on the Teensy 4.1, the storage driver "
+    "streaming four sounds and a movie for 60 s while LVGL drew and the main task wrote 2 KB of log "
+    "a second and a 4 KB save every 3 s, right after its 9.2 MB movie file was written: the longest "
+    "save of one run, 952.73 ms; five more runs stayed below 86 ms")
 msr("t_frame_load", 21.35, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end, the "
     "longer of two runs, 21.35 and 21.30 ms")
 msr("t_audio_wait_load", 58.34, "ms", src=f"{_LOAD}, 8 KB chunks: the longest of 861 audio reads "
