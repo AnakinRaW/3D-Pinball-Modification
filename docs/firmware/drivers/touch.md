@@ -14,18 +14,35 @@ The main task starts the driver after the display driver, so the black screen do
 
 ## Reading
 
-A read asks the controller how many fingers touch the screen and where the first one touches. The answer is five bytes. 
+A read asks the controller how many fingers touch the screen and where the first one touches. The answer is five bytes.
 
 Every 20 ms the driver tick requests a read from the bus. When the read has ended, the bus calls the driver back with the five bytes.
 
-The controller reports positions in the panel's portrait orientation. The driver turns them into the picture's landscape orientation, the same way the [display driver](display.md#start-up) turns the panel's memory at start-up. With the panel set to landscape by the memory access value 0x28, both axes turn over. The picture's x is 319 minus the panel's y, and the picture's y is the panel's x. It publishes the four touch events below, and `finger()` gives the same position whenever a component asks.
+The controller reports positions in the panel's portrait orientation. The driver turns them into the picture's landscape orientation, the same way the [display driver](display.md#start-up) turns the panel's memory at start-up. With the panel set to landscape by the memory access value 0x28, the axes swap. The picture's x follows the panel's y backward, and the picture's y follows the panel's x.
+
+The touch layer lies shifted and stretched against the picture by a few pixels, and differently on every module. The driver maps each axis linearly between the controller's readings at the picture's two edges, which the [config](#config) holds. A position beyond an edge lands on that edge.
+
+The driver publishes the four touch events below, and `finger()` gives the same position whenever a component asks.
+
+## Config
+
+The four readings at the picture's edges stand in the [machine config](../components/config.md). Their defaults were measured on the bench with this build's module:
+
+| Key | Default | Range |
+|---|---|---|
+| `touch.raw_left` | 327 | 0 to 4095, the panel's y at the picture's left edge |
+| `touch.raw_right` | 1 | 0 to 4095, the panel's y at the picture's right edge |
+| `touch.raw_top` | 3 | 0 to 4095, the panel's x at the picture's top edge |
+| `touch.raw_bottom` | 254 | 0 to 4095, the panel's x at the picture's bottom edge |
+
+The main task hands the four values to `configure()` before `begin()`. A value above 4095 counts as 4095. An axis whose two readings lie less than 100 apart keeps its defaults.
 
 ## Driver events
 
 | Type | When | Payload |
 |---|---|---|
 | `TouchDown` | A finger touches the screen | x and y |
-| `TouchMoved` | The finger has moved 10 pixels or more from the position last reported | x and y |
+| `TouchMoved` | The finger has moved 10 pixels or more along either axis from the position last reported | x and y |
 | `TouchHeld` | The finger has rested within 10 pixels of where it touched down for 1 s | x and y |
 | `TouchUp` | The finger has left the screen | x and y, where it was last |
 
@@ -39,31 +56,12 @@ A controller that answered at `begin()` counts as [failed](../error-handling.md#
 
 A failed read is dropped. The next tick requests a new one.
 
+A finger that touches the screen when the controller fails leaves it with `TouchUp` at the first failed read past 100 ms, and `finger()` then shows no finger.
+
 ## Existing libraries
 
 The driver reads the controller through the I²C bus, since [Adafruit_FT6206](https://github.com/adafruit/Adafruit_FT6206_Library) waits in `Wire` until each read has ended. At 100 kHz its read costs 1.74 ms of waiting, 8.7 % of the processor's time at one read every 20 ms.
 
 ## Driver
 
-```cpp
-// where a finger touches the screen, in the picture's pixels
-struct Finger {
-    bool     down;              // a finger touches the screen
-    uint16_t x;                 // 0 at the left edge
-    uint16_t y;                 // 0 at the top edge
-};
-
-class Touch : public Driver {
-public:
-    // attaches its transfer to the bus on Wire2, checks once whether the touch controller answers,
-    // and attaches to the driver tick; false when the driver tick is full
-    bool begin() override;
-
-    bool   present() const;     // gets whether the machine has its display module, which begin() finds out once from the touch controller
-    Finger finger() const;      // gets where a finger touches the screen
-
-    // gets which parts have failed, bit 0 once the controller that answered at begin() has brought
-    // no read for 100 ms, with the LPI2C4 error flags of the last failed read as the error code
-    Fault failed() const override;
-};
-```
+[`firmware/src/drivers/touch.h`](../../../firmware/src/drivers/touch.h) holds the interface.

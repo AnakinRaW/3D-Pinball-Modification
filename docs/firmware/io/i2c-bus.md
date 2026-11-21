@@ -32,40 +32,4 @@ The bus programs the I²C controller directly, because the I²C libraries for th
 
 ## Interface
 
-```cpp
-namespace io {
-
-// a transfer on an I²C bus: bytes written to one device, then bytes read from it
-struct I2cTransfer {
-    using Done = teensy::inplace_function<void(uint32_t errors), 16>;   // a lambda capturing this fits
-
-    uint8_t        address;    // the device's address
-    const uint8_t* out;        // the bytes written first, such as a register address
-    uint8_t        outCount;   // the number of bytes written, 0 for a read alone
-    uint8_t*       in;         // where the bytes read go
-    uint8_t        inCount;    // the number of bytes read, 0 for a write alone
-    Done           done;       // called in the bus's interrupt when the transfer has ended, with the
-                               // controller's error flags, 0 when it worked
-};
-
-// an I²C port that runs the transfers of every driver on its bus, one after another, in its interrupt
-class I2cBus {
-public:
-    // adds a transfer the bus runs on request, and sets the bus up at the first; before the main
-    // loop only
-    void attach(I2cTransfer& t);
-
-    // asks the bus to run the transfer once and then call its done function; returns at once,
-    // from any interrupt
-    void request(I2cTransfer& t);
-
-    // attaches the transfer if it is not yet, runs it and waits until it has ended; before the main
-    // loop only. Gets the controller's error flags, 0 when it worked
-    uint32_t requestAndWait(I2cTransfer& t);
-};
-
-extern I2cBus wireBus;    // the bus on Wire, run by LPI2C1, defined in the main file
-extern I2cBus wire2Bus;   // the bus on Wire2, run by LPI2C4, defined in the main file
-
-}
-```
+[`firmware/src/io/i2c-bus.h`](../../../firmware/src/io/i2c-bus.h) holds the interface.
