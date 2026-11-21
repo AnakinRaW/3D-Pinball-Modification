@@ -96,10 +96,10 @@ with MODEL.block("STREAM", section=STREAM):
 # -- the stream buffers -------------------------------------------------------
 BUFFERS = "Stream buffers"
 with MODEL.block("BUFFERS", section=BUFFERS):
-    MODEL.uses("ram2", of="teensy-4.1")
     dec("n_streams", 4, "", src="kChannels in docs/firmware/drivers/audio.md, the four inputs of "
         "the driver's mixer", stated=False)
-    dec("buf", 32, "KB", src="the ring buffer each channel gets in RAM2")
+    dec("buf", 192, "KB", src="the ring buffer each channel gets in the PSRAM, sized so that a "
+        "channel outlasts the longest stall of the card measured, t_card_stall")
     dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, kChunk in "
         "docs/firmware/drivers/audio.md")
     MODEL.as_written("chunk_bytes", of="chunk", unit="bytes")
@@ -191,6 +191,7 @@ dec("n_path", 64, "bytes", src="FILE_PATH_BYTES in firmware/src/drivers/storage-
     "longest path with its end")
 MODEL.uses("prio_kernel", of="firmware")
 MODEL.uses("t_movie", of="display")      # a video frame, which the video player tests in testing.md name
+MODEL.uses("b_cluster", of="display", stated=False)   # the clusters storage.md and testing.md name
 
 # the end of the path takes one byte of FILE_PATH_BYTES
 fig("n_path_chars", "", "n_path / Q.of(1, 'bytes') - 1", moves="+n_path", stated=False)
@@ -211,8 +212,7 @@ _I("the Teensy's high level switches the amplifier's inputs", "v_3v3 > v_ih")
 _I("and stays inside their rating, powered or not", "v_3v3 < v_in_max")
 _I("the port's bit clock lies in the amplifier's range", "f_bclk_min < f_bclk < f_bclk_max")
 _I("and its frame length is one the amplifier accepts", "n_bclk <= n_bclk_amp <= n_bclk")
-_I("the stream buffers leave most of RAM2 to the rest of the firmware",
-   "ram_streams < ram2 / Q.of(2, '')")
+_I("a channel holds more sound than the longest stall of the card measured", "t_ahead > t_card_stall")
 _I("a buffer holds more than the chunk it is refilled with", "chunk < buf")
 _I("the storage task's stack holds its deepest measured call chain",
    "stack_storage_need < stack_storage")
@@ -240,6 +240,6 @@ MODEL.aside("1 W", "the upper end of the rating docs/research/Rokr/5_sound.md es
 
 MODEL.owns("I²S2", "PJRC's AudioOutputI2S2 drives the port by DMA, docs/firmware/drivers/audio.md")
 
-MODEL.draws("ram_streams", pool="RAM2")
+MODEL.draws("ram_streams", pool="PSRAM")
 MODEL.draws("ram_blocks", pool="RAM2")
 MODEL.draws(pool="device monitor")   # the SD card

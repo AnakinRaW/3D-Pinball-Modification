@@ -143,11 +143,14 @@ LVGL      its two buffers of the whole screen in
           RAM2                                   = 300 KB
           its refresh period                       33 ms
           the picture memory, the PSRAM the log's
-          and the debug buffers leave            = 8 MB
+          and the debug buffers and the sound's
+          rings leave                            = 8 MB
           the opaque full-screen pictures it
-          holds                                  = 54
+          holds                                  = 48
 MOVIE     the frame rate of every movie            25 Hz
           one frame                              = 40 ms
+          the movie the frames read ahead hold   = 1000 ms
+          their room in the picture memory       = 3.66211 MB
 CARD      the card's clusters                      32 KB
           a full-screen frame from the card, at
           most, measured                           18.01 ms

@@ -158,15 +158,21 @@ with MODEL.block("LVGL", section=FRAME):
     MODEL.uses("psram_size", of="psram", stated=False)
     MODEL.uses("log_buffer", of="firmware", stated=False)
     MODEL.uses("debug_buffer", of="firmware", stated=False)
-    fig("b_pictures", "MB", "psram_size - log_buffer - debug_buffer",
-        moves="+psram_size -log_buffer -debug_buffer")
+    MODEL.uses("ram_streams", of="audio", stated=False)
+    fig("b_pictures", "MB", "psram_size - log_buffer - debug_buffer - ram_streams",
+        moves="+psram_size -log_buffer -debug_buffer -ram_streams")
     fig("n_full_pictures", "", "b_pictures / b_frame", "down",
-        moves="+psram_size -log_buffer -debug_buffer -n_cols -n_rows -b_pixel")
+        moves="+psram_size -log_buffer -debug_buffer -ram_streams -n_cols -n_rows -b_pixel")
 
 # -- the movie: RGB565 frames from the card, each read whole into its room in the picture memory
 with MODEL.block("MOVIE", section=MOVIE):
     dec("f_movie", 25, "Hz", src="the frame rate of every movie")
     fig("t_movie", "ms", "1 / f_movie", moves="-f_movie")
+    # the frames the card reads ahead, which carry the movie through a stall of the card
+    dec("n_video_ahead", 25, "", src="the frames the video player reads ahead, a decision: one "
+        "second of movie, more than the longest stall of the card measured", stated=False)
+    fig("t_video_ahead", "ms", "n_video_ahead * t_movie", "down", moves="+n_video_ahead -f_movie")
+    fig("b_video", "MB", "n_video_ahead * b_frame", "up", moves="+n_video_ahead +n_cols +n_rows +b_pixel")
 
 # ---------------------------------------------------------------------------
 # the card: measured on the bench. SdFat's file layer cuts a read at every cluster, and its DMA
@@ -198,8 +204,8 @@ with MODEL.block("CARD", section=MOVIE):
         moves="+n_streams +f_s +b_sample -f_movie -chunk +t_audio_read")
     fig("card_load", "%", "(t_card_frame + t_card_audio) / t_movie", "up",
         moves="+f_movie +t_card_frame +t_audio_read")
-    # The video player keeps two frames in the picture memory, so the card reads the next frame
-    # while LVGL draws the current one and the bus sends it. Each of the two has a movie frame.
+    # The card reads the next frames into the picture memory while LVGL draws the current one and
+    # the bus sends it. Each of the two has a movie frame.
     msr("t_render", 7.09, "ms", src="firmware/bench/stack on the Teensy 4.1 under FreeRTOS, built "
         "with PlatformIO and LVGL's code in the flash: the longest of 30 times LVGL draws the "
         "full-screen frame from the PSRAM into its buffer in RAM2 while the storage task reads "
@@ -413,6 +419,10 @@ MODEL.uses("ram2", of="teensy-4.1")
 # -- requirements -------------------------------------------------------------
 _I = MODEL.invariant
 _I("a frame read under full load ends inside its movie frame", "t_read_cycle_load < t_movie")
+MODEL.uses("t_card_stall", of="audio", stated=False)
+_I("the frames read ahead carry the movie through the longest stall of the card measured",
+   "t_video_ahead > t_card_stall")
+_I("the frames read ahead fit the picture memory", "b_video < b_pictures")
 _I("a single failed touch read does not count as a failure", "t_fail > 2 * t_ttick")
 _I("the shortest supervisor reset silences the touch controller longer than its failure time",
    "t_fail < t_sup_min")

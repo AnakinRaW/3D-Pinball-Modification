@@ -39,7 +39,7 @@ Because starting FreeRTOS resets that priority, `begin()` sets it back to 208.
 
 `ChannelPlayer` is our own class derived from `AudioStream`. It reads one channel's sound file from the card and hands its samples on to the mixer. When PJRC's library asks for the next block, the channel first takes the caller's last request, e.g., `play()` or `stop()`. Requests therefore take effect within one block (2.9 ms). A new sound starts once the file channel has read the first piece of its file from the card.
 
-The channel fills its block through a [file channel](../file-channel.md), a buffer that refills itself from the card. The file channel reads with high priority. A block the file channel could not fill in time plays silence.
+The channel fills its block through a [file channel](../file-channel.md), a buffer that refills itself from the card. The file channel reads with the priority `HIGHEST`. A block the file channel could not fill in time plays silence.
 
 ### Volume
 
@@ -62,7 +62,7 @@ The driver publishes `SoundEnded` once a sound has played to its end or a read h
 
 ## Limitations
 
-Playback depends on the card's read speed. Using the file channel's ring buffer only bridges short delays.
+Playback depends on the card's read speed. A channel's ring holds more than two seconds of sound, which carries it through the longest stall of the card measured, 953 ms.
 
 ## Existing libraries
 
