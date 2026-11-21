@@ -18,7 +18,7 @@ A read asks the controller how many fingers touch the screen and where the first
 
 Every 20 ms the driver tick requests a read from the bus. When the read has ended, the bus calls the driver back with the five bytes.
 
-The controller reports positions in the panel's portrait orientation. The driver turns them into the picture's landscape orientation, the same way the [display driver](display.md#start-up) turns the panel's memory at start-up. It publishes the four touch events below, and `finger()` gives the same position whenever a component asks.
+The controller reports positions in the panel's portrait orientation. The driver turns them into the picture's landscape orientation, the same way the [display driver](display.md#start-up) turns the panel's memory at start-up. With the panel set to landscape by the memory access value 0x28, both axes turn over. The picture's x is 319 minus the panel's y, and the picture's y is the panel's x. It publishes the four touch events below, and `finger()` gives the same position whenever a component asks.
 
 ## Driver events
 
