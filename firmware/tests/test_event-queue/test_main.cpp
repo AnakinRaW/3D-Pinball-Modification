@@ -5,12 +5,15 @@
 //   across-wrap   the order holds with times on both sides of the wrap of nowUs()
 //   full          a publish into a full queue returns false and counts, the queued events stay
 //   payload       payload<TAG>() gives back what publish<TAG>() packed, for every type
+//   drop-warning  read() writes how many events a full queue dropped into the log, once
 //   refused       attach() turns down a bad depth and a queue past the last, and the queue it
 //                 points at drops every event
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "core/event-queue.h"
+#include "logging/logger.h"
+#include <string>
 #include <unity.h>
 
 constexpr uint32_t DEPTH = 8;
@@ -29,6 +32,32 @@ constexpr uint32_t CODE = 0xDEADBEEF;   // an error code that uses every byte of
 constexpr uint8_t SOURCE = 0xA5;
 constexpr uint32_t REFUSED_DEPTH = 2;
 constexpr uint32_t ODD_DEPTH = 3;   // a depth that is no power of two
+
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log for the test that reads it. It lives as long as the program, since
+// logWarning() keeps writing to the logger that began last.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[1024];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
 
 void setUp() {}
 
@@ -111,6 +140,27 @@ static void testFull() {
 }
 
 // payload: payload<TAG>() gives every payload back unchanged.
+// drop-warning: the drops of a full queue reach the log once.
+static void testDropWarning() {
+    logger.begin(LogFileStart{}, LogFileStart{});
+    EventQueue queue;
+    DriverEvent storage[FULL_DEPTH];
+    EventQueue::Producer* attached = nullptr;
+    TEST_ASSERT_TRUE(queue.attach(storage, FULL_DEPTH, attached));
+    for (uint32_t i = 0; i <= FULL_DEPTH + 1; ++i) {
+        attached->publish(DriverEvent{i, DriverEventType::DEVICE_FAILED, SOURCE, i});
+    }
+    DriverEvent out[FULL_DEPTH];
+    queue.read(out, FULL_DEPTH);
+    queue.read(out, FULL_DEPTH);
+    logger.flush();
+    logger.update();
+    logger.update();
+    TEST_ASSERT_NOT_EQUAL(std::string::npos,
+                          logA.content.find(" W events queue 0 dropped 2 events\n"));
+    TEST_ASSERT_EQUAL(logA.content.find("dropped"), logA.content.rfind("dropped"));
+}
+
 static void testPayload() {
     EventQueue queue;
     DriverEvent storage[DEPTH];
@@ -167,6 +217,7 @@ int main() {
     RUN_TEST(testOldestFirst);
     RUN_TEST(testAcrossWrap);
     RUN_TEST(testFull);
+    RUN_TEST(testDropWarning);
     RUN_TEST(testPayload);
     RUN_TEST(testRefused);
     return UNITY_END();

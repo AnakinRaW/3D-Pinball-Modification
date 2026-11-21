@@ -15,7 +15,7 @@
 #include <new>
 #include <type_traits>
 #include "core/clock.h"
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 #include "components/lamp-effects.h"
 #include "game/layer.h"
 #include "drivers/lighting.h"
@@ -223,7 +223,8 @@ public:
     void brightness(float playfield, float ambient);
 
     // Works out every effect and hands the driver a frame once a frame period has passed since
-    // the last one. Gets whether it handed one. The main loop calls it in every pass.
+    // the last one. Gets whether it handed one. The main loop calls it in every pass with
+    // nowUs(). The effects take their time from millis().
     bool update(uint32_t now);
 
 private:
@@ -284,10 +285,6 @@ private:
     Place locate(uint8_t strip, uint16_t i) const;
     uint32_t stripLength(uint8_t strip) const;
 
-    // Advances the component's millisecond clock to now and gets it. The clock counts on across
-    // the wrap of nowUs().
-    uint32_t clockAt(uint32_t now);
-
     // Takes a new entry for key at its priority in place of the key's own entry. Gets nullptr
     // when the lamp holds five effects of other keys, which counts as refused.
     Entry* claim(Effects& effects, uint8_t key, uint8_t priority);
@@ -323,9 +320,6 @@ private:
     Effects stripEffects[STRIPS];
     uint32_t seq = 0;
     uint32_t refusedCount = 0;
-    bool clockStarted = false;
-    uint32_t clockUs = 0;   // the nowUs() at which clockMs last counted a millisecond
-    uint32_t clockMs = 0;
     bool framed = false;
     uint32_t shownUs = 0;   // the update() of the last frame
     float playfieldShare = 1;
@@ -351,6 +345,8 @@ Lamps::Entry* Lamps::start(Effects& effects, uint8_t key, uint8_t priority, Pain
 }
 
 template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Paint to) {
+    DEBUG_LOG("lamps: key %u starts an effect on lamps %u to %u\n", layer.key, first,
+              first + count - 1);
     uint16_t refusals = 0;
     for (uint16_t i = 0; i < count; ++i) {
         Lamps::Entry* e = lamps->start(lamps->playfieldEffects[first + i], layer.key,
@@ -370,6 +366,7 @@ template <typename E> LampRange& LampRange::play(const E& effect, Paint from, Pa
 }
 
 template <typename E> Strip& Strip::play(const E& effect, Paint from, Paint to) {
+    DEBUG_LOG("lamps: key %u starts an effect on strip %u\n", layer.key, strip);
     if (lamps->start(lamps->stripEffects[strip], layer.key, layer.priority, from, to, effect) ==
         nullptr) {
         DEBUG_LOG("Lamps: strip %u holds five effects and refuses one of key %u\n", strip,

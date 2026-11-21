@@ -1,5 +1,6 @@
 #include "servo-driver.h"
-#include "core/debug-log.h"
+#include "logging/logger.h"
+#include "logging/debug-log.h"
 #include <inttypes.h>
 
 constexpr uint8_t PIN = 0;                // pin-assignment.md: Servo signal
@@ -9,13 +10,13 @@ constexpr uint32_t FRAME_MS = 20;         // the servo's frame, one step per fra
 constexpr uint32_t US_PER_MS = 1000;
 constexpr uint32_t MDEG_PER_DEG = 1000;   // thousandths of a degree in a degree
 
-// Holds a value inside its range. A value it moves is named in a debug build.
+// Holds a value inside its range. A value it moves is named in the log.
 static uint32_t held(const char* name, uint32_t value, uint32_t lowest, uint32_t highest) {
     if (value >= lowest && value <= highest) {
         return value;
     }
-    DEBUG_LOG("ServoDriver::configure: %s %" PRIu32 " lies outside %" PRIu32 " to %" PRIu32 "\n",
-              name, value, lowest, highest);
+    logWarning("servo", "%s %" PRIu32 " lies outside %" PRIu32 " to %" PRIu32, name, value, lowest,
+               highest);
     return value < lowest ? lowest : highest;
 }
 
@@ -27,12 +28,12 @@ void ServoDriver::configure(const Settings& s) {
 
 bool ServoDriver::begin() {
     if (!driverTick.attach([this] { step(); }, FRAME_MS * US_PER_MS)) {
-        DEBUG_LOG("ServoDriver::begin: the driver tick refused its step\n");
+        logWarning("servo", "the driver tick refused its step");
         return false;
     }
     if (!servo.attach(PIN, PULSE_MIN_US, PULSE_MAX_US)) {
         // The pin stays low, so the servo gets no pulse.
-        DEBUG_LOG("ServoDriver::begin: the timer did not take the no-pulse setting\n");
+        logWarning("servo", "the pulse timer did not start, the servo stays without pulse");
         stuck = true;
         return false;
     }
@@ -54,7 +55,11 @@ bool ServoDriver::begin() {
 
 void ServoDriver::moveTo(Position target) {
     if (!ready) {
+        DEBUG_LOG("ServoDriver::moveTo: no begin() yet, the servo stays\n");
         return;
+    }
+    if (target != lastTarget) {
+        DEBUG_LOG("servo moves to its %s position\n", target == Position::START ? "start" : "end");
     }
     // step() walks the pulse there.
     targetDeg = target == Position::START ? startDeg : endDeg;

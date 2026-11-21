@@ -1,4 +1,5 @@
 #include "ws2812-flexio2.h"
+#include "logging/logger.h"
 #include <DMAChannel.h>
 #include <new>
 #include "drivers/ws2812-color-encoder.h"
@@ -150,7 +151,7 @@ bool rootAt120() {
 // and its gate only whether that bit can be read.
 bool clockAt120() {
     if (!pll3At480()) {
-        DEBUG_LOG("Ws2812Flexio2::begin: PLL3 does not run at 480 MHz\n");
+        logWarning("leds", "PLL3 does not run at 480 MHz");
         return false;
     }
     if (rootAt120()) {
@@ -158,7 +159,7 @@ bool clockAt120() {
     }
     const bool flexio3Clocked = (CCM_CCGR7 & CCM_CCGR7_FLEXIO3(CCM_CCGR_ON)) != 0;
     if (flexio3Clocked && (FLEXIO3_CTRL & FLEXIO_CTRL_FLEXEN) != 0) {
-        DEBUG_LOG("Ws2812Flexio2::begin: FlexIO3 runs on the shared clock root at another rate\n");
+        logWarning("leds", "FlexIO3 runs on the shared clock root at another rate");
         return false;
     }
     // RM CCM: the gate stays off while the root changes, and comes back on for a FlexIO2 that
@@ -188,7 +189,7 @@ bool startFlexio() {
     dma.begin(true);
     // DMAChannel.cpp leaves TCD null when every channel is taken
     if (dma.TCD == nullptr) {
-        DEBUG_LOG("Ws2812Flexio2::begin: no DMA channel free\n");
+        logWarning("leds", "no DMA channel free");
         return false;
     }
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_FLEXIO2_REQUEST0);
@@ -203,19 +204,19 @@ bool Ws2812Flexio2::begin(const Lane* lanes, uint8_t count) {
     // keeps the lanes of the first.
     if (!allocated) {
         if (count == 0 || count > MAX_LANES) {
-            DEBUG_LOG("Ws2812Flexio2::begin: %u lanes, where 1 to %u fit\n", count, MAX_LANES);
+            logWarning("leds", "%u lanes, where 1 to %u fit", count, MAX_LANES);
             return false;
         }
         uint16_t longest = 0;
         for (uint8_t lane = 0; lane < count; ++lane) {
             const uint8_t signal = Ws2812Flexio2::signalOf(lanes[lane].pin);
             if (signal == NO_SIGNAL) {
-                DEBUG_LOG("Ws2812Flexio2::begin: pin %u does not reach FlexIO2\n", lanes[lane].pin);
+                logWarning("leds", "pin %u does not reach FlexIO2", lanes[lane].pin);
                 return false;
             }
             for (uint8_t other = 0; other < lane; ++other) {
                 if (lanes[other].pin == lanes[lane].pin) {
-                    DEBUG_LOG("Ws2812Flexio2::begin: pin %u carries two lanes\n", lanes[lane].pin);
+                    logWarning("leds", "pin %u carries two lanes", lanes[lane].pin);
                     return false;
                 }
             }
@@ -227,7 +228,7 @@ bool Ws2812Flexio2::begin(const Lane* lanes, uint8_t count) {
             const size_t bytes = size_t(wordCount) * count * sizeof(uint32_t) + CACHE_LINE;
             uint8_t* raw = new (std::nothrow) uint8_t[bytes];
             if (raw == nullptr) {
-                DEBUG_LOG("Ws2812Flexio2::begin: no room for %lu words\n", wordCount * count);
+                logWarning("leds", "no room for %lu words", wordCount * count);
                 wordCount = 0;
                 return false;
             }

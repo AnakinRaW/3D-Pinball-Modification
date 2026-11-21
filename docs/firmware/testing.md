@@ -34,6 +34,7 @@ The test image prints its run to the serial port in these lines:
 | `RUN <test>` | The test begins |
 | `DO <test> <step>` | A person carries out the step. The test waits until it sees the step done, and fails when it does not see it in time |
 | `ASK <test> <question>` | A person answers `y` or `n` over the serial port |
+| `CHECK <test> <tag> <count>` | The runner checks the debug lines of the tag that the test sent, numbered from 0, and answers `checked <good> <total> <lost>`: the lines that came whole and in order, every line of the tag, and the lines and notes the debug output's loss notices state |
 | `PASS <test>` | The test has passed |
 | `FAIL <test> <seen> expected <wanted>` | The test has failed, with what it saw and what it expected |
 | `SKIP <test> <reason>` | The test could not run, such as for a part that is not connected |
@@ -101,6 +102,71 @@ The program `clock` checks the [time measurement](general-design.md#time-measure
 | `wrap` | computer | Compare times on both sides of the wrap of `nowUs()` with `before()`, `elapsedUs()` and `elapsedMs()` | Every answer equals the one the same span gives away from the wrap |
 | `rate` | Teensy | Read `nowUs()` and the processor's cycle counter side by side for a minute | The two agree to within the time the reads take |
 
+### Task lock
+
+The program `task-lock` checks the lock that keeps the other tasks out of a short piece of code, [`core/task-lock.h`](../../firmware/src/core/task-lock.h).
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `exclusive` | Teensy | Let the test task and a task above its priority count one counter up for two seconds each, by reading it, pausing and writing it back. Run once without the lock and once with it | Without the lock some counts get lost. With the lock none get lost |
+
+### Debug output
+
+The program `debug-output` checks the [debug output](logging.md#debug-output) and the form of a [line](logging.md#lines).
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `format` | computer | Write lines whose text ends in one line break, in none and in two | Each line starts with the milliseconds since the start and the letter `D` and ends in exactly one line break |
+| `cut` | computer | Write a line twice as long as the longest line | It is cut to the longest line and ends in `...` |
+| `full` | computer | Write lines until the buffer is full, then one more and one twice as long | Each new line takes the place of as many of the oldest lines as it needs. The lines between come out intact, followed by a notice of how many lines were dropped |
+| `half-sent` | computer | Fill the buffer, send part of the oldest line, then write one more | The rest of the begun line goes first, then as many whole lines as the new one needs. The new line comes out whole |
+| `interrupt` | computer | Write a line while posing as an interrupt | The line is dropped, and the next send states it in a notice. The lock is never taken |
+| `room` | computer | Send with USB serial taking no bytes, then ten, then any number | `sendDebugLog()` hands over no more than USB serial takes. The next call goes on where the last stopped |
+| `send-time` | Teensy | Write a burst of 300 lines into a debug output and send them while the runner reads | Every line leaves. No call of `send()` takes a millisecond |
+| `interrupt-line` | Teensy | Add a line to a debug output from an `IntervalTimer` 100 times | The output drops and counts all 100 lines |
+| `round-trip` | Teensy | Write 200 numbered lines through `DEBUG_LOG()` and let the runner check what arrives over USB | The runner counts all 200 lines, each whole and in its order |
+
+### Debug trace
+
+The program `debug-trace` checks the [debug trace](logging.md#debug-output), which notes events from interrupts.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `order` | computer | Note two events with their times, then note and take one at a time past the end of the records | Every note comes out in the order it was noted, with its label, its numbers and its time |
+| `full` | computer | Note one event more than the trace holds, take one and note again | The extra note is refused and counted. The note after the take fits |
+| `lost` | computer | Note two events more than the trace holds, then take every note | The kept notes come first, then a notice of the two lost notes |
+| `format` | computer | Turn a note into a line | The line holds the time, `D trace`, the label, both numbers and the note's time in microseconds |
+| `from-interrupts` | Teensy | Note numbered events from two interrupts of different priorities for two seconds while the test task takes them | Every note arrives once and whole, each interrupt's notes in their order. None is lost |
+| `round-trip` | Teensy | Note 100 numbered events with `DEBUG_TRACE()` from an `IntervalTimer` and let the runner check the debug lines that arrive over USB | The runner counts all 100 lines, each whole and in its order |
+| `lost-notice` | Teensy | Note 300 numbered events with `DEBUG_TRACE()` while nothing sends, then let the runner check the debug lines | The runner counts the first 256 notes, each whole and in its order, and a notice of 44 lost notes |
+
+### Ring
+
+The program `ring` checks the ring that the debug output and the card appender keep their lines in and that each queue of the [event queue](input-handling.md) keeps its events in.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `wrap` | computer | Append records of bytes that run past the end of the buffer and read them back | They come back in order, the piece up to the buffer's end first and the rest after it |
+| `whole-or-nothing` | computer | Append a record larger than the free space | It is refused. The ring keeps what it held |
+| `power-of-two` | computer | Make rings of 1000 bytes, of 0 bytes and of no buffer | The first holds 512 bytes, the others refuse every record |
+| `elements` | computer | Append records of several structs to a ring of 8, the second running past the end, and read them back | `size()`, `used()` and `peek()` count structs. Every struct comes back whole and in order, the second record in two pieces |
+| `begin` | computer | Append to a ring made without a buffer, then give it a buffer of 6 with `begin()`, append, and call `begin()` again | The first record is refused. The ring holds 4 elements, and the second `begin()` leaves it empty with both counts at 0 |
+
+### Card appender
+
+The program `card-appender` checks the [card appender](../../firmware/src/io/card-appender.h) on fake files whose writes run until the test ends them.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `period` | computer | Append records and let the time run to a second | Nothing is written before the second, then one write takes every record |
+| `half-full` | computer | Fill the buffer to half | The write starts at once |
+| `flush` | computer | Append a record and call `flush()` | The next `update()` writes it |
+| `retry` | computer | Let a write fail, then fill half the buffer and call `flush()` | The next write waits a second and takes the failed write's records to the same place, with the new ones behind them |
+| `start` | computer | Append to one file, `start()` a second, append and `start()` a third at once | The first file gets the records before the start. The second is started anew with the rest. The third start is refused until the second has its records |
+| `lost` | computer | Append records past the free space | Each is refused and counted. `takeLost()` gives the count once |
+| `no-file` | computer | Append before any file, then `start()` one and append | The first record is refused and counted, the next starts the file anew |
+| `wrap` | computer | Append records that run past the end of the buffer and let a second pass | They reach the card in two writes, the second right after the first |
+
 ### Priority list
 
 The program `priority-list` checks the [priority list](general-design.md#priority-lists).
@@ -132,6 +198,7 @@ The program `event-queue` checks the [event queue](input-handling.md).
 | `oldest-first` | computer | Publish into several queues in turn, each queue in time order | `read()` gives every event once, oldest first across all queues |
 | `across-wrap` | computer | Do the same with times on both sides of the wrap of `nowUs()` | The order holds across the wrap |
 | `full` | computer | Publish into a queue until it is full, and once more | The last publish returns false and counts in `dropped()`, and the queued events come out unchanged |
+| `drop-warning` | computer | Let a queue drop two events, then read twice with a log begun | The log holds one warning that names the queue and the two dropped events |
 | `payload` | computer | Publish an event of every type with `publish<Tag>()` | `payload<Tag>()` gives every payload back unchanged |
 | `refused` | computer | Attach a depth of three, a depth of zero and no storage, then queues until every one is taken, and one more. Publish through each refused queue | `attach()` returns false for each refusal, and the queue it points at drops the event and counts it in `dropped()` |
 | `from-interrupts` | Teensy | Publish numbered events from two interrupts of different priorities for ten minutes while the main loop reads | Every event arrives once and whole, and each queue's events arrive in their order, while `dropped()` stays 0 |
@@ -167,7 +234,7 @@ The program `psram` checks the [PSRAM](../parts/psram/design.md) on the Teensy's
 |---|---|---|---|
 | `found` | Teensy | Read `external_psram_size`, which Teensyduino sets at start-up | It equals the [chip's size](../parts/psram/design.md#chip) in MB |
 | `card` | Teensy | Read `background.img` through the [storage driver](drivers/storage.md) into the PSRAM, once straight and once at an address off the 32-byte steps | Both copies equal the file |
-| `patterns` | Teensy | Write fixed patterns and a pseudo-random sequence into the whole PSRAM and read each back, as [PJRC's memory test](https://github.com/PaulStoffregen/teensy41_psram_memtest) does | Every byte reads back as written |
+| `patterns` | Teensy | Send the waiting debug lines, then write fixed patterns and a pseudo-random sequence into the whole PSRAM and read each back, as [PJRC's memory test](https://github.com/PaulStoffregen/teensy41_psram_memtest) does | Every byte reads back as written |
 
 ## Drivers
 
@@ -448,6 +515,7 @@ The program `lamps` checks the [lamps component](components/lamps.md). Its compu
 | `gaps` | computer | Configure the right perimeter with two hidden stretches and run a chase along it on both profiles | The chase lights the visible LEDs one after the other at an even pace, no hidden LED lights, and the smaller adapter's profile takes every second visible LED |
 | `playfield-gaps` | computer | Configure a playfield section with a hidden LED and a hidden stretch, cut into lamps of 2, 1 and 2 LEDs, and give every lamp a different color | Every hidden LED stays dark, a lamp starts after a gap, the lamp that meets a gap ends there, and the LEDs past the counts are one lamp each |
 | `groups` | computer | Configure chains of different lengths, read every group's size on both profiles, take parts of the playfield at and past its end, and run a wipe along `ambient` | Each group holds the lamps its chains and the profile's perimeter step give, a part past the end is cut there, and the wipe starts at the left perimeter's first lamp |
+| `millis-wrap` | computer | Start a blink, a fade and a color with `lasting()` on three playfield lamps shortly before `millis()` wraps | The blink keeps its rhythm, the fade its pace and the lasting color its end across the wrap |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 
@@ -525,13 +593,19 @@ The program `logger` checks the [logger](logging.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `format` | computer | Write lines from several writers while the clock runs past its wrap | Each line starts with the milliseconds since the start, rising across the wrap, and the writer's name |
-| `buffer-full` | computer | Write more lines than the buffer holds before the next write | Each line that does not fit is lost whole and counted in `lost()`, and the others stay intact |
-| `one-write` | computer | Write lines at a high rate for several seconds into a fake card | The lines reach the card in one write a [second](logging.md#buffered-writes) |
-| `failed-write` | computer | Let one write fail | Its lines are lost, and the next write goes where the failed one would have gone |
-| `order` | Teensy | Write numbered lines, restart twice, then read `/log.txt` back | The lines stand in the order they were written, and the lines of each restart follow those before |
-| `full` | Teensy | Put a `/log.txt` at the [size limit](logging.md#size-limit) on the card, then start and write | The file holds only the new lines |
-| `no-card` | Teensy | Start without the card and write | `write()` returns false at once, and `lost()` counts the line |
+| `format` | computer | Start an empty log, then write lines from two writers at two times | The head line comes first, then the banner with the machine's name, the firmware's version and the kind of build, debug or release. Each line starts with the milliseconds since the start, then the level's letter and the writer's name |
+| `buffer-full` | computer | Write more lines than the buffer holds before the next write, then one line after it | Each line that does not fit is lost whole and counted in `lost()`. The others stay intact. A line states the count ahead of the next line |
+| `one-write` | computer | Write lines at a high rate for several seconds into a fake card | The lines reach the card in one write a [second](logging.md#buffer) |
+| `failed-write` | computer | Let one write fail, then write a line | The failed write's lines reach the card with the next write, at the place the failed one would have taken |
+| `head` | computer | Start with both files full and numbered, then with a file that has no head line | The log goes on in the file with the higher number. Without a head line it goes on in the first file |
+| `turn` | computer | Write a line that fits into a nearly full file, then one that does not | The second line starts the other file anew, behind a head line one number higher. The full file stays within its limit |
+| `no-card` | computer | Write two lines without `begin()`, as the firmware does without a card | Both lines are lost and counted |
+| `interrupt` | computer | Write a line while posing as an interrupt | The line is lost and counted. The lock is never taken |
+| `free-lines` | computer | Begin a log, then write a line through `logInfo()` and one through `logWarning()` | Both lines stand in that log with their level and writer |
+| `two-tasks` | Teensy | Write numbered lines from a task above the test task's priority in bursts while the test task writes its own and runs `update()`, into files in RAM | Every line stands whole in the file, each writer's lines in their order. None is lost |
+| `order` | Teensy | Write numbered lines, restart twice, then read the log back | The lines stand in the order they were written. The lines of each restart follow those before |
+| `files` | Teensy | Put a log file at the [size limit](logging.md#files) on the card, then start and write | The other file starts anew with a higher number. The full file stays as it was |
+| `card-missing` | Teensy | Start without the card and write | The log does not begin. `write()` returns false at once. `lost()` counts the line |
 
 ### Watchdog
 

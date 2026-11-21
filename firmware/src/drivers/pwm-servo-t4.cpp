@@ -1,4 +1,5 @@
 #include "pwm-servo-t4.h"
+#include "logging/debug-log.h"
 
 namespace {
 
@@ -22,6 +23,8 @@ constexpr uint32_t DUTY_STEPS = 1u << DUTY_BITS;
 
 bool PWMServoT4::attach(uint8_t pinNumber, uint16_t minUs, uint16_t maxUs) {
     if (minUs >= maxUs || maxUs > FRAME_US) {
+        DEBUG_LOG("PWMServoT4::attach: a pulse of %u to %u us does not fit the frame\n", minUs,
+                  maxUs);
         return false;
     }
     const XPin* x = nullptr;
@@ -31,6 +34,7 @@ bool PWMServoT4::attach(uint8_t pinNumber, uint16_t minUs, uint16_t maxUs) {
         }
     }
     if (x == nullptr) {
+        DEBUG_LOG("PWMServoT4::attach: pin %u is no channel X pin of FlexPWM1\n", pinNumber);
         return false;
     }
 
@@ -52,6 +56,7 @@ bool PWMServoT4::attach(uint8_t pinNumber, uint16_t minUs, uint16_t maxUs) {
     elapsedMillis waitedMs;
     while ((pwm.MCTRL & FLEXPWM_MCTRL_LDOK(mask)) != 0) {
         if (waitedMs > LOAD_TIMEOUT_MS) {
+            DEBUG_LOG("PWMServoT4::attach: the timer did not load the no-pulse setting\n");
             return false;
         }
     }

@@ -7,6 +7,8 @@ description: Use before building or committing any circuit, wiring plan or schem
 
 Find what destroys hardware, then what stops the circuit working, then what has no margin.
 
+Whether a circuit that survives is also good is the question of `design-review`, which runs after this skill.
+
 ## 1. Load the constraints before reviewing anything
 
 Read these first. They hold the numbers this review is judged against. Do not review from memory of them.

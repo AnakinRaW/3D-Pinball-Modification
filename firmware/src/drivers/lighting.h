@@ -15,7 +15,7 @@
 #pragma GCC diagnostic push
 #include <FastLED.h>
 #pragma GCC diagnostic pop
-#include "core/debug-log.h"
+#include "logging/debug-log.h"
 #include "drivers/driver-base.h"
 #include "drivers/ws2812-flexio2.h"
 

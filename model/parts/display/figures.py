@@ -153,11 +153,15 @@ with MODEL.block("LVGL", section=FRAME):
     dec("t_refr", 33, "ms", src="LV_DEF_REFR_PERIOD in firmware/gist/lv_conf.h, the period of LVGL's "
         "display refresh, LVGL's default kept")
 
-    # the screen's picture memory takes the whole PSRAM; every frame and picture lies in it
+    # the screen's picture memory takes the PSRAM the log's and the debug output's buffers leave;
+    # every frame and picture lies in it
     MODEL.uses("psram_size", of="psram", stated=False)
-    fig("b_pictures", "MB", "psram_size", moves="+psram_size")
+    MODEL.uses("log_buffer", of="firmware", stated=False)
+    MODEL.uses("debug_buffer", of="firmware", stated=False)
+    fig("b_pictures", "MB", "psram_size - log_buffer - debug_buffer",
+        moves="+psram_size -log_buffer -debug_buffer")
     fig("n_full_pictures", "", "b_pictures / b_frame", "down",
-        moves="+psram_size -n_cols -n_rows -b_pixel")
+        moves="+psram_size -log_buffer -debug_buffer -n_cols -n_rows -b_pixel")
 
 # -- the movie: RGB565 frames from the card, each read whole into its room in the picture memory
 with MODEL.block("MOVIE", section=MOVIE):

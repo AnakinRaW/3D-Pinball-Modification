@@ -1,4 +1,6 @@
 #include "lighting.h"
+#include "logging/logger.h"
+#include <inttypes.h>
 #include <new>
 
 constexpr uint8_t PINS[] = {32, 6, 7, 8, 9, 10};   // pin-assignment.md: LED chain A to F
@@ -10,13 +12,13 @@ static_assert(sizeof(CRGB) == 3, "FastLED's CRGB holds an LED in three bytes");
 void Lighting::configure(const Settings& given) {
     settings = given;
     if (given.adapterA < ADAPTER_MIN_A || given.adapterA > ADAPTER_MAX_A) {
-        DEBUG_LOG("Lighting::configure: %u A lies outside %u to %u A\n", given.adapterA,
-                  ADAPTER_MIN_A, ADAPTER_MAX_A);
+        logWarning("lighting", "%u A lies outside %u to %u A", given.adapterA, ADAPTER_MIN_A,
+                   ADAPTER_MAX_A);
     }
     for (uint8_t c = 0; c < CHAINS; ++c) {
         if (given.leds[c] > MAX_CHAIN_LEDS) {
-            DEBUG_LOG("Lighting::configure: chain %u counts as %u LEDs in place of %u\n", c,
-                      MAX_CHAIN_LEDS, given.leds[c]);
+            logWarning("lighting", "chain %u counts as %u LEDs in place of %u", c, MAX_CHAIN_LEDS,
+                       given.leds[c]);
             settings.leds[c] = MAX_CHAIN_LEDS;
         }
     }
@@ -24,6 +26,8 @@ void Lighting::configure(const Settings& given) {
 
 bool Lighting::begin() {
     current = settings.adapterA >= ADAPTER_MAX_A ? PROFILE_6A : PROFILE_3A;
+    logInfo("lighting", "%u A adapter, the LEDs capped at %" PRIu32 " mA", settings.adapterA,
+            current.capMa);
     FastLED.setPowerModel(PowerModelRGB(RED_MW, GREEN_MW, BLUE_MW, DARK_MW));
     // The colors come from the heap, once, during the start, so a later begin() keeps the chains
     // of the first.
@@ -34,7 +38,7 @@ bool Lighting::begin() {
         if (total > 0) {
             colors = new (std::nothrow) CRGB[total]();
             if (colors == nullptr) {
-                DEBUG_LOG("Lighting::begin: no room for the colors of %u LEDs\n", total);
+                logWarning("lighting", "no room for the colors of %u LEDs", total);
                 total = 0;
                 return false;
             }
