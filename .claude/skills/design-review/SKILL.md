@@ -103,7 +103,7 @@ Rule 3 requires that someone else could rebuild this from the repository alone.
 
 ## 8. Packages
 
-The build is through-hole (RULES.md rule 17). Derating and thermal targets are met for the through-hole package the design names. A part that exists only as SMD is judged in its own package, on its adapter.
+The build is through-hole (RULES.md rule 17). Derating and thermal targets are met for the through-hole package the design names. A part that exists only as SMD is judged in the package of its adapter.
 
 ## Report
 
@@ -112,6 +112,6 @@ The build is through-hole (RULES.md rule 17). Derating and thermal targets are m
 | **Below bar** | Violates rule 3 - would not pass a reviewing engineer |
 | **Thin margin** | Works, but with less headroom than practice expects |
 | **Craft** | Schematic or board conventions |
-| **Missing** | Something rule 3 requires that does not exist yet |
+| **Missing** | Something rule 3 requires that the design lacks |
 
 Each finding names the target it misses and the calculation or convention behind it. Where a judgment depends on a number no source provides, report it as unverifiable and name the measurement that settles it.

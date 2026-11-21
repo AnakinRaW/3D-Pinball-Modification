@@ -1,6 +1,6 @@
 # Pictures, videos and sounds
 
-A game's files lie in its directory `/games/<id>/` on the SD card. Media assets need to be created with the requirements below. 
+A game's files lie in its directory `/games/<id>/` on the SD card.
 
 ## Pictures
 

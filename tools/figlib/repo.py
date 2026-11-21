@@ -20,7 +20,7 @@ MODELS = ROOT / "model"
 
 def home_of(path) -> pathlib.Path:
     """The folder under docs/ a file under model/ stands for, where its documents and drawings
-    lie. A file outside model/ stands for its own folder."""
+    lie. A file outside model/ stands for the folder of that file."""
     path = pathlib.Path(path).resolve()
     try:
         return ROOT / "docs" / path.parent.relative_to(MODELS)

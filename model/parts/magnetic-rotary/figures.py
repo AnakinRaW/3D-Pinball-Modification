@@ -60,7 +60,7 @@ with MODEL.block("READ", section=READ):
         "before each read, the address and the register, as readReg2() in RobTillaart/AS5600 sends "
         "them", stated=False)
     dec("t_fail", 1, "s", src="how long no read may work before the sensor counts as failed, long "
-        "enough for its own recovery attempts and short enough for a game to react", stated=False)
+        "enough for its recovery attempts and short enough for a game to react", stated=False)
     MODEL.uses("t_monitor", of="firmware", stated=False)
     MODEL.as_written("t_fail_ms", of="t_fail", unit="ms")
     dec("n_still", 4, "", src="the ticks the position has to stay within n_dead after a movement "
@@ -75,7 +75,7 @@ with MODEL.block("READ", section=READ):
         moves="+n_bytes +n_bits_byte -f_scl")
     fig("bus_share", "%", "t_read / t_tick", "up", moves="+n_bytes +n_bits_byte -f_scl -t_tick")
 
-    # A library read: the pointer write and then the read, each with its own START and STOP,
+    # A library read: the pointer write and then the read, each with a START and a STOP,
     # with the processor waiting in Wire for both.
     fig("t_lib_read", "µs", "(n_bytes_ptr * n_bits_byte + 2) / f_scl + t_read", "up",
         moves="+n_bytes_ptr +n_bytes +n_bits_byte -f_scl", stated=False)

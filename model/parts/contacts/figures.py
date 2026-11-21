@@ -1,4 +1,4 @@
-"""The figures of the contacts on the port expander, in this build the drain ball store's foils
+"""The figures of the contacts on the port expander, the drain ball store's foils
 and the stock machine's two bells, as inputs plus formulas."""
 from figcheck import *
 

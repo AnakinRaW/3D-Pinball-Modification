@@ -452,7 +452,7 @@ def pass_circuits(model, rep) -> int:
     for msg in model.schematic_problems + teensy_pins(model):
         rep.error(msg if msg.startswith(model.name) else f"{model.name}: {msg}",
                   kind="circuit", key=model.name)
-    # a designator names a part on its own board; a board built twice carries it twice
+    # a designator names a part on one board; a board built twice carries it twice
     on_boards = {}
     for b in boards:
         for ref in b.parts:
@@ -546,7 +546,7 @@ def part_rows(model):
     instances = _instances(model)
     for at, head, rows in _tables(m.group(1)):
         cols = [_norm(h) for h in head]
-        # the designators stand in a Where or a Use column, a type may stand in its own
+        # the designators stand in a Where or a Use column, a type may stand in a separate column
         place = "where" if "where" in cols else "use" if "use" in cols else None
         if not {"qty", "part"} <= set(cols) or place is None:
             continue
