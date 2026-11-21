@@ -531,6 +531,15 @@ svg.sim-studio {
   gap: 8px;
   font-size: 13px;
 }
+.errors {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: #e5484d;
+  font-size: 12px;
+}
+.sequence-status {
+  font-size: 13px;
+}
 .lamp-numbers text {
   fill: var(--plate-text);
   stroke: var(--plate);

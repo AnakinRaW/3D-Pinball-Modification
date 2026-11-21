@@ -4,7 +4,7 @@ A browser tool that shows the machine as the drawing in [`assets/playfield/`](..
 
 - **Features** lists the features of the root README. Selecting one lights its lamps, marks and labels its parts in the drawing, and shows its rows of [`docs/features.md`](../../docs/features.md).
 - **A part's card** opens on a click into the drawing: the part's place, its driver, channel and component, and a lamp's chain and LEDs.
-- **Studio** runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count, and the ramps can be hidden so the lamps under them show.
+- **Studio** runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count, and the ramps can be hidden so the lamps under them show. It plays the light sequences of [`lights/`](lights/), `.lights` files of timed effect calls on tracks, which [`src/sim/sequence.ts`](src/sim/sequence.ts) reads; the format there is a prototype.
 - **The current readout** in the Studio adds up what the machine draws from the selected adapter in each frame: the LEDs by FastLED's power model over the colors the driver sent, with the cap's dimming, the loads that always draw, and each coil for its pull time and the servo for its longest move while their buttons have fired them. A total past the adapter's rating turns red. Below it stand the design's worst cases for that adapter: the lighting at its cap with two bumpers and the scoop pulling, and the whole layout at full white.
 
 The app stands alone and links to no document of the repository. It follows the system's light or dark setting, and a switch in the top bar picks the other theme for this browser.
@@ -54,8 +54,9 @@ The app reads these files of the repository when it builds and holds no copy of 
 | Path | Holds |
 |---|---|
 | `src/model/` | Reading the sources, the lamps on their chains, the highlight of a feature, a part's card and the current the machine draws, with no browser needed |
-| `src/sim/` | Loading the WebAssembly module, setting it up from the config, and the colors of the drawing's lamps and LEDs |
+| `src/sim/` | Loading the WebAssembly module, setting it up from the config, the colors of the drawing's lamps and LEDs, and reading and playing `.lights` files |
+| `lights/` | The light sequences the Studio plays |
 | `src/ui/` | The drawing with its overlay and its glow, the list, the cards, the Studio and its current readout |
 | `scripts/build-wasm.mjs` | What `npm run wasm` runs |
 | `scripts/figures.py` | Writes `config/figures.json` from the models |
-| `tests/` | `model.test.ts` for the models against the repository's files, `current.test.ts` for the current's arithmetic and the design's worst cases, `lights.test.ts` for the firmware's lamps in WebAssembly, `app.test.tsx` and `readout.test.tsx` for the views in jsdom |
+| `tests/` | `model.test.ts` for the models against the repository's files, `current.test.ts` for the current's arithmetic and the design's worst cases, `lights.test.ts` for the firmware's lamps in WebAssembly, `sequence.test.ts` for the `.lights` format and its player, `app.test.tsx` and `readout.test.tsx` for the views in jsdom |

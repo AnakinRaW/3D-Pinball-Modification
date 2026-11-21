@@ -18,11 +18,14 @@ import {
   type Paint,
   type Target,
 } from "../sim/lights";
+import { advanceWith, lampNames, parseSequence, SequencePlayer, type Parsed } from "../sim/sequence";
 import type { Model, State } from "../state";
 import { CurrentReadout } from "./CurrentReadout";
 
 const MAX_STEP_MS = 100; // a pass of the loop never advances the clock further, so a hidden tab does not jump
-const LAST_KEY = 255; // a layer's key is one byte
+const LAST_KEY = 199; // the effects started by hand take keys 1 to 199
+const SEQUENCE_KEY = 200; // a light sequence's tracks take the keys from here
+const SEQUENCE_PRIORITY = 10; // its track 0 lies at this priority, each higher track one above
 const SPEEDS = [0.25, 1, 4];
 
 type Status = "loading" | "missing" | "failed" | "ready";
@@ -37,6 +40,15 @@ const cap = signal(255);
 const chains = signal<Uint8Array[]>([]); // the colors of the frame shown
 const adapter = signal<Adapter>(3);
 const layers = signal<{ key: number; label: string }[]>([]);
+// the .lights files of the simulator, by their file name
+const SEQUENCE_FILES = Object.fromEntries(
+  Object.entries(import.meta.glob<string>("../../lights/*.lights", { query: "?raw", import: "default", eager: true })).map(
+    ([path, text]) => [path.split("/").pop()!.replace(/\.lights$/, ""), text],
+  ),
+);
+const player = signal<SequencePlayer | null>(null);
+const sequenceName = signal(Object.keys(SEQUENCE_FILES)[0] ?? "");
+const parsedSequence = signal<Parsed>({ sequence: null, errors: [] });
 let nextKey = 1;
 let loading: Promise<void> | null = null;
 
@@ -248,6 +260,56 @@ export function StudioControls({ model, state }: { model: Model; state: State })
         </label>
       </div>
 
+      <h3>Light sequences</h3>
+      <div class="group sequences">
+        <label class="field">
+          <span>File</span>
+          <select value={sequenceName.value} onChange={(e) => (sequenceName.value = (e.target as HTMLSelectElement).value)}>
+            {Object.keys(SEQUENCE_FILES).map((n) => (
+              <option key={n} value={n}>
+                {n}.lights
+              </option>
+            ))}
+          </select>
+        </label>
+        <div class="actions">
+          <button
+            class="primary"
+            data-sequence="play"
+            onClick={() => {
+              player.value?.stop();
+              const parsed = parseSequence(SEQUENCE_FILES[sequenceName.value] ?? "", lampNames(model.pf, model.hw));
+              parsedSequence.value = parsed;
+              if (!parsed.sequence) {
+                player.value = null;
+                return;
+              }
+              const p = new SequencePlayer(m, parsed.sequence, SEQUENCE_KEY, SEQUENCE_PRIORITY);
+              p.start();
+              player.value = p;
+            }}
+          >
+            Play
+          </button>
+          <button
+            data-sequence="stop"
+            onClick={() => {
+              player.value?.stop();
+              player.value = null;
+            }}
+          >
+            Stop
+          </button>
+        </div>
+        {parsedSequence.value.errors.length > 0 && (
+          <ul class="errors">
+            {parsedSequence.value.errors.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <h3>Ramps</h3>
       <div class="group ramps">
         <label class="check">
@@ -339,6 +401,8 @@ export function StudioControls({ model, state }: { model: Model; state: State })
         </button>
         <button
           onClick={() => {
+            player.value?.stop();
+            player.value = null;
             m.clearLamps();
             layers.value = [];
           }}
@@ -409,6 +473,14 @@ export function StudioStatus({ model, state }: { model: Model; state: State }) {
           </>
         )}
       </dl>
+      {player.value?.playing && (
+        <>
+          <h4>Sequence</h4>
+          <p class="sequence-status">
+            {player.value.sequence.name} · {player.value.sequence.tracks} tracks · {player.value.sequence.steps.length} steps
+          </p>
+        </>
+      )}
       <h4>Layers</h4>
       <ul class="layers">
         {layers.value.map((l) => (
@@ -439,7 +511,7 @@ export function StudioCurrent({ model }: { model: Model }) {
 
 // Runs the main loop for ms of simulated time and hands the drawing and the readout the colors.
 function advance(m: LightsModule, model: Model, state: State, ms: number) {
-  m.step(ms);
+  advanceWith(m, player.value, ms);
   nowMs.value = m.nowMs();
   cap.value = m.capBrightness();
   chains.value = readChains(m);
@@ -481,5 +553,5 @@ export function useStudioClock(model: Model, state: State) {
   }, [active]);
 }
 
-// the studio's module, its status, its layers, its pace and its adapter
-export const studio = { lights, status, layers, running, adapter };
+// the studio's module, its status, its layers, its pace, its adapter and its light sequence
+export const studio = { lights, status, layers, running, adapter, player, parsedSequence };
