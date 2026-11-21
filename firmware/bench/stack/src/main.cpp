@@ -50,8 +50,8 @@ static bool inInterrupt() {
 }
 
 // SdFat calls yield() while it waits for the card. The storage task sleeps until the SD
-// controller's interrupt or the next tick, as in firmware/gist/drivers/storage.cpp; every other
-// caller gets freertos-teensy's default_yield()
+// controller's interrupt or the next tick; every other caller gets freertos-teensy's
+// default_yield()
 void yield() {
     if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING || inInterrupt()) return;
     if (storageTask == nullptr || xTaskGetCurrentTaskHandle() != storageTask) {

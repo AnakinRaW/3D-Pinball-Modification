@@ -109,16 +109,18 @@ STREAM    the Audio library's sample rate          44.1 kHz
 ### Stream buffers
 
 ```
-BUFFERS   RAM2 on the Teensy 4.1                   512 KB
-          the ring buffer of each channel          32 KB
+BUFFERS   the ring buffer of each channel, in
+          the PSRAM                                192 KB
           the chunk the card is read in            8 KB
           one mono 16-bit sample                   2 bytes
-          what a channel holds ahead at least    = 278 ms
+          what a channel holds ahead at least    = 2136 ms
+          the longest stall of the card,
+          measured                                 953 ms
           the longest one card read may take
-          with all four channels waiting         = 69.6 ms
+          with all four channels waiting         = 534 ms
           the longest read under full load,
-          measured                                 21.53 ms
-          all four channels together             = 128 KB
+          measured                                 58.34 ms
+          all four channels together             = 768 KB
 ```
 
 ## Sources

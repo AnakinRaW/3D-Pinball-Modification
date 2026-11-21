@@ -96,10 +96,10 @@ with MODEL.block("STREAM", section=STREAM):
 # -- the stream buffers -------------------------------------------------------
 BUFFERS = "Stream buffers"
 with MODEL.block("BUFFERS", section=BUFFERS):
-    MODEL.uses("ram2", of="teensy-4.1")
     dec("n_streams", 4, "", src="kChannels in docs/firmware/drivers/audio.md, the four inputs of "
         "the driver's mixer", stated=False)
-    dec("buf", 32, "KB", src="the ring buffer each channel gets in RAM2")
+    dec("buf", 192, "KB", src="the ring buffer each channel gets in the PSRAM, sized so that a "
+        "channel outlasts the longest stall of the card measured, t_card_stall")
     dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, kChunk in "
         "docs/firmware/drivers/audio.md")
     MODEL.as_written("chunk_bytes", of="chunk", unit="bytes")
@@ -149,12 +149,12 @@ ds("t_wr_block", 500, "ms", src=f"{SD}, 4.6.2.2: the longest busy an SDXC card m
    "block it writes, 250 ms for an SDHC card; the application note asks a host to wait longer than "
    "500 ms")
 msr("t_mount_nocard", 3, "s", src="firmware/bench/card-pull on the Teensy 4.1 under FreeRTOS: the "
-    "longest of 8 calls of SdFat's begin() in its DMA mode with no card in the socket, 3002 ms, "
-    "in which no other task ran")
+    "longest of 7 calls of SdFat's begin() in its DMA mode with no card in the socket, 3004 ms, "
+    "while the main task took turns with the storage task")
 _LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
-msr("t_main_wait_pull", 0.13, "ms", src="firmware/bench/card-pull on the Teensy 4.1 under FreeRTOS: "
-    "the longest the main task waited while the storage task read frames, met the pulled card and "
-    "failed three reads")
+msr("t_main_wait_pull", 1.00, "ms", src="firmware/bench/card-pull on the Teensy 4.1 under FreeRTOS: "
+    "the longest the main task waited in a row while the storage task read frames, met the pulled "
+    "card, failed three reads and tried to mount it once a second until it was back")
 msr("t_frame_fat", 17.35, "ms", src=f"{_LOAD}: the mean time one frame read itself took over three "
     "runs, the file opened anew and SdFat asking the FAT for each cluster")
 msr("t_frame_contig", 16.65, "ms", src=f"{_LOAD}: the same over two runs once contiguousRange() had "
@@ -164,39 +164,36 @@ _SAVES = ("a sketch on the Teensy 4.1 saving 4 KB in SdFat's DMA mode, written a
           "in turn")
 msr("t_save_new", 15.80, "ms", src=f"{_SAVES}: the longer of the two first saves into a new file")
 msr("t_save_over", 4.69, "ms", src=f"{_SAVES}: the longest save over an existing file")
-msr("t_frame_fast", 12.45, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in one "
-    "run of the same build")
-msr("t_frame_slow", 17.41, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end in "
-    "the other runs of the same build")
-msr("t_audio_wait_load", 21.53, "ms", src=f"{_LOAD}, 8 KB chunks: the longest of 861 audio reads "
-    "from request to end")
-dec("n_open", 16, "", src="kOpen in docs/firmware/drivers/storage.md, the files the storage task "
-    "keeps open at once")
-dec("t_probe", 1, "s", src="how often the storage task asks a failed card for its status, kProbeMs "
-    "in docs/firmware/drivers/storage.md")
+msr("t_card_stall", 953, "ms", src="firmware/bench/stream on the Teensy 4.1, the storage driver "
+    "streaming four sounds and a movie for 60 s while LVGL drew and the main task wrote 2 KB of log "
+    "a second and a 4 KB save every 3 s, right after its 9.2 MB movie file was written: the longest "
+    "save of one run, 952.73 ms; five more runs stayed below 86 ms")
+msr("t_frame_load", 21.35, "ms", src=f"{_LOAD}: the mean of 500 frames from request to end, the "
+    "longer of two runs, 21.35 and 21.30 ms")
+msr("t_audio_wait_load", 58.34, "ms", src=f"{_LOAD}, 8 KB chunks: the longest of 861 audio reads "
+    "from request to end, the longer of two runs")
+msr("t_write_load", 67, "ms", src=f"{_LOAD}: the longest of 19 log lines written and synced, which "
+    "a frame requested meanwhile waits behind")
+dec("n_open", 16, "", src="CardFiles::SLOTS in firmware/src/drivers/storage-service.h, the files "
+    "the storage task keeps open at once")
+dec("t_probe", 1, "s", src="how often the storage task tries a failed card again, PROBE_MS in "
+    "firmware/src/drivers/storage.cpp")
 MODEL.as_written("t_probe_ms", of="t_probe", unit="ms")
-dec("bounce", 4, "KB", src="kBounce in docs/firmware/drivers/storage.md, the read buffer in RAM1 "
+dec("bounce", 4, "KB", src="BOUNCE_BYTES in firmware/src/drivers/storage.cpp, the read buffer in RAM1 "
     "that a read lands in when it may not land straight in its buffer")
-dec("stack_storage", 8, "KB", src="kStack in docs/firmware/drivers/storage.md, the storage task's "
+dec("stack_storage", 8, "KB", src="STACK_BYTES in firmware/src/drivers/storage.cpp, the storage task's "
     "stack; the size freertos-teensy's example/sdfat gives the task that runs SdFat, 2048 words")
 MODEL.as_written("stack_storage_bytes", of="stack_storage", unit="bytes")
-msr("stack_storage_need", 1.66, "KB", src="the storage task's deepest call chain in a test build "
-    "of the documents' code with Teensyduino 1.62.0: gcc's -fcallgraph-info=su frames summed along "
-    "the linked ELF's calls, with the hardware and PendSV frames on top")
-dec("n_path", 64, "bytes", src="kPath in docs/firmware/drivers/storage.md, the longest path with "
-    "its end")
-dec("t_pause", 50, "ms", src="kPauseMs in docs/firmware/drivers/storage.md: the pause before a "
-    "transfer that follows a failed one, which lets the main loop make a pass between two of "
-    "SdFat's waits")
-dec("t_land", 100, "ms", src="kLandMs in docs/firmware/drivers/storage.md: the longest the storage "
-    "task lets a transfer that still moves data finish before it resets the data line, the wait "
-    "Linux's drivers/mmc/host/sdhci-esdhc-imx.c gives this controller")
-MODEL.as_written("t_pause_ms", of="t_pause", unit="ms")
-MODEL.as_written("t_land_ms", of="t_land", unit="ms")
+msr("stack_storage_need", 1.41, "KB", src="the bench test storage.card-back of the test image "
+    "on the Teensy 4.1: the most of its stack the storage task had taken, 1436 bytes, after every "
+    "Teensy test of the storage program and a pulled card whose errors went into the log")
+dec("n_path", 64, "bytes", src="FILE_PATH_BYTES in firmware/src/drivers/storage-service.h, the "
+    "longest path with its end")
 MODEL.uses("prio_kernel", of="firmware")
 MODEL.uses("t_movie", of="display")      # a video frame, which the video player tests in testing.md name
+MODEL.uses("b_cluster", of="display", stated=False)   # the clusters storage.md and testing.md name
 
-# the end of the path takes one byte of kPath
+# the end of the path takes one byte of FILE_PATH_BYTES
 fig("n_path_chars", "", "n_path / Q.of(1, 'bytes') - 1", moves="+n_path", stated=False)
 ds("t_sdfat", 1, "s", src="BUSY_TIMEOUT_MICROS in SdFat's src/SdCard/SdioTeensy.cpp, PJRC's copy: "
    "the longest SdFat waits for the card before the call fails")
@@ -215,8 +212,7 @@ _I("the Teensy's high level switches the amplifier's inputs", "v_3v3 > v_ih")
 _I("and stays inside their rating, powered or not", "v_3v3 < v_in_max")
 _I("the port's bit clock lies in the amplifier's range", "f_bclk_min < f_bclk < f_bclk_max")
 _I("and its frame length is one the amplifier accepts", "n_bclk <= n_bclk_amp <= n_bclk")
-_I("the stream buffers leave most of RAM2 to the rest of the firmware",
-   "ram_streams < ram2 / Q.of(2, '')")
+_I("a channel holds more sound than the longest stall of the card measured", "t_ahead > t_card_stall")
 _I("a buffer holds more than the chunk it is refilled with", "chunk < buf")
 _I("the storage task's stack holds its deepest measured call chain",
    "stack_storage_need < stack_storage")
@@ -244,6 +240,6 @@ MODEL.aside("1 W", "the upper end of the rating docs/research/Rokr/5_sound.md es
 
 MODEL.owns("I²S2", "PJRC's AudioOutputI2S2 drives the port by DMA, docs/firmware/drivers/audio.md")
 
-MODEL.draws("ram_streams", pool="RAM2")
+MODEL.draws("ram_streams", pool="PSRAM")
 MODEL.draws("ram_blocks", pool="RAM2")
 MODEL.draws(pool="device monitor")   # the SD card

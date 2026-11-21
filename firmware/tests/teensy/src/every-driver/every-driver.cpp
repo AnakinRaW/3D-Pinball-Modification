@@ -23,6 +23,7 @@
 #pragma GCC diagnostic pop
 #include "drivers/lighting.h"
 #include "drivers/servo-driver.h"
+#include "drivers/storage.h"
 #include "drivers/ws2812-color-encoder.h"
 #include "test-harness.h"
 
@@ -245,12 +246,52 @@ static bool servoBeginFails(Verdict& v) {
     return servoEmpty(servoStarved, v);
 }
 
+// ---- the storage driver
+
+constexpr size_t STORAGE_BYTES = 65536;   // a read long enough to run past its start
+constexpr char STORAGE_FILE[] = "/tests/every-driver.bin";
+EXTMEM static uint8_t storageBuffer[STORAGE_BYTES] __attribute__((aligned(32)));
+
+// Before begin() a request fails at once. No part is reported failed. No stack is in use.
+static bool storageBeforeBegin(Verdict& v) {
+    FileRequest r;
+    uint8_t into[16];
+    const uint32_t us = timedUs([&] { storage.open(STORAGE_FILE).read(0, into, sizeof into, r); });
+    if (r.status() != FileStatus::FAILED || storage.failed().parts != 0 ||
+        storage.stackLeftBytes() != 0) {
+        return v.want("FAILED at once, no failed part, no stack")
+            .saw("status %u, parts %u, stack %lu", unsigned(r.status()),
+                 unsigned(storage.failed().parts), storage.stackLeftBytes());
+    }
+    return atOnce(us, "read()", v);
+}
+
+// A long read returns while the card still moves its bytes.
+static bool storageAtOnce(Verdict& v) {
+    if (!storage.begin()) {
+        return v.want("a card in the socket").saw("begin() false");
+    }
+    FileRequest r;
+    storage.openWriter(STORAGE_FILE).rewrite(storageBuffer, STORAGE_BYTES, r);
+    if (!r.wait()) {
+        return v.want("the file written").saw("the write failed");
+    }
+    const uint32_t us =
+        timedUs([&] { storage.open(STORAGE_FILE).read(0, storageBuffer, STORAGE_BYTES, r); });
+    const bool pending = r.status() == FileStatus::PENDING;
+    r.wait();
+    return (pending || v.want("PENDING right after read()").saw("a read that had ended")) &&
+           atOnce(us, "read()", v);
+}
+
 // ---- the register and the rows
 
 static const DriverCase DRIVERS[] = {
     // begin() fails only when the heap has no room for the colors, which no setting reaches
     {"lighting", lightingBeforeBegin, lightingOutOfRange, lightingAtOnce, nullptr},
     {"servo", servoBeforeBegin, servoOutOfRange, servoAtOnce, servoBeginFails},
+    // the storage driver takes no settings and no slot of the driver tick
+    {"storage", storageBeforeBegin, nullptr, storageAtOnce, nullptr},
 };
 
 // Runs a row's case of every driver and reports the first failure, or PASS.

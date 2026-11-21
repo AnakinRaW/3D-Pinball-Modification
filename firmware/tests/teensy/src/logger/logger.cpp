@@ -1,16 +1,22 @@
 // The logger program of docs/firmware/testing.md. It tests on the Teensy whether the lines of two
-// tasks reach the log whole and in their order while one task preempts the other.
+// tasks reach the log whole and in their order while one task preempts the other. It also tests
+// how the log goes on across restarts and full files on the card.
 //
-//   two-tasks  a task above the test task's priority writes numbered lines in short bursts while
-//              the test task writes its own numbered lines and runs update()
+//   two-tasks     a task above the test task's priority writes numbered lines in short bursts
+//                 while the test task writes its own numbered lines and runs update()
+//   order         numbered lines written over three starts stand in the log in their order
+//   files         with the newer file at its limit, the log starts the other file anew with a
+//                 higher number. The full file stays as it was
+//   card-missing  without a card the log does not begin. A line is lost and counted (bench)
 //
-// Wiring: none. The log's files are two files in RAM2 that end every write at once, so the test
-// needs no card.
+// Wiring: none. The card sits in the Teensy's socket. two-tasks writes into two files in RAM2 that
+// end every write at once. The other tests leave their files in /tests/logger/ on the card.
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include <string.h>
 #include <task.h>
+#include "drivers/storage.h"
 #include "logging/logger.h"
 #include "test-harness.h"
 
@@ -19,7 +25,7 @@ constexpr size_t FILE_BYTES = 192 * 1024;   // more than the test writes into on
 constexpr uint32_t URGENT_LINES = 2000;
 constexpr uint32_t URGENT_BURST = 5;         // lines between two pauses of the urgent task
 constexpr uint32_t CALM_PAUSE_US = 40;       // keeps the calm task's lines under the file's size
-constexpr UBaseType_t URGENT_PRIORITY = 2;   // above the test task's 1, as the storage task
+constexpr UBaseType_t URGENT_PRIORITY = 2;   // above the test task's 1
 constexpr uint32_t URGENT_STACK_BYTES = 4096;
 
 // A file in RAM whose writes end at once.
@@ -157,8 +163,261 @@ static void testTwoTasks() {
     test::pass();
 }
 
+// ---- the log on the card
+
+constexpr char ORDER_FIRST[] = "/tests/logger/order-a.txt";
+constexpr char ORDER_SECOND[] = "/tests/logger/order-b.txt";
+constexpr char FULL_FIRST[] = "/tests/logger/full-a.txt";
+constexpr char FULL_SECOND[] = "/tests/logger/full-b.txt";
+constexpr char MISSING_FIRST[] = "/tests/logger/missing-a.txt";
+constexpr char MISSING_SECOND[] = "/tests/logger/missing-b.txt";
+constexpr uint32_t ORDER_LINES = 10;   // lines each start writes
+constexpr uint32_t ORDER_STARTS = 3;   // the first start and two restarts
+constexpr uint32_t SETTLE_MS = 2000;   // more than the card took for any write on the bench
+constexpr size_t READ_BYTES = 16384;   // more than the order test's file holds
+constexpr size_t FILL_BYTES = 65536;
+constexpr uint32_t FULL_NUMBER = 7;    // the head number of the full file
+constexpr uint32_t OLDER_NUMBER = 6;   // the head number of the other file
+constexpr size_t TAIL_BYTES = 64;      // the end of the full file that has to stay
+constexpr uint32_t BENCH_LIMIT_S = 120;
+constexpr uint32_t PULL_MS = 60000;   // how long a person may take to pull the card
+
+EXTMEM static uint8_t orderBuffer[Logger::BUFFER_BYTES];
+EXTMEM static uint8_t fullBuffer[Logger::BUFFER_BYTES];
+EXTMEM static uint8_t missingBuffer[Logger::BUFFER_BYTES];
+EXTMEM static char readBack[READ_BYTES + 1] __attribute__((aligned(32)));
+EXTMEM static uint8_t fill[FILL_BYTES] __attribute__((aligned(32)));
+static uint8_t firstHead[Logger::HEAD_BYTES];
+static uint8_t secondHead[Logger::HEAD_BYTES];
+static char seenText[96];
+
+// Begins the driver once and skips the test without a card.
+static bool cardReady() {
+    if (storage.begin()) {
+        return true;
+    }
+    test::skip("no card in the socket");
+    return false;
+}
+
+// Reads the start of a file, as the main task does for the logger's begin().
+static LogFileStart startOf(const char* path, uint8_t (&head)[Logger::HEAD_BYTES]) {
+    FileRequest r;
+    storage.open(path).read(0, head, sizeof head, r);
+    r.wait();
+    return {head, r.bytes(), r.fileSize()};
+}
+
+// Begins a log in two files on the card, as the main task does.
+static void beginOn(Logger& log, const char* first, const char* second) {
+    log.begin(startOf(first, firstHead), startOf(second, secondHead));
+}
+
+// Writes what the log holds and gives the card time to take it.
+static void settle(Logger& log) {
+    log.flush();
+    const uint32_t t0 = millis();
+    while (millis() - t0 < SETTLE_MS) {
+        log.update();
+        vTaskDelay(1);
+    }
+}
+
+// Reads a whole file into readBack and ends it with a zero. Returns its length.
+static size_t readAll(const char* path) {
+    FileRequest r;
+    storage.open(path).read(0, readBack, READ_BYTES, r);
+    r.wait();
+    readBack[r.bytes()] = '\0';
+    return r.bytes();
+}
+
+// Replaces a file's content with n bytes from data and waits for the card.
+static bool put(const char* path, const void* data, size_t n) {
+    FileRequest r;
+    storage.openWriter(path).rewrite(data, n, r);
+    return r.wait();
+}
+
+static Logger& orderLog() {
+    static CardFile first(storage.openWriter(ORDER_FIRST));
+    static CardFile second(storage.openWriter(ORDER_SECOND));
+    static Logger log(first, second, orderBuffer, sizeof orderBuffer);
+    return log;
+}
+
+// Writes the numbered lines of one start.
+static void writeStart(uint32_t start) {
+    for (uint32_t i = 0; i < ORDER_LINES; ++i) {
+        orderLog().write(LogLevel::INFO, "order", "%lu %lu", start, i);
+    }
+    settle(orderLog());
+}
+
+// Gets how many starts have written their lines into the order test's log so far and whether
+// every line stands in its order.
+static uint32_t startsInLog(bool& inOrder) {
+    readAll(ORDER_FIRST);
+    uint32_t next = 0;
+    inOrder = true;
+    for (const char* at = strstr(readBack, " I order "); at != nullptr;
+         at = strstr(at + 1, " I order ")) {
+        unsigned long start = 0;
+        unsigned long line = 0;
+        if (sscanf(at, " I order %lu %lu", &start, &line) != 2 ||
+            start * ORDER_LINES + line != next) {
+            inOrder = false;
+        }
+        next = next + 1;
+    }
+    return next / ORDER_LINES;
+}
+
+static void testOrder() {
+    if (!cardReady() || !put(ORDER_FIRST, "", 0) || !put(ORDER_SECOND, "", 0)) {
+        return;
+    }
+    beginOn(orderLog(), ORDER_FIRST, ORDER_SECOND);
+    writeStart(0);
+    test::restart();
+}
+
+static void resumeOrder() {
+    if (!cardReady()) {
+        return;
+    }
+    beginOn(orderLog(), ORDER_FIRST, ORDER_SECOND);
+    bool inOrder = false;
+    const uint32_t starts = startsInLog(inOrder);
+    if (inOrder && starts > 0 && starts < ORDER_STARTS) {
+        writeStart(starts);
+        test::restart();
+    }
+    if (!inOrder || starts != ORDER_STARTS) {
+        snprintf(seenText, sizeof seenText, "%lu starts, %s", starts,
+                 inOrder ? "in order" : "out of order");
+        test::fail(seenText, "3 starts, every line in order");
+        return;
+    }
+    test::pass();
+}
+
+static Logger& fullLog() {
+    static CardFile first(storage.openWriter(FULL_FIRST));
+    static CardFile second(storage.openWriter(FULL_SECOND));
+    static Logger log(first, second, fullBuffer, sizeof fullBuffer);
+    return log;
+}
+
+// Writes the full file: a head line with FULL_NUMBER, then lines of x up to the file's limit.
+static bool writeFullFile() {
+    FileRequest r;
+    const FileWriter file = storage.openWriter(FULL_FIRST);
+    for (uint32_t at = 0; at < Logger::FILE_LIMIT_BYTES; at += FILL_BYTES) {
+        memset(fill, 'x', FILL_BYTES);
+        fill[FILL_BYTES - 1] = '\n';
+        if (at == 0) {
+            const int n = snprintf(reinterpret_cast<char*>(fill), FILL_BYTES,
+                                   "0 I logger file %lu\n", FULL_NUMBER);
+            fill[n] = 'x';
+            fill[n - 1] = '\n';
+        }
+        if (at == 0) {
+            file.rewrite(fill, FILL_BYTES, r);
+        } else {
+            file.write(at, fill, FILL_BYTES, r);
+        }
+        if (!r.wait()) {
+            return false;
+        }
+    }
+    char older[32];
+    const int n = snprintf(older, sizeof older, "0 I logger file %lu\n", OLDER_NUMBER);
+    return put(FULL_SECOND, older, size_t(n));
+}
+
+static void testFiles() {
+    if (!cardReady()) {
+        return;
+    }
+    if (!writeFullFile()) {
+        test::fail("the full file could not be written", "a full file on the card");
+        return;
+    }
+    beginOn(fullLog(), FULL_FIRST, FULL_SECOND);
+    fullLog().write(LogLevel::INFO, "files", "after the full file");
+    settle(fullLog());
+    readAll(FULL_SECOND);
+    char wantedHead[32];
+    snprintf(wantedHead, sizeof wantedHead, " I logger file %lu\n", FULL_NUMBER + 1);
+    const char* const head = strstr(readBack, wantedHead);
+    const char* const lineEnd = strchr(readBack, '\n');
+    if (head == nullptr || lineEnd == nullptr || head + strlen(wantedHead) - 1 != lineEnd ||
+        strstr(readBack, " I files after the full file") == nullptr) {
+        test::fail("the other file without a new head line and the line",
+                   "a head line one number higher, then the line");
+        return;
+    }
+    FileRequest r;
+    char tail[TAIL_BYTES];
+    storage.open(FULL_FIRST).read(Logger::FILE_LIMIT_BYTES - TAIL_BYTES, tail, TAIL_BYTES, r);
+    r.wait();
+    if (r.fileSize() != Logger::FILE_LIMIT_BYTES ||
+        memcmp(tail, fill + FILL_BYTES - TAIL_BYTES, TAIL_BYTES) != 0) {
+        snprintf(seenText, sizeof seenText, "a full file of %lu bytes or with other bytes",
+                 r.fileSize());
+        test::fail(seenText, "the full file as it was");
+        return;
+    }
+    test::pass();
+}
+
+static void testCardMissing() {
+    if (!cardReady()) {
+        return;
+    }
+    test::step("pull the card out of the socket");
+    const uint32_t t0 = millis();
+    while (millis() - t0 < PULL_MS) {
+        // The read takes whole sectors, so it reaches the card past SdFat's cache of one sector.
+        FileRequest r;
+        storage.open(FULL_FIRST).read(0, fill, FILL_BYTES, r);
+        if (!r.wait()) {
+            test::restart();
+        }
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+    test::fail("the card still answers", "a read fails once the card is out");
+}
+
+static void resumeCardMissing() {
+    static CardFile first(storage.openWriter(MISSING_FIRST));
+    static CardFile second(storage.openWriter(MISSING_SECOND));
+    static Logger log(first, second, missingBuffer, sizeof missingBuffer);
+    // The main task begins the log only once the card is mounted.
+    const bool card = storage.begin();
+    if (card) {
+        beginOn(log, MISSING_FIRST, MISSING_SECOND);
+    }
+    const uint32_t t0 = micros();
+    const bool written = log.write(LogLevel::INFO, "missing", "a line without a card");
+    const uint32_t us = micros() - t0;
+    test::step("put the card back into the socket");
+    if (card || written || log.lost() != 1 || us > 50) {
+        snprintf(seenText, sizeof seenText, "card %d, written %d, lost %lu, %lu us", card, written,
+                 log.lost(), us);
+        test::fail(seenText, "no card, a lost line counted at once");
+        return;
+    }
+    test::pass();
+}
+
 static const Test TESTS[] = {
     {"logger.two-tasks", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testTwoTasks, nullptr},
+    {"logger.order", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testOrder, resumeOrder},
+    {"logger.files", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testFiles, nullptr},
+    {"logger.card-missing", RunsOn::BENCH, BENCH_LIMIT_S, BENCH_LIMIT_S, testCardMissing,
+     resumeCardMissing},
 };
 
 extern const Program LOGGER = {TESTS, sizeof TESTS / sizeof TESTS[0]};

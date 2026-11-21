@@ -137,8 +137,8 @@ private:
     float          gain_ = 1;   // the gain the last block ended at, 1 while nothing overdrives
 };
 
-// the four rings in RAM2, 32 KB each and aligned to 32 bytes
-DMAMEM static uint8_t rings_[4][32768] __attribute__((aligned(32)));
+// the four rings in the PSRAM, 192 KB each and aligned to 32 bytes
+EXTMEM static uint8_t rings_[4][196608] __attribute__((aligned(32)));
 
 // the audio graph, which PJRC's Audio library updates every block in the order it is built,
 // the channels first

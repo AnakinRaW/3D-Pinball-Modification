@@ -47,7 +47,7 @@ The SD card driver is one exception because the library SdFat internally waits f
 
 The solution to this is using [freertos-teensy](https://github.com/tsandmann/freertos-teensy), a small real-time scheduler for microcontrollers. FreeRTOS runs several tasks side by side on the one processor and organizes scheduling using SysTick and PendSV.
 
-The firmware runs two tasks, the main task with priority 1 for the main loop and the storage task with priority 2 for the SD card (In FreeRTOS a lower priority number means lower priority). While SdFat waits for the card, the main loop runs, and the card's interrupt wakes the storage task the moment a transfer ends. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
+The firmware runs two tasks at priority 1, the main task for the main loop and the storage task for the SD card. FreeRTOS switches between them every tick of 1 ms. While SdFat waits for the card, the storage task hands the processor to the main loop, so a card that hangs never stops the main loop. The drivers run in neither task, and their interrupts run ahead of both. Starting FreeRTOS sets every interrupt to priority 128, so each driver sets its priorities in its `begin()`.
 
 [Zephyr](../research/zephyr-teensy-4.1.md) lost to FreeRTOS on the Teensy 4.1: its SD card driver aborted reads, its PSRAM driver read back only zeros, and LVGL drew more slowly.
 
@@ -67,7 +67,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |
 | Audio, computing the next block of samples | the Audio library's update | the next audio block | yes | 208 |
 | Display, sending a rectangle | FlexIO3 | none, a late refill only pauses the bus | no | 224 |
-| Storage, waking the storage task at the end of a transfer | the SD controller's interrupt | none, the storage task waits for it | yes | 240 |
+| Storage, SdFat ending a transfer | the SD controller's interrupt | none, the storage task waits for it | no | 240 |
 | FreeRTOS, its tick and its task switch | SysTick and PendSV | its next tick, 1 ms | yes | 240 |
 
 FreeRTOS holds back the interrupts that call it for a moment while it changes its task lists. The more urgent interrupts never wait for it.

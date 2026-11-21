@@ -26,7 +26,7 @@ Every call of `take()` or `available()` starts the next read when a chunk is fre
 
 Calls that come from the driver's interrupt return at once. That interrupt must not be more urgent than priority 208, as the [storage driver](drivers/storage.md#requests) requires. 
 
-A file channel supports setting a higher priority, so its reads are scheduled before other reads and writes.
+A file channel reads with the priority its driver gives it.
 
 ## Existing libraries
 
@@ -44,7 +44,7 @@ class FileChannel {
 public:
     // a ring of Chunks chunks of chunk bytes each at ring, which starts on a 32-byte boundary, read
     // with priority
-    FileChannel(uint8_t* ring, uint32_t chunk, Storage::Priority priority = Storage::Priority::Normal);
+    FileChannel(uint8_t* ring, uint32_t chunk, FilePriority priority = FilePriority::NORMAL);
 
     // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
     // of the file read before are gone at once

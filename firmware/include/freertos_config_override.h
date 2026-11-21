@@ -1,7 +1,6 @@
-// The firmware's four FreeRTOS settings for freertos-teensy 11.2.0-4 with its pull request 43,
-// which sets the heap's start before any constructor runs. These four values replace the port's
-// own. The port's FreeRTOSConfig.h includes this file last once the include path holds it. The
-// firmware and the test image put this folder there with build_flags, which reach the libraries.
+// Sets the FreeRTOS values in which the firmware differs from the freertos-teensy port's defaults.
+// The port's FreeRTOSConfig.h includes this file last, so a value here replaces the port's default.
+// The file takes effect only where build_flags puts this folder on the include path.
 #pragma once
 
 // The port's 2. The kernel masks only priority numbers 208 and up.
@@ -12,6 +11,11 @@
 // storage task.
 #undef configUSE_CUSTOM_YIELD_HANDLER
 #define configUSE_CUSTOM_YIELD_HANDLER 1
+
+// The port's 0. The storage task and the main task share a priority and take turns every tick, so
+// a card that holds SdFat in a wait never stops the main loop.
+#undef configUSE_TIME_SLICING
+#define configUSE_TIME_SLICING 1
 
 // The port's 1. malloc() stays in RAM2, where PJRC's core puts it.
 #undef configTEENSY_HEAP_ALLOCATION

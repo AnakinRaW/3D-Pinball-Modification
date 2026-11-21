@@ -101,10 +101,9 @@ with MODEL.block(section=IRQ):
         group="I²C buses, running every transfer on Wire and Wire2")
     ds("prio_update", 208, "", src=f"{CORE}/AudioStream.cpp, NVIC_SET_PRIORITY(IRQ_SOFTWARE, 208), "
        "the Audio library's update", group="Audio, computing the next block of samples")
-    dec("prio_card", 240, "", src="the SD controller's interrupt, which wakes the storage task at "
-        "the end of a transfer, NVIC_SET_PRIORITY(IRQ_SDHC1, 240) in "
-        "docs/firmware/drivers/storage.md",
-        group="Storage, waking the storage task at the end of a transfer")
+    dec("prio_card", 240, "", src="the SD controller's interrupt, in which SdFat ends a transfer, "
+        "SD_PRIORITY in firmware/src/drivers/storage.cpp",
+        group="Storage, SdFat ending a transfer")
     ds("prio_kernel_irq", 240, "", src="freertos-teensy 11.2.0-4, src/portable/port.c: PendSV and "
        "SysTick at portMIN_INTERRUPT_PRIORITY, 255, of which the Teensy's four priority bits keep "
        "240", group="FreeRTOS, its tick and its task switch")
@@ -234,8 +233,7 @@ _I("the kernel never masks an interrupt that does not call it: the pins, the dri
    "interrupts and the I²C bus",
    "max(prio_pins, prio_tick, prio_dma, prio_i2c) < prio_kernel")
 _I("every interrupt that calls the kernel lies at its threshold or below it: the audio update and "
-   "FlexIO3 start reads, and the SD controller wakes the storage task",
-   "prio_kernel <= min(prio_update, prio_display, prio_card)")
+   "FlexIO3 start reads", "prio_kernel <= min(prio_update, prio_display)")
 _I("the kernel's tick and task switch wait for every other interrupt", "prio_kernel_irq >= "
    "max(prio_ir, prio_pins, prio_tick, prio_dma, prio_i2c, prio_update, prio_display, "
    "prio_card)")
@@ -243,8 +241,7 @@ _I("the device monitor checks on whole driver ticks", "(t_monitor / t_tick).raw.
 _I("the device monitor's queue has a depth the event queue accepts, a power of two",
    "math.log2(n_queue.raw).is_integer()")
 _I("an average log line fits the logger's buffer", "log_line < log_buffer")
-_I("SdFat's longest wait, which stops the main loop in the cases storage.md's limitations name, "
-   "ends before the watchdog restarts the Teensy", "t_sdfat < t_wdt")
+_I("SdFat's longest wait ends before the watchdog restarts the Teensy", "t_sdfat < t_wdt")
 _I("SdFat's longest wait ends before the watchdog warns, so a wait the main loop survives leaves "
    "no note", "t_sdfat < t_wdt - t_wdt_warn")
 _I("the watchdog's warning preempts every driver interrupt, so a hang in any of them is noted",

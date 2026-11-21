@@ -16,7 +16,6 @@
 
 constexpr uint32_t kFrame   = 320 * 240 * 2;
 constexpr uint32_t kFrames  = 30;
-constexpr UBaseType_t kCard = 1;
 
 EXTMEM static uint8_t picture[kFrame] __attribute__((aligned(32)));
 DMAMEM static uint8_t fillBuf[16384] __attribute__((aligned(32)));
@@ -24,7 +23,6 @@ DMAMEM static uint8_t fillBuf[16384] __attribute__((aligned(32)));
 static SdFs   sd;
 static FsFile file;
 static TaskHandle_t mainTask = nullptr, storageTask = nullptr;
-static void (*sdfatIsr)() = nullptr;
 
 static volatile uint32_t readsOk = 0, readsFailed = 0, lastReadUs = 0, longestFailUs = 0, firstFailUs = 0;
 static volatile uint32_t mounts = 0, mountsOk = 0, longestMountUs = 0;
@@ -37,23 +35,14 @@ static bool inInterrupt() { uint32_t ipsr; asm volatile("mrs %0, ipsr" : "=r"(ip
 void yield() {
     if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING || inInterrupt()) return;
     if (storageTask == nullptr || xTaskGetCurrentTaskHandle() != storageTask) { freertos::default_yield(); return; }
-    ulTaskNotifyTakeIndexed(kCard, pdTRUE, 1);
+    taskYIELD();   // the main task runs until the next tick, as the storage driver's yield() does
 }
 
-static void sdInterrupt() {
-    sdfatIsr();
-    BaseType_t woken = pdFALSE;
-    vTaskNotifyGiveIndexedFromISR(storageTask, kCard, &woken);
-    portYIELD_FROM_ISR(woken);
-}
-
-// mounts the card by DMA and takes over SdFat's interrupt, as the storage driver does
+// mounts the card by DMA and sets SdFat's interrupt to its priority, as the storage driver does
 static bool mount() {
     file.close();
     sd.end();
-    const bool ok = sd.begin(SdioConfig(DMA_SDIO));   // SdFat waits through yield(), where the storage task sleeps
-    sdfatIsr = _VectorsRam[IRQ_SDHC1 + 16];
-    attachInterruptVector(IRQ_SDHC1, sdInterrupt);
+    const bool ok = sd.begin(SdioConfig(DMA_SDIO));   // SdFat waits through yield(), where the storage task hands on
     NVIC_SET_PRIORITY(IRQ_SDHC1, 240);
     return ok && file.open("pull.bin", O_RDONLY);
 }
@@ -114,7 +103,7 @@ static void storageMain(void*) {
 static void runMainTask(void*) {
     while (!Serial) vTaskDelay(10);
     Serial.println("Card-pull test: pull the card about 15 s in, put it back about 15 s later");
-    xTaskCreate(storageMain, "storage", 8192 / sizeof(StackType_t), nullptr, 2, nullptr);
+    xTaskCreate(storageMain, "storage", 8192 / sizeof(StackType_t), nullptr, 1, nullptr);
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     if (!up) { Serial.println("the card did not start, stopped"); vTaskSuspend(nullptr); }
 
