@@ -96,12 +96,12 @@ with MODEL.block("STREAM", section=STREAM):
 # -- the stream buffers -------------------------------------------------------
 BUFFERS = "Stream buffers"
 with MODEL.block("BUFFERS", section=BUFFERS):
-    dec("n_streams", 4, "", src="kChannels in docs/firmware/drivers/audio.md, the four inputs of "
-        "the driver's mixer", stated=False)
+    dec("n_streams", 4, "", src="SoundMixer::INPUTS in firmware/src/drivers/sound-mixer.h, the four "
+        "inputs of the driver's mixer", stated=False)
     dec("buf", 192, "KB", src="the ring buffer each channel gets in the PSRAM, sized so that a "
         "channel outlasts the longest stall of the card measured, t_card_stall")
-    dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, kChunk in "
-        "docs/firmware/drivers/audio.md")
+    dec("chunk", 8, "KB", src="what one card read brings into a channel's ring, SoundChannel::CHUNK_BYTES in "
+        "firmware/src/drivers/sound-channel.h")
     MODEL.as_written("chunk_bytes", of="chunk", unit="bytes")
     MODEL.as_written("buf_bytes", of="buf", unit="bytes")
     dec("b_sample", 2, "bytes", src="one 16-bit mono sample, the PCM form the channels carry")
@@ -122,9 +122,9 @@ with MODEL.block("BUFFERS", section=BUFFERS):
        "128 samples of 2 bytes behind a header of 4 bytes; AudioMemory() places the blocks in "
        "DMAMEM, RAM2", stated=False)
 
-    # the audio blocks AudioMemory() reserves, kBlocks in docs/firmware/drivers/audio.md: each channel
-    # fills one per round, the mixer and the master gain write into the block they receive, and the
-    # output holds the blocks it still sends
+    # the audio blocks AudioMemory() reserves, AudioDriver::BLOCKS in firmware/src/drivers/audio.h:
+    # each channel fills one per round, the mixer and the master gain write into the block they
+    # receive, and the output holds the blocks it still sends
     fig("n_blocks", "", "n_streams + n_out_held", moves="+n_streams +n_out_held", stated=False)
     fig("ram_blocks", "KB", "n_blocks * b_block", moves="+n_blocks +b_block", stated=False)
     fig("ram_streams", "KB", "buf * n_streams", "up", moves="+buf +n_streams")

@@ -6,6 +6,8 @@ A file channel reads each file from front to back, and starts it over when told 
 
 Code in the main loop reads a large file with `read()` in pieces instead.
 
+[`firmware/src/io/file-channel.h`](../../firmware/src/io/file-channel.h) holds the file channel's interface.
+
 ## Ring buffer
 
 The file channel keeps the bytes it has read ahead in a ring buffer. The card fills the ring in chunks of equal size one after another. The driver empties the buffer in the same order. The ring belongs to the driver that reads the file. That driver sets how many chunks the ring holds when it declares the channel, as in `FileChannel<4>` for four chunks, and the size of a chunk in the constructor. A chunk is free again once `take()` has taken all its bytes.
@@ -31,34 +33,3 @@ A file channel reads with the priority its driver gives it.
 ## Existing libraries
 
 A ring such as SdFat's [`RingBuf`](https://github.com/PaulStoffregen/SdFat/blob/master/src/RingBuf.h) or a FreeRTOS stream buffer passes bytes from one writer to one reader. Neither reads the file. The file channel also starts the reads, switches files, starts a file over and skips bytes. `RingBuf` also turns every interrupt off for a moment in each call from a task.
-
-## Interface
-
-```cpp
-// reads files one after another from the card into a ring of chunks, for the one place that takes
-// the bytes; every call comes from that place and returns at once
-template <uint8_t Chunks>                  // the chunks the ring holds, such as FileChannel<4>
-class FileChannel {
-    static_assert(Chunks > 0, "a ring holds at least one chunk");
-
-public:
-    // a ring of Chunks chunks of chunk bytes each at ring, which starts on a 32-byte boundary, read
-    // with priority
-    FileChannel(uint8_t* ring, uint32_t chunk, FilePriority priority = FilePriority::NORMAL);
-
-    // reads file from byte at, and from its beginning again at its end when loop is set; the bytes
-    // of the file read before are gone at once
-    void start(const FileReader& file, bool loop, uint32_t at = 0);
-
-    void stop();                           // ends the file it reads; its bytes are gone at once
-
-    // copies up to n bytes from the front of the ring into to, across chunks, or skips them when to
-    // is nullptr; starts the next read where a chunk is free and gets how many it took
-    size_t take(void* to, size_t n);
-
-    // gets how many bytes take() could take now; also starts the next read where a chunk is free
-    size_t available();
-
-    bool ended() const;                    // gets whether the file has run out or a read has failed and every byte before is taken, or no file is read
-};
-```

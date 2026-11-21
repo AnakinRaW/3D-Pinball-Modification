@@ -41,7 +41,7 @@ The step runs in three paces. In real time, the browser runs passes of 1 ms simu
 | Lamps component | Real |
 | Lighting driver | Real down to its chains, with the adapter profile and every limit on brightness. Only the output stage, ws2812-flexio2, is replaced: the browser reads the six chains after every frame |
 | Screen component, LVGL 9.6, video player | Real, with the firmware's [`lv_conf.h`](../../firmware/gist/lv_conf.h). The simulated display driver receives the rectangles LVGL sends and copies them into a 320 × 240 frame. Videos are the same `.rgb` files the card holds |
-| Sounds component | Real. The simulated audio driver plays the files through Web Audio and publishes `SoundEnded` when one ends |
+| Sounds component | Real. The simulated audio driver plays the files through Web Audio and publishes `SOUND_ENDED` when one ends |
 | Config and file system components | Real. The simulated storage driver reads and writes an in-memory file system that holds the card's contents |
 | IR, break beam, contacts, controls, rotary sensor, touch | Simulated: each publishes the driver events the browser hands it, stamped with their simulated time |
 | Solenoids, servo | Simulated: each records its pulls and moves, which the drawing animates |

@@ -2,7 +2,7 @@
 
 The sounds component plays the game's audio files from the SD card in the `/games/<id>/audio` directory.
 
-The host hands every `SoundEnded` event of the driver to this component.
+The host hands every `SOUND_ENDED` event of the driver to this component.
 
 ## Music and effects
 

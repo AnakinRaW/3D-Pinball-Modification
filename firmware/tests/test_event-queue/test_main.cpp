@@ -203,6 +203,12 @@ static void testPayload() {
         TEST_ASSERT_EQUAL_UINT16(TOUCH_X, q.x);
         TEST_ASSERT_EQUAL_UINT16(TOUCH_Y, q.y);
     }
+
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::SOUND_ENDED>(7, SOURCE, CODE));
+    DriverEvent sound[1];
+    TEST_ASSERT_EQUAL_UINT32(1, queue.read(sound, 1));
+    TEST_ASSERT_EQUAL_UINT16(uint16_t(DriverEventType::SOUND_ENDED), uint16_t(sound[0].type));
+    TEST_ASSERT_EQUAL_HEX32(CODE, payload<DriverEventType::SOUND_ENDED>(sound[0]));
 }
 
 // Publishes one event through p and checks that p drops it and that read() finds nothing.
