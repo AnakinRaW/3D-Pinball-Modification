@@ -152,7 +152,7 @@ with MODEL.block("LVGL", section=FRAME):
         "while the driver sends the last", stated=False)
     fig("b_draw", "KB", "n_cols * n_rows * b_pixel * n_draw_bufs",
         moves="+n_cols +n_rows +b_pixel +n_draw_bufs")
-    dec("t_refr", 33, "ms", src="LV_DEF_REFR_PERIOD in firmware/gist/lv_conf.h, the period of LVGL's "
+    dec("t_refr", 33, "ms", src="LV_DEF_REFR_PERIOD in firmware/include/lv_conf.h, the period of LVGL's "
         "display refresh, LVGL's default kept")
 
     # the screen's picture memory takes the PSRAM the log's and the debug output's buffers leave;

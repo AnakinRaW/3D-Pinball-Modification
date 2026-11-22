@@ -1,2 +1,2 @@
 // the firmware's LVGL settings
-#include "../../../gist/lv_conf.h"
+#include "../../../include/lv_conf.h"
