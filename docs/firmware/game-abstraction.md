@@ -71,7 +71,7 @@ A component may make several pinball events of one driver event. It keeps them i
 
 A component with timed work, such as the [drain](components/drain.md)'s wait for a released ball, does it in `update()`. The host calls `update()` of every component once per pass of the main loop, before the game's `update()`, and in every phase of the game. The host passes the pinball events of both `translate()` and `update()` to the game. A component without timed work keeps the default, which makes none.
 
-Components are described under [`components/`](components/).
+[`game/pinball-event.h`](../../firmware/src/game/pinball-event.h) holds the pinball events and their types, and [`game/component.h`](../../firmware/src/game/component.h) holds `Component`. Components are described under [`components/`](components/).
 
 ## Saved data
 
@@ -82,45 +82,9 @@ A game writes to the card only outside Play. A game keeps its live score in RAM 
 ## Interfaces
 
 ```cpp
-// the events a game gets: those the components make, and those of the services
-enum class EventType : uint16_t {
-    // List of events
-};
-
-// what a game gets, with the fields of a DriverEvent
-struct PinballEvent {
-    uint32_t  time;      // nowUs() at detection, taken over from the driver event
-    EventType type;
-    uint8_t   source;    // lane or channel inside its component or service
-    uint32_t  payload;   // interpreted according to the type
-};
-
-// one payload per type
-template <EventType Tag> struct PayloadOf;
-template <EventType Tag> typename PayloadOf<Tag>::type payload(const PinballEvent&);
-
 // what a game may use; the host hands it over in start()
 struct Machine {
     XXXComponent& component;  // for each component and each service, one struct field
-};
-
-// the pinball events a component made of one driver event; valid until its next translate()
-struct PinballEvents {
-    const PinballEvent* events = nullptr;   // points into the component's own list
-    uint8_t             count  = 0;         // how many it holds this time
-};
-
-// one element of the playfield, or a service such as the sounds, built on the drivers' parts
-class Component {
-public:
-    virtual ~Component() = default;
-
-    // takes a driver event of the component's parts and points out at the pinball events it made of it, if any; false for any other
-    virtual bool translate(const DriverEvent& in, PinballEvents& out) = 0;
-
-    // runs the component's timed work and points out at the pinball events it made, if any; false
-    // when it made none. The host calls it once per pass of the loop, before the game's update()
-    virtual bool update(uint32_t now, PinballEvents& out) { return false; }
 };
 
 // the three top roll-over lanes, each with its IR channel

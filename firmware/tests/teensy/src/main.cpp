@@ -41,15 +41,18 @@ extern const Program DISPLAY_PROGRAM;
 extern const Program TOUCH_PROGRAM;
 extern const Program EVERY_DRIVER;
 extern const Program LAMPS;
+extern const Program SOUNDS;
 extern const Program LOGGER;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
 static const Program* const PROGRAMS[] = {
-    &CLOCK,       &TASK_LOCK, &DEBUG_OUTPUT, &DEBUG_TRACE_PROGRAM, &CARD_APPENDER,  &EVENT_QUEUE,
-    &DRIVER_TICK, &PSRAM,     &STORAGE,      &FILE_CHANNEL,        &WS2812_FLEXIO2, &LIGHTING,
-    &I2C_BUS,     &SERVO,     &AUDIO,        &DISPLAY_PROGRAM,     &TOUCH_PROGRAM,  &EVERY_DRIVER,
-    &LAMPS,       &LOGGER,    &START_UP};
+    &CLOCK,         &TASK_LOCK,    &DEBUG_OUTPUT,   &DEBUG_TRACE_PROGRAM,
+    &CARD_APPENDER, &EVENT_QUEUE,  &DRIVER_TICK,    &PSRAM,
+    &STORAGE,       &FILE_CHANNEL, &WS2812_FLEXIO2, &LIGHTING,
+    &I2C_BUS,       &SERVO,        &AUDIO,          &DISPLAY_PROGRAM,
+    &TOUCH_PROGRAM, &EVERY_DRIVER, &LAMPS,          &SOUNDS,
+    &LOGGER,        &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line

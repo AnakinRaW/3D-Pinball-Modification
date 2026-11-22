@@ -1,0 +1,224 @@
+#include "sounds.h"
+#include "logging/debug-log.h"
+#include "logging/logger.h"
+#include <math.h>
+#include <stdio.h>
+
+constexpr char AUDIO_DIRECTORY[] = "audio/";   // sounds.md: the game's audio directory
+constexpr float PERCENT = 100;                 // the log writes a volume in whole percent
+
+void Sounds::begin() {
+    const float music = fminf(fmaxf(settings.musicVolume, VOLUME_MIN), VOLUME_MAX);
+    float effects = fminf(fmaxf(settings.effectsVolume, VOLUME_MIN), VOLUME_MAX);
+    // Music and an effect at their full volumes add up to the output's full scale, so the two
+    // squared stay within 1.
+    const float room = sqrtf(VOLUME_MAX - music * music);
+    if (effects > room) {
+        logWarning("sounds",
+                   "audio.effects_volume lowered from %ld %% to %ld %%, so music and an effect "
+                   "never overdrive the output",
+                   lroundf(effects * PERCENT), lroundf(room * PERCENT));
+        effects = room;
+    }
+    musicVolume(music);
+    effectsVolume(effects);
+}
+
+float Sounds::gain(float percent) {
+    const float p = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
+    return p * p;
+}
+
+FileReader Sounds::file(const char* name) const {
+    char path[FILE_PATH_BYTES];
+    const int n = snprintf(path, sizeof path, "%s%s", AUDIO_DIRECTORY, name);
+    if (n < 0 || size_t(n) >= sizeof path) {
+        DEBUG_LOG("sounds: %s is too long for a path\n", name);
+        return FileReader();
+    }
+    return files.open(path);
+}
+
+uint8_t Sounds::pick() const {
+    uint8_t oldest = MUSIC + 1;
+    for (uint8_t c = MUSIC + 1; c < AudioDriver::CHANNELS; ++c) {
+        if (!audio.playing(c)) {
+            return c;
+        }
+        // The difference keeps the order across the count's wrap.
+        if (int32_t(startedAs[c] - startedAs[oldest]) < 0) {
+            oldest = c;
+        }
+    }
+    return oldest;
+}
+
+void Sounds::play(const char* name) {
+    const uint8_t c = pick();
+    effects = effects + 1;
+    startedAs[c] = effects;
+    audio.play(c, file(name));
+}
+
+void Sounds::hold(Track& t) {
+    if (t.number == 0 || t.number != onChannel) {
+        return;
+    }
+    // The driver's position belongs to the last request, which was this track's.
+    const AudioDriver::Position at = audio.position(MUSIC);
+    if (at.empty()) {
+        // The track has played to its end, and its SOUND_ENDED is on the way. It keeps its
+        // number, so translate() ends it.
+        return;
+    }
+    t.at = at;
+    t.number = 0;
+}
+
+void Sounds::resume() {
+    if (tracks.size() == 0) {
+        if (onChannel != 0) {
+            audio.stop(MUSIC);
+            onChannel = 0;
+        }
+        return;
+    }
+    Track& t = tracks[0];
+    if (t.number != 0) {
+        if (t.number != onChannel && onChannel != 0) {
+            // The track on top has played to its end and waits for its SOUND_ENDED, so the
+            // channel stays silent until translate() ends it.
+            audio.stop(MUSIC);
+            onChannel = 0;
+        }
+        return;
+    }
+    t.number = t.at.empty() ? audio.play(MUSIC, t.file, t.loop) : audio.play(MUSIC, t.at);
+    t.at = {};
+    onChannel = t.number;
+}
+
+void Sounds::start(const Track& track) {
+    // The track it replaces leaves first, so the new one lies above the tracks of equal priority.
+    tracks.removeIf([&](const Track& t) { return t.same(track); });
+    if (tracks.insert(track) == nullptr) {
+        DEBUG_LOG("sounds: a track of key %u refused, %u modes hold one\n", track.key, MODES);
+        resume();
+        return;
+    }
+    if (tracks.size() > 1 && tracks[0].same(track)) {
+        hold(tracks[1]);
+    }
+    resume();
+}
+
+template <typename Pred> void Sounds::drop(Pred pred) {
+    const bool top = tracks.size() > 0 && pred(tracks[0]);
+    tracks.removeIf(pred);
+    if (top) {
+        resume();
+    }
+}
+
+void Sounds::music(Layer layer, const char* name, bool loop) {
+    Track track;
+    track.key = layer.key;
+    track.priority = layer.priority;
+    track.file = file(name);
+    track.loop = loop;
+    start(track);
+}
+
+void Sounds::stopMusic(Layer layer) {
+    drop([&](const Track& t) { return t.owner == Owner::MODE && t.key == layer.key; });
+}
+
+bool Sounds::musicEnded(Layer layer) const {
+    for (size_t i = 0; i < tracks.size(); ++i) {
+        if (tracks[i].owner == Owner::MODE && tracks[i].key == layer.key) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Sounds::videoSound(const char* name, bool loop) {
+    Track track;
+    track.owner = Owner::VIDEO;
+    track.file = file(name);
+    track.loop = loop;
+    start(track);
+}
+
+void Sounds::stopVideoSound() {
+    drop([](const Track& t) { return t.owner == Owner::VIDEO; });
+}
+
+bool Sounds::videoSounding() const {
+    for (size_t i = 0; i < tracks.size(); ++i) {
+        if (tracks[i].owner == Owner::VIDEO) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint32_t Sounds::videoPlayed() const {
+    // The video's sound lies on top whenever it is there, so the channel plays it.
+    if (tracks.size() == 0 || tracks[0].owner != Owner::VIDEO || tracks[0].number == 0 ||
+        tracks[0].number != onChannel) {
+        return 0;
+    }
+    return audio.position(MUSIC).played();
+}
+
+void Sounds::musicVolume(float percent) {
+    musicGain = gain(percent);
+    audio.volume(MUSIC, musicGain);
+}
+
+void Sounds::effectsVolume(float percent) {
+    effectsGain = gain(percent);
+    for (uint8_t c = MUSIC + 1; c < AudioDriver::CHANNELS; ++c) {
+        audio.volume(c, effectsGain);
+    }
+}
+
+bool Sounds::translate(const DriverEvent& in, PinballEvents& out) {
+    if (in.type != DriverEventType::SOUND_ENDED) {
+        return false;
+    }
+    out = {};
+    const uint32_t number = payload<DriverEventType::SOUND_ENDED>(in);
+    if (in.source != MUSIC || number == 0) {
+        return true;
+    }
+    if (number == onChannel) {
+        onChannel = 0;
+    }
+    // A track stopped or replaced reports no end, so only a track still held can match.
+    const Track* t = tracks.find([&](const Track& x) { return x.number == number; });
+    if (t == nullptr) {
+        return true;
+    }
+    const bool top = t == &tracks[0];
+    const Track done = *t;
+    tracks.removeIf([&](const Track& x) { return x.number == number; });
+    if (done.owner == Owner::MODE) {
+        ended = {in.time, EventType::MUSIC_ENDED, done.key, number};
+        out = {&ended, 1};
+    }
+    if (top) {
+        resume();
+    }
+    return true;
+}
+
+void Sounds::reset() {
+    tracks.clear();
+    onChannel = 0;
+    for (uint8_t c = 0; c < AudioDriver::CHANNELS; ++c) {
+        audio.stop(c);
+        audio.volume(c, c == MUSIC ? musicGain : effectsGain);
+    }
+}

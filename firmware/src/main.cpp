@@ -1,13 +1,18 @@
 // The firmware's start: setup() starts the clock, creates the main task and starts FreeRTOS. The
 // main task runs the start order of docs/firmware/general-design.md and then the main loop: it
-// mounts the card and begins the log on it. Until the other drivers exist, it brings up LVGL and
-// FastLED and blinks the Teensy's LED once a second.
+// mounts the card, begins the log on it, starts the audio driver and the sounds, and hands the
+// driver events to the sounds. Until the other drivers exist, it brings up LVGL and FastLED and
+// blinks the Teensy's LED once a second.
 
 // Keeps Arduino's macros, which FastLED's Teensy 4 code and WDT_T4 use.
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
+#include "components/file-system.h"
+#include "components/sounds.h"
 #include "core/device-monitor.h"
+#include "core/event-queue.h"
+#include "drivers/audio.h"
 #include "drivers/storage.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
@@ -20,6 +25,9 @@
 
 constexpr uint32_t BLINK_MS = 500;   // half the LED's blink period
 constexpr uint32_t US_PER_MS = 1000;
+/// The most driver events one pass of the main loop hands on, an estimate. A debug build reports a
+/// pass that finds more waiting.
+constexpr uint32_t EVENTS_PER_PASS = 64;
 
 /// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
 /// on a multiple of its size
@@ -43,6 +51,10 @@ static StaticTask_t mainTask;
 constexpr char LOG_FIRST[] = "/log-a.txt";    // logging.md: the log's first file
 constexpr char LOG_SECOND[] = "/log-b.txt";   // logging.md: the log's second file
 EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
+
+static AudioDriver audio(events);
+static FileSystem files(storage);
+static Sounds sounds(audio, files);
 
 /// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
@@ -97,8 +109,16 @@ static void runMainTask(void*) {
         logger.begin(readLogStart(LOG_FIRST, firstHead), readLogStart(LOG_SECOND, secondHead));
     }
 
+    if (!audio.begin()) {
+        logWarning("main", "the audio driver does not begin, so no sound plays");
+    }
+
     lv_init();
     pinMode(LED_BUILTIN, OUTPUT);
+
+    // The sounds start at their starting volumes where the game host's begin() stands in the
+    // start order.
+    sounds.begin();
 
     startingUp = false;
     uint32_t toggledUs = nowUs();
@@ -106,6 +126,23 @@ static void runMainTask(void*) {
         if (elapsedMs(toggledUs, BLINK_MS)) {
             toggledUs += BLINK_MS * US_PER_MS;
             digitalToggleFast(LED_BUILTIN);
+        }
+        // One event past the cap shows that more waited. It stays first for the next pass, so the
+        // order holds.
+        static DriverEvent pending[EVENTS_PER_PASS + 1];
+        static uint32_t carried = 0;
+        const uint32_t n = carried + events.read(pending + carried, EVENTS_PER_PASS + 1 - carried);
+        const uint32_t taken = n > EVENTS_PER_PASS ? EVENTS_PER_PASS : n;
+        if (n > EVENTS_PER_PASS) {
+            DEBUG_LOG("main: more than %lu driver events waited for one pass\n", EVENTS_PER_PASS);
+        }
+        for (uint32_t i = 0; i < taken; ++i) {
+            PinballEvents made;
+            sounds.translate(pending[i], made);
+        }
+        carried = n - taken;
+        if (carried != 0) {
+            pending[0] = pending[EVENTS_PER_PASS];
         }
         logger.update();
         sendDebugLog();

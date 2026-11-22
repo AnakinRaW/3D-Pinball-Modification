@@ -566,19 +566,21 @@ The program `rotating-seal` checks the [rotating seal component](components/rota
 
 ### Sounds
 
-The program `sounds` checks the [sounds component](components/sounds.md) on a fake audio driver.
+The program `sounds` checks the [sounds component](components/sounds.md). Its computer tests run it on a fake audio driver, whose channels are the driver's channels and play from a fake card. Its `Teensy` and `bench` tests run it on the audio driver, and its `Teensy` test listens through a tap behind the master gain, as the [audio](#audio) program does.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `channels` | computer | Play effects until every effect channel is busy, then one more | The music keeps its channel, each effect takes a free channel, and the extra one replaces the effect that started first |
-| `video-sound` | computer | Play music, then a video's sound, and let it end | The video's sound takes the music's place, the music goes on from where it stood, and no `MusicEnded` comes for the video's sound |
+| `video-sound` | computer | Play music, then a video's sound, and let it end | The video's sound takes the music's place, the music goes on from where it stood, and no `MUSIC_ENDED` comes for the video's sound |
 | `video-sound-top` | computer | Start a mode's track at the highest priority and stop the track below while a video's sound plays, then let the video's sound end, and play a video's sound with no track | The video's sound plays on, the mode's track starts from its beginning once the video's sound has ended, and with no track the music stays off |
 | `tracks` | computer | Start tracks for three modes, two of them at equal priority, start a second track for one mode, then stop the track on top and let the next one end | Only the track of the highest priority plays, between the equal ones the later, a covered track is paused and resumes where it was paused, a second track of a mode replaces the mode's first, and a track below that is stopped leaves the track on top playing |
-| `music-ended` | computer | Let a track end, a looping track run, a covered track's and an older track's end arrive late, and an effect end | Only the track that plays gives `MusicEnded` with the key of its mode as the source, once |
+| `same-pass` | computer | Play a track and cover it with a second, then stop the second and start a third on top before the driver plays a block | The first track waits paused at the sample it was to go on from, and goes on there once the third stops |
+| `music-ended` | computer | Let a track end, a looping track run, a track end right before another covers it, the end of a replaced track arrive late, and an effect end | Each track that played to its end gives `MUSIC_ENDED` once, with the key of its mode as the source, also when it is covered by then. A covered track that has ended never starts again. The looping track, the replaced track and the effect give none |
 | `volume` | computer | Set both volumes across 0 to 1 and outside | The driver gets the square of each percentage, and a value outside counts as the nearer end |
 | `start-volumes` | computer | Start with both starting volumes at 1 | The music starts at 1 and the effects at 0, with one log line |
 | `names` | computer | Play names in the game's audio directory, and one too long | Each plays `/games/<id>/audio/<name>`, and the long one finds no file |
 | `reset` | computer | Play on every channel with tracks waiting below, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back, and no track goes on |
+| `handover` | Teensy | Play a mode's track, lay a video's sound over it, and let the video's sound end | The tap records the track from its first sample up to where it was paused, the video's sound from its first sample, then the track going on from the sample where it was paused. The track glides out without a jump between neighboring samples, each sound glides in across its first block, and no `MUSIC_ENDED` comes |
 | `resume` | bench | Play music, a video's sound in the middle of it, and let the video's sound end | The music goes on where it stopped, without a click |
 
 ### Screen
