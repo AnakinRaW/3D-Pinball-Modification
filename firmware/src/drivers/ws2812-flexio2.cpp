@@ -64,6 +64,11 @@ constexpr uint32_t TIMER_CTL = FLEXIO_TIMCTL_TRGSEL(SHIFTER0_STATUS) | FLEXIO_TI
 constexpr uint32_t SHIFTER_TRANSMIT = 2;
 constexpr uint32_t SHIFTER_OUTPUT = 3;
 constexpr uint32_t SHIFTER0_DMA = 1;   // SHIFTSDEN: shifter 0's status requests the DMA
+/// RM FlexIO, CTRL: FlexIO takes no register write until its software reset has cleared in the
+/// FlexIO clock. The manual gives no time, so the output holds the reset this long and waits this
+/// long after it, as the display driver does at FlexIO3, where the first write behind a shorter
+/// reset got lost on the bench.
+constexpr uint32_t FLEXIO_RESET_NS = 1000;
 
 /// WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, more than 280 µs
 constexpr uint32_t RESET_NS = 280000;
@@ -185,7 +190,9 @@ bool clockAt120() {
 bool startFlexio() {
     CCM_CCGR3 |= CCM_CCGR3_FLEXIO2(CCM_CCGR_ON);
     FLEXIO2_CTRL = FLEXIO_CTRL_SWRST;
+    delayNanoseconds(FLEXIO_RESET_NS);
     FLEXIO2_CTRL = 0;
+    delayNanoseconds(FLEXIO_RESET_NS);
     for (uint8_t shifter = 0; shifter < MAX_LANES; ++shifter) {
         shiftcfg(shifter) = 0;
         shiftctl(shifter) = 0;

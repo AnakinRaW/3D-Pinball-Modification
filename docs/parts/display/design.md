@@ -72,7 +72,9 @@ The [display driver](../../firmware/drivers/display.md) sends what LVGL draws ov
 
 ## Limitations
 
-Fast motion in a video can show a tear, since the module gives no signal when the panel refreshes.
+A moving picture can show a tear, since the module gives no signal when the panel builds its picture. A tear is a vertical line with the frame before on one side and the new frame on the other. A whole screen tears in 1.2 % of the screens sent. A video in a viewport tears more often.
+
+The screen is white from power-up until the driver has set the panel up, since Lite ends unconnected and the backlight is always on.
 
 The video rate needs the card formatted with 32 KB clusters. SdFat costs one command per cluster in its DMA mode, and smaller clusters make a video stutter.
 
@@ -130,13 +132,17 @@ FRAME     the panel in landscape, pixels across  = 320
           one frame                              = 150 KB
           that frame on the bus                  = 12.8 ms
           the full screen anew, at most          = 78.1 Hz
+          the panel builds its picture             79 Hz
+          one such build                         = 12.7 ms
+          the screens in which the build
+          overtakes the write                    = 1.2 %
           one burst, eight shifters of four
           bytes                                  = 32 bytes
           that burst on the bus                  = 2.67 µs
           the processor's clock                    600 MHz
           its clocks for one refill, at most,
-          measured                                 178 clocks
-          its share while the bus sends          = 11.2 %
+          measured                                 255 clocks
+          its share while the bus sends          = 16.0 %
           the clocks one burst gives a refill    = 1600 clocks
           the display's tick, which steps a
           restart                                  40 ms
@@ -252,7 +258,7 @@ START     the supervisor's reset after power-up,
 - [`datasheets/CST026-Hynitron.pdf`](../../datasheets/CST026-Hynitron.pdf): the touch controller's supply current and its I²C clock
 - [FocalTech, FT6x06 datasheet](https://cdn-shop.adafruit.com/datasheets/FT6x06%20Datasheet_V0.1_Preliminary_20120723.pdf), V0.1: the time from reset to the first I²C answer
 - [`datasheets/IMXRT1060CEC.pdf`](../../datasheets/IMXRT1060CEC.pdf), Rev. 4: Table 27, the pads' drive strengths
-- [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3: Table 14-5, the FlexIO clock's limit; 50.3.3.1, the shifters that drive several pins; Table 4-3, no DMA request for FlexIO3
+- [i.MX RT1060 reference manual](https://www.pjrc.com/teensy/IMXRT1060RM_rev3.pdf), Rev. 3: Table 14-5, the FlexIO clock's limit; 50.3.3.1, the shifters that drive several pins; 50.6.1.4, the software reset during which FlexIO takes no register write; Table 4-3, no DMA request for FlexIO3
 - [`firmware/bench/card-speed`](../../../firmware/bench/card-speed/card-speed.ino): the measured time of an audio chunk from the card
 - [`firmware/bench/stack`](../../../firmware/bench/stack/src/main.cpp): the measured time of a full-screen frame from the card under FreeRTOS
 - [`datasheets/UM10204-NXP.pdf`](../../datasheets/UM10204-NXP.pdf): the Standard-mode rise time

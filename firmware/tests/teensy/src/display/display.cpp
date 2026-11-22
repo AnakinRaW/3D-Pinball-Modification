@@ -7,12 +7,16 @@
 //                  estimate
 //   restart-steps  a restart holds a rectangle back until the panel is back, and lets the one on
 //                  its way finish
+//   repeated-restarts
+//                  the screen turns green after each of twenty restarts (asks at the bench)
+//   setup          FlexIO3 holds the driver's setup after each rectangle and after each restart
 //   with-lighting  the lighting's frames on FlexIO2, which shares FlexIO3's clock, go out every
 //                  lamps' frame period while full screens go out, and the screens keep their speed
 //
 // Wiring: the Adafruit 2090 on its 8-bit bus, as pin-assignment.md gives it. The panel cannot be
 // read back, so a test judges what the Teensy sees: the times and the calls of the function each
-// rectangle hands in. The screen shows the test's colors meanwhile. with-lighting sends dark
+// rectangle hands in, and FlexIO3's registers in setup. The screen shows the test's colors
+// meanwhile. with-lighting sends dark
 // frames on chain F, which has no LEDs at the bench, so no LED lights.
 
 #include <Arduino.h>
@@ -56,23 +60,46 @@ constexpr uint32_t DONE_TIMEOUT_MS = 100;   // far longer than the whole screen'
 struct Rect {
     uint16_t x, y, width, height;
 };
-constexpr Rect RECTS[] = {{0, 0, 320, 240}, {0, 0, 16, 1},        {304, 239, 16, 1},
-                          {16, 32, 64, 48}, {160, 120, 160, 120}, {48, 200, 32, 40}};
+constexpr Rect RECTS[] = {{0, 0, 64, 240},  {0, 0, 16, 1},        {304, 239, 16, 1},
+                          {16, 32, 64, 48}, {160, 120, 128, 120}, {48, 200, 32, 40}};
 // refills: how long each half runs, and how much slower than the bus a frame may arrive
 constexpr uint32_t REFILLS_QUICK_MS = 3000;
 constexpr uint32_t REFILLS_SOAK_MS = 30000;
 constexpr uint32_t FRAME_SLACK_PERMILLE = 50;
-constexpr uint32_t TURNS = 10;        // the idle and sending halves of refills, in turn
-constexpr uint32_t TIMED_MS = 1000;   // the run that counts the handler's clocks
-constexpr uint32_t PASS_WORK = 600;   // the nops of one pass of the counting loop
-constexpr uint32_t BAND_ROWS = 48;    // five bands make the screen
-constexpr uint32_t BANDS = H / BAND_ROWS;
+constexpr uint32_t TURNS = 10;          // the idle and sending halves of refills, in turn
+constexpr uint32_t TIMED_MS = 1000;     // the run that counts the handler's clocks
+constexpr uint32_t PASS_WORK = 600;     // the nops of one pass of the counting loop
+constexpr uint32_t BAND_COLUMNS = 64;   // five bands make the screen
+constexpr uint32_t BANDS = W / BAND_COLUMNS;
 constexpr uint32_t PERMILLE = 1000;
 // restart-steps: the panel's 120 ms after the reset and 120 ms after Sleep Out, plus up to two
 // display ticks of 40 ms each before a step is taken, and a reserve
 constexpr uint32_t RESTART_MIN_MS = 240;
 constexpr uint32_t RESTART_MAX_MS = 400;
 constexpr uint32_t RESTART_TIMEOUT_MS = 2000;
+// repeated-restarts: the green screen stays this long after each restart, so a panel that a
+// restart left asleep shows as a screen that stays white far longer than between two restarts
+constexpr uint32_t RESTARTS = 20;
+constexpr uint32_t GREEN_MS = 1500;
+// setup: what FlexIO3's registers hold once the driver has set it up for bursts or for single
+// writes, RM FlexIO. Every shifter puts a byte on eight pins at once and takes its next bytes from
+// the shifter after it. Shifter 0 drives D0 to D7 from FlexIO3's signal 8 on, and timer 0 drives WR
+// on signal 6, as pin-assignment.md gives them. A write lasts ten FlexIO3 clocks, and a burst has
+// 32 writes.
+constexpr uint8_t SHIFTERS = 8;
+constexpr uint32_t SETUP_SHIFTCFG = FLEXIO_SHIFTCFG_INSRC | FLEXIO_SHIFTCFG_PWIDTH(7);
+constexpr uint32_t SETUP_SHIFTCTL = FLEXIO_SHIFTCTL_TIMSEL(0) | FLEXIO_SHIFTCTL_SMOD(2);
+constexpr uint32_t SETUP_SHIFTCTL_FIRST =
+    SETUP_SHIFTCTL | FLEXIO_SHIFTCTL_PINCFG(3) | FLEXIO_SHIFTCTL_PINSEL(8);
+constexpr uint32_t SETUP_HALF_WRITE = 10 / 2 - 1;
+constexpr uint32_t SETUP_TIMCMP_BURST = (32 * 2 - 1) << 8 | SETUP_HALF_WRITE;
+constexpr uint32_t SETUP_TIMCMP_SINGLE = (1 * 2 - 1) << 8 | SETUP_HALF_WRITE;
+constexpr uint32_t SETUP_TIMCFG = FLEXIO_TIMCFG_TIMDIS(2) | FLEXIO_TIMCFG_TIMENA(2);
+constexpr uint32_t SETUP_TIMCTL = FLEXIO_TIMCTL_TRGPOL | FLEXIO_TIMCTL_TRGSRC |
+                                  FLEXIO_TIMCTL_PINCFG(3) | FLEXIO_TIMCTL_PINSEL(6) |
+                                  FLEXIO_TIMCTL_PINPOL | FLEXIO_TIMCTL_TIMOD(1);
+constexpr uint32_t SETUP_RECTS = 2000;
+constexpr uint32_t SETUP_RESTARTS = 10;
 // with-lighting: chain F, which has no LEDs at the bench, at its longest, one frame every lamps'
 // frame period
 constexpr uint8_t BENCH_CHAIN = Lighting::CHAINS - 1;
@@ -90,14 +117,18 @@ constexpr uint32_t BAR_ROWS = 120;
 constexpr uint32_t QUICK_LIMIT_S = 20;
 constexpr uint32_t REFILLS_SOAK_LIMIT_S = 90;
 constexpr uint32_t ASK_LIMIT_S = 150;
+constexpr uint32_t RESTARTS_LIMIT_S = 200;
 
 static Display display;
 static bool begun = false;
 // the programs' shared PSRAM
 static_assert(2 * FRAME_BYTES <= test::SCRATCH_BYTES, "both screens fit");
 static uint8_t* const frame = test::scratch();
-// refills: a band of the screen in RAM2, where the screen component keeps LVGL's buffers
-DMAMEM static uint8_t band[BAND_ROWS * W * BYTES_PER_PIXEL] __attribute__((aligned(32)));
+// A band of the screen from its top to its bottom in RAM2, where the screen component keeps LVGL's
+// buffers. The driver takes the pixels down the columns, which pixels in the PSRAM hold back, and
+// a band as high as the screen costs it what a whole screen costs.
+DMAMEM static uint8_t band[BAND_COLUMNS * H * BYTES_PER_PIXEL] __attribute__((aligned(32)));
+static_assert(sizeof band >= 128 * 120 * BYTES_PER_PIXEL, "the largest of RECTS fits");
 static uint8_t* const second = test::scratch() + FRAME_BYTES;
 
 static volatile uint32_t doneCount = 0;
@@ -259,10 +290,11 @@ static void testRectangles() {
         return;
     }
     fill(frame, FRAME_BYTES, BLUE);
+    fill(band, sizeof band, BLUE);
     for (const Rect& r : RECTS) {
         const uint32_t before = doneCount;
         const uint32_t t0 = ARM_DWT_CYCCNT;
-        if (!display.send(r.x, r.y, r.width, r.height, frame, onDone)) {
+        if (!display.send(r.x, r.y, r.width, r.height, band, onDone)) {
             snprintf(seen, sizeof seen, "%u, %u, %u by %u refused", r.x, r.y, r.width, r.height);
             test::fail(seen, "sent");
             return;
@@ -342,7 +374,8 @@ static uint32_t countPasses(bool sending, uint32_t ms, uint32_t& frames) {
             asm volatile("nop");
         }
         if (sending && doneCount - start == sentBands &&
-            display.send(0, uint16_t(sentBands % BANDS * BAND_ROWS), W, BAND_ROWS, band, onDone)) {
+            display.send(uint16_t(sentBands % BANDS * BAND_COLUMNS), 0, BAND_COLUMNS, H, band,
+                         onDone)) {
             ++sentBands;
         }
     }
@@ -467,6 +500,119 @@ static void testRestartSteps() {
     test::pass();
 }
 
+// ---- repeated-restarts
+
+static void testRepeatedRestarts() {
+    char text[96];
+    if (!ready()) {
+        return;
+    }
+    snprintf(text, sizeof text, "watch the screen: it restarts %lu times and turns green each time",
+             RESTARTS);
+    test::step(text);
+    for (uint32_t i = 0; i < RESTARTS; ++i) {
+        display.restart();
+        const uint32_t t0 = millis();
+        while (display.restarting() && millis() - t0 < RESTART_TIMEOUT_MS) {
+        }
+        if (display.restarting() || !showColor(GREEN)) {
+            snprintf(text, sizeof text, "restart %lu did not end or its screen did not go out",
+                     i + 1);
+            test::fail(text, "the panel back and the green screen sent");
+            return;
+        }
+        delay(GREEN_MS);
+    }
+    const test::Answer a = test::ask(
+        "Did the screen turn green after every restart, and never stay white for a second?",
+        ASK_TIMEOUT_MS);
+    if (a == test::Answer::YES) {
+        test::pass();
+    } else {
+        test::fail(a == test::Answer::NO ? "answered no" : "no answer", "yes");
+    }
+}
+
+// ---- setup
+
+// Gets the first register of FlexIO3 that differs from the driver's setup for bursts or for single
+// writes, counted from 0 in the order the driver writes them, and -1 when every register holds it.
+static int32_t wrongRegister(bool burst) {
+    const IMXRT_FLEXIO_t& f = IMXRT_FLEXIO3_S;
+    const uint8_t shifters = burst ? SHIFTERS : 1;
+    int32_t at = 0;
+    for (uint8_t i = 0; i < shifters; ++i) {
+        if (f.SHIFTCFG[i] != SETUP_SHIFTCFG) {
+            return at;
+        }
+        ++at;
+        if (f.SHIFTCTL[i] != (i == 0 ? SETUP_SHIFTCTL_FIRST : SETUP_SHIFTCTL)) {
+            return at;
+        }
+        ++at;
+    }
+    // RM FlexIO, TIMCTL: TRGSEL 4 * N + 1 picks shifter N's status flag, the last shifter's for a
+    // burst and shifter 0's for a single write.
+    const uint32_t trigger = burst ? SHIFTERS - 1 : 0;
+    const uint32_t values[] = {f.TIMCMP[0], f.TIMCFG[0], f.TIMCTL[0], f.CTRL};
+    const uint32_t wanted[] = {burst ? SETUP_TIMCMP_BURST : SETUP_TIMCMP_SINGLE, SETUP_TIMCFG,
+                               SETUP_TIMCTL | FLEXIO_TIMCTL_TRGSEL(trigger << 2 | 1),
+                               FLEXIO_CTRL_FLEXEN};
+    for (size_t i = 0; i < sizeof values / sizeof values[0]; ++i) {
+        if (values[i] != wanted[i]) {
+            return at;
+        }
+        ++at;
+    }
+    return -1;
+}
+
+// A rectangle leaves FlexIO3 set up for bursts, and a restart leaves it set up for single writes,
+// from its last command. Each is read back many times, since a setup fails only now and then.
+static void testSetup() {
+    char seen[96];
+    if (!ready()) {
+        return;
+    }
+    fill(frame, Display::STEP_PX * BYTES_PER_PIXEL, BLACK);
+    for (uint32_t i = 0; i < SETUP_RECTS; ++i) {
+        const uint32_t before = doneCount;
+        if (!display.send(0, 0, Display::STEP_PX, 1, frame, onDone) || !waitDone(before + 1)) {
+            snprintf(seen, sizeof seen, "rectangle %lu did not go out", i + 1);
+            test::fail(seen, "sent");
+            return;
+        }
+        const int32_t wrong = wrongRegister(true);
+        if (wrong >= 0) {
+            snprintf(seen, sizeof seen, "after rectangle %lu, register %ld of the burst setup",
+                     i + 1, wrong);
+            test::fail(seen, "every register as the driver writes it");
+            return;
+        }
+    }
+    for (uint32_t i = 0; i < SETUP_RESTARTS; ++i) {
+        display.restart();
+        const uint32_t t0 = millis();
+        while (display.restarting() && millis() - t0 < RESTART_TIMEOUT_MS) {
+        }
+        if (display.restarting()) {
+            snprintf(seen, sizeof seen, "restart %lu did not end", i + 1);
+            test::fail(seen, "the panel back");
+            return;
+        }
+        const int32_t wrong = wrongRegister(false);
+        if (wrong >= 0) {
+            snprintf(seen, sizeof seen, "after restart %lu, register %ld of the single setup",
+                     i + 1, wrong);
+            test::fail(seen, "every register as the driver writes it");
+            return;
+        }
+    }
+    Serial.printf("%lu rectangles and %lu restarts, every setup read back whole\n", SETUP_RECTS,
+                  SETUP_RESTARTS);
+    test::pass();
+}
+
 // ---- with-lighting
 
 static Lighting lighting;
@@ -489,7 +635,8 @@ static uint32_t countRefusals(uint32_t ms, uint32_t& shows, uint32_t& frames) {
             }
         }
         if (doneCount - start == sentBands &&
-            display.send(0, uint16_t(sentBands % BANDS * BAND_ROWS), W, BAND_ROWS, band, onDone)) {
+            display.send(uint16_t(sentBands % BANDS * BAND_COLUMNS), 0, BAND_COLUMNS, H, band,
+                         onDone)) {
             ++sentBands;
         }
     }
@@ -542,6 +689,9 @@ static const Test TESTS[] = {
     {"display.refills", RunsOn::TEENSY, QUICK_LIMIT_S, REFILLS_SOAK_LIMIT_S, testRefills, nullptr},
     {"display.restart-steps", RunsOn::TEENSY, QUICK_LIMIT_S, QUICK_LIMIT_S, testRestartSteps,
      nullptr},
+    {"display.repeated-restarts", RunsOn::BENCH, RESTARTS_LIMIT_S, RESTARTS_LIMIT_S,
+     testRepeatedRestarts, nullptr},
+    {"display.setup", RunsOn::TEENSY, QUICK_LIMIT_S, QUICK_LIMIT_S, testSetup, nullptr},
     {"display.with-lighting", RunsOn::TEENSY, QUICK_LIMIT_S, REFILLS_SOAK_LIMIT_S, testWithLighting,
      nullptr},
 };

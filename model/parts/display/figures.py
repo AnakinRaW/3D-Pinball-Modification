@@ -113,15 +113,23 @@ with MODEL.block("FRAME", section=FRAME):
     ds("b_shifter", 4, "bytes", src=f"{RM}: each shifter buffer holds 32 bits, four writes of "
        "8 bits", stated=False)
     MODEL.uses("f_cpu", of="teensy-4.1")
-    msr("n_isr", 178, "clocks", src="the processor clocks one refill costs the main loop: "
+    msr("n_isr", 255, "clocks", src="the processor clocks one refill costs the main loop: "
         "firmware/tests/teensy, display.refills, the share of a loop's passes that full screens "
-        "from RAM2 take, at worst 11.1 % of the 1600 clocks of a burst over 13 starts. The FlexIO3 "
-        "handler took 140 clocks in most starts and 171 in the others, where every FlexIO3 access "
+        "from RAM2 take, at worst 15.9 % of the 1600 clocks of a burst over 13 starts. The FlexIO3 "
+        "handler took 209 clocks in most starts and 240 in the others, where every FlexIO3 access "
         "takes longer")
     fig("b_frame", "KB", "n_cols * n_rows * b_pixel", moves="+n_cols +n_rows +b_pixel")
     fig("t_frame_bus", "ms", "b_frame * t_wr", "up",
         moves="+n_cols +n_rows +b_pixel +n_div -f_flexio")
     fig("f_screen_max", "Hz", "1 / t_frame_bus", "down", moves="+f_flexio -n_cols -n_rows -n_div")
+    # The driver sends a screen column by column, the way the panel builds its picture. A screen
+    # is on the bus a little longer than one build takes, so the build overtakes the write in that
+    # share of the screens, and the panel then shows two frames side by side.
+    ds("f_panel", 79, "Hz", sheet=PANEL, src="8.3.2 Frame Rate Control, the frame rate at RTNA "
+       "11000, 24 clocks a line, which the driver's setup sends, p. 155")
+    fig("t_panel", "ms", "1 / f_panel", moves="-f_panel")
+    fig("tear_share", "%", "t_frame_bus / t_panel - 1", "up",
+        moves="+n_cols +n_rows +b_pixel +n_div -f_flexio +f_panel")
     fig("n_burst", "bytes", "n_shifters * b_shifter", moves="+n_shifters +b_shifter")
     fig("n_burst_px", "", "n_burst / b_pixel", moves="+n_shifters +b_shifter -b_pixel",
         stated=False)
@@ -134,6 +142,14 @@ with MODEL.block("FRAME", section=FRAME):
         "FlexIO3 clocks between shifter 7's flag and the burst's first write, which the reference "
         "manual does not give", stated=False)
     MODEL.as_written("t_end_wait_ns", of="t_end_wait", unit="ns")
+    dec("t_flexio_reset", 1, "µs", src="how long the driver holds FlexIO3's software reset, and "
+        f"how long it waits after the reset before it writes a register, a decision: {RM}, "
+        "50.6.1.4, has FlexIO take no register write until the reset has cleared in the FlexIO "
+        "clock and gives no time. A bench program set FlexIO3 up as the driver does and read its "
+        "registers back, 1 720 000 times each way over 43 starts of the Teensy: with the reset "
+        "set, cleared and followed by the setup at once, 190 679 setups lost their first write, "
+        "in 31 of the starts, and with the two waits none did. Either wait alone lost none",
+        stated=False)
 
     fig("cpu_send", "%", "n_isr / (t_burst * f_cpu)", "up",
         moves="+n_isr +f_flexio -n_div -f_cpu -n_shifters")
@@ -576,6 +592,7 @@ for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"
                                   ("n_div", DISPLAY_CPP, "DIVIDER", "clocks"),
                                   ("t_dtick", DISPLAY_CPP, "TICK_US", "µs"),
                                   ("t_end_wait", DISPLAY_CPP, "END_WAIT_NS", "ns"),
+                                  ("t_flexio_reset", DISPLAY_CPP, "FLEXIO_RESET_NS", "ns"),
                                   ("t_ttick", TOUCH_H, "TICK_US", "µs"),
                                   ("n_slop", TOUCH_H, "SLOP_PX", ""),
                                   ("t_hold", TOUCH_H, "HOLD_MS", "ms"),

@@ -311,6 +311,7 @@ The program `ws2812-flexio2` checks the [FlexIO2 output](drivers/lighting.md#how
 | `latch` | Teensy | Send a short frame on chain F and the next one the moment the output is free again | The line stays low between the two frames for longer than the reset time that ends a frame for the LEDs |
 | `clock` | Teensy | Move the clock root FlexIO2 and FlexIO3 share to another rate. Start an output with FlexIO3 enabled, then one with FlexIO3 off | The first start is refused and leaves the root alone. The second sets the root back to the rate the bit timing needs and starts, and a frame goes out afterwards |
 | `shared` | Teensy | Send a frame through one output, then send through a second output while the frame goes out, and again once it is out | The second output is busy while the first one's frame goes out and refuses its send at once. Afterwards its send goes through |
+| `setup` | Teensy | Start an output and read FlexIO2's timer registers back | The registers hold the timer setup the start wrote |
 
 ### Lighting
 
@@ -465,12 +466,14 @@ The program `display` checks the [display driver](drivers/display.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `start` | bench | Start the Teensy from power-up, then restart it while the display is awake | The screen turns black both times, with no garbage and no white flash |
+| `start` | bench | Start the Teensy from power-up, then restart it while the display is awake | The screen is white until the panel is set up and then turns black both times, with no garbage |
 | `restart` | bench | Disconnect the 5 V of J-DISP for half a second while a picture shows, then connect it again | The picture returns within two seconds, and the Teensy keeps running |
 | `picture` | bench | Send color bars, a ramp of every level of red, green and blue, and the words TOP LEFT in that corner | The colors are right, the ramps run smoothly, and the words stand upright at the top left |
 | `rectangles` | Teensy | Send rectangles of several sizes and places, then one off the 16-pixel steps, one beyond the screen and one while another is on its way | The function handed in runs once per rectangle on the steps, after the rectangle's bus time and close behind it, and the three others are refused |
 | `refills` | Teensy | Send the screen in bands from RAM2 without a pause for a minute while a loop counts its passes, in turns with the same loop while nothing is sent | The refills take no more of the processor than the [measured share](drivers/display.md#performance--memory-usage), and a screen takes its bus time within 5 % |
 | `restart-steps` | Teensy | Send a screen, call `restart()` while it goes out, then send a second screen during the restart | The first screen finishes. `restarting()` is true from the call until the panel shows again, after the panel's waits after its reset and after Sleep Out and at most two of the display's ticks more. The second screen goes out only then |
+| `setup` | Teensy | Send two thousand small rectangles, then call `restart()` ten times, and read FlexIO3's registers back after each rectangle and each restart | Every register holds what the driver writes for bursts after a rectangle and for single writes after a restart |
+| `repeated-restarts` | bench | Call `restart()` twenty times in a row and send a green screen after each restart | The screen turns green after every restart |
 | `with-lighting` | Teensy | Start the [lighting](drivers/lighting.md) with the longest chain on chain F beside the display, and send a dark light frame every frame period of the [lamps](components/lamps.md) while the screen goes out in bands without a pause | No light frame is refused, and a screen takes its bus time within 5 % |
 
 ### Touch
@@ -510,6 +513,7 @@ The program `file-system` checks the [file system component](components/file-sys
 |---|---|---|---|
 | `paths` | computer | Open a path inside a game's directory, an empty path, one from the root, one with `..`, one too long, one before any game is named, and a full path for the host | The first gives the file in `/games/<id>/`, the last the file at the card's root, and every other a file whose requests fail |
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
+| `root` | computer | Name the card's root with `useRoot()`, open a path, an empty path, one from the root, one with `..` and one too long, then name a game and open again | The first gives the file at the card's root, every other a file whose requests fail, and the last lies in the game's directory |
 
 ### Config
 
@@ -593,6 +597,8 @@ The program `screen` checks the [screen component](components/screen.md). Its co
 | `layers` | bench | Create an object on the host's layer, a message box and an object on the game overlay layer, an object on a slide and an object on the background over `background.img`, then play a video on the slide | The objects lie over one another in the [order of the layers](components/screen.md#layers), the message box between the host's layer and the game overlay layer, the video and the slide's object in front of the background's objects, and the picture behind them |
 | `reset` | computer | Switch games while a picture and a frame of the stopped game still load | Every object, slide and image of the stopped game is gone, and the new game starts only once both have loaded and the picture memory is empty |
 | `redraw` | Teensy | Change the whole screen in every refresh, once without a video and once beside a full-screen video, while the main loop measures its passes | No pass [waits](components/screen.md#drawing) for the driver, and the longest pass is the time LVGL renders |
+| `restart` | computer | Call `restart()`, change an object while the fake display restarts, then let the display come back | The display driver's `restart()` is called once, no rectangle goes out while the display restarts, and the first refresh after it sends the whole screen once, with the change in it |
+| `power-lost` | bench | Show `background.img`, then pull the 5 V lead from the module's Vin for about two seconds and plug it back in. On `DEVICE_RECOVERED` of the touch controller, call `restart()` as the host does | `restarting()` of the display is true from the call until the panel is back, the picture shows again, and the Teensy keeps running |
 
 ### Video player
 
@@ -674,6 +680,7 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `last-game` | Teensy | Start game b, then restart | Game b starts again |
 | `first-start` | Teensy | Start with no record of a last game | The first game of the list starts |
 | `saved-data` | Teensy | Let a test game write a file in `end()`, restart, and let it read the file in `start()` | The game reads what it wrote |
+| `boot-film` | bench | Start with `/video/intro.rgb` and `/audio/intro.wav` at the card's root, then start once more without the two files | The film plays once on the whole screen with its sound before the first game starts, and without the files the first game starts at once |
 | `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole, and no picture of the stopped game stays on the screen |
 | `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game overlay layer reappears with every change drawn meanwhile |
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |

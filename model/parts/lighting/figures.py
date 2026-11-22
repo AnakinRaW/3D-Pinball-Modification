@@ -463,6 +463,10 @@ dec("n_latch_words", 110, "", src="LATCH_WORDS in firmware/src/drivers/ws2812-fl
     "one word, rounded down, plus one, plus the queued words")
 dec("n_words_queued", 2, "", src="WORDS_QUEUED in firmware/src/drivers/ws2812-flexio2.cpp: the words "
     "a shifter still holds when the DMA has written its last word, RM FlexIO")
+# The output waits at FlexIO2's software reset as the display driver does at FlexIO3's.
+MODEL.uses("t_flexio_reset", of="display", stated=False)
+MODEL.in_code("t_flexio_reset", file="firmware/src/drivers/ws2812-flexio2.cpp",
+              name="FLEXIO_RESET_NS", unit="ns")
 fig("t_latch", "µs", "(n_latch_words - n_words_queued) * t_word",
     moves="+n_latch_words -n_words_queued +n_symbols_word +n_symbol_bits +t_symbol",
     stated=False)
