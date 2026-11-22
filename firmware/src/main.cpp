@@ -1,8 +1,5 @@
 // The firmware's start: setup() starts the clock, creates the main task and starts FreeRTOS. The
-// main task runs the start order of docs/firmware/general-design.md and then the main loop: it
-// mounts the card, begins the log on it, starts the audio driver and the sounds, and hands the
-// driver events to the sounds. Until the other drivers exist, it brings up LVGL and FastLED and
-// blinks the Teensy's LED once a second.
+// main task runs the start order of docs/firmware/general-design.md and then the main loop.
 
 // Keeps Arduino's macros, which FastLED's Teensy 4 code and WDT_T4 use.
 #define USE_ARDUINO_DEFINES
@@ -10,13 +7,15 @@
 #include "core/clock.h"
 #include "components/file-system.h"
 #include "components/sounds.h"
+#include "components/screen.h"
+#include "components/video-player.h"
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
 #include "drivers/audio.h"
+#include "drivers/display.h"
 #include "drivers/storage.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
-#include <lvgl.h>
 // FastLED's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
 #pragma GCC diagnostic push
@@ -55,6 +54,9 @@ EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 static AudioDriver audio(events);
 static FileSystem files(storage);
 static Sounds sounds(audio, files);
+static Display display;
+static Screen screen(display);
+static VideoPlayer videoPlayer(screen, files, sounds);
 
 /// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
@@ -113,7 +115,12 @@ static void runMainTask(void*) {
         logWarning("main", "the audio driver does not begin, so no sound plays");
     }
 
-    lv_init();
+    if (!display.begin()) {
+        logWarning("main", "the display does not begin, so the screen stays dark");
+    }
+
+    screen.begin();
+    videoPlayer.begin();
     pinMode(LED_BUILTIN, OUTPUT);
 
     // The sounds start at their starting volumes where the game host's begin() stands in the
@@ -144,7 +151,10 @@ static void runMainTask(void*) {
         if (carried != 0) {
             pending[0] = pending[EVENTS_PER_PASS];
         }
+        PinballEvents ended;
+        videoPlayer.update(nowUs(), ended);
         logger.update();
+        screen.render();
         sendDebugLog();
         yield();
     }

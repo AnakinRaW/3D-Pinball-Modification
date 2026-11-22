@@ -31,7 +31,7 @@
   <text x="304" y="120" font-size="15" font-weight="700" fill="#2c3e50">Game</text>
   <text x="304" y="140" font-size="12" fill="#333">creates LVGL objects in overlay(), slide() and background()</text>
   <text x="304" y="156" font-size="12" fill="#333">loads its pictures and shows them</text>
-  <text x="304" y="172" font-size="12" fill="#333">plays videos and gets MovieEnded when one ends</text>
+  <text x="304" y="172" font-size="12" fill="#333">plays videos and gets MOVIE_ENDED when one ends</text>
   <text x="304" y="188" font-size="12" fill="#333">one slide per mode: slide(mode), remove(mode)</text>
 
   <rect x="790" y="96" width="190" height="132" rx="8" fill="#eef3f8" stroke="#4a6785" stroke-width="2"/>
@@ -39,7 +39,7 @@
   <text x="804" y="140" font-size="12" fill="#333">play(viewport, name,</text>
   <text x="804" y="156" font-size="12" fill="#333">loop, sound)</text>
   <text x="804" y="172" font-size="12" fill="#333">refreshes with each frame</text>
-  <text x="804" y="188" font-size="12" fill="#333">update(): MovieEnded</text>
+  <text x="804" y="188" font-size="12" fill="#333">update(): MOVIE_ENDED</text>
   <text x="804" y="204" font-size="12" fill="#333">step() on an LVGL timer</text>
   <text x="804" y="220" font-size="12" fill="#333">stops when its slide hides</text>
 

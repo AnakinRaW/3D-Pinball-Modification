@@ -79,15 +79,9 @@ The card is of Class A1 or A2. It is formatted FAT32 with 32 KB clusters and hol
 |---|---|
 | `audio/music.wav` | music of at least a minute, in the [audio driver's format](drivers/audio.md#audio-files) |
 | `audio/1.wav` to `audio/4.wav` | short effects in the same format, one for each channel |
-| `audio/loop.wav` | the sound of `video/loop.rgb`, as long as the movie |
-| `audio/sync.wav` | a click every second, as long as `video/sync.rgb` |
-| `video/loop.rgb` | a fullscreen movie in the [video format](../../assets/media.md#videos) |
-| `video/viewport.rgb` | a movie for a viewport smaller than the screen, in the same format |
-| `video/sync.rgb` | a movie that flashes white every second |
-| `background.img` | a background picture in the [screen's format](components/screen.md#pictures) |
-| `short.img` | the same picture, cut off halfway through its pixels |
-| `icon.img` | a picture smaller than the screen with transparent pixels, in the same format |
 | `settings` | a small settings file one driver reads in its `begin()` |
+
+The programs `sounds`, `screen` and `video-player` write their sounds, pictures and videos into `/games/tests/` themselves.
 
 ## Core
 
@@ -585,13 +579,13 @@ The program `sounds` checks the [sounds component](components/sounds.md). Its co
 
 ### Screen
 
-The program `screen` checks the [screen component](components/screen.md). Its computer tests run LVGL with a fake display driver.
+The program `screen` checks the [screen component](components/screen.md). Its computer tests run LVGL with a fake display driver. Its Teensy tests write `background.img`, a full-screen picture, `short.img`, the same picture cut off halfway through its pixels, and `icon.img`, a picture smaller than the screen with transparent pixels.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `widen` | computer | Change objects that start and end at every column | Every rectangle the driver gets spans whole rows and covers the change |
+| `widen` | computer | Change objects that start and end at every column, then two objects far apart in one refresh | Every rectangle the driver gets spans whole rows and covers the change, and a refresh hands the driver one rectangle |
 | `gestures` | computer | Feed touch events of short and long touches, still and moving, onto a modal object, onto a button, onto no object and from beside a button onto it | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the button gets the touch that comes down on it and none that slides onto it, each tap and hold reaches the game only when no object took the touch, and `takeGesture()` gives the host every gesture once |
-| `slides` | computer | Take slides for three modes, two of them at equal priority, ask again for one mode, then remove the slide on top, while a button and an animation lie on each slide, and start an animation on a covered slide | Only the slide of the highest priority shows, between the equal ones the later, the second call gets the same slide, only the button of the slide that shows takes a touch, the animations of covered slides stand still, and the next slide shows once the top one is removed, its animation going on where it stood |
+| `slides` | computer | Take slides for three modes, two of them at equal priority, ask again for one mode, then remove the slide on top, while a button lies on each slide. Start an animation with `animate()` on two slides and one more on the covered slide | Only the slide of the highest priority shows, between the equal ones the later, the second call gets the same slide, only the button of the slide that shows takes a touch, the animations of covered slides stand still, and the next slide shows once the top one is removed, its animation going on where it stood |
 | `hide-overlay` | computer | Hide the game overlay layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its overlay layer shown |
 | `load` | Teensy | Load `background.img`, `short.img`, `icon.img` and a picture the card does not hold | `loading()` is true until each has loaded, the background and the icon show, and the short and the missing one make `failed()` true |
 | `memory` | computer | Load a full-screen picture and smaller ones, release the full-screen one, reserve memory for a full-screen frame, then load until the memory is full | The frame gets the memory the full-screen picture freed, and a picture that finds the memory full makes `failed()` true |
@@ -602,22 +596,22 @@ The program `screen` checks the [screen component](components/screen.md). Its co
 
 ### Video player
 
-The program `video-player` checks the [video player](components/video-player.md). Its computer tests run LVGL with a fake display driver, a fake card and fake sounds.
+The program `video-player` checks the [video player](components/video-player.md). Its computer tests run LVGL with a fake display driver, a fake card and the sounds on a fake audio driver. Its Teensy tests write `loop.rgb`, a full-screen movie of four seconds whose top left pixel holds the frame's number, with `loop.wav` as long as the movie, `viewport.rgb`, a smaller movie, and `sync.rgb`, which flashes white every second, with `sync.wav`, a click every second.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, and with `sound` the sounds get `audio/<name>.wav` as the video's track in the same call |
-| `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MovieEnded` with the key of the mode that holds the video's slide reaches the game from the video player's next `update()` |
+| `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, one second ahead, and with `sound` the sounds get `audio/<name>.wav` as the video's track once the first frames have landed |
+| `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MOVIE_ENDED` with the key of the mode that holds the video's slide reaches the game from the video player's next `update()` |
 | `stop` | computer | Stop a video and its sound | Both stop, the music goes on, and the memory of the frame is free again |
 | `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on |
 | `owner` | computer | Play a video on the slide that shows, then one in a viewport on a hidden slide and one on no slide, then a second one on the slide that shows | `play()` returns false for the hidden slide and for no slide while the first video goes on, and the second video on the slide that shows replaces the first |
-| `hidden` | computer | Show a slide of higher priority over a playing video's slide, then one of equal priority, then remove a playing video's slide, and lay an object over the whole viewport of a playing video | The video and its sound stop each of the first three times, the music goes on, and no `MovieEnded` comes, while the video under the object plays on |
+| `hidden` | computer | Show a slide of higher priority over a playing video's slide, then one of equal priority, then remove a playing video's slide, and lay an object over the whole viewport of a playing video | The video and its sound stop each of the first three times, the music goes on, and no `MOVIE_ENDED` comes, while the video under the object plays on |
 | `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
-| `short-sound` | computer | Play a video whose sound ends before its last frame, and one whose sound file is missing | Each video plays on by the clock from the frame it stands at, the screen keeps refreshing, and each ends with `MovieEnded` |
+| `short-sound` | computer | Play a video whose sound ends before its last frame, and one whose sound file is missing | Each video plays on by the clock from the frame it stands at, the screen keeps refreshing, and each ends with `MOVIE_ENDED` |
 | `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
-| `frames` | Teensy | Write a file of several megabytes, then play `loop.rgb` with its sound in a loop for ten minutes. Meanwhile play a sound on each of the other audio channels, write to the card every second and run the game's load: effects on every lamp group at the lamps' frame period on chain F, where no LED is wired, and the touch driver's reads | Every frame is on the screen within its 40 ms and is the frame that belongs to how far its sound has played. No audio block plays silence for want of data |
+| `frames` | Teensy | Write a file of several megabytes, then play `loop.rgb` with its sound in a loop for ten minutes. Meanwhile play a sound on each of the other audio channels, write to the card every second and run the game's load: a dark light frame at the lamps' frame period on chain F, where no LED is wired, and the touch driver's reads | From the second frame on, every frame follows the one before within its 40 ms, none is skipped, and each is the frame that belongs to how far its sound has played. No channel's sound misses a sample for want of data, and the loops of the sound leave no gap |
 | `viewport` | bench | Play `viewport.rgb` in a viewport on a slide over a full-screen picture on the same slide, with a caption created after the viewport | The video fills only its viewport, the picture shows around it, and the caption lies in front of the video |
-| `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |
+| `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MOVIE_ENDED`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |
 
 ## Main program
