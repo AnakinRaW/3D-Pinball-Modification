@@ -93,10 +93,12 @@ constexpr uint32_t ASK_LIMIT_S = 150;
 
 static Display display;
 static bool begun = false;
-EXTMEM static uint8_t frame[FRAME_BYTES] __attribute__((aligned(32)));
+// the programs' shared PSRAM
+static_assert(2 * FRAME_BYTES <= test::SCRATCH_BYTES, "both screens fit");
+static uint8_t* const frame = test::scratch();
 // refills: a band of the screen in RAM2, where the screen component keeps LVGL's buffers
 DMAMEM static uint8_t band[BAND_ROWS * W * BYTES_PER_PIXEL] __attribute__((aligned(32)));
-EXTMEM static uint8_t second[FRAME_BYTES] __attribute__((aligned(32)));
+static uint8_t* const second = test::scratch() + FRAME_BYTES;
 
 static volatile uint32_t doneCount = 0;
 static volatile uint32_t doneCycles = 0;

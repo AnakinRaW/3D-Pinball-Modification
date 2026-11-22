@@ -68,8 +68,10 @@ constexpr Layer BASE = {0, 1};   // the mode whose track plays
 
 constexpr uint32_t FILE_BYTES = MELODY_SAMPLES * 2 + 64;
 
-EXTMEM static int16_t samples[RECORD];
-EXTMEM static uint8_t fileBuffer[FILE_BYTES] __attribute__((aligned(32)));
+// the programs' shared PSRAM
+static_assert(RECORD * sizeof(int16_t) + FILE_BYTES <= test::SCRATCH_BYTES, "the buffers fit");
+static int16_t* const samples = reinterpret_cast<int16_t*>(test::scratch());
+static uint8_t* const fileBuffer = test::scratch() + RECORD * sizeof(int16_t);
 
 // The audio program names its tap Tap as well, so this one stays inside this file.
 namespace {

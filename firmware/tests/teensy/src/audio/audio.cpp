@@ -71,7 +71,9 @@ constexpr char BLIP[] = "/tests/audio/blip.wav";
 constexpr char MISSING[] = "/tests/audio/missing.wav";
 constexpr char BIG[] = "/tests/audio/big.bin";
 
-EXTMEM static int16_t samples[RECORD];
+// the programs' shared PSRAM
+static_assert(RECORD * sizeof(int16_t) + FILE_BYTES <= test::SCRATCH_BYTES, "the buffers fit");
+static int16_t* const samples = reinterpret_cast<int16_t*>(test::scratch());
 
 /// Records the blocks bound for the amplifier into a ring in the PSRAM, an update without a block
 /// as silence, so the record keeps time.
@@ -116,7 +118,7 @@ private:
 
 static EventQueue queue;
 static AudioDriver audio(queue);
-EXTMEM static uint8_t fileBuffer[FILE_BYTES] __attribute__((aligned(32)));
+static uint8_t* const fileBuffer = test::scratch() + RECORD * sizeof(int16_t);
 static Tap* tap = nullptr;
 static bool written = false;
 static char seen[TEXT];
