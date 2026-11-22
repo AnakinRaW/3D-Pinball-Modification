@@ -6,9 +6,12 @@
 //           others, and release() deletes them
 //   redraw  LVGL never waits for the driver while it changes the whole screen in every refresh,
 //           also beside a full-screen video
+//   power-lost  the module's 5 V pulled for a moment: once the touch controller answers again,
+//               restart() brings the picture back (asks at the bench)
 //
 // Wiring: the Adafruit 2090 on its 8-bit bus, as pin-assignment.md gives it, and the card. The
 // screen shows the test's pictures meanwhile. The tests leave their files in /games/tests/.
+// power-lost needs the module's touch controller on Wire2 as well.
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -17,9 +20,11 @@
 #include "components/sounds.h"
 #include "components/video-player.h"
 #include "core/clock.h"
+#include "core/device-monitor.h"
 #include "drivers/audio.h"
 #include "drivers/display.h"
 #include "drivers/storage.h"
+#include "drivers/touch.h"
 #include "test-harness.h"
 #include "test-media.h"
 
@@ -30,6 +35,10 @@ constexpr uint32_t REDRAW_MS = 3000;
 /// calls
 constexpr uint32_t WAIT_MAX_US = 50;
 constexpr size_t TEXT = 128;
+constexpr uint32_t POWER_LIMIT_S = 300;
+constexpr uint32_t LOST_TIMEOUT_MS = 80000;   // power-lost: the time for each step at the bench
+constexpr uint32_t RESTART_TIMEOUT_MS = 2000;
+constexpr uint32_t ASK_TIMEOUT_MS = 120000;
 
 static Display display;
 static Screen screen(display);
@@ -38,6 +47,10 @@ static AudioDriver audio(queue);
 static FileSystem files(storage);
 static Sounds sounds(audio, files);
 static VideoPlayer player(screen, files, sounds);
+static Touch touch(io::wire2Bus, queue, driverTick);
+static EventQueue monitorEvents;
+DMAMEM static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
+static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
 static char seen[TEXT];
 static char wanted[TEXT];
 
@@ -49,6 +62,7 @@ public:
         p.reset();
         s.reset();
     }
+    static void restart(Screen& s) { s.restart(); }
 };
 
 // Begins the card, the display and the screen once, writes the pictures and starts each test on
@@ -269,10 +283,92 @@ static void testRedraw() {
     test::pass();
 }
 
+// Renders as the main loop does until the monitor's next event about the touch controller.
+static bool nextTouchFault(DriverEvent& e) {
+    const uint32_t t0 = millis();
+    while (millis() - t0 < LOST_TIMEOUT_MS) {
+        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+            return true;
+        }
+        screen.render();
+    }
+    return false;
+}
+
+static void testPowerLost() {
+    if (!ready()) {
+        return;
+    }
+    if (!touch.begin()) {
+        test::fail("the touch driver's begin() false", "true");
+        return;
+    }
+    if (!touch.present()) {
+        test::skip("no touch controller answers");
+        return;
+    }
+    if (!monitor.watch(Device::TOUCH, touch)) {
+        test::fail("the monitor refused the touch driver", "it watches it");
+        return;
+    }
+    static Picture background(screen);
+    Picture* const all[] = {&background};
+    background.load(files.open("background.img"));
+    background.show(screen.background());
+    renderWhileLoading(all, 1);
+    if (background.loading() || background.failed()) {
+        test::fail("background.img did not load", "it loads");
+        return;
+    }
+    uint32_t t0 = millis();
+    while (millis() - t0 < LOAD_MS) {
+        screen.render();
+    }
+    test::step("pull the 5 V lead from the display module's Vin for about two seconds, then plug "
+               "it back in");
+    DriverEvent e;
+    if (!nextTouchFault(e) || e.type != DriverEventType::DEVICE_FAILED) {
+        test::fail("no DEVICE_FAILED for the touch controller", "DEVICE_FAILED");
+        return;
+    }
+    if (!nextTouchFault(e) || e.type != DriverEventType::DEVICE_RECOVERED) {
+        test::fail("no DEVICE_RECOVERED after the 5 V came back", "DEVICE_RECOVERED");
+        return;
+    }
+    // What the host does on DEVICE_RECOVERED.
+    GameHost::restart(screen);
+    const bool heldAtOnce = display.restarting();
+    t0 = millis();
+    while (display.restarting() && millis() - t0 < RESTART_TIMEOUT_MS) {
+        screen.render();
+    }
+    const uint32_t restartMs = millis() - t0;
+    if (!heldAtOnce || display.restarting()) {
+        snprintf(seen, sizeof seen, "restarting at once %d, still restarting after %lu ms",
+                 heldAtOnce, restartMs);
+        test::fail(seen, "restarting at once, and the panel back in time");
+        return;
+    }
+    Serial.printf("the panel was back %lu ms after restart()\n", restartMs);
+    // The screen sends the picture in the passes after the panel is back.
+    t0 = millis();
+    while (millis() - t0 < LOAD_MS) {
+        screen.render();
+    }
+    const test::Answer a =
+        test::ask("Does the screen show the test's background picture again?", ASK_TIMEOUT_MS);
+    if (a != test::Answer::YES) {
+        test::fail(a == test::Answer::NO ? "answered no" : "no answer", "yes");
+        return;
+    }
+    test::pass();
+}
+
 static const Test TESTS[] = {
     {"screen.load", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLoad, nullptr},
     {"screen.show", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testShow, nullptr},
     {"screen.redraw", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testRedraw, nullptr},
+    {"screen.power-lost", RunsOn::BENCH, POWER_LIMIT_S, POWER_LIMIT_S, testPowerLost, nullptr},
 };
 
 extern const Program SCREEN = {TESTS, sizeof TESTS / sizeof TESTS[0]};

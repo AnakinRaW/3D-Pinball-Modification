@@ -8,6 +8,8 @@
 //   memory   a frame gets the room a full-screen picture gave back, and a full memory fails a load
 //   reset    a switch of games deletes the game's objects and slides and releases its pictures,
 //            and the memory empties once the reads of a picture and a frame have landed
+//   restart  the display restarts, nothing goes out meanwhile, and the whole screen goes out once
+//            the display is back
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -88,6 +90,7 @@ public:
         screen.reset();
     }
     static bool settled() { return screen.settled(); }
+    static void restart() { screen.restart(); }
     static PictureMemory& pictures() { return screen.pictures; }
     static lv_obj_t* top() { return screen.top(); }
 };
@@ -162,6 +165,7 @@ void setUp() {
     refresh();
     display.rects.clear();
     display.hold = false;
+    display.panelBack = true;
 }
 
 void tearDown() {}
@@ -377,11 +381,50 @@ static void testReset() {
     TEST_ASSERT_FALSE(p.loading());
 }
 
+static void testRestart() {
+    const Layer layer = {1, 10};
+    lv_obj_t* s = screen.slide(layer);
+    box(s, 40, 50, 20, 20);
+    refresh();
+    display.rects.clear();
+    const uint32_t before = display.restarts;
+    const uint32_t refusedBefore = display.refused;
+    GameHost::restart();
+    TEST_ASSERT_EQUAL_UINT32(before + 1, display.restarts);
+
+    // LVGL rests while the display restarts, so a change meanwhile reaches no rectangle.
+    box(s, 200, 100, 20, 20);
+    refresh();
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, display.rects.size());
+
+    // The first refresh after the display is back sends every row, with the change in it.
+    display.panelBack = true;
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(1, display.rects.size());
+    const Display::Rect r = display.rects[0];
+    TEST_ASSERT_EQUAL_UINT16(0, r.x);
+    TEST_ASSERT_EQUAL_UINT16(0, r.y);
+    TEST_ASSERT_EQUAL_UINT16(W, r.width);
+    TEST_ASSERT_EQUAL_UINT16(H, r.height);
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(45, 55));
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(205, 105));
+    TEST_ASSERT_EQUAL_HEX16(0x0000, display.pixel(0, 0));
+
+    // The whole screen goes out once: a refresh without a change sends nothing.
+    display.rects.clear();
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, display.rects.size());
+    TEST_ASSERT_EQUAL_UINT32(refusedBefore, display.refused);
+    screen.remove(layer);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testWiden);
     RUN_TEST(testSlides);
     RUN_TEST(testMemory);
     RUN_TEST(testReset);
+    RUN_TEST(testRestart);
     return UNITY_END();
 }

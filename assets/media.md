@@ -1,6 +1,6 @@
 # Pictures, videos and sounds
 
-A game's files lie in its directory `/games/<id>/` on the SD card.
+A game's files lie in its directory `/games/<id>/` on the SD card. The machine's boot film lies at the card's root, as `/video/intro.rgb` with its sound `/audio/intro.wav`.
 
 ## Pictures
 

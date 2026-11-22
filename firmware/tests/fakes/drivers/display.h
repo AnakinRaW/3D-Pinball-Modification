@@ -1,6 +1,7 @@
 // The display driver of firmware/src/drivers/display.h for the tests that run on the computer. It
 // records every rectangle it gets and copies its pixels into a screen in memory. The rectangle's
-// function runs at once, or once the test calls finish() when the test holds the bus.
+// function runs at once, or once the test calls finish() when the test holds the bus. A restart
+// lasts until the test sets panelBack.
 #pragma once
 #include <IntervalTimer.h>
 #include <stdint.h>
@@ -21,7 +22,12 @@ public:
 
     bool begin() { return true; }
 
-    bool restarting() const { return restart; }
+    void restart() {
+        ++restarts;
+        panelBack = false;
+    }
+
+    bool restarting() const { return !panelBack; }
 
     bool send(uint16_t x, uint16_t y, uint16_t width, uint16_t height, const uint8_t* pixels,
               Sent done) {
@@ -61,7 +67,8 @@ public:
     std::vector<Rect> rects;   // every rectangle sent, in order
     uint32_t refused = 0;      // the rectangles send() refused
     bool hold = false;         // the test ends each rectangle with finish()
-    bool restart = false;      // restarting() answers it
+    uint32_t restarts = 0;     // the calls of restart()
+    bool panelBack = true;     // false from restart() on, until the test ends the restart
 
 private:
     std::vector<uint8_t> screen = std::vector<uint8_t>(size_t(WIDTH) * HEIGHT * 2);

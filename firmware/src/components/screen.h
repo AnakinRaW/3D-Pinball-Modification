@@ -170,6 +170,13 @@ private:
     /// Deletes the game's slides and the objects on its background, and releases its pictures.
     void reset();
 
+    /// Sets the display up again and sends the whole screen once the display is back.
+    ///
+    /// LVGL rests until then. Before begin() it does nothing.
+    ///
+    /// @note  Returns at once. The main loop calls it once the display module has its power back.
+    void restart();
+
     /// Gets the slide @p obj lies on, nullptr for an object on no slide.
     lv_obj_t* slideOf(lv_obj_t* obj) const;
 
@@ -209,5 +216,6 @@ private:
     int32_t lastRow = -1;
     Animation animations[ANIMATIONS];
     bool begun = false;
+    bool redraw = false;        // the whole screen goes out once the display is back
     static Screen* animating;   // the screen whose animations LVGL reports deleted
 };

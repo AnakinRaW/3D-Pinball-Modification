@@ -104,7 +104,22 @@ void Screen::render() {
     if (!begun || display.restarting()) {
         return;
     }
+    if (redraw) {
+        // The panel lost its picture with its setup. The bottom layer spans the screen and is never
+        // hidden, so LVGL draws every layer over its area again.
+        lv_obj_invalidate(lv_layer_bottom());
+        redraw = false;
+    }
     lv_timer_handler();
+}
+
+void Screen::restart() {
+    if (!begun) {
+        DEBUG_LOG("Screen::restart: no begin() yet\n");
+        return;
+    }
+    display.restart();
+    redraw = true;
 }
 
 lv_obj_t* Screen::slide(Layer layer) {
