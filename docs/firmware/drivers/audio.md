@@ -15,7 +15,7 @@ The driver plays up to four sounds at once, one on each of its four channels. Th
 
 Both calls only leave a request for the channel, so they return at once. The main task makes every call.
 
-`position()` gets the sound on a channel and where it stands. A later `play()` from that position goes on there, also after the channel has played something else meanwhile. A free channel gives an empty position, which plays nothing. `played()` returns how many samples of a position's sound have played so far.
+`position()` gets the sound on a channel and where it stands. A later `play()` from that position goes on there, also after the channel has played something else meanwhile. A free channel gives an empty position, which plays nothing. Right after `play()` the position is the one the sound starts from, and right after `stop()` it is empty, so a position never belongs to a sound that a later call has replaced. `played()` returns how many samples of a position's sound have played so far.
 
 `playing()` tells whether a channel plays a sound. It turns true with the call of `play()`.
 

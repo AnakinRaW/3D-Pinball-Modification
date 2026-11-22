@@ -9,7 +9,8 @@
 //               another sample rate
 //   wav-loop    a sound that loops runs on from its first sample after its last
 //   card-waits  a channel waiting for the card plays silence and loses no sample
-//   position    a sound goes on from where position() saw it, also across a loop
+//   position    a sound goes on from where position() saw it, also across a loop, and a request
+//               not taken yet gives the position it starts from
 //   glides      starting, stopping, replacing and a new volume glide across one block
 //   ends        a sound that plays out reports its number once, a cut-off sound none
 //   mix-sum     the mixer adds the channels exactly, one block late
@@ -367,10 +368,14 @@ static void testPosition() {
     TEST_ASSERT_FALSE(at.empty());
     TEST_ASSERT_EQUAL_UINT32(7 * N, at.played());
     rig.channel.request(SoundPosition(rig.service.open("/b.wav"), false), 2);
+    // A request not taken yet gives the position it starts from, never the sound before.
+    TEST_ASSERT_FALSE(rig.channel.position().empty());
+    TEST_ASSERT_EQUAL_UINT32(0, rig.channel.position().played());
     for (int i = 0; i < 10; ++i) {
         rig.block();
     }
     rig.channel.request(at, 3);
+    TEST_ASSERT_EQUAL_UINT32(7 * N, rig.channel.position().played());
     // The first block glides the other sound out, the next starts the card's read again.
     TEST_ASSERT_EQUAL_UINT32(N, rig.block().size());
     TEST_ASSERT_TRUE(rig.block().empty());
@@ -392,6 +397,7 @@ static void testPosition() {
     TEST_ASSERT_FALSE(behind.empty());
     TEST_ASSERT_EQUAL_UINT32(N + 1, behind.played());
     rig.channel.request(SoundPosition(), 0);
+    TEST_ASSERT_TRUE(rig.channel.position().empty());
     rig.block();
     rig.block();
     TEST_ASSERT_TRUE(rig.channel.position().empty());

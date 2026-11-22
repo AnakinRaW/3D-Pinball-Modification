@@ -122,6 +122,9 @@ public:
 
     /// Gets the sound on a channel and where it stands.
     ///
+    /// Right after play() it gives the position the sound starts from, and right after stop() an
+    /// empty position, also before the sound has started or stopped.
+    ///
     /// @param channel  The channel, 0 to 3.
     /// @return         An empty position for a free channel, a channel past 3 and before begin().
     /// @note           The main task calls it.

@@ -52,6 +52,11 @@ bool SoundChannel::requested() const {
 }
 
 SoundPosition SoundChannel::position() const {
+    // The main task alone fills the slots, so a slot it filled stays as it is while it reads it.
+    const uint32_t count = made.load(std::memory_order_acquire);
+    if (count != taken.load(std::memory_order_acquire)) {
+        return requests[count & 1].from;
+    }
     SoundPosition copy;
     uint32_t before = 0;
     uint32_t after = 0;

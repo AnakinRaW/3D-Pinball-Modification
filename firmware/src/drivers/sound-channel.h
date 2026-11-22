@@ -80,7 +80,8 @@ public:
 
     /// Gets the sound playing and where it stands, an empty position for none.
     ///
-    /// A request not taken yet leaves the sound before in place.
+    /// A request not taken yet gives the position it starts from, and a request for silence an
+    /// empty position, so the position always belongs to the last request.
     SoundPosition position() const;
 
     /// Sets the volume the channel plays at.
