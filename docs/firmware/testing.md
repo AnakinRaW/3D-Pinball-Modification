@@ -79,9 +79,7 @@ The card is of Class A1 or A2. It is formatted FAT32 with 32 KB clusters and hol
 |---|---|
 | `audio/music.wav` | music of at least a minute, in the [audio driver's format](drivers/audio.md#audio-files) |
 | `audio/1.wav` to `audio/4.wav` | short effects in the same format, one for each channel |
-| `audio/ramp.wav` | samples that count up by one from the first, so a test can place every sample |
-| `audio/ramp-chunks.wav` | the same samples behind extra chunks ahead of the data chunk |
-| `audio/full.wav` | a full-scale square wave |
+| `audio/loop.wav` | the sound of `video/loop.rgb`, as long as the movie |
 | `audio/sync.wav` | a click every second, as long as `video/sync.rgb` |
 | `video/loop.rgb` | a fullscreen movie in the [video format](../../assets/media.md#videos) |
 | `video/viewport.rgb` | a movie for a viewport smaller than the screen, in the same format |
@@ -441,21 +439,31 @@ The program `servo` checks the [servo driver](drivers/servo.md). A wire from the
 
 ### Audio
 
-The program `audio` checks the [audio driver](drivers/audio.md). Its `Teensy` tests listen through a tap. A tap is a recording stage that the test build adds behind the master gain, so the program can compare the samples bound for the amplifier with the samples in the files.
+The program `audio` checks the [audio driver](drivers/audio.md). Its computer tests play the channels and the mixer from a fake card. Its `Teensy` tests write their sounds to the card and listen through a tap. A tap is a recording stage that the program connects behind the master gain, so it can compare the samples bound for the amplifier with the samples in the files. The sounds are a ramp of samples that count up by one, the same ramp behind extra chunks ahead of the data chunk, a falling ramp, a constant level and a full-scale square wave.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `samples` | Teensy | Play `ramp.wav` and `ramp-chunks.wav` at full volume | The tap records every sample of each file once, in order, from the first, scaled by the master gain |
-| `mix` | Teensy | Play `full.wav` on every channel at once | The tap records no sample beyond full scale times the [master gain](../parts/audio/design.md#level) |
-| `loop` | Teensy | Play `ramp.wav` in a loop a hundred times | Each loop's first sample follows the last sample of the loop before, with no gap |
+| `wav-chunks` | computer | Play files of several lengths, with odd-sized and long chunks ahead of the data chunk and behind it | Every sample of the data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
+| `wav-format` | computer | Play a stereo file, a file at another sample rate, a RIFF file that is no WAV, a file without a fmt chunk, a missing file, a file with no name, and a file whose read fails partway | Each ends with its number. The failed read ends behind the samples before it |
+| `wav-ffmpeg` | computer | Play a sound that the command of [`media.md`](../../assets/media.md#sounds) made from a stereo MP3 at another sample rate | Every sample of its data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
+| `wav-loop` | computer | Play a file with chunks around its data chunk in a loop for forty blocks | After the first block the samples run through the file again and again with no gap, and no end comes |
+| `card-waits` | computer | Play a file while the card brings one chunk every fifty blocks | The blocks without data are silent, and every sample comes once and in order |
+| `position` | computer | Note a sound's position, play another, play on from the position, and do the same in the bytes behind the samples of a sound that loops | The sound goes on at the sample noted, and the loop starts over at its first sample |
+| `glides` | computer | Start a sound, set volumes inside and outside 0 to 1, replace the sound and stop it | Each change glides linearly across one block, a volume outside counts as the nearer end, and a replaced or stopped sound reports no end |
+| `ends` | computer | Let a sound play out, replace one, stop one, and replace a request before its block | Only the sound that played out reports its number, once |
+| `mix-sum` | computer | Add blocks of two channels below full scale | The sum comes out exactly, one block late, also into one of the inputs |
+| `mix-limit` | computer | Add four full-scale blocks behind a quiet one, then quiet blocks again | No sample passes full scale. The quiet block glides down ahead of the loud ones without a jump, and the gain climbs back to 1 within 100 ms |
+| `samples` | Teensy | Play the ramp and the ramp behind extra chunks at full volume | The tap records every sample of each file once, in order, from the first, scaled by the master gain |
+| `mix` | Teensy | Play the square wave on every channel at once | The tap records no sample beyond full scale times the [master gain](../parts/audio/design.md#level) |
+| `loop` | Teensy | Play the ramp in a loop a hundred times | Each loop's first sample follows the last sample of the loop before, with no gap |
 | `replace` | Teensy | Call `play()` on a channel that plays a sound | The old sound glides out without a jump, and the new one starts from its first sample |
 | `glide` | Teensy | Start and stop a sound, and change its volume while it plays | Each change glides over one block, with no jump between neighboring samples |
 | `volume` | Teensy | Set volumes inside and outside 0 to 1 | The tap records the samples scaled by the volume, and a value outside counts as the nearer end |
 | `resume` | Teensy | Note `position()`, play another sound on the channel, then play on from the position | The first sound goes on from the sample where it stood |
-| `ended` | Teensy | Let sounds play out, cut others off with `play()` and `stop()`, and let one loop | `SoundEnded` with the number `play()` returned comes once for every sound that played out, and for no other |
-| `missing` | Teensy | Play a file the card does not hold, then start without the card and play | Each sound ends at once with `SoundEnded`, and the other channels play on |
-| `starved` | Teensy | Start one write of several megabytes while a sound plays | The tap records silence while data is missing, then the sound going on from where it stopped, and no stray sample |
-| `by-ear` | bench | Play the music and an effect on every other channel, restart one effect many times in a row, and let the music loop for several minutes | No sound drops out or clicks, every effect starts from its beginning, and the music loops |
+| `ended` | Teensy | Let sounds play out, cut others off with `play()` and `stop()`, and let one loop | `SOUND_ENDED` with the number `play()` returned comes once for every sound that played out, and for no other |
+| `missing` | Teensy | Play a file the card does not hold while another channel plays | The sound ends at once with `SOUND_ENDED`, and the other channel plays on |
+| `starved` | Teensy | Write several megabytes to the card while a sound plays | The tap records silence while data is missing, then the sound going on from where it stopped, and no stray sample |
+| `by-ear` | bench | Play looping tones and a blip on every other channel, restart one blip many times in a row, and let the tones loop for several minutes | No sound drops out or clicks, every effect starts from its beginning, and the music loops |
 
 ### Display
 
@@ -605,7 +613,7 @@ The program `video-player` checks the [video player](components/video-player.md)
 | `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
 | `short-sound` | computer | Play a video whose sound ends before its last frame, and one whose sound file is missing | Each video plays on by the clock from the frame it stands at, the screen keeps refreshing, and each ends with `MovieEnded` |
 | `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
-| `frames` | Teensy | Write a file of several megabytes, then play `loop.rgb` in a loop for ten minutes with a sound on every audio channel and a write to the card every second | Every frame is on the screen within its 40 ms, and no audio block plays silence for want of data |
+| `frames` | Teensy | Write a file of several megabytes, then play `loop.rgb` with its sound in a loop for ten minutes. Meanwhile play a sound on each of the other audio channels, write to the card every second and run the game's load: effects on every lamp group at the lamps' frame period on chain F, where no LED is wired, and the touch driver's reads | Every frame is on the screen within its 40 ms and is the frame that belongs to how far its sound has played. No audio block plays silence for want of data |
 | `viewport` | bench | Play `viewport.rgb` in a viewport on a slide over a full-screen picture on the same slide, with a caption created after the viewport | The video fills only its viewport, the picture shows around it, and the caption lies in front of the video |
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MovieEnded`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |

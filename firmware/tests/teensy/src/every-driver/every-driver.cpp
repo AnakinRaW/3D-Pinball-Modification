@@ -12,7 +12,8 @@
 //
 // Wiring: none. The lighting runs on chain F, which has no LEDs at the bench, and sends dark
 // frames. Chain A and its LEDs stay untouched. A servo on the servo pin stays at its start
-// position. The display, where one is connected, shows black and then a dark gray screen.
+// position. The display, where one is connected, shows black and then a dark gray screen. The
+// audio driver plays a file that holds no sound, so a speaker stays silent.
 
 #include <Arduino.h>
 #include <stdarg.h>
@@ -23,6 +24,7 @@
 #include <FastLED.h>
 #pragma GCC diagnostic pop
 #include "core/event-queue.h"
+#include "drivers/audio.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/servo-driver.h"
@@ -401,6 +403,62 @@ static bool touchBeginFails(Verdict& v) {
     return touchEmpty(touchStarved, v);
 }
 
+// ---- the audio driver
+
+static EventQueue audioQueue;
+static AudioDriver audioFresh(audioQueue);     // before-begin: never begun
+static AudioDriver audioPlaying(audioQueue);   // at-once, and the driver that holds the I²S2 port
+static AudioDriver audioSecond(audioQueue);    // begin-fails: begins after audioPlaying
+
+// Gets whether an audio driver answers every call at once with empty data: no number, no sound
+// and an empty position.
+static bool audioEmpty(AudioDriver& audio, Verdict& v) {
+    uint32_t number = 1;
+    const uint32_t us = timedUs([&] { number = audio.play(0, storage.open(STORAGE_FILE)); });
+    audio.stop(0);
+    if (number != 0 || audio.playing(0) || !audio.position(0).empty()) {
+        return v.want("number 0, not playing, an empty position")
+            .saw("number %lu, playing %d, empty %d", number, audio.playing(0),
+                 audio.position(0).empty());
+    }
+    return atOnce(us, "play()", v);
+}
+
+static bool audioBeforeBegin(Verdict& v) {
+    return audioEmpty(audioFresh, v);
+}
+
+// play() returns while the card still reads the file, with the sound requested. The file holds
+// no sound, so the speaker stays silent.
+static bool audioAtOnce(Verdict& v) {
+    if (!storage.begin()) {
+        return v.want("a card in the socket").saw("storage begin() false");
+    }
+    if (!audioPlaying.begin()) {
+        return v.want("begin() true").saw("begin() false");
+    }
+    uint32_t number = 0;
+    const uint32_t us = timedUs([&] { number = audioPlaying.play(0, storage.open(STORAGE_FILE)); });
+    const bool requested = audioPlaying.playing(0);
+    audioPlaying.stop(0);
+    if (number == 0 || !requested) {
+        return v.want("a number and the sound requested")
+            .saw("number %lu, playing %d", number, requested);
+    }
+    return atOnce(us, "play()", v);
+}
+
+// A second audio driver finds the I²S2 port held, and answers every call at once with nothing.
+static bool audioBeginFails(Verdict& v) {
+    if (!audioPlaying.begin()) {
+        return v.want("the first driver's begin() true").saw("begin() false");
+    }
+    if (audioSecond.begin()) {
+        return v.want("false").saw("begin() true with the I2S2 port held");
+    }
+    return audioEmpty(audioSecond, v);
+}
+
 // ---- the register and the rows
 
 static const DriverCase DRIVERS[] = {
@@ -413,6 +471,9 @@ static const DriverCase DRIVERS[] = {
     {"display", displayBeforeBegin, nullptr, displayAtOnce, displayBeginFails},
     // the touch driver starts no long transfer
     {"touch", touchBeforeBegin, touchOutOfRange, nullptr, touchBeginFails},
+    // the audio program checks the volume's range through its tap. begin() needs no slot of the
+    // driver tick and fails when another audio driver holds the I²S2 port
+    {"audio", audioBeforeBegin, nullptr, audioAtOnce, audioBeginFails},
 };
 
 // Runs a row's case of every driver and reports the first failure, or PASS.
