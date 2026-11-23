@@ -1,6 +1,6 @@
-/* PJRC's imxrt1062_t41.ld of Teensyduino 1.62 with two lines added: LVGL's code and its
-   constant data stay in the flash. Its drawing loops carry FASTRUN, which puts them into ITCM
-   as before. Everything else is PJRC's script unchanged. */
+/* PJRC's imxrt1062_t41.ld of Teensyduino 1.62. The lines that name a library keep its code and
+   its constant data in the flash. A function marked FASTRUN still goes into ITCM. Everything else
+   is PJRC's script unchanged. */
 
 MEMORY
 {
@@ -28,6 +28,7 @@ SECTIONS
 		KEEP(*(.startup))
 		*(.flashmem*)
 		*liblvgl.a:*(.text*)   /* LVGL's code, all but its FASTRUN loops */
+		*libyaml.a:*(.text*)   /* libyaml's code */
 		. = ALIGN(4);
 		KEEP(*(.init))
 		__preinit_array_start = .;
@@ -42,6 +43,7 @@ SECTIONS
 	.text.progmem : {
 		*(.progmem*)
 		*liblvgl.a:*(.rodata*) /* LVGL's tables and strings */
+		*libyaml.a:*(.rodata*) /* libyaml's tables and strings */
 		. = ALIGN(4);
 	} > FLASH
 

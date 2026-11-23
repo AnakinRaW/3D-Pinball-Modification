@@ -517,6 +517,22 @@ The program `file-system` checks the [file system component](components/file-sys
 | `paths` | computer | Open a path inside a game's directory, an empty path, one from the root, one with `..`, one too long, one before any game is named, and a full path for the host | The first gives the file in `/games/<id>/`, the last the file at the card's root, and every other a file whose requests fail |
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
 
+### YAML tree
+
+The program `yaml-tree` checks the [YAML tree](components/config.md#the-file) on texts of files it writes itself, in rooms it sizes itself.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `walk` | computer | Parse a file of sections, lists of values and lists of sections, then walk it entry by entry and reach entries by name, by number and by key | Every entry has its kind, name, text and place among its neighbors as the file gives them, a list's entries are reached by their numbers, and a key that leads nowhere gives no entry |
+| `positions` | computer | Parse a file with entries at known lines and columns, in sections, in lists and in brackets, then add an entry | Every entry of a section keeps the line and column of its name, every entry of a list those of itself, and the added entry keeps 0 for both |
+| `problems` | computer | Parse a file with a name with a dot, a name twice, a reference to an anchor, more entries than the room holds and a second document, then a broken file, files whose top is a list, a text or a list as a name, and files of a comment alone and of a lone `---` | The report gets each problem once with its line and column, and the rest of the file reads. Each broken file returns false with one problem marked broken and leaves the tree empty. The comment and the lone `---` give an empty tree without a problem |
+| `long-text` | computer | Parse long names, an expression in quotes and texts over several lines, write the tree and parse it again | Every text reads whole, the line breaks included, and reads the same after the second parse |
+| `text-room` | computer | Parse a file with more names and values than the room for text holds | The entries up to the room read, the rest is left out, and the report gets one problem |
+| `change` | computer | Add sections, values and list entries, set texts longer and shorter, add under a value, a name twice and a name with a dot, fill the tree, then remove a list entry, a section and the top | Each change shows in the tree and in `fits()`. Each refusal gives no entry. A list's later entries move down by one number, and removing the top leaves an empty tree with all its room |
+| `compact` | computer | Set the texts of a few values in a small room again and again, adding and removing an entry between, then fill the room | Every text reads as set last, a text that fills the room is taken, and one past it is refused without a change |
+| `write` | computer | Parse a file of every form the tree writes, write it, write it into too small a room and parse the written text again | The written text equals the file, too small a room is refused with the length it needed, and the second parse reads the same entries |
+| `numbers` | computer | Read numbers, list numbers and unset values from texts, and texts that only look like them | Each reads as written, and the rest is refused |
+
 ### Config
 
 The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys it makes up itself.
