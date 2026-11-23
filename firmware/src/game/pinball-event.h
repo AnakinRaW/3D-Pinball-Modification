@@ -4,6 +4,7 @@
 //
 // Design: docs/firmware/game-abstraction.md, Playfield components.
 #pragma once
+#include "core/event-queue.h"
 #include <stdint.h>
 #include <string.h>
 #include <type_traits>
@@ -15,6 +16,12 @@ enum class EventType : uint16_t {
     /// A video has played to its end. The source is the key of the mode that holds the video's
     /// slide, and the payload is 0.
     MOVIE_ENDED,
+    /// A short touch that no control of the screen took. The source is 0, and the payload is the
+    /// TouchPoint where the finger came down.
+    SCREEN_TAPPED,
+    /// A finger that rests on the screen where no control took it. Source and payload as for
+    /// SCREEN_TAPPED.
+    SCREEN_HELD,
 };
 
 struct PinballEvent {
@@ -37,6 +44,12 @@ template <> struct PayloadOf<EventType::MUSIC_ENDED> {
 };
 template <> struct PayloadOf<EventType::MOVIE_ENDED> {
     using type = uint32_t;   // always 0
+};
+template <> struct PayloadOf<EventType::SCREEN_TAPPED> {
+    using type = TouchPoint;
+};
+template <> struct PayloadOf<EventType::SCREEN_HELD> {
+    using type = TouchPoint;
 };
 
 /// Gets the payload of an event of type TAG.

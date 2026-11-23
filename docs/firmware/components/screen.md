@@ -72,7 +72,7 @@ public:
 // LVGL on the display: the game's overlay, slides and background, and the host's layer over them
 class Screen : public Component {
 public:
-    Screen(Display& display, Touch& touch);
+    explicit Screen(Display& display);
 
     void begin();                            // starts LVGL on the display driver
 
@@ -98,12 +98,12 @@ private:
     friend class GameHost;
     friend class VideoPlayer;
 
-    enum class Gesture : uint8_t { None, Tap, Hold };
+    enum class Gesture : uint8_t { NONE, TAP, HOLD };
 
     lv_obj_t* hostLayer();                   // gets the parent of the host's objects
     bool      settled() const;               // gets whether the picture memory is empty
     void      showHost(bool shown);          // shows or hides the host's layer
-    Gesture   takeGesture(uint16_t& x, uint16_t& y);   // gets the host the last gesture once, None when there is none
+    Gesture   takeGesture(TouchPoint& at);   // gets the host the last gesture once, NONE when there is none
     void      reset();                       // deletes the game's objects and slides, releases its pictures and shows the game overlay layer
     lv_obj_t* slideOf(lv_obj_t* obj);        // gets the slide obj lies on, nullptr for an object on no slide
     lv_obj_t* top();                         // gets the slide that shows, nullptr when there is none

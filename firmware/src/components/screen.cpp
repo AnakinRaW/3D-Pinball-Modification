@@ -1,13 +1,16 @@
 #include "screen.h"
+#include "drivers/touch.h"
 #include "io/psram.h"
 #include "logging/debug-log.h"
 #include <Arduino.h>
+#include <string.h>
 
 constexpr uint32_t PIXEL_BYTES = 2;   // RGB565
 constexpr size_t ROW_BYTES = size_t(Display::WIDTH) * PIXEL_BYTES;
 constexpr size_t SCREEN_BYTES = ROW_BYTES * Display::HEIGHT;
 constexpr uint32_t OPACITY_BYTES = 1;   // RGB565A8: one byte of opacity behind the colors
 constexpr uint8_t BITS_PER_BYTE = 8;
+constexpr uint32_t US_PER_MS = 1000;
 
 // LVGL's two buffers of the whole screen, RGB565 high byte first as the driver sends it. LVGL draws
 // into one while the driver's interrupt reads the other.
@@ -22,6 +25,13 @@ static uint32_t tickMs() {
 
 static uint16_t get16(const uint8_t* at) {
     return uint16_t(at[0] | (at[1] << BITS_PER_BYTE));
+}
+
+/// Gets the distance of two points along the axis on which they lie further apart.
+static uint16_t distance(TouchPoint a, TouchPoint b) {
+    const uint16_t dx = a.x > b.x ? a.x - b.x : b.x - a.x;
+    const uint16_t dy = a.y > b.y ? a.y - b.y : b.y - a.y;
+    return dx > dy ? dx : dy;
 }
 
 void Screen::begin() {
@@ -50,15 +60,25 @@ void Screen::begin() {
     lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_TRANSP, 0);
     back = lv_obj_create(lv_screen_active());
     deck = lv_obj_create(lv_screen_active());
-    for (lv_obj_t* o : {back, deck}) {
+    over = lv_obj_create(lv_screen_active());
+    for (lv_obj_t* o : {back, deck, over}) {
         lv_obj_remove_style_all(o);
         lv_obj_set_size(o, Display::WIDTH, Display::HEIGHT);
         lv_obj_set_scrollable(o, false);
     }
-    for (lv_obj_t* o : {lv_screen_active(), bottom, back, deck}) {
+    for (lv_obj_t* o : {lv_screen_active(), bottom, back, deck, over}) {
         // A touch on no object passes through to the game.
         lv_obj_set_clickable(o, false);
     }
+
+    // LVGL reads the touch only when translate() hands it an event, and between the events while
+    // the finger is down, for its long press.
+    pointer = lv_indev_create();
+    lv_indev_set_type(pointer, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(pointer, readTouch);
+    lv_indev_set_user_data(pointer, this);
+    lv_indev_set_display(pointer, lv);
+    lv_indev_set_mode(pointer, LV_INDEV_MODE_EVENT);
 
     size_t bytes = 0;
     uint8_t* memory = io::takeFreePsram(bytes);
@@ -113,6 +133,95 @@ void Screen::render() {
         redraw = false;
     }
     lv_timer_handler();
+}
+
+void Screen::readTouch(lv_indev_t* indev, lv_indev_data_t* data) {
+    const Screen* self = static_cast<const Screen*>(lv_indev_get_user_data(indev));
+    data->point.x = self->finger.x;
+    data->point.y = self->finger.y;
+    data->state = self->pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+}
+
+// LVGL searches the layers in this order and finds only an object that takes touches. The screen's
+// own objects take none.
+lv_obj_t* Screen::controlAt(TouchPoint at) const {
+    if (!begun) {
+        return nullptr;
+    }
+    lv_point_t p = {at.x, at.y};
+    for (lv_obj_t* layer : {lv_layer_sys(), lv_layer_top(), lv_screen_active()}) {
+        if (lv_obj_t* found = lv_indev_search_obj(layer, &p)) {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
+bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
+    const bool touch =
+        in.type == DriverEventType::TOUCH_DOWN || in.type == DriverEventType::TOUCH_MOVED ||
+        in.type == DriverEventType::TOUCH_HELD || in.type == DriverEventType::TOUCH_UP;
+    if (!touch) {
+        return false;
+    }
+    out = {};
+    // The four touch events carry the same payload.
+    const TouchPoint at = payload<DriverEventType::TOUCH_DOWN>(in);
+    if (in.type == DriverEventType::TOUCH_DOWN) {
+        // Only the point where the finger comes down decides, so a finger that slides onto a
+        // control afterwards does not press it.
+        handed = controlAt(at) != nullptr;
+        downAt = at;
+        downUs = in.time;
+        strayed = false;
+        held = false;
+    }
+    if (handed) {
+        // LVGL holds a long press by itself and needs no TOUCH_HELD.
+        if (in.type != DriverEventType::TOUCH_HELD) {
+            finger = at;
+            pressed = in.type != DriverEventType::TOUCH_UP;
+            lv_indev_read(pointer);
+        }
+        handed = in.type != DriverEventType::TOUCH_UP;
+        return true;
+    }
+    if (distance(at, downAt) >= Touch::SLOP_PX) {
+        strayed = true;
+    }
+    if (in.type == DriverEventType::TOUCH_HELD && !strayed && !held) {
+        held = true;
+        makeGesture(Gesture::HOLD, in.time, out);
+    } else if (in.type == DriverEventType::TOUCH_UP && !strayed && !held &&
+               in.time - downUs <= TAP_MS * US_PER_MS) {
+        makeGesture(Gesture::TAP, in.time, out);
+    }
+    return true;
+}
+
+void Screen::makeGesture(Gesture g, uint32_t time, PinballEvents& out) {
+    uint32_t packed = 0;
+    memcpy(&packed, &downAt, sizeof downAt);
+    const EventType type = g == Gesture::TAP ? EventType::SCREEN_TAPPED : EventType::SCREEN_HELD;
+    gesture = {time, type, 0, packed};
+    out = {&gesture, 1};
+    lastGesture = g;
+    lastAt = downAt;
+}
+
+Screen::Gesture Screen::takeGesture(TouchPoint& at) {
+    const Gesture g = lastGesture;
+    at = lastAt;
+    lastGesture = Gesture::NONE;
+    return g;
+}
+
+void Screen::showOverlay(bool shown) {
+    if (over == nullptr) {
+        DEBUG_LOG("Screen::showOverlay: no begin() yet\n");
+        return;
+    }
+    lv_obj_set_hidden(over, !shown);
 }
 
 void Screen::restart() {
@@ -252,6 +361,8 @@ void Screen::reset() {
     slides.clear();
     lv_obj_clean(deck);
     lv_obj_clean(back);
+    lv_obj_clean(over);
+    lv_obj_set_hidden(over, false);
     for (Picture* p = first; p != nullptr; p = p->later) {
         p->release();
     }

@@ -583,6 +583,7 @@ MODEL.draws(pool="device monitor")   # the touch driver: the touch controller
 DISPLAY_H = "firmware/src/drivers/display.h"
 DISPLAY_CPP = "firmware/src/drivers/display.cpp"
 TOUCH_H = "firmware/src/drivers/touch.h"
+SCREEN_H = "firmware/src/components/screen.h"
 for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"),
                                   ("n_isr_budget", DISPLAY_H, "BURST_CLOCKS", "clocks"),
                                   ("t_frame_bus", DISPLAY_H, "FRAME_BUS_US", "µs"),
@@ -602,5 +603,6 @@ for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"
                                   ("touch_raw_top", TOUCH_H, "RAW_TOP", ""),
                                   ("touch_raw_bottom", TOUCH_H, "RAW_BOTTOM", ""),
                                   ("touch_raw_max", TOUCH_H, "RAW_MAX", ""),
-                                  ("touch_span_min", TOUCH_H, "SPAN_MIN", "")):
+                                  ("touch_span_min", TOUCH_H, "SPAN_MIN", ""),
+                                  ("t_tap", SCREEN_H, "TAP_MS", "ms")):
     MODEL.in_code(_key, file=_file, name=_name, unit=_unit)
