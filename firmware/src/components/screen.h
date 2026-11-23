@@ -1,10 +1,10 @@
 // Runs LVGL, the library for user interfaces, on the display. A game places LVGL's objects, such as
 // labels, images and buttons, on the slides of its modes, on its overlay in front of them and on
 // its background, and LVGL draws the parts of the screen that changed into one of two buffers while
-// the display driver sends the other. The slide of the mode with the highest priority shows. A
-// touch on a control goes to that control, and any other touch reaches the game as a tap or a hold.
-// The game's pictures load from the card into the picture memory in the PSRAM without the game
-// waiting for the card.
+// the display driver sends the other. The slide of the mode with the highest priority shows. The
+// host's objects lie in front of everything the game shows. A touch on a control goes to that
+// control. Any other touch reaches the game as a tap or a hold. The game's pictures load from the
+// card into the picture memory in the PSRAM without the game waiting for the card.
 //
 // Design: docs/firmware/components/screen.md.
 #pragma once
@@ -101,8 +101,8 @@ private:
     Picture* later = nullptr;   // the next picture in the screen's list
 };
 
-/// LVGL on the display: the game's overlay in front of the slides of its modes, in front of its
-/// background.
+/// LVGL on the display: the host's layer in front of the game's overlay, which lies in front of the
+/// slides of the game's modes and of its background.
 class Screen : public Component {
 public:
     static constexpr size_t SLIDES = 8;        // one for each mode the mode stack runs at once
@@ -207,6 +207,16 @@ private:
     /// @return    The gesture, NONE when there was none since the last call.
     Gesture takeGesture(TouchPoint& at);
 
+    /// Gets the host's layer, the parent of the host's objects, in front of LVGL's popups and of
+    /// everything the game shows.
+    lv_obj_t* hostLayer() { return host; }
+
+    /// Shows or hides the host's layer.
+    ///
+    /// The hidden layer keeps its objects, which take no touch meanwhile. A game switch leaves them
+    /// in place.
+    void showHost(bool shown);
+
     /// Sets the display up again and sends the whole screen once the display is back.
     ///
     /// LVGL rests until then. Before begin() it does nothing.
@@ -258,6 +268,7 @@ private:
     lv_obj_t* back = nullptr;             // a full-screen object on LVGL's screen
     lv_obj_t* deck = nullptr;             // the same, created after back, so it lies in front of it
     lv_obj_t* over = nullptr;             // the same, created after deck, so it lies in front of it
+    lv_obj_t* host = nullptr;             // a full-screen object on LVGL's system layer
     lv_indev_t* pointer = nullptr;        // LVGL's input of the touches handed to it
     PriorityList<Slide, SLIDES> slides;   // the game's slides, the one that shows first
     int32_t firstRow = 0;   // the rows that changed in this refresh, from firstRow to lastRow

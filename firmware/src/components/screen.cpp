@@ -61,12 +61,14 @@ void Screen::begin() {
     back = lv_obj_create(lv_screen_active());
     deck = lv_obj_create(lv_screen_active());
     over = lv_obj_create(lv_screen_active());
-    for (lv_obj_t* o : {back, deck, over}) {
+    // LVGL draws its system layer last, in front of its popups on the top layer.
+    host = lv_obj_create(lv_layer_sys());
+    for (lv_obj_t* o : {back, deck, over, host}) {
         lv_obj_remove_style_all(o);
         lv_obj_set_size(o, Display::WIDTH, Display::HEIGHT);
         lv_obj_set_scrollable(o, false);
     }
-    for (lv_obj_t* o : {lv_screen_active(), bottom, back, deck, over}) {
+    for (lv_obj_t* o : {lv_screen_active(), bottom, back, deck, over, host}) {
         // A touch on no object passes through to the game.
         lv_obj_set_clickable(o, false);
     }
@@ -222,6 +224,14 @@ void Screen::showOverlay(bool shown) {
         return;
     }
     lv_obj_set_hidden(over, !shown);
+}
+
+void Screen::showHost(bool shown) {
+    if (host == nullptr) {
+        DEBUG_LOG("Screen::showHost: no begin() yet\n");
+        return;
+    }
+    lv_obj_set_hidden(host, !shown);
 }
 
 void Screen::restart() {
