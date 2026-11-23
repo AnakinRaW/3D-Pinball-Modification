@@ -1,5 +1,6 @@
 #include "touch.h"
 #include "core/clock.h"
+#include "logging/debug-trace.h"
 #include "logging/logger.h"
 
 constexpr uint32_t TOUCH_READY_MS =
@@ -135,6 +136,12 @@ Fault Touch::failed() const {
 
 void Touch::done(uint32_t errors) {
     if (errors != 0) {
+        // Only the first failure of a run is noted, so a controller without power does not fill
+        // the trace.
+        if (!failing) {
+            failing = true;
+            DEBUG_TRACE("touch read failed", int32_t(errors), 0);
+        }
         // The next tick asks for a new read. A finger the controller can no longer see leaves the
         // screen once the controller counts as failed.
         lastErrors = errors;
@@ -145,6 +152,10 @@ void Touch::done(uint32_t errors) {
             out->publish<DriverEventType::TOUCH_UP>(nowUs(), 0, last);
         }
         return;
+    }
+    if (failing) {
+        failing = false;
+        DEBUG_TRACE("touch reads again", 0, 0);
     }
     lastGoodUs = nowUs();
     const uint8_t touches = bytes[0] & COUNT_MASK;

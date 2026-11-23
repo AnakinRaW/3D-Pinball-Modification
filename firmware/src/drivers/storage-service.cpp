@@ -203,6 +203,9 @@ bool StorageService::serveNext() {
 bool StorageService::serve(FileRequest& r, uint8_t& slot) {
     slot = find(r);
     if (slot == NO_SLOT) {
+        DEBUG_LOG("storage: %s does not open, %s\n", r.path,
+                  r.kind == FileRequest::Kind::READ ? "so it reads as empty"
+                                                    : "so the write fails");
         return r.kind == FileRequest::Kind::READ;
     }
     const uint32_t fileBytes = card.size(slot);
@@ -346,6 +349,7 @@ uint32_t FileRequest::fileSize() const {
 
 bool FileRequest::wait() const {
     if (service == nullptr || status() == FileStatus::IDLE) {
+        DEBUG_LOG("storage: wait() on a request that never started\n");
         return false;
     }
     if (!service->callerMayWait()) {
