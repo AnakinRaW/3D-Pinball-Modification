@@ -5,7 +5,8 @@
 //   play         a video reads its frames ahead from video/<name>.rgb, and its sound starts with it
 //   movie-ends   a video that runs out ends its sound and hands MOVIE_ENDED with its mode's key
 //   stop         stop() ends the video and its sound and frees its memory
-//   no-room      a full picture memory and a viewport beyond the screen refuse a video
+//   no-room      a full picture memory and a viewport beyond the screen refuse a video, and the
+//                full memory writes a warning
 //   owner        only the slide that shows plays a video, and a second video there replaces the
 //                first
 //   hidden       a covered or removed slide stops its video without MOVIE_ENDED, an object over
@@ -14,6 +15,7 @@
 //   short-sound  a video whose sound runs out or is missing plays on by the clock
 //   sound-clock  a video with sound holds while its sound holds
 //   covers       LVGL draws nothing that lies behind a video's frame
+//   bad-files    a missing video and one whose size is no multiple of its frames write a warning
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -22,6 +24,7 @@
 #include "components/sounds.h"
 #include "components/video-player.h"
 #include "io/psram.h"
+#include "logging/logger.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -126,6 +129,39 @@ static void put32(std::string& s, uint32_t v) {
 }
 
 // Gets a video file whose frame k is one color, FIRST_COLOR + k, high byte first.
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log, begun once, which logWarning() writes to.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[16384];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
+
+// Gets whether the log holds a line.
+static bool logged(const char* line) {
+    logger.flush();
+    logger.update();
+    logger.update();
+    return logA.content.find(line) != std::string::npos;
+}
+
 static std::string movie(uint32_t frames, uint16_t width = W, uint16_t height = H) {
     std::string f;
     f.reserve(size_t(frames) * width * height * 2);
@@ -241,6 +277,7 @@ void setUp() {
     static bool begun = false;
     if (!begun) {
         begun = true;
+        logger.begin(LogFileStart{}, LogFileStart{});
         service.mount();
         GameHost::use(GAME);
         audio.begin();
@@ -358,6 +395,7 @@ static void testNoRoom() {
     const std::string music = audio.files[Sounds::MUSIC];
     const uint32_t stops = audio.stops[Sounds::MUSIC];
     TEST_ASSERT_FALSE(player.play(viewportOn(s), "m", false, true));
+    TEST_ASSERT_TRUE(logged(" W video m refused, the picture memory has no room for its frames"));
     TEST_ASSERT_FALSE(player.play(viewportOn(s, 300, 0, 64, 48), "small", false, true));
     TEST_ASSERT_FALSE(player.play(viewportOn(s, 0, 0, 0, 0), "small", false, true));
     TEST_ASSERT_EQUAL_STRING(music.c_str(), audio.files[Sounds::MUSIC].c_str());
@@ -524,6 +562,21 @@ static void testCovers() {
     TEST_ASSERT_EQUAL_INT(-1, shownAt());
 }
 
+static void testBadFiles() {
+    lv_obj_t* s = screen.slide(LOW);
+    TEST_ASSERT_TRUE(player.play(viewportOn(s), "gone", false, false));
+    run(2 * FRAME_US);
+    TEST_ASSERT_TRUE(logged(" W video /games/a/video/gone.rgb is missing or holds no frame"));
+    card.files["/games/a/video/odd.rgb"] = movie(3) + "odd";
+    lv_obj_t* v = viewportOn(s);
+    TEST_ASSERT_TRUE(player.play(v, "odd", false, false));
+    run(FRAME_US);
+    TEST_ASSERT_TRUE(logged(" W video /games/a/video/odd.rgb takes 460803 bytes, no multiple of a "
+                            "frame of 153600 bytes"));
+    // The whole frames still play.
+    TEST_ASSERT_TRUE(player.playing(v));
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testPlay);
@@ -536,6 +589,7 @@ int main() {
     RUN_TEST(testShortSound);
     RUN_TEST(testSoundClock);
     RUN_TEST(testCovers);
+    RUN_TEST(testBadFiles);
     // Every read lands before the program ends, so no request waits in its destructor.
     GameHost::reset();
     service.serveAll();
