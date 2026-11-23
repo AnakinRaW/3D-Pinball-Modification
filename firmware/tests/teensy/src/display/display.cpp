@@ -348,7 +348,7 @@ static volatile uint32_t handlerRuns = 0;
 static volatile uint64_t handlerClocks = 0;
 static volatile uint32_t handlerMaxClocks = 0;
 
-static void timedHandler() {
+FASTRUN static void timedHandler() {
     const uint32_t t0 = ARM_DWT_CYCCNT;
     driverHandler();
     const uint32_t clocks = ARM_DWT_CYCCNT - t0;
@@ -361,7 +361,7 @@ static void timedHandler() {
 
 // Counts the passes of a loop that sends the next band of the screen whenever the last one is out,
 // or only asks whether it is out.
-static uint32_t countPasses(bool sending, uint32_t ms, uint32_t& frames) {
+FASTRUN static uint32_t countPasses(bool sending, uint32_t ms, uint32_t& frames) {
     uint32_t passes = 0;
     uint32_t sentBands = 0;
     const uint32_t start = doneCount;

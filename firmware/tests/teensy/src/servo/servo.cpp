@@ -71,7 +71,7 @@ static bool haveRise = false;
 
 static bool captureOn = false;
 
-static void edgeIsr() {
+FASTRUN static void edgeIsr() {
     edges[edgeHead % EDGES] = (ARM_DWT_CYCCNT & ~1u) | digitalReadFast(CAPTURE_PIN);
     edgeHead = edgeHead + 1;
 }
