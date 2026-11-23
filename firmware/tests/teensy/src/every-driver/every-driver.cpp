@@ -31,6 +31,7 @@
 #include "drivers/storage.h"
 #include "drivers/touch.h"
 #include "drivers/ws2812-color-encoder.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 // the frame: a WS2812B takes 24 bits, and the lighting driver sends a bit as one symbol
@@ -102,7 +103,8 @@ static bool atOnce(uint32_t us, const char* call, Verdict& v) {
 // ---- the lighting driver
 
 static Lighting lightingFresh;   // before-begin: never begun
-static Lighting lighting;        // out-of-range and at-once: the bench chain past its bound
+// out-of-range and at-once: the shared lighting driver, the bench chain past its bound
+using test::lighting;
 static bool lightingBegun = false;
 
 // an adapter rating past the range and the cap of the profile it counts as
@@ -298,19 +300,19 @@ constexpr uint8_t DARK_GRAY = 0x10;                   // both bytes of a dark RG
 constexpr uint32_t DISPLAY_DONE_MS = 100;             // far longer than a whole screen's bus time
 static Display displayFresh;                          // before-begin: never begun
 static Display displayStarved;   // begin-fails: begins with the driver tick full
-static Display displaySending;   // at-once
+using test::display;             // at-once: the shared display driver
 EXTMEM static uint8_t displayFrame[DISPLAY_FRAME_BYTES] __attribute__((aligned(32)));
 static volatile bool displayOut = false;
 
 // Gets whether a display driver answers every call at once with false or nothing.
-static bool displayEmpty(Display& display, Verdict& v) {
+static bool displayEmpty(Display& driver, Verdict& v) {
     bool sent = true;
     const uint32_t us =
-        timedUs([&] { sent = display.send(0, 0, Display::WIDTH, 1, displayFrame, [] {}); });
-    display.restart();
-    if (sent || display.restarting()) {
+        timedUs([&] { sent = driver.send(0, 0, Display::WIDTH, 1, displayFrame, [] {}); });
+    driver.restart();
+    if (sent || driver.restarting()) {
         return v.want("send() false, not restarting")
-            .saw("send() %d, restarting %d", sent, display.restarting());
+            .saw("send() %d, restarting %d", sent, driver.restarting());
     }
     return atOnce(us, "send()", v);
 }
@@ -322,7 +324,7 @@ static bool displayBeforeBegin(Verdict& v) {
 // A whole screen returns while its bytes still go out, and a second rectangle right after it
 // returns false at once.
 static bool displayAtOnce(Verdict& v) {
-    if (!displaySending.begin()) {
+    if (!display.begin()) {
         return v.want("begin() true").saw("begin() false");
     }
     memset(displayFrame, DARK_GRAY, sizeof displayFrame);
@@ -330,12 +332,12 @@ static bool displayAtOnce(Verdict& v) {
     bool first = false;
     bool second = true;
     const uint32_t firstUs = timedUs([&] {
-        first = displaySending.send(0, 0, Display::WIDTH, Display::HEIGHT, displayFrame,
-                                    [] { displayOut = true; });
+        first = display.send(0, 0, Display::WIDTH, Display::HEIGHT, displayFrame,
+                             [] { displayOut = true; });
     });
     const bool outAtReturn = displayOut;
-    const uint32_t secondUs = timedUs(
-        [&] { second = displaySending.send(0, 0, Display::STEP_PX, 1, displayFrame, [] {}); });
+    const uint32_t secondUs =
+        timedUs([&] { second = display.send(0, 0, Display::STEP_PX, 1, displayFrame, [] {}); });
     const uint32_t t0 = millis();
     while (!displayOut && millis() - t0 < DISPLAY_DONE_MS) {
     }
@@ -406,20 +408,21 @@ static bool touchBeginFails(Verdict& v) {
 // ---- the audio driver
 
 static EventQueue audioQueue;
-static AudioDriver audioFresh(audioQueue);     // before-begin: never begun
-static AudioDriver audioPlaying(audioQueue);   // at-once, and the driver that holds the I²S2 port
-static AudioDriver audioSecond(audioQueue);    // begin-fails: begins after audioPlaying
+static AudioDriver audioFresh(audioQueue);   // before-begin: never begun
+// at-once: the shared audio driver, which holds the I²S2 port
+using test::audio;
+static AudioDriver audioSecond(audioQueue);   // begin-fails: begins after the shared driver
 
 // Gets whether an audio driver answers every call at once with empty data: no number, no sound
 // and an empty position.
-static bool audioEmpty(AudioDriver& audio, Verdict& v) {
+static bool audioEmpty(AudioDriver& driver, Verdict& v) {
     uint32_t number = 1;
-    const uint32_t us = timedUs([&] { number = audio.play(0, storage.open(STORAGE_FILE)); });
-    audio.stop(0);
-    if (number != 0 || audio.playing(0) || !audio.position(0).empty()) {
+    const uint32_t us = timedUs([&] { number = driver.play(0, storage.open(STORAGE_FILE)); });
+    driver.stop(0);
+    if (number != 0 || driver.playing(0) || !driver.position(0).empty()) {
         return v.want("number 0, not playing, an empty position")
-            .saw("number %lu, playing %d, empty %d", number, audio.playing(0),
-                 audio.position(0).empty());
+            .saw("number %lu, playing %d, empty %d", number, driver.playing(0),
+                 driver.position(0).empty());
     }
     return atOnce(us, "play()", v);
 }
@@ -434,13 +437,13 @@ static bool audioAtOnce(Verdict& v) {
     if (!storage.begin()) {
         return v.want("a card in the socket").saw("storage begin() false");
     }
-    if (!audioPlaying.begin()) {
+    if (!audio.begin()) {
         return v.want("begin() true").saw("begin() false");
     }
     uint32_t number = 0;
-    const uint32_t us = timedUs([&] { number = audioPlaying.play(0, storage.open(STORAGE_FILE)); });
-    const bool requested = audioPlaying.playing(0);
-    audioPlaying.stop(0);
+    const uint32_t us = timedUs([&] { number = audio.play(0, storage.open(STORAGE_FILE)); });
+    const bool requested = audio.playing(0);
+    audio.stop(0);
     if (number == 0 || !requested) {
         return v.want("a number and the sound requested")
             .saw("number %lu, playing %d", number, requested);
@@ -450,7 +453,7 @@ static bool audioAtOnce(Verdict& v) {
 
 // A second audio driver finds the I²S2 port held, and answers every call at once with nothing.
 static bool audioBeginFails(Verdict& v) {
-    if (!audioPlaying.begin()) {
+    if (!audio.begin()) {
         return v.want("the first driver's begin() true").saw("begin() false");
     }
     if (audioSecond.begin()) {

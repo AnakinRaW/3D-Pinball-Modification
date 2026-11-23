@@ -25,6 +25,7 @@
 #include "drivers/display.h"
 #include "drivers/storage.h"
 #include "drivers/touch.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 #include "test-media.h"
 
@@ -40,14 +41,13 @@ constexpr uint32_t LOST_TIMEOUT_MS = 80000;   // power-lost: the time for each s
 constexpr uint32_t RESTART_TIMEOUT_MS = 2000;
 constexpr uint32_t ASK_TIMEOUT_MS = 120000;
 
-static Display display;
-static Screen screen(display);
-static EventQueue queue;
-static AudioDriver audio(queue);
-static FileSystem files(storage);
-static Sounds sounds(audio, files);
-static VideoPlayer player(screen, files, sounds);
-static Touch touch(io::wire2Bus, queue, driverTick);
+using test::audio;
+using test::display;
+using test::files;
+using test::screen;
+using test::sounds;
+using test::touch;
+using test::videoPlayer;
 static EventQueue monitorEvents;
 DMAMEM static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
 static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
@@ -79,7 +79,7 @@ static bool ready() {
             return false;
         }
         screen.begin();
-        player.begin();
+        videoPlayer.begin();
         begun = true;
     }
     if (!media::writePictures() || !media::writeLoop()) {
@@ -87,7 +87,7 @@ static bool ready() {
         return false;
     }
     GameHost::use(files, media::GAME);
-    GameHost::reset(screen, player);
+    GameHost::reset(screen, videoPlayer);
     return true;
 }
 
@@ -272,7 +272,7 @@ static void testRedraw() {
     lv_obj_t* viewport = lv_obj_create(slide);
     lv_obj_remove_style_all(viewport);
     lv_obj_set_size(viewport, media::W, media::H);
-    if (!player.play(viewport, "loop", true, false)) {
+    if (!videoPlayer.play(viewport, "loop", true, false)) {
         test::fail("play() false", "the video plays");
         return;
     }

@@ -29,6 +29,7 @@
 #include "core/clock.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint32_t W = Display::WIDTH;
@@ -119,7 +120,7 @@ constexpr uint32_t REFILLS_SOAK_LIMIT_S = 90;
 constexpr uint32_t ASK_LIMIT_S = 150;
 constexpr uint32_t RESTARTS_LIMIT_S = 200;
 
-static Display display;
+using test::display;
 static bool begun = false;
 // the programs' shared PSRAM
 static_assert(2 * FRAME_BYTES <= test::SCRATCH_BYTES, "both screens fit");
@@ -615,7 +616,7 @@ static void testSetup() {
 
 // ---- with-lighting
 
-static Lighting lighting;
+using test::lighting;
 
 // Sends a lighting frame every lamps' frame period for ms while the display sends the screen in
 // bands without a pause, and counts the frames the lighting refused because the last was not out.
