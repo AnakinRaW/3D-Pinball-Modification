@@ -63,23 +63,23 @@ static bool spanned(uint16_t a, uint16_t b) {
 }
 
 void Touch::configure(const Settings& s) {
-    const uint16_t left = heldReading("raw_left", s.rawLeft);
-    const uint16_t right = heldReading("raw_right", s.rawRight);
-    const uint16_t top = heldReading("raw_top", s.rawTop);
-    const uint16_t bottom = heldReading("raw_bottom", s.rawBottom);
+    const uint16_t left = heldReading("left_edge", s.rawLeft);
+    const uint16_t right = heldReading("right_edge", s.rawRight);
+    const uint16_t top = heldReading("top_edge", s.rawTop);
+    const uint16_t bottom = heldReading("bottom_edge", s.rawBottom);
     held = Settings{};
     if (spanned(left, right)) {
         held.rawLeft = left;
         held.rawRight = right;
     } else {
-        logWarning("touch", "raw_left %u and raw_right %u lie too close, the defaults stay",
+        logWarning("touch", "left_edge %u and right_edge %u lie too close, the defaults stay",
                    unsigned(left), unsigned(right));
     }
     if (spanned(top, bottom)) {
         held.rawTop = top;
         held.rawBottom = bottom;
     } else {
-        logWarning("touch", "raw_top %u and raw_bottom %u lie too close, the defaults stay",
+        logWarning("touch", "top_edge %u and bottom_edge %u lie too close, the defaults stay",
                    unsigned(top), unsigned(bottom));
     }
 }

@@ -8,6 +8,8 @@
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
+#include "components/config.h"
+#include "components/config-keys.h"
 #include "components/file-system.h"
 #include "components/sounds.h"
 #include "core/device-monitor.h"
@@ -54,6 +56,9 @@ EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 
 static AudioDriver audio(events);
 static FileSystem files(storage);
+/// The tree of settings and the file's text take about 21 KB, which RAM2 holds instead of the main
+/// task's stack in RAM1.
+DMAMEM static Config config(files);
 static Sounds sounds(audio, files);
 
 /// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
@@ -90,6 +95,16 @@ static LogFileStart readLogStart(const char* path, uint8_t (&head)[Logger::HEAD_
     return {head, r.bytes(), r.fileSize()};
 }
 
+/// Gets the sounds' starting volumes from the config.
+static Sounds::Settings soundSettings() {
+    Sounds::Settings s;
+    s.musicVolume = float(config.get(ConfigKey::MUSIC_VOLUME, Sounds::MUSIC_VOLUME,
+                                     Sounds::VOLUME_MIN, Sounds::VOLUME_MAX));
+    s.effectsVolume = float(config.get(ConfigKey::EFFECTS_VOLUME, Sounds::EFFECTS_VOLUME,
+                                       Sounds::VOLUME_MIN, Sounds::VOLUME_MAX));
+    return s;
+}
+
 /// The main task: sets the machine up, then runs the main loop, which never waits.
 static void runMainTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, TEMPERATURE_PANIC_PRIORITY);
@@ -108,6 +123,8 @@ static void runMainTask(void*) {
         static uint8_t secondHead[Logger::HEAD_BYTES];
         logger.begin(readLogStart(LOG_FIRST, firstHead), readLogStart(LOG_SECOND, secondHead));
     }
+    // Without a card every setting takes its default.
+    config.begin();
 
     if (!audio.begin()) {
         logWarning("main", "the audio driver does not begin, so no sound plays");
@@ -118,6 +135,7 @@ static void runMainTask(void*) {
 
     // The sounds start at their starting volumes where the game host's begin() stands in the
     // start order.
+    sounds.configure(soundSettings());
     sounds.begin();
 
     startingUp = false;

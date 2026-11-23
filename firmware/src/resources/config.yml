@@ -1,0 +1,20 @@
+# The machine's settings, which the firmware reads from /config.yml on the memory card.
+# docs/firmware/components/config.md gives the format. The document of each part gives its keys,
+# their defaults and their ranges.
+
+lighting:
+  adapter_a: 3
+audio:
+  music_volume: 0.5
+  effects_volume: 0.7
+servo:
+  start_deg: 0
+  end_deg: 40
+  speed_deg_s: 50
+touch:
+  left_edge: 327
+  right_edge: 1
+  top_edge: 3
+  bottom_edge: 254
+solenoid:
+  pull_ms: [30, 30, 30, 30]

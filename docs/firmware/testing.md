@@ -535,16 +535,24 @@ The program `yaml-tree` checks the [YAML tree](components/config.md#the-file) on
 
 ### Config
 
-The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys it makes up itself.
+The program `config` checks the [config component](components/config.md). Its computer tests hand the component the text of a file on a fake card and read keys they make up themselves. Its `Teensy` tests write their config file to `/tests/config/` on the card.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `defaults` | computer | Start without a file and read several keys with and without a default, then start with a file that does not parse | Every read gets its default or no value, and no file is written. With the broken file, the log names the line that broke, and the file stays as it is |
-| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries | Every read gets the file's value, `count()` gets the length of each list, and the log stays empty |
+| `defaults` | computer | Start without a file and read several keys with and without a default, then start with an empty file, a file larger than the component reads, one that does not parse and one whose top is a list | Every read gets its default or no value, and no file is written. Each start writes one log line. The line of the broken file names the line that broke, and the file stays as it is |
+| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries, with comments | Every read gets the file's value, `count()` gets the length of each list and 0 for a section and a missing key, a malformed key reads as missing, and the log stays empty |
 | `clamp` | computer | Read a value above its range and one below | Each gets the nearer end of its range, with one log line each |
-| `wrong` | computer | Read a value that is text, with a default and without one | The read with a default gets the default, the other gets no value, and each writes a log line |
-| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list |
-| `save-busy` | computer | Save, and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `wrong` | computer | Read a value that is text and a key that names a section, each with a default and without one, then keys that hold `~`, `null` and nothing | The reads with a default get the default, the others get no value, and each writes a log line. The unset keys get their default or no value without a line |
+| `numbers` | computer | Read values written with a sign, a fraction and an exponent, then text that only starts like a number, a hexadecimal number and one past a double's range | Each number reads as written. The rest reads as no number |
+| `limits` | computer | Start with a file that holds a long name and a long value, a name with a dot, a name twice, a reference to an anchor and a level too deep, then with one of more entries than the tree holds | The long name and the long value read. Each other is left out with everything under it and one log line naming its line and column, the full tree with one line, and every other entry reads |
+| `set` | computer | Set values under new sections and lists and at a list's end, then past a list's end, on a section, on a list, under a value, with too many names and with values past the limit | Each value set reads back, kept to six decimal places. Each refusal returns false and leaves the saved file as it was. A tree with one free entry refuses a key that needs two and takes one that needs one |
+| `remove` | computer | Remove an entry in the middle of a list, a section and two missing keys, then add an entry to the list | The later entries move down by one, the section goes with its entries, the missing keys change nothing, and the new entry follows the last |
+| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list. `saveStatus()` follows the write |
+| `round-trip` | computer | Start with a file of text with YAML's marks, empty values, empty sections, and lists of values, of sections and of lists, save it, then start a second config on the saved file and save that | Neither start writes a log line, the second file equals the first, and the second config reads the nested values |
+| `save-busy` | computer | Save, change a value and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `save-full` | computer | Fill the tree with values whose text takes more than the largest file, and save | The save is refused with a log line, and the file stays as it was |
+| `card` | Teensy | Write a config file to the card, start a config on it, set a value and add a list entry, save, then start a second config on the saved file | The saved file holds both changes and the entry nothing reads, and the second config reads every value of the first |
+| `heap` | Teensy | Start a config on the file of `card` and compare the heap's use before and after | The heap holds as many bytes after `begin()` as before |
 
 ### Lamps
 

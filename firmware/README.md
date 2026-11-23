@@ -4,7 +4,7 @@ The firmware runs on the Teensy 4.1. Its design stands in [`docs/firmware/`](../
 
 | Folder | Contents |
 |---|---|
-| `src/` | The firmware's source. |
+| `src/` | The firmware's source, and in [`src/resources/`](src/resources/) the files for the memory card's root, such as the machine config. |
 | `include/` | The settings headers that the firmware, the test image and the bench programs share, such as the FreeRTOS settings. |
 | `tests/` | The tests of the firmware's code, with every Teensy test in the test image `tests/teensy/`. |
 | `bench/` | The measurement programs behind the bench figures. |

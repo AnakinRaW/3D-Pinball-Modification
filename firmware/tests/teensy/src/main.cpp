@@ -40,6 +40,7 @@ extern const Program AUDIO;
 extern const Program DISPLAY_PROGRAM;
 extern const Program TOUCH_PROGRAM;
 extern const Program EVERY_DRIVER;
+extern const Program CONFIG;
 extern const Program LAMPS;
 extern const Program SOUNDS;
 extern const Program LOGGER;
@@ -51,8 +52,8 @@ static const Program* const PROGRAMS[] = {
     &CARD_APPENDER, &EVENT_QUEUE,  &DRIVER_TICK,    &PSRAM,
     &STORAGE,       &FILE_CHANNEL, &WS2812_FLEXIO2, &LIGHTING,
     &I2C_BUS,       &SERVO,        &AUDIO,          &DISPLAY_PROGRAM,
-    &TOUCH_PROGRAM, &EVERY_DRIVER, &LAMPS,          &SOUNDS,
-    &LOGGER,        &START_UP};
+    &TOUCH_PROGRAM, &EVERY_DRIVER, &CONFIG,         &LAMPS,
+    &SOUNDS,        &LOGGER,       &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
