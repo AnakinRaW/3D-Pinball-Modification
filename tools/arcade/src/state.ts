@@ -45,8 +45,9 @@ export function createState(model: Model) {
   const picked = signal<Item | null>(null);
   // the ramps the studio hides
   const hiddenRamps = signal<string[]>([]);
-  // whether the Features view and the studio show the machine in 3D instead of the drawing
-  const threeD = signal(false);
+  // whether the Features view and the studio show the machine in 3D instead of the drawing: at first
+  // wherever the model is in the checkout and the browser draws WebGL 2, as three.js needs
+  const threeD = signal(!!model.machineGlb && typeof WebGL2RenderingContext !== "undefined");
   // the games of a memory card the browser opened, and every game of the three sources
   const cardGames = signal<GameEntry[]>([]);
   const games = computed(() => [...model.repoGames, ...FIRMWARE_GAMES, ...cardGames.value]);

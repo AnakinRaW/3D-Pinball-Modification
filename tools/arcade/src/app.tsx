@@ -10,7 +10,7 @@ import { FeatureCard, FeatureList, PartCard, ThemeSwitch, TopBar } from "./ui/Pa
 import { panels, Splitter } from "./ui/Splitter";
 import { StudioControls, StudioCurrent, StudioStatus, useStudioClock } from "./ui/Studio";
 
-// the 3D view and three.js load on the first switch to 3D, so the page starts without them
+// the 3D view and three.js load after the page, so the drawing and the lists stand at once
 const View3D = lazy(() => import("./ui/View3D").then((m) => ({ default: m.View3D })));
 
 export function App({ model, state }: { model: Model; state: State }) {

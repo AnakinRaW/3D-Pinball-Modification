@@ -367,7 +367,7 @@ export function Drawing({ model, state }: { model: Model; state: State }) {
         }}
       >
         <div
-          class="drawing-host"
+          class={`drawing-host${studio ? " dim" : ""}`}
           ref={host}
           onClick={onClick}
           dangerouslySetInnerHTML={markup}
