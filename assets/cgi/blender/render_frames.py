@@ -1,7 +1,8 @@
 """Renders the film's frames one by one from a timer, so Blender stays reachable between frames.
 
-Run inside Blender with BUILD set to this folder. A frame whose PNG exists is skipped, so a stopped run
-picks up where it ended. FIRST and LAST limit the range; the run writes its progress to frames/progress.txt.
+Run inside Blender with BUILD set to the film's blender folder. The frames go to frames/ in the film's folder, or
+to FRAMES_DIR there. A frame whose PNG exists is skipped, so a stopped run picks up where it ended. FIRST and LAST
+limit the range. The run writes its progress to progress.txt beside the frames.
 """
 import bpy, os, time
 

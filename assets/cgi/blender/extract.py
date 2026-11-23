@@ -1,4 +1,4 @@
-"""Turns the playfield drawing into the inputs of the intro scene.
+"""Turns the playfield drawing into the inputs of scene.py.
 
 Writes, into the folder given as the first argument:
   shapes.json  every shape of the composed drawing as a world polyline in millimeters, tagged with its
@@ -6,7 +6,7 @@ Writes, into the folder given as the first argument:
   floor.png    the playfield board as the floor texture: layer 0 without the parts the scene raises in 3D
   backbox.png  the backbox picture, which the scene stands up behind the playfield
 
-Run with the system Python from the repository root: python assets/intro/blender/extract.py <out>
+Run with the system Python from the repository root: python assets/cgi/blender/extract.py <out>
 """
 import copy, ctypes, json, math, os, re, sys
 import xml.etree.ElementTree as ET

@@ -4,10 +4,16 @@ Run inside Blender with BUILD set to this folder; extract.py has written its inp
 One Blender unit is 10 mm. The drawing's x runs to the right and its y down the playfield, so a point
 (x, y) in millimeters lies at (x / 10, -y / 10). Positions and outlines come from the drawing. Heights are
 estimates read off the photos of the kit's manual and are collected in H. Everything but the backbox
-hangs from the empty "machine-tilt", which tips the playfield by 4 degrees toward the flippers.
+hangs from the empty "machine-tilt", which tips the playfield by 4 degrees toward the flippers. lights.py adds the
+machine's lights and the room's, at rest.
 """
-import bpy, bmesh, json, math, os
-from mathutils import Vector
+import bpy, bmesh, importlib, json, math, os, sys
+from mathutils import Matrix, Vector
+
+if BUILD not in sys.path: sys.path.insert(0, BUILD)
+import common, lights
+for _m in (common, lights): importlib.reload(_m)
+from common import coll, hexcol
 
 OUT = os.path.join(BUILD, "out")
 DATA = json.load(open(os.path.join(OUT, "shapes.json")))
@@ -21,7 +27,8 @@ H = {
     "wood_lo": 3.5, "plastic": 7.0, "wood_hi": 10.5, "cover": 13.5,   # the side stack, layer tops
     "post": 12.0, "sleeve_lo": 2.0, "sleeve_hi": 10.0, "rubber_z": 6.0,
     "fence": 25.0, "fence_end": 12.0, "blade": 20.0,
-    "flipper": 8.0, "sling": 12.0, "rail": 10.0,
+    "flipper": 8.0, "sling": 13.0, "rail": 10.0,
+    "sling_lo": 10.0,                               # the slingshot's wooden cover, its underside 1 mm over the 9 mm ball
     "apron_lo": 10.5, "apron_hi": 13.5,             # the apron rests on the outlane walls' stack
     "bell_rim": 4.0, "bell_body": 12.0, "bell_top": 18.0, "foil": 0.03, "plate": 1.0,
     "ramp_wall": 9.0, "ramp_floor": 1.6,
@@ -44,21 +51,6 @@ def wall_top(y):
 
 def W(x, y, z=0.0):
     return (x / 10.0, -y / 10.0, z / 10.0)
-
-
-def coll(name):
-    c = bpy.data.collections.get(name)
-    if c is None:
-        c = bpy.data.collections.new(name); bpy.context.scene.collection.children.link(c)
-    return c
-
-
-def hexcol(h, a=1.0):
-    h = h.lstrip("#")
-    if len(h) == 3: h = "".join(c * 2 for c in h)
-    srgb = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-    lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in srgb]
-    return (*lin, a)
 
 
 def mat(name, color, rough=0.45, metal=0.0, coat=0.0, alpha=1.0, transmission=0.0, emit=None, strength=0.0):
@@ -231,6 +223,7 @@ def ribbon(name, pts, width, z0, z1, c, material, closed=False, zfn=None, uv=Fal
 
 def tube(name, pts, radius, z, c, material, closed=False, zfn=None):
     cu = bpy.data.curves.new(name, "CURVE"); cu.dimensions = "3D"; cu.bevel_depth = radius / 10.0; cu.bevel_resolution = 3
+    cu.use_fill_caps = not closed
     sp = cu.splines.new("POLY"); pts = clean(pts); sp.points.add(len(pts) - 1)
     for p, (x, y) in zip(sp.points, pts): p.co = (*W(x, y, z + (zfn(x, y) if zfn else 0)), 1)
     sp.use_cyclic_u = closed
@@ -340,6 +333,19 @@ def inside(pt, poly):
         (x1, y1), (x2, y2) = poly[i - 1], poly[i]
         if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: result = not result
     return result
+
+
+def hull(pts):
+    """The convex hull of points (x, y), in order round it (Andrew's monotone chain)."""
+    pts = sorted(set(pts))
+    def half(seq):
+        out = []
+        for p in seq:
+            while len(out) >= 2 and (out[-1][0] - out[-2][0]) * (p[1] - out[-2][1]) - (out[-1][1] - out[-2][1]) * (p[0] - out[-2][0]) <= 0:
+                out.pop()
+            out.append(p)
+        return out[:-1]
+    return half(pts) + half(pts[::-1])
 
 
 def placed(pid):
@@ -550,6 +556,27 @@ def wood():
     return mat("plywood", "#d9bf8a", rough=0.6)
 
 
+SCOOP_SEAT = -5.5     # mm: the face of the scoop's kicker, on which the ball rests with its middle 1 mm under the board
+
+
+def scoop_mechanism(c, x, y, r, dark):
+    """The scoop under its hole in the 4 mm board: a dark cup, and at its floor the face of the solenoid's armature,
+    which kicks the ball up and out. The solenoid hangs under the board and pulls upward; gravity returns the
+    armature. Its size is estimated from the product's photos."""
+    me = bpy.data.meshes.new("scoop-cup"); bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=False, segments=48, radius1=r / 10, radius2=r / 10, depth=1.0,
+                          matrix=Matrix.Translation(W(x, y, -9.0)))
+    bm.to_mesh(me); bm.free()
+    link(bpy.data.objects.new("scoop-cup", me), c, dark)
+    steel = mat("kicker-steel", "#b9bec6", rough=0.25, metal=1.0)
+    cyl("scoop-kicker", x, y, 3.6, SCOOP_SEAT - 1.0, SCOOP_SEAT, c, steel, verts=32)
+    cyl("scoop-kicker-rod", x, y, 2.5, -26.0, SCOOP_SEAT - 1.0, c, steel, verts=24)
+    frame = mat("solenoid-frame", "#5d6168", rough=0.4, metal=0.8)
+    copper = mat("solenoid-coil", "#b0652c", rough=0.35, metal=0.9)
+    prism("scoop-solenoid", [(x - 12, y - 7.5), (x + 12, y - 7.5), (x + 12, y + 7.5), (x - 12, y + 7.5)], -44.0, -16.0, c, frame)
+    cyl("scoop-solenoid-coil", x, y, 8.5, -41.0, -19.0, c, copper, verts=32)
+
+
 # ---------------------------------------------------------------- the machine
 def build_board():
     c = coll("board")
@@ -572,9 +599,12 @@ def build_board():
         cutter = cyl(f"{name}-cutter", x, y, r, -8, 2, c, None)
         cutter.hide_render = True; cutter.hide_viewport = True
         bo = pf.modifiers.new(name, "BOOLEAN"); bo.object = cutter; bo.operation = "DIFFERENCE"
-        cyl(f"{name}-well", x, y, r, -30, -0.2, c, well)
-    # the drain's disk is a light diffuser flush with the board
-    cyl("drain-diffuser", 108.54, 387.04, 7.73, 0.0, 0.3, c, mat("diffuser-drain", "#d9e4ea", rough=0.3, transmission=0.3, emit="#fff1d6", strength=2.5))
+        if name == "scoop":
+            scoop_mechanism(c, x, y, r, well)
+        else:
+            cyl(f"{name}-well", x, y, r, -30, -0.2, c, well)
+    # the drain's disk is a light diffuser flush with the board, its face over the foil's height
+    cyl("drain-diffuser", 108.54, 387.04, 7.73, 0.0, H["foil"] + 0.1, c, mat("diffuser-drain", "#d9e4ea", rough=0.3, transmission=0.3, emit="#fff1d6", strength=2.5))
     wall = side_wall_material()
     top = back_wall_material()
     for s in placed("cabinet"):
@@ -828,17 +858,25 @@ def build_posts_and_rubbers():
             # through the ramp's floor, and its head sits on top
             under = any(inside((x + dx, y + dy), o) for o in BLUE_FLOOR for dx, dy in ((0, 0), (3, 0), (-3, 0), (0, 3), (0, -3)))
             top = blue_z(x, y) if under and blue_z(x, y) - H["ramp_floor"] < H["post"] + 2.2 else H["post"]
+            # a slingshot's screw runs up through its cover, and its head sits on top
+            if any(inside((x, y), t["pts"]) for t in SHAPES if t["cls"] == "sling"):
+                top = H["sling"] + 0.2
             cyl("post", x, y, r, 0, top, c, post, verts=24)
             cyl("post-head", x, y, r + 0.6, top, top + 1.2, c, post, verts=24)
         elif cl == "sleeve":
-            # a round rubber ring stretched around the two posts
+            # a round rubber ring stretched around the two posts: it lies on the posts and reaches out as far as
+            # the drawing's band, so its cord is the band's width less the post, halved
             (ax, ay), (bx, by_) = s["pts"][0], s["pts"][-1]
-            d = math.atan2(by_ - ay, bx - ax); r = 2.0
+            rp = min((t["circle"] for t in SHAPES if t["cls"] == "post" and "circle" in t),
+                     key=lambda q: math.hypot(q[0] - ax, q[1] - ay))[2]
+            cord = (s["sw"] / 2 - rp) / 2
+            d = math.atan2(by_ - ay, bx - ax); r = rp + cord
             loop = [(bx + r * math.cos(d - math.pi / 2 + math.pi * i / 12), by_ + r * math.sin(d - math.pi / 2 + math.pi * i / 12)) for i in range(13)]
             loop += [(ax + r * math.cos(d + math.pi / 2 + math.pi * i / 12), ay + r * math.sin(d + math.pi / 2 + math.pi * i / 12)) for i in range(13)]
-            tube("rubber", loop, 1.3, H["rubber_z"], c, rubber, closed=True)
+            tube("rubber", loop, cord, H["rubber_z"], c, rubber, closed=True)
         elif cl == "rubber":
-            tube("rubber", s["pts"], 1.4, H["rubber_z"], c, rubber, closed=s["closed"])
+            # the drawing's stroke is the rubber's full width
+            tube("rubber", s["pts"], s["sw"] / 2, H["rubber_z"], c, rubber, closed=s["closed"])
         elif cl == "comb-back":
             ribbon("fence", s["pts"], s["sw"], 0, H["fence"], c, fence_material(), uv=True, top_fn=fence_top)
         elif cl == "blade-wood":
@@ -918,13 +956,26 @@ def build_lower():
         cl = s["cls"]
         if "flippers" in ch or "inlane-rails" in ch or "inlane-separators" in ch:
             if cl == "flipper": prism("flipper", s["pts"], 0.5, H["flipper"], c, black)
-            elif cl == "sling":
-                prism("sling", s["pts"], 0, H["sling"], c, red)
-                # the rubber runs once around the slingshot, round like the others
-                pts = clean(s["pts"])
-                def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps))))
-                ring_pts = max((offset_line(pts, d, True) for d in (1.4, -1.4)), key=area)
-                tube("sling-rubber", [(p.x, p.y) for p in ring_pts], 1.4, H["rubber_z"], c, rubber, closed=True)
+            elif cl == "sling": prism("sling", s["pts"], H["sling_lo"], H["sling"], c, red)
+            elif cl == "sling-rubber":
+                # under the wooden cover the rubber runs once around three round clear spacers, one at each of the
+                # slingshot's screws. The drawing gives the rubber's width and its strand along the kicking face,
+                # and the strand's distance from the screws, less half that width, is the spacers' radius.
+                r = s["sw"] / 2
+                (ax, ay), (bx, by_) = s["pts"][0], s["pts"][-1]
+                mid = ((ax + bx) / 2, (ay + by_) / 2)
+                sling = min((t for t in SHAPES if t["cls"] == "sling"),
+                            key=lambda t: math.dist(mid, (sum(p[0] for p in t["pts"]) / len(t["pts"]), sum(p[1] for p in t["pts"]) / len(t["pts"]))))
+                screws = [t["circle"] for t in SHAPES if t["cls"] == "post" and "circle" in t and inside(t["circle"][:2], sling["pts"])]
+                d = Vector((bx - ax, by_ - ay)).normalized()
+                spacer = min(abs((x - ax) * d.y - (y - ay) * d.x) for x, y, _ in screws) - r
+                for x, y, _ in screws:
+                    cyl("sling-spacer", x, y, spacer, 0, H["sling_lo"], c,
+                        mat("spacer-clear", "#eef3f6", rough=0.15, transmission=0.6), verts=48)
+                # the ring is the hull of the spacers, widened by half the rubber's width
+                around = [(x + (spacer + r) * math.cos(k * math.tau / 96), y + (spacer + r) * math.sin(k * math.tau / 96))
+                          for x, y, _ in screws for k in range(96)]
+                tube("sling-rubber", hull(around), r, H["rubber_z"], c, rubber, closed=True)
             elif cl == "sling-panel": prism("sling-panel", s["pts"], H["sling"], H["sling"] + 0.2, c, panel)
             elif cl == "disc":
                 x, y, r = s["circle"]
@@ -968,7 +1019,7 @@ def build_lower():
             # wood, the rubber band between, blue wood, then the seal
             prism("seal-rotor", s["pts"], z, z + 1.5, c, rotor_m)
             prism("seal-rotor-top", s["pts"], z + 3.0, z + 4.5, c, rotor_top)
-        elif cl == "seal-rubber": tube("seal-rubber", s["pts"], 0.75, z + 2.25, c, mat("clear-band", "#f2f4f6", rough=0.2, transmission=0.7), closed=True)
+        elif cl == "seal-rubber": tube("seal-rubber", s["pts"], s["sw"] / 2, z + 2.25, c, mat("clear-band", "#f2f4f6", rough=0.2, transmission=0.7), closed=True)
         elif cl == "seal-pivot": cyl("seal-pivot", *s["circle"], z + 4.5, z + 5.1, c, screw, 24)
     ang = 36.6
     figure("seal", x, y, ang, SEAL, 3.0, c, mat("seal", "#e4e4e0", rough=0.5), z0=z + 4.5)
@@ -983,13 +1034,20 @@ def build_shooter_lane():
     c = coll("shooter")
     lane = mat("shooter-floor", "#3a3f4b", rough=0.4)
     lit = mat("shooter-arrow", "#f2e7c4", rough=0.3, emit="#ffe9b0", strength=1.5)
+    floor_z = shooter_z
     for s in placed("shooter-lane-floor"):
         if s["cls"] == "shooter":
             # the lane's floor ends where the gray lane begins, flush with it
-            prism("shooter-floor", [(x, max(y, GRAY_START_Y)) for x, y in s["pts"]], -1.6, 0.0, c, lane, zfn=shooter_z)
+            pts = [(x, max(y, GRAY_START_Y)) for x, y in s["pts"]]
+            prism("shooter-floor", pts, -1.6, 0.0, c, lane, zfn=shooter_z)
+            # the floor's outline has its corners only at the lane's two ends, so its top is a straight climb
+            # between them; the arrows lie on that climb
+            y0, y1 = min(p[1] for p in pts), max(p[1] for p in pts)
+            z0, z1 = shooter_z(0.0, y0), shooter_z(0.0, y1)
+            floor_z = lambda x, y: z0 + (z1 - z0) * (y - y0) / (y1 - y0)
     for s in SHAPES:
         if s["chain"] and any(ch.startswith("shooter-arrow-") for ch in s["chain"]):
-            prism("shooter-arrow", s["pts"], 0.05, 0.2, c, lit, zfn=shooter_z, cap_only=True)
+            prism("shooter-arrow", s["pts"], 0.05, 0.2, c, lit, zfn=floor_z, cap_only=True)
 
 
 def build_sides():
@@ -1004,12 +1062,18 @@ def build_sides():
         for s in by(pid, "plastic"):
             prism(pid + "-wood", s["pts"], 0, H["wood_lo"], c, wood())
             prism(pid + "-plastic", s["pts"], H["wood_lo"], H["plastic"], c, plastic)
-    # behind the apron the outlanes are walled by the same stack: wood, lit plastic, wood, the apron on top
+    # behind the apron the outlanes are walled by the same stack, wood, clear plastic, wood and the apron on top;
+    # the perimeter strips end at the apron, so this plastic carries no light
+    dark_plastic = mat("stack-plastic", "#eef3f6", rough=0.15, transmission=0.6)
     for pid in ("outlane-left", "outlane-right"):
         for s in by(pid, "clear"):
             prism(pid + "-wood", s["pts"], 0, H["wood_lo"], c, wood())
-            prism(pid + "-plastic", s["pts"], H["wood_lo"], H["plastic"], c, plastic)
+            prism(pid + "-plastic", s["pts"], H["wood_lo"], H["plastic"], c, dark_plastic)
             prism(pid + "-wood-top", s["pts"], H["plastic"], H["wood_hi"], c, wood())
+    # between a side's guide and its outlane the strip runs on along the red wall, the cabinet's on the left and
+    # the shooter lane's on the right, at the plastic's height
+    for name, x0, x1, y0, y1 in (("gap-left", 0.0, 3.0, 296.0, 334.0), ("gap-right", 213.8, 216.8, 296.0, 337.0)):
+        prism(name + "-plastic", [(x0, y0), (x1, y0), (x1, y1), (x0, y1)], H["wood_lo"], H["plastic"], c, plastic)
     for pid in ("cover-left", "panel-corner-right", "panel-guide-right"):
         for s in placed(pid):
             cl = s["cls"]
@@ -1167,7 +1231,10 @@ def build_ramps():
             # and above the floor it leaves room for the ball
             # the drawing gives the hoop's outer radius; its inner edge meets the walls' outer faces at the hoop's
             # widest point, just above the floor, and leaves the ball room above
-            flat_ring("ramp-hoop", cx, cy, math.degrees(a), h + 2.0, r_out - 2.5, r_out, h - H["ramp_floor"] - 2.5, 2.5, 2.2, c, material)
+            # its clamp reaches 2.5 mm under the ramp's floor; where the inlanes run under the ramp's end it stops
+            # 10 mm above the board, clear of the 9 mm ball
+            cut = max(h - H["ramp_floor"] - 2.5, min(h - H["ramp_floor"], 10.0))
+            flat_ring("ramp-hoop", cx, cy, math.degrees(a), h + 2.0, r_out - 2.5, r_out, cut, 2.5, 2.2, c, material)
 
     # the green track runs on top of the U lane's fence after a short climb from its entry
     ramp("ramp-orbit-left", "ramp-green", "green-wall", green_z, "#3f5e48", "#2f4a39", wall_h=H["ramp_wall"] / 2,
@@ -1197,6 +1264,18 @@ def build_ramps():
         v = max(0.0, min(1.0, ((x - snout[0]) * u.x + (y - snout[1]) * u.y) / span))
         return 0.02 + (jaw_top - 0.02) * (3 * v * v - 2 * v ** 3) + jaw_top * (v ** 3 - v * v)
     surface("crocodile-jaw", kick, croc_z, 2.0, c, green, cuts=4)
+    # the head is closed down to the board: a block fills it under the jaw, so no ball rolls in beneath it from
+    # behind; its outline in steps of 1 mm keeps its top inside the 2 mm jaw along the jaw's curve. It stands
+    # 1.5 mm inside the jaw's edge, so a ball beside the head rolls with its lower half under the jaw. The jaw's
+    # back corner lies closer to the rubber at post 022 than the ball is wide, and a ball held off by a block
+    # flush with the edge rests there.
+    dense = []
+    for a, b in zip(kick, kick[1:] + kick[:1]):
+        k = max(1, math.ceil(math.dist(a, b)))
+        dense += [(a[0] + (b[0] - a[0]) * i / k, a[1] + (b[1] - a[1]) * i / k) for i in range(k)]
+    def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps))))
+    dense = min((offset_line(dense, d, True) for d in (1.5, -1.5)), key=area)
+    prism("crocodile-base", [(p[0], p[1]) for p in dense], 0.0, 0.0, c, green, hi_fn=lambda x, y: max(0.05, croc_z(x, y) - 2.1))
     half = math.dist(kick[0], kick[1]) / 2
     ties = [t["pts"] for t in by("wire-ramp", "tie")]
     ties.sort(key=lambda t: (t[0][1] + t[-1][1]) / 2)
@@ -1251,7 +1330,10 @@ def build_ramps():
         prof += [(centre_u - (loop_r + 0.5) * math.cos(t), z_a + loop_r + (loop_r + 0.5) * math.sin(t))
                  for t in (math.radians(-90 + 10 * k) for k in range(19))]
         prof += [(reach, upper_z + open_fn(*at(reach))), (mouth, floor(mouth) + 6.0), (length, floor(length) + 3.0)]
-        figure("crocodile-side", back[0], back[1], math.degrees(math.atan2(e.y, e.x)), prof, 1.5, c, green)
+        n = Vector((-e.y, e.x))
+        if n.dot(Vector((sum(q[0] for q in kick) / len(kick) - back[0], sum(q[1] for q in kick) / len(kick) - back[1]))) < 0:
+            n = -n
+        figure("crocodile-side", back[0] + n.x * 0.75, back[1] + n.y * 0.75, math.degrees(math.atan2(e.y, e.x)), prof, 1.5, c, green)
     side_plate(kick[1], kick[2])
     side_plate(kick[0], kick[-1])
     for hx, hy, hr in [t["circle"] for t in by("ramp-kicker", "hole") if "circle" in t]:
@@ -1354,14 +1436,14 @@ def build_balls():
 
 
 def build_inserts():
-    """The light inserts and diffusers in the board, flush with it, each kind with a material the film lights."""
+    """The light inserts and diffusers in the board, flush with it, each kind with a material that lights.py colors and a film keys."""
     c = coll("inserts")
     lit = {"insert": mat("diffuser-lit", "#e8eef2", rough=0.3, emit="#fff1d6", strength=0.4),
            "insert-star": mat("star-lit", "#7d8a9a", rough=0.3, emit="#ffe9b0", strength=0.0),
            "insert-arrow": mat("arrow-lit", "#c9d0d8", rough=0.3, emit="#fff1d6", strength=0.3)}
     for s in SHAPES:
         if s["chain"] and s["chain"][0] == "layer-0" and s["cls"] in lit:
-            prism("insert", s["pts"], 0.0, 0.03, c, lit[s["cls"]], cap_only=True)
+            prism("insert", s["pts"], 0.0, H["foil"] + 0.1, c, lit[s["cls"]], cap_only=True)
 
 
 TABLE_Z = -84.4   # mm, the coffee table's top: the playfield's front edge lies 54 mm above it, its back edge 85 mm
@@ -1719,6 +1801,134 @@ def build_decorations():
     figure("deco-spinner-top", x, y, lane + 90.0, [(-2.0, axle - 1.8), (2.0, axle - 1.8), (2.0, axle + 1.5), (-2.0, axle + 1.5)], 2.5, c, mat("deco-yellow", "#f1c94a", rough=0.4))
 
 
+# ---------------------------------------------------------------- under the board: the ball store and the sensors
+# the seesaw rocks about a pin under the board between its two fingers; tilted by SEESAW_TILT, one finger stands
+# FINGER_UP above the board and the other lies just under it. The start position holds the front ball back.
+SEESAW_TILT, SEESAW_PIN, FINGER_UP, FINGER_DOWN = 38.0, -9.0, 5.5, -0.5
+
+
+def store_frame():
+    """The ball store's frame from the drawing: the seesaw's pin, the unit vector along the track toward the
+    plunger lane, the one across it, and the two fingers' middles, front first (mm)."""
+    fingers = []
+    for t in by("drain-ball-store", "seesaw"):
+        (ax, ay), (bx, by_) = t["pts"][0], t["pts"][-1]
+        fingers.append(((ax + bx) / 2, (ay + by_) / 2))
+    fingers.sort(key=lambda q: -q[0])
+    (fx, fy), (bx, by_) = fingers
+    along = Vector((fx - bx, fy - by_)).normalized()
+    return Vector(((fx + bx) / 2, (fy + by_) / 2)), along, Vector((-along.y, along.x)), fingers
+
+
+def box(name, centre, along, across, size, c, material, rot=None):
+    """A box of size (along, across, up) in mm around centre (x, y, z in mm), its length along the unit vector
+    along in the board's plane, turned about its middle by rot, a quaternion in Blender's frame."""
+    X = Vector((along.x, -along.y, 0.0)); Y = Vector((across.x, -across.y, 0.0)); Z = Vector((0, 0, 1))
+    if X.cross(Y).dot(Z) < 0: Y = -Y
+    basis = Matrix((X, Y, Z)).transposed().to_4x4()
+    if rot is not None: basis = rot.to_matrix().to_4x4() @ basis
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation(W(*centre)) @ basis
+                          @ Matrix.Diagonal((size[0] / 10, size[1] / 10, size[2] / 10, 1.0)))
+    bm.to_mesh(me); bm.free()
+    return link(bpy.data.objects.new(name, me), c, material)
+
+
+def build_store():
+    """The ball store under the apron: two balls wait in a row on the board behind the seesaw, whose fingers rise
+    through slots in the board. A DFRobot SER0049 micro servo rocks it through a pushrod. In the start position
+    the front finger stands up and holds the front ball. In the end position the rear finger holds the back ball,
+    and the front one rolls on into the plunger lane. A copper foil lies under each ball's place, a third one on
+    the drain wall behind them, and the break beam's emitter and receiver face each other across the drain. The
+    sizes the drawing does not give, the servo's and the beam parts', are estimates."""
+    from mathutils import Quaternion
+    c = coll("store")
+    pin, along, across, fingers = store_frame()
+    steel = mat("kicker-steel", "#b9bec6", rough=0.25, metal=1.0)
+    plastic = mat("store-plastic", "#2a2d33", rough=0.5)
+    white = mat("servo-white", "#e8e8e4", rough=0.4)
+    blue = mat("servo-blue", "#2f5d9e", rough=0.45)
+    tilt = Quaternion(Vector((across.x, -across.y, 0.0)).normalized(), math.radians(SEESAW_TILT))
+    # the beam in its start pose, turned so that its front end, toward the plunger lane, rises
+    if (tilt @ Vector((along.x, -along.y, 0.0))).z < 0: tilt = tilt.inverted()
+    box("store-seesaw-beam", (pin.x, pin.y, SEESAW_PIN), along, across, (12.0, 3.0, 2.0), c, steel, rot=tilt)
+    box("store-seesaw-bracket", (pin.x, pin.y, (SEESAW_PIN - 4.0) / 2 - 2.0), along, across, (3.0, 12.0, 8.0), c, plastic)
+    pf = bpy.data.objects["playfield"]
+    for k, (fx, fy) in enumerate(fingers):
+        name = "store-finger-front" if k == 0 else "store-finger-back"
+        lift = math.dist((fx, fy), pin) * math.sin(math.radians(SEESAW_TILT)) * (1 if k == 0 else -1)
+        bottom = SEESAW_PIN + lift
+        top = FINGER_UP if k == 0 else FINGER_DOWN
+        box(name, (fx, fy, (bottom + top) / 2), along, across, (1.3, 10.0, top - bottom), c, steel)
+        cut = box(name + "-slot", (fx, fy, -1.0), along, across, (1.8, 10.6, 8.0), c, None)
+        cut.hide_render = True; cut.hide_viewport = True
+        bo = pf.modifiers.new(name + "-slot", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
+    # the servo lies under the board past the seesaw toward the plunger lane, its horn turned toward the beam
+    servo_at = pin + along * 18.0
+    box("store-servo", (servo_at.x, servo_at.y, -20.5), along, across, (23.0, 12.2, 22.5), c, blue)
+    box("store-servo-tabs", (servo_at.x, servo_at.y, -12.0), along, across, (32.0, 12.2, 2.5), c, blue)
+    shaft = servo_at - along * 6.0
+    cyl("store-servo-shaft", shaft.x, shaft.y, 2.4, -9.5, -7.5, c, white, verts=24)
+    horn_tip = shaft - along * 6.0
+    mid = (shaft + horn_tip) / 2
+    box("store-servo-horn", (mid.x, mid.y, -7.0), along, across, (7.5, 3.0, 1.2), c, white)
+    beam_end = pin + along * 6.0
+    end_z = SEESAW_PIN + 6.0 * math.sin(math.radians(SEESAW_TILT))
+    cu = bpy.data.curves.new("store-pushrod", "CURVE"); cu.dimensions = "3D"; cu.bevel_depth = 0.05
+    cu.use_fill_caps = True
+    sp = cu.splines.new("POLY"); sp.points.add(1)
+    sp.points[0].co = (*W(horn_tip.x, horn_tip.y, -7.0), 1); sp.points[1].co = (*W(beam_end.x, beam_end.y, end_z), 1)
+    link(bpy.data.objects.new("store-pushrod", cu), c, steel)
+    # the foils: copper under each ball's place, and the strip on the drain wall behind them
+    copper = mat("foil-copper", "#c27a45", rough=0.3, metal=0.9)
+    (fx, fy), (bx, by_) = fingers
+    front_mid = Vector(((fx + bx) / 2, (fy + by_) / 2))
+    flat = H["foil"] + 0.1
+    box("store-foil-front", (front_mid.x, front_mid.y, flat / 2), along, across, (7.5, 4.0, flat), c, copper)
+    back_mid = Vector((bx, by_)) - along * 5.0
+    box("store-foil-back", (back_mid.x, back_mid.y, flat / 2), along, across, (7.5, 4.0, flat), c, copper)
+    wall = next(t for t in SHAPES if t["cls"] == "wood-wall" and "drain-wall-lower" in t["chain"])
+    seg = [q for q in wall["pts"] if bx - 9.0 <= q[0] <= fx + 3.0]
+    face = min((offset_line(seg, d, False) for d in (wall["sw"] / 2 + 0.1, -wall["sw"] / 2 - 0.1)),
+               key=lambda l: sum(q.y for q in l))
+    ribbon("store-foil-wall", [(q.x, q.y) for q in face], 0.15, 1.0, 7.0, c, copper)
+    # the store hands its front ball through an opening in the foot of the plunger lane's wall
+    gate = box("store-gate-cutter", (219.5, 399.0, 4.0), Vector((1, 0)), Vector((0, 1)), (7.0, 11.0, 10.0), c, None)
+    gate.hide_render = True; gate.hide_viewport = True
+    bo = bpy.data.objects["shooter-wall"].modifiers.new("store-gate", "BOOLEAN"); bo.object = gate; bo.operation = "DIFFERENCE"
+    # the break beam across the drain, 39 mm from emitter to receiver, at the ball's middle
+    led = mat("ir-led", "#3a1418", rough=0.2)
+    black = mat("pit", "#050506", rough=0.9)
+    for name, x, m, out in (("drain-beam-emitter", 89.65, led, -1.0), ("drain-beam-receiver", 128.65, black, 1.0)):
+        box(name + "-holder", (x + 3.0 * out, 405.0, 4.5), Vector((1, 0)), Vector((0, 1)), (6.0, 7.0, 9.0), c, plastic)
+        tube(name, [(x, 405.0), (x + 2.5 * out, 405.0)], 1.5, 4.5, c, m)
+
+
+def build_sensors():
+    """The IR sensors: one under each sensor eye in the drawing, looking up through it. A track's sensor sits
+    against the track's floor, found by looking down from above the eye; every other sensor sits against the
+    board's underside. A small green board carries each one. Its size is an estimate."""
+    c = coll("sensors")
+    dg = bpy.context.evaluated_depsgraph_get()
+    pcb = mat("pcb", "#1f6b3a", rough=0.5)
+    body = mat("sensor-black", "#111214", rough=0.4)
+    eyes = [(t["circle"][0], t["circle"][1], any(ch.startswith("ir-ramp-") for ch in t["chain"]))
+            for t in SHAPES if t["cls"] == "ir-eye" and "ir-sensors" in t["chain"]]
+    for t in by("drain-ball-store", "exit-sensor"):
+        xs = [q[0] for q in t["pts"]]; ys = [q[1] for q in t["pts"]]
+        eyes.append(((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2, False))
+    for x, y, track in eyes:
+        under = -4.0
+        if track:
+            hit, loc, nor, idx, ob, mtx = bpy.context.scene.ray_cast(dg, Vector(W(x, y, 120.0)), Vector((0, 0, -1)))
+            if hit and ob.name != "playfield" and loc.z * 10 > 2.0:
+                under = loc.z * 10 - H["ramp_floor"]
+        prism("ir-sensor", [(x - 2.3, y - 2.0), (x + 2.3, y - 2.0), (x + 2.3, y + 2.0), (x - 2.3, y + 2.0)],
+              under - 3.0, under, c, body)
+        prism("ir-sensor-board", [(x - 6.0, y - 5.0), (x + 6.0, y - 5.0), (x + 6.0, y + 5.0), (x - 6.0, y + 5.0)],
+              under - 4.6, under - 3.0, c, pcb)
+
+
 def tilt_machine():
     """Hangs everything but the backbox from one empty that tips the playfield toward the flippers."""
     e = bpy.data.objects.new("machine-tilt", None); bpy.context.scene.collection.objects.link(e)
@@ -1729,13 +1939,24 @@ def tilt_machine():
     return e
 
 
+def textured_view():
+    """Sets every 3D view's solid shading to show the image textures, so the playfield and the backbox show their
+    prints."""
+    for w in bpy.context.window_manager.windows:
+        for a in w.screen.areas:
+            if a.type == "VIEW_3D":
+                a.spaces.active.shading.color_type = "TEXTURE"
+
+
 def build_all():
     reset()
     sc = bpy.context.scene
     sc.unit_settings.system = "METRIC"; sc.unit_settings.scale_length = 0.01
     build_board(); build_bumpers(); build_posts_and_rubbers(); build_lower(); build_shooter_lane()
     build_sides(); build_ramps(); build_balls(); build_inserts(); build_outer_sides(); build_front(); build_decorations()
-    tilt_machine(); build_backbox(); build_room()
+    build_store(); build_sensors()
+    tilt_machine(); build_backbox(); build_room(); lights.build()
+    textured_view()
     return {"objects": len(bpy.data.objects)}
 
 

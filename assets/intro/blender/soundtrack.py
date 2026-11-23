@@ -18,7 +18,7 @@ The track, by the film's frames at 25 a second:
   97        the balls collide with a clear metallic clink, the march and the rolls giving way
   108       the camera whips round to the drain
   128..158  the flippers snap up and fall back and miss
-  146..162  the march winds down like a stopped tape as the ball drains; the drain knocks at 156
+  152..164  the march winds down like a stopped tape as the ball drains; the drain knocks at 156
   157..167  in the black the tape starts again, running up to full speed
   167..260  the logo: the march plays on to its last chord at 239 over a pumping kick on every beat, with echo
             and a wide hall, and rings out as the picture fades; a neon tube buzzes, sparks fly where the
@@ -46,7 +46,8 @@ FLIPS = ((128, 2), (130, 1), (134, 1), (136, 1), (152, 2), (155, 1))   # (up, fr
 # the hits in the recordings, the onsets in seconds: the kit's flipper snapping up and falling back, two steel balls
 FLIP_UP, FLIP_DOWN, BALLS = (1.523, 2.359), (1.664, 2.514), 2.958
 HIT_GAIN = 0.0          # dB on the balls' collision, set so its first 100 ms sit 7.6 dB over the 350 ms before it
-STOP = (146, 162)                 # the march winds down
+STOP = (152, 164)                 # the march winds down
+LEVEL_END = 146                   # keep the march's reference level before the tape stops
 DRAIN = 156
 LOGO, LOGO_FLIP = 167, 207
 IMPACT = 228.2          # the last letter of ANAKINRAW lights, from film.py
@@ -273,7 +274,7 @@ def march(path):
     far = 1 - u
     swell = db(np.interp(t, [0.0, (VOICE - 1) / FPS, (KICK - 1) / FPS], [-24.0, -8.0, 0.0]))
     out = (dry * db(-6 * far) + wet * 0.6 * far) * swell + wet * 0.3 * v   # far off at first, a hall as it stops
-    return rms_scale(out, -20.0, slice(sample(KICK), sample(STOP[0])))
+    return rms_scale(out, -20.0, slice(sample(KICK), sample(LEVEL_END)))
 
 
 def logo_sound(flip, speed, march_path):

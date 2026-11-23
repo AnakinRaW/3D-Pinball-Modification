@@ -4,19 +4,15 @@ The machine's intro film: a ride as the ball through a multiball, into the drain
 
 ## The film
 
-The scripts in [`blender/`](blender/) build the machine from the [playfield drawing](../playfield/), animate the ride and render it. A script that runs inside Blender reads the folder it lies in from `BUILD`.
+The scripts in [`blender/`](blender/) animate the ride on the machine that [`cgi/`](../cgi/) builds, and render it. A script that runs inside Blender reads the folder it lies in from `BUILD`.
 
 | Step | Script | Runs in | Makes |
 |---|---|---|---|
-| 1 | `extract.py <out>` | Python | `blender/out/`: the drawing's shapes and its textures |
-| 2 | `frame_body.py <out>` | Python | the diorama's frame without the parts built in 3D, and the crown's outline |
-| 3 | `display.py <out>` | Python | `display/`: what the diorama's screen shows in each frame |
-| 4 | `scene.py` | Blender | the machine |
-| 5 | `film.py` | Blender | the ride, the lights, the logo and the render settings |
-| 6 | `render_frames.py` | Blender, with `FIRST` and `LAST` | `frames/`: the film in Cycles, at 640 × 480 |
-| 7 | `convert.py <frames> <out>` | Python | `intro.rgb`, and `preview.gif` to look at |
-
-`preview.py` sets up cameras for checking the modeled parts.
+| 1 | the steps of [`cgi/`](../cgi/) | Python and Blender | the machine and its lights at rest |
+| 2 | `display.py <out>` | Python | `display/`: what the diorama's screen shows in each frame |
+| 3 | `film.py` | Blender | the ride, the lights' keys, the logo's place in the film and the render settings |
+| 4 | `render_frames.py` of `cgi/`, with `BUILD` set to `blender/` | Blender, with `FIRST` and `LAST` | `frames/`: the film in Cycles, at 640 × 480 |
+| 5 | `convert.py <frames> <out>` | Python | `intro.rgb`, and `preview.gif` to look at |
 
 ## The sound
 
