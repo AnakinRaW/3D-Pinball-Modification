@@ -25,6 +25,7 @@
 #pragma GCC diagnostic pop
 #include "core/event-queue.h"
 #include "drivers/audio.h"
+#include "drivers/break-beam.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/servo-driver.h"
@@ -459,6 +460,38 @@ static bool audioBeginFails(Verdict& v) {
     return audioEmpty(audioSecond, v);
 }
 
+// ---- the break beam driver
+
+static EventQueue beamQueue;
+static BreakBeamDriver beamFresh(beamQueue);    // before-begin: never begun
+static BreakBeamDriver beamHolder(beamQueue);   // begin-fails: begins first and holds the pin
+static BreakBeamDriver beamSecond(beamQueue);   // begin-fails: begins after beamHolder
+
+// Gets whether a break beam driver answers every call at once with empty data.
+static bool beamEmpty(BreakBeamDriver& beam, Verdict& v) {
+    bool blocked = true;
+    const uint32_t us = timedUs([&] { blocked = beam.blocked(); });
+    if (blocked || beam.failed().parts != 0) {
+        return v.want("not blocked, no failed part")
+            .saw("blocked %d, failed parts %u", blocked, unsigned(beam.failed().parts));
+    }
+    return atOnce(us, "blocked()", v);
+}
+
+static bool beamBeforeBegin(Verdict& v) {
+    return beamEmpty(beamFresh, v);
+}
+
+static bool beamBeginFails(Verdict& v) {
+    if (!beamHolder.begin()) {
+        return v.want("true").saw("the first begin() false");
+    }
+    if (beamSecond.begin()) {
+        return v.want("false").saw("begin() true with the pin held");
+    }
+    return beamEmpty(beamSecond, v);
+}
+
 // ---- the register and the rows
 
 static const DriverCase DRIVERS[] = {
@@ -474,6 +507,9 @@ static const DriverCase DRIVERS[] = {
     // the audio program checks the volume's range through its tap. begin() needs no slot of the
     // driver tick and fails when another audio driver holds the I²S2 port
     {"audio", audioBeforeBegin, nullptr, audioAtOnce, audioBeginFails},
+    // the break beam driver takes no settings and starts no transfer. begin() needs no slot of the
+    // driver tick and fails when another break beam driver holds the pin
+    {"break-beam", beamBeforeBegin, nullptr, nullptr, beamBeginFails},
 };
 
 // Runs a row's case of every driver and reports the first failure, or PASS.
