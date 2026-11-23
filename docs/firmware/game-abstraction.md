@@ -25,6 +25,10 @@ The host performs the same sequence at every start of a game, machine power-up i
 
 A ball still on the playfield carries on in the new game.
 
+At start-up, before it launches the first game, the host plays the machine's boot film once. The film is `/video/intro.rgb` with its sound `/audio/intro.wav`, both at the card's root and made as [`media.md`](../../assets/media.md#videos) gives. The host names the card's root to the [file system](components/file-system.md#paths) and plays the film through the [video player](components/video-player.md) on a slide that fills the screen. Once the film has ended, the host removes the slide. A card without the film ends it at once.
+
+The host does its start-up work while the film plays and shows its first screen only after the film's `MOVIE_ENDED`.
+
 The bumpers fire only while a game is in its [Play](#game-lifecycle) phase. The host arms the contacts of the [solenoid driver](drivers/solenoid.md) when the phase begins and disarms them when it ends.
 
 The host also manages the user menu on the touch display. There the player switches games or configures the machine.

@@ -12,6 +12,9 @@ enum class EventType : uint16_t {
     /// A mode's track of music has played to its end. The source is the key of the track's mode,
     /// and the payload is the number the audio driver gave the track.
     MUSIC_ENDED,
+    /// A video has played to its end. The source is the key of the mode that holds the video's
+    /// slide, and the payload is 0.
+    MOVIE_ENDED,
 };
 
 struct PinballEvent {
@@ -31,6 +34,9 @@ struct PinballEvents {
 template <EventType TAG> struct PayloadOf;
 template <> struct PayloadOf<EventType::MUSIC_ENDED> {
     using type = uint32_t;   // the number the audio driver gave the track
+};
+template <> struct PayloadOf<EventType::MOVIE_ENDED> {
+    using type = uint32_t;   // always 0
 };
 
 /// Gets the payload of an event of type TAG.

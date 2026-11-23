@@ -40,6 +40,7 @@ This repository hosts everything for the project:
 | Photos, renders & other assets | [`assets/`](assets/) |
 | Checking tools | [`tools/`](tools/) |
 | Arcade: the machine's features and games in the browser | [`tools/arcade/`](tools/arcade/) |
+| Separator geometry: the drain's ball separator computed and drawn in the browser | [`tools/separator/separator.html`](tools/separator/separator.html) |
 
 ## Reversibility
 

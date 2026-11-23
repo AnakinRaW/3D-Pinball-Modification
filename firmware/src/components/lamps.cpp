@@ -19,6 +19,19 @@ static Color toColor(const CRGB& c) {
     return {c.r, c.g, c.b, false};
 }
 
+/// Gets the start since() takes: @p startMs, or now where @p startMs lies after now.
+///
+/// @param key  The layer key, for the debug line.
+static uint32_t notAfterNow(uint32_t startMs, uint8_t key) {
+    const uint32_t nowMs = millis();
+    if (before(nowMs, startMs)) {
+        DEBUG_LOG("Lamps: since() of key %u lies %lu ms ahead and counts as now\n", key,
+                  static_cast<unsigned long>(startMs - nowMs));
+        return nowMs;
+    }
+    return startMs;
+}
+
 LampRange LampRange::sub(uint16_t from, uint16_t n) const {
     if (from >= count) {
         return {lamps, uint16_t(first + count), 0, layer};
@@ -49,6 +62,18 @@ LampRange& LampRange::run(Pattern p, Direction d, Paint c, uint16_t stepMs, Pain
         stepMs = 1;
     }
     return play(Run(p, d, stepMs), back, c);
+}
+
+LampRange& LampRange::since(uint32_t startMs) {
+    startMs = notAfterNow(startMs, layer.key);
+    for (uint16_t i = 0; i < count; ++i) {
+        Lamps::Entry* e = lamps->playfieldEffects[first + i].find(
+            [this](const Lamps::Entry& x) { return x.key == layer.key; });
+        if (e != nullptr) {
+            e->startMs = startMs;
+        }
+    }
+    return *this;
 }
 
 void LampRange::lasting(uint16_t ms) {
@@ -90,6 +115,16 @@ Strip& Strip::fade(Paint c, uint16_t ms) {
 
 Strip& Strip::run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back) {
     return play(Run(p, d, mmPerS), back, c);
+}
+
+Strip& Strip::since(uint32_t startMs) {
+    startMs = notAfterNow(startMs, layer.key);
+    Lamps::Entry* e = lamps->stripEffects[strip].find(
+        [this](const Lamps::Entry& x) { return x.key == layer.key; });
+    if (e != nullptr) {
+        e->startMs = startMs;
+    }
+    return *this;
 }
 
 void Strip::lasting(uint16_t ms) {

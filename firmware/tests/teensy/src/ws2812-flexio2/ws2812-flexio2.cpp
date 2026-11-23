@@ -16,6 +16,7 @@
 //   clock      a clock root at another rate is refused while FlexIO3 is enabled on it, and set to
 //              120 MHz while FlexIO3 is not
 //   shared     while one output's frame goes out, another output is busy and refuses to send
+//   setup      FlexIO2 holds the timer setup the first start wrote
 //
 // Wiring: none. LEDs on chain A may stay connected. Its first LEDs show the wave's colors for a
 // moment and go dark again. long, load and latch send on chain F, where no LED is wired.
@@ -677,6 +678,36 @@ static void testShared() {
     test::pass();
 }
 
+// setup: the registers the start writes once and no frame changes, RM FlexIO. The timer shifts one
+// symbol bit every twelve FlexIO2 clocks and stops after a word, and shifter 0's status asks the
+// DMA for the next word.
+static void testSetup() {
+    constexpr uint32_t BAUD_DIV = 5;
+    constexpr uint32_t COMPARE = ((ws2812::WORD_BITS * 2 - 1) << 8) | BAUD_DIV;
+    constexpr uint32_t TIMER_CFG = FLEXIO_TIMCFG_TIMDIS(2) | FLEXIO_TIMCFG_TIMENA(2);
+    constexpr uint32_t SHIFTER0_DMA = 1;
+    if (!longStarted()) {
+        return;
+    }
+    delay(SETTLE_MS);
+    const uint32_t compare = FLEXIO2_TIMCMP0;
+    const uint32_t config = FLEXIO2_TIMCFG0;
+    const uint32_t request = FLEXIO2_SHIFTSDEN;
+    const uint32_t control = FLEXIO2_CTRL;
+    if (compare != COMPARE || config != TIMER_CFG || request != SHIFTER0_DMA ||
+        control != FLEXIO_CTRL_FLEXEN) {
+        char seen[96];
+        char wanted[96];
+        snprintf(seen, sizeof seen, "TIMCMP0 %lx, TIMCFG0 %lx, SHIFTSDEN %lx, CTRL %lx", compare,
+                 config, request, control);
+        snprintf(wanted, sizeof wanted, "%lx, %lx, %lx, %lx", COMPARE, TIMER_CFG, SHIFTER0_DMA,
+                 uint32_t(FLEXIO_CTRL_FLEXEN));
+        test::fail(seen, wanted);
+        return;
+    }
+    test::pass();
+}
+
 static const Test TESTS[] = {
     {"ws2812-flexio2.wave", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testWave, nullptr},
     {"ws2812-flexio2.two-lanes", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testTwoLanes, nullptr},
@@ -689,6 +720,7 @@ static const Test TESTS[] = {
     {"ws2812-flexio2.latch", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLatch, nullptr},
     {"ws2812-flexio2.clock", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testClock, nullptr},
     {"ws2812-flexio2.shared", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testShared, nullptr},
+    {"ws2812-flexio2.setup", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testSetup, nullptr},
 };
 
 extern const Program WS2812_FLEXIO2 = {TESTS, sizeof TESTS / sizeof TESTS[0]};

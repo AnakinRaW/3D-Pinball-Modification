@@ -28,6 +28,14 @@ struct Program {
 
 namespace test {
 
+/// The PSRAM the programs share for their large buffers. The Teensy restarts before each program,
+/// so the buffers of one program alone live at a time, and the screen's picture memory gets what
+/// the programs leave.
+constexpr size_t SCRATCH_BYTES = 1280 * 1024;
+
+/// Gets the shared PSRAM, SCRATCH_BYTES from a 32-byte boundary.
+uint8_t* scratch();
+
 enum class Answer : uint8_t { YES, NO, NONE };
 
 // Gets whether this run takes the durations testing.md states rather than the quick ones.

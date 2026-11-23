@@ -44,11 +44,11 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 | Microcontroller | Teensy 4.1 (NXP i.MX RT1062) |
 | Schematic and netlist | Declared pin by pin in the subsystem's `schematic.py` under `model/`. KiCad is opt-in: `tools/netlist.py` writes a board out as a KiCad netlist and compares one KiCad exported |
 | 3D CAD | FreeCAD **or** Fusion, **undecided**: assume neither |
-| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader with `upload_protocol = teensy-gui`, since `teensy-cli` fails to write on this machine. The linker script [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld) keeps LVGL's code out of RAM1, which the Arduino IDE cannot do per project |
+| Firmware build | PlatformIO, uploading through PJRC's Teensy Loader with `upload_protocol = teensy-gui`, since `teensy-cli` fails to write on this machine. The linker script [`firmware/linker/teensy41.ld`](firmware/linker/teensy41.ld) keeps LVGL's code and the C library's text formatting out of RAM1, which the Arduino IDE cannot do per project |
 | Teensy core | The newest Teensyduino release, as PlatformIO's `framework-arduinoteensy` package, pinned in each `platformio.ini` |
 | LED library | FastLED 3.10.6 or newer from PlatformIO's registry, for the colors, the palettes and the power model. Teensyduino 1.62 ships FastLED 3.4.0, which has no `setPowerModel`. The chains go out from FlexIO2 through `firmware/src/drivers/ws2812-flexio2.h`, since ObjectFLED's DMA writes to the pins stretched bits whenever the processor loaded the peripheral bus |
 | Audio library | PJRC's Audio library from the Teensy core, with its I²S2 output and its master gain. The audio driver adds its channels and its mixer as stages of it. A stage joins the library's update in the order it is made, and the library keeps it for good, so the driver is a static object that makes its output in `begin()` |
-| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/gist/lv_conf.h`](firmware/gist/lv_conf.h) sets. The screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it |
+| UI library | LVGL 9.6, its code in the flash and its drawing loops in RAM1, as [`firmware/include/lv_conf.h`](firmware/include/lv_conf.h) sets. The screen component in [`docs/firmware/components/screen.md`](docs/firmware/components/screen.md) runs it |
 | RTOS | FreeRTOS 11.2 from freertos-teensy 11.2.0-4 with the port's pull request 43 and the changed settings that [`firmware/include/freertos_config_override.h`](firmware/include/freertos_config_override.h) holds. The tasks are in [`docs/firmware/general-design.md`](docs/firmware/general-design.md#execution-model) |
 
 ## Repository layout
@@ -60,6 +60,7 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 - `model/`: the Python files the checks read, in folders that mirror those under `docs/`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
 - `tools/arcade/`: the Arcade, a browser app in TypeScript with Vite and Preact. It shows the drawing, or the machine in 3D from `assets/cgi/machine.glb` with three.js, with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
+- `tools/separator/separator.html`: a single page without dependencies that computes the drain's ball separator from the wall distance, the pins' length and their diameter, draws it in three views and prints the drilling pattern. It opens straight from the file system
 - `firmware/sim/`: the Arcade's WebAssembly build of the lamps component and the lighting driver, with a simulated output stage in `fakes/`
 - `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
 

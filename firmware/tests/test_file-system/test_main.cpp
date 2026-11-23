@@ -6,6 +6,8 @@
 //           whose requests fail. A full path reaches the card's root
 //   switch  a file keeps its path after the host names another game. The next file lies in the
 //           other game's directory
+//   root    once the host names the card's root, a path counts from there, and a path that leaves
+//           it is refused. The next game named gets its directory again
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -37,6 +39,7 @@ struct Service : StorageService {
 class GameHost {
 public:
     static void use(FileSystem& files, const char* game) { files.use(game); }
+    static void useRoot(FileSystem& files) { files.useRoot(); }
     static FileWriter openFull(const FileSystem& files, const char* path) {
         return files.openFull(path);
     }
@@ -82,9 +85,30 @@ static void testSwitch() {
     TEST_ASSERT_EQUAL_STRING("/games/b/best", second.name());
 }
 
+static void testRoot() {
+    NoCard card;
+    Service storage(card);
+    FileSystem files(storage);
+    GameHost::useRoot(files);
+    const FileWriter film = files.open("video/intro.rgb");
+    TEST_ASSERT_EQUAL_STRING("/video/intro.rgb", film.name());
+    TEST_ASSERT_EQUAL_STRING("", files.open("").name());
+    TEST_ASSERT_EQUAL_STRING("", files.open("/video/intro.rgb").name());
+    TEST_ASSERT_EQUAL_STRING("", files.open("../intro.rgb").name());
+    // "/" takes 1 byte, so 62 more fill the path to its end.
+    const std::string longest(FILE_PATH_BYTES - 1 - 1, 'x');
+    TEST_ASSERT_EQUAL_STRING(("/" + longest).c_str(), files.open(longest.c_str()).name());
+    const std::string tooLong = longest + "x";
+    TEST_ASSERT_EQUAL_STRING("", files.open(tooLong.c_str()).name());
+    GameHost::use(files, "a");
+    TEST_ASSERT_EQUAL_STRING("/games/a/video/intro.rgb", files.open("video/intro.rgb").name());
+    TEST_ASSERT_EQUAL_STRING("/video/intro.rgb", film.name());
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testPaths);
     RUN_TEST(testSwitch);
+    RUN_TEST(testRoot);
     return UNITY_END();
 }

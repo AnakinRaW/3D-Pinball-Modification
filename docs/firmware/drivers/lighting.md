@@ -46,7 +46,7 @@ A 0 is 300 ns high and a 1 is 700 ns high. The chips on the two strips are unkno
 
 After the longest chain the lines stay low for longer than 280 µs, after which the LEDs take over the frame.
 
-FlexIO2 shares its 120 MHz clock with the [display's](display.md) bus. The library sets the clock only while no display runs on it. Where the clock runs at another rate, the library refuses to start.
+FlexIO2 shares its 120 MHz clock with the [display's](display.md) bus. The library sets the clock only while no display runs on it. Where the clock runs at another rate, the library refuses to start. The library holds FlexIO2's software reset for 1 µs and waits 1 µs after it, as the [display driver](display.md#setting-flexio3-up) does at FlexIO3.
 
 The DMA channel that feeds FlexIO2 has the highest priority, so no other channel can delay a refill and stop a frame halfway.
 
