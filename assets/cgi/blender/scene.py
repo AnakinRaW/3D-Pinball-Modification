@@ -9,6 +9,7 @@ machine's lights and the room's, at rest.
 """
 import bpy, bmesh, importlib, json, math, os, sys
 from mathutils import Matrix, Vector
+from mathutils.geometry import delaunay_2d_cdt
 
 if BUILD not in sys.path: sys.path.insert(0, BUILD)
 import common, lights
@@ -25,15 +26,15 @@ TILT_DEG = 4.0
 H = {
     "wall_back": 61.0, "wall_front": 31.0,          # cabinet walls above the playfield at its back and front edge, off the side panels
     "wood_lo": 3.5, "plastic": 7.0, "wood_hi": 10.5, "cover": 13.5,   # the side stack, layer tops
-    "post": 12.0, "sleeve_lo": 2.0, "sleeve_hi": 10.0, "rubber_z": 6.0,
+    "post": 8.0, "head": 2.5, "sleeve_lo": 2.0, "sleeve_hi": 10.0, "rubber_z": 6.0,   # a post's clear spacer, its screw's head
     "fence": 25.0, "fence_end": 12.0, "blade": 20.0,
-    "flipper": 8.0, "sling": 13.0, "rail": 10.0,
-    "sling_lo": 10.0,                               # the slingshot's wooden cover, its underside 1 mm over the 9 mm ball
+    "flipper": 8.0, "sling": 12.0, "rail": 10.0,
+    "sling_lo": 9.5,                                # the slingshot's wooden cover, its underside 0.5 mm over the 9 mm ball
     "apron_lo": 10.5, "apron_hi": 13.5,             # the apron rests on the outlane walls' stack
-    "bell_rim": 4.0, "bell_body": 12.0, "bell_top": 18.0, "foil": 0.03, "plate": 1.0,
+    "bell_rim": 4.0, "bell_top": 18.0, "foil": 0.03, "plate": 1.0,
     "ramp_wall": 9.0, "ramp_floor": 1.6,
     "gray_end": 30.0,                               # the gray lane's floor at its end under the blue ramp
-    "shooter_top": 24.0, "shooter_wall": 30.0,      # the shooter lane's floor at its top end, its red wall
+    "shooter_top": 24.0,                            # the shooter lane's floor at its top end
 }
 # The pop bumper after the manual: a flat metal dish on its spring, as wide as the cap, floating over a hole
 # in the board that the coil pulls it into until the dish almost rests on the board. At rest the ball wedges
@@ -108,25 +109,31 @@ def prism(name, pts, z0, z1, c, material, zfn=None, lo_fn=None, hi_fn=None, cap_
     return link(bpy.data.objects.new(name, me), c, material)
 
 
-def surface(name, pts, zfn, thickness, c, material, cuts=1, step=None):
-    """A ramp floor: the outline triangulated and finely subdivided, every vertex lifted to zfn, then given
-    its thickness downward, so the floor follows its height between the outline's points as well. A step (mm)
-    first sets a point on the outline at least that often, so a long floor follows a curved climb closely."""
+SURFACE_STEP = 1.5     # mm between the points of a floor's net
+
+
+def surface(name, pts, zfn, thickness, c, material):
+    """A floor that follows a height: a net of even triangles over the outline, its points SURFACE_STEP apart along
+    the outline and on a square grid inside it, every point lifted to zfn, then given its thickness downward."""
     pts = clean(pts)
-    if step:
-        dense = []
-        for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
-            n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / step))
-            dense += [(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n) for k in range(n)]
-        pts = dense
+    edge = []
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+        n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / SURFACE_STEP))
+        edge += [(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n) for k in range(n)]
+    xs, ys = [p[0] for p in edge], [p[1] for p in edge]
+    grid = []
+    for gx in range(math.floor(min(xs) / SURFACE_STEP), math.ceil(max(xs) / SURFACE_STEP) + 1):
+        for gy in range(math.floor(min(ys) / SURFACE_STEP), math.ceil(max(ys) / SURFACE_STEP) + 1):
+            x, y = gx * SURFACE_STEP, gy * SURFACE_STEP
+            # a grid point closer to the outline than half a step would leave a sliver
+            if inside((x, y), edge) and min(math.hypot(x - ex, y - ey) for ex, ey in edge) > SURFACE_STEP / 2:
+                grid.append((x, y))
+    verts = [Vector((x, y)) for x, y in edge + grid]
+    out_verts, _, out_faces, *_ = delaunay_2d_cdt(verts, [], [list(range(len(edge)))], 1, 1e-6)
     me = bpy.data.meshes.new(name); bm = bmesh.new()
-    vs = [bm.verts.new((x / 10, -y / 10, 0.0)) for x, y in pts]
-    f = bm.faces.new(vs)
-    bmesh.ops.triangulate(bm, faces=[f], quad_method="BEAUTY", ngon_method="BEAUTY")
-    for _ in range(2):
-        bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=cuts, use_grid_fill=True)
-    for v in bm.verts:
-        v.co.z = zfn(v.co.x * 10, -v.co.y * 10) / 10
+    vs = [bm.verts.new((v.x / 10, -v.y / 10, zfn(v.x, v.y) / 10)) for v in out_verts]
+    for f in out_faces:
+        bm.faces.new([vs[k] for k in f])
     bm.normal_update()
     for face in bm.faces:
         if face.normal.z < 0: face.normal_flip()
@@ -136,9 +143,8 @@ def surface(name, pts, zfn, thickness, c, material, cuts=1, step=None):
     bmesh.ops.translate(bm, verts=new, vec=(0.0, 0.0, -thickness / 10))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(me); bm.free()
-    if cuts > 1 or step:
-        # a finely curved floor shades smooth, its edges stay sharp
-        me.shade_smooth(); me.set_sharp_from_angle(angle=math.radians(30))
+    # a curved floor shades smooth, its edges stay sharp
+    me.shade_smooth(); me.set_sharp_from_angle(angle=math.radians(30))
     o = link(bpy.data.objects.new(name, me), c, material)
     return o
 
@@ -609,15 +615,30 @@ def build_board():
     top = back_wall_material()
     for s in placed("cabinet"):
         if s["cls"] in ("wall", "wall-top"):
-            # the partition at the back is the diorama's front, up to its base; the side walls run to the wall top
+            # the partition at the back is the diorama's front, up to its base; the side walls run to the wall top.
+            # Every wall stands level on the table: its lower edge, in the tipped machine's frame, climbs toward
+            # the back as the board falls toward the front
             hi = (lambda x, y: wall_top(y)) if s["cls"] == "wall" else (lambda x, y: DIORAMA_BASE)
-            prism("cabinet-wall", s["pts"], -110, 0.0, c, wall if s["cls"] == "wall" else top, hi_fn=hi)
+            on_table = lambda x, y: (TABLE_Z + y * math.sin(math.radians(TILT_DEG))) / math.cos(math.radians(TILT_DEG))
+            prism("cabinet-wall", s["pts"], 0.0, 0.0, c, wall if s["cls"] == "wall" else top, lo_fn=on_table, hi_fn=hi)
 
 
 DIORAMA_WIDTH = 275.0                           # mm, the manual's assembly size: the towers' width
 # mm above the playfield's back edge: the partition's ledge, from the photos, where the towers' base plates rest on
 # the side walls' top
 DIORAMA_BASE = 48.0
+
+
+CIRCUS_INSET = 3.0     # mm the CIRCUS board stands inside the casing's back, as the diorama stands behind the front
+CROWN_SIGN = 1.5     # mm the ROKR sign stands out of the crown
+CROWN_THICK = 6.0     # mm, the crown's thickness; it stands in the middle of the structure's depth
+SHOOTER_WALL_ABOVE = 12.0     # mm the shooter lane's red wall stands over the lane's floor: the ball and 3 mm
+TOWER_WALL = 3.0     # mm, the plywood of the towers' column
+CABINET_OUTER = (-12.0, 242.0, -16.0)     # mm: the cabinet's outer faces left and right, with its side panels, and its back
+DIORAMA_DEPTH = 22.0     # mm from the frame's picture back to the casing's back, the sky 2 mm before it
+CURTAIN_THICK = 2.0     # mm, the curtains' boards
+FRAME_THICK = 3.0       # mm, the frame's plate
+BEAM_PROUD = 0.6        # mm the roof's beams, the ledges and the stars stand out of the plate
 
 
 def build_backbox():
@@ -633,8 +654,9 @@ def build_backbox():
     top = bottom + height * s
     X = lambda x: 115.0 + (x - 115.0) * s
     vb = height / VB[3]
-    def layer(name, y):
-        img = bpy.data.images.load(os.path.join(OUT, name + ".png"))
+    def layer(name, y, mirror=False):
+        """A picture of the drawing standing at y; mirror shows it the right way round from behind."""
+        img = bpy.data.images.load(os.path.join(OUT, name + ".png"), check_existing=True)
         m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree
         tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = img
         b = nt.nodes["Principled BSDF"]; nt.links.new(tex.outputs["Color"], b.inputs["Base Color"])
@@ -644,15 +666,62 @@ def build_backbox():
         vs = [bm.verts.new((X(x) / 10, -y / 10, z / 10)) for x, z in ((VB[0], bottom), (VB[0] + VB[2], bottom), (VB[0] + VB[2], top), (VB[0], top))]
         f = bm.faces.new(vs); uv = bm.loops.layers.uv.new()
         for loop, (uu, vv) in zip(f.loops, [(0, 1 - vb), (1, 1 - vb), (1, 1), (0, 1)]):
-            loop[uv].uv = (uu, vv)
+            loop[uv].uv = (1 - uu if mirror else uu, vv)
         bm.to_mesh(me); bm.free()
         return link(bpy.data.objects.new(name, me), c, m)
     # the towers reach 10 mm past the brown partition's front (4.3 mm, from the drawing) over the cabinet's back
     # corners, where only the low side stacks end in them; the frame's picture stands just in front of them, the
     # sky at the casing's back
-    front, back = 14.95, -18.0
-    for name, y in (("backbox-back", back + 2.0), ("backbox-b20", -10.0), ("backbox-scene", -5.0), ("backbox-frame-body", front)):
+    front, back = 14.95, 14.95 - DIORAMA_DEPTH
+    rear = CABINET_OUTER[2] - TOWER_WALL                # the casing's back, flush with the towers' backs
+    for name, y in (("backbox-back", back + 2.0), ("backbox-b20", back + 4.5)):
         layer(name, y)
+
+    def cutout(name, image, outline, y_front, thick, side, alpha=False, u_range=None, mirror=False):
+        """A part sawn out along outline, drawing millimetres (x, y of the elevation): its front shows the picture
+        image as the layers do, at y_front, and its edge and back are side, thick behind it. Beyond
+        u_range, x0 to x1, the front repeats the picture's column at the nearer end. A negative thick puts the
+        part on the casing's back, its picture facing backward; mirror turns the picture to read right from
+        behind."""
+        pts = clean(outline)
+        edge = []
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+            n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / 2.0))
+            edge += [(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n) for k in range(n)]
+        xs, ys = [p[0] for p in edge], [p[1] for p in edge]
+        grid = [(gx * 2.0, gy * 2.0) for gx in range(math.floor(min(xs) / 2), math.ceil(max(xs) / 2) + 1)
+                for gy in range(math.floor(min(ys) / 2), math.ceil(max(ys) / 2) + 1)
+                if inside((gx * 2.0, gy * 2.0), edge) and min(math.hypot(gx * 2.0 - ex, gy * 2.0 - ey) for ex, ey in edge) > 1.0]
+        ov, _, of, *_ = delaunay_2d_cdt([Vector(p) for p in edge + grid], [], [list(range(len(edge)))], 1, 1e-6)
+        img = bpy.data.images.load(os.path.join(OUT, image + ".png"), check_existing=True)
+        m = bpy.data.materials.get(name + "-picture") or bpy.data.materials.new(name + "-picture"); m.use_nodes = True
+        nt = m.node_tree; b = nt.nodes["Principled BSDF"]
+        if not any(n.type == "TEX_IMAGE" for n in nt.nodes):
+            tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = img
+            nt.links.new(tex.outputs["Color"], b.inputs["Base Color"]); b.inputs["Roughness"].default_value = 0.6
+            nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"]); b.inputs["Emission Strength"].default_value = 0.35
+            if alpha: nt.links.new(tex.outputs["Alpha"], b.inputs["Alpha"])
+        me = bpy.data.meshes.new(name); bm = bmesh.new(); uvl = bm.loops.layers.uv.new()
+        at = lambda x, yd, y: (X(x) / 10, -y / 10, (top - (yd - VB[1]) * s) / 10)
+        fv = [bm.verts.new(at(v.x, v.y, y_front)) for v in ov]
+        bv = [bm.verts.new(at(v.x, v.y, y_front - thick)) for v in ov]
+        for f in of:
+            face = bm.faces.new([fv[k] for k in f]); face.material_index = 0
+            for loop, k in zip(face.loops, f):
+                ux = ov[k].x if u_range is None else min(max(ov[k].x, u_range[0]), u_range[1])
+                uu = (ux - VB[0]) / VB[2]
+                loop[uvl].uv = (2 * (115.0 - VB[0]) / VB[2] - uu if mirror else uu, 1 - (ov[k].y - VB[1]) / VB[3])
+            bm.faces.new([bv[k] for k in f[::-1]]).material_index = 1
+        n = len(edge)
+        for i in range(n):
+            j = (i + 1) % n
+            try: bm.faces.new((fv[i], fv[j], bv[j], bv[i])).material_index = 1
+            except ValueError: pass
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(me); bm.free()
+        me.materials.append(m); me.materials.append(side)
+        o = bpy.data.objects.new(name, me); c.objects.link(o)
+        return o
     def box(name, x0, x1, y0, y1, z0, z1, material):
         me = bpy.data.meshes.new(name); bm = bmesh.new()
         bmesh.ops.create_cube(bm, size=1.0)
@@ -677,11 +746,11 @@ def build_backbox():
         return [((r_out if k % 2 == 0 else r_in) * math.cos(math.radians(90 + 36 * k)),
                  zc + (r_out if k % 2 == 0 else r_in) * math.sin(math.radians(90 + 36 * k))) for k in range(10)]
     def tower_top(x0, x1, y0, y1):
-        """The tower's top from the photos, heights and widths from the drawing (mm below the elevation's top and
-        across, scaled): the red cover plate (79 to 74.5, 56.8 wide), the red box with gold stripes between four
-        dark posts (74.5 to 52.5, 45.8), a gray base and a gray plate (52.5 to 40, 36.8 and 39.2), a red plate with
-        gold pegs (40 to 38), the dark pedestal (38 to 28), a gray and a red disc (28 to 22), the wooden stick
-        (22 to 12) and the gold star (12 to 0)."""
+        """The tower's top after the photo of the kit, heights and widths from the drawing (mm below the
+        elevation's top and across, scaled), a stepped pyramid: the red cover plate (79 to 74.5, 56.8 wide), one
+        thick red block with gold stripes (74.5 to 63.5), a cap plate overhanging it (63.5 to 62), a smaller dark
+        block (62 to 54), a gap bridged by gold pegs, a smaller red plate (52.5 to 50.5), a round drum in two tiers
+        (50.5 to 44.5), the wooden stick up into the gold star around 38.5."""
         cx, cy, d = (x0 + x1) / 2, (y0 + y1) / 2, y1 - y0
         zd = lambda depth: top - depth * s
         def slab(name, sw, sd, z0, z1, material):
@@ -689,28 +758,23 @@ def build_backbox():
         cw = 56.8 * s
         slab("diorama-tower-cover", cw, d + (cw - (x1 - x0)), zd(79.0), zd(74.5), red)
         pw = 45.8 * s; vw = pw - 6.0; vd = d - (x1 - x0 - vw)
-        slab("diorama-tower-vent", vw, vd, zd(74.5), zd(52.5), red)
-        for zz in (0.25, 0.45, 0.65):
-            z = zd(74.5) + (zd(52.5) - zd(74.5)) * zz
-            box("diorama-tower-vent-stripe", cx - vw / 2 + 2, cx + vw / 2 - 2, cy + vd / 2, cy + vd / 2 + 0.15, z, z + 0.8, gold_line)
+        slab("diorama-tower-vent", vw, vd, zd(74.5), zd(63.5), red)
+        for zz in (0.25, 0.5, 0.75):
+            z = zd(74.5) + (zd(63.5) - zd(74.5)) * zz
+            box("diorama-tower-vent-stripe", cx - vw / 2 + 2, cx + vw / 2 - 2, cy + vd / 2, cy + vd / 2 + 0.15, z - 0.4, z + 0.4, gold_line)
+        slab("diorama-tower-cap", vw + 3.0, vd + 3.0, zd(63.5), zd(62.0), red)
+        gw, gd = vw * 0.75, vd * 0.75
+        slab("diorama-tower-gray", gw, gd, zd(62.0), zd(54.0), panel_gray)
+        rw, rd = vw * 0.6, vd * 0.6
+        slab("diorama-tower-cross", rw, rd, zd(52.5), zd(50.5), red)
         for sx in (-1, 1):
             for sy in (-1, 1):
-                px, py = cx + sx * (vw / 2 + 1.5), cy + sy * (vd / 2 + 1.5)
-                box("diorama-tower-post", px - 1.5, px + 1.5, py - 1.5, py + 1.5, zd(74.5), zd(43.5), dark)
-        slab("diorama-tower-gray", 36.8 * s, vd, zd(52.5), zd(43.5), panel_gray)
-        gw = 39.2 * s
-        slab("diorama-tower-gray", gw, gw * d / (x1 - x0), zd(43.5), zd(40.0), panel_gray)
-        rw = gw - 5.0
-        slab("diorama-tower-cross", rw, rw * d / (x1 - x0), zd(40.0), zd(38.0), red)
-        for sx in (-1, 1):
-            for sy in (-1, 1):
-                cyl("diorama-tower-peg", cx + sx * (rw / 2 - 2.5), cy + sy * (rw * d / (x1 - x0) / 2 - 2.5), 1.0, zd(38.0), zd(37.2), c, gold_line, 12)
-        cyl("diorama-tower-pedestal", cx, cy, 8.4 * s, zd(38.0), zd(28.0), c, dark, 4, r_top=6.9 * s * 0.6)
-        cyl("diorama-tower-disc", cx, cy, 7.5 * s, zd(28.0), zd(25.0), c, panel_gray, 32)
-        cyl("diorama-tower-disc", cx, cy, 5.0 * s, zd(25.0), zd(22.0), c, red, 32)
-        cyl("diorama-tower-stick", cx, cy, 0.9, zd(22.0), zd(11.0), c, stick, 12)
-        figure("diorama-tower-star", cx, cy, 0.0, star(6.0 * s, 2.6 * s, zd(6.0)), 1.8, c, gold_line)
-        figure("diorama-tower-star-hole", cx, cy, 0.0, star(2.7 * s, 1.1 * s, zd(6.0)), 2.0, c, dark)
+                cyl("diorama-tower-peg", cx + sx * (rw / 2 - 2.5), cy + sy * (rd / 2 - 2.5), 1.0, zd(54.0), zd(52.5), c, gold_line, 12)
+        cyl("diorama-tower-disc", cx, cy, 7.5 * s, zd(50.5), zd(47.0), c, panel_gray, 32)
+        cyl("diorama-tower-disc", cx, cy, 5.5 * s, zd(47.0), zd(44.5), c, red, 32)
+        cyl("diorama-tower-stick", cx, cy, 0.9, zd(44.5), zd(38.5), c, stick, 12)          # up into the star
+        figure("diorama-tower-star", cx, cy, 0.0, star(6.0 * s, 2.6 * s, zd(38.5)), 1.8, c, gold_line)
+        figure("diorama-tower-star-hole", cx, cy, 0.0, star(2.7 * s, 1.1 * s, zd(38.5)), 2.0, c, dark)
     dark = mat("diorama-column", "#1c1c20", rough=0.6)
     gray = mat("diorama-gray", "#4a4d54", rough=0.6)
     red = mat("diorama-red", "#b3242d", rough=0.55)
@@ -719,16 +783,27 @@ def build_backbox():
     # at 163.5 mm
     box_top, box_foot = top - 79.0 * s, top - 163.5 * s
     for x0, x1 in (left, right):
-        # the column and the tower above it share one nearly square footprint: the tower's width from the picture,
-        # 40 mm deep from the frame back; the cabinet's back corner reaches into it. From the photo of its side,
-        # heights in mm above the table: a red foot, a stepped plinth, a tall part with a gold-framed gray panel,
-        # dark ledges with a small slotted plate between them, and the ledge at the side wall's top
-        y0, y1 = front - 40.5, front - 0.5
-        box("diorama-tower", x0, x1, y0, y1, TABLE_Z, box_top, red)
+        # the column and the tower above it share one footprint: the tower's width from the picture, and deep
+        # enough from the frame back that the column's back wall, TOWER_WALL thick, stands behind the cabinet's back.
+        # From the photo of its side, heights in mm above the table: a red foot, a stepped plinth, a tall part with a
+        # gold-framed gray panel, dark ledges with a small slotted plate between them, and the ledge at the side
+        # wall's top
+        y0, y1 = CABINET_OUTER[2] - TOWER_WALL, front - 0.5
         out = -1.0 if x0 < 115 else 1.0
         xo = x0 if out < 0 else x1
+        # below the stage the column is an L of two boards seen from above, its outer walls only: one beside the
+        # cabinet's side, one behind its back, and the cabinet's back corner lies inside it. Above the stage the
+        # tower is a closed box.
+        box("diorama-tower", x0, x1, y0, y1, stage, box_top, red)
+        side_x = sorted((xo, CABINET_OUTER[0] if out < 0 else CABINET_OUTER[1]))
+        box("diorama-tower", side_x[0], side_x[1], y0, y1, TABLE_Z, stage, red)
+        box("diorama-tower", x0, x1, y0, CABINET_OUTER[2], TABLE_Z, stage, red)
         def ledge(z0, z1, grow, material):
-            box("diorama-tower-ledge", x0 - grow, x1 + grow, y0 - grow, y1 + grow, z0, z1, material)
+            if z0 >= stage:
+                box("diorama-tower-ledge", x0 - grow, x1 + grow, y0 - grow, y1 + grow, z0, z1, material)
+                return
+            box("diorama-tower-ledge", side_x[0] - grow, side_x[1] + grow, y0 - grow, y1 + grow, z0, z1, material)
+            box("diorama-tower-ledge", x0 - grow, x1 + grow, y0 - grow, CABINET_OUTER[2] + grow, z0, z1, material)
         for h0, h1, grow, material in ((18, 21, 2.0, dark), (21, 23, 3.0, cream), (23, 25, 1.5, dark), (106, 111, 2.0, dark),
                                        (119, 121, 1.5, dark), (131, 135, 2.0, dark)):
             ledge(TABLE_Z + h0, TABLE_Z + h1, grow, material)
@@ -747,11 +822,12 @@ def build_backbox():
     box("diorama-back-board", left[1], right[0], back + 0.6, back + 1.8, stage, top - 78.7 * s + 1.5, mat("diorama-board", "#8a6a44", rough=0.6))
     # the casing's back below the sky
     box("diorama-back", left[0], right[1], back - 1.0, back, TABLE_Z, stage, mat("diorama-back", "#4a2616", rough=0.6))
-    # the scene stands on a red stage on the partition, from the frame back to the sky; its top lies flush with the
-    # frame's dark bottom bar, which is the stage's front edge
-    box("diorama-stage", left[1], right[0], back, front - 0.1, stage, stage + 3.0, red)
-    # the crown on the frame's top bar: its outline from the drawing, 3 mm thick, the picture on its front and
-    # red round its edge, a blue and gold star standing out of its middle
+    # the scene stands on a red stage on the partition, from the frame back to the sky; its top meets the sandy
+    # ground's lower edge, so the scene stands on it
+    ground_low = max(p[1] for t in SHAPES if "dio-scene-ground" in t["chain"] for p in t["pts"])
+    box("diorama-stage", left[1], right[0], back, front - 0.1, stage, top - (ground_low - VB[1]) * s, red)
+    # the crown on the frame's top bar: its outline from the drawing, CROWN_THICK thick with rounded edges, the
+    # picture on its front and its back and red round its edge, a blue and gold star standing out of its middle
     crown = json.load(open(os.path.join(OUT, "crown.json")))["outline"]
     pic = bpy.data.materials.new("crown-picture"); pic.use_nodes = True; nt = pic.node_tree
     tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = bpy.data.images.load(os.path.join(OUT, "backbox-frame.png"), check_existing=True)
@@ -759,27 +835,136 @@ def build_backbox():
     nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"]); b.inputs["Emission Strength"].default_value = 0.35
     me = bpy.data.meshes.new("diorama-crown"); bm = bmesh.new(); uvl = bm.loops.layers.uv.new()
     pts = [(X(x) / 10, (top - dep * s) / 10, (x - VB[0]) / VB[2], 1 - dep / VB[3]) for x, dep in crown]
-    yf, yb = -(front + 1.2) / 10, -(front - 1.8) / 10
+    crown_y = (front + rear) / 2
+    yf, yb = -(crown_y + CROWN_THICK / 2) / 10, -(crown_y - CROWN_THICK / 2) / 10
     fv = [bm.verts.new((x, yf, z)) for x, z, _, _ in pts]
     bv = [bm.verts.new((x, yb, z)) for x, z, _, _ in pts]
     face = bm.faces.new(fv[::-1]); face.material_index = 0
     for loop in face.loops:
         i = fv.index(loop.vert); loop[uvl].uv = (pts[i][2], pts[i][3])
-    bm.faces.new(bv).material_index = 1
+    # the back shows the same picture, mirrored about the crown's middle so it reads right from behind
+    u_mid = (115.0 - VB[0]) / VB[2]
+    face = bm.faces.new(bv); face.material_index = 0
+    for loop in face.loops:
+        i = bv.index(loop.vert); loop[uvl].uv = (2 * u_mid - pts[i][2], pts[i][3])
     for i in range(len(pts)):
         j = (i + 1) % len(pts); bm.faces.new((fv[i], fv[j], bv[j], bv[i])).material_index = 1
     bm.normal_update(); bm.to_mesh(me); bm.free()
     o = bpy.data.objects.new("diorama-crown", me); c.objects.link(o)
     me.materials.append(pic); me.materials.append(red)
-    zc = top - 32.0 * s
-    figure("diorama-crown-star", 115.0, front + 1.7, 0.0, star(4.6, 2.0, zc), 1.0, c, mat("crown-star-blue", "#8fb4dc", rough=0.4))
-    figure("diorama-crown-star", 115.0, front + 2.4, 0.0, star(2.8, 1.2, zc), 0.6, c, gold_line)
+    bev = o.modifiers.new("round", "BEVEL"); bev.width = 0.08; bev.segments = 3; bev.limit_method = "ANGLE"
+    # the blue and the gold star stand out of the crown, one on the other, over the painted stars' middle and as
+    # large as they are; the ROKR sign stands out of it as a plate of its own; both on its front and its back
+    def crest(cls):
+        pts = next(t["pts"] for t in SHAPES if "dio-frame-crest" in t["chain"] and t["cls"] == cls)
+        ys = [p[1] for p in pts]
+        r = (max(p[0] for p in pts) - min(p[0] for p in pts)) / 2 / math.sin(math.radians(72))
+        return top - (max(ys) - r * math.cos(math.radians(36)) - VB[1]) * s, r * s
+    zc, r_blue = crest("dio-silver")
+    _, r_gold = crest("dio-gold")
+    plaque = next(t["pts"] for t in SHAPES if "dio-frame-crest" in t["chain"] and t["cls"] == "dio-plaque")
+    for out in (1, -1):              # on its front and its back
+        face = crown_y + out * CROWN_THICK / 2
+        figure("diorama-crown-star", 115.0, face + out * 0.5, 0.0, star(r_blue, r_blue * 0.43, zc), 1.0, c, mat("crown-star-blue", "#8fb4dc", rough=0.4))
+        figure("diorama-crown-star", 115.0, face + out * 1.2, 0.0, star(r_gold, r_gold * 0.43, zc), 0.6, c, gold_line)
+        cutout("diorama-crown-sign", "backbox-frame", plaque, face + out * CROWN_SIGN, out * CROWN_SIGN, red, mirror=out < 0)
     # the box's red ceiling meets the sky's top edge, 78.7 mm below the elevation's top in the drawing; between
     # the ledge and the towers' boxes, side walls close the box
     ceiling = top - 78.7 * s
-    box("diorama-ceiling", left[1], right[0], back, front, ceiling, ceiling + 1.5, red)
+    box("diorama-ceiling", left[1] - 4.0, right[0] + 4.0, rear, front - 0.3, ceiling, ceiling + 1.5, red)
+    crown_base = min(top - dep * s for _, dep in crown)
+    # the casing reaches back as far as the towers; in the back's window, where the front has the diorama, stands
+    # a dark wooden board with CIRCUS on it
+    circus = bpy.data.materials.new("diorama-circus"); circus.use_nodes = True; nt = circus.node_tree
+    tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = bpy.data.images.load(os.path.join(OUT, "backbox-circus.png"))
+    nt.links.new(tex.outputs["Color"], nt.nodes["Principled BSDF"].inputs["Base Color"])
+    nt.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.6
+    me = bpy.data.meshes.new("diorama-circus"); bm = bmesh.new(); uvl = bm.loops.layers.uv.new()
+    y_board = rear + CIRCUS_INSET
+    f = bm.faces.new([bm.verts.new(W(x, y_board, z)) for x, z in ((left[1], stage), (right[0], stage), (right[0], ceiling + 1.5), (left[1], ceiling + 1.5))])
+    for loop, q in zip(f.loops, ((1, 0), (0, 0), (0, 1), (1, 1))):           # read from behind
+        loop[uvl].uv = q
+    bm.to_mesh(me); bm.free(); me.materials.append(circus)
+    c.objects.link(bpy.data.objects.new("diorama-circus", me))
+    box("diorama-circus-board", left[1], right[0], y_board, y_board + 3.0, stage, ceiling + 1.5, mat("diorama-circus-wood", "#3b2415", rough=0.6))
     for x in (left[1], right[0]):
-        box("diorama-wall", x - 1.0, x + 1.0, back, front, stage, box_foot, mat("diorama-wall", "#7a1a20", rough=0.6))
+        box("diorama-wall", x - 1.0, x + 1.0, back, front - 0.3, stage, box_foot, mat("diorama-wall", "#7a1a20", rough=0.6))
+    # the scene's parts are sawn out and stand one before the other between the background and the frame: the
+    # sandy ground at the back, then the balls, the pins and the cannon's wheel
+    plywood = mat("diorama-plywood", "#c8a878", rough=0.7)
+    def scene_part(child, cls):
+        shs = [t for t in SHAPES if child in t["chain"] and t["closed"] and (cls is None or t["cls"] == cls)]
+        def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps)))) / 2
+        return max(shs, key=lambda t: area(t["pts"]))["pts"]
+    depth = lambda k: back + 7.0 + k * 2.0
+    # the sand reaches sideways behind the curtains to the box's walls: its ends are drawn out to them
+    ground = scene_part("dio-scene-ground", "dio-ground")
+    gx0, gx1 = min(p[0] for p in ground), max(p[0] for p in ground)
+    wall_x = [115.0 + (x - 115.0) / s for x in (left[1], right[0])]
+    ground = [(wall_x[0] if x < gx0 + 0.5 else wall_x[1] if x > gx1 - 0.5 else x, y) for x, y in ground]
+    cutout("diorama-ground", "backbox-scene-ground", ground, depth(0), 2.0, plywood, u_range=(gx0 + 1.0, gx1 - 1.0))
+    for child in ("dio-ball-1", "dio-ball-2", "dio-ball-big"):
+        cutout("diorama-ball", "backbox-scene-balls", scene_part(child, None), depth(1), 2.0, plywood)
+    for child in ("dio-pin-1", "dio-pin-2", "dio-pin-3", "dio-pin-4"):
+        cutout("diorama-pin", "backbox-scene-pins", scene_part(child, "dio-pin"), depth(2), 2.0, plywood)
+    cutout("diorama-wheel", "backbox-scene-wheel", scene_part("dio-wheel", None), depth(3), 2.0, plywood, alpha=True)
+    # the frame is built of parts: a plate of FRAME_THICK at the casing's front, its columns and its valance
+    # with their picture, and the same columns at the casing's back, their picture read from behind
+    Z = lambda yd: top - (yd - VB[1]) * s
+    frame = lambda ch, cl: [t for t in SHAPES if ch in t["chain"] and t["cls"] == cl]
+    columns = [frame(ch, "dio-red")[0]["pts"] for ch in ("dio-frame-column-left", "dio-frame-column-right")]
+    for pts in columns:
+        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+        rect = [(min(xs), min(ys)), (max(xs), min(ys)), (max(xs), y_back), (min(xs), y_back)]
+        cutout("diorama-frame-column", "backbox-frame-plate", rect, front, FRAME_THICK, red)
+        cutout("diorama-frame-column", "backbox-frame-plate", rect, rear, -FRAME_THICK, red, mirror=True)
+    cutout("diorama-frame-valance", "backbox-frame-plate", frame("dio-frame-valance", "dio-red")[0]["pts"], front, FRAME_THICK, red)
+    # the rope along the valance's lower edge lies on the plate as a cord
+    edge = frame("dio-frame-valance", "dio-edge-back")[0]
+    cord = edge["sw"] / 2 * s
+    cu = bpy.data.curves.new("diorama-frame-rope", "CURVE"); cu.dimensions = "3D"
+    cu.bevel_depth = cord / 10; cu.bevel_resolution = 3; cu.use_fill_caps = True
+    sp = cu.splines.new("POLY"); sp.points.add(len(edge["pts"]) - 1)
+    for pt, (x, yd) in zip(sp.points, edge["pts"]):
+        pt.co = (X(x) / 10, -(front + cord) / 10, Z(yd) / 10, 1.0)
+    link(bpy.data.objects.new("diorama-frame-rope", cu), c, mat("diorama-rope", "#5c6069", rough=0.6))
+    # the roof: a red block as long as the star band, from the ceiling up to the crown, over the casing's whole
+    # depth; on both faces the lower beam across the whole frame, its upper half red and its lower half black, and
+    # the black upper beam at half its drawn height; the stars stand on the front
+    def span(pts):
+        return min(p[0] for p in pts), max(p[0] for p in pts), min(p[1] for p in pts), max(p[1] for p in pts)
+    roof_black = sorted(frame("dio-frame-roof", "dio-black"), key=lambda t: span(t["pts"])[2])
+    bx0, bx1, by0, by1 = span(frame("dio-frame-roof", "dio-red")[0]["pts"])
+    box("diorama-roof", X(bx0), X(bx1), rear, front, ceiling + 1.5, crown_base, red)
+    for y_face, out in ((front, 1.0), (rear, -1.0)):
+        ya, yb = sorted((y_face - out * FRAME_THICK, y_face + out * BEAM_PROUD))
+        x0, x1, y0, y1 = span(roof_black[1]["pts"])          # the lower beam
+        box("diorama-roof-beam", X(x0), X(x1), ya, yb, Z(y1), Z((y0 + y1) / 2), dark)
+        box("diorama-roof-beam", X(x0), X(x1), ya, yb, Z((y0 + y1) / 2), Z(y0), red)
+        x0, x1, y0, y1 = span(roof_black[0]["pts"])          # the upper beam
+        box("diorama-roof-beam", X(x0), X(x1), ya, yb, Z(y1), Z((y0 + y1) / 2), dark)
+        # the dark ledges at the columns' feet
+        for ch in ("dio-frame-column-left", "dio-frame-column-right"):
+            for t in frame(ch, "dio-black"):
+                x0, x1, y0, y1 = span(t["pts"])
+                if y0 > -40.0:
+                    box("diorama-frame-ledge", X(x0), X(x1), ya, yb, Z(y1), Z(y0), dark)
+    silver = mat("diorama-star-silver", "#dcdfe4", rough=0.35, metal=0.6)
+    for t in frame("dio-frame-roof", "dio-silver") + frame("dio-frame-roof", "dio-gold"):
+        cx = sum(p[0] for p in t["pts"]) / len(t["pts"])
+        figure("diorama-roof-star", X(cx), front + BEAM_PROUD / 2, 0.0, [(X(x) - X(cx), Z(y)) for x, y in t["pts"]],
+               BEAM_PROUD, c, silver if t["cls"] == "dio-silver" else gold_line)
+    # the stage floor's dark edge in front of the stage
+    x0, x1, y0, y1 = span(frame("dio-frame-floor", "dio-black")[0]["pts"])
+    box("diorama-frame-floor", X(x0), X(x1), front - FRAME_THICK, front + BEAM_PROUD, Z(y1), Z(y0), dark)
+    # the curtains are boards of their own, CURTAIN_THICK thick, hanging behind the plate; their outer edges reach
+    # in behind the columns and their tops behind the valance
+    cloth = mat("diorama-curtain-back", "#8a1a22", rough=0.7)
+    for side_id, inner in (("dio-frame-curtain-left", 1.0), ("dio-frame-curtain-right", -1.0)):
+        pts = frame(side_id, "dio-curtain")[0]["pts"]
+        edge_x = min(p[0] for p in pts) if inner > 0 else max(p[0] for p in pts)
+        pts = [(edge_x - inner * 3.0 if abs(x - edge_x) < 0.05 else x, y) for x, y in pts]
+        cutout("diorama-curtain", "backbox-frame", pts, front - FRAME_THICK - 0.2, CURTAIN_THICK, cloth)
 
 
 def foil_material():
@@ -837,13 +1022,17 @@ def blue_height():
     blue_line = [tuple(p) for p in by("ramp-blue", "ramp-shine")[0]["pts"]]
     f = polyline_param(blue_line)
     crown_first = blue_line[0][1] < 150
-    pb = profile([(0, 30), (0.15, 42), (0.6, 44), (1.0, H["rail"] + H["ramp_floor"])])
+    # from the fire hoop it climbs in a straight line to its top and falls from there at one slope to its end
+    pb = profile([(0, 30), (BLUE_TOP_AT, 44), (1.0, H["rail"] + H["ramp_floor"])])
     return lambda x, y: pb(f(x, y) if crown_first else 1 - f(x, y))
 
 
 def build_posts_and_rubbers():
     c = coll("posts")
     post = mat("post", "#17171b", rough=0.4, coat=0.5)
+    spacer = mat("spacer-clear", "#eef3f6", rough=0.15, transmission=0.6)
+    screw = mat("post-screw", "#3a3d42", rough=0.35, metal=0.9)
+    pit = mat("pit", "#050506", rough=0.9)
     rubber = mat("rubber", "#f4f1ea", rough=0.7)
     sleeve = mat("sleeve", "#e9eef2", rough=0.6)
     blue_z = blue_height()
@@ -858,19 +1047,25 @@ def build_posts_and_rubbers():
             # through the ramp's floor, and its head sits on top
             under = any(inside((x + dx, y + dy), o) for o in BLUE_FLOOR for dx, dy in ((0, 0), (3, 0), (-3, 0), (0, 3), (0, -3)))
             top = blue_z(x, y) if under and blue_z(x, y) - H["ramp_floor"] < H["post"] + 2.2 else H["post"]
-            # a slingshot's screw runs up through its cover, and its head sits on top
-            if any(inside((x, y), t["pts"]) for t in SHAPES if t["cls"] == "sling"):
+            # a post is a clear spacer round a screw, the screw's black socket head on top, the drawing's circle; a
+            # slingshot's screw
+            # runs up through its cover inside the slingshot's own spacer, and its head sits on the cover
+            sling = any(inside((x, y), t["pts"]) for t in SHAPES if t["cls"] == "sling")
+            if sling:
                 top = H["sling"] + 0.2
-            cyl("post", x, y, r, 0, top, c, post, verts=24)
-            cyl("post-head", x, y, r + 0.6, top, top + 1.2, c, post, verts=24)
+            else:
+                cyl("post", x, y, SPACER_R, 0, top, c, spacer, verts=32)
+            cyl("post-screw", x, y, 0.8, 0, top, c, screw, verts=12)
+            cyl("post-head", x, y, r, top, top + H["head"], c, post, verts=24)
+            cyl("post-socket", x, y, 0.7, top + H["head"] - 0.05, top + H["head"] + 0.02, c, pit, verts=6)
         elif cl == "sleeve":
-            # a round rubber ring stretched around the two posts: it lies on the posts and reaches out as far as
-            # the drawing's band, so its cord is the band's width less the post, halved
+            # a round rubber ring stretched around the two posts' spacers; its cord is the drawing's band less the
+            # screw's head, halved
             (ax, ay), (bx, by_) = s["pts"][0], s["pts"][-1]
             rp = min((t["circle"] for t in SHAPES if t["cls"] == "post" and "circle" in t),
                      key=lambda q: math.hypot(q[0] - ax, q[1] - ay))[2]
             cord = (s["sw"] / 2 - rp) / 2
-            d = math.atan2(by_ - ay, bx - ax); r = rp + cord
+            d = math.atan2(by_ - ay, bx - ax); r = SPACER_R + cord
             loop = [(bx + r * math.cos(d - math.pi / 2 + math.pi * i / 12), by_ + r * math.sin(d - math.pi / 2 + math.pi * i / 12)) for i in range(13)]
             loop += [(ax + r * math.cos(d + math.pi / 2 + math.pi * i / 12), ay + r * math.sin(d + math.pi / 2 + math.pi * i / 12)) for i in range(13)]
             tube("rubber", loop, cord, H["rubber_z"], c, rubber, closed=True)
@@ -884,41 +1079,53 @@ def build_posts_and_rubbers():
             ribbon("blade", s["pts"], s["sw"], 0, H["blade"], c, mat("wood-dark", "#7a4a26", rough=0.6),
                    top_fn=lambda x, y: max(0.0, min(H["blade"], green_z(x, y) - H["ramp_floor"] - 0.5)))
         elif cl == "dome":
-            # the bell hangs from a center rod, clear of the board so it can ring: a tube with the dome on top
+            # the bell hangs from a center rod, clear of the board so it can ring
             x, y, r = s["circle"]
             dome = mat("bell", "#1a1a1e", rough=0.15, metal=0.9)
             cyl("bell-rod", x, y, 1.5, 0, H["bell_top"], c, mat("rod", "#9aa0a8", rough=0.4, metal=1.0), 16)
-            me = bpy.data.meshes.new("bell-tube"); bm = bmesh.new()
-            bmesh.ops.create_cone(bm, cap_ends=False, segments=48, radius1=r / 10, radius2=r / 10, depth=(H["bell_body"] - H["bell_rim"]) / 10)
+            # the bell is one casting: its profile, a long straight skirt that rounds over BELL_CORNER into the
+            # flat top, turned round its rod
+            k = BELL_CORNER
+            prof = [(r, H["bell_rim"]), (r, H["bell_top"] - k)]
+            prof += [(r - k + k * math.cos(math.radians(a)), H["bell_top"] - k + k * math.sin(math.radians(a))) for a in range(10, 91, 10)]
+            prof += [(0.0, H["bell_top"])]
+            me = bpy.data.meshes.new("bell"); bm = bmesh.new()
+            vs = [bm.verts.new((u / 10, 0.0, z / 10)) for u, z in prof]
+            es = [bm.edges.new((a, b)) for a, b in zip(vs, vs[1:])]
+            bmesh.ops.spin(bm, geom=vs + es, cent=(0, 0, 0), axis=(0, 0, 1), steps=48, angle=2 * math.pi, use_merge=True)
+            bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+            # the faces look outward, so the wall thickens inward and the outside stays on the drawing's circle
+            for f in bm.faces:
+                ctr = f.calc_center_median()
+                if f.normal.dot(Vector((ctr.x, ctr.y, ctr.z - H["bell_top"] / 20))) < 0:
+                    f.normal_flip()
+            bm.normal_update()
             bm.to_mesh(me); bm.free()
-            o = link(bpy.data.objects.new("bell-tube", me), c, dome)
-            o.location = W(x, y, (H["bell_rim"] + H["bell_body"]) / 2)
-            for p in o.data.polygons: p.use_smooth = True
-            o.modifiers.new("shell", "SOLIDIFY").thickness = 0.08
-            me = bpy.data.meshes.new("bell-dome"); bm = bmesh.new()
-            bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=24, radius=r / 10)
-            bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < -1e-4], context="VERTS")
-            bm.to_mesh(me); bm.free()
-            o = link(bpy.data.objects.new("bell-dome", me), c, dome)
-            o.location = W(x, y, H["bell_body"]); o.scale.z = (H["bell_top"] - H["bell_body"]) / r
+            o = link(bpy.data.objects.new("bell", me), c, dome)
+            o.location = W(x, y, 0.0)
             for p in o.data.polygons: p.use_smooth = True
             o.modifiers.new("shell", "SOLIDIFY").thickness = 0.08
             sphere("bell-screw", x, y, H["bell_top"], 1.6, c, mat("screw", "#d9dde2", rough=0.2, metal=1.0)).scale.z = 0.5
             # the conductive tape around it, flush with the board
             annulus("bell-foil", x, y, r + 0.05, r + 6.06, H["foil"], c, foil_material())
         elif cl == "target-base" and any(ch.startswith("target-") for ch in ch):
-            prism("target-base", s["pts"], 0, 15.0, c, mat("target-base", "#2b2d33", rough=0.5))
+            face = next(t["pts"] for t in SHAPES if t["cls"] == "target-face" and t["chain"] == s["chain"])
+            prism("target-base", target_forward(s["pts"], face), 0, 15.0, c, mat("target-base", "#2b2d33", rough=0.5))
         elif cl == "target-face" and any(ch.startswith("target-") for ch in ch):
-            prism("target-face", s["pts"], 2.0, 13.0, c, mat("target-face", "#f2c230", rough=0.35, coat=0.5))
+            prism("target-face", target_forward(s["pts"], s["pts"]), 2.0, 13.0, c, mat("target-face", "#f2c230", rough=0.35, coat=0.5))
         elif cl == "ir-eye" and "ir-sensors" in ch:
             # a small hole in the board where the IR sensor looks up through it
             x, y, r = s["circle"]
             cyl("ir-hole", x, y, 1.5, 0.0, 0.05, c, mat("pit", "#050506", rough=0.9), 16)
         elif cl == "wall-red":
-            # the red wall between the shooter lane and the playfield runs on down to the front wall
+            # the red wall between the shooter lane and the playfield, F56 on the manual's page 40, runs on down to
+            # the front wall; it climbs with the lane's floor, SHOOTER_WALL_ABOVE over it, and stands at least as
+            # high as the apron at its low end
             xs = [p[0] for p in s["pts"]]; ys = [p[1] for p in s["pts"]]
-            wall = [(min(xs), min(ys)), (max(xs), min(ys)), (max(xs), 427.3), (min(xs), 427.3)]
-            prism("shooter-wall", wall, 0, H["shooter_wall"], c, mat("shooter-wall", "#b8323a", rough=0.35, coat=0.6))
+            steps = [min(ys) + (427.3 - min(ys)) * k / 60 for k in range(61)]
+            wall = [(max(xs), y) for y in steps] + [(min(xs), y) for y in steps[::-1]]
+            prism("shooter-wall", wall, 0, 0, c, mat("shooter-wall", "#b8323a", rough=0.35, coat=0.6),
+                  hi_fn=lambda x, y: max(H["apron_hi"], shooter_z(x, y) + SHOOTER_WALL_ABOVE))
 
 
 # side views of the two figures, (u, z) in mm, u along the plane
@@ -981,7 +1188,7 @@ def build_lower():
                 x, y, r = s["circle"]
                 cyl("elephant-stand", x, y, r, H["sling"], H["sling"] + 2.0, c, disc)
                 mirror = x > 108.5
-                flip = (lambda pts: [(-u, z) for u, z in pts]) if not mirror else (lambda pts: pts)
+                flip = (lambda pts: [(-u, z) for u, z in pts]) if mirror else (lambda pts: pts)
                 z0 = H["sling"] + 2.0
                 figure("elephant", x, y, 0.0, flip(ELEPHANT), 3.0, c, mat("elephant", "#9097a0", rough=0.5), z0=z0)
                 for name, prof, colr in (("elephant-blanket", ELEPHANT_BLANKET, "#c8323a"), ("elephant-trim", ELEPHANT_TRIM, "#e3c46c"),
@@ -1078,12 +1285,71 @@ def build_sides():
         for s in placed(pid):
             cl = s["cls"]
             if cl == "panel":
-                prism(pid + "-wood", s["pts"], H["plastic"], H["wood_hi"], c, wood())
+                if pid == "cover-left":
+                    cover_left_wood(s["pts"], c)
+                else:
+                    prism(pid + "-wood", s["pts"], H["plastic"], H["wood_hi"], c, wood())
                 prism(pid, s["pts"], H["wood_hi"], H["cover"], c, gray)
             elif cl in paint:
                 prism(pid + "-paint", s["pts"], H["cover"], H["cover"] + 0.15, c, paint[cl], cap_only=True)
     for s in placed("block-top-left"):
         if s["cls"] == "block": prism("block-top-left", s["pts"], 0, H["cover"], c, mat("block-red", "#a3232c", rough=0.4))
+
+
+BLUE_TOP_AT = 0.25     # the share of the blue ramp's course where its floor is highest
+SPACER_R = 2.3     # mm, a post's clear spacer: wider than the screw's head, narrower than a slingshot's (estimate)
+TARGET_FORWARD = 3.0     # mm a stand-up target stands toward the playfield's middle from the drawing, clear of its posts
+
+
+def target_forward(pts, face):
+    """A stand-up target's outline moved TARGET_FORWARD toward the playfield's middle, in front of the screws and
+    rubbers beside it, and shortened along the face so it ends flush with the outer edge of the rear screw's head,
+    the one further up the board. face is the target's face outline, which sets the direction along it."""
+    d = TARGET_FORWARD if sum(p[0] for p in face) / len(face) < 108.5 else -TARGET_FORWARD
+    moved = [(p[0] + d, p[1]) for p in pts]
+    f = [(p[0] + d, p[1]) for p in face]
+    a, b = max(((p, q) for p in f for q in f), key=lambda pq: math.dist(*pq))
+    ax = Vector((b[0] - a[0], b[1] - a[1])).normalized()
+    mid = Vector((sum(p[0] for p in f) / len(f), sum(p[1] for p in f) / len(f)))
+    posts = sorted((t["circle"] for t in SHAPES if t["cls"] == "post" and "circle" in t),
+                   key=lambda q: math.dist(q[:2], mid))[:2]
+    rx, ry, rr = min(posts, key=lambda q: q[1])
+    t_post = (Vector((rx, ry)) - mid).dot(ax)
+    end = t_post + (rr if t_post > 0 else -rr)
+    out = []
+    for x, y in moved:
+        t = (Vector((x, y)) - mid).dot(ax)
+        if (end > 0 and t > end) or (end < 0 and t < end):
+            x, y = x - ax.x * (t - end), y - ax.y * (t - end)
+        out.append((x, y))
+    return out
+
+
+LANE_FENCE_TOP = 10.0     # mm, the top of the picket fence round the blue ramp's entrance lane
+BELL_CORNER = 4.0     # mm, the radius where a bell's skirt rounds into its top
+COVER_L11_END = 75.0     # mm, where L11 under the left cover ends, after the manual's page 27
+
+
+def clip_y(pts, y0, y1):
+    """The part of a closed outline between y0 and y1 (Sutherland-Hodgman against the two half planes)."""
+    def cut(poly, keep, y):
+        out = []
+        for a, b in zip(poly, poly[1:] + poly[:1]):
+            ina, inb = keep(a), keep(b)
+            if ina: out.append(a)
+            if ina != inb:
+                t = (y - a[1]) / (b[1] - a[1])
+                out.append((a[0] + (b[0] - a[0]) * t, y))
+        return out
+    return cut(cut([tuple(p) for p in pts], lambda q: q[1] >= y0, y0), lambda q: q[1] <= y1, y1)
+
+
+def cover_left_wood(pts, c):
+    """The wood under the left gray cover is two plates on pegs, as the manual's page 27 shows: L11 fills the top
+    corner under the cover's curved inner edge, and E6 has the outline of the left guide's clear plastic under it."""
+    prism("cover-left-wood", clip_y(pts, -1.0, COVER_L11_END), H["plastic"], H["wood_hi"], c, wood())
+    for g in by("guide-left", "plastic"):
+        prism("cover-left-wood", g["pts"], H["plastic"], H["wood_hi"], c, wood())
 
 
 def fire_hoop(c, x, y, z_floor, span_deg=90.0):
@@ -1104,9 +1370,10 @@ def fire_hoop(c, x, y, z_floor, span_deg=90.0):
 
 
 def entrance_walls(c, floor_z):
-    """The side plates of the blue ramp's entrance lane, from the photo of the part: on the right a gray plate
-    with a red rim, a salmon wave crest along its top, small lit windows, jester caps and circus tents; on the
-    left a taller red plate with a flame crest; under the high end a gold stand."""
+    """The side plates of the blue ramp's entrance lane, from the photo of the part: on the right a red plate with
+    a salmon wave crest along its top, on the left a taller red plate with a flame crest, each with a gray face
+    on its outer side that carries small lit windows, jester caps and circus tents; under the high end a gold
+    stand."""
     red = mat("lane-red", "#b3242d", rough=0.5)
     gray = mat("lane-gray", "#6b6f78", rough=0.55)
     salmon = mat("lane-salmon", "#ec8f7c", rough=0.5)
@@ -1129,33 +1396,35 @@ def entrance_walls(c, floor_z):
         k = ((146.5 - y) / 9.0) % 1.0
         return 8.5 + 3.0 * t + 3.5 * (1.0 - abs(2.0 * k - 1.0)) ** 1.6
     ribbon("lane-wall-left", left, wl, -3.0, 8.5, c, red, zfn=floor_z, top_fn=flame_top)
-    # the right plate: red body, gray face on its outer side, salmon waves on top
+    # the right plate: red body, salmon waves on top
     ribbon("lane-wall-right", right, wr, -3.0, 7.5, c, red, zfn=floor_z)
-    out = outward(right, 1.0)
-    face = offset_line(right, out * (wr / 2 + 0.05), False)
-    ribbon("lane-wall-face", [(p.x, p.y) for p in face], 0.1, -2.0, 6.6, c, gray, zfn=floor_z)
     wave = lambda x, y: 7.5 + 2.6 * abs(math.sin(math.pi * (146.5 - y) / 9.0))
     ribbon("lane-wall-crest", right, wr, 7.4, 7.5, c, salmon, zfn=floor_z, top_fn=wave)
-    # along the gray face: lit windows, and between them jester caps and tents in turn
-    acc = [0.0]
-    for p0, p1 in zip(right, right[1:]): acc.append(acc[-1] + math.dist(p0, p1))
+    # both plates carry the painting on their outer side: a gray face with lit windows, and between them jester
+    # caps and tents in turn
     cap = [(-1.8, 0), (1.8, 0), (2.4, 2.2), (1.0, 1.2), (0.0, 2.8), (-1.0, 1.2), (-2.4, 2.2)]
     tent = [(-1.9, 0), (1.9, 0), (1.9, 1.2), (0.0, 3.2), (-1.9, 1.2)]
-    k = 0
-    for d in range(8, int(acc[-1]) - 4, 9):
-        i = min(range(len(acc)), key=lambda j: abs(acc[j] - d))
-        a0, a1 = right[max(i - 1, 0)], right[min(i + 1, len(right) - 1)]
-        ang = math.degrees(math.atan2(a1[1] - a0[1], a1[0] - a0[0]))
-        fx, fy = face[i].x, face[i].y
-        nx, ny = -math.sin(math.radians(ang)), math.cos(math.radians(ang))
-        sgn = 1.0 if ((fx - right[i][0]) * nx + (fy - right[i][1]) * ny) > 0 else -1.0
-        x, y = fx + nx * sgn * 0.1, fy + ny * sgn * 0.1
-        z = floor_z(x, y)
-        if k % 2 == 0:
-            figure("lane-window", x, y, ang, [(-0.8, 0), (0.8, 0), (0.8, 1.6), (-0.8, 1.6)], 0.15, c, lamp, z0=z + 1.8)
-        else:
-            figure("lane-icon", x, y, ang, cap if (k // 2) % 2 == 0 else tent, 0.15, c, salmon if (k // 2) % 2 == 0 else red, z0=z + 1.2)
-        k += 1
+    for line, w, sign in ((right, wr, 1.0), (left, wl, -1.0)):
+        out = outward(line, sign)
+        face = offset_line(line, out * (w / 2 + 0.05), False)
+        ribbon("lane-wall-face", [(p.x, p.y) for p in face], 0.1, -2.0, 6.6, c, gray, zfn=floor_z)
+        acc = [0.0]
+        for p0, p1 in zip(line, line[1:]): acc.append(acc[-1] + math.dist(p0, p1))
+        k = 0
+        for d in range(8, int(acc[-1]) - 4, 9):
+            i = min(range(len(acc)), key=lambda j: abs(acc[j] - d))
+            a0, a1 = line[max(i - 1, 0)], line[min(i + 1, len(line) - 1)]
+            ang = math.degrees(math.atan2(a1[1] - a0[1], a1[0] - a0[0]))
+            fx, fy = face[i].x, face[i].y
+            nx, ny = -math.sin(math.radians(ang)), math.cos(math.radians(ang))
+            sgn = 1.0 if ((fx - line[i][0]) * nx + (fy - line[i][1]) * ny) > 0 else -1.0
+            x, y = fx + nx * sgn * 0.1, fy + ny * sgn * 0.1
+            z = floor_z(x, y)
+            if k % 2 == 0:
+                figure("lane-window", x, y, ang, [(-0.8, 0), (0.8, 0), (0.8, 1.6), (-0.8, 1.6)], 0.15, c, lamp, z0=z + 1.8)
+            else:
+                figure("lane-icon", x, y, ang, cap if (k // 2) % 2 == 0 else tent, 0.15, c, salmon if (k // 2) % 2 == 0 else red, z0=z + 1.2)
+            k += 1
     # the lane's feet: two gold plates along the lane, each with a tab in one of the inner slots of the board
     # (135.5 and 144.8 mm across, 120.1 mm down, 9.8 mm long), their tops carrying the floor
     for fx in (135.5, 144.8):
@@ -1167,17 +1436,17 @@ def entrance_walls(c, floor_z):
     # under the high part, so no ball rolls in beneath the ramp
     arc = [(140.1 - 10.7 * math.cos(math.pi * k / 16), 102.0 - 10.7 * math.sin(math.pi * k / 16)) for k in range(17)]
     fence_path = [(129.4, 118.4), (129.4, 108.0)] + arc + [(150.8, 108.0), (150.8, 118.4)]
-    ribbon("lane-fence", fence_path, 1.5, -2.0, 5.0, c, fence_material(), uv=True)
+    ribbon("lane-fence", fence_path, 1.5, -2.0, LANE_FENCE_TOP, c, fence_material(), uv=True)
 
 
 def build_ramps():
     c = coll("ramps")
 
     def ramp(pid, floor_cls, wall_cls, zfn, color_floor, color_wall, wall_h=H["ramp_wall"], wall_lo=-H["ramp_floor"],
-             cuts=1, step=None):
+             clip=lambda pts: pts):
         fm = mat(pid + "-floor", color_floor, rough=0.3, coat=0.5)
         wm = mat(pid + "-wall", color_wall, rough=0.3, coat=0.5)
-        outlines = [sh["pts"] for sh in by(pid, floor_cls)]
+        outlines = [clip(sh["pts"]) for sh in by(pid, floor_cls)]
         if floor_cls == "launch-floor":
             # drawn even-odd: the largest outline is the floor, the smaller one the slot into the rollover lanes
             def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps)))) / 2
@@ -1189,24 +1458,22 @@ def build_ramps():
                 bo = fl.modifiers.new("hole", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
         else:
             for pts in outlines:
-                surface(pid + "-floor", pts, zfn, H["ramp_floor"], c, fm, cuts=cuts, step=step)
+                surface(pid + "-floor", pts, zfn, H["ramp_floor"], c, fm)
         for s in by(pid, wall_cls):
             # a wall is drawn as a thin outline around it; it is built along its middle line
-            mid, width = centerline(s["pts"])
+            mid, width = centerline(clip(s["pts"]))
             ribbon(pid + "-wall", mid, max(width, 1.0), wall_lo, wall_h, c, wm, zfn=zfn)
 
     # the blue ramp climbs from the playfield through the fire hoop, turns, and ends in the air above the left inlane
     blue_z = blue_height()
     # its rails are flat strips lying 3 mm above the floor at the ball's middle, held only by the hoops
     ramp("ramp-blue", "ramp-blue", "blue-wall", blue_z, "#3f7fc4", "#1d3c7a", wall_h=6.0, wall_lo=3.0)
-    # the entrance lane leaves the playfield flush and level, a hair above it so the two surfaces do not fight,
-    # and meets the blue ramp's floor at the fire hoop with that floor's own slope, 0.2 mm a mm, so the climb
-    # has no bend anywhere: a cubic through both ends with both slopes
+    # the entrance lane climbs in a straight line from the playfield, a hair above it so the two surfaces do
+    # not fight, to the fire hoop, where the blue floor starts at 30 mm
     def centre_z(x, y):
-        run = 146.5 - 85.5                      # to the seam, where the blue floor starts at 30 mm
-        u = max(0.0, min(1.0, (146.5 - y) / run))
-        return 0.02 + 29.98 * (3 * u * u - 2 * u ** 3) + 0.2 * run * (u ** 3 - u * u)
-    ramp("ramp-blue", "ramp-blue-dark", "none", centre_z, "#4fb0e0", "#1f4674", cuts=5)   # a dense net for the curve
+        u = max(0.0, min(1.0, (146.5 - y) / (146.5 - 85.5)))
+        return 0.02 + 29.98 * u
+    ramp("ramp-blue", "ramp-blue-dark", "none", centre_z, "#4fb0e0", "#1f4674")
     entrance_walls(c, centre_z)
     # the chevrons are flat; lifted 0.15 mm, they clear the floor's bend under them
     for s in by("ramp-blue", "chevron"): prism("chevron", s["pts"], 0.15, 0.35, c, mat("chevron", "#22476f"), zfn=centre_z)
@@ -1237,8 +1504,23 @@ def build_ramps():
             flat_ring("ramp-hoop", cx, cy, math.degrees(a), h + 2.0, r_out - 2.5, r_out, cut, 2.5, 2.2, c, material)
 
     # the green track runs on top of the U lane's fence after a short climb from its entry
+    # it ends where the fence it rests on ends, square to its course
+    fence = next(t["pts"] for t in SHAPES if t["cls"] == "comb-back")
+    end = Vector(max(fence, key=lambda q: q[0]))
+    beyond = Vector(GREEN_LINE[-1]) - end; beyond.normalize()
+    def at_fence_end(pts):
+        keep = lambda q: q[0] < end.x - 40.0 or (Vector(q) - end).dot(beyond) <= 0.0
+        out = []
+        for a, b in zip(pts, pts[1:] + pts[:1]):
+            a, b = Vector(a), Vector(b)
+            if keep(a): out.append((a.x, a.y))
+            if keep(a) != keep(b):
+                t = (end - a).dot(beyond) / (b - a).dot(beyond)
+                q = a + (b - a) * t
+                out.append((q.x, q.y))
+        return out
     ramp("ramp-orbit-left", "ramp-green", "green-wall", green_z, "#3f5e48", "#2f4a39", wall_h=H["ramp_wall"] / 2,
-         step=2.0)
+         clip=at_fence_end)
 
     # the gray launch lane continues the shooter lane, crosses over the green track and ends under the blue ramp
     # a constant, flat climb along its course, continuing the shooter lane's floor
@@ -1263,7 +1545,7 @@ def build_ramps():
         bend to the hinge, where it has the slope of a straight jaw of the same height."""
         v = max(0.0, min(1.0, ((x - snout[0]) * u.x + (y - snout[1]) * u.y) / span))
         return 0.02 + (jaw_top - 0.02) * (3 * v * v - 2 * v ** 3) + jaw_top * (v ** 3 - v * v)
-    surface("crocodile-jaw", kick, croc_z, 2.0, c, green, cuts=4)
+    surface("crocodile-jaw", kick, croc_z, 2.0, c, green)
     # the head is closed down to the board: a block fills it under the jaw, so no ball rolls in beneath it from
     # behind; its outline in steps of 1 mm keeps its top inside the 2 mm jaw along the jaw's curve. It stands
     # 1.5 mm inside the jaw's edge, so a ball beside the head rolls with its lower half under the jaw. The jaw's
@@ -1309,17 +1591,26 @@ def build_ramps():
                 bm.faces.new((r0[m], r0[m + 1], r1[m + 1], r1[m]))
         bm.to_mesh(me); bm.free()
         o = link(bpy.data.objects.new(name, me), c, material)
-        o.modifiers.new("solid", "SOLIDIFY").thickness = 0.12
+        o.modifiers.new("solid", "SOLIDIFY").thickness = 0.2
         return o
-    # the half loop is the back of the head: a kerf-bent green panel between the two side plates
-    kerf = mat("crocodile-kerf", "#6a9a88", rough=0.55)
-    sweep("crocodile-loop", path[:25], kerf, walls=False, w=half - 1.5)
-    # the upper jaw over the whole head, opening toward the snout
-    upper_z = z_top + 0.5
-    open_fn = lambda x, y: (1 - max(0.0, min(1.0, ((x - snout[0]) * u.x + (y - snout[1]) * u.y) / span))) * 8.0
-    prism("crocodile-upper-jaw", kick, upper_z, upper_z + 2.5, c, green, zfn=open_fn)
-    # each side of the head is one plywood plate: the lower jaw along the long edge to the open tip, the cheek
-    # up to the upper jaw, and the round back of the head around the half loop
+    # the lower jaw, the half loop at the back of the head and the upper jaw are one kerf-bent wooden strip, F38
+    # on the manual's page 51: the jaw bends up round the loop between the cheeks and runs on forward, as wide as
+    # the bend, as the upper jaw; it opens toward the snout and ends round, with the nostrils
+    w_strip = half - 1.5
+    sweep("crocodile-loop", path[:25], green, walls=False, w=w_strip)
+    upper_z = z_top
+    fwd = Vector((-u.x, -u.y)); sd = Vector((-fwd.y, fwd.x))
+    ahead = lambda x, y: (x - a2.x) * fwd.x + (y - a2.y) * fwd.y
+    open_fn = lambda x, y: 8.0 * max(0.0, min(1.0, ahead(x, y) / span))
+    holes = [t["circle"] for t in by("ramp-kicker", "hole") if "circle" in t]
+    reach_jaw = max(ahead(hx, hy) + hr for hx, hy, hr in holes) + 3.0
+    tip = a2 + fwd * (reach_jaw - w_strip)
+    outline = [a2 + sd * w_strip, tip + sd * w_strip]
+    outline += [tip + sd * (w_strip * math.cos(math.pi * k / 16)) + fwd * (w_strip * math.sin(math.pi * k / 16)) for k in range(1, 16)]
+    outline += [tip - sd * w_strip, a2 - sd * w_strip]
+    prism("crocodile-upper-jaw", [(q.x, q.y) for q in outline], 0.0, 2.0, c, green, zfn=lambda x, y: upper_z + open_fn(x, y))
+    # each cheek is one plywood plate on the bent part's side, its outer face flush with the jaw's edge: along
+    # the lower jaw to the open tip, up to the upper jaw, and round the back of the head around the half loop
     def side_plate(back, tip):
         e = Vector((tip[0] - back[0], tip[1] - back[1])); length = e.length; e.normalize()
         at = lambda d: (back[0] + e.x * d, back[1] + e.y * d)
@@ -1337,14 +1628,14 @@ def build_ramps():
     side_plate(kick[1], kick[2])
     side_plate(kick[0], kick[-1])
     for hx, hy, hr in [t["circle"] for t in by("ramp-kicker", "hole") if "circle" in t]:
-        cyl("crocodile-nostril", hx, hy, hr, upper_z + 2.5 + open_fn(hx, hy), upper_z + 2.55 + open_fn(hx, hy), c, mat("pit", "#050506"))
+        cyl("crocodile-nostril", hx, hy, hr, upper_z + 2.0 + open_fn(hx, hy), upper_z + 2.05 + open_fn(hx, hy), c, mat("pit", "#050506"))
     eye = [(2.6 * math.cos(2 * math.pi * k / 24), 2.6 + 2.6 * math.sin(2 * math.pi * k / 24)) for k in range(24)]
     pupil = [(0.9 * math.cos(2 * math.pi * k / 16), 3.0 + 0.9 * math.sin(2 * math.pi * k / 16)) for k in range(16)]
     ang = math.degrees(math.atan2(side.y, side.x))
     for d in (-4.5, 4.5):
         ex, ey = hinge[0] - u.x * 5 + side.x * d, hinge[1] - u.y * 5 + side.y * d
-        figure("crocodile-eye", ex, ey, ang, eye, 1.5, c, mat("eye-white", "#f2efe6", rough=0.4), z0=upper_z + 2.5 + open_fn(ex, ey))
-        figure("crocodile-pupil", ex, ey, ang, pupil, 1.7, c, mat("pupil", "#1a3a8a", rough=0.4), z0=upper_z + 2.5 + open_fn(ex, ey))
+        figure("crocodile-eye", ex, ey, ang, eye, 1.5, c, mat("eye-white", "#f2efe6", rough=0.4), z0=upper_z + 2.0 + open_fn(ex, ey))
+        figure("crocodile-pupil", ex, ey, ang, pupil, 1.7, c, mat("pupil", "#1a3a8a", rough=0.4), z0=upper_z + 2.0 + open_fn(ex, ey))
 
     # the red track: a wooden floor between two bent wooden walls, falling from the mouth onto the right
     # inlane's separator, where the ball drops through the round hole at its end
@@ -1472,9 +1763,10 @@ def build_room():
 
 
 # ---------------------------------------------------------------- the cabinet's painted outer sides
-# Layouts measured off a photo of the left side, rectified so that u runs 0..1768 from the back end of the
-# wall to its front end and v runs 0..460 from the wall's top edge down to the table.
+# Layouts measured off a photo of the left side, rectified so that u runs 0..1768 from where the wall leaves
+# the tower to its front end and v runs 0..460 from the wall's top edge down to the table.
 SIDE_W, SIDE_H = 1768.0, 460.0
+SIDE_UNIT = 0.237     # mm a layout unit along the wall, (433.7 - 14.45) / 1768, which round pieces keep in both directions
 SIDE_WINDOWS = [(37, 58, 360), (80, 100, 345), (122, 147, 320), (168, 195, 282), (212, 240, 240), (265, 295, 275),
                 (320, 348, 310), (375, 402, 332), (430, 460, 343), (490, 518, 340), (548, 580, 325), (610, 642, 298),
                 (673, 710, 255), (745, 780, 293), (815, 852, 318), (890, 925, 328), (970, 1010, 322), (1055, 1095, 285),
@@ -1484,19 +1776,10 @@ SIDE_TABS = [(75, 180, 425, 440), (310, 430, 425, 440), (590, 735, 418, 436), (9
 SWAG_EDGE = [(10, 292), (60, 270), (120, 235), (160, 195), (185, 160), (205, 150), (240, 150), (280, 200), (330, 230),
              (400, 250), (450, 255), (520, 250), (580, 225), (630, 190), (660, 172), (690, 168), (725, 168), (780, 198),
              (850, 222), (920, 232), (990, 228), (1040, 210), (1080, 200), (1110, 190)]
-MEDALLIONS = [(205, 78, 38), (685, 92, 38), (1083, 110, 45)]
+MEDALLIONS = [(205, 78, 40), (685, 92, 40), (1083, 110, 40)]     # all three the same size
 NICHE_X0, NICHE_X1 = 1340.0, 1712.0
-
-
-def _homography(src, dst):
-    """The projective map that takes the four points src to the four points dst."""
-    import numpy as np
-    rows, rhs = [], []
-    for (x, y), (X, Y) in zip(src, dst):
-        rows.append([x, y, 1, 0, 0, 0, -X * x, -X * y]); rhs.append(X)
-        rows.append([0, 0, 0, x, y, 1, -Y * x, -Y * y]); rhs.append(Y)
-    h = list(np.linalg.solve(np.array(rows, float), np.array(rhs, float))) + [1.0]
-    return lambda x, y: ((h[0] * x + h[1] * y + h[2]) / (h[6] * x + h[7] * y + 1), (h[3] * x + h[4] * y + h[5]) / (h[6] * x + h[7] * y + 1))
+DRUMMER_SCALE = (1715 - 1414) / (1712 - 1340)     # the drummer shrinks as his niche does along the wall
+DRUMMER_SHIFT = 100.0     # layout units the niche lies further on in the photo of the side than in the layout
 
 
 def _side_height(y):
@@ -1505,23 +1788,51 @@ def _side_height(y):
     return -y * math.sin(a) + wall_top(y) * math.cos(a) - TABLE_Z
 
 
-# The side panel is a trapezoid: its bottom stands on the table, its top falls with the playfield. The layout's
-# rectangle maps onto it projectively, which undoes the photo's perspective and keeps the paint undistorted.
-SIDE_Y0, SIDE_Y1 = -8.4, 433.7
-_side_map = _homography([(0, 0), (SIDE_W, 0), (SIDE_W, SIDE_H), (0, SIDE_H)],
-                        [(SIDE_Y0, _side_height(SIDE_Y0)), (SIDE_Y1, _side_height(SIDE_Y1)), (SIDE_Y1, 0.0), (SIDE_Y0, 0.0)])
+# The side panel is a trapezoid: its bottom stands level on the table and its top falls with the playfield. Each
+# column of the layout stands upright in the room at its place along the wall, from the table to the top edge.
+SIDE_Y0, SIDE_Y1 = 14.45, 433.7     # mm: the tower's front face, where the painted wall begins, and the front end
+
+
+# where the layout's marks lie along the wall, after the photo of the whole side: the gray strip at the back, the
+# three medallions and the drummer's niche, as (layout u, u on the wall); between them the layout stretches evenly
+SIDE_WARP = [(0, 0), (10, 35), (205, 272), (685, 819), (1083, 1211), (1340, 1414), (1712, 1715), (1768, 1768)]
+
+
+def side_warp(u):
+    """The layout's u moved to its place along the wall, by SIDE_WARP."""
+    for (a, a2), (b, b2) in zip(SIDE_WARP, SIDE_WARP[1:]):
+        if u <= b or b == SIDE_WARP[-1][0]:
+            return a2 + (b2 - a2) * (u - a) / (b - a)
+
+
+def _room_to_frame(y, z):
+    """A point of the room, y along the wall and z up (mm), in the tipped machine's frame."""
+    a = math.radians(TILT_DEG)
+    return y * math.cos(a) - z * math.sin(a), y * math.sin(a) + z * math.cos(a)
+
+
+def _side_room(u, v):
+    """A point of the side layout in the room, (y, z) in mm: u moved to its place along the wall, v between the
+    wall's top edge and the table."""
+    y = SIDE_Y0 + (SIDE_Y1 - SIDE_Y0) * side_warp(u) / SIDE_W
+    return y, TABLE_Z + _side_height(y) * (1 - v / SIDE_H)
 
 
 def side_point(u, v):
-    """A point of the side layout as (y, z) in mm, z relative to the playfield as for the side walls."""
-    y, h = _side_map(u, v)
-    a = math.radians(TILT_DEG)
-    return y, (TABLE_Z + h + y * math.sin(a)) / math.cos(a)
+    """A point of the side layout as (y, z) in mm in the tipped machine's frame, as the side walls are built."""
+    return _room_to_frame(*_side_room(u, v))
 
 
-def side_plate(name, pts_uv, d0, d1, c, material):
-    """A flat piece laid on the outer face of both side walls, from d0 to d1 mm out from the face."""
-    pts = [side_point(u, v) for u, v in pts_uv]
+def side_plate(name, pts_uv, d0, d1, c, material, rigid=None):
+    """A flat piece laid on the outer face of both side walls, from d0 to d1 mm out from the face. With rigid, a
+    point (u, v) of the layout and optionally a scale, the piece keeps its shape: it moves with that point and is
+    drawn round it at one scale in both directions, SIDE_UNIT mm a layout unit times the scale."""
+    if rigid is None:
+        pts = [side_point(u, v) for u, v in pts_uv]
+    else:
+        uc, vc, k = rigid if len(rigid) == 3 else (*rigid, 1.0)
+        yc, zc = _side_room(uc, vc)
+        pts = [_room_to_frame(yc + (u - uc) * SIDE_UNIT * k, zc - (v - vc) * SIDE_UNIT * k) for u, v in pts_uv]
     area = sum(pts[i][0] * pts[i - 1][1] - pts[i - 1][0] * pts[i][1] for i in range(len(pts)))
     for face, out in ((-8.38, -1.0), (238.38, 1.0)):
         me = bpy.data.meshes.new(name); bm = bmesh.new()
@@ -1549,6 +1860,17 @@ def normal_edge(edge, d):
         nu, nv = dv / ln, -du / ln
         if nv > 0: nu, nv = -nu, -nv
         out.append((u + nu * d, v + nv * d))
+    return out
+
+
+def clip_u(pts, u0):
+    """The part of a closed outline of the side layout at u0 and beyond."""
+    out = []
+    for a, b in zip(pts, pts[1:] + pts[:1]):
+        if a[0] >= u0: out.append(a)
+        if (a[0] >= u0) != (b[0] >= u0):
+            t = (u0 - a[0]) / (b[0] - a[0])
+            out.append((u0, a[1] + (b[1] - a[1]) * t))
     return out
 
 
@@ -1588,9 +1910,12 @@ def build_outer_sides():
     side_plate("side-curtain", curtain, 0.0, 1.2, c, red)
     # along the swags' lower edge, measured across it: the gold fringe, the blue line on top of it, and higher
     # up the white line
-    edge = SWAG_EDGE[:-3]
+    # it runs on to under the front medallion, whose pennant covers its end, as at the other two
+    edge = [q for q in SWAG_EDGE if q[0] <= MEDALLIONS[-1][0]]
     for name, lo, hi, material in (("side-fringe", 0, 24, gold), ("side-line-blue", 24, 30, blue), ("side-line-white", 62, 68, white)):
-        side_plate(name, normal_edge(edge, lo) + normal_edge(edge, hi)[::-1], 1.2, 1.4, c, material)
+        band = normal_edge(edge, lo) + normal_edge(edge, hi)[::-1]
+        # moved across the edge, a band reaches back past the curtain's start; it ends where the curtain does
+        side_plate(name, clip_u(band, edge[0][0]), 1.2, 1.4, c, material)
     # stripes hang from under the rail down to the white line, long in a swag's middle and short at its ends:
     # blue in the back swag, yellow in the middle and blue again in the front one
     white_top = normal_edge(edge, 68)
@@ -1611,13 +1936,13 @@ def build_outer_sides():
     # three star medallions, each with a pennant and its fringe hanging below
     for cu, cv, r in MEDALLIONS:
         top, bottom, w = cv + r * 0.8, cv + r * 3.2, r * 0.65
-        side_plate("side-pennant", [(cu - w, top), (cu + w, top), (cu + w, bottom - 18), (cu, bottom), (cu - w, bottom - 18)], 2.0, 3.0, c, red)
-        side_plate("side-pennant-fringe", [(cu - w, bottom - 45), (cu + w, bottom - 45), (cu + w, bottom - 18), (cu, bottom), (cu - w, bottom - 18)], 3.0, 3.2, c, gold)
-        side_plate("side-medallion", arc_uv(cu, cv, r, 0, 360, 32)[:-1], 3.4, 4.4, c, black)
-        side_plate("side-medallion-red", arc_uv(cu, cv, r * 0.8, 0, 360, 32)[:-1], 4.4, 4.6, c, red)
+        side_plate("side-pennant", [(cu - w, top), (cu + w, top), (cu + w, bottom - 18), (cu, bottom), (cu - w, bottom - 18)], 2.0, 3.0, c, red, rigid=(cu, cv))
+        side_plate("side-pennant-fringe", [(cu - w, bottom - 45), (cu + w, bottom - 45), (cu + w, bottom - 18), (cu, bottom), (cu - w, bottom - 18)], 3.0, 3.2, c, gold, rigid=(cu, cv))
+        side_plate("side-medallion", arc_uv(cu, cv, r, 0, 360, 32)[:-1], 3.4, 4.4, c, black, rigid=(cu, cv))
+        side_plate("side-medallion-red", arc_uv(cu, cv, r * 0.8, 0, 360, 32)[:-1], 4.4, 4.6, c, red, rigid=(cu, cv))
         star = [(cu + (r * 0.6 if k % 2 == 0 else r * 0.25) * math.cos(math.radians(90 + 36 * k)),
                  cv - (r * 0.6 if k % 2 == 0 else r * 0.25) * math.sin(math.radians(90 + 36 * k))) for k in range(10)]
-        side_plate("side-star", star, 4.6, 4.8, c, gold)
+        side_plate("side-star", star, 4.6, 4.8, c, gold, rigid=(cu, cv))
     # the drummer's niche at the front: a wooden arch frame, the ochre niche, the drummer on his blue stand
     cx = (NICHE_X0 + NICHE_X1) / 2
     spring = 256.0   # where the niche's arch springs from its posts
@@ -1627,14 +1952,19 @@ def build_outer_sides():
     side_plate("side-niche-red", inner, 2.4, 2.6, c, red)
     niche = [(NICHE_X0 + 60, 430), (NICHE_X0 + 60, spring)] + arc_uv(cx, spring, (NICHE_X1 - NICHE_X0) / 2 - 60, 180, 0, 24)[1:-1] + [(NICHE_X1 - 60, spring), (NICHE_X1 - 60, 430)]
     side_plate("side-niche", niche, 2.6, 2.8, c, ochre)
-    side_plate("side-stand", [(1410, 400), (1590, 400), (1590, 430), (1410, 430)], 2.8, 4.0, c, blue)
-    side_plate("side-drum", arc_uv(1470, 250, 48, 0, 360, 32)[:-1], 2.8, 4.2, c, black)
-    side_plate("side-drum-head", arc_uv(1470, 250, 40, 0, 360, 32)[:-1], 4.2, 4.4, c, white)
-    side_plate("side-drummer-coat", [(1500, 215), (1565, 215), (1575, 320), (1495, 320)], 2.8, 4.0, c, red)
-    side_plate("side-drummer-legs", [(1500, 320), (1570, 320), (1600, 395), (1580, 400), (1535, 345), (1505, 400), (1480, 395)], 2.8, 4.0, c, white)
-    side_plate("side-drummer-head", arc_uv(1532, 190, 22, 0, 360, 20)[:-1], 2.8, 4.0, c, skin)
-    side_plate("side-drummer-hat", [(1512, 172), (1555, 172), (1560, 130), (1508, 130)], 4.0, 4.4, c, red)
-    side_plate("side-drummer-plume", [(1545, 132), (1575, 100), (1585, 108), (1556, 140)], 4.0, 4.4, c, gold)
+    # the drummer after the photo of the side, which shows the niche DRUMMER_SHIFT further on: the drum in front,
+    # its rim over the frame's post, and behind it the slim drummer walking toward the front, one arm on the drum
+    def at(pts):
+        return [(u - DRUMMER_SHIFT, v) for u, v in pts]
+    side_plate("side-stand", at([(1545, 400), (1730, 400), (1730, 430), (1545, 430)]), 2.8, 4.0, c, blue, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-legs", at([(1625, 300), (1690, 300), (1725, 390), (1705, 397), (1658, 335), (1602, 397), (1585, 390)]), 2.8, 4.0, c, white, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-coat", at([(1628, 205), (1685, 205), (1690, 300), (1622, 300)]), 2.8, 4.0, c, red, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-head", at(arc_uv(1668, 183, 19, 0, 360, 20)[:-1]), 2.8, 4.0, c, skin, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-hat", at([(1650, 168), (1690, 168), (1698, 138), (1655, 138)]), 4.0, 4.4, c, red, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-plume", at([(1688, 142), (1710, 116), (1719, 123), (1698, 148)]), 4.0, 4.4, c, gold, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drum", at(arc_uv(1490, 250, 48, 0, 360, 32)[:-1]), 4.0, 5.4, c, black, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drum-head", at(arc_uv(1490, 250, 40, 0, 360, 32)[:-1]), 5.4, 5.6, c, white, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
+    side_plate("side-drummer-arm", at([(1630, 215), (1545, 246), (1549, 258), (1632, 230)]), 5.6, 5.8, c, red, rigid=((NICHE_X0 + NICHE_X1) / 2, 300.0, DRUMMER_SCALE))
     side_plate("side-ledge", [(1290, 425), (NICHE_X1, 425), (NICHE_X1, 450), (1290, 450)], 0.0, 4.5, c, mat("side-ledge", "#7a1a20", rough=0.5))
 
 
@@ -1642,6 +1972,15 @@ def build_outer_sides():
 # Layout measured off a photo of the front panel: u runs from its left edge (80) to its right edge (1420),
 # v down from the top of the gray cover strip (1005). One scale for both directions, from the panel's width.
 FRONT_U0, FRONT_U1, FRONT_V0 = 80.0, 1420.0, 1005.0
+SHOOTER_LANE_END = 427.33  # mm, the front wall's inner face at the shooter lane's foot
+PLUNGER_IN = 10.0          # mm the plunger's rod reaches into the shooter lane at rest, an estimate
+# the middle of the ball resting on the rod's tip, on the lane's axis
+PLUNGER_REST = (224.4, SHOOTER_LANE_END - PLUNGER_IN - RBALL)
+PLUNGER_REACH = 18.0      # mm of rod and spring between the mount and the knob, an estimate from the photos
+PLUNGER_ROD_R = 1.5       # mm, the rod's radius, an estimate
+PLUNGER_SPRING_R = 3.5    # mm, the spring's radius to its wire's middle, an estimate
+PLUNGER_SPRING_WIRE = 0.7 # mm, the spring's wire, an estimate
+PLUNGER_SPRING_TURNS = 9
 FRONT_FACE = 435.71                     # mm, the front wall's outer face
 FRONT_SCALE = 246.76 / (FRONT_U1 - FRONT_U0)
 BRIDGE_TOP = [(300, 1335), (400, 1310), (500, 1280), (600, 1245), (680, 1215), (730, 1196), (745, 1188), (760, 1188),
@@ -1703,6 +2042,10 @@ def build_front():
         cut = front_plate(f"front-cut-{name}", pts, 0.3, 4.5, c, dark)
         cut.hide_render = True; cut.hide_viewport = True
         bo = panel.modifiers.new(name, "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"; bo.material_mode = "TRANSFER"
+    # a gold star sits in the star's hole, a little smaller than the hole
+    gold_star = [(752 + (30 if k % 2 == 0 else 12.5) * math.cos(math.radians(90 + 36 * k)),
+                  1132 - (30 if k % 2 == 0 else 12.5) * math.sin(math.radians(90 + 36 * k))) for k in range(10)]
+    front_plate("front-star", gold_star, 0.6, 2.6, c, mat("side-gold", "#d9b04a", rough=0.35, metal=0.5))
     for u0, u1 in FRONT_WINDOWS:
         top = min(_bridge_top_at(u0), _bridge_top_at(u1)) + 28
         front_plate("front-window", [(u0, top), (u1, top), (u1, 1415), (u0, 1415)], 0.6, 0.7, c, window)
@@ -1713,17 +2056,37 @@ def build_front():
     front_plate("front-drawer-box", [(167, 1182), (398, 1182), (398, 1273), (167, 1273)], 0.6, 6.1, c, drawer_wood)
     front_plate("front-drawer-cover", [(157, 1172), (408, 1172), (408, 1283), (157, 1283)], 6.1, 7.6, c, drawer_wood)
     front_plate("front-drawer-tab", [(262, 1222), (303, 1222), (303, 1233), (262, 1233)], 7.6, 11.6, c, drawer_wood)
-    # the plunger's knob on its wooden mount, at the shooter lane
-    pu = FRONT_U0 + (224.4 + 8.38) / FRONT_SCALE
-    front_plate("front-plunger-mount", [(pu - 40, 1090), (pu + 10, 1090), (pu + 10, 1240), (pu - 40, 1240)], 4.1, 6.6, c, wood_m)
-    x, z = front_point(pu, 1160)
-    o = sphere("plunger-knob", x, FRONT_FACE + 14.6, z, 8.0, c, knob)
-    cyl_y = bpy.data.meshes.new("plunger-rod"); bm = bmesh.new()
-    bmesh.ops.create_cone(bm, cap_ends=True, segments=16, radius1=0.2, radius2=0.2, depth=0.8)
-    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=__import__("mathutils").Matrix.Rotation(math.pi / 2, 3, "X"))
-    bm.to_mesh(cyl_y); bm.free()
-    rod = link(bpy.data.objects.new("plunger-rod", cyl_y), c, mat("rod", "#9aa0a8", rough=0.4, metal=1.0))
-    rod.location = W(x, FRONT_FACE + 6.6, z)
+    # the plunger: a steel rod on the axis of the ball resting on it, from the ball's back PLUNGER_IN into the
+    # shooter lane through the front wall and the wooden mount centred on it, a spring round it from the mount to
+    # the knob on its end
+    x, y_ball = PLUNGER_REST
+    z = shooter_z(x, y_ball) + RBALL
+    pu = FRONT_U0 + (x + 8.38) / FRONT_SCALE
+    z_top, z_table = front_point(pu, FRONT_V0)[1], front_point(pu, 1430.0)[1]
+    pv = FRONT_V0 + (z_top - z) / (z_top - z_table) * (1430.0 - FRONT_V0)
+    front_plate("front-plunger-mount", [(pu - 25, pv - 75), (pu + 25, pv - 75), (pu + 25, pv + 75), (pu - 25, pv + 75)], 4.1, 6.6, c, wood_m)
+    mount = FRONT_FACE + 6.6
+    knob_r = 8.0
+    sphere("plunger-knob", x, mount + PLUNGER_REACH + knob_r, z, knob_r, c, knob)
+    steel = mat("rod", "#9aa0a8", rough=0.4, metal=1.0)
+    rod = bpy.data.meshes.new("plunger-rod"); bm = bmesh.new()
+    tip = y_ball + RBALL
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=16, radius1=PLUNGER_ROD_R / 10, radius2=PLUNGER_ROD_R / 10,
+                          depth=(mount + PLUNGER_REACH + knob_r - tip) / 10)
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi / 2, 3, "X"))
+    bm.to_mesh(rod); bm.free()
+    link(bpy.data.objects.new("plunger-rod", rod), c, steel).location = W(x, (tip + mount + PLUNGER_REACH + knob_r) / 2, z)
+    cu = bpy.data.curves.new("plunger-spring", "CURVE"); cu.dimensions = "3D"
+    cu.bevel_depth = PLUNGER_SPRING_WIRE / 20; cu.bevel_resolution = 2
+    n = PLUNGER_SPRING_TURNS * 24
+    sp = cu.splines.new("POLY"); sp.points.add(n)
+    # its origin sits at the mount, so a film stretches it along the rod by scaling it
+    origin = Vector(W(x, mount, z))
+    for k, pt in enumerate(sp.points):
+        t = k / n; a = 2 * math.pi * PLUNGER_SPRING_TURNS * t
+        p = Vector(W(x + PLUNGER_SPRING_R * math.cos(a), mount + PLUNGER_SPRING_WIRE / 2 + t * (PLUNGER_REACH - PLUNGER_SPRING_WIRE), z + PLUNGER_SPRING_R * math.sin(a)))
+        pt.co = (*(p - origin), 1.0)
+    link(bpy.data.objects.new("plunger-spring", cu), c, steel).location = origin
 
 
 def build_decorations():
@@ -1751,11 +2114,13 @@ def build_decorations():
         (ax, ay), (bx, by_) = line[0], line[-1]
         x, y, ang = behind(ax, ay, bx, by_, 0.0)    # the stand's foot sits between the rubber's two strands
         half = math.dist((ax, ay), (bx, by_)) / 2
-        figure("deco-star-stand", x, y, ang, [(-2.0, 0), (2.0, 0), (2.0, 15), (half, 17), (half, 19), (-half, 19), (-half, 17), (-2.0, 15)], 1.2, c, wood_m)
-        figure("deco-star", x, y, ang, star(5.0, 2.2, -half, 24.0), 2.4, c, mat("deco-star-" + pid, colr, rough=0.4))
-        figure("deco-star-hole", x, y, ang, star(2.0, 0.9, -half, 24.0), 2.6, c, dark)
-        figure("deco-star-gold", x, y, ang, star(5.5, 2.4, half, 24.5), 2.4, c, gold)
-        figure("deco-star-hole", x, y, ang, star(2.2, 1.0, half, 24.5), 2.6, c, dark)
+        # the stand's bar sits just over the screws' heads, the gold star lower than the coloured one
+        bar = H["post"] + H["head"] + 0.5
+        figure("deco-star-stand", x, y, ang, [(-2.0, 0), (2.0, 0), (2.0, bar - 2), (half, bar), (half, bar + 2), (-half, bar + 2), (-half, bar), (-2.0, bar - 2)], 1.2, c, wood_m)
+        figure("deco-star", x, y, ang, star(5.0, 2.2, -half, bar + 6.5), 2.4, c, mat("deco-star-" + pid, colr, rough=0.4))
+        figure("deco-star-hole", x, y, ang, star(2.0, 0.9, -half, bar + 6.5), 2.6, c, dark)
+        figure("deco-star-gold", x, y, ang, star(5.5, 2.4, half, bar + 5.0), 2.4, c, gold)
+        figure("deco-star-hole", x, y, ang, star(2.2, 1.0, half, bar + 5.0), 2.6, c, dark)
     # bullseye targets: a red arch with white rings and stars
     def bullseye(x, y, ang, w, h, leg):
         top_legs = H["post"] + 1.0
@@ -1802,14 +2167,24 @@ def build_decorations():
 
 
 # ---------------------------------------------------------------- under the board: the ball store and the sensors
-# the seesaw rocks about a pin under the board between its two fingers; tilted by SEESAW_TILT, one finger stands
-# FINGER_UP above the board and the other lies just under it. The start position holds the front ball back.
-SEESAW_TILT, SEESAW_PIN, FINGER_UP, FINGER_DOWN = 38.0, -9.0, 5.5, -0.5
+# the ball separator after tools/separator/separator.html at its defaults, in mm from the board's top face: two
+# pins of PIN_D stand PIN_WALL from the drain wall's face, PIN_SPACING apart along the track. The seesaw below
+# carries them through a clevis axle each and rocks about its pivot between them. In the start position the
+# front pin stands PIN_UP above the board and holds the front ball; the back pin lies at PIN_DOWN, just under the
+# board's face.
+PIN_D, PIN_LEN, PIN_WALL, PIN_SPACING, PIN_UP, PIN_DOWN = 2.0, 13.0, 6.5, 9.0, 3.1, -0.4
+PIN_AXLE = 10.25                    # from a pin's tip to its axle's middle
+AXLE_D, HOLE_D, BOARD_T, CABINET_FLOOR = 1.5, 2.5, 3.9, -31.0
+SEESAW_LEN, SEESAW_H, SEESAW_W = 13.0, 3.0, 3.0      # its width across the track is not on the page: an estimate
+SEESAW_PIVOT = (PIN_UP + PIN_DOWN) / 2 - PIN_AXLE    # midway between the two axles
+FOIL_ACROSS = 8.0     # mm a ball place's copper foil reaches from the drain wall into the track
+SEESAW_TILT = math.degrees(math.atan((PIN_UP - PIN_DOWN) / PIN_SPACING))
 
 
 def store_frame():
-    """The ball store's frame from the drawing: the seesaw's pin, the unit vector along the track toward the
-    plunger lane, the one across it, and the two fingers' middles, front first (mm)."""
+    """The ball store's frame: the seesaw's pivot, the unit vector along the track toward the plunger lane, the
+    one across it from the drain wall into the track, and the two pins, front first (mm). The front pin stands where
+    the drawing puts the front finger, PIN_WALL from the drain wall's face; the back pin PIN_SPACING behind it."""
     fingers = []
     for t in by("drain-ball-store", "seesaw"):
         (ax, ay), (bx, by_) = t["pts"][0], t["pts"][-1]
@@ -1817,7 +2192,16 @@ def store_frame():
     fingers.sort(key=lambda q: -q[0])
     (fx, fy), (bx, by_) = fingers
     along = Vector((fx - bx, fy - by_)).normalized()
-    return Vector(((fx + bx) / 2, (fy + by_) / 2)), along, Vector((-along.y, along.x)), fingers
+    wall = next(t for t in SHAPES if t["cls"] == "wood-wall" and "drain-wall-lower" in t["chain"])
+    seg = [q for q in wall["pts"] if bx - 9.0 <= q[0] <= fx + 3.0]
+    face = min((offset_line(seg, d, False) for d in (wall["sw"] / 2, -wall["sw"] / 2)), key=lambda l: sum(q.y for q in l))
+    f = Vector((fx, fy))
+    near = min((a + (b - a) * max(0.0, min(1.0, (f - a).dot(b - a) / (b - a).length_squared)) for a, b in zip(face, face[1:])),
+               key=lambda q: (q - f).length)
+    across = (f - near).normalized()
+    front = near + across * PIN_WALL
+    back = front - along * PIN_SPACING
+    return (front + back) / 2, along, across, [tuple(front), tuple(back)]
 
 
 def box(name, centre, along, across, size, c, material, rot=None):
@@ -1835,10 +2219,10 @@ def box(name, centre, along, across, size, c, material, rot=None):
 
 
 def build_store():
-    """The ball store under the apron: two balls wait in a row on the board behind the seesaw, whose fingers rise
-    through slots in the board. A DFRobot SER0049 micro servo rocks it through a pushrod. In the start position
-    the front finger stands up and holds the front ball. In the end position the rear finger holds the back ball,
-    and the front one rolls on into the plunger lane. A copper foil lies under each ball's place, a third one on
+    """The ball store under the apron: two balls wait in a row on the board against the drain wall, behind the
+    separator, whose two pins rise through holes in the board. A DFRobot SER0049 micro servo rocks its seesaw
+    through a pushrod. In the start position the front pin stands up and holds the front ball. In the end position
+    the back pin holds the back ball, and the front one rolls on into the plunger lane. A copper foil lies under each ball's place, a third one on
     the drain wall behind them, and the break beam's emitter and receiver face each other across the drain. The
     sizes the drawing does not give, the servo's and the beam parts', are estimates."""
     from mathutils import Quaternion
@@ -1848,21 +2232,33 @@ def build_store():
     plastic = mat("store-plastic", "#2a2d33", rough=0.5)
     white = mat("servo-white", "#e8e8e4", rough=0.4)
     blue = mat("servo-blue", "#2f5d9e", rough=0.45)
+    brass = mat("ferrule-brass", "#b08d3c", rough=0.3, metal=0.9)
     tilt = Quaternion(Vector((across.x, -across.y, 0.0)).normalized(), math.radians(SEESAW_TILT))
-    # the beam in its start pose, turned so that its front end, toward the plunger lane, rises
+    # the seesaw in its start pose, turned so that its front end, toward the plunger lane, rises
     if (tilt @ Vector((along.x, -along.y, 0.0))).z < 0: tilt = tilt.inverted()
-    box("store-seesaw-beam", (pin.x, pin.y, SEESAW_PIN), along, across, (12.0, 3.0, 2.0), c, steel, rot=tilt)
-    box("store-seesaw-bracket", (pin.x, pin.y, (SEESAW_PIN - 4.0) / 2 - 2.0), along, across, (3.0, 12.0, 8.0), c, plastic)
+    box("store-seesaw-beam", (pin.x, pin.y, SEESAW_PIVOT), along, across, (SEESAW_LEN, SEESAW_W, SEESAW_H), c, steel, rot=tilt)
     pf = bpy.data.objects["playfield"]
     for k, (fx, fy) in enumerate(fingers):
         name = "store-finger-front" if k == 0 else "store-finger-back"
-        lift = math.dist((fx, fy), pin) * math.sin(math.radians(SEESAW_TILT)) * (1 if k == 0 else -1)
-        bottom = SEESAW_PIN + lift
-        top = FINGER_UP if k == 0 else FINGER_DOWN
-        box(name, (fx, fy, (bottom + top) / 2), along, across, (1.3, 10.0, top - bottom), c, steel)
-        cut = box(name + "-slot", (fx, fy, -1.0), along, across, (1.8, 10.6, 8.0), c, None)
+        top = PIN_UP if k == 0 else PIN_DOWN
+        # the pin, its clevis axle across the track, and the wire ferrule lining its hole in the board
+        cyl(name, fx, fy, PIN_D / 2, top - PIN_LEN, top, c, steel, verts=24)
+        axle = top - PIN_AXLE
+        box(name + "-axle", (fx, fy, axle), along, across, (AXLE_D, SEESAW_W + 2.0, AXLE_D), c, steel)
+        cyl("store-ferrule", fx, fy, HOLE_D / 2, -BOARD_T, 0.02, c, brass, verts=24)
+        cut = box(name + "-slot", (fx, fy, -2.0), along, across, (HOLE_D, HOLE_D, 8.0), c, None)
         cut.hide_render = True; cut.hide_viewport = True
         bo = pf.modifiers.new(name + "-slot", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
+    # the pivot's bearing: two legs from the board's underside, one on each side of the seesaw, its axle through
+    # them; a foot below the pivot stands on the cabinet's floor
+    for d in (-1, 1):
+        leg = pin + across * d * (SEESAW_W / 2 + 1.0)
+        box("store-seesaw-bracket", (leg.x, leg.y, (-BOARD_T + SEESAW_PIVOT - 1.2) / 2), along, across,
+            (6.6, 1.0, -(SEESAW_PIVOT - 1.2) - BOARD_T), c, plastic)
+    box("store-seesaw-pivot", (pin.x, pin.y, SEESAW_PIVOT), along, across, (AXLE_D, SEESAW_W + 4.0, AXLE_D), c, steel)
+    foot = pin + across * (SEESAW_W / 2 + 2.3)
+    box("store-seesaw-foot", (foot.x, foot.y, (SEESAW_PIVOT - 1.2 + CABINET_FLOOR) / 2), along, across,
+        (1.6, 1.6, SEESAW_PIVOT - 1.2 - CABINET_FLOOR), c, plastic)
     # the servo lies under the board past the seesaw toward the plunger lane, its horn turned toward the beam
     servo_at = pin + along * 18.0
     box("store-servo", (servo_at.x, servo_at.y, -20.5), along, across, (23.0, 12.2, 22.5), c, blue)
@@ -1872,8 +2268,8 @@ def build_store():
     horn_tip = shaft - along * 6.0
     mid = (shaft + horn_tip) / 2
     box("store-servo-horn", (mid.x, mid.y, -7.0), along, across, (7.5, 3.0, 1.2), c, white)
-    beam_end = pin + along * 6.0
-    end_z = SEESAW_PIN + 6.0 * math.sin(math.radians(SEESAW_TILT))
+    beam_end = pin + along * (SEESAW_LEN / 2 - 0.5)
+    end_z = SEESAW_PIVOT + (SEESAW_LEN / 2 - 0.5) * math.sin(math.radians(SEESAW_TILT))
     cu = bpy.data.curves.new("store-pushrod", "CURVE"); cu.dimensions = "3D"; cu.bevel_depth = 0.05
     cu.use_fill_caps = True
     sp = cu.splines.new("POLY"); sp.points.add(1)
@@ -1884,9 +2280,13 @@ def build_store():
     (fx, fy), (bx, by_) = fingers
     front_mid = Vector(((fx + bx) / 2, (fy + by_) / 2))
     flat = H["foil"] + 0.1
-    box("store-foil-front", (front_mid.x, front_mid.y, flat / 2), along, across, (7.5, 4.0, flat), c, copper)
+    # each foil reaches across from the drain wall's face, where the pins stand PIN_WALL off, to beyond the ball
+    to_wall = -across * PIN_WALL
+    f_at = front_mid + to_wall + across * FOIL_ACROSS / 2
+    box("store-foil-front", (f_at.x, f_at.y, flat / 2), along, across, (7.5, FOIL_ACROSS, flat), c, copper)
     back_mid = Vector((bx, by_)) - along * 5.0
-    box("store-foil-back", (back_mid.x, back_mid.y, flat / 2), along, across, (7.5, 4.0, flat), c, copper)
+    b_at = back_mid + to_wall + across * FOIL_ACROSS / 2
+    box("store-foil-back", (b_at.x, b_at.y, flat / 2), along, across, (7.5, FOIL_ACROSS, flat), c, copper)
     wall = next(t for t in SHAPES if t["cls"] == "wood-wall" and "drain-wall-lower" in t["chain"])
     seg = [q for q in wall["pts"] if bx - 9.0 <= q[0] <= fx + 3.0]
     face = min((offset_line(seg, d, False) for d in (wall["sw"] / 2 + 0.1, -wall["sw"] / 2 - 0.1)),

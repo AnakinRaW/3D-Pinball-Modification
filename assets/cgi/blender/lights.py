@@ -28,9 +28,13 @@ DRAIN = 8.0             # the drain's judgment light's emission strength at rest
 # the ceiling strip: 26 RGB LEDs 6.25 mm apart on a white tape 2.7 mm wide, 9 mm behind the frame
 CEILING_N, CEILING_PITCH, CEILING_TAPE, CEILING_Y = 26, 6.25, 2.7, 9.0
 CEILING_LED, CEILING_W = 25.0, 3000.0       # the LEDs' emission strength and the strip's light in W at rest
-# the display's glass, 3 mm inside the bezel, which lies 87.6 to 147.6 mm across and 77.8 to 121.5 mm high in the
-# back layer: x0, x1, z0, z1, and y just in front of the back layer at -16 mm
-DISPLAY = (92.4, 142.7, 80.8, 118.5, -15.6)
+# the display: the panel after the CH280QV10 datasheet (Rev. D, page 5) is 69.2 mm by 50.0 mm, its active area
+# 57.6 mm by 43.2 mm, 3.0 mm from the panel's near end, 8.6 mm from the end with the flex cable and 3.4 mm from its
+# long edges. The panel's middle sits at the middle of the drawing's window in the back layer, 87.6 to 147.6 mm across
+# and 77.8 to 121.5 mm high, just before the sky. DISPLAY is the active area (x0, x1, z0, z1, y in mm), the screen the
+# films play on.
+DISPLAY = (117.6 - 34.6 + 3.0, 117.6 - 34.6 + 3.0 + 57.6, 99.65 - 21.6, 99.65 + 21.6, -4.6)
+DISPLAY_RIM = (3.0, 8.6, 3.4, 4.0)        # mm: the glass past the active area at its near and its cable end, above and below, depth
 
 
 def mm(x, y, z=0.0):
@@ -156,6 +160,19 @@ def display():
     for loop, q in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))):
         loop[uv].uv = q
     bm.to_mesh(me); bm.free()
+    # the panel behind the active area: dark glass round it, wider at the cable's end
+    near, cable, rim, depth = DISPLAY_RIM
+    bez = bmesh.new()
+    bmesh.ops.create_cube(bez, size=1.0, matrix=Matrix.LocRotScale(
+        mm((x0 - near + x1 + cable) / 2, y - 0.05 - depth / 2, (z0 + z1) / 2), None,
+        Vector(((x1 - x0 + near + cable) / 10, depth / 10, (z1 - z0 + 2 * rim) / 10))))
+    bme = bpy.data.meshes.new("display-panel"); bez.to_mesh(bme); bez.free()
+    pm = bpy.data.materials.new("display-panel"); pm.use_nodes = True
+    pb = pm.node_tree.nodes["Principled BSDF"]
+    pb.inputs["Base Color"].default_value = (0.008, 0.009, 0.012, 1.0); pb.inputs["Roughness"].default_value = 0.08
+    pm.diffuse_color = (0.01, 0.01, 0.015, 1.0)
+    bme.materials.append(pm)
+    coll("lights").objects.link(bpy.data.objects.new("display-panel", bme))
     m = bpy.data.materials.new("display-glass"); m.use_nodes = True
     b = m.node_tree.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.01, 0.012, 0.02, 1.0); b.inputs["Roughness"].default_value = 0.1

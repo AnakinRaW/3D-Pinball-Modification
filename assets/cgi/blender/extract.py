@@ -265,6 +265,19 @@ def main():
     for name, keep in layers.items():
         layer = strip(root, keep_only={"backbox"}, drop=every - keep)
         render(ET.tostring(layer), os.path.join(out, name + ".png"), width_px)
+    # the frame's plate alone: its columns, its valance and the swags painted on them, without the parts that
+    # scene.py builds in 3D in front of it or behind it
+    built = {"dio-frame-curtain-left", "dio-frame-curtain-right", "dio-frame-roof", "dio-frame-crest",
+             "dio-frame-tower-left", "dio-frame-tower-right", "dio-frame-floor"}
+    layer = strip(root, keep_only={"backbox"}, drop=(every - {"dio-frame"}) | built)
+    render(ET.tostring(layer), os.path.join(out, "backbox-frame-plate.png"), width_px)
+    # the scene's parts each alone, so the scene can saw them out and stand them at their depths
+    parts = {"ground": {"dio-scene-ground"}, "pins": {"dio-pin-1", "dio-pin-2", "dio-pin-3", "dio-pin-4"},
+             "balls": {"dio-ball-1", "dio-ball-2", "dio-ball-big"}, "wheel": {"dio-wheel"}}
+    for name, keep in parts.items():
+        others = set().union(*parts.values()) - keep
+        layer = strip(root, keep_only={"backbox"}, drop=(every - {"dio-scene"}) | others)
+        render(ET.tostring(layer), os.path.join(out, "backbox-scene-" + name + ".png"), width_px)
     json.dump({"viewBox": vb, "size": [W, H]}, open(os.path.join(out, "textures.json"), "w"))
     print(len(shapes), "shapes;", "textures", W, "x", H)
 
