@@ -1,13 +1,17 @@
-// The app: the Features view with the list, the drawing and the feature's or the part's card; the
-// Games view with every source's games as covers below the picked one; and the studio with
-// the game it edits, its Lights controls, the drawing in the firmware's colors, the clock with the
+// The app: the Features view with the list, the drawing or the machine in 3D, and the feature's or the
+// part's card; the Games view with every source's games as covers below the picked one; and the studio
+// with the game it edits, its Lights controls, the drawing in the firmware's colors, the clock with the
 // layers and the current.
+import { lazy, Suspense } from "preact/compat";
 import type { Model, State } from "./state";
 import { Drawing } from "./ui/Drawing";
 import { GamesView } from "./ui/Games";
 import { FeatureCard, FeatureList, PartCard, ThemeSwitch, TopBar } from "./ui/Panels";
 import { panels, Splitter } from "./ui/Splitter";
 import { StudioControls, StudioCurrent, StudioStatus, useStudioClock } from "./ui/Studio";
+
+// the 3D view and three.js load on the first switch to 3D, so the page starts without them
+const View3D = lazy(() => import("./ui/View3D").then((m) => ({ default: m.View3D })));
 
 export function App({ model, state }: { model: Model; state: State }) {
   useStudioClock(model, state);
@@ -41,14 +45,26 @@ export function App({ model, state }: { model: Model; state: State }) {
         >
           {left}
           <Splitter side="left" />
-          <Drawing model={model} state={state} />
+          {state.threeD.value ? (
+            <Suspense fallback={<div class="stage" />}>
+              <View3D model={model} state={state} onClose={() => (state.threeD.value = false)} />
+            </Suspense>
+          ) : (
+            <Drawing model={model} state={state} />
+          )}
           <Splitter side="right" />
           <div class="side">{side}</div>
         </main>
       ) : (
         <main class="features-view">
           {left}
-          <Drawing model={model} state={state} />
+          {state.threeD.value ? (
+            <Suspense fallback={<div class="stage" />}>
+              <View3D model={model} state={state} onClose={() => (state.threeD.value = false)} />
+            </Suspense>
+          ) : (
+            <Drawing model={model} state={state} />
+          )}
           <div class="side">{side}</div>
         </main>
       )}

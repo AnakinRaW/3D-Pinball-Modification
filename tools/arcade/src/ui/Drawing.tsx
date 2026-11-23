@@ -486,6 +486,9 @@ export function Drawing({ model, state }: { model: Model; state: State }) {
         >
           ⤢
         </button>
+        <button data-action="three-d" class="dim" title="Show the machine in 3D" onClick={() => (state.threeD.value = true)}>
+          3D
+        </button>
       </div>
     </div>
   );

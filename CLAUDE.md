@@ -59,7 +59,7 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 - `hardware/cad/`: 3D models, a source model plus a neutral export (STEP for mating parts, STL or 3MF for printed ones)
 - `model/`: the Python files the checks read, in folders that mirror those under `docs/`
 - `tools/perfboard/`: the perfboard inventory and the SVG library that draws its parts as they look. A layout takes sizes and pinouts from here, never from memory
-- `tools/arcade/`: the Arcade, a browser app in TypeScript with Vite and Preact. It shows the drawing with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
+- `tools/arcade/`: the Arcade, a browser app in TypeScript with Vite and Preact. It shows the drawing, or the machine in 3D from `assets/cgi/machine.glb` with three.js, with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
 - `firmware/sim/`: the Arcade's WebAssembly build of the lamps component and the lighting driver, with a simulated output stage in `fakes/`
 - `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
 

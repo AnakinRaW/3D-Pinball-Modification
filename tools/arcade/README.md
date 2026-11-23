@@ -3,6 +3,7 @@
 A browser tool that shows the machine as the drawing in [`assets/playfield/`](../../assets/playfield/) and runs the firmware's lamps behind it.
 
 - **Features** lists the features of the root README. Selecting one lights its lamps, marks and labels its parts in the drawing, and shows its rows of [`docs/features.md`](../../docs/features.md). A click on a part in the drawing selects the feature that shows it. A part that no feature shows opens its card, and a click on the cabinet or into empty space clears both. The wheel or the buttons at the bottom right zoom the drawing, and a drag pans it, in this view and in the Studio.
+- **3D**, a button among the zoom buttons of the Features view and of the Studio, shows the machine in 3D instead of the drawing. The model is `assets/cgi/machine.glb`, which the Blender scripts of [`assets/cgi/`](../../assets/cgi/) build from the drawing and export, so the films and the Arcade show the same machine. Every part of the file carries its id from the drawing. A drag turns the machine, the wheel zooms and a right drag moves it. A click on a part works as in the drawing. The marked parts glow. The ramp pills hide the ramps. The lamps and the strip LEDs light at their places in the drawing: in the Studio in the colors the firmware sends, elsewhere in a fixed color per lights group.
 - **A part's card** opens from the feature card's list of parts: the part's place, its driver, channel and component, and a lamp's chain and LEDs.
 - **Games** is the launcher of every game of the three sources: the memory card, opened in the browser through Chrome's or Edge's folder picker, the firmware, and the repository's `games/<id>/game.yml`. The picked game stands large on top, every game of the chosen source as a cover below it. A `thumbnail.png`, `.jpg` or `.webp` beside a game.yml is the game's picture. Its rules and playing it come with the game loader.
 - **Studio** edits a game picked from the same list, one part per tab. Its Lights tab runs the firmware's lamps component and lighting driver, compiled to WebAssembly, on a simulated clock. It starts effects on the playfield's lamps and the strips, switches between the 3 A and the 6 A adapter, and paints the colors the chains carry onto the drawing. A click on a lamp or a strip picks it as the effect's target. Each playfield lamp shows its number in the firmware's count. It plays the light sequences of [`lights/`](lights/), `.lights` files of timed effect calls on tracks, which [`src/sim/sequence.ts`](src/sim/sequence.ts) reads; the format there is a prototype.
@@ -12,7 +13,7 @@ In every view a bar of pills over the drawing hides and shows the ramps, so the 
 
 The app stands alone and links to no document of the repository. It follows the system's light or dark setting, and a switch in the top bar picks the other theme for this browser.
 
-The app loads the WebAssembly module in the background as it starts, so the Studio opens ready.
+The app loads the WebAssembly module in the background as it starts, so the Studio opens ready. The 3D view, three.js and the model load on the first switch to 3D. A checkout without `machine.glb` builds and runs. Its 3D view then says the file is missing.
 
 ## Commands
 
@@ -43,6 +44,7 @@ The app reads these files of the repository when it builds and holds no copy of 
 | File | Gives |
 |---|---|
 | `assets/playfield/playfield.svg` | The drawing, inline in the page |
+| `assets/cgi/machine.glb` | The machine in 3D, as the Blender scripts of `assets/cgi/` export it |
 | `assets/playfield/playfield.json` | The placements, lamps and strips, and the parts of each feature |
 | `README.md` | The numbered feature list with its short texts |
 | `docs/features.md` | What the stock machine has and what the mod adds, without the links |
@@ -60,7 +62,8 @@ The app reads these files of the repository when it builds and holds no copy of 
 | `src/model/` | Reading the sources, the lamps on their chains, the highlight of a feature, a part's card and the current the machine draws, with no browser needed |
 | `src/sim/` | Loading the WebAssembly module, setting it up from the config, the colors of the drawing's lamps and LEDs, and reading and playing `.lights` files |
 | `lights/` | The light sequences the Studio plays |
-| `src/ui/` | The drawing with its overlay and its glow, the list, the cards, the Studio and its current readout |
+| `src/three/` | Loading the machine in 3D, with its lamps and strip LEDs at the drawing's places |
+| `src/ui/` | The drawing with its overlay and its glow, the 3D view, the list, the cards, the Studio and its current readout |
 | `scripts/build-wasm.mjs` | What `npm run wasm` runs |
 | `scripts/figures.py` | Writes `config/figures.json` from the models |
-| `tests/` | `model.test.ts` for the models against the repository's files, `current.test.ts` for the current's arithmetic and the design's worst cases, `lights.test.ts` for the firmware's lamps in WebAssembly, `sequence.test.ts` for the `.lights` format and its player, `app.test.tsx` and `readout.test.tsx` for the views in jsdom |
+| `tests/` | `model.test.ts` for the models against the repository's files, `current.test.ts` for the current's arithmetic and the design's worst cases, `lights.test.ts` for the firmware's lamps in WebAssembly, `sequence.test.ts` for the `.lights` format and its player, `three.test.ts` for the ids and the frame of `machine.glb`, `app.test.tsx` and `readout.test.tsx` for the views in jsdom |
