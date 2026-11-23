@@ -185,7 +185,6 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
             pressed = in.type != DriverEventType::TOUCH_UP;
             lv_indev_read(pointer);
         }
-        handed = in.type != DriverEventType::TOUCH_UP;
         return true;
     }
     if (distance(at, downAt) >= Touch::SLOP_PX) {

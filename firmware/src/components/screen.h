@@ -276,7 +276,7 @@ private:
     Animation animations[ANIMATIONS];
     TouchPoint finger = {};      // where the finger of the touch handed to LVGL is
     bool pressed = false;        // LVGL sees that finger on the screen
-    bool handed = false;         // the touch on the screen went to LVGL
+    bool handed = false;         // the last touch went to LVGL, set at its TOUCH_DOWN
     TouchPoint downAt = {};      // where the touch beside every control came down
     uint32_t downUs = 0;         // nowUs() when it came down
     bool strayed = false;        // it moved Touch::SLOP_PX or more from where it came down
