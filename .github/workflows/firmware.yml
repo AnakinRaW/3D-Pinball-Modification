@@ -55,6 +55,14 @@ jobs:
           LOCALAPPDATA: ${{ runner.temp }}
         run: python -m platformio run -e release
 
+      # Fails, as the release build does, when RAM1 keeps less than the floor of
+      # firmware/tools/ram1-floor.py free for local variables
+      - name: Build the test image
+        env:
+          LOCALAPPDATA: ${{ runner.temp }}
+        working-directory: firmware/tests/teensy
+        run: python -m platformio run
+
       # the tests that need no hardware, from the first test_ folder in firmware/tests on; the
       # Teensy tests stand beside them in the test image firmware/tests/teensy and run on the bench
       - name: Test

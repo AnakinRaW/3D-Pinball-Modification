@@ -14,6 +14,9 @@
 - **Code lands with its tests.** A new library gets its test program, and a changed behavior gets its row in [`testing.md`](../docs/firmware/testing.md) and its test, in the same step as the code. Before code is reported done, each public function it touched is named with the test that covers it. Coverage through another component's tests does not count.
 - **Tests that need no hardware run on the computer**, in the `computer` environment, which PlatformIO builds with its platform `native`. CI runs them. Tests that need the Teensy run on the bench from the test image.
 - **A new driver joins the register of `every-driver`** in `tests/teensy/src/every-driver/`, with a case for each row its rules reach.
+- **The test programs share one instance of each driver and component**, which `tests/teensy/include/test-drivers.h` declares, as the firmware's `main.cpp` holds one. A program keeps a further instance only where a test needs one never begun or one whose `begin()` fails.
+- **A large buffer of a test lies in the PSRAM**, with `EXTMEM`, since RAM2's heap carries the test task's stack and the lighting's colors. [`tools/ram1-floor.py`](tools/ram1-floor.py) fails the build when RAM1 keeps less than its floor free.
+- **The test programs' code runs from the flash**, since [`linker/teensy41-tests.ld`](linker/teensy41-tests.ld) puts it there. A loop or a handler that times edges carries `FASTRUN`, which keeps it in ITCM.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
 
 ## Layout
