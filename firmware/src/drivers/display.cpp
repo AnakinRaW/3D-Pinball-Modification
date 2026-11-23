@@ -37,6 +37,7 @@ constexpr uint8_t LAST_SHIFTER = SHIFTERS - 1;
 constexpr uint32_t LAST_FLAG = 1u << LAST_SHIFTER;
 constexpr uint32_t BURST_BYTES = 32;   // design.md: one burst, eight shifters of four bytes
 constexpr uint32_t BYTES_PER_PIXEL = 2;
+constexpr uint8_t PIXELS_PER_WORD = sizeof(uint32_t) / BYTES_PER_PIXEL;   // two in a shifter
 constexpr uint32_t DATA_LINES = 8;   // D0 to D7, one byte a write
 /// RM FlexIO, TIMCMP in 8-bit baud mode: twice the writes less one in the upper byte, half the
 /// divider less one in the lower
@@ -440,8 +441,8 @@ void Display::loadNext() {
     uint32_t words[SHIFTERS];
     for (uint8_t i = 0; i < SHIFTERS; ++i) {
         uint32_t word = 0;
-        for (uint8_t pixel = 0; pixel < sizeof(uint32_t) / BYTES_PER_PIXEL; ++pixel) {
-            uint16_t bytes;
+        for (uint8_t pixel = 0; pixel < PIXELS_PER_WORD; ++pixel) {
+            uint16_t bytes = 0;
             memcpy(&bytes, p, sizeof bytes);
             word |= uint32_t(bytes) << (pixel * BYTES_PER_PIXEL * BYTE_BITS);
             p += rowBytes;
