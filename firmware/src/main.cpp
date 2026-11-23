@@ -1,8 +1,5 @@
 // The firmware's start: setup() starts the clock, creates the main task and starts FreeRTOS. The
-// main task runs the start order of docs/firmware/general-design.md and then the main loop: it
-// mounts the card, begins the log on it, starts the audio driver and the sounds, and hands the
-// driver events to the sounds. Until the other drivers exist, it brings up LVGL and FastLED and
-// blinks the Teensy's LED once a second.
+// main task runs the start order of docs/firmware/general-design.md and then the main loop.
 
 // Keeps Arduino's macros, which FastLED's Teensy 4 code and WDT_T4 use.
 #define USE_ARDUINO_DEFINES
@@ -13,14 +10,18 @@
 #include "components/config-keys.h"
 #include "components/file-system.h"
 #include "components/sounds.h"
+#include "components/screen.h"
+#include "components/video-player.h"
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
 #include "drivers/audio.h"
+#include "drivers/display.h"
 #include "drivers/storage.h"
+#include "drivers/touch.h"
+#include "io/i2c-bus.h"
 #include "io/usb-upload-link.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
-#include <lvgl.h>
 // FastLED's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
 // the push and pop -Wunused-parameter and -Wreturn-type stay off for all code after it.
 #pragma GCC diagnostic push
@@ -32,6 +33,9 @@ constexpr uint32_t US_PER_MS = 1000;
 /// The most driver events one pass of the main loop hands on, an estimate. A debug build reports a
 /// pass that finds more waiting.
 constexpr uint32_t EVENTS_PER_PASS = 64;
+/// The boot film's layer. No game runs while the film plays, so no mode holds its key.
+constexpr Layer BOOT_LAYER = {1, 0};
+constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb with audio/intro.wav
 
 /// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
 /// on a multiple of its size
@@ -67,6 +71,10 @@ static FileSystem files(storage);
 /// task's stack in RAM1.
 DMAMEM static Config config(files);
 static Sounds sounds(audio, files);
+static Display display;
+static Touch touch(io::wire2Bus, events, driverTick);
+static Screen screen(display);
+static VideoPlayer videoPlayer(screen, files, sounds);
 static UsbUploadLink uploadLink;
 
 /// Restarts the Teensy, as the card upload asks for once new files are on the card.
@@ -85,6 +93,68 @@ static volatile bool startingUp = true;
 namespace freertos {
 void setup_event_responder() {}
 }   // namespace freertos
+
+/// The game host's handling of a device fault, where the host's dispatch() stands in the main loop.
+class GameHost {
+public:
+    /// Takes a fault event of the device monitor, so no component sees it.
+    ///
+    /// The touch controller shares the display module's power. Once it answers again, the display
+    /// has lost its setup, and the screen sets it up again.
+    ///
+    /// @param e  A driver event of any type.
+    /// @return   Whether @p e was DEVICE_FAILED or DEVICE_RECOVERED.
+    /// @note     The main loop calls it.
+    static bool takeFault(const DriverEvent& e) {
+        if (e.type == DriverEventType::DEVICE_FAILED) {
+            return true;
+        }
+        if (e.type != DriverEventType::DEVICE_RECOVERED) {
+            return false;
+        }
+        if (faultDevice(e.source) == Device::TOUCH) {
+            logInfo("main", "the display module answers again, so the display restarts");
+            screen.restart();
+        }
+        return true;
+    }
+
+    /// Plays the machine's boot film once, on the whole screen and with its sound.
+    ///
+    /// The film and its sound lie at the card's root. A card without the film ends it at once.
+    ///
+    /// @note  The main task calls it once at the start, after the begin() of the screen, the
+    ///        video player and the sounds.
+    static void playBootFilm() {
+        files.useRoot();
+        lv_obj_t* slide = screen.slide(BOOT_LAYER);
+        if (slide == nullptr) {
+            logWarning("main", "the screen has no slide for the boot film");
+            return;
+        }
+        lv_obj_t* viewport = lv_obj_create(slide);
+        lv_obj_remove_style_all(viewport);
+        lv_obj_set_size(viewport, Display::WIDTH, Display::HEIGHT);
+        if (!videoPlayer.play(viewport, BOOT_FILM, false, true)) {
+            logWarning("main", "the video player refuses the boot film");
+            screen.remove(BOOT_LAYER);
+        }
+    }
+
+    /// Takes the end of the boot film and removes its slide, so the screen is black again.
+    ///
+    /// @param made  The events of the video player's update().
+    /// @note        The main loop calls it.
+    static void takeEnded(const PinballEvents& made) {
+        for (uint8_t i = 0; i < made.count; ++i) {
+            const PinballEvent& e = made.events[i];
+            if (e.type == EventType::MOVIE_ENDED && e.source == BOOT_LAYER.key) {
+                logInfo("main", "the boot film has ended");
+                screen.remove(BOOT_LAYER);
+            }
+        }
+    }
+};
 
 /// Blocks the 32 bytes at @p at, as PJRC guards the end of the static variables.
 ///
@@ -121,6 +191,24 @@ static Sounds::Settings soundSettings() {
     return s;
 }
 
+/// Gets a touch controller's reading at an edge of the picture from the config.
+///
+/// @param key       The edge's key.
+/// @param fallback  The edge's default.
+static uint16_t touchEdge(const char* key, uint16_t fallback) {
+    return uint16_t(lround(config.get(key, fallback, 0, Touch::RAW_MAX)));
+}
+
+/// Gets the touch controller's readings at the picture's edges from the config.
+static Touch::Settings touchSettings() {
+    Touch::Settings s;
+    s.rawLeft = touchEdge(ConfigKey::TOUCH_LEFT_EDGE, Touch::RAW_LEFT);
+    s.rawRight = touchEdge(ConfigKey::TOUCH_RIGHT_EDGE, Touch::RAW_RIGHT);
+    s.rawTop = touchEdge(ConfigKey::TOUCH_TOP_EDGE, Touch::RAW_TOP);
+    s.rawBottom = touchEdge(ConfigKey::TOUCH_BOTTOM_EDGE, Touch::RAW_BOTTOM);
+    return s;
+}
+
 /// The main task: sets the machine up, then runs the main loop, which never waits.
 static void runMainTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, TEMPERATURE_PANIC_PRIORITY);
@@ -146,13 +234,28 @@ static void runMainTask(void*) {
         logWarning("main", "the audio driver does not begin, so no sound plays");
     }
 
-    lv_init();
+    if (!display.begin()) {
+        logWarning("main", "the display does not begin, so the screen stays dark");
+    }
+    // After the display, so the black screen does not wait for the touch controller.
+    touch.configure(touchSettings());
+    if (!touch.begin()) {
+        logWarning("main", "the touch driver does not begin, so the screen takes no touch");
+    }
+    if (!deviceMonitor.watch(Device::TOUCH, touch)) {
+        logWarning("main", "the device monitor does not watch the touch controller");
+    }
+
+    screen.begin();
+    videoPlayer.begin();
     pinMode(LED_BUILTIN, OUTPUT);
 
     // The sounds start at their starting volumes where the game host's begin() stands in the
     // start order.
     sounds.configure(soundSettings());
     sounds.begin();
+    // The boot film plays where the host launches the first game.
+    GameHost::playBootFilm();
 
     startingUp = false;
     uint32_t toggledUs = nowUs();
@@ -171,6 +274,9 @@ static void runMainTask(void*) {
             DEBUG_LOG("main: more than %lu driver events waited for one pass\n", EVENTS_PER_PASS);
         }
         for (uint32_t i = 0; i < taken; ++i) {
+            if (GameHost::takeFault(pending[i])) {
+                continue;
+            }
             PinballEvents made;
             sounds.translate(pending[i], made);
         }
@@ -178,8 +284,13 @@ static void runMainTask(void*) {
         if (carried != 0) {
             pending[0] = pending[EVENTS_PER_PASS];
         }
+        PinballEvents ended;
+        if (videoPlayer.update(nowUs(), ended)) {
+            GameHost::takeEnded(ended);
+        }
         upload.update();
         logger.update();
+        screen.render();
         sendDebugLog();
         yield();
     }

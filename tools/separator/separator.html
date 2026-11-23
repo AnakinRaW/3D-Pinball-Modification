@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Separator Geometry</title>
+<!--
+  Lays out the ball separator in the drain's ball store: two pins, A and B, on a seesaw that the
+  servo tilts. A holds the front ball back. During a release, B rises behind the front ball,
+  nudges it forward and catches the ball behind it. The page computes the pins, the stroke, the
+  pin spacing and the depths of the seesaw from the wall distance, the pins' length and their
+  diameter, draws the separator from above, across and along the track, and prints the drilling
+  pattern for a drilling jig. All lengths are in millimeters.
+-->
+<style>
+  :root{
+    --paper:#fdfcf7; --ink:#2b2a27; --ink-soft:#6b6963;
+    --grid-fine:#f4ddd2; --grid-major:#e8c4b1;
+    --ball-fill:rgba(226,240,252,.85); --ball-line:#185fa5;
+    --ball2-fill:rgba(225,245,238,.85); --ball2-line:#0f6e56;
+    --pin:#7f77dd; --pin-line:#534ab7;
+    --ok:#0f6e56; --ok-bg:#e1f5ee; --no:#b3261e; --no-bg:#fbe9e6;
+    --wood:#f1ecdd; --wood-line:#5f5e5a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; overflow:hidden}
+  body{margin:0; background:#efece4; color:var(--ink);
+    font:14px/1.4 "Segoe UI", system-ui, -apple-system, sans-serif;
+    display:flex; flex-direction:column; padding:10px 12px 12px; gap:8px;}
+
+  header{display:flex; align-items:center; gap:18px; flex-wrap:wrap; flex:0 0 auto}
+  header h1{font-size:16px; margin:0; font-weight:650; white-space:nowrap}
+  header .meta{font-size:12px; color:var(--ink-soft); white-space:nowrap}
+  .ctrlbar{display:flex; flex-direction:column; gap:3px; flex:1 1 190px; min-width:170px; max-width:300px}
+  .ctrlbar label{display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    font-size:12.5px; line-height:1.25}
+  .ctrlbar label b{font-variant-numeric:tabular-nums; white-space:nowrap; flex:0 0 auto}
+  input[type=range]{flex:1 1 auto; min-width:120px; accent-color:var(--pin-line)}
+  input[type=range]:focus-visible{outline:2px solid var(--pin-line); outline-offset:3px; border-radius:4px}
+  .pbox{background:#f3efe4; border:1px solid #ddd6c4; border-radius:5px; padding:3px 12px; white-space:nowrap}
+  .pbox span{font-size:11.5px; color:var(--ink-soft); display:block; line-height:1.1}
+  .pbox b{font-size:19px; font-variant-numeric:tabular-nums}
+
+  .grid{flex:1 1 auto; min-height:0; display:grid; gap:8px;
+    grid-template-columns:1.55fr 1fr; grid-template-rows:1fr 1fr;}
+  .sheet{background:var(--paper); border:1px solid #d8d2c2; border-radius:6px;
+    position:relative; min-height:0; min-width:0; overflow:hidden; display:flex; flex-direction:column;}
+  .sheet h2{margin:0; font-size:11.5px; font-weight:650; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--ink-soft); padding:5px 9px 2px; flex:0 0 auto}
+  #svgSide{cursor:grab;touch-action:none}
+  #svgSide.drag{cursor:grabbing}
+  .sheet h2 .zh{float:right;font-weight:600;text-transform:none;letter-spacing:0;color:#a8a294}
+  .sheet svg{flex:1 1 auto; width:100%; height:100%; min-height:0; display:block}
+
+  .info{background:var(--paper); border:1px solid #d8d2c2; border-radius:6px; padding:8px 10px;
+    display:flex; flex-direction:column; gap:6px; min-height:0; overflow:auto}
+  .stamp{font-weight:750; font-size:13px; letter-spacing:.4px; border:2px solid currentColor;
+    border-radius:4px; padding:3px 9px; align-self:flex-start; transform:rotate(-1deg)}
+  .stamp.ok{color:var(--ok); background:var(--ok-bg)}
+  .stamp.no{color:var(--no); background:var(--no-bg)}
+  .stamp small{display:block; font-size:10px; font-weight:600; letter-spacing:0}
+  .grp{font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    color:#8a8578;border-bottom:1px solid #e5dfcd;padding-bottom:2px;margin:4px 0 1px}
+  .reads{display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; margin:0; font-size:12.5px}
+  .reads dt{color:var(--ink-soft); font-size:11px; line-height:1.2}
+  .reads dd{margin:0 0 3px; font-weight:650; font-variant-numeric:tabular-nums; font-size:14px; line-height:1.2}
+  .fix{font-size:11.5px; color:var(--ink-soft); border-top:1px dashed #d8d2c2; padding-top:5px; margin-top:auto}
+  .fix b{color:var(--ink); font-variant-numeric:tabular-nums}
+  .coords{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:2px}
+  .coords th,.coords td{border:1px solid #ddd6c4;padding:2px 5px;text-align:right}
+  .coords th{background:#f3efe4;font-weight:650;text-align:left}
+  .coords td:first-child{text-align:left}
+  .coords tr.ref td{background:#f8f5ec;color:#6b6963;font-style:italic}
+  .prbtn{padding:8px 14px;font:650 12px/1 inherit;color:#2b2a27;background:#eae5d6;
+    border:1px solid #cfc7b2;border-radius:5px;cursor:pointer;white-space:nowrap;flex:0 0 auto}
+  .prbtn:hover{background:#e0dac8}
+  #tpl{position:fixed;inset:0;background:rgba(24,24,22,.6);display:none;
+    align-items:center;justify-content:center;z-index:50}
+  #tpl.open{display:flex}
+  #tplBox{background:#fff;color:#000;padding:16px 18px;border-radius:8px;
+    max-width:94vw;max-height:94vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .tplbtns{display:flex;gap:8px;margin:0 0 12px}
+  .tplbtns button{padding:7px 14px;font:600 12px/1 inherit;border-radius:5px;cursor:pointer;
+    border:1px solid #bbb;background:#eee;color:#222}
+  .tplbtns button.go{background:#2f6d57;border-color:#2f6d57;color:#fff}
+  @media print{
+    html,body{height:auto;overflow:visible;background:#fff;padding:0}
+    header,.grid{display:none!important}
+    #tpl{display:block!important;position:static;background:none;inset:auto}
+    #tplBox{max-width:none;max-height:none;overflow:visible;padding:0;box-shadow:none;border-radius:0}
+    .tplbtns{display:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Separator Geometry</h1>
+  <div class="ctrlbar">
+    <label for="a">Wall distance a <b id="aVal">6.5 mm</b></label>
+    <input id="a" type="range" min="1" max="10" step="0.5" value="6.5">
+  </div>
+  <div class="pbox"><span>Pin spacing p</span><b id="pOut">9.0 mm</b></div>
+  <div class="ctrlbar">
+    <label for="fl">Pin length overall (tip to bottom) <b id="flVal">13.0 mm</b></label>
+    <input id="fl" type="range" min="8" max="22" step="0.5" value="13">
+  </div>
+  <div class="ctrlbar">
+    <label for="pd">Pin Ø <b id="pdVal">2.0 mm</b></label>
+    <input id="pd" type="range" min="1" max="4" step="0.1" value="2">
+  </div>
+  <button class="prbtn" id="print">Drilling pattern</button>
+  <div class="meta">Ball Ø<b id="mBall">9.0</b> · board <b id="mBoard">3.9</b> · pins Ø<b id="mD">2.0</b> · stand-out <b id="mH">3.1</b> · stroke <b id="mHub">3.5</b></div>
+</header>
+
+<div class="grid">
+
+  <!-- ================= TOP ================= -->
+  <div class="sheet">
+    <h2>Top view</h2>
+    <svg viewBox="0 0 700 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Top view with the wall, the track line, both balls and the pins A and B">
+      <defs>
+        <pattern id="mmT" width="18" height="18" patternUnits="userSpaceOnUse" x="520" y="30">
+          <path d="M18 0H0V18" fill="none" stroke="var(--grid-fine)" stroke-width="1"/>
+        </pattern>
+        <marker id="dimArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#8a8781" stroke-width="1.4" stroke-linecap="round"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="700" height="300" fill="url(#mmT)"/>
+      <rect x="10" y="252" width="680" height="26" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <text x="20" y="270" font-size="11.5" fill="var(--ink-soft)">Guide wall</text>
+      <line x1="10" y1="171" x2="690" y2="171" stroke="#8a8781" stroke-width="1" stroke-dasharray="7 5"/>
+      <text x="16" y="166" font-size="11.5" fill="var(--ink-soft)">Track line</text>
+
+      <circle id="tB2" cx="264" cy="171" r="81" fill="var(--ball2-fill)" stroke="var(--ball2-line)" stroke-width="1.3"/>
+      <circle id="tB2w" cx="264" cy="171" r="67" fill="none" stroke="#0f6e56" stroke-width="1" stroke-dasharray="4 3"/>
+      <circle id="tB1" cx="426" cy="171" r="81" fill="var(--ball-fill)" stroke="var(--ball-line)" stroke-width="1.3"/>
+      <circle id="tB1w" cx="426" cy="171" r="76" fill="none" stroke="#185fa5" stroke-width="1" stroke-dasharray="4 3"/>
+      <text id="tB1L" x="426" y="176" font-size="12.5" font-weight="650" fill="#185fa5" text-anchor="middle">Ball 1</text>
+      <text id="tB2L" x="264" y="176" font-size="12.5" font-weight="650" fill="#0f6e56" text-anchor="middle">Ball 2</text>
+
+      <circle id="tPA" cx="520" cy="171" r="18" fill="var(--pin)" stroke="var(--pin-line)" stroke-width="1.1"/>
+      <circle id="tPB" cx="349" cy="171" r="18" fill="var(--pin)" stroke="var(--pin-line)" stroke-width="1.1"/>
+      <text id="tPAL" x="520" y="146" font-size="12.5" font-weight="650" fill="#534ab7" text-anchor="middle">A</text>
+      <text id="tPBL" x="349" y="146" font-size="12.5" font-weight="650" fill="#534ab7" text-anchor="middle">B</text>
+
+      <line id="tTickA" x1="520" y1="171" x2="520" y2="52" stroke="#8a8781" stroke-width="0.8" stroke-dasharray="4 3"/>
+      <line id="tTickB" x1="349" y1="171" x2="349" y2="52" stroke="#8a8781" stroke-width="0.8" stroke-dasharray="4 3"/>
+      <line id="tDim" x1="349" y1="46" x2="520" y2="46" stroke="#8a8781" stroke-width="1" marker-start="url(#dimArr)" marker-end="url(#dimArr)"/>
+      <text id="tDimT" x="434" y="39" font-size="12" text-anchor="middle" fill="var(--ink)">p = 9.0 mm</text>
+      <text x="16" y="296" font-size="11" fill="var(--ink-soft)">dashed: the ball's width at the pin's height, where the contact lies</text>
+      <text x="596" y="166" font-size="11.5" fill="var(--ink-soft)">→ rolls</text>
+    </svg>
+  </div>
+
+  <!-- ================= FRONT ================= -->
+  <div class="sheet">
+    <h2>Front view, across the track</h2>
+    <svg viewBox="0 0 380 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Front view with the wall, ball 1, pin A and the board">
+      <defs>
+        <pattern id="mmF" width="20" height="20" patternUnits="userSpaceOnUse" x="90" y="200">
+          <path d="M20 0H0V20" fill="none" stroke="var(--grid-fine)" stroke-width="1"/>
+        </pattern>
+        <clipPath id="ballClipF"><circle cx="180" cy="110" r="90"/></clipPath>
+      </defs>
+      <rect x="0" y="0" width="380" height="300" fill="url(#mmF)"/>
+      <rect id="fFloorL" x="90" y="200" width="140" height="78" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <rect id="fFloorR" x="270" y="200" width="100" height="78" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <path d="M20,200 L90,200 L90,70 Q87,44 60,40 L20,40 Z" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <text x="28" y="182" font-size="11.5" fill="var(--ink-soft)">Wall</text>
+
+      <rect id="fPinA" x="170" y="140" width="40" height="150" fill="var(--pin)" stroke="var(--pin-line)" stroke-width="1.1"/>
+      <rect id="fPinAov" x="170" y="140" width="40" height="60" fill="var(--ok)" opacity="0.4" clip-path="url(#ballClipF)"/>
+      <circle cx="180" cy="110" r="90" fill="var(--ball-fill)" stroke="var(--ball-line)" stroke-width="1.3"/>
+      <text x="180" y="115" font-size="12.5" font-weight="650" fill="#185fa5" text-anchor="middle">Ball 1</text>
+      <line x1="180" y1="14" x2="180" y2="290" stroke="#8a8781" stroke-width="1" stroke-dasharray="7 5"/>
+      <text id="fTrackT" x="186" y="26" font-size="11.5" fill="var(--ink-soft)">Track 4.5</text>
+      <line id="fDim" x1="90" y1="292" x2="180" y2="292" stroke="#8a8781" stroke-width="1" marker-start="url(#dimArr)" marker-end="url(#dimArr)"/>
+      <text id="fDimT" x="135" y="286" font-size="12" text-anchor="middle" fill="var(--ink)">a = 6.5</text>
+      <text id="fPinAL" x="216" y="252" font-size="12.5" font-weight="650" fill="#534ab7">A</text>
+    </svg>
+  </div>
+
+  <!-- ================= SIDE ================= -->
+  <div class="sheet">
+    <h2>Side view, along the track<span class="zh">wheel = zoom · drag = pan · double-click = reset</span></h2>
+    <svg id="svgSide" viewBox="0 0 850 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Side view with the pins, the seesaw and their dimensions">
+      <defs>
+        <pattern id="mmS" width="18" height="18" patternUnits="userSpaceOnUse" x="520" y="190">
+          <path d="M18 0H0V18" fill="none" stroke="var(--grid-fine)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect x="0" y="0" width="700" height="300" fill="url(#mmS)"/>
+      <rect id="sFloor1" x="20" y="190" width="300" height="70" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <rect id="sFloor2" x="360" y="190" width="140" height="70" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+      <rect id="sFloor3" x="540" y="190" width="140" height="70" fill="var(--wood)" stroke="var(--wood-line)" stroke-width="1.1"/>
+
+      <circle id="sB2" cx="264" cy="109" r="81" fill="var(--ball2-fill)" stroke="var(--ball2-line)" stroke-width="1.3"/>
+      <circle id="sB1" cx="426" cy="109" r="81" fill="var(--ball-fill)" stroke="var(--ball-line)" stroke-width="1.3"/>
+      <text id="sB1L" x="426" y="114" font-size="12.5" font-weight="650" fill="#185fa5" text-anchor="middle">Ball 1</text>
+      <text id="sB2L" x="264" y="114" font-size="12.5" font-weight="650" fill="#0f6e56" text-anchor="middle">Ball 2</text>
+      <rect id="sPinB" x="331" y="154" width="36" height="120" fill="var(--pin)" stroke="var(--pin-line)" stroke-width="1.1"/>
+      <rect id="sPinA" x="502" y="136" width="36" height="138" fill="var(--pin)" stroke="var(--pin-line)" stroke-width="1.1"/>
+      <text id="sPinAL" x="520" y="128" font-size="12.5" font-weight="650" fill="#534ab7" text-anchor="middle">A raised</text>
+      <text id="sPinBL" x="349" y="146" font-size="12.5" font-weight="650" fill="#534ab7" text-anchor="middle">B lowered</text>
+      <rect id="sBockL" x="410" y="262" width="16" height="90" fill="#e6e2d2" stroke="#8a8781" stroke-width="1"/>
+      <rect id="sBockR" x="466" y="262" width="16" height="90" fill="#e6e2d2" stroke="#8a8781" stroke-width="1"/>
+      <line id="sWip" x1="330" y1="400" x2="560" y2="380" stroke="#afa9ec" stroke-width="54" stroke-linecap="butt"/>
+      <circle id="sJA" cx="560" cy="380" r="5" fill="#fdfcf7" stroke="#534ab7" stroke-width="1.6"/>
+      <circle id="sJB" cx="330" cy="400" r="5" fill="#fdfcf7" stroke="#534ab7" stroke-width="1.6"/>
+      <circle id="sPiv" cx="445" cy="390" r="8" fill="#fdfcf7" stroke="#2b2a27" stroke-width="1.8"/>
+      <line id="sPivL" x1="445" y1="390" x2="120" y2="390" stroke="#8a8781" stroke-width="1" stroke-dasharray="6 4"/>
+      <text id="sPivT" x="116" y="386" font-size="12" fill="var(--ink)" text-anchor="end">Pivot</text>
+      <text x="16" y="286" font-size="11" fill="var(--ink-soft)">A holds · B catches ball 2 and nudges ball 1</text>
+      <defs><marker id="sArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#6b6963" stroke-width="1.4" stroke-linecap="round"/></marker></defs>
+      <line id="sFloorLine" x1="20" y1="460" x2="700" y2="460" stroke="#8a8781" stroke-width="2.5"/>
+      <text id="sFloorT" x="24" y="454" font-size="11.5" fill="var(--ink-soft)">Cabinet floor</text>
+      <rect id="sFoot" x="430" y="352" width="30" height="108" fill="#e6e2d2" stroke="#8a8781" stroke-width="1"/>
+      <g id="sDims"></g>
+      <text x="600" y="104" font-size="11.5" fill="var(--ink-soft)">→ rolls</text>
+    </svg>
+  </div>
+
+  <!-- ================= INFO ================= -->
+  <div class="info">
+    <div id="stampA" class="stamp ok">BLOCKS<small id="stampASub">A covers the track line</small></div>
+    <div id="stampB" class="stamp ok">NUDGE OK<small id="stampBSub">B pushes ball 1 while A sinks</small></div>
+    <div class="grp">Pins · heights above the board's top face</div>
+    <dl class="reads">
+      <div><dt>Length of A and B, overall</dt><dd id="lenOut">–</dd></div>
+      <div><dt>of that, tip to axle center</dt><dd id="lenAxOut">–</dd></div>
+      <div><dt>Stroke, both pins, opposed</dt><dd id="hubOut2">–</dd></div>
+      <div><dt>A stands out · blocking / release</dt><dd id="hAOut">–</dd></div>
+      <div><dt>B stands out · blocking / release</dt><dd id="hBOut">–</dd></div>
+    </dl>
+    <div class="grp">A in the blocking position</div>
+    <dl class="reads">
+      <div><dt>Effective barrier</dt><dd id="dhOut">–</dd></div>
+      <div><dt>Holds a ball up to</dt><dd id="vOut">–</dd></div>
+    </dl>
+    <div class="grp">Release · B nudges ball 1</div>
+    <dl class="reads">
+      <div><dt>B reaches into ball 1</dt><dd id="ovOut">–</dd></div>
+      <div><dt>Clearance from B to ball 2</dt><dd id="clOut">–</dd></div>
+      <div><dt>Contact at this share of the stroke</dt><dd id="hubOut">–</dd></div>
+      <div><dt>A still stands out then</dt><dd id="aRestOut">–</dd></div>
+    </dl>
+    <div class="grp">Seesaw · depths below the board's underside</div>
+    <dl class="reads">
+      <div><dt>Axle center A · blocking</dt><dd id="bzOut">–</dd></div>
+      <div><dt>Axle center B · blocking</dt><dd id="bzBOut">–</dd></div>
+      <div><dt>Pivot · fixed, centered</dt><dd id="pvOut">–</dd></div>
+      <div><dt>Axles Ø / their bores</dt><dd id="axDOut">–</dd></div>
+      <div><dt>Room above axle center A</dt><dd id="axOut">–</dd></div>
+      <div><dt>Seesaw above its axle center</dt><dd id="wTopOut">–</dd></div>
+      <div><dt>Least overall pin length</dt><dd id="minLenOut">–</dd></div>
+      <div><dt>Foot: floor to pivot</dt><dd id="footOut">–</dd></div>
+      <div><dt>Lowest part above the floor</dt><dd id="deepOut">–</dd></div>
+    </dl>
+    <table class="coords">
+      <tr><th>Point</th><th>X</th><th>Y</th><th>Ø hole</th></tr>
+      <tr class="ref"><td>Wall face</td><td>—</td><td>0.0</td><td>reference</td></tr>
+      <tr><td>Pin A</td><td id="cxA">0.0</td><td id="cyA">–</td><td id="cdA">–</td></tr>
+      <tr><td>Pin B</td><td id="cxB">–</td><td id="cyB">–</td><td id="cdB">–</td></tr>
+    </table>
+    <div class="fix">
+      Both pins <b id="fxLen">–</b> long (whole mm), stand-out <b id="fxH">–</b>, common stroke <b id="fxHub">–</b> ·
+      pin holes <b id="fxBore">–</b> with a wire ferrule · axles <b id="fxAx">–</b> · seesaw <b id="fxWt">–</b> high, pivoted in its middle
+    </div>
+  </div>
+
+</div>
+
+<div id="tpl">
+  <div id="tplBox">
+    <div style="font:12px/1.45 Arial,sans-serif;color:#000;margin:0 0 8px">
+      <b>Drilling pattern, ball separator</b> · sketch, not to scale · all dimensions in mm
+      <span id="tplMeta"></span>
+    </div>
+    <div class="tplbtns">
+      <button class="go" id="tplPrint">Print</button>
+      <button id="tplSave">Save SVG</button>
+      <button id="tplClose">Close</button>
+    </div>
+    <svg id="tplSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* The ball, the board and the parts below it. */
+  var r=4.5;                // the ball's radius, for a 9 mm ball
+  var BOARD=3.9;            // the playfield board's thickness
+  var FLOOR=31;             // the playfield's top face to the cabinet floor
+  var BORE=2.5;             // the pins' holes in the board, each lined with a wire ferrule the pin slides in
+  var MINEFF=2.0;           // the least effective barrier A has to put in front of ball 1
+  var MINLEN=6;             // the least pin length above the axle's material
+  var STROKE_RESERVE=0.4;   // how far a lowered pin sinks below the board's top face
+  var STROKE_STEP=0.5;      // the grid the stroke is rounded up to
+  var OVERLAP=0.5;          // how far B is meant to reach into ball 1's back
+  var NUDGE_OK=0.25;        // the least reach into ball 1 that counts as a full nudge
+  var WT=3.0, WEXT=2.0;     // the seesaw's height, and how far it reaches past a joint
+  var ROOF=1.0;             // the room between the seesaw's highest point and the clevis's slot ceiling
+  var AX=1.5, AXWALL=2.0;   // the axles' diameter, and the least material around an axle's bore
+  var G=9.81;               // gravity, in m/s²
+  var ROLL=7/5;             // a rolling solid sphere carries 7/5 of its translational energy
+
+  var TRACK=r;              // the ball leans on the wall, so its center runs a radius off the wall face
+  var PIND=2.0, PR=1.0, hA=3.1, hB=3.1, HUB=3.5, pinLen=7;
+  var pinTotal=13, pinLenAx=10.25;
+  var yBolt=0, yPiv=0, axleDepth=0;
+  var ST=18, TXA=520, TYW=252;         // top view: scale, pin A's x, the wall face's y
+  var SF=20, FX0=90,  FG=200;          // front view: scale, the wall face's x, the board's top face
+  var SS=18, SXA=520, SG=190;          // side view: scale, pin A's x, the board's top face
+
+  function w(h){ return Math.sqrt(Math.max(0,2*r*h-h*h)); }   // the ball's half width at height h
+  function fmt(x,n){ return x.toFixed(n); }
+  function $(id){ return document.getElementById(id); }
+
+  // update() computes in this order, since each step takes what the one before it gave:
+  // the controls, the pins from the wall distance, the front view, the spacing p, the depths of
+  // the seesaw (which take p and the stroke), the coordinates, the top view, the side view.
+  function update(){
+    var a=parseFloat($('a').value), e=a-TRACK, ae=Math.abs(e);
+    $('aVal').textContent=fmt(a,1)+' mm';
+    PIND=parseFloat($('pd').value); PR=PIND/2; $('pdVal').textContent=fmt(PIND,1)+' mm';
+    pinTotal=parseFloat($('fl').value);
+    $('flVal').textContent=fmt(pinTotal,1)+' mm';
+
+    /* ---- the pins' stand-out from the wall distance ---- */
+    var lo0=a-PR, hi0=a+PR, dLat=0;           // the pin's edges, and its nearest edge's offset from the track line
+    if(hi0<r) dLat=r-hi0; else if(lo0>r) dLat=lo0-r;
+    var sag=(dLat<r)?r-Math.sqrt(r*r-dLat*dLat):r;      // the height the offset costs the barrier
+    var hReq=MINEFF+sag;                                 // the stand-out the barrier needs
+    pinLen=Math.max(MINLEN, Math.ceil(BOARD+hReq));      // whole millimeters above the axle's material
+    hA=hB=pinLen-BOARD;                                  // the stand-out the pins get
+    HUB=Math.ceil((hA+STROKE_RESERVE)/STROKE_STEP)*STROKE_STEP;
+    var reachA=w(hA)+PR, reachB=w(hB)+PR;
+    var effBar=hA-sag;
+
+    /* ---- front view ---- */
+    var d=dLat;
+    var blocked = dLat < w(hA)-1e-9;
+    var fLo=FX0+lo0*SF, fHi=FX0+hi0*SF, fTop=FG-hA*SF;
+    var bLo=FX0+(a-BORE/2)*SF, bHi=FX0+(a+BORE/2)*SF;    // the board's edges at the hole
+    $('fFloorL').setAttribute('width',Math.max(0,bLo-FX0));
+    $('fFloorR').setAttribute('x',bHi);
+    $('fFloorR').setAttribute('width',Math.max(0,370-bHi));
+    var fp=$('fPinA'); fp.setAttribute('x',fLo); fp.setAttribute('width',fHi-fLo);
+    fp.setAttribute('y',fTop); fp.setAttribute('height',(FG+78+12)-fTop);
+    var fo=$('fPinAov'); fo.setAttribute('x',fLo); fo.setAttribute('width',fHi-fLo);
+    fo.setAttribute('y',fTop); fo.setAttribute('height',FG-fTop);
+    fo.setAttribute('fill', blocked?'var(--ok)':'var(--no)');
+    fo.setAttribute('opacity', blocked?0.4:0);
+    $('fDim').setAttribute('x2',FX0+a*SF);
+    $('fDimT').setAttribute('x',(FX0+FX0+a*SF)/2);
+    $('fDimT').textContent='a = '+fmt(a,1);
+    $('fTrackT').textContent='Track '+fmt(TRACK,1);
+    $('fPinAL').setAttribute('x',Math.max(fHi,bHi)+6);
+    $('fPinAL').textContent='A · '+fmt(hA,1)+' mm';
+
+    /* ---- the spacing p from the wall distance ---- */
+    // L: ball 1's center behind A. B sits where it reaches OVERLAP into ball 1's back, and at
+    // most where it starts to touch ball 2, which rests against ball 1.
+    var L=(ae<reachA)?Math.sqrt(reachA*reachA-e*e):0;
+    var pMax=(ae<reachB)?L+2*r-Math.sqrt(reachB*reachB-e*e):L+2*r;
+    var tgt=reachB-OVERLAP;
+    var p=(ae<tgt)?L+Math.sqrt(tgt*tgt-e*e):pMax;
+    if(p>pMax) p=pMax;
+    p=Math.round(p*10)/10;
+    var d1=Math.sqrt((p-L)*(p-L)+e*e), d2=Math.sqrt((L+2*r-p)*(L+2*r-p)+e*e);
+    var overlap=reachB-d1, gapBall2=d2-reachB;
+    // B's rising tip meets ball 1 at height zc; frac is that height's share of the stroke.
+    var need=d1-PR;
+    var zc=(need<r)?r-Math.sqrt(Math.max(0,r*r-need*need)):hB+1;
+    var frac=(zc-(hB-HUB))/HUB, aRest=hA-(zc-(hB-HUB));
+    $('pOut').textContent = blocked ? fmt(p,1)+' mm' : '—';
+
+    /* ---- depths: clevis, joints, pivot, in mm above the board's top face, negative below ---- */
+    pinLenAx=pinTotal-(AX/2+AXWALL);   // tip to axle center; the axle's material stays below it
+    yBolt=hA-pinLenAx;                 // A's axle center in the blocking position
+    yPiv=yBolt-HUB/2;                  // the pivot, midway between both joints
+    axleDepth=-yBolt-BOARD;            // A's axle center below the board's underside
+    $('bzOut').textContent=fmt(axleDepth,2)+' mm';
+    $('bzOut').style.color=(axleDepth>0.5)?'#0f6e56':'#b3261e';
+    $('bzBOut').textContent=fmt(axleDepth+HUB,2)+' mm';
+    $('pvOut').textContent=fmt(-yPiv-BOARD,2)+' mm';
+    $('axDOut').textContent=fmt(AX,1)+' / '+fmt(AX,1)+' mm';
+    // The least pin length comes from the seesaw at its steepest, where its corner rises
+    // highest toward the clevis's slot ceiling.
+    var tiltA=Math.atan(HUB/p);
+    var wTop=(WT/2)*Math.cos(tiltA)+WEXT*Math.sin(tiltA);
+    var axNeed=Math.max(AX/2+AXWALL, wTop+ROOF);
+    $('axOut').textContent=fmt(axleDepth,2)+' of '+fmt(axNeed,2)+' mm';
+    $('axOut').style.color=(axleDepth>=axNeed)?'#0f6e56':'#b3261e';
+    var footH=FLOOR+yPiv;
+    var deepest=-(yBolt-HUB-axNeed);
+    $('footOut').textContent=fmt(footH,2)+' mm';
+    $('footOut').style.color=(footH>2)?'#0f6e56':'#b3261e';
+    $('deepOut').textContent=fmt(FLOOR-deepest,2)+' mm';
+    $('deepOut').style.color=(FLOOR-deepest>1)?'#0f6e56':'#b3261e';
+    var minLen=hA+BOARD+axNeed+(AX/2+AXWALL);
+    $('wTopOut').textContent=fmt(wTop,2)+' mm';
+    $('minLenOut').textContent=fmt(minLen,2)+' mm';
+    $('minLenOut').style.color=(pinTotal>=minLen)?'#0f6e56':'#b3261e';
+
+    /* ---- coordinates and the drilling pattern ---- */
+    $('cyA').textContent=fmt(a,1);
+    $('cdA').textContent=fmt(BORE,1); $('cdB').textContent=fmt(BORE,1);
+    $('cxB').textContent=fmt(-p,1); $('cyB').textContent=fmt(a,1);
+    buildTemplate(a,p);
+
+    /* ---- top view ---- */
+    var yTrack=TYW-TRACK*ST, yPin=TYW-a*ST;
+    var xB1=TXA-L*ST, xB2=TXA-(L+2*r)*ST, xPB=TXA-p*ST;
+    $('tB1').setAttribute('cx',xB1); $('tB1').setAttribute('cy',yTrack); $('tB1').setAttribute('r',r*ST);
+    $('tB2').setAttribute('cx',xB2); $('tB2').setAttribute('cy',yTrack); $('tB2').setAttribute('r',r*ST);
+    $('tB1w').setAttribute('cx',xB1); $('tB1w').setAttribute('cy',yTrack); $('tB1w').setAttribute('r',w(hA)*ST);
+    $('tB2w').setAttribute('cx',xB2); $('tB2w').setAttribute('cy',yTrack); $('tB2w').setAttribute('r',w(hB)*ST);
+    $('tB1L').setAttribute('x',xB1); $('tB1L').setAttribute('y',yTrack+5);
+    $('tB2L').setAttribute('x',xB2); $('tB2L').setAttribute('y',yTrack+5);
+    $('tPA').setAttribute('cx',TXA); $('tPA').setAttribute('cy',yPin); $('tPA').setAttribute('r',PR*ST);
+    $('tPB').setAttribute('cx',xPB);  $('tPB').setAttribute('cy',yPin); $('tPB').setAttribute('r',PR*ST);
+    $('tPAL').setAttribute('x',TXA);  $('tPAL').setAttribute('y',yPin-25);
+    $('tPBL').setAttribute('x',xPB);  $('tPBL').setAttribute('y',yPin-25);
+    $('tTickA').setAttribute('x1',TXA); $('tTickA').setAttribute('x2',TXA); $('tTickA').setAttribute('y1',yPin);
+    $('tTickB').setAttribute('x1',xPB); $('tTickB').setAttribute('x2',xPB); $('tTickB').setAttribute('y1',yPin);
+    $('tDim').setAttribute('x1',xPB); $('tDim').setAttribute('x2',TXA);
+    $('tDimT').setAttribute('x',(xPB+TXA)/2);
+    $('tDimT').textContent='p = '+fmt(p,1)+' mm';
+
+    /* ---- side view ---- */
+    var sB1=SXA-L*SS, sB2=SXA-(L+2*r)*SS, sPB=SXA-p*SS;
+    $('sB1').setAttribute('cx',sB1); $('sB2').setAttribute('cx',sB2);
+    $('sB1').setAttribute('r',r*SS); $('sB2').setAttribute('r',r*SS);
+    $('sB1').setAttribute('cy',SG-r*SS); $('sB2').setAttribute('cy',SG-r*SS);
+    $('sB1L').setAttribute('x',sB1); $('sB2L').setAttribute('x',sB2);
+    var paLo=SXA-PR*SS;
+    $('sPinB').setAttribute('x',sPB-PR*SS); $('sPinB').setAttribute('width',2*PR*SS); $('sPinB').setAttribute('y',SG-(hB-HUB)*SS);
+    $('sPinA').setAttribute('x',paLo); $('sPinA').setAttribute('width',2*PR*SS); $('sPinA').setAttribute('y',SG-hA*SS);
+    $('sPinBL').setAttribute('x',sPB); $('sPinBL').setAttribute('y',SG-(hB-HUB)*SS-8);
+    $('sPinAL').setAttribute('x',SXA); $('sPinAL').setAttribute('y',SG-hA*SS-8);
+    var SY=function(v){ return SG-v*SS; };
+    var yBB=yBolt-HUB;
+    var axR=AX/2*SS;
+    $('sJA').setAttribute('cx',SXA); $('sJA').setAttribute('cy',SY(yBolt)); $('sJA').setAttribute('r',axR);
+    $('sJB').setAttribute('cx',sPB); $('sJB').setAttribute('cy',SY(yBB));   $('sJB').setAttribute('r',axR);
+    $('sPiv').setAttribute('r',axR);
+    var wx1=sPB, wy1=SY(yBB), wx2=SXA, wy2=SY(yBolt);
+    var wlen=Math.hypot(wx2-wx1, wy2-wy1), ux=(wx2-wx1)/wlen, uy=(wy2-wy1)/wlen, ext=WEXT*SS;
+    $('sWip').setAttribute('x1',wx1-ux*ext); $('sWip').setAttribute('y1',wy1-uy*ext);
+    $('sWip').setAttribute('x2',wx2+ux*ext); $('sWip').setAttribute('y2',wy2+uy*ext);
+    $('sWip').setAttribute('stroke-width', WT*SS);
+    // the bearing block carries the pivot and is screwed to the board's underside
+    var px=(sPB+SXA)/2, py=SY(yPiv), bw=0.9*SS, gap=2.4*SS;
+    [['sBockL',px-gap-bw],['sBockR',px+gap]].forEach(function(e){
+      var el=$(e[0]); el.setAttribute('x',e[1]); el.setAttribute('y',SY(-BOARD));
+      el.setAttribute('width',bw); el.setAttribute('height',Math.max(6,py+1.2*SS-SY(-BOARD)));
+    });
+    $('sPiv').setAttribute('cx',px); $('sPiv').setAttribute('cy',SY(yPiv));
+    $('sPivL').setAttribute('x1',px-10); $('sPivL').setAttribute('y1',SY(yPiv));
+    $('sPivL').setAttribute('y2',SY(yPiv));
+    $('sPivT').setAttribute('y',SY(yPiv)-4);
+    // each pin reaches below its axle center by the axle's material
+    var tail=(AX/2+AXWALL)*SS;
+    $('sPinA').setAttribute('height',SY(yBolt)-SY(hA)+tail);
+    $('sPinB').setAttribute('height',SY(yBB)-SY(hB-HUB)+tail);
+    var yFloorPx=SY(-FLOOR);
+    $('sFloorLine').setAttribute('y1',yFloorPx); $('sFloorLine').setAttribute('y2',yFloorPx);
+    $('sFloorT').setAttribute('y',yFloorPx-6);
+    $('sFoot').setAttribute('x',px-0.8*SS); $('sFoot').setAttribute('y',SY(yPiv));
+    $('sFoot').setAttribute('width',1.6*SS);
+    $('sFoot').setAttribute('height',Math.max(4,yFloorPx-SY(yPiv)));
+
+    /* ---- the side view's dimensions; one shorter than 3 px is left out ---- */
+    (function(){
+      var yTop=SY(0), yUnd=SY(-BOARD);
+      function vd(x,y1,y2,lab,from){
+        if(Math.abs(y1-y2)<3) return '';
+        var t='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="#6b6963" stroke-width="1" marker-start="url(#sArr)" marker-end="url(#sArr)"/>';
+        t+='<line x1="'+from+'" y1="'+y1+'" x2="'+(x+7)+'" y2="'+y1+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<line x1="'+from+'" y1="'+y2+'" x2="'+(x+7)+'" y2="'+y2+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<rect x="'+(x+9)+'" y="'+((y1+y2)/2-8)+'" width="62" height="15" fill="#fdfcf7"/>';
+        t+='<text x="'+(x+12)+'" y="'+((y1+y2)/2+4)+'" font-size="11.5" font-weight="650" fill="#2b2a27">'+lab+'</text>';
+        return t;
+      }
+      function vdL(x,y1,y2,lab,from){
+        if(Math.abs(y1-y2)<3) return '';
+        var t='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="#6b6963" stroke-width="1" marker-start="url(#sArr)" marker-end="url(#sArr)"/>';
+        t+='<line x1="'+(x-7)+'" y1="'+y1+'" x2="'+from+'" y2="'+y1+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<line x1="'+(x-7)+'" y1="'+y2+'" x2="'+from+'" y2="'+y2+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<rect x="'+(x-74)+'" y="'+((y1+y2)/2-8)+'" width="66" height="15" fill="#fdfcf7"/>';
+        t+='<text x="'+(x-11)+'" y="'+((y1+y2)/2+4)+'" font-size="11.5" font-weight="650" fill="#2b2a27" text-anchor="end">'+lab+'</text>';
+        return t;
+      }
+      function hd(y,x1,x2,lab,fromY){
+        if(Math.abs(x1-x2)<3) return '';
+        var over=(y<fromY)?-6:6;
+        var t='<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="#6b6963" stroke-width="1" marker-start="url(#sArr)" marker-end="url(#sArr)"/>';
+        t+='<line x1="'+x1+'" y1="'+fromY+'" x2="'+x1+'" y2="'+(y+over)+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<line x1="'+x2+'" y1="'+fromY+'" x2="'+x2+'" y2="'+(y+over)+'" stroke="#c6c0b0" stroke-width="0.8"/>';
+        t+='<rect x="'+((x1+x2)/2-26)+'" y="'+(y-9)+'" width="52" height="15" fill="#fdfcf7"/>';
+        t+='<text x="'+((x1+x2)/2)+'" y="'+(y+3)+'" font-size="11.5" font-weight="650" fill="#2b2a27" text-anchor="middle">'+lab+'</text>';
+        return t;
+      }
+      var g='';
+      g+=vd(596, SY(hA), yTop, fmt(hA,1), SXA+18);                      // A's stand-out
+      g+=vd(596, yTop, yUnd, fmt(BOARD,1), SXA+18);                     // the board
+      g+=vd(648, yUnd, SY(yBolt), fmt(axleDepth,2), SXA+18);            // board to A's axle
+      g+=vd(748, SY(hA), SY(yBolt-(AX/2+AXWALL)), fmt(pinTotal,1), SXA+18);   // overall length
+      g+=vdL(150, yUnd, SY(yPiv), fmt(-yPiv-BOARD,2), sPB-18);          // board to pivot
+      g+=vdL(66,  yUnd, SY(yBB),  fmt(axleDepth+HUB,2), sPB-18);        // board to B's axle
+      g+=vd(470, SY(yBolt), SY(yBB), fmt(HUB,1), px+14);                // stroke
+      g+=vdL(sPB-52, yTop, SY(hB-HUB), fmt(HUB-hB,1), sPB-16);          // how far B sinks
+      g+=hd(SY(-FLOOR)-54, sPB, SXA, fmt(p,1), SY(yBB)+10);             // pin spacing
+      g+=hd(SY(hA)-40, SXA-PR*SS, SXA+PR*SS, fmt(2*PR,1), SY(hA));      // pin A's diameter
+      g+=hd(SY(hA)-40, sPB-PR*SS, sPB+PR*SS, fmt(2*PR,1), SY(hB-HUB));  // pin B's diameter
+      g+=hd(SY(-FLOOR)-22, sPB-WEXT*SS, SXA+WEXT*SS, fmt(p+2*WEXT,1), SY(yPiv)+14);   // seesaw length
+      g+=vdL(210, SY(yPiv), yFloorPx, fmt(FLOOR+yPiv,2), px-16);        // foot
+      $('sDims').innerHTML=g;
+    })();
+    var gbLo=sPB-BORE/2*SS, gbHi=sPB+BORE/2*SS, gaLo=SXA-BORE/2*SS, gaHi=SXA+BORE/2*SS;
+    $('sFloor1').setAttribute('x',20); $('sFloor1').setAttribute('width',Math.max(0,gbLo-20));
+    $('sFloor2').setAttribute('x',gbHi); $('sFloor2').setAttribute('width',Math.max(0,gaLo-gbHi));
+    $('sFloor3').setAttribute('x',gaHi); $('sFloor3').setAttribute('width',Math.max(0,680-gaHi));
+
+    /* ---- readings ---- */
+    $('mBall').textContent=fmt(2*r,1); $('mBoard').textContent=fmt(BOARD,1);
+    $('fxBore').textContent='Ø '+fmt(BORE,1); $('fxAx').textContent='Ø '+fmt(AX,1);
+    $('fxWt').textContent=fmt(WT,1)+' mm';
+    var stA=$('stampA'), stB=$('stampB');
+    if(blocked){
+      var dH=effBar, v=Math.sqrt(2*G*(dH/1000)/ROLL);   // the speed whose rolling energy lifts the ball over dH
+      $('dhOut').textContent=fmt(dH,2)+' mm'; $('vOut').textContent=fmt(v,2)+' m/s';
+      $('lenOut').textContent=fmt(pinTotal,1)+' mm';
+      $('lenAxOut').textContent=fmt(pinLenAx,2)+' mm';
+      $('fxLen').textContent=fmt(pinTotal,1)+' mm'; $('fxH').textContent=fmt(hA,1)+' mm'; $('fxHub').textContent=fmt(HUB,1)+' mm';
+      $('hubOut2').textContent=fmt(HUB,1)+' mm';
+      $('mD').textContent=fmt(PIND,1); $('mH').textContent=fmt(hA,1); $('mHub').textContent=fmt(HUB,1);
+      $('hAOut').textContent=fmt(hA,1)+' / '+fmt(hA-HUB,1)+' mm';
+      $('hBOut').textContent=fmt(hB-HUB,1)+' / '+fmt(hB,1)+' mm';
+      stA.className='stamp ok'; stA.childNodes[0].nodeValue='BLOCKS';
+      $('stampASub').textContent=(d===0)?'A covers the track line, the full '+fmt(hA,1)+' mm':'contact on the ball\'s flank, '+fmt(d,1)+' mm off the track line';
+      $('ovOut').textContent=fmt(overlap,2)+' mm';
+      $('clOut').textContent=fmt(gapBall2,2)+' mm';
+      $('hubOut').textContent=fmt(frac*100,0)+' % of the stroke';
+      $('aRestOut').textContent=fmt(Math.max(0,aRest),2)+' mm';
+      if(overlap>=NUDGE_OK){ stB.className='stamp ok'; stB.childNodes[0].nodeValue='NUDGE OK';
+        $('stampBSub').textContent='B pushes ball 1 while A sinks'; }
+      else if(overlap>0){ stB.className='stamp ok'; stB.childNodes[0].nodeValue='NUDGE WEAK';
+        $('stampBSub').textContent='B reaches only '+fmt(overlap,2)+' mm into ball 1'; }
+      else { stB.className='stamp no'; stB.childNodes[0].nodeValue='NO NUDGE';
+        $('stampBSub').textContent='B misses ball 1 at this offset'; }
+    } else {
+      ['dhOut','vOut','lenOut','lenAxOut','hubOut2','hAOut','hBOut','ovOut','clOut','hubOut','aRestOut',
+       'fxLen','fxH','fxHub'].forEach(function(id){ $(id).textContent='—'; });
+      stA.className='stamp no'; stA.childNodes[0].nodeValue='ROLLS PAST';
+      $('stampASub').textContent='A sits too far out to meet the ball';
+      stB.className='stamp no'; stB.childNodes[0].nodeValue='NO FUNCTION';
+      $('stampBSub').textContent='without a block there is no nudge';
+    }
+  }
+
+  /* The drilling pattern for a printed drilling jig: a sketch with dimensions, not to scale.
+     The wall face is the reference edge at the bottom, pin A the reference at X = 0. */
+  function buildTemplate(a,p){
+    var S=30, M=112;
+    var pts=[
+      {x:-p, y:a, d:BORE, s:'B'},
+      {x:0,  y:a, d:BORE, s:'A'}
+    ];
+    var xmin=pts[0].x-3.2, xmax=3.2;
+    var top=a*S;
+    var wallY=top+152;
+    var PAD=26;
+    var W=M+(xmax-xmin)*S+170, H=wallY+52;
+    var PX=function(v){ return M+(v-xmin)*S; };
+    var PY=function(v){ return wallY-v*S; };            // Y grows upward, into the track
+    var g='';
+
+    // the wall line at the bottom, hatched below it
+    var wx0=PX(xmin)-30, wx1=PX(xmax)+18;
+    g+='<line x1="'+wx0+'" y1="'+wallY+'" x2="'+wx1+'" y2="'+wallY+'" stroke="#2b2a27" stroke-width="2.2"/>';
+    for(var hx=wx0;hx<wx1;hx+=11)
+      g+='<line x1="'+hx+'" y1="'+wallY+'" x2="'+(hx-8)+'" y2="'+(wallY+9)+'" stroke="#8a8781" stroke-width="1"/>';
+    g+='<text x="'+wx0+'" y="'+(wallY+27)+'" font-size="13" font-weight="700" fill="#2b2a27">Guide wall, reference edge Y = 0</text>';
+
+    // the center line of the row of holes
+    g+='<line x1="'+(PX(xmin)-14)+'" y1="'+PY(a)+'" x2="'+PX(xmax)+'" y2="'+PY(a)+'" stroke="#b9b4a6" stroke-width="1" stroke-dasharray="7 5"/>';
+
+    // the holes
+    pts.forEach(function(q){
+      var cx=PX(q.x), cy=PY(q.y), rr=Math.max(9, q.d/2*S*0.9);
+      g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+rr+'" fill="#efeade" stroke="#2b2a27" stroke-width="1.6"/>';
+      g+='<line x1="'+(cx-rr-7)+'" y1="'+cy+'" x2="'+(cx+rr+7)+'" y2="'+cy+'" stroke="#2b2a27" stroke-width="0.9"/>';
+      g+='<line x1="'+cx+'" y1="'+(cy-rr-7)+'" x2="'+cx+'" y2="'+(cy+rr+7)+'" stroke="#2b2a27" stroke-width="0.9"/>';
+      g+='<text x="'+cx+'" y="'+(cy+rr+19)+'" font-size="13" font-weight="700" fill="#2b2a27" text-anchor="middle">'+q.s+'</text>';
+      g+='<text x="'+(cx+rr+9)+'" y="'+(cy+5)+'" font-size="12.5" fill="#534ab7" font-weight="650">⌀'+fmt(q.d,1)+'</text>';
+    });
+
+    function dimH(xa,xb,yy,lab,from){
+      var over=(yy<from)?-6:6;
+      var t='<line x1="'+xa+'" y1="'+yy+'" x2="'+xb+'" y2="'+yy+'" stroke="#6b6963" stroke-width="1" marker-start="url(#dimArr)" marker-end="url(#dimArr)"/>';
+      t+='<line x1="'+xa+'" y1="'+from+'" x2="'+xa+'" y2="'+(yy+over)+'" stroke="#b9b4a6" stroke-width="0.8"/>';
+      t+='<line x1="'+xb+'" y1="'+from+'" x2="'+xb+'" y2="'+(yy+over)+'" stroke="#b9b4a6" stroke-width="0.8"/>';
+      t+='<rect x="'+((xa+xb)/2-19)+'" y="'+(yy-9)+'" width="38" height="15" fill="#fdfcf7"/>';
+      t+='<text x="'+((xa+xb)/2)+'" y="'+(yy+3)+'" font-size="12.5" font-weight="650" fill="#2b2a27" text-anchor="middle">'+lab+'</text>';
+      return t;
+    }
+    function dimV(ya,yb,xx,lab){
+      var t='<line x1="'+xx+'" y1="'+ya+'" x2="'+xx+'" y2="'+yb+'" stroke="#6b6963" stroke-width="1" marker-start="url(#dimArr)" marker-end="url(#dimArr)"/>';
+      t+='<rect x="'+(xx-21)+'" y="'+((ya+yb)/2-9)+'" width="42" height="16" fill="#fdfcf7"/>';
+      t+='<text x="'+xx+'" y="'+((ya+yb)/2+3)+'" font-size="12.5" font-weight="650" fill="#2b2a27" text-anchor="middle">'+lab+'</text>';
+      return t;
+    }
+
+    // the X dimension above the holes, and the Y dimension from the wall on the left
+    var y1=wallY-top-42;
+    g+=dimH(PX(-p), PX(0), y1, fmt(p,1), PY(a)-24);
+    g+='<text x="'+(PX(0)+14)+'" y="'+(y1-34)+'" font-size="12" fill="#6b6963">Reference: pin A (X = 0)</text>';
+    var vx=PX(xmin)-34;
+    g+=dimV(wallY, PY(a), vx, fmt(a,1));
+    g+='<text x="'+(wx0-10)+'" y="'+(wallY+27)+'" font-size="11.5" fill="#6b6963" text-anchor="end">Y from wall</text>';
+
+    var svg=$('tplSvg');
+    svg.removeAttribute('width'); svg.removeAttribute('height');
+    svg.setAttribute('viewBox',''+(-PAD)+' '+(-PAD)+' '+(W+2*PAD)+' '+(H+2*PAD));
+    svg.setAttribute('style','width:min(860px,86vw);height:auto;background:#fdfcf7');
+    svg.innerHTML='<defs><marker id="dimArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b6963" stroke-width="1.5" stroke-linecap="round"/></marker></defs>'+g;
+    $('tplMeta').textContent=' · a = '+fmt(a,1)+' · p = '+fmt(p,1);
+  }
+
+  $('print').addEventListener('click',function(){ $('tpl').classList.add('open'); });
+  $('tplClose').addEventListener('click',function(){ $('tpl').classList.remove('open'); });
+  function tplDoc(){
+    var svg=$('tplSvg').outerHTML;
+    return '<!DOCTYPE html><html><head><meta charset="utf-8">'+
+      '<title>Separator drilling pattern</title>'+
+      '<style>@page{margin:10mm} body{margin:0;font:12px/1.45 Arial,sans-serif;color:#000}'+
+      'h1{font-size:13px;margin:0 0 3mm;font-weight:700}</style></head><body>'+
+      '<h1>Drilling pattern, ball separator · sketch, all dimensions in mm'+
+      ($('tplMeta').textContent||'')+'</h1>'+svg+'</body></html>';
+  }
+  $('tplPrint').addEventListener('click',function(){
+    var wnd=window.open('','_blank');
+    if(!wnd){ alert('Allow pop-ups for this page, or use "Save SVG".'); return; }
+    wnd.document.open(); wnd.document.write(tplDoc()); wnd.document.close();
+    wnd.focus();
+    setTimeout(function(){ wnd.print(); }, 350);
+  });
+  $('tplSave').addEventListener('click',function(){
+    var blob=new Blob([$('tplSvg').outerHTML], {type:'image/svg+xml'});
+    var url=URL.createObjectURL(blob), aEl=document.createElement('a');
+    aEl.href=url; aEl.download='separator-drilling-pattern.svg'; aEl.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  });
+  $('tpl').addEventListener('click',function(ev){ if(ev.target===$('tpl')) $('tpl').classList.remove('open'); });
+  addEventListener('keydown',function(ev){ if(ev.key==='Escape') $('tpl').classList.remove('open'); });
+
+  /* pan and zoom of the side view; the zoom stays while the controls move */
+  var fitSide=function(){};
+  (function(){
+    var sv=$('svgSide'), base={x:0,y:0,w:850,h:470}, vb={x:0,y:0,w:850,h:470};
+    function apply(){ sv.setAttribute('viewBox',vb.x+' '+vb.y+' '+vb.w+' '+vb.h); }
+    // The start view frames everything drawn, down to the cabinet floor and the foot's dimension.
+    fitSide=function(){
+      if(!sv.getBBox) return;
+      var bb=sv.getBBox(), m=10;
+      base={x:bb.x-m, y:bb.y-m, w:bb.width+2*m, h:bb.height+2*m};
+      vb={x:base.x,y:base.y,w:base.w,h:base.h}; apply();
+    };
+    function toSvg(ev){
+      var rc=sv.getBoundingClientRect();
+      var sc=Math.min(rc.width/vb.w, rc.height/vb.h);
+      var ox=(rc.width-vb.w*sc)/2, oy=(rc.height-vb.h*sc)/2;
+      return { x: vb.x+(ev.clientX-rc.left-ox)/sc, y: vb.y+(ev.clientY-rc.top-oy)/sc, sc:sc };
+    }
+    sv.addEventListener('wheel',function(ev){
+      ev.preventDefault();
+      var pt=toSvg(ev), f=(ev.deltaY>0)?1.12:1/1.12;
+      var nw=Math.max(120,Math.min(2400,vb.w*f)); f=nw/vb.w;
+      vb.w=nw; vb.h*=f;
+      vb.x=pt.x-(pt.x-vb.x)*f; vb.y=pt.y-(pt.y-vb.y)*f;
+      apply();
+    },{passive:false});
+    var drag=false,lx=0,ly=0,lsc=1;
+    sv.addEventListener('pointerdown',function(ev){
+      drag=true; lx=ev.clientX; ly=ev.clientY; lsc=toSvg(ev).sc;
+      sv.classList.add('drag'); sv.setPointerCapture(ev.pointerId);
+    });
+    sv.addEventListener('pointermove',function(ev){
+      if(!drag) return;
+      vb.x-=(ev.clientX-lx)/lsc; vb.y-=(ev.clientY-ly)/lsc;
+      lx=ev.clientX; ly=ev.clientY; apply();
+    });
+    function stop(){ drag=false; sv.classList.remove('drag'); }
+    sv.addEventListener('pointerup',stop); sv.addEventListener('pointercancel',stop);
+    sv.addEventListener('dblclick',function(){ vb={x:base.x,y:base.y,w:base.w,h:base.h}; apply(); });
+  })();
+
+  $('a').addEventListener('input',update);
+  $('fl').addEventListener('input',update);
+  $('pd').addEventListener('input',update);
+  update();
+  fitSide();
+})();
+</script>
+</body>
+</html>

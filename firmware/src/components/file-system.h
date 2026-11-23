@@ -1,7 +1,8 @@
 // Turns paths into files on the SD card and keeps a game inside its directory. The game's path
 // "best" becomes "/games/<id>/best". A path that leaves the directory gives a file whose every
 // request fails. A full path reaches any place of the card for the components and the host.
-// Getting a file touches no card.
+// Before the first game the host names the card's root, where the machine's files lie. Getting a
+// file touches no card.
 //
 // The files and their requests come from drivers/storage-service.h.
 //
@@ -18,10 +19,12 @@ public:
 
     /// Gets a file by its path inside the running game's directory.
     ///
+    /// While the host has named the card's root in place of a game, the path counts from there.
+    ///
     /// @param path  Names the file inside the directory. "best" gives "/games/<id>/best".
     /// @return      A file whose every request fails for an empty path, a path from the card's
     ///              root, a path with "..", a full path too long for the storage driver, and
-    ///              before use() named a game.
+    ///              before the host named a game or the card's root.
     /// @note        Touches no card.
     FileWriter open(const char* path) const;
 
@@ -41,8 +44,19 @@ private:
     ///
     /// @param game  The game's id, such as "a". It stays in place while the game runs.
     /// @note        The host only, while no file request of the game before is pending.
-    void use(const char* game) { running = game; }
+    void use(const char* game) {
+        running = game;
+        root = false;
+    }
+
+    /// Names the card's root as the directory open() opens files in, until use() names a game.
+    ///
+    /// "video/intro.rgb" then gives "/video/intro.rgb".
+    ///
+    /// @note  The host only, for the machine's files, while no file request of a game is pending.
+    void useRoot() { root = true; }
 
     StorageService& storage;
     const char* running = nullptr;   // the running game's id
+    bool root = false;               // open() counts from the card's root
 };

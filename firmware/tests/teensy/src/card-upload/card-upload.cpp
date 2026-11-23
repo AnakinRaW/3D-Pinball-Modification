@@ -24,6 +24,12 @@ constexpr size_t HEADER_BYTES = 64;      // the longest command line
 constexpr size_t TEXT = 96;
 
 constexpr char PATH[] = "/tests/card-upload/file.bin";
+constexpr size_t SENT_BYTES = FILE_BYTES + 4 * HEADER_BYTES;   // the file with its commands
+
+// The test's bytes lie in the PSRAM, so RAM1 and the heap in RAM2 keep their room.
+EXTMEM static uint8_t sent[SENT_BYTES];
+EXTMEM static uint8_t file[FILE_BYTES];
+EXTMEM static uint8_t back[FILE_BYTES + 1];
 
 /// The computer's side: the bytes it has sent and the answers it got.
 class MemoryLink final : public UploadLink {
@@ -50,7 +56,6 @@ public:
     uint32_t answers = 0;
 
 private:
-    uint8_t sent[FILE_BYTES + 4 * HEADER_BYTES] = {};
     size_t length = 0;
     size_t taken = 0;
 };
@@ -58,10 +63,8 @@ private:
 static void noRestart() {}
 
 static FileSystem files(storage);
-DMAMEM static MemoryLink link;
+static MemoryLink link;
 DMAMEM static CardUpload upload(link, files, noRestart);
-static uint8_t file[FILE_BYTES];
-static uint8_t back[FILE_BYTES + 1];
 static char seen[TEXT];
 
 // Gets the CRC-32 of a run of bytes as zlib.crc32() computes it.

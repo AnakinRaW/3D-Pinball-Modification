@@ -107,6 +107,14 @@ public:
     /// @param stepMs  The time from lamp to lamp, in ms.
     /// @param back    The paint the pattern moves over.
     LampRange& run(Pattern p, Direction d, Paint c, uint16_t stepMs, Paint back = Color::NONE);
+    /// Dates the range's effects back to @p startMs, so they run on as if they had begun then.
+    ///
+    /// A blink, a pulse or a run shows at once what it would show at this point of its rhythm. A
+    /// fade goes on from the color it began with now, as far along as the time since @p startMs.
+    /// The end that lasting() sets stays where it is.
+    ///
+    /// @param startMs  A millis() value. One after now counts as now.
+    LampRange& since(uint32_t startMs);
     /// Removes the range's effects @p ms from now.
     ///
     /// @param ms  The time until they go, in ms.
@@ -141,6 +149,13 @@ public:
     /// @param ms  How long the fade takes, in ms.
     Lamp& fade(Paint c, uint16_t ms) {
         one.fade(c, ms);
+        return *this;
+    }
+    /// Dates the lamp's effects back to @p startMs, as LampRange::since() does.
+    ///
+    /// @param startMs  A millis() value. One after now counts as now.
+    Lamp& since(uint32_t startMs) {
+        one.since(startMs);
         return *this;
     }
     void lasting(uint16_t ms) { one.lasting(ms); }
@@ -191,6 +206,10 @@ public:
     /// @param mmPerS  The speed along the strip, in millimeters a second.
     /// @param back    The paint the pattern moves over.
     Strip& run(Pattern p, Direction d, Paint c, uint16_t mmPerS, Paint back = Color::NONE);
+    /// Dates the strip's effect back to @p startMs, as LampRange::since() does.
+    ///
+    /// @param startMs  A millis() value. One after now counts as now.
+    Strip& since(uint32_t startMs);
     void lasting(uint16_t ms);
     void clear();
 

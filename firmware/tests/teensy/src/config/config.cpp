@@ -1,8 +1,8 @@
 // The config program of docs/firmware/testing.md. It runs the config component on the card in the
 // Teensy's socket, with a config file it writes there itself.
 //
-//   card  a config reads the file, sets two values and saves. A second config reads the saved file
-//         and gets every value of the first, the unknown entry included
+//   card  a config reads the file, sets two values and saves. Read again from the saved file, it
+//         gets every value it had, the unknown entry included
 //   heap  begin() gives back every byte libyaml took from the heap
 //
 // Wiring: none. The card sits in the Teensy's socket. The tests leave their file in /tests/config/
@@ -38,8 +38,8 @@ constexpr char SAVED[] = "servo:\n"
                          "unknown: text\n";
 
 static FileSystem files(storage);
+// One config serves both reads, so the heap keeps room for libyaml.
 DMAMEM static Config first(files, PATH);
-DMAMEM static Config second(files, PATH);
 static char seen[TEXT];
 static char wanted[TEXT];
 
@@ -108,13 +108,13 @@ static void testCard() {
         test::fail("another file", "the saved values with the unknown entry");
         return;
     }
-    second.begin();
-    if (!holds(second, "servo.start_deg", 7) || !holds(second, "servo.speed_deg_s", 80) ||
-        !holds(second, "solenoid.pull_ms.3", 15)) {
+    first.begin();
+    if (!holds(first, "servo.start_deg", 7) || !holds(first, "servo.speed_deg_s", 80) ||
+        !holds(first, "solenoid.pull_ms.3", 15)) {
         return;
     }
-    if (second.count("solenoid.pull_ms") != 4) {
-        snprintf(seen, sizeof seen, "%u entries", unsigned(second.count("solenoid.pull_ms")));
+    if (first.count("solenoid.pull_ms") != 4) {
+        snprintf(seen, sizeof seen, "%u entries", unsigned(first.count("solenoid.pull_ms")));
         test::fail(seen, "4 entries");
         return;
     }

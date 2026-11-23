@@ -96,6 +96,8 @@ Two calls remove an effect before its mode ends.
 
 Every effect call returns its lamps, so `lasting(ms)` can follow it, as in `flash.perimeter.pulse(a, b, periodMs).lasting(ms)`.
 
+`since(startMs)` lets an effect started again run on in step, as if it had begun at `startMs`. A fade started again begins at the color the lamp shows.
+
 `Color::NONE` is the color for "leave this lamp to the effect below". `run()` takes it where a call leaves out `back`, and `blink()` shows it while off. `Color::BLACK` covers the effect below instead.
 
 ## Brightness

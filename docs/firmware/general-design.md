@@ -118,5 +118,5 @@ Four parts of the firmware order their entries with a priority list. The [lamps 
 5. the [config's](components/config.md) `begin()`, which reads the machine's settings, and the solenoids' `configure()`, which hands them their pull times;
 6. the `configure()` and `begin()` of every other driver, the lighting's ahead of the IR's and the display's ahead of the touch's;
 7. the `begin()` of the screen, which starts LVGL, and of the video player, then the lamps' `configure()` and `begin()`, which size the lamps to the lighting's chains;
-8. the game host's `begin()`;
+8. the game host's `begin()`, which starts the [boot film](game-abstraction.md#host);
 9. the main loop, which hands the queued events to the host, updates the host, the [card upload](components/card-upload.md), the logger, the screen and the lamps, sends the [debug output](logging.md#debug-output), calls `yield()` and feeds the watchdog. The screen runs the video player through LVGL.

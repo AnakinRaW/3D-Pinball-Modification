@@ -44,6 +44,8 @@ extern const Program CONFIG;
 extern const Program CARD_UPLOAD;
 extern const Program LAMPS;
 extern const Program SOUNDS;
+extern const Program SCREEN;
+extern const Program VIDEO_PLAYER;
 extern const Program LOGGER;
 extern const Program START_UP;
 
@@ -54,7 +56,8 @@ static const Program* const PROGRAMS[] = {
     &STORAGE,       &FILE_CHANNEL, &WS2812_FLEXIO2, &LIGHTING,
     &I2C_BUS,       &SERVO,        &AUDIO,          &DISPLAY_PROGRAM,
     &TOUCH_PROGRAM, &EVERY_DRIVER, &CONFIG,         &CARD_UPLOAD,
-    &LAMPS,         &SOUNDS,       &LOGGER,         &START_UP};
+    &LAMPS,         &SOUNDS,       &SCREEN,         &VIDEO_PLAYER,
+    &LOGGER,        &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
@@ -140,7 +143,13 @@ static bool firstResult() {
     return true;
 }
 
+EXTMEM static uint8_t scratchBytes[test::SCRATCH_BYTES] __attribute__((aligned(32)));
+
 namespace test {
+
+uint8_t* scratch() {
+    return scratchBytes;
+}
 
 bool soak() {
     return soakRun;

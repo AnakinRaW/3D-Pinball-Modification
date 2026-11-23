@@ -55,9 +55,11 @@ public:
     AppendStatus state = AppendStatus::IDLE;
 };
 
-DMAMEM static char firstBytes[FILE_BYTES];
+// The log's buffer and the first file lie in the PSRAM, as the firmware's log buffer does. RAM2
+// holds LVGL's buffers.
+EXTMEM static char firstBytes[FILE_BYTES];
 DMAMEM static char secondBytes[8];
-DMAMEM static uint8_t buffer[Logger::BUFFER_BYTES];
+EXTMEM static uint8_t buffer[Logger::BUFFER_BYTES];
 static RamFile first(firstBytes);
 static RamFile second(secondBytes);
 static Logger logger(first, second, buffer, sizeof buffer);

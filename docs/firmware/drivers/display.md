@@ -10,17 +10,23 @@ The rectangle's left edge and its width go in steps of 16 pixels, since the driv
 
 The caller hands `send()` a function. The driver calls it from its interrupt once the last pixel has left the bus. Until then the buffer has to stay as it is.
 
+The driver sends a rectangle column by column, as the panel builds its picture. A whole screen then [tears](../../parts/display/design.md#limitations) in only 1.2 % of the screens sent. The pixels have to lie in RAM1 or RAM2, since the PSRAM serves reads down the columns too slowly.
+
 ## Start-up
 
 `begin()` waits until 285 ms after power-up, as [`design.md`](../../parts/display/design.md#appendix-derivations) derives. It then resets the panel by command, since a restart of the Teensy can find the panel awake. It sends the power, frame rate and gamma setup that the ILI9341 libraries send, sets the panel to RGB565 in landscape and ends with a black screen.
 
 FlexIO3 shares its clock with FlexIO2, which the [lighting](lighting.md) drives at the same 120 MHz. `begin()` returns false when FlexIO2 runs that clock at another rate.
 
+## Setting FlexIO3 up
+
+The driver sets FlexIO3 up anew before each run of commands and each run of pixels, starting with FlexIO3's software reset. It holds the reset for 1 µs and waits 1 µs after it. Without the waits FlexIO3 dropped the first register write after the reset on the bench. A restart could then leave the panel asleep, with a white screen.
+
 ## Performance & Memory Usage
 
 Sending the whole screen once takes 12.8 ms.
 
-While the driver sends, it takes at most 11.2 % of the processor, as measured on the bench.
+While the driver sends, it takes at most 16.0 % of the processor, as measured on the bench.
 
 The driver needs no memory for pixels. It sends straight from the two buffers LVGL draws into, which the [screen component](../components/screen.md#drawing) keeps in RAM2.
 
