@@ -275,7 +275,7 @@ The program `file-channel` checks the [file channel](file-channel.md). Its compu
 | `slow-card` | computer | Hold the reads back while `take()` asks for more | `take()` gives fewer bytes and later the rest, with nothing missing or doubled |
 | `restart` | computer | Start a new file while a read of the old one is on its way, then let that read end | No byte of the old file comes out |
 | `stop` | computer | Call `stop()` while a read is on its way, then let it end | `take()` gives nothing, and `ended()` is true |
-| `failed-read` | computer | Let a read fail partway through a file | The bytes before it come out, and `ended()` turns true after them |
+| `failed-read` | computer | Let a read fail partway through a file, then start a file that runs out | The bytes before the failed read come out, `ended()` turns true after them, and `failed()` is true. The file that runs out ends with `failed()` false |
 | `skip` | computer | Take bytes with `to` set to `nullptr` | The bytes are skipped, and the next `take()` goes on behind them |
 | `nothing` | computer | Start a file the card does not hold, and leave another channel unstarted | `ended()` is true at once for both |
 | `high-first` | Teensy | Queue normal reads, then read through a channel of high priority | The channel's read ends before every normal read that had not started |
@@ -439,7 +439,7 @@ The program `audio` checks the [audio driver](drivers/audio.md). Its computer te
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `wav-chunks` | computer | Play files of several lengths, with odd-sized and long chunks ahead of the data chunk and behind it | Every sample of the data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
-| `wav-format` | computer | Play a stereo file, a file at another sample rate, a RIFF file that is no WAV, a file without a fmt chunk, a missing file, a file with no name, and a file whose read fails partway | Each ends with its number. The failed read ends behind the samples before it |
+| `wav-format` | computer | Play a stereo file, a file at another sample rate, a RIFF file that is no WAV, a file without a fmt chunk, a missing file, a file with no name, a file cut short inside its samples, and a file whose read fails partway | Each ends with its number and the code of its end: the first four as no WAV, the missing file and the one with no name as missing, the short file as cut short and the failed read as a failed read. The failed read ends behind the samples before it |
 | `wav-ffmpeg` | computer | Play a sound that the command of [`media.md`](../../assets/media.md#sounds) made from a stereo MP3 at another sample rate | Every sample of its data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
 | `wav-loop` | computer | Play a file with chunks around its data chunk in a loop for forty blocks | After the first block the samples run through the file again and again with no gap, and no end comes |
 | `card-waits` | computer | Play a file while the card brings one chunk every fifty blocks | The blocks without data are silent, and every sample comes once and in order |
@@ -578,6 +578,7 @@ The program `sounds` checks the [sounds component](components/sounds.md). Its co
 | `volume` | computer | Set both volumes across 0 to 1 and outside | The driver gets the square of each percentage, and a value outside counts as the nearer end |
 | `start-volumes` | computer | Start with both starting volumes at 1 | The music starts at 1 and the effects at 0, with one log line |
 | `names` | computer | Play names in the game's audio directory, and one too long | Each plays `/games/<id>/audio/<name>`, and the long one finds no file |
+| `failed-files` | computer | With a log begun, play an effect that plays out, an effect the card does not hold, an effect in another format and a mode's track the card does not hold | The log holds one warning for each of the three failed files, naming its path and why it failed. The missing track still ends with `MUSIC_ENDED`, and the effect that plays out writes nothing |
 | `reset` | computer | Play on every channel with tracks waiting below, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back, and no track goes on |
 | `handover` | Teensy | Play a mode's track, lay a video's sound over it, and let the video's sound end | The tap records the track from its first sample up to where it was paused, the video's sound from its first sample, then the track going on from the sample where it was paused. The track glides out without a jump between neighboring samples, each sound glides in across its first block, and no `MUSIC_ENDED` comes |
 | `resume` | bench | Play music, a video's sound in the middle of it, and let the video's sound end | The music goes on where it stopped, without a click |

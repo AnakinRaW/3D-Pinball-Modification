@@ -2,6 +2,7 @@
 #include "core/clock.h"
 #include "logging/debug-log.h"
 #include "logging/debug-trace.h"
+#include "logging/logger.h"
 #include <output_i2s2.h>
 #include <string.h>
 
@@ -19,9 +20,9 @@ ChannelPlayer::ChannelPlayer(uint8_t index, uint8_t* ring)
     : AudioStream(0, nullptr), sound(ring), index(index) {}
 
 void ChannelPlayer::update() {
-    uint32_t ended = 0;
+    SoundEnd ended{};
     const bool sounding = sound.play(block, ended);
-    if (ended != 0 && out != nullptr) {
+    if (ended.number != 0 && out != nullptr) {
         out->publish<DriverEventType::SOUND_ENDED>(nowUs(), index, ended);
     }
     if (!sounding) {
@@ -86,24 +87,24 @@ bool AudioDriver::begin() {
     }
     begun = true;
     if (owner != nullptr) {
-        DEBUG_LOG("audio: another audio driver holds the I2S2 port");
+        logWarning("audio", "another audio driver holds the I2S2 port");
         return false;
     }
     EventQueue::Producer* out = nullptr;
     if (!queue.attach(storage, QUEUE_DEPTH, out)) {
-        DEBUG_LOG("audio: the event queue takes no further queue");
+        logWarning("audio", "the event queue takes no further queue");
         return false;
     }
     owner = this;
     for (uint8_t i = 0; i < CHANNELS; ++i) {
         players[i].out = out;
         if (wires[i].connect(players[i], 0, mixer, i) != 0) {
-            DEBUG_LOG("audio: channel %u does not connect to the mixer", i);
+            logWarning("audio", "channel %u does not connect to the mixer", i);
             return false;
         }
     }
     if (wires[CHANNELS].connect(mixer, 0, level, 0) != 0) {
-        DEBUG_LOG("audio: the mixer does not connect to the master gain");
+        logWarning("audio", "the mixer does not connect to the master gain");
         return false;
     }
     level.gain(MASTER_GAIN);
@@ -137,7 +138,8 @@ uint32_t AudioDriver::start(uint8_t channel, const Position& from) {
         DEBUG_LOG("audio: play() on channel %u refused, begun %d", channel, begunOk);
         return 0;
     }
-    count = count + 1 == 0 ? 1 : count + 1;
+    // The number fits the 24 bits of SOUND_ENDED's payload, and 0 names no sound.
+    count = count + 1 == SOUND_NUMBERS ? 1 : count + 1;
     players[channel].sound.request(from, count);
     return count;
 }

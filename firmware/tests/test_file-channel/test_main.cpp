@@ -8,7 +8,8 @@
 //   slow-card    reads held back give fewer bytes, and later the rest
 //   restart      a new file drops the read of the old one still on its way
 //   stop         stop() drops the file and its read on its way
-//   failed-read  the bytes ahead of a failed read come out, then ended() turns true
+//   failed-read  the bytes ahead of a failed read come out, then ended() turns true, and
+//                failed() tells the failure from a file that ran out
 //   skip         take() with nullptr skips bytes
 //   nothing      a missing file and a channel never started count as ended at once
 //
@@ -206,14 +207,24 @@ static void testFailedRead() {
     channel.available();
     rig.service.serveNext();
     channel.available();
+    TEST_ASSERT_FALSE(channel.failed());
     rig.card.failNext = 1;
     rig.service.serveNext();
     TEST_ASSERT_EQUAL_UINT32(64, channel.available());
     TEST_ASSERT_FALSE(channel.ended());
+    TEST_ASSERT_TRUE(channel.failed());
     char buffer[100];
     TEST_ASSERT_EQUAL_UINT32(64, channel.take(buffer, sizeof buffer));
     TEST_ASSERT_TRUE(std::string(buffer, 64) == rig.card.files["/f"].substr(0, 64));
     TEST_ASSERT_TRUE(channel.ended());
+    // A file that runs out ends without a failure, and a new start forgets the failure.
+    rig.card.files["/g"] = pattern(10);
+    channel.start(rig.service.open("/g"), false);
+    TEST_ASSERT_FALSE(channel.failed());
+    rig.service.serveAll();
+    TEST_ASSERT_EQUAL_UINT32(10, channel.take(buffer, sizeof buffer));
+    TEST_ASSERT_TRUE(channel.ended());
+    TEST_ASSERT_FALSE(channel.failed());
 }
 
 static void testSkip() {

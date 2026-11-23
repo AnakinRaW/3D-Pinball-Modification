@@ -16,6 +16,8 @@
 //   volume           the driver gets the square of each volume inside 0 to 1
 //   start-volumes    begin() lowers the effects until the two volumes squared add up to 1
 //   names            a name plays from the game's audio directory, a long one finds no file
+//   failed-files     a missing file and a file in another format each write a warning with
+//                    the file's name, a sound that plays out none
 //   reset            reset() silences every channel, forgets every track and sets the volumes
 //
 // Run: pio test -e computer, which runs in CI as well.
@@ -512,6 +514,29 @@ static void testNames() {
     TEST_ASSERT_TRUE(ended);
 }
 
+static void testFailedFiles() {
+    Rig rig;
+    rig.card.files["/games/a/audio/bad.wav"] = std::string(200, 'x');
+    const size_t before = soundsWarnings();
+    rig.sounds.play("e1.wav");
+    rig.sounds.play("gone.wav");
+    rig.sounds.play("bad.wav");
+    rig.sounds.music(LOW, "lost.wav");
+    rig.blocks(SETTLE);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+    for (const char* line : {"W sounds /games/a/audio/gone.wav is missing or empty",
+                             "W sounds /games/a/audio/bad.wav is no WAV",
+                             "W sounds /games/a/audio/lost.wav is missing or empty"}) {
+        TEST_ASSERT_TRUE_MESSAGE(logA.content.find(line) != std::string::npos, line);
+    }
+    // The missing track still ends as a track that played out.
+    TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(EventType::MUSIC_ENDED), uint8_t(rig.events[0].type));
+    // The effect that plays out writes nothing.
+    rig.blocks(4 * TRACK_BLOCKS + 10);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+}
+
 static void testReset() {
     Rig rig;
     rig.sounds.music(LOW, "a.wav");
@@ -556,6 +581,7 @@ int main() {
     RUN_TEST(testVolume);
     RUN_TEST(testStartVolumes);
     RUN_TEST(testNames);
+    RUN_TEST(testFailedFiles);
     RUN_TEST(testReset);
     return UNITY_END();
 }

@@ -50,7 +50,8 @@ public:
     /// Takes the end of a sound.
     ///
     /// The end of a mode's track becomes MUSIC_ENDED, and the track below goes on. The end of an
-    /// effect, of a video's sound and of a track already stopped or replaced makes no event.
+    /// effect, of a video's sound and of a track already stopped or replaced makes no event. A
+    /// sound whose file could not be played writes a warning with the file's name to the log.
     ///
     /// @return  True for every SOUND_ENDED, false for any other event.
     bool translate(const DriverEvent& in, PinballEvents& out) override;
@@ -180,6 +181,12 @@ private:
     /// Removes the tracks @p pred holds for. On top, the track below goes on.
     template <typename Pred> void drop(Pred pred);
 
+    /// Writes a warning for a sound whose file could not be played.
+    ///
+    /// @param channel  The channel the sound played on.
+    /// @param end      The sound's number and how it ended.
+    void warnFailed(uint8_t channel, SoundEnd end);
+
     AudioDriver& audio;
     FileSystem& files;
     Settings settings;
@@ -187,7 +194,9 @@ private:
     uint32_t onChannel = 0;   // the number of the track the music channel was handed last
     uint32_t effects = 0;     // counts the effects play() has started
     uint32_t startedAs[AudioDriver::CHANNELS] =
-        {};                    // which count each channel's effect started at
+        {};                                          // which count each channel's effect started at
+    FileReader effectFiles[AudioDriver::CHANNELS];   // the file of each channel's last effect
+    uint32_t effectNumbers[AudioDriver::CHANNELS] = {};   // the driver's number for that effect
     float musicGain = 0;       // the driver's volume for the music and a video's sound
     float effectsGain = 0;     // the driver's volume for the effects
     PinballEvent ended = {};   // the MUSIC_ENDED that translate() points at

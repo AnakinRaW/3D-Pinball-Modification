@@ -11,6 +11,7 @@
 #include "core/clock.h"
 #include "core/ring.h"
 #include <string.h>
+#include <limits>
 #include <type_traits>
 
 enum class DriverEventType : uint16_t {
@@ -27,8 +28,8 @@ enum class DriverEventType : uint16_t {
     TOUCH_HELD,
     /// The finger has left the screen. The payload is where it was last.
     TOUCH_UP,
-    /// A sound has played to its end, or its file could not be read. The source is the audio
-    /// channel, and the payload is the number play() gave the sound.
+    /// A sound has played to its end, or its file could not be played. The source is the audio
+    /// channel, and the payload is a SoundEnd.
     SOUND_ENDED,
 };
 
@@ -52,6 +53,29 @@ struct TouchPoint {
     uint16_t y;
 };
 
+/// How a sound ended.
+enum class SoundEndCode : uint8_t {
+    PLAYED,        // the sound played to its end
+    NO_FILE,       // the file is missing, empty or has no name
+    NOT_WAV,       // the file holds no WAV in the format the channel plays
+    CUT_SHORT,     // the file ends ahead of the end of its samples
+    READ_FAILED,   // a read of the card failed
+};
+
+/// The bits of a payload that hold a sound's number. The code takes the rest.
+constexpr uint8_t SOUND_NUMBER_BITS = 24;
+constexpr uint8_t SOUND_CODE_BITS = std::numeric_limits<uint32_t>::digits - SOUND_NUMBER_BITS;
+/// The numbers a sound can take, which SoundEnd::number holds. 0 names no sound.
+constexpr uint32_t SOUND_NUMBERS = 1u << SOUND_NUMBER_BITS;
+
+/// The payload of SOUND_ENDED. Packed into a payload, the number takes the lower 24 bits and the
+/// code the upper 8.
+struct SoundEnd {
+    uint32_t number : SOUND_NUMBER_BITS;   // the number play() gave the sound, 0 for none
+    SoundEndCode code : SOUND_CODE_BITS;   // how the sound ended
+};
+static_assert(sizeof(SoundEnd) == sizeof(uint32_t), "a SoundEnd fills a payload");
+
 /// Names the payload of each type, one per type.
 template <DriverEventType TAG> struct DriverPayloadOf;
 template <> struct DriverPayloadOf<DriverEventType::DEVICE_FAILED> {
@@ -73,7 +97,7 @@ template <> struct DriverPayloadOf<DriverEventType::TOUCH_UP> {
     using type = TouchPoint;
 };
 template <> struct DriverPayloadOf<DriverEventType::SOUND_ENDED> {
-    using type = uint32_t;   // the number play() gave the sound
+    using type = SoundEnd;
 };
 
 /// Gets the payload of an event of type TAG.
