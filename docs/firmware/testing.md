@@ -218,6 +218,7 @@ The program `device-monitor` checks the [device monitor](error-handling.md#devic
 | `changes` | computer | Let the fake driver report parts failing and recovering, with error codes | Each change gives one `DEVICE_FAILED` with the device, the part and the code, or one `DEVICE_RECOVERED`, and an unchanged answer gives nothing |
 | `full-queue` | computer | Let parts fail while the monitor's queue is full, then empty it | Each part is reported at the first check after the queue has room |
 | `source` | computer | Pack the source of every device and part | `faultDevice()` and `faultPart()` give back what `faultSource()` packed |
+| `log-line` | computer | Hand `logFault()` a `DEVICE_FAILED`, a `DEVICE_RECOVERED` and a touch event with a log begun | The log holds a warning that names the device, the part and the error code, and a line of the level INFO that names the recovered part. The touch event writes nothing |
 
 ### PSRAM
 
