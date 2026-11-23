@@ -552,22 +552,6 @@ The program `config` checks the [config component](components/config.md). Its co
 | `card` | Teensy | Write a config file to the card, start a config on it, set a value and add a list entry, save, then start a second config on the saved file | The saved file holds both changes and the entry nothing reads, and the second config reads every value of the first |
 | `heap` | Teensy | Start a config on the file of `card` and compare the heap's use before and after | The heap holds as many bytes after `begin()` as before |
 
-### Card upload
-
-The program `card-upload` checks the [card upload](components/card-upload.md). Its computer tests play the computer through a link in memory and run on a fake card. Its `Teensy` test writes its file to `/tests/card-upload/` on the card.
-
-| Test | Runs on | Steps | Passes when |
-|---|---|---|---|
-| `put` | computer | Send a file in three chunks, then a shorter file to the same path | Each chunk is answered once it is on the card, the last one with `CARD DONE`, and the card holds each file whole. The shorter file leaves nothing of the longer one |
-| `empty` | computer | Send a file of no bytes over a file on the card | `CARD DONE 0` answers, and the file on the card is empty |
-| `checksum` | computer | Send a chunk with a wrong checksum, then the same chunk with the checksum `zlib.crc32()` gives | The first is refused with nothing written, and the second lands |
-| `refusals` | computer | Send paths that are not full, hold `..` or are too long, a size that is not a number, a chunk without a file, an unknown command, a line without `CARD`, a line too long, and chunks that are empty, too large, past the file or malformed | Each command is refused with `CARD FAIL` and ends the file it came in. The line without `CARD` and the line too long get no answer |
-| `card-fails` | computer | Send a chunk the card refuses to write | `CARD FAIL` answers, and the file ends |
-| `quiet` | computer | Start a file and stay silent, then start one and stop inside a chunk | Each ends with `CARD FAIL` once 2 s have passed without a byte, and not before |
-| `restart` | computer | Send `CARD RESTART`, then send it inside a file | The restart comes 100 ms after `CARD RESTARTING`, and not before. Inside a file, the file ends first with `CARD FAIL` |
-| `slow` | computer | Send a file whose bytes arrive one at a time | The card holds the file whole |
-| `card` | Teensy | Send a file of three chunks through a link in memory onto the card, then read it back | The answers end with `CARD DONE`, the card holds the file whole, and no step of the upload takes longer than a millisecond |
-
 ### Lamps
 
 The program `lamps` checks the [lamps component](components/lamps.md). Its computer tests run on a fake lighting driver and a stand-in of FastLED's colors, palettes and curves.

@@ -32,12 +32,11 @@ private:
     friend class GameHost;
     friend class Logger;
     friend class Config;
-    friend class CardUpload;
 
     /// Gets a file at any place of the card.
     ///
     /// @param path  The file's full path, such as "/config.yml".
-    /// @note        Touches no card. The host, the logger, the config and the card upload only.
+    /// @note        Touches no card. The host, the logger and the config only.
     FileWriter openFull(const char* path) const;
 
     /// Names the game in whose directory open() opens files.

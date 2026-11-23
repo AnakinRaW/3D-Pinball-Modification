@@ -2,8 +2,7 @@
 // the compiler removes every DEBUG_LOG() call, so no output stays behind in the firmware for the
 // machine.
 // A line goes into a buffer and leaves it from the main loop, so no task ever waits for USB.
-// Lines from two tasks never mix. serialLine() sends a line in every build, such as an answer to
-// the computer.
+// Lines from two tasks never mix.
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
@@ -31,19 +30,10 @@ void debugLog(const char* format, ...) __attribute__((format(printf, 1, 2)));
 /// @param n     The length of the line.
 void debugLogLine(const char* line, size_t n);
 
-/// Sends a line to USB serial in every build, with the debug lines and without mixing with them.
-///
-/// When the buffer is full, the oldest waiting lines give way to it.
-///
-/// @param line  The line with its line break.
-/// @param n     The length of the line.
-/// @note        Any task may call it. It never waits.
-void serialLine(const char* line, size_t n);
-
 /// Turns the waiting notes of DEBUG_TRACE() into lines, then sends as many waiting lines to USB
 /// serial as it takes without waiting.
 ///
-/// A release build has no debug lines and no notes, so it sends the lines of serialLine() alone.
+/// Does nothing in a release build.
 ///
 /// @return  The count of bytes sent.
 /// @note    The main loop calls it in every pass. Never from an interrupt.

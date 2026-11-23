@@ -1,24 +1,27 @@
 """Copies the repository's files for the memory card onto the card in the Teensy, over USB.
 
-The firmware's card upload takes each file in chunks with a checksum and answers each chunk once
-it is on the card. Every file under firmware/src/resources/ but its README goes to the card's root
-with its path below that folder, so config.yml becomes /config.yml. Every file under games/ goes to
-/games/ with its path. A file on the card that the upload writes is replaced. Every other file on
-the card stays. The Teensy restarts at the end, so the machine starts with the new files.
+The firmware takes no files over USB, so the script flashes the program in card-upload/ for the
+time of the copy, sends it the files and flashes the firmware back. The program takes each file in
+chunks with a checksum and answers each chunk once it is on the card. Every file under
+firmware/src/resources/ but its README goes to the card's root with its path below that folder, so
+config.yml becomes /config.yml. Every file under games/ goes to /games/ with its path. A file on
+the card that the copy writes is replaced. Every other file on the card stays.
 
     python firmware/tools/card-upload.py                   firmware/src/resources/ and games/
     python firmware/tools/card-upload.py <file>            the named files of the repository
     python firmware/tools/card-upload.py --port COM3       a given port instead of the first Teensy
-    python firmware/tools/card-upload.py --no-restart      leaves the Teensy running
+    python firmware/tools/card-upload.py --env release     flashes the release firmware back
+    python firmware/tools/card-upload.py --no-firmware     leaves the upload program on the Teensy
 
 python -m platformio run -t uploadcard runs it with no arguments.
 
-Exit code 0 when every file is on the card, 1 when one is not, 2 when no Teensy answers.
-Design: docs/firmware/components/card-upload.md.
+Exit code 0 when every file is on the card, 1 when one is not, 2 when a flash fails or no Teensy
+answers. card-upload/src/main.cpp gives the commands and the answers.
 """
 
 import argparse
 import os
+import subprocess
 import sys
 import time
 import zlib
@@ -27,20 +30,29 @@ import serial
 import serial.tools.list_ports
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-RESOURCES = os.path.join(ROOT, "firmware", "src", "resources")   # the card's root
+PROGRAM = os.path.join(ROOT, "firmware", "tools", "card-upload")   # the upload program
+RESOURCES = os.path.join(ROOT, "firmware", "src", "resources")    # the card's root
 GAMES = os.path.join(ROOT, "games")                               # the card's /games/
-SKIPPED = {"README.md"}   # the folder's description, which stays in the repository
+SKIPPED = {"README.md"}    # the folder's description, which stays in the repository
 TEENSY_VID = 0x16C0        # PJRC's USB vendor id
 BAUD = 115200              # ignored by USB serial, needed by pyserial
-CHUNK_BYTES = 4096         # CardUpload::CHUNK_BYTES
+CHUNK_BYTES = 4096         # CHUNK_BYTES of the upload program
 ANSWER_TIMEOUT_S = 10      # longer than any write of a chunk takes on the card
-OPEN_TIMEOUT_S = 10        # the Teensy's start after a flash
+OPEN_TIMEOUT_S = 20        # the Teensy's start after a flash
 RETRIES = 3                # the times a chunk whose checksum failed is sent again
 PREFIX = "CARD "
 
 
 class Failure(Exception):
     pass
+
+
+def flash(project, env=None):
+    """Builds and flashes a PlatformIO project onto the Teensy."""
+    command = [sys.executable, "-m", "platformio", "run", "-d", project, "-t", "upload"]
+    if env:
+        command += ["-e", env]
+    return subprocess.run(command).returncode == 0
 
 
 def find_port():
@@ -64,7 +76,7 @@ def open_port(name):
 
 
 class Link:
-    """The serial port to the firmware, read as answers. Debug lines in between are passed over."""
+    """The serial port to the upload program, read as answers."""
 
     def __init__(self, port):
         self.port = port
@@ -95,12 +107,12 @@ def put(link, card_path, data):
         if answer != "DONE 0":
             raise Failure(f"{card_path}: {answer}")
         return
-    if answer != "READY":
+    if answer != "OPEN":
         raise Failure(f"{card_path}: {answer}")
     at = 0
     while at < len(data):
         chunk = data[at:at + CHUNK_BYTES]
-        for attempt in range(RETRIES):
+        for _ in range(RETRIES):
             link.send(f"{PREFIX}DATA {len(chunk)} {zlib.crc32(chunk):08x}\n".encode() + chunk)
             answer = link.answer()
             if answer != "FAIL checksum":
@@ -132,12 +144,43 @@ def card_files(named):
     return [(path, card_path(path)) for path in paths]
 
 
+def copy(port_name, files):
+    """Sends the files to the upload program and gets how many failed, None where none went."""
+    port = open_port(port_name)
+    if port is None:
+        print("no Teensy on USB serial")
+        return None
+    link = Link(port)
+    failed = 0
+    with port:
+        try:
+            answer = link.answer()
+        except Failure as e:
+            print(e)
+            return None
+        if answer != "READY":
+            print(answer)
+            return None
+        for path, card in files:
+            with open(path, "rb") as f:
+                data = f.read()
+            try:
+                put(link, card, data)
+                print(f"{card}: {len(data)} bytes")
+            except Failure as e:
+                print(e)
+                failed += 1
+    return failed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("files", nargs="*", help="files under firmware/src/resources/ or games/, "
                         "by default all of them")
     parser.add_argument("--port", help="the Teensy's serial port, by default the first one found")
-    parser.add_argument("--no-restart", action="store_true", help="leaves the Teensy running")
+    parser.add_argument("--env", help="the firmware's environment flashed back, by default debug")
+    parser.add_argument("--no-firmware", action="store_true",
+                        help="leaves the upload program on the Teensy")
     args = parser.parse_args()
 
     try:
@@ -145,25 +188,15 @@ def main():
     except Failure as e:
         print(e)
         return 1
-    port = open_port(args.port)
-    if port is None:
-        print("no Teensy on USB serial")
+    if not flash(PROGRAM):
+        print("the upload program did not flash")
         return 2
-    link = Link(port)
-    failed = 0
-    with port:
-        for path, card_path in files:
-            with open(path, "rb") as f:
-                data = f.read()
-            try:
-                put(link, card_path, data)
-                print(f"{card_path}: {len(data)} bytes")
-            except Failure as e:
-                print(e)
-                failed += 1
-        if not args.no_restart:
-            link.send(f"{PREFIX}RESTART\n".encode())
-            print("the Teensy restarts")
+    failed = copy(args.port, files)
+    if not args.no_firmware and not flash(ROOT, args.env):
+        print("the firmware did not flash back")
+        return 2
+    if failed is None:
+        return 2
     return 1 if failed else 0
 
 

@@ -5,7 +5,6 @@
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
-#include "components/card-upload.h"
 #include "components/config.h"
 #include "components/config-keys.h"
 #include "components/file-system.h"
@@ -19,7 +18,6 @@
 #include "drivers/storage.h"
 #include "drivers/touch.h"
 #include "io/i2c-bus.h"
-#include "io/usb-upload-link.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
 // FastLED's fl/gfx/colorutils.h turns warnings off twice and back on once, so without
@@ -50,11 +48,6 @@ constexpr uint32_t GUARD_SIZE = 4;
 constexpr uint8_t PIN_PRIORITY = 96;
 constexpr uint8_t TEMPERATURE_PANIC_PRIORITY = 0;
 
-/// ARMv7-M Architecture Reference Manual, B3.2.6: AIRCR takes a write only with the key 0x05FA in
-/// its upper half, and SYSRESETREQ, bit 2, restarts the processor
-constexpr uint32_t AIRCR_VECTKEY = 0x05FA0000;
-constexpr uint32_t AIRCR_SYSRESETREQ = 1u << 2;
-
 /// PJRC's linker script: the end of the static variables in RAM1, and the top of the stack
 extern "C" uint8_t _ebss[];
 extern "C" uint8_t _estack[];
@@ -75,15 +68,6 @@ static Display display;
 static Touch touch(io::wire2Bus, events, driverTick);
 static Screen screen(display);
 static VideoPlayer videoPlayer(screen, files, sounds);
-static UsbUploadLink uploadLink;
-
-/// Restarts the Teensy, as the card upload asks for once new files are on the card.
-static void restartTeensy() {
-    SCB_AIRCR = AIRCR_VECTKEY | AIRCR_SYSRESETREQ;
-}
-
-/// The chunk the computer sends waits in RAM2, which the card reads it from.
-DMAMEM static CardUpload upload(uploadLink, files, restartTeensy);
 
 /// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
@@ -288,7 +272,6 @@ static void runMainTask(void*) {
         if (videoPlayer.update(nowUs(), ended)) {
             GameHost::takeEnded(ended);
         }
-        upload.update();
         logger.update();
         screen.render();
         sendDebugLog();

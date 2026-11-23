@@ -4,21 +4,15 @@
 #include "logging/log-line.h"
 #include <Arduino.h>
 
-/// Lines waiting for USB. 16 KB hold a burst of a hundred lines and more while no host reads.
-constexpr size_t DEBUG_BUFFER_BYTES = 16384;
-
-// The buffer stands in a release build as well, for the answers of serialLine().
-EXTMEM static uint8_t debugBuffer[DEBUG_BUFFER_BYTES];
-static DebugOutput output(debugBuffer, sizeof(debugBuffer));
-
-void serialLine(const char* line, size_t n) {
-    output.writeLine(line, n);
-}
-
 #if defined(DEBUG)
 
+/// Lines waiting for USB. 16 KB hold a burst of a hundred lines and more while no host reads.
+constexpr size_t DEBUG_BUFFER_BYTES = 16384;
 /// The trace notes one call of sendDebugLog() turns into lines. It bounds the main loop's pass.
 constexpr uint32_t TRACES_PER_SEND = 32;
+
+EXTMEM static uint8_t debugBuffer[DEBUG_BUFFER_BYTES];
+static DebugOutput output(debugBuffer, sizeof(debugBuffer));
 
 void debugLog(const char* format, ...) {
     va_list args;
@@ -47,7 +41,7 @@ void debugLog(const char*, ...) {}
 void debugLogLine(const char*, size_t) {}
 
 size_t sendDebugLog() {
-    return output.send();
+    return 0;
 }
 
 #endif

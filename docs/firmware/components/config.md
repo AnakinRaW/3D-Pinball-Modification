@@ -1,6 +1,6 @@
 # Machine config
 
-The machine config holds the settings that change without building and flashing the firmware again. It is the YAML file `/config.yml` on the memory card. It is edited on a computer in [`firmware/src/resources/config.yml`](../../../firmware/src/resources/config.yml). The [card upload](card-upload.md) puts it on the card. Every value the hardware dictates stays in the code.
+The machine config holds the settings that change without building and flashing the firmware again. It is the YAML file `/config.yml` on the memory card. It is edited on a computer in [`firmware/src/resources/config.yml`](../../../firmware/src/resources/config.yml). Every value the hardware dictates stays in the code.
 
 ## Settings
 

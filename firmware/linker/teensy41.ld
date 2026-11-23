@@ -34,7 +34,6 @@ SECTIONS
 		*libyaml.a:*(.text*)   /* libyaml's code */
 		*yaml-tree.cpp.o(.text*) *:yaml-tree.cpp.o(.text*)
 		*config.cpp.o(.text*) *:config.cpp.o(.text*)
-		*card-upload.cpp.o(.text*) *:card-upload.cpp.o(.text*)
 		*libc*.a:*printf*.o(.text*) *libc*.a:*scanf*.o(.text*)   /* the C library's formatting */
 		*libc*.a:*strto*.o(.text*) *libc*.a:*dtoa*.o(.text*)
 		. = ALIGN(4);
@@ -54,7 +53,6 @@ SECTIONS
 		*libyaml.a:*(.rodata*) /* libyaml's tables and strings */
 		*yaml-tree.cpp.o(.rodata*) *:yaml-tree.cpp.o(.rodata*)
 		*config.cpp.o(.rodata*) *:config.cpp.o(.rodata*)
-		*card-upload.cpp.o(.rodata*) *:card-upload.cpp.o(.rodata*)
 		. = ALIGN(4);
 	} > FLASH
 
