@@ -994,14 +994,14 @@
        "label": "U lane, top left"
       },
       {
-       "id": "ir-left-lane",
+       "id": "ir-scoop",
        "part": "ir",
        "at": [
         38.628,
         135.15
        ],
        "rotate": 80.093,
-       "label": "Left lane, between the U lane's wall and the plate"
+       "label": "Scoop, between the U lane's wall and the plate"
       },
       {
        "id": "ir-top-lane-1",
@@ -2390,7 +2390,7 @@
    "feature": "Scoop",
    "targets": [
     "ball-scoop",
-    "ir-left-lane",
+    "ir-scoop",
     "diffuser-scoop"
    ]
   },
@@ -2486,7 +2486,7 @@
   {
    "around": [
     "ball-scoop",
-    "ir-left-lane"
+    "ir-scoop"
    ],
    "through": [
     "ramp-orbit-left",
