@@ -33,7 +33,7 @@ Each file starts with a head line that numbers it, such as `0 I logger file 7`. 
 
 An interrupt notes an event with `DEBUG_TRACE(label, a, b)`: a label, two numbers and the time from `nowUs()`. A note takes a few cycles, formats no text and never waits, so any interrupt at any priority may note. `sendDebugLog()` turns the waiting notes into debug lines such as `73021 D trace ir late 3 -12 at 73020512 us`. The trace holds 256 notes. A note that finds it full is lost. The debug output states what it and the trace had to drop in a line such as `73021 D trace 44 notes lost`.
 
-In a debug build every line of the log goes to the debug output as well.
+In a debug build every line of the log goes to the debug output as well. The buffer stands in a release build too, where it carries the answers of the [card upload](components/card-upload.md) alone.
 
 ## Interface
 

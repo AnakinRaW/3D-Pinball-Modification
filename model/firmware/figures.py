@@ -7,7 +7,8 @@ MODEL = Model.at(__file__, "firmware", "general-design.md",
                  drawings=["architecture.svg"],
                  documents=["driver-design.md", "error-handling.md", "logging.md", "io/i2c-bus.md",
                             "components/file-system.md", "game-abstraction.md",
-                            "input-handling.md", "components/config.md"])
+                            "input-handling.md", "components/config.md",
+                            "components/card-upload.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.ignores("README.md", "the index of the firmware documents for a visitor, which states no figure")
 dec("n_balls_example", 3, "", src="the balls the example game in game-abstraction.md starts with")
@@ -157,7 +158,7 @@ dec("log_line_max", 160, "bytes", src="the longest line with its line break, LOG
 dec("n_trace_records", 256, "", src="the notes the debug trace holds in a debug build, "
     "TRACE_RECORDS in firmware/src/logging/debug-trace.cpp, a burst of interrupts while the main "
     "loop is away")
-dec("debug_buffer", 16, "KB", src="the debug lines waiting for USB in a debug build, "
+dec("debug_buffer", 16, "KB", src="the debug lines and the card upload's answers waiting for USB, "
     "DEBUG_BUFFER_BYTES in firmware/src/logging/debug-log.cpp, in the PSRAM")
 fig("n_buffer_lines", "", "log_buffer / log_line", "down", moves="+log_buffer -log_line",
     stated=False)
@@ -167,6 +168,17 @@ MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
 MODEL.uses("t_sdfat", of="audio")
 MODEL.uses("i_supply_6a", of="lighting")
+# -- the card upload, firmware/src/components/card-upload.h -----------------
+dec("upload_chunk", 4, "KB", src="the largest chunk of a file the card upload takes, "
+    "CardUpload::CHUNK_BYTES in firmware/src/components/card-upload.h, a decision: one chunk "
+    "fills the Teensy's USB receive buffers once")
+dec("t_upload_quiet", 2, "s", src="the longest silence inside a file before the card upload ends "
+    "it, CardUpload::QUIET_MS in firmware/src/components/card-upload.h, a decision: longer than "
+    "a chunk's write on the card")
+dec("t_upload_restart", 100, "ms", src="the wait between the card upload's last answer and the "
+    "restart, CardUpload::RESTART_MS in firmware/src/components/card-upload.h, a decision: the "
+    "answer leaves over USB within a few main loop passes")
+
 # -- the config component, firmware/src/components/config.h ------------------
 dec("config_max", 8, "KB", src="the longest /config.yml the config component reads and writes, "
     "Config::FILE_BYTES in firmware/src/components/config.h, a decision: every setting of the "
