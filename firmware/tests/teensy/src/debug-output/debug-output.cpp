@@ -34,7 +34,8 @@ constexpr uint32_t PAYLOAD_FACTOR = 2654435761u;
 constexpr uint32_t CHECK_TIMEOUT_MS = 10000;   // the runner's answer after the last line
 constexpr char INTERRUPT_LINE[] = "from an interrupt\n";
 
-DMAMEM static uint8_t buffer[BUFFER_BYTES];
+// in the PSRAM, as the firmware's debug buffer
+EXTMEM static uint8_t buffer[BUFFER_BYTES];
 static DebugOutput output(buffer, sizeof buffer);
 static volatile uint32_t interruptLines = 0;
 static IntervalTimer timer;

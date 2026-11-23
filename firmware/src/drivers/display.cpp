@@ -37,6 +37,7 @@ constexpr uint8_t LAST_SHIFTER = SHIFTERS - 1;
 constexpr uint32_t LAST_FLAG = 1u << LAST_SHIFTER;
 constexpr uint32_t BURST_BYTES = 32;   // design.md: one burst, eight shifters of four bytes
 constexpr uint32_t BYTES_PER_PIXEL = 2;
+constexpr uint8_t PIXELS_PER_WORD = sizeof(uint32_t) / BYTES_PER_PIXEL;   // two in a shifter
 constexpr uint32_t DATA_LINES = 8;   // D0 to D7, one byte a write
 /// RM FlexIO, TIMCMP in 8-bit baud mode: twice the writes less one in the upper byte, half the
 /// divider less one in the lower
@@ -57,6 +58,10 @@ constexpr uint32_t RESET_MS = 120;   // ILI9341_DS_V1.11, 01h: after a software 
 constexpr uint32_t SLEEP_OUT_MS = 120;   // design.md: from Sleep Out to running
 /// design.md: from the start of the last burst until it has left the bus, with a reserve
 constexpr uint32_t END_WAIT_NS = 3000;
+/// RM FlexIO, CTRL: FlexIO3 takes no register write until its software reset has cleared in the
+/// FlexIO3 clock. The manual gives no time, so the driver holds the reset this long and waits this
+/// long after it.
+constexpr uint32_t FLEXIO_RESET_NS = 1000;
 /// ILI9341_DS_V1.11, 18.3.1: CS setup 15 ns and CS wait 10 ns at the most, D/C setup and hold 0 ns,
 /// plus the 4.8 ns skew of the module's buffers; 50 ns leaves a reserve
 constexpr uint32_t SETTLE_NS = 50;
@@ -74,9 +79,11 @@ constexpr uint8_t PAGE_ADDRESS = 0x2B;
 constexpr uint8_t MEMORY_WRITE = 0x2C;
 constexpr uint8_t MEMORY_ACCESS = 0x36;
 constexpr uint8_t PIXEL_FORMAT = 0x3A;
-constexpr uint8_t RGB565 = 0x55;      // 8.2.33: 16 bits a pixel
-constexpr uint8_t LANDSCAPE = 0x28;   // 8.2.29: rows and columns swapped, BGR panel
-constexpr uint8_t WORD_BYTES = 2;     // an address of CASET or PASET, high byte first
+constexpr uint8_t RGB565 = 0x55;   // 8.2.33: 16 bits a pixel
+/// 8.2.29: a BGR panel, its memory addressed as the panel lies, 240 columns by 320 pages. The
+/// panel builds its picture page by page, and a page is a column of the screen in landscape.
+constexpr uint8_t PANEL_ORDER = 0x08;
+constexpr uint8_t WORD_BYTES = 2;   // an address of CASET or PASET, high byte first
 constexpr uint8_t BYTE_BITS = 8;
 
 /// The power, frame rate and gamma setup the ILI9341 libraries send after a reset, each command
@@ -183,8 +190,12 @@ void settle() {
 /// @param burst  True for bursts, false for single writes.
 void configure(bool burst) {
     IMXRT_FLEXIO_t& f = io();
+    // With the two writes of the reset in a row and the setup right behind them, the panel missed
+    // commands on the bench and stayed asleep after a restart.
     f.CTRL = FLEXIO_CTRL_SWRST;
+    delayNanoseconds(FLEXIO_RESET_NS);
     f.CTRL = 0;
+    delayNanoseconds(FLEXIO_RESET_NS);
     const uint8_t shifters = burst ? SHIFTERS : 1;
     for (uint8_t i = 0; i < shifters; ++i) {
         // RM FlexIO, SHIFTCFG: INSRC takes each shifter's input from the next one, and PWIDTH
@@ -266,10 +277,8 @@ void burstMode() {
 
 /// Loads one burst into the shifters, shifter 7 last, since its buffer starts the burst.
 ///
-/// @param bytes  The burst's 32 bytes, in the order they go out.
-void loadBurst(const uint8_t* bytes) {
-    uint32_t words[SHIFTERS];
-    memcpy(words, bytes, sizeof words);
+/// @param words  The burst's 32 bytes, four to a shifter, in the order they go out.
+void loadBurst(const uint32_t* words) {
     IMXRT_FLEXIO_t& f = io();
     for (uint8_t i = 0; i < SHIFTERS; ++i) {
         f.SHIFTBUF[i] = words[i];
@@ -284,9 +293,12 @@ void addressRange(uint8_t cmd, uint16_t first, uint16_t last) {
 }
 
 /// Opens the panel's memory for the rectangle and starts the memory write.
+///
+/// The screen's rows are the panel's columns and its columns the panel's pages, so the pixels that
+/// follow run down one column of the screen after the other.
 void window(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-    addressRange(COLUMN_ADDRESS, x, uint16_t(x + width - 1));
-    addressRange(PAGE_ADDRESS, y, uint16_t(y + height - 1));
+    addressRange(COLUMN_ADDRESS, y, uint16_t(y + height - 1));
+    addressRange(PAGE_ADDRESS, x, uint16_t(x + width - 1));
     command(MEMORY_WRITE);
 }
 
@@ -298,14 +310,14 @@ void setUpPanel() {
         i += 2 + count;
     }
     command(PIXEL_FORMAT, &RGB565, 1);
-    command(MEMORY_ACCESS, &LANDSCAPE, 1);
+    command(MEMORY_ACCESS, &PANEL_ORDER, 1);
     command(SLEEP_OUT);
 }
 
 /// Fills the whole panel with black, polling FlexIO3, since the panel's memory holds noise after
-/// power-up and the driver keeps no buffer of its own.
+/// power-up and the driver keeps no buffer.
 void blackScreen() {
-    static const uint8_t black[BURST_BYTES] = {};
+    static const uint32_t black[SHIFTERS] = {};
     commandMode();
     window(0, 0, Display::WIDTH, Display::HEIGHT);
     burstMode();
@@ -316,7 +328,13 @@ void blackScreen() {
             break;
         }
         loadBurst(black);
+        // The writes reach FlexIO3 only after a few of its clocks, and shifter 7's flag falls
+        // then. Reading it earlier takes the burst before for this one.
+        asm volatile("dsb" ::: "memory");
     }
+    // The last burst waits in the buffers while the one before is on the bus. Shifter 7's flag
+    // rises once it has started, and only then its time on the bus begins.
+    waitFor(io().SHIFTSTAT, LAST_FLAG);
     delayNanoseconds(END_WAIT_NS);
     deselect();
 }
@@ -396,7 +414,9 @@ bool Display::send(uint16_t x, uint16_t y, uint16_t width, uint16_t height, cons
     rectY = y;
     rectWidth = width;
     rectHeight = height;
+    column = pixels;
     at = pixels;
+    rowsLeft = height;
     // The width is whole bursts, so the rectangle is.
     left = uint32_t(width) * height * BYTES_PER_PIXEL / BURST_BYTES;
     sent = std::move(sentFn);
@@ -411,6 +431,36 @@ void Display::serveActive() {
     active->serve();
 }
 
+/// Takes sixteen pixels down the rectangle's columns, which lie row by row in the caller's buffer,
+/// and steps to the top of the next column at the end of one. A pixel's two bytes go out in the
+/// order they lie, and a shifter sends its lowest byte first.
+void Display::loadNext() {
+    const uint32_t rowBytes = uint32_t(rectWidth) * BYTES_PER_PIXEL;
+    const uint8_t* p = at;
+    uint32_t rows = rowsLeft;
+    uint32_t words[SHIFTERS];
+    for (uint8_t i = 0; i < SHIFTERS; ++i) {
+        uint32_t word = 0;
+        for (uint8_t pixel = 0; pixel < PIXELS_PER_WORD; ++pixel) {
+            uint16_t bytes = 0;
+            memcpy(&bytes, p, sizeof bytes);
+            word |= uint32_t(bytes) << (pixel * BYTES_PER_PIXEL * BYTE_BITS);
+            p += rowBytes;
+            rows = rows - 1;
+            if (rows == 0) {
+                column += BYTES_PER_PIXEL;
+                p = column;
+                rows = rectHeight;
+            }
+        }
+        words[i] = word;
+    }
+    at = p;
+    rowsLeft = rows;
+    loadBurst(words);
+    left = left - 1;
+}
+
 void Display::serve() {
     IMXRT_FLEXIO_t& f = io();
     if (!running) {
@@ -422,9 +472,7 @@ void Display::serve() {
         window(rectX, rectY, rectWidth, rectHeight);
         burstMode();
         running = true;
-        loadBurst(at);
-        at += BURST_BYTES;
-        left = left - 1;
+        loadNext();
         // Shifter 7's flag rises once a burst has moved from the buffers into the shifters, so the
         // next burst loads while this one is on the bus.
         f.SHIFTSIEN = LAST_FLAG;
@@ -434,9 +482,7 @@ void Display::serve() {
         return;
     }
     if (left > 0) {
-        loadBurst(at);
-        at += BURST_BYTES;
-        left = left - 1;
+        loadNext();
         // The writes reach FlexIO3 only after a few of its clocks. Ending the interrupt earlier
         // finds shifter 7's flag still raised, which raises the interrupt a second time for
         // nothing.
