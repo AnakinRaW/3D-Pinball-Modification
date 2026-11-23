@@ -109,6 +109,10 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
     // The image lies at the top left of the viewport's content and is empty until the first frame
     // has landed.
     image = lv_image_create(in);
+    // LVGL takes an image as covering what lies behind it only where the image has a background
+    // that covers. With the black background LVGL draws nothing behind a frame.
+    lv_obj_set_style_bg_color(image, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(image, LV_OPA_COVER, 0);
     lv_obj_add_event_cb(image, gone, LV_EVENT_DELETE, this);
 
     char path[FILE_PATH_BYTES];

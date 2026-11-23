@@ -10,6 +10,9 @@
 //            and the memory empties once the reads of a picture and a frame have landed
 //   restart  the display restarts, nothing goes out meanwhile, and the whole screen goes out once
 //            the display is back
+//   covered  LVGL leaves out an object that another object covers, when the whole screen changes
+//   picture-covers  LVGL draws nothing behind a picture that holds no opacity, and draws what lies
+//            in front of it
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -228,21 +231,21 @@ static void testSlides() {
         lv_obj_set_pos(buttons[i], 100, 100);
         lv_obj_set_size(buttons[i], 50, 30);
     }
-    lv_obj_update_layout(lv_layer_bottom());
+    lv_obj_update_layout(lv_screen_active());
     lv_point_t p = {120, 110};
-    TEST_ASSERT_EQUAL_PTR(buttons[2], lv_indev_search_obj(lv_layer_bottom(), &p));
+    TEST_ASSERT_EQUAL_PTR(buttons[2], lv_indev_search_obj(lv_screen_active(), &p));
 
     screen.remove(middleLater);
     TEST_ASSERT_EQUAL_PTR(b, GameHost::top());
     TEST_ASSERT_FALSE(lv_obj_is_hidden(b));
     TEST_ASSERT_TRUE(lv_obj_is_hidden(a));
-    TEST_ASSERT_EQUAL_PTR(buttons[1], lv_indev_search_obj(lv_layer_bottom(), &p));
+    TEST_ASSERT_EQUAL_PTR(buttons[1], lv_indev_search_obj(lv_screen_active(), &p));
     screen.remove(middle);
     TEST_ASSERT_EQUAL_PTR(a, GameHost::top());
-    TEST_ASSERT_EQUAL_PTR(buttons[0], lv_indev_search_obj(lv_layer_bottom(), &p));
+    TEST_ASSERT_EQUAL_PTR(buttons[0], lv_indev_search_obj(lv_screen_active(), &p));
     screen.remove(low);
     TEST_ASSERT_NULL(GameHost::top());
-    TEST_ASSERT_NULL(lv_indev_search_obj(lv_layer_bottom(), &p));
+    TEST_ASSERT_NULL(lv_indev_search_obj(lv_screen_active(), &p));
 
     // An animation on each of two slides, and one started on the covered slide: only the slide
     // that shows moves, and the covered one goes on where it stood once it shows.
@@ -419,6 +422,84 @@ static void testRestart() {
     screen.remove(layer);
 }
 
+static uint32_t draws = 0;
+
+static void countDraw(lv_event_t*) {
+    ++draws;
+}
+
+static void testCovered() {
+    const Layer layer = {1, 10};
+    lv_obj_t* below = box(screen.background(), 0, 0, W, H);
+    lv_obj_add_event_cb(below, countDraw, LV_EVENT_DRAW_MAIN, nullptr);
+    refresh();
+    TEST_ASSERT_GREATER_THAN_UINT32(0, draws);
+
+    // An object that fills the screen on a slide covers the background's object.
+    lv_obj_t* above = box(screen.slide(layer), 0, 0, W, H);
+    lv_obj_set_style_bg_color(above, lv_color_black(), 0);
+    refresh();
+    draws = 0;
+    display.rects.clear();
+    lv_obj_invalidate(above);
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(1, display.rects.size());
+    TEST_ASSERT_EQUAL_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_HEX16(0x0000, display.pixel(10, 10));
+
+    // Without the slide the background's object shows again and is drawn.
+    screen.remove(layer);
+    refresh();
+    TEST_ASSERT_GREATER_THAN_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(10, 10));
+    lv_obj_delete(below);
+}
+
+static void testPictureCovers() {
+    card.files["/games/a/opaque.img"] = pictureFile(W, H, 0xF800, true);
+    card.files["/games/a/clear.img"] = pictureFile(W, H, 0x07E0, false);
+    lv_obj_t* below = box(screen.background(), 0, 0, W, H);
+    lv_obj_add_event_cb(below, countDraw, LV_EVENT_DRAW_MAIN, nullptr);
+    lv_obj_t* s = screen.slide({1, 10});
+    static Picture opaque(screen);
+    static Picture clear(screen);
+
+    // The image gets its pixels once the picture has loaded. An object lies in front of it.
+    opaque.load(files.open("opaque.img"));
+    lv_obj_t* early = opaque.show(s);
+    box(s, 10, 10, 20, 20);
+    settle();
+    refresh();
+    draws = 0;
+    lv_obj_invalidate(early);
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_HEX16(0xF800, display.pixel(100, 100));
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(15, 15));
+
+    // An image of the loaded picture covers as well.
+    lv_obj_delete(early);
+    lv_obj_t* late = opaque.show(s);
+    refresh();
+    draws = 0;
+    lv_obj_invalidate(late);
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_HEX16(0xF800, display.pixel(100, 100));
+
+    // A picture with opacity leaves what lies behind it drawn.
+    opaque.release();
+    clear.load(files.open("clear.img"));
+    lv_obj_t* through = clear.show(s);
+    settle();
+    refresh();
+    draws = 0;
+    lv_obj_invalidate(through);
+    refresh();
+    TEST_ASSERT_GREATER_THAN_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_HEX16(0x07E0, display.pixel(100, 100));
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testWiden);
@@ -426,5 +507,7 @@ int main() {
     RUN_TEST(testMemory);
     RUN_TEST(testReset);
     RUN_TEST(testRestart);
+    RUN_TEST(testCovered);
+    RUN_TEST(testPictureCovers);
     return UNITY_END();
 }

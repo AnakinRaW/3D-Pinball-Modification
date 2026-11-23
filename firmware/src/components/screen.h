@@ -38,8 +38,10 @@ public:
 
     /// Creates an image of the picture inside @p parent, to place like any LVGL object.
     ///
-    /// The image is empty until the picture has loaded and shows it from then on. The picture
-    /// keeps its images in a list through their LVGL user data, which the game leaves alone.
+    /// The image is empty until the picture has loaded and shows it from then on. The image of a
+    /// picture that holds no opacity covers what lies behind it. Where that picture leaves the
+    /// image empty, the image is black. The picture keeps its images in a list through their LVGL
+    /// user data, which the game leaves alone.
     ///
     /// @param parent  The LVGL object the image lies in.
     /// @return        The image.
@@ -209,7 +211,7 @@ private:
     PictureMemory pictures;
     Picture* first = nullptr;   // every picture that has loaded once
     lv_display_t* lv = nullptr;
-    lv_obj_t* back = nullptr;             // a full-screen object on LVGL's bottom layer
+    lv_obj_t* back = nullptr;             // a full-screen object on LVGL's screen
     lv_obj_t* deck = nullptr;             // the same, created after back, so it lies in front of it
     PriorityList<Slide, SLIDES> slides;   // the game's slides, the one that shows first
     int32_t firstRow = 0;   // the rows that changed in this refresh, from firstRow to lastRow

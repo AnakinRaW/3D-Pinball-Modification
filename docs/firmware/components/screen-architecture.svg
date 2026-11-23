@@ -75,14 +75,14 @@
   <rect x="304" y="328" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
   <text x="316" y="346" font-size="12" fill="#333">Screen: the game overlay layer</text>
   <rect x="304" y="358" width="262" height="94" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="374" font-size="12" fill="#333">Bottom layer: game content layer</text>
+  <text x="316" y="374" font-size="12" fill="#333">Screen: the game content layer</text>
   <rect x="316" y="380" width="238" height="38" rx="4" fill="#eef3f8" stroke="#4a6785" stroke-width="1"/>
   <text x="326" y="395" font-size="11" fill="#333">Multiball, priority 5: shows</text>
   <text x="326" y="410" font-size="11" fill="#333">its video in a viewport, a caption</text>
   <rect x="316" y="424" width="238" height="22" rx="4" fill="#eef3f8" stroke="#4a6785" stroke-width="1" stroke-dasharray="3 2"/>
   <text x="326" y="439" font-size="11" fill="#555">Base mode, priority 1: hidden</text>
   <rect x="304" y="458" width="262" height="26" rx="5" fill="#ffffff" stroke="#4a6785" stroke-width="1.2"/>
-  <text x="316" y="476" font-size="12" fill="#333">Bottom layer: the background</text>
+  <text x="316" y="476" font-size="12" fill="#333">Screen: the background</text>
   <text x="584" y="292" font-size="11.5" fill="#333">renders what changed into</text>
   <text x="584" y="308" font-size="11.5" fill="#333">one of two buffers of the</text>
   <text x="584" y="324" font-size="11.5" fill="#333">whole screen in RAM2</text>

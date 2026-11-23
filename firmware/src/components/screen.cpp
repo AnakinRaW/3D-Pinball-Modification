@@ -40,14 +40,16 @@ void Screen::begin() {
     lv_display_set_flush_cb(lv, flush);
     lv_display_set_user_data(lv, this);
 
-    // The slides and the background lie on LVGL's bottom layer, which is black behind them. LVGL's
-    // screen in front of it stays transparent.
+    // The background and the slides lie on LVGL's screen, which is transparent where they hold
+    // nothing and shows the black bottom layer there. LVGL looks for the object that covers a
+    // changed area on its screen alone and starts drawing at that object. A video that fills the
+    // screen therefore costs no drawing of what lies behind it.
     lv_obj_t* bottom = lv_layer_bottom();
     lv_obj_set_style_bg_color(bottom, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(bottom, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_TRANSP, 0);
-    back = lv_obj_create(bottom);
-    deck = lv_obj_create(bottom);
+    back = lv_obj_create(lv_screen_active());
+    deck = lv_obj_create(lv_screen_active());
     for (lv_obj_t* o : {back, deck}) {
         lv_obj_remove_style_all(o);
         lv_obj_set_size(o, Display::WIDTH, Display::HEIGHT);
@@ -255,6 +257,18 @@ void Screen::reset() {
     }
 }
 
+/// Sets a loaded picture into an image.
+static void fillImage(lv_obj_t* shown, const lv_image_dsc_t& picture) {
+    lv_image_set_src(shown, &picture);
+    // LVGL takes an image as covering what lies behind it only where the image has a background
+    // that covers. A picture that holds no opacity gets a black one, so LVGL draws nothing behind
+    // it. A picture with opacity gets none and shows what lies behind it.
+    if (!lv_color_format_has_alpha(lv_color_format_t(picture.header.cf))) {
+        lv_obj_set_style_bg_color(shown, lv_color_black(), 0);
+        lv_obj_set_style_bg_opa(shown, LV_OPA_COVER, 0);
+    }
+}
+
 void Picture::load(const FileReader& picture) {
     if (!known) {
         // Not in the constructor: a game's Picture may be built before the screen.
@@ -285,7 +299,7 @@ lv_obj_t* Picture::show(lv_obj_t* parent) {
     images = shown;
     lv_obj_add_event_cb(shown, forget, LV_EVENT_DELETE, this);
     if (step == Step::LOADED) {
-        lv_image_set_src(shown, &image);
+        fillImage(shown, image);
     }
     return shown;
 }
@@ -332,7 +346,7 @@ bool Picture::loading() const {
 
 void Picture::fill() {
     for (lv_obj_t* o = images; o != nullptr; o = static_cast<lv_obj_t*>(lv_obj_get_user_data(o))) {
-        lv_image_set_src(o, &image);
+        fillImage(o, image);
     }
 }
 

@@ -13,6 +13,7 @@
 //   late-card    a frame the card brings late stays, and the video catches up with the clock
 //   short-sound  a video whose sound runs out or is missing plays on by the clock
 //   sound-clock  a video with sound holds while its sound holds
+//   covers       LVGL draws nothing that lies behind a video's frame
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -497,6 +498,32 @@ static void testSoundClock() {
     TEST_ASSERT_EQUAL_INT(int(played / FRAME_SAMPLES), shownAt());
 }
 
+static uint32_t draws = 0;
+
+static void countDraw(lv_event_t*) {
+    ++draws;
+}
+
+static void testCovers() {
+    lv_obj_t* below = viewportOn(screen.background());
+    lv_obj_set_style_bg_opa(below, LV_OPA_COVER, 0);
+    lv_obj_add_event_cb(below, countDraw, LV_EVENT_DRAW_MAIN, nullptr);
+    lv_obj_t* v = viewportOn(screen.slide(LOW));
+    TEST_ASSERT_TRUE(player.play(v, "m", false, false));
+    run(2 * FRAME_US);
+    const int first = shownAt();
+    draws = 0;
+    run(3 * FRAME_US);
+    TEST_ASSERT_EQUAL_INT(first + 3, shownAt());
+    TEST_ASSERT_EQUAL_UINT32(0, draws);
+
+    // Without the video the object behind it shows again and is drawn.
+    player.stop(v);
+    run(4 * FRAME_US);
+    TEST_ASSERT_GREATER_THAN_UINT32(0, draws);
+    TEST_ASSERT_EQUAL_INT(-1, shownAt());
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testPlay);
@@ -508,6 +535,7 @@ int main() {
     RUN_TEST(testLateCard);
     RUN_TEST(testShortSound);
     RUN_TEST(testSoundClock);
+    RUN_TEST(testCovers);
     // Every read lands before the program ends, so no request waits in its destructor.
     GameHost::reset();
     service.serveAll();
