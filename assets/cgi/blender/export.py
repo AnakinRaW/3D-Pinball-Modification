@@ -14,11 +14,21 @@ OUT = os.path.join(BUILD, "out")
 TEXTURE_HEIGHT = 2048          # px, the height every texture is scaled to
 JPEG_QUALITY = 85
 # the backbox stands upright behind the board and the cabinet's outer panels hang beside and before it, where the
-# drawing's top view places nothing, so their parts go by name
+# drawing's top view places nothing, so their parts go by name; so do the parts that reach well past their
+# placement's outline in the drawing, or lie under the board
 NAMED_IDS = (("backbox-b20", "dio-b20"), ("backbox-scene", "dio-scene"), ("backbox-back", "sky"),
              ("display-screen", "display"), ("backbox-frame", "dio-frame"), ("diorama-", "dio-frame"),
-             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("plunger-", "cabinet"),
-             ("separator-left", "separator-left"), ("separator-right", "separator-right"))
+             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("playfield", "cabinet"),
+             ("plunger-", "shooter-lane-floor"), ("shooter-floor", "shooter-lane-floor"),
+             ("separator-left", "separator-left"), ("separator-right", "separator-right"),
+             ("crocodile-", "ramp-kicker"), ("store-", "drain-ball-store"), ("lane-", "ramp-blue"),
+             ("deco-spinner-", "lane-guides-left"))
+# parts that come in a left and a right copy go by name and by the side of the board they stand on
+SIDED_IDS = (("sling-rubber", ("slingshot-left", "slingshot-right")),)
+MIDDLE_X = 108.5               # mm, the board's middle in the drawing
+# a part held by the cabinet's outline only, and partly by a smaller shape, goes to the smaller shape holding most
+# of it, when that holds at least this share
+FALLBACK_SHARE = 0.2
 
 exec(compile(open(os.path.join(BUILD, "scene.py"), encoding="utf-8").read(), "scene.py", "exec"),
      {"BUILD": BUILD, "__name__": "scene"})
@@ -109,15 +119,23 @@ def tag(objects):
         if not pts:
             loose.append(o.name)
             continue
+        sided = next((pair for prefix, pair in SIDED_IDS if o.name.startswith(prefix)), None)
+        if sided:
+            o["drawing_id"] = sided[0] if sum(p[0] for p in pts) / len(pts) < MIDDLE_X else sided[1]
+            continue
         x0, x1 = min(p[0] for p in pts), max(p[0] for p in pts)
         y0, y1 = min(p[1] for p in pts), max(p[1] for p in pts)
-        best = None
+        best, most = None, None
         for pid, poly, filled, reach, area, (bx0, bx1, by0, by1) in table:
             if bx1 < x0 or bx0 > x1 or by1 < y0 or by0 > y1:
                 continue
             hits = sum(1 for x, y in pts if (filled and inside(x, y, poly)) or near(x, y, poly, filled, reach))
             if hits * 2 >= len(pts) and (best is None or area < best[0]):
                 best = (area, pid)
+            if pid != "cabinet" and hits and (most is None or hits > most[0] or hits == most[0] and area < most[1]):
+                most = (hits, area, pid)
+        if (best is None or best[1] == "cabinet") and most and most[0] >= FALLBACK_SHARE * len(pts):
+            best = (most[1], most[2])
         if best:
             o["drawing_id"] = best[1]
         else:
@@ -219,6 +237,15 @@ def merge(objects):
             if under:
                 piece.parent = tilt
             pieces.append(piece)
+        # joining keeps only UV maps of the same name, so where one piece has a map every piece carries one named
+        # alike
+        for piece in pieces if any(p.data.uv_layers for p in pieces) else []:
+            uv = piece.data.uv_layers
+            if not uv:
+                uv.new(name="UVMap")
+            uv[0].name = "UVMap"
+            for extra in list(uv)[1:]:
+                uv.remove(extra)
         if len(pieces) > 1:
             with bpy.context.temp_override(active_object=pieces[0], selected_editable_objects=pieces):
                 bpy.ops.object.join()
