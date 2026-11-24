@@ -476,14 +476,9 @@ def reset():
 # ---------------------------------------------------------------- materials
 def floor_material():
     m = bpy.data.materials.new("playfield"); m.use_nodes = True; nt = m.node_tree; n = nt.nodes
+    # the picture lies on the board through its UV map, which build_board sets from the drawing's view box
     img = bpy.data.images.load(os.path.join(OUT, "floor.png"))
-    tc = n.new("ShaderNodeTexCoord"); sep = n.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
-    u = n.new("ShaderNodeMath"); u.operation = "MULTIPLY_ADD"; u.inputs[1].default_value = 10 / VB[2]; u.inputs[2].default_value = -VB[0] / VB[2]
-    v = n.new("ShaderNodeMath"); v.operation = "MULTIPLY_ADD"; v.inputs[1].default_value = 10 / VB[3]; v.inputs[2].default_value = 1 + VB[1] / VB[3]
-    nt.links.new(sep.outputs[0], u.inputs[0]); nt.links.new(sep.outputs[1], v.inputs[0])
-    comb = n.new("ShaderNodeCombineXYZ"); nt.links.new(u.outputs[0], comb.inputs[0]); nt.links.new(v.outputs[0], comb.inputs[1])
     it = n.new("ShaderNodeTexImage"); it.image = img; it.interpolation = "Cubic"; it.extension = "EXTEND"
-    nt.links.new(comb.outputs[0], it.inputs[0])
     b = n["Principled BSDF"]; nt.links.new(it.outputs["Color"], b.inputs["Base Color"])
     # painted wood: matte, no lacquer
     b.inputs["Roughness"].default_value = 0.7
@@ -611,7 +606,11 @@ def build_board():
     x0, x1, y0, y1 = -8.0, 238.0, -8.0, 433.0   # inside the cabinet walls
     # counterclockwise seen from above, so the face points up and the board's thickness lies below it
     vs = [bm.verts.new(W(x, y, 0)) for x, y in ((x0, y1), (x1, y1), (x1, y0), (x0, y0))]
-    bm.faces.new(vs); bm.to_mesh(me); bm.free()
+    face = bm.faces.new(vs); uv = bm.loops.layers.uv.new("UVMap")
+    for loop in face.loops:
+        co = loop.vert.co              # Blender units of 10 mm, y pointing up the drawing
+        loop[uv].uv = (co.x * 10 / VB[2] - VB[0] / VB[2], co.y * 10 / VB[3] + 1 + VB[1] / VB[3])
+    bm.to_mesh(me); bm.free()
     pf = link(bpy.data.objects.new("playfield", me), c, floor_material())
     so = pf.modifiers.new("solid", "SOLIDIFY"); so.thickness = 0.4; so.offset = -1.0
     # holes: the scoop, and one under each bumper, which the coil pulls the bumper into; both are dark
