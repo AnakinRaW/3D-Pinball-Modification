@@ -1,4 +1,5 @@
 #include "yaml-tree.h"
+#include "logging/debug-log.h"
 #include <initializer_list>
 #include <math.h>
 #include <stdio.h>
@@ -406,14 +407,19 @@ YamlTree::Id YamlTree::find(const char* key) const {
 YamlTree::Id YamlTree::add(Id id, const char* name, size_t length, Kind kind) {
     const bool inSection = entries[id].kind == Kind::SECTION;
     if (entries[id].kind == Kind::VALUE) {
+        DEBUG_LOG("YamlTree::add: %.*s refused, entry %u holds a value\n", int(length), name,
+                  unsigned(id));
         return NONE;
     }
     if (inSection && (memchr(name, '.', length) != nullptr ||
                       memchr(name, '\0', length) != nullptr || child(id, name, length) != NONE)) {
+        DEBUG_LOG("YamlTree::add: %.*s refused, a name with a dot or one the section holds\n",
+                  int(length), name);
         return NONE;
     }
     const size_t bytes = inSection && length > 0 ? length + 1 : 0;
     if (!fits(1, bytes)) {
+        DEBUG_LOG("YamlTree::add: %.*s refused, the tree has no room\n", int(length), name);
         return NONE;
     }
     const uint32_t at = inSection ? store(name, length) : NO_TEXT;
@@ -424,6 +430,7 @@ YamlTree::Id YamlTree::add(Id id, const char* name, size_t length, Kind kind) {
 
 bool YamlTree::setText(Id id, const char* text) {
     if (entries[id].kind != Kind::VALUE) {
+        DEBUG_LOG("YamlTree::setText: refused, entry %u holds no value\n", unsigned(id));
         return false;
     }
     const size_t n = strlen(text);
@@ -441,6 +448,8 @@ bool YamlTree::setText(Id id, const char* text) {
     }
     const uint32_t at = store(text, n);
     if (at == NOT_STORED) {
+        DEBUG_LOG("YamlTree::setText: refused, the tree has no room for %u bytes\n",
+                  unsigned(n + 1));
         return false;
     }
     if (entries[id].text != NO_TEXT) {
