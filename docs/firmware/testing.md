@@ -16,6 +16,8 @@ The runner `firmware/tools/teensy-tests.py` flashes the image once and sends it 
 
 A row counts as covered once the code holds a test of its name that runs where the row says: `test<Row>` in its computer test, such as `testOldestFirst` for `oldest-first`, or `{"<program>.<row>", RunsOn::...}` in its program's folder of the image. `firmware/tools/test-coverage.py` counts the covered rows in CI and fails the run where the code and this document disagree.
 
+A program that has a computer test folder needs a test for each of its `computer` rows. A row that describes code still to be written is marked `computer, planned` in its Runs on column and only counts against the coverage, as do the rows of a program without a computer test folder. The mark comes off with the test, since a planned row that has a test fails the run as well.
+
 ## Where a test runs
 
 | Runs on | Setup |
@@ -589,9 +591,9 @@ The program `screen` checks the [screen component](components/screen.md). Its co
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `widen` | computer | Change objects that start and end at every column, then two objects far apart in one refresh | Every rectangle the driver gets spans whole rows and covers the change, and a refresh hands the driver one rectangle |
-| `gestures` | computer | Feed touch events of short and long touches, still and moving, onto a modal object, onto a button, onto no object and from beside a button onto it | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the button gets the touch that comes down on it and none that slides onto it, each tap and hold reaches the game only when no object took the touch, and `takeGesture()` gives the host every gesture once |
+| `gestures` | computer, planned | Feed touch events of short and long touches, still and moving, onto a modal object, onto a button, onto no object and from beside a button onto it | A tap is a touch inside the [tap limits](components/screen.md#touch), a hold is `TouchHeld`, the button gets the touch that comes down on it and none that slides onto it, each tap and hold reaches the game only when no object took the touch, and `takeGesture()` gives the host every gesture once |
 | `slides` | computer | Take slides for three modes, two of them at equal priority, ask again for one mode, then remove the slide on top, while a button lies on each slide. Start an animation with `animate()` on two slides and one more on the covered slide | Only the slide of the highest priority shows, between the equal ones the later, the second call gets the same slide, only the button of the slide that shows takes a touch, the animations of covered slides stand still, and the next slide shows once the top one is removed, its animation going on where it stood |
-| `hide-overlay` | computer | Hide the game overlay layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its overlay layer shown |
+| `hide-overlay` | computer, planned | Hide the game overlay layer, change its objects, show it again, then hide it and start a new game | The changes show once the layer is shown, and the new game starts with its overlay layer shown |
 | `load` | Teensy | Load `background.img`, `short.img`, `icon.img` and a picture the card does not hold | `loading()` is true until each has loaded, the background and the icon show, and the short and the missing one make `failed()` true |
 | `memory` | computer | Load a full-screen picture and smaller ones, release the full-screen one, reserve memory for a full-screen frame, then load until the memory is full | The frame gets the memory the full-screen picture freed, and a picture that finds the memory full makes `failed()` true |
 | `show` | Teensy | Show `icon.img` in three images, delete the parent of one, then release the picture | The images show the same pixels, the other two stay when one is deleted, and `release()` deletes them |
