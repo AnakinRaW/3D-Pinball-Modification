@@ -1865,7 +1865,8 @@ def build_ramps():
         at = lambda t: (snout[0] + u.x * t + side_n.x * ac, snout[1] + u.y * t + side_n.y * ac)
         top = [(t, max(0.05, croc_z(*at(t)) - 2.1)) for t in [u0 + (u1 - u0) * i / 24 for i in range(25)]]
         z_back = top[-1][1]
-        top += [(u1 + tail * i / 12, max(1.0, z_back * (1 - i / 12) ** 1.5)) for i in range(1, 13)] if tail > 0.5 else []
+        # the tail runs out on the board, so a ball rolling against the ribs' stepped ends rides over them
+        top += [(u1 + tail * i / 12, max(0.05, z_back * (1 - i / 12) ** 1.5)) for i in range(1, 13)] if tail > 0.5 else []
         profile_ = top + [(top[-1][0], 0.0), (u0, 0.0)]
         figure("crocodile-pedestal", snout[0] + side_n.x * ac, snout[1] + side_n.y * ac, heading, profile_,
                (a1 - a0) - 0.1, c, green)
