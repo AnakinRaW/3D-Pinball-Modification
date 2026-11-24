@@ -8,20 +8,19 @@ A game holds all the rules and conditions for the player to collect points.
 
 A game is driven two ways. `event()` is the game's handler for every event of a game component, and for the events of a service such as the controls driver's `ToggleSwitched`. `update()` runs once per pass of the main loop and gets the current time. Both return as soon as their work is done, since [nothing in the loop may block](general-design.md#execution-model).
 
-A game may bring files on the SD card, under `/games/<id>`.
+A game may bring files on the SD card, under `/games/<id>`. A game described in the file `game.yml` there needs no code: classes of the firmware run it, as [`game-files.md`](game-files.md) sets out.
 
 A `Machine` typed struct is passed to the game, allowing it to access game components and hardware devices.
 
 ## Host
 
-The host runs the games and is responsible for switching and starting them. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). At start-up it reads which game ran last, and its first `update()` starts that game or a default game. Once the running game has finished its post-game phase, the host starts it anew.
+The host runs the games and is responsible for switching and starting them. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). At start-up it shows the game choice. The firmware's built-in game is always its first card, with or without a memory card. With a single game to choose from, the host starts that game at once. Without a card, the host shows a warning and then starts the built-in game. Once the running game has finished its post-game phase, the host starts it anew.
 
 The host performs the same sequence at every start of a game, machine power-up included:
 
 1. It stops the running game and runs a clean-up procedure.
-2. It writes the id of the new game.
-3. It prepares the new game by initializing things such as audio, display or lighting.
-4. It starts the new game once the screen has cleared the stopped game's objects and pictures.
+2. It prepares the new game by initializing things such as audio, display or lighting.
+3. It starts the new game once the screen has cleared the stopped game's objects and pictures.
 
 A ball still on the playfield carries on in the new game.
 
@@ -46,7 +45,16 @@ A game is organized into phases and the host is responsible for their transition
 | Stopped | gets no calls | boot, or `stop()` | `start()` |
 | Intro | sets itself up afresh and runs its intro through `update()`, such as emptying the scoop and playing an intro sound | `start()`, which hands it the machine | `done()` returning true, such as once the intro sound has ended with the scoop empty. The host then calls `play()` |
 | Play | plays through `event()` and `update()` | `play()` | `done()` returning true, for instance once its last ball drains. The host then calls `end()` |
-| Post-game | shows its score and saves its high score | `end()` | `done()` returning true. The host then stops the game and starts it anew |
+| Post-game | shows its score | `end()` | `done()` returning true, with every name entry of the [high scores](#what-the-host-expects-of-a-game) done. The host then stops the game and starts it anew |
+
+## What the host expects of a game
+
+Every game meets these requirements, whether it is written in C++ or in [`game.yml`](game-files.md):
+
+- A game has at most four players. `players()` gives how many play, and `score()` gives each player's score. The host reads both once Play ends.
+- A game keeps no high scores. The host keeps each game's list in `/games/<id>/highscores.yml`. After every game, the host asks each player for a name, which the player enters or skips. The field opens with the name that player entered last time. The host then compares every player's score with the list. A score on the list without a name stands as `???`. The host then writes the list and shows it. Without a card, the built-in game's list lasts until power-off.
+- A game leaves the swipe from the right edge of the screen to the host. The swipe opens the host's menu and reaches no game. A tap or a hold at the right edge reaches the game as anywhere else. The game draws up to the right edge.
+- A game may bring a cover, the picture its card in the host's menu shows. The cover is `thumbnail.png` beside the game's `game.yml`. The host shows the `thumbnail.img` that `tools/picture.py` writes from it. Without a cover, the card shows the title alone.
 
 ## Modes
 
@@ -79,9 +87,9 @@ A component with timed work, such as the [drain](components/drain.md)'s wait for
 
 ## Saved data
 
-A game's assets, high scores and other data may be stored in its directory on the SD card. Assets are files the [storage driver](drivers/storage.md) only reads. A game writes its high scores into ordinary files of its directory, as [storage](drivers/storage.md#writing) describes. A file missing on the card is created by its first write.
+A game's assets and other data lie in its directory on the SD card. Assets are files the [storage driver](drivers/storage.md) only reads. A game writes its other data into ordinary files of its directory, as [storage](drivers/storage.md#writing) describes. The host writes the game's high scores there as well, into `highscores.yml`. A file missing on the card is created by its first write.
 
-A game writes to the card only outside Play. A game keeps its live score in RAM and writes it in `end()`.
+A game writes to the card only outside Play. A game keeps what it saves in RAM during Play and writes it in `end()`.
 
 ## Interfaces
 
@@ -106,6 +114,9 @@ public:
 
     virtual const char* id() const = 0;             // its directory on the card, /games/<id>
     virtual const char* title() const = 0;          // the name the player sees
+    virtual const char* cover() const { return nullptr; }  // the picture its card in the menu shows, or none
+    virtual uint8_t players() const = 0;            // how many play, from 1 to 4
+    virtual int32_t score(uint8_t player) const = 0;  // a player's score, the players counted from 0
 
     virtual void start(Machine& machine) = 0;       // starts a new game: Stopped to Intro
     virtual void play() = 0;                        // begins play: Intro to Play
@@ -146,17 +157,17 @@ public:
     void update(uint32_t now);                  // runs every mode, then stops those whose done() is true
 };
 
-// the games this firmware carries; the first one is the default
+// the games this firmware carries; the first one is the built-in game, the first card of the game choice
 extern Game* const kGames[];
 extern const size_t kGameCount;
 
 class GameHost {
 public:
     void add(Component& component);            // routes the driver events of the component's parts through it
-    void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes and reads which game ran last, or the default game; the first update() launches it
+    void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes; the first update() shows the game choice, or starts the one game there is
     void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
     void update(uint32_t now);                 // updates every component, then the running game, and moves the game on once its phase is done
-    void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
+    void launch(Game* next);                   // the sequence every start takes; the game choice and the menu call it on OK
 };
 ```
 

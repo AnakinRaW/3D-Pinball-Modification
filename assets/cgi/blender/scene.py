@@ -426,6 +426,7 @@ def idw(anchors):
     return f
 
 
+GRAY_UNDER_BLUE = 0.3  # mm the gray lane keeps under the blue ramp's floor where it ends beneath it
 GRAY_START_Y = 136.4   # mm, where the gray launch lane takes over from the shooter lane
 
 
@@ -485,93 +486,114 @@ def floor_material():
     return m
 
 
-def stripes_material(name, a, b_, period):
+def tile_material(name, size_px, color, rough, coat=0.0, scale=(1.0, 1.0)):
+    """A material painted from a small tile that repeats over the UV map: color(u, v) names the hex color at a
+    point of the tile, u and v from 0 to 1; scale maps the UV map's units onto the tile."""
+    w, h = size_px
+    img = bpy.data.images.get(name + "-tile") or bpy.data.images.new(name + "-tile", w, h)
+    img.pixels[:] = [c for j in range(h) for i in range(w)
+                     for c in tuple(int(color((i + 0.5) / w, (j + 0.5) / h)[k:k + 2], 16) / 255 for k in (1, 3, 5)) + (1.0,)]
+    img.filepath_raw = os.path.join(OUT, name + "-tile.png"); img.file_format = "PNG"; img.save()
     m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree; n = nt.nodes
-    tc = n.new("ShaderNodeTexCoord"); sep = n.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
-    w = n.new("ShaderNodeMath"); w.operation = "WRAP"; w.inputs[1].default_value = 0; w.inputs[2].default_value = period / 10
-    nt.links.new(sep.outputs[0], w.inputs[0])
-    gt = n.new("ShaderNodeMath"); gt.operation = "GREATER_THAN"; gt.inputs[1].default_value = period / 20
-    nt.links.new(w.outputs[0], gt.inputs[0])
-    mix = n.new("ShaderNodeMix"); mix.data_type = "RGBA"
-    mix.inputs[6].default_value = hexcol(a); mix.inputs[7].default_value = hexcol(b_)
-    nt.links.new(gt.outputs[0], mix.inputs[0])
-    bs = n["Principled BSDF"]; nt.links.new(mix.outputs[2], bs.inputs["Base Color"])
-    bs.inputs["Roughness"].default_value = 0.35; bs.inputs["Coat Weight"].default_value = 0.3
+    uvn = n.new("ShaderNodeUVMap")
+    it = n.new("ShaderNodeTexImage"); it.image = img; it.interpolation = "Closest"; it.extension = "REPEAT"
+    if scale != (1.0, 1.0):
+        mp = n.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (scale[0], scale[1], 1.0)
+        nt.links.new(uvn.outputs[0], mp.inputs[0]); nt.links.new(mp.outputs[0], it.inputs[0])
+    else:
+        nt.links.new(uvn.outputs[0], it.inputs[0])
+    bs = n["Principled BSDF"]; nt.links.new(it.outputs["Color"], bs.inputs["Base Color"])
+    bs.inputs["Roughness"].default_value = rough; bs.inputs["Coat Weight"].default_value = coat
     return m
+
+
+def stripes_material(name, a, b_):
+    """Stripes of two colors across a part whose UV map's u counts stripe periods, the first half a."""
+    return tile_material(name, (2, 1), lambda u, v: a if u < 0.5 else b_, 0.35, coat=0.3)
+
+
+def uv_along_x(o, period):
+    """Gives the object a UV map whose u counts periods of period mm along x."""
+    me = o.data
+    uv = me.uv_layers.new(name="UVMap")
+    for loop in me.loops:
+        uv.data[loop.index].uv = (me.vertices[loop.vertex_index].co.x * 10 / period, 0.5)
+
+
+APRON_STRIPE = 14.9                           # mm, the apron's stripes: one red and one darker red
+FENCE_PICKET = (4.0, 2.6)                     # mm: the pickets' pitch and their width
+FENCE_RAILS = ((7.0, 9.5), (17.0, 19.5))      # mm over the fence's foot: the two rails
+FENCE_TILE_H = 25.0                           # mm of fence one tile covers
 
 
 def fence_material():
-    """The U lane's wall painted as a picket fence: pickets and gaps along its length, two rails across."""
-    m = bpy.data.materials.new("fence"); m.use_nodes = True; nt = m.node_tree; n = nt.nodes
-    uvn = n.new("ShaderNodeUVMap"); sep = n.new("ShaderNodeSeparateXYZ"); nt.links.new(uvn.outputs[0], sep.inputs[0])
-    w = n.new("ShaderNodeMath"); w.operation = "WRAP"; w.inputs[1].default_value = 0; w.inputs[2].default_value = 4.0
-    nt.links.new(sep.outputs[0], w.inputs[0])
-    gap = n.new("ShaderNodeMath"); gap.operation = "GREATER_THAN"; gap.inputs[1].default_value = 2.6
-    nt.links.new(w.outputs[0], gap.inputs[0])
-    def band(lo, hi):
-        a = n.new("ShaderNodeMath"); a.operation = "GREATER_THAN"; a.inputs[1].default_value = lo; nt.links.new(sep.outputs[1], a.inputs[0])
-        b = n.new("ShaderNodeMath"); b.operation = "LESS_THAN"; b.inputs[1].default_value = hi; nt.links.new(sep.outputs[1], b.inputs[0])
-        mm = n.new("ShaderNodeMath"); mm.operation = "MULTIPLY"; nt.links.new(a.outputs[0], mm.inputs[0]); nt.links.new(b.outputs[0], mm.inputs[1])
-        return mm
-    r1, r2 = band(7.0, 9.5), band(17.0, 19.5)
-    rails = n.new("ShaderNodeMath"); rails.operation = "MAXIMUM"; nt.links.new(r1.outputs[0], rails.inputs[0]); nt.links.new(r2.outputs[0], rails.inputs[1])
-    mix1 = n.new("ShaderNodeMix"); mix1.data_type = "RGBA"
-    mix1.inputs[6].default_value = hexcol("#b07a45"); mix1.inputs[7].default_value = hexcol("#4b2b14")
-    nt.links.new(gap.outputs[0], mix1.inputs[0])
-    mix2 = n.new("ShaderNodeMix"); mix2.data_type = "RGBA"; mix2.inputs[7].default_value = hexcol("#7a4a26")
-    nt.links.new(mix1.outputs[2], mix2.inputs[6]); nt.links.new(rails.outputs[0], mix2.inputs[0])
-    bs = n["Principled BSDF"]; nt.links.new(mix2.outputs[2], bs.inputs["Base Color"]); bs.inputs["Roughness"].default_value = 0.55
-    return m
+    """The U lane's wall painted as a picket fence: pickets and gaps along its length, two rails across. Its
+    ribbon's UV map runs in mm, along and up."""
+    def color(u, v):
+        if any(lo < v * FENCE_TILE_H < hi for lo, hi in FENCE_RAILS):
+            return "#7a4a26"
+        return "#b07a45" if u * FENCE_PICKET[0] < FENCE_PICKET[1] else "#4b2b14"
+    return tile_material("fence", (40, 250), color, 0.55, scale=(1 / FENCE_PICKET[0], 1 / FENCE_TILE_H))
 
 
-def node_math(nt, op, *vals):
-    n = nt.nodes.new("ShaderNodeMath"); n.operation = op
-    for i, v in enumerate(vals):
-        if v is None: continue
-        if isinstance(v, (int, float)): n.inputs[i].default_value = v
-        else: nt.links.new(v, n.inputs[i])
-    return n.outputs[0]
+WALL_COLORS = {"plywood": "#e8dcc0", "red": "#b3242d", "edge": "#2a2d33", "outer": "#4a4d54",
+               "brown": "#4a2616", "upright": "#121215"}
+UPRIGHT_PITCH, UPRIGHT_WIDTH = 46.0, 4.0     # mm, the partition's black uprights
 
 
-def node_mix(nt, fac, a, b):
-    m = nt.nodes.new("ShaderNodeMix"); m.data_type = "RGBA"
-    for v, i in ((a, 6), (b, 7)):
-        if isinstance(v, str): m.inputs[i].default_value = hexcol(v)
-        else: nt.links.new(v, m.inputs[i])
-    nt.links.new(fac, m.inputs[0])
-    return m.outputs[2]
+def wall_top_line():
+    """The side walls' top edge as a line over the board, z = a + b y in mm, from the back at y = -8.4 to the
+    front at 435.7."""
+    b = (H["wall_front"] - H["wall_back"]) / 444.1
+    return H["wall_back"] + 8.4 * b, b
 
 
-def side_wall_material():
-    """The cabinet's inner faces: red above the playfield, plywood below it, the dark top edge."""
-    m = bpy.data.materials.new("cabinet-wall"); m.use_nodes = True; nt = m.node_tree
-    tc = nt.nodes.new("ShaderNodeTexCoord"); sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
-    z = node_math(nt, "MULTIPLY", sep.outputs[2], 10.0)
-    y = node_math(nt, "MULTIPLY", sep.outputs[1], -10.0)            # mm down the playfield, 0 at the back
-    t = node_math(nt, "MINIMUM", node_math(nt, "MAXIMUM", node_math(nt, "DIVIDE", node_math(nt, "ADD", y, 8.4), 444.1), 0.0), 1.0)
-    top = node_math(nt, "ADD", H["wall_back"], node_math(nt, "MULTIPLY", t, H["wall_front"] - H["wall_back"]))
-    col = node_mix(nt, node_math(nt, "GREATER_THAN", z, 0.0), "#e8dcc0", "#b3242d")
-    col = node_mix(nt, node_math(nt, "GREATER_THAN", z, node_math(nt, "SUBTRACT", top, 2.0)), col, "#2a2d33")
-    # the outer faces of the two side walls are the gray base board; build_outer_sides lays the paint on it
-    geo = nt.nodes.new("ShaderNodeNewGeometry"); gsep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Normal"], gsep.inputs[0])
-    side_sign = node_math(nt, "SIGN", node_math(nt, "SUBTRACT", node_math(nt, "MULTIPLY", sep.outputs[0], 10.0), 115.0))
-    outer = node_math(nt, "GREATER_THAN", node_math(nt, "MULTIPLY", gsep.outputs[0], side_sign), 0.5)
-    col = node_mix(nt, outer, col, "#4a4d54")
-    b = nt.nodes["Principled BSDF"]; nt.links.new(col, b.inputs["Base Color"]); b.inputs["Roughness"].default_value = 0.6
-    return m
+def paint(o, planes, rule, rough):
+    """Cuts the object's mesh along planes, each (point, normal) in mm of the tilted frame, and gives every face the
+    flat color rule names for its middle and normal, so each color is a material of one color."""
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    for co, no in planes:
+        geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        bmesh.ops.bisect_plane(bm, geom=geom, plane_co=Vector(W(*co)), plane_no=Vector((no[0], -no[1], no[2])))
+    bm.normal_update()
+    names = []
+    for f in bm.faces:
+        c = f.calc_center_median()
+        name = rule((c.x * 10, -c.y * 10, c.z * 10), (f.normal.x, -f.normal.y, f.normal.z))
+        if name not in names:
+            names.append(name)
+        f.material_index = names.index(name)
+    o.data.materials.clear()
+    for name in names:
+        o.data.materials.append(mat("wall-" + name, WALL_COLORS[name], rough=rough))
+    bm.to_mesh(o.data); bm.free()
 
 
-def back_wall_material():
-    """The partition under the backbox: dark brown above, plywood below, black uprights."""
-    m = bpy.data.materials.new("back-wall"); m.use_nodes = True; nt = m.node_tree
-    tc = nt.nodes.new("ShaderNodeTexCoord"); sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
-    z = node_math(nt, "MULTIPLY", sep.outputs[2], 10.0)
-    x = node_math(nt, "MULTIPLY", sep.outputs[0], 10.0)
-    col = node_mix(nt, node_math(nt, "GREATER_THAN", z, 0.0), "#e8dcc0", "#4a2616")
-    post = node_math(nt, "LESS_THAN", node_math(nt, "WRAP", x, 46.0, 0.0), 4.0)
-    col = node_mix(nt, post, col, "#121215")
-    b = nt.nodes["Principled BSDF"]; nt.links.new(col, b.inputs["Base Color"]); b.inputs["Roughness"].default_value = 0.55
-    return m
+def side_wall_paint(o):
+    """The cabinet's side walls: red above the playfield, plywood below it, the dark top edge 2 mm deep, and the
+    gray base board on the outer faces, where build_outer_sides lays the paint."""
+    a, b = wall_top_line()
+    def rule(p, n):
+        x, y, z = p
+        if n[0] * (1 if x > 115 else -1) > 0.5:
+            return "outer"
+        if z > a + b * y - 2.0:
+            return "edge"
+        return "red" if z > 0 else "plywood"
+    # the edge's lower line z = a - 2 + b y runs through (0, 0, a - 2), normal to (0, -b, 1)
+    paint(o, [((0, 0, 0), (0, 0, 1)), ((0, 0, a - 2.0), (0, -b, 1))], rule, 0.6)
+
+
+def back_wall_paint(o):
+    """The partition under the backbox: dark brown above the playfield, plywood below, black uprights."""
+    def rule(p, n):
+        x, y, z = p
+        if (x % UPRIGHT_PITCH) < UPRIGHT_WIDTH:
+            return "upright"
+        return "brown" if z > 0 else "plywood"
+    planes = [((0, 0, 0), (0, 0, 1))]
+    planes += [((k * UPRIGHT_PITCH + d, 0, 0), (1, 0, 0)) for k in range(-1, 7) for d in (0.0, UPRIGHT_WIDTH)]
+    paint(o, planes, rule, 0.55)
 
 
 def wood():
@@ -631,8 +653,6 @@ def build_board():
             cyl(f"{name}-well", x, y, r, -30, -0.2, c, well)
     # the drain's disk is a light diffuser flush with the board, its face over the foil's height
     cyl("drain-diffuser", 108.54, 387.04, 7.73, 0.0, H["foil"] + 0.1, c, mat("diffuser-drain", "#d9e4ea", rough=0.3, transmission=0.3, emit="#fff1d6", strength=2.5))
-    wall = side_wall_material()
-    top = back_wall_material()
     for s in placed("cabinet"):
         if s["cls"] in ("wall", "wall-top"):
             # the partition at the back is the diorama's front, up to its base; the side walls run to the wall top.
@@ -640,7 +660,8 @@ def build_board():
             # the back as the board falls toward the front
             hi = (lambda x, y: wall_top(y)) if s["cls"] == "wall" else (lambda x, y: DIORAMA_BASE)
             on_table = lambda x, y: (TABLE_Z + y * math.sin(math.radians(TILT_DEG))) / math.cos(math.radians(TILT_DEG))
-            prism("cabinet-wall", s["pts"], 0.0, 0.0, c, wall if s["cls"] == "wall" else top, lo_fn=on_table, hi_fn=hi)
+            o = prism("cabinet-wall", s["pts"], 0.0, 0.0, c, None, lo_fn=on_table, hi_fn=hi)
+            (side_wall_paint if s["cls"] == "wall" else back_wall_paint)(o)
 
 
 DIORAMA_WIDTH = 275.0                           # mm, the manual's assembly size: the towers' width
@@ -1039,14 +1060,92 @@ def build_bumpers():
 
 def separator_top():
     """The inlane separators' height, the top of their R, on which the blue ramp and the red track end."""
-    rail = next(t["pts"] for t in SHAPES if "inlane-separators" in t["chain"] and t["cls"] == "rail")
-    return (max(p[1] for p in rail) - min(p[1] for p in rail)) * SEPARATOR_ASPECT
+    return SEPARATOR_HEIGHT
 
 
-def separator_r(name, pts, c, face, edge):
-    """An inlane separator: the letter R in the ROKR sign's typeface, standing along the drawing's separator with
-    its feet in the separator's two holes, its stem at the front and its bowl toward the diorama, its faces
-    painted face and its edges edge."""
+def two_tone(o, face, edge, axis):
+    """Paints an upright plywood part: the faces whose normal runs along axis (0 for x, 1 for y) face, every
+    other face edge."""
+    me = o.data
+    me.materials.clear(); me.materials.append(face); me.materials.append(edge)
+    for p in me.polygons:
+        p.material_index = 0 if abs(p.normal[axis]) > 0.9 else 1
+    return o
+
+
+def rail_arch(name, pts, c):
+    """The arch of the manual on the straight upright piece of an inlane rail, the wall between inlane and outlane:
+    the wall F30, the thicker plywood, stands closed and flush with the rail's face toward the outlane, red on
+    that face and black on its face toward the inlane; the arch F31, a thinner red plywood, lies directly on that
+    black face, which shows through its opening. Every edge is black, and their tops are level with the R's."""
+    red = mat("separator-red", "#c8323a", rough=0.45)
+    black = mat("separator-edge", "#141416", rough=0.5)
+    # the upright piece is as wide as the rail's rounded top end; the outlane runs outside it, between the rail
+    # and the cabinet's wall or the shooter lane
+    y0 = min(p[1] for p in pts)
+    straight = [p for p in pts if p[1] < y0 + 3.0]
+    x0, x1 = min(p[0] for p in straight), max(p[0] for p in straight)
+    right = x0 > 108.5
+    outward = 1.0 if right else -1.0
+    outlane_face = x1 if right else x0
+    length = SEPARATOR_ARCH_LENGTH
+    # both arches stand centered on the hole through which the red track drops its ball
+    ring = [p for t in SHAPES if "wire-ramp-drop" in t["chain"] for p in t["pts"]]
+    front = (min(p[1] for p in ring) + max(p[1] for p in ring)) / 2 + length / 2
+    height = separator_top() - H["rail"]
+    leg, rise, r = SEPARATOR_LEG, SEPARATOR_ARCH, SEPARATOR_CORNER
+    a = (length - 2 * leg) / 2
+    corner = lambda cu, cz, t0: [(cu + r * math.cos(t0 + math.pi / 2 * k / 6), cz + r * math.sin(t0 + math.pi / 2 * k / 6)) for k in range(7)]
+    rim = corner(length - r, height - r, 0.0) + corner(r, height - r, math.pi / 2)
+    opening = [(length / 2 - a * math.cos(math.pi * k / 16), rise * math.sin(math.pi * k / 16)) for k in range(17)]
+    tw, ta = SEPARATOR_WALL_THICK, SEPARATOR_ARCH_THICK
+    wall = figure(f"{name}-wall", outlane_face - outward * tw / 2, front, -90.0, [(0.0, 0.0), (length, 0.0)] + rim, tw, c, None,
+                  z0=H["rail"])
+    me = wall.data
+    me.materials.clear(); me.materials.append(red); me.materials.append(black)
+    for poly in me.polygons:
+        poly.material_index = 0 if poly.normal[0] * outward > 0.9 else 1
+    arch = figure(f"{name}-arch", outlane_face - outward * (tw + ta / 2), front, -90.0,
+                  [(0.0, 0.0)] + opening + [(length, 0.0)] + rim, ta, c, None, z0=H["rail"])
+    two_tone(arch, red, black, 0)
+
+
+def separator(name, pts, c):
+    """An inlane separator after the manual (C6, C7): the letter R standing on the board along the drawing's
+    separator, and on the right one the cradle C22 that reaches out under the red track. The R is yellow, the
+    cradle red, both with black edges."""
+    red = mat("separator-red", "#c8323a", rough=0.45)
+    edge = mat("separator-edge", "#141416", rough=0.5)
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    right = min(xs) > 108.5
+    inner = min(xs) if right else max(xs)
+    separator_r(name, pts, c, mat("separator-yellow", "#f1c94a", rough=0.45), edge)
+    if right:
+        top = separator_top()
+        # C22 hangs on the R's outer face with its tab in the R, crosses under the red track and ends in a
+        # notched tip; its underside is a moon's curve
+        reach = SEPARATOR_CRADLE
+        under = [(reach - reach * (1 - math.cos(math.pi / 2 * k / 12)) - SEPARATOR_THICK / 2,
+                  top - 1.5 - (SEPARATOR_CRADLE_DEPTH - 1.5) * math.sin(math.pi / 2 * k / 12)) for k in range(13)]
+        tip = [(reach - 4.0, top), (reach - 4.0, top - 1.5), (reach - 2.5, top - 1.5), (reach - 2.5, top),
+               (reach - 1.0, top), (reach - 1.0, top - 1.5), (reach, top - 1.5)]
+        cradle_x = inner + SEPARATOR_THICK
+        y_mid = (min(ys) + max(ys)) / 2
+        profile = [(-SEPARATOR_THICK / 2, top)] + tip + under
+        cradle = figure(f"{name}-cradle", cradle_x, y_mid, 0.0, profile, 3.0, c, None)
+        two_tone(cradle, red, edge, 1)
+        gold = mat("separator-star", "#f1c94a", rough=0.4)
+        for u, z, rs in ((3.0, top - 3.2, 1.4), (7.5, top - 3.0, 1.1)):
+            star = [(u + (rs if k % 2 == 0 else rs * 0.45) * math.sin(math.pi * k / 5),
+                     z + (rs if k % 2 == 0 else rs * 0.45) * math.cos(math.pi * k / 5)) for k in range(10)]
+            for side in (1, -1):
+                figure(f"{name}-star", cradle_x, y_mid + side * 1.55, 0.0, star, 0.1, c, gold)
+
+
+def separator_r(name, pts, c, face, edge, z0=0.0):
+    """The letter R of an inlane separator in the ROKR sign's typeface, standing along the drawing's separator
+    at height z0 (mm), its stem at the front and its bowl toward the diorama, its faces painted face and its
+    edges edge."""
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     font = next((f for f in SEPARATOR_FONT if os.path.exists(f)), None)
     cu = bpy.data.curves.new(name, "FONT"); cu.body = "R"; cu.extrude = SEPARATOR_THICK / 20
@@ -1059,15 +1158,18 @@ def separator_r(name, pts, c, face, edge):
     bm = bmesh.new(); bm.from_mesh(me)
     gx0, gx1 = min(v.co.x for v in bm.verts), max(v.co.x for v in bm.verts)
     gy0 = min(v.co.y for v in bm.verts)
-    k = (max(ys) - min(ys)) / 10 / (gx1 - gx0)
-    # its face toward the board's middle stays where the drawing has it, and its second layer lies outside it,
+    gy1 = max(v.co.y for v in bm.verts)
+    k = SEPARATOR_HEIGHT / 10 / (gy1 - gy0)
+    # it stands in the middle of the drawing's separator
+    front = (max(ys) + min(ys)) / 2 + (gx1 - gx0) * k * 10 / 2
+    # its face toward the board's middle stays where the drawing has it, and its thickness lies outside it,
     # so the lane between it and the slingshot keeps its width
     inner = min(xs) if min(xs) > 108.5 else max(xs)
     xc = inner + (SEPARATOR_THICK / 2 if inner > 108.5 else -SEPARATOR_THICK / 2)
     for v in bm.verts:
         gx, gy, gz = v.co
         # the glyph's width runs from the front toward the diorama, its height up, its extrusion across
-        v.co = Vector(W(xc + gz * 10, max(ys) - (gx - gx0) * k * 10, (gy - gy0) * k * 10))
+        v.co = Vector(W(xc + gz * 10, front - (gx - gx0) * k * 10, z0 + (gy - gy0) * k * 10))
     bm.normal_update()
     for f in bm.faces:
         f.material_index = 0 if abs(f.normal.x) > 0.9 else 1
@@ -1216,16 +1318,26 @@ def build_posts_and_rubbers():
 
 
 # side views of the two figures, (u, z) in mm, u along the plane
-ELEPHANT = [(-4.5, 0), (-1.2, 0), (-0.8, 4), (0.8, 4), (1.2, 0), (4.5, 0), (4.6, 6), (5.4, 9.5), (4.8, 12.5), (3.2, 14),
-            (4.4, 15.2), (6.2, 17.2), (7.2, 20.2), (6.2, 20.6), (5.0, 18.4), (3.2, 17.0), (1.6, 18.2), (-0.6, 18.2),
-            (-2.4, 16.6), (-2.8, 14.6), (-4.8, 13.4), (-5.4, 10.6), (-4.4, 9.0), (-4.9, 6.0)]
+# the elephant after the manual, reared up and facing +u: its hind legs on the stand, one front foot on a red
+# pedestal, the other front leg raised, its trunk curled up over its head
+ELEPHANT = [(-4.6, 0), (-1.6, 0), (-1.2, 4.0), (1.0, 6.0), (3.2, 5.4), (3.6, 3.5), (5.8, 3.5), (5.6, 6.8), (6.6, 8.6),
+            (8.6, 9.0), (8.8, 10.6), (6.8, 10.8), (6.4, 12.6), (7.6, 14.0), (9.2, 15.0), (10.2, 17.0), (10.4, 19.4),
+            (9.8, 21.2), (8.8, 21.6), (8.6, 20.8), (9.4, 20.2), (9.4, 18.0), (8.6, 16.4), (7.6, 15.8)] + [
+            (4.8 + 3.4 * math.cos(math.radians(a)), 18.6 + 3.4 * math.sin(math.radians(a))) for a in range(-40, 201, 15)] + [
+            (1.2, 15.6),
+            (-1.0, 14.4), (-3.6, 11.8), (-5.4, 8.6), (-5.6, 5.4), (-5.0, 2.0)]
+ELEPHANT_PEDESTAL = (4.7, 2.0, 1.5, 3.5)   # the front foot's round pedestal, a truncated cone: u, radius at the foot and the top, height
 # the seal sits facing -u, its nose up under the ball, its tail curled up behind it
 # the elephant's paint: a red blanket with a gold trim on its back, a red headdress with a gold plume, the eye
-ELEPHANT_BLANKET = [(-4.9, 6.4), (3.4, 6.4), (3.1, 11.6), (-4.9, 11.6)]
-ELEPHANT_TRIM = [(-4.9, 5.8), (3.5, 5.8), (3.5, 6.8), (-4.9, 6.8)]
-ELEPHANT_HEADDRESS = [(-0.6, 17.4), (1.8, 17.4), (1.4, 18.8), (-0.2, 18.8)]
-ELEPHANT_PLUME = [(0.0, 18.6), (1.2, 18.6), (0.6, 21.0)]
-ELEPHANT_EYE = [(3.2 + 0.5 * math.cos(2 * math.pi * k / 12), 15.4 + 0.5 * math.sin(2 * math.pi * k / 12)) for k in range(12)]
+ELEPHANT_BLANKET = [(-4.6, 6.8), (1.6, 9.2), (1.0, 14.6), (-3.4, 11.6)]
+ELEPHANT_TRIM = [(-4.7, 6.2), (1.7, 8.6), (1.7, 9.4), (-4.7, 7.0)]
+ELEPHANT_HEADDRESS = [(3.8, 21.4), (5.8, 21.4), (5.6, 22.8), (4.0, 22.8)]
+ELEPHANT_PLUME = [(4.4, 22.6), (5.4, 22.6), (4.8, 24.8)]
+ELEPHANT_STAND_STEP = 1.5   # mm, how much smaller the stand's upper disc is than the lower one
+ELEPHANT_EYE = [(6.4 + 0.5 * math.cos(2 * math.pi * k / 12), 19.0 + 0.5 * math.sin(2 * math.pi * k / 12)) for k in range(12)]
+# the big ear on the side of the head, a shade darker, and a short tusk at the trunk's root
+ELEPHANT_EAR = [(3.8 + 2.2 * math.cos(2 * math.pi * k / 16), 17.4 + 3.2 * math.sin(2 * math.pi * k / 16)) for k in range(16)]
+ELEPHANT_TUSK = [(7.2, 15.0), (8.9, 14.1), (7.5, 15.7)]
 SEAL = [(-4.2, 0), (5.0, 0), (6.6, 1.2), (8.0, 3.2), (9.6, 6.4), (8.6, 6.2), (7.6, 4.8), (6.2, 4.4), (4.4, 4.6),
         (2.6, 6.2), (1.6, 8.4), (1.2, 10.6), (0.2, 12.2), (-1.4, 12.8), (-3.2, 13.8), (-4.2, 13.4), (-3.4, 11.6),
         (-3.6, 9.4), (-3.2, 7.2), (-4.0, 5.0), (-5.6, 3.0), (-4.6, 2.4), (-3.8, 2.8)]
@@ -1238,7 +1350,6 @@ def build_lower():
     black = mat("flipper", "#121215", rough=0.35, coat=0.6)
     red = mat("sling-red", "#b8323a", rough=0.35, coat=0.6)
     panel = mat("sling-panel", "#5a6370", rough=0.5)
-    disc = mat("disc-red", "#c92a35", rough=0.3, coat=0.7)
     rail = mat("rail-red", "#c42c38", rough=0.35, coat=0.6)
     gem = mat("gem", "#8e99a6", rough=0.2, metal=0.5)
     gem_y = mat("gem-yellow", "#f1c94a", rough=0.2, emit="#f1c94a", strength=0.5)
@@ -1273,30 +1384,41 @@ def build_lower():
             elif cl == "sling-panel": prism("sling-panel", s["pts"], H["sling"], H["sling"] + 0.2, c, panel)
             elif cl == "disc":
                 x, y, r = s["circle"]
-                cyl("elephant-stand", x, y, r, H["sling"], H["sling"] + 2.0, c, disc)
+                # the stand: two discs, a white one and a smaller light blue one on it, each with a gold rim
+                rim = mat("elephant-stand-rim", "#d4a640", rough=0.35, metal=0.6)
+                z0 = H["sling"]
+                for rr, colr in ((r, "#f2efe6"), (r - ELEPHANT_STAND_STEP, "#8fcbe6")):
+                    cyl("elephant-stand", x, y, rr, z0, z0 + 2.0, c, rim)
+                    cyl("elephant-stand", x, y, rr - 0.8, z0 + 2.0, z0 + 2.2, c, mat("elephant-stand-" + colr[1:], colr, rough=0.45))
+                    z0 += 2.2
                 mirror = x > 108.5
                 flip = (lambda pts: [(-u, z) for u, z in pts]) if mirror else (lambda pts: pts)
-                z0 = H["sling"] + 2.0
+                pu, pr0, pr1, ph = ELEPHANT_PEDESTAL
+                cyl("elephant-pedestal", x + (-pu if mirror else pu), y, pr0, z0, z0 + ph, c,
+                    mat("elephant-pedestal", "#e0414c", rough=0.45), 48, r_top=pr1)
                 figure("elephant", x, y, 0.0, flip(ELEPHANT), 3.0, c, mat("elephant", "#9097a0", rough=0.5), z0=z0)
-                for name, prof, colr in (("elephant-blanket", ELEPHANT_BLANKET, "#c8323a"), ("elephant-trim", ELEPHANT_TRIM, "#e3c46c"),
-                                         ("elephant-headdress", ELEPHANT_HEADDRESS, "#c8323a"), ("elephant-plume", ELEPHANT_PLUME, "#e3c46c"),
-                                         ("elephant-eye", ELEPHANT_EYE, "#141416")):
-                    figure(name, x, y, 0.0, flip(prof), 3.4, c, mat(name, colr, rough=0.45), z0=z0)
+                for name, prof, colr, thick in (("elephant-blanket", ELEPHANT_BLANKET, "#c8323a", 3.4), ("elephant-trim", ELEPHANT_TRIM, "#e3c46c", 3.4),
+                                                ("elephant-ear", ELEPHANT_EAR, "#7a828c", 3.4), ("elephant-tusk", ELEPHANT_TUSK, "#f2ead8", 3.4),
+                                                ("elephant-headdress", ELEPHANT_HEADDRESS, "#c8323a", 3.4), ("elephant-plume", ELEPHANT_PLUME, "#e3c46c", 1.0),
+                                                ("elephant-eye", ELEPHANT_EYE, "#141416", 3.6)):
+                    figure(name, x, y, 0.0, flip(prof), thick, c, mat(name, colr, rough=0.45), z0=z0)
             elif cl == "rail" and "inlane-separators" in ch:
-                separator_r(next(n for n in ch if n.startswith("separator-")), s["pts"], c, mat("separator-yellow", "#f1c94a", rough=0.45),
-                            mat("separator-edge", "#141416", rough=0.5))
-            elif cl == "rail": prism("rail", s["pts"], 0, H["rail"], c, rail)
+                separator(next(n for n in ch if n.startswith("separator-")), s["pts"], c)
+            elif cl == "rail":
+                prism("rail", s["pts"], 0, H["rail"], c, rail)
+                if "inlane-rails" in ch:
+                    rail_arch("separator-" + ("right" if min(p[0] for p in s["pts"]) > 108.5 else "left"), s["pts"], c)
             elif cl == "rail-gem": prism("rail-gem", s["pts"], H["rail"], H["rail"] + 0.3, c, gem)
             elif cl == "rail-gem-y": prism("rail-gem", s["pts"], H["rail"], H["rail"] + 0.3, c, gem_y)
             elif cl == "screw" and "circle" in s: cyl("flipper-screw", *s["circle"], H["flipper"], H["flipper"] + 0.4, c, screw, 24)
     # the apron is a plate the ball rolls under on its way into the drain
-    stripes = stripes_material("apron", "#e2505b", "#c8323f", 14.9)
+    stripes = stripes_material("apron", "#e2505b", "#c8323f")
     band = mat("apron-band", "#3c4250", rough=0.4)
     side = mat("apron-side", "#555c69", rough=0.4)
     star = mat("apron-star", "#d9b65a", rough=0.3, metal=0.8)
     for s in placed("apron"):
         cl = s["cls"]
-        if cl == "apron": prism("apron", s["pts"], H["apron_lo"], H["apron_hi"], c, stripes)
+        if cl == "apron": uv_along_x(prism("apron", s["pts"], H["apron_lo"], H["apron_hi"], c, stripes), APRON_STRIPE)
         elif cl == "apron-band": prism("apron-band", s["pts"], 0, H["apron_hi"] + 2, c, band)
         elif cl == "apron-side": prism("apron-side", s["pts"], H["apron_hi"], H["apron_hi"] + 0.4, c, side)
         elif cl == "apron-star": prism("apron-star", s["pts"], H["apron_hi"] + 2, H["apron_hi"] + 2.3, c, star)
@@ -1395,10 +1517,19 @@ CROC_DROP = 18.0       # mm ahead of the half loop's foot where the red track st
 CROC_CLEAR = 0.5       # mm the ball keeps from the red track in the mouth, climbing under it and dropping onto it
 CROC_TAIL = 12.0       # mm the middle rib runs on behind the hinge as the tail, an estimate from the manual's picture
 TRACK_FALL = 0.006     # mm the red track falls for every mm along the board
+TRACK_WALL = 2.0       # mm, the red track's walls, as thick as the drawing's end wall
 # the inlane separators (C6, C7) are a letter R standing along the separator, its feet in the drawing's two holes
 SEPARATOR_FONT = ("C:/Windows/Fonts/georgiab.ttf",)  # the ROKR sign's Georgia Bold, the first one found
-SEPARATOR_ASPECT = 1419 / 1629     # Georgia Bold's R: its height over its width, in font units
-SEPARATOR_THICK = 6.0  # mm, the R's two layers of 3 mm plywood, wide enough that the tracks' edges rest on it
+SEPARATOR_THICK = 4.5  # mm, the R's thickness, by eye
+SEPARATOR_HEIGHT = 17.0  # mm, the R's height, by eye; the blue ramp and the red track end on its top
+SEPARATOR_ARCH_LENGTH = 22.7  # mm, the arch F30/F31 along its inlane rail, as long as the R, by eye after the manual
+SEPARATOR_LEG = 4.0    # mm, the width of the arch's legs
+SEPARATOR_WALL_THICK = 4.0  # mm, the wall F30, by eye
+SEPARATOR_ARCH_THICK = 2.0  # mm, the thinner arch F31 on it, by eye
+SEPARATOR_ARCH = 6.0   # mm, the height of the opening between them
+SEPARATOR_CORNER = 3.0  # mm, the radius of the arch's top corners
+SEPARATOR_CRADLE = 14.0  # mm, how far C22 reaches out from the right R's outer face
+SEPARATOR_CRADLE_DEPTH = 8.0  # mm, C22's depth below the R's top at the R
 SPACER_R = 2.3     # mm, a post's clear spacer: wider than the screw's head, narrower than a slingshot's (estimate)
 TARGET_FORWARD = 3.0     # mm a stand-up target stands toward the playfield's middle from the drawing, clear of its posts
 
@@ -1549,22 +1680,25 @@ def build_ramps():
         fm = mat(pid + "-floor", color_floor, rough=0.3, coat=0.5)
         wm = mat(pid + "-wall", color_wall, rough=0.3, coat=0.5)
         outlines = [clip(sh["pts"]) for sh in by(pid, floor_cls)]
+        built = []
         if floor_cls == "launch-floor":
             # drawn even-odd: the largest outline is the floor, the smaller one the slot into the rollover lanes
             def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps)))) / 2
             outlines.sort(key=area, reverse=True)
             fl = surface(pid + "-floor", outlines[0], zfn, H["ramp_floor"], c, fm)
+            built.append(fl)
             for h_pts in outlines[1:]:
                 cut = prism(pid + "-hole", h_pts, -H["ramp_floor"] - 3, 3, c, None, zfn=zfn)
                 cut.hide_render = True; cut.hide_viewport = True
                 bo = fl.modifiers.new("hole", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
         else:
             for pts in outlines:
-                surface(pid + "-floor", pts, zfn, H["ramp_floor"], c, fm)
+                built.append(surface(pid + "-floor", pts, zfn, H["ramp_floor"], c, fm))
         for s in by(pid, wall_cls):
             # a wall is drawn as a thin outline around it; it is built along its middle line
             mid, width = centerline(clip(s["pts"]))
-            ribbon(pid + "-wall", mid, max(width, 1.0), wall_lo, wall_h, c, wm, zfn=zfn)
+            built.append(ribbon(pid + "-wall", mid, max(width, 1.0), wall_lo, wall_h, c, wm, zfn=zfn))
+        return [o for o in built if o]
 
     # the blue ramp climbs from the playfield through the fire hoop, turns, and ends in the air above the left inlane
     blue_z = blue_height()
@@ -1632,8 +1766,15 @@ def build_ramps():
     gray_course = polyline_param([(224.0, GRAY_START_Y), (222.0, 90.0), (208.0, 50.0), (172.0, 38.0), (132.0, 52.0)])
     gray_start = shooter_z(224.0, GRAY_START_Y)
     gray_z = lambda x, y: gray_start + gray_course(x, y) * (H["gray_end"] - gray_start)
-    # its walls stay low, so they pass under the blue ramp where the lane ends beneath it
-    ramp("ramp-orbit-right", "launch-floor", "launch-wall", gray_z, "#3a404b", "#6a7382", wall_h=H["ramp_wall"] / 2)
+    # its walls stay low; where it ends under the blue ramp, whatever of it would reach into the blue floor is cut
+    # away, GRAY_UNDER_BLUE under that floor
+    gray = ramp("ramp-orbit-right", "launch-floor", "launch-wall", gray_z, "#3a404b", "#6a7382", wall_h=H["ramp_wall"] / 2)
+    for k, poly in enumerate(BLUE_FLOOR):
+        # the cutter follows the blue floor on the same net, so its underside bends with the floor's
+        cut = surface(f"ramp-blue-cutter-{k}", poly, lambda x, y: blue_z(x, y) + 10.0, 10.0 + H["ramp_floor"] + GRAY_UNDER_BLUE, c, None)
+        cut.hide_render = True; cut.hide_viewport = True
+        for o in gray:
+            bo = o.modifiers.new(f"under-blue-{k}", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
 
     # the crocodile: the ball climbs its lower jaw, turns in a half loop at the back of the mouth and leaves
     # on the red track, under the open upper jaw that carries the eyes
@@ -1826,7 +1967,6 @@ def build_ramps():
         q = p0 * s_ ** 3 + p1 * 3 * s_ * s_ * t + p2 * 3 * s_ * t * t + p3 * t ** 3
         d = (p1 - p0) * 3 * s_ * s_ + (p2 - p1) * 6 * s_ * t + (p3 - p2) * 3 * t * t
         curve.append((q, d.normalized(), Vector((0, 0, 1))))
-    sweep("crocodile-mouth-track", curve, red, walls=True, w=tie_w)
     track_z = lambda x, y: z_mouth - TRACK_FALL * (max(y, y0) - y0)
     for s in by("wire-ramp", "rail-red"):
         ys = [p[1] for p in s["pts"]]
@@ -1835,7 +1975,13 @@ def build_ramps():
             end_y = min(ys)
     # the drawing's cross strips, each from one edge to the other, with rows between them every millimeter or
     # less, so the floor and its walls follow the profile's bends
-    pairs, prev = [], None
+    # the track starts in the mouth: the curve's cross sections come first, so floor, slot and walls run on in
+    # one piece from there to the end
+    pairs = []
+    for q, tan, up in curve[:-1]:
+        sd = tan.cross(up).normalized()
+        pairs.append(((q.x + sd.x * tie_w, q.y + sd.y * tie_w), (q.x - sd.x * tie_w, q.y - sd.y * tie_w)))
+    prev = pairs[-1]
     for t in ties:
         a, b = tuple(t[0]), tuple(t[-1])
         if prev and math.dist(a, prev[0]) + math.dist(b, prev[1]) > math.dist(a, prev[1]) + math.dist(b, prev[0]):
@@ -1844,7 +1990,7 @@ def build_ramps():
             n = max(1, math.ceil(max(math.dist(a, prev[0]), math.dist(b, prev[1])) / 1.0))
             pairs += [(lerp2(prev[0], a, k / n), lerp2(prev[1], b, k / n)) for k in range(1, n)]
         pairs.append((a, b)); prev = (a, b)
-    # the floor (F15) has a slot along its middle from the mouth to the end piece; the ball runs on its edges
+    # the floor (F15) has a slot along its middle; the ball runs on its edges
     me = bpy.data.meshes.new("track-floor"); bm = bmesh.new()
     rows = []
     for a, b in pairs:
@@ -1852,16 +1998,10 @@ def build_ramps():
         sa = (a[0] + (b[0] - a[0]) * (0.5 - f), a[1] + (b[1] - a[1]) * (0.5 - f))
         sb = (a[0] + (b[0] - a[0]) * (0.5 + f), a[1] + (b[1] - a[1]) * (0.5 + f))
         rows.append([bm.verts.new(W(*q, track_z(*q))) for q in (a, sa, sb, b)])
-    # the slot is closed at the mouth: the floor's first 8 mm are whole
-    along = [0.0]
+    # the slot runs from the track's start in the mouth to the hole
     for r0, r1 in zip(rows, rows[1:]):
-        along.append(along[-1] + (r1[0].co - r0[0].co).length * 10)
-    for i, (r0, r1) in enumerate(zip(rows, rows[1:])):
-        if along[i + 1] <= 8.0:
-            bm.faces.new((r0[0], r0[3], r1[3], r1[0]))
-        else:
-            bm.faces.new((r0[0], r0[1], r1[1], r1[0]))
-            bm.faces.new((r0[2], r0[3], r1[3], r1[2]))
+        bm.faces.new((r0[0], r0[1], r1[1], r1[0]))
+        bm.faces.new((r0[2], r0[3], r1[3], r1[2]))
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     bm.normal_update()
     for f in bm.faces:
@@ -1881,9 +2021,22 @@ def build_ramps():
     cut = cyl("track-hole-cutter", hx, hy, hr, track_z(hx, hy) - 5, track_z(hx, hy) + 5, c, None)
     cut.hide_render = True; cut.hide_viewport = True
     bo = end_floor.modifiers.new("hole", "BOOLEAN"); bo.object = cut; bo.operation = "DIFFERENCE"
+    # the floor's slot runs on through the end piece into the hole
+    f = min(0.19, 3.5 / math.dist(la, lb))
+    sa, sb = lerp2(la, lb, 0.5 - f), lerp2(la, lb, 0.5 + f)
+    dh = hy - (la[1] + lb[1]) / 2
+    slot = [(sa[0], sa[1] - 0.5), (sb[0], sb[1] - 0.5), (sb[0], sb[1] + dh), (sa[0], sa[1] + dh)]
+    slit = prism("track-slot-cutter", slot, -5.0, 5.0, c, None, zfn=track_z)
+    slit.hide_render = True; slit.hide_viewport = True
+    bo = end_floor.modifiers.new("slot", "BOOLEAN"); bo.object = slit; bo.operation = "DIFFERENCE"
     edges[0].append(ea); edges[1].append(eb)
-    for edge in edges:
-        ribbon("track-wall", edge, 1.5, -1.6, 4.0, c, red, zfn=track_z)
+    # both side walls are as thick as the end wall and stand outside the floor's edges, flush with its ends
+    for edge, other in ((edges[0], edges[1]), (edges[1], edges[0])):
+        line = []
+        for p, q in zip(edge, other):
+            d = Vector(p) - Vector(q); d.normalize()
+            line.append((p[0] + d.x * TRACK_WALL / 2, p[1] + d.y * TRACK_WALL / 2))
+        ribbon("track-wall", line, TRACK_WALL, -1.6, 4.0, c, red, zfn=track_z)
     floor.modifiers.new("solid", "SOLIDIFY").thickness = H["ramp_floor"] / 10
 
 

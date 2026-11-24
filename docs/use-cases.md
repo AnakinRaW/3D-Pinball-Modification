@@ -6,7 +6,7 @@
 
 | Use case | Realized in |
 |---|---|
-| At power-up the machine loads the game that ran last, or the first game when none ran before. | [Host](firmware/game-abstraction.md#host), [game host tests](firmware/testing.md#game-host) |
+| At power-up the machine shows the game choice, with the built-in game as the first card. A single game starts at once. Without a card, a warning shows and the built-in game starts. | [Host](firmware/game-abstraction.md#host), [game host tests](firmware/testing.md#game-host) |
 | A game is loaded anew once its post-game phase has ended. | [Host](firmware/game-abstraction.md#host), [game lifecycle](firmware/game-abstraction.md#game-lifecycle) |
 | A loaded game starts once its start conditions hold, as a rule once every ball lies in the drain's store. | [Game lifecycle](firmware/game-abstraction.md#game-lifecycle) |
 | A lane sensor sees even the fastest ball, one the plunger fires at full strength. | [IR ball sensing](parts/ir-reflective/design.md#requirements), [phase length](firmware/drivers/ir-sensing.md#phase-length) |
@@ -24,6 +24,10 @@
 | A shot that turns the rotating seal counts with its direction and its full turns. The game sets how far the seal has to turn for a shot. | [Rotating seal](firmware/components/rotating-seal.md) |
 | Vibration of the machine and a nudge too small for a shot never count as a shot. | [Rotating seal](firmware/components/rotating-seal.md#requirements), [rotary sensor driver](firmware/drivers/magnetic-rotary.md#driver-events) |
 | A ball still on the playfield carries on when the game changes. | [Host](firmware/game-abstraction.md#host) |
+| Up to four players take turns. Each player has a score and a count of balls. | [Players and balls](firmware/game-files.md#players-and-balls), [what the host expects of a game](firmware/game-abstraction.md#what-the-host-expects-of-a-game) |
+| A player joins with a tap while the first player's first ball runs. | [Players and balls](firmware/game-files.md#players-and-balls) |
+| A game gives a player an extra ball. The same player then plays again. | [Players and balls](firmware/game-files.md#players-and-balls) |
+| At the end of a ball, the bonus counts up item by item before the next ball comes. | [Players and balls](firmware/game-files.md#players-and-balls) |
 
 ## Scoring
 
@@ -31,8 +35,11 @@
 |---|---|
 | The game awards points for lanes, shots and hits by rules the game sets. | [Example game](firmware/game-abstraction.md#an-example-game) |
 | The score stays on the screen over every mode's slide. | [Screen slides](firmware/components/screen.md#slides) |
-| The post-game phase shows the score and keeps the high score. The high score survives a power cut. | [Game lifecycle](firmware/game-abstraction.md#game-lifecycle), [saved data](firmware/game-abstraction.md#saved-data) |
+| After every game, each player enters a name or skips it. Every score that makes the game's high-score list is entered there. The list survives a power cut. Without a card, the built-in game's list lasts until power-off. | [What the host expects of a game](firmware/game-abstraction.md#what-the-host-expects-of-a-game), [saved data](firmware/game-abstraction.md#saved-data) |
 | The ball count shows on the lights of the shooter lane, where the stock ball count board sat. | [Light layout](parts/lighting/design.md#light-layout), [lamp groups](firmware/components/lamps.md#groups) |
+| A game keeps values in variables. A variable holds a value for each player, for each ball, for the whole game or across restarts. | [Variables](firmware/game-files.md#variables) |
+| A multiplier acts on every award of points. | [Variables](firmware/game-files.md#variables) |
+| A game counts every hit on the playfield, whichever part the ball hits. | [Events](firmware/game-files.md#events) |
 
 ## Drain and ball store
 
@@ -67,6 +74,19 @@
 | Where two modes want the same hit, the mode of higher priority decides first. | [Modes](firmware/game-abstraction.md#modes) |
 | A multiball puts the second ball into play while the first is still on the playfield. | [Modes](firmware/game-abstraction.md#modes), [ball store](firmware/components/drain.md#ball-store) |
 | Each mode shows its lights, its slide and its music. What the mode below set comes back when it ends. | [Overlapping effects](firmware/components/lamps.md#overlapping-effects), [screen slides](firmware/components/screen.md#slides), [music](firmware/components/sounds.md#music) |
+
+## Rules
+
+| Use case | Realized in |
+|---|---|
+| A game has timers. A timer counts down and raises an event when it runs out. It can also raise an event at a set interval. | [Game files](firmware/game-files.md) |
+| The game starts, stops, pauses, resumes and restarts a timer. It gives a timer more time and reads the time a timer has left. | [Game files](firmware/game-files.md) |
+| A game has hurry-ups. A hurry-up's value falls over time until a shot collects it. | [Game files](firmware/game-files.md) |
+| A game has shots. A shot is lit or unlit, and its lamp shows which. The game tells a hit on a lit shot from a hit on an unlit one. | [Game files](firmware/game-files.md) |
+| Shots form groups. A group lights or clears its shots at once, moves the lit shots on, lights one at random and reports when none is left lit. | [Game files](firmware/game-files.md) |
+| A game has award lists. A list hands out its awards in a set order or shuffled. A shuffled list repeats no award before all were given. | [Game files](firmware/game-files.md) |
+| A game counts events toward a target. It collects several events in any order, or in a fixed order within a time window. | [Game files](firmware/game-files.md) |
+| A game's rules end after a fixed number of steps, whatever the events. A replay of a game reaches the same score. | [Conditions and values](firmware/game-files.md#conditions-and-values), [time](firmware/game-files.md#time) |
 
 ## Lights
 
@@ -105,7 +125,7 @@
 | A full-screen video plays at its full frame rate while the sounds keep playing. A video with sound stays in step with its sound. | [Display](parts/display/design.md#use-cases), [video player](firmware/components/video-player.md#playing) |
 | A video plays only while its mode's slide shows. | [Video owner](firmware/components/video-player.md#owner) |
 | The game learns when a video has played to its end. | [End of a video](firmware/components/video-player.md#end-of-a-video) |
-| The game reacts when the player taps or holds the screen, or presses a button on it. | [Touch](firmware/components/screen.md#touch), [touch driver](firmware/drivers/touch.md#driver-events) |
+| The game reacts when the player taps or holds the screen, or presses a button on it. The game knows where the screen was touched. | [Touch](firmware/components/screen.md#touch), [touch driver](firmware/drivers/touch.md#driver-events), [screen in a game file](firmware/game-files.md#screen) |
 | The picture comes back after a supply dip has reset the panel. | [Display driver](firmware/drivers/display.md#device-faults), [reset](parts/display/design.md#reset) |
 
 ## Menu and settings
@@ -157,7 +177,8 @@
 | The operator checks at every start whether the seal's magnet sits at the right gap. | [Rotary sensor driver](firmware/drivers/magnetic-rotary.md#start-up) |
 | The operator reads the machine's log on a computer. The log keeps the latest lines and never outgrows its limit. | [Logging](firmware/logging.md), [its two files](firmware/logging.md#files) |
 | The operator makes pictures, videos and sounds for a game from ordinary files. | [Media](../assets/media.md) |
-| The operator adds a game, whose code is built into the firmware and whose files lie on the SD card. | [Game abstraction](firmware/game-abstraction.md) |
+| The operator can add a game as a file on the SD card, with no firmware build. | [Game files](firmware/game-files.md), [game abstraction](firmware/game-abstraction.md) |
+| A game with an error in its file does not start. Its card in the menu shows the error with its file, line and column. | [Loading and checking](firmware/game-files.md#loading-and-checking) |
 | The operator updates the firmware. | **Not covered.** The firmware's build and flash toolchain is not chosen yet. |
 | The operator tests each subsystem on the bench before it goes into the machine. | [Testing](firmware/testing.md) |
 | The operator restores the stock machine. | [Reversibility](../RULES.md#12-reversibility) |
