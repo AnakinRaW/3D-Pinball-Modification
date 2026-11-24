@@ -744,7 +744,7 @@
     <path class="ir-sensor" d="M1.298 -2.796Q2.135 -2.797 2.137 -1.962L2.143 1.954Q2.147 2.79 1.31 2.792L-1.298 2.795Q-2.135 2.795 -2.137 1.961L-2.147 -1.952Q-2.147 -2.788 -1.307 -2.792Z" />
     <circle class="ir-eye" cx="0" cy="-0.001" r="0.84" />
    </g>
-   <g id="ir-left-lane" inkscape:label="Left lane, between the U lane's wall and the plate" transform="translate(38.628 135.15) rotate(80.093)">
+   <g id="ir-scoop" inkscape:label="Scoop, between the U lane's wall and the plate" transform="translate(38.628 135.15) rotate(80.093)">
     <path class="ir-sensor" d="M1.298 -2.796Q2.135 -2.797 2.137 -1.962L2.143 1.954Q2.147 2.79 1.31 2.792L-1.298 2.795Q-2.135 2.795 -2.137 1.961L-2.147 -1.952Q-2.147 -2.788 -1.307 -2.792Z" />
     <circle class="ir-eye" cx="0" cy="-0.001" r="0.84" />
    </g>
