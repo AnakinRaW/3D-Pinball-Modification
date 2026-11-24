@@ -17,7 +17,8 @@ JPEG_QUALITY = 85
 # drawing's top view places nothing, so their parts go by name
 NAMED_IDS = (("backbox-b20", "dio-b20"), ("backbox-scene", "dio-scene"), ("backbox-back", "sky"),
              ("display-screen", "display"), ("backbox-frame", "dio-frame"), ("diorama-", "dio-frame"),
-             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("plunger-", "cabinet"))
+             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("plunger-", "cabinet"),
+             ("separator-left", "separator-left"), ("separator-right", "separator-right"))
 
 exec(compile(open(os.path.join(BUILD, "scene.py"), encoding="utf-8").read(), "scene.py", "exec"),
      {"BUILD": BUILD, "__name__": "scene"})

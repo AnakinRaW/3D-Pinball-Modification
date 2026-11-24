@@ -397,6 +397,27 @@ def profile(points):
     return f
 
 
+def clip_band(poly, origin, normal, a0, a1):
+    """The part of polygon poly whose distance along normal from origin lies between a0 and a1."""
+    def cut(pts, keep):
+        out = []
+        for i, p in enumerate(pts):
+            q = pts[i - 1]
+            dp, dq = keep(p), keep(q)
+            if (dp >= 0) != (dq >= 0):
+                t = dq / (dq - dp)
+                out.append((q[0] + (p[0] - q[0]) * t, q[1] + (p[1] - q[1]) * t))
+            if dp >= 0:
+                out.append(p)
+        return out
+    d = lambda p: (p[0] - origin[0]) * normal.x + (p[1] - origin[1]) * normal.y
+    return cut(cut(list(poly), lambda p: d(p) - a0), lambda p: a1 - d(p))
+
+
+def lerp2(p, q, t):
+    return (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+
+
 def idw(anchors):
     """Height (mm) by inverse distance weighting over anchors [(x, y, z)]."""
     def f(x, y):
@@ -1017,14 +1038,81 @@ def build_bumpers():
             bo = o.modifiers.new(f"bumper-{k}", "BOOLEAN"); bo.object = bpy.data.objects[f"bumper-{k}-foil-cutter"]; bo.operation = "DIFFERENCE"
 
 
-def blue_height():
-    """The blue ramp's floor height (mm) over a point of its course; its end rests on the left inlane's separator."""
+def separator_top():
+    """The inlane separators' height, the top of their R, on which the blue ramp and the red track end."""
+    rail = next(t["pts"] for t in SHAPES if "inlane-separators" in t["chain"] and t["cls"] == "rail")
+    return (max(p[1] for p in rail) - min(p[1] for p in rail)) * SEPARATOR_ASPECT
+
+
+def separator_r(name, pts, c, face, edge):
+    """An inlane separator: the letter R in the ROKR sign's typeface, standing along the drawing's separator with
+    its feet in the separator's two holes, its stem at the front and its bowl toward the diorama, its faces
+    painted face and its edges edge."""
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    font = next((f for f in SEPARATOR_FONT if os.path.exists(f)), None)
+    cu = bpy.data.curves.new(name, "FONT"); cu.body = "R"; cu.extrude = SEPARATOR_THICK / 20
+    if font:
+        cu.font = bpy.data.fonts.load(font, check_existing=True)
+    tmp = bpy.data.objects.new(name + "-text", cu); bpy.context.scene.collection.objects.link(tmp)
+    bpy.context.view_layer.update()
+    me = bpy.data.meshes.new_from_object(tmp.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    bpy.data.objects.remove(tmp); bpy.data.curves.remove(cu)
+    bm = bmesh.new(); bm.from_mesh(me)
+    gx0, gx1 = min(v.co.x for v in bm.verts), max(v.co.x for v in bm.verts)
+    gy0 = min(v.co.y for v in bm.verts)
+    k = (max(ys) - min(ys)) / 10 / (gx1 - gx0)
+    # its face toward the board's middle stays where the drawing has it, and its second layer lies outside it,
+    # so the lane between it and the slingshot keeps its width
+    inner = min(xs) if min(xs) > 108.5 else max(xs)
+    xc = inner + (SEPARATOR_THICK / 2 if inner > 108.5 else -SEPARATOR_THICK / 2)
+    for v in bm.verts:
+        gx, gy, gz = v.co
+        # the glyph's width runs from the front toward the diorama, its height up, its extrusion across
+        v.co = Vector(W(xc + gz * 10, max(ys) - (gx - gx0) * k * 10, (gy - gy0) * k * 10))
+    bm.normal_update()
+    for f in bm.faces:
+        f.material_index = 0 if abs(f.normal.x) > 0.9 else 1
+    me.materials.clear(); me.materials.append(face); me.materials.append(edge)
+    bm.to_mesh(me); bm.free()
+    return link(bpy.data.objects.new(name, me), c)
+
+
+def bend(z, m_in, m_out, r):
+    """A straight floor bending at height z from slope m_in to slope m_out, over r mm either side: a parabola,
+    over t mm from the bend, that meets both straight pieces at their slopes."""
+    return lambda t: z + m_in * t + (m_out - m_in) * (t + r) ** 2 / (4 * r)
+
+
+def blue_course():
+    """The blue ramp's course: its share of the course at a point, its length in mm, where along it the red hoop
+    stands, and the bends at the fire hoop and at the red hoop as functions of mm from each."""
     blue_line = [tuple(p) for p in by("ramp-blue", "ramp-shine")[0]["pts"]]
     f = polyline_param(blue_line)
     crown_first = blue_line[0][1] < 150
-    # from the fire hoop it climbs in a straight line to its top and falls from there at one slope to its end
-    pb = profile([(0, 30), (BLUE_TOP_AT, 44), (1.0, H["rail"] + H["ramp_floor"])])
-    return lambda x, y: pb(f(x, y) if crown_first else 1 - f(x, y))
+    course = lambda x, y: f(x, y) if crown_first else 1 - f(x, y)
+    length = sum(math.dist(a, b) for a, b in zip(blue_line, blue_line[1:]))
+    red = [p for s in SHAPES if "ramp-blue-bracket" in s["chain"] for p in s["pts"]]
+    top_at = course(*centroid(red))
+    m_in = (30.0 - 0.02) / (BLUE_ENTRY_Y[0] - BLUE_ENTRY_Y[1])
+    m_up = (BLUE_TOP - 30.0) / (top_at * length)
+    m_down = (separator_top() + H["ramp_floor"] - BLUE_TOP) / ((1 - top_at) * length)
+    return course, length, top_at, bend(30.0, m_in, m_up, BLUE_BEND), bend(BLUE_TOP, m_up, m_down, BLUE_BEND)
+
+
+def blue_height():
+    """The blue ramp's floor height (mm) over a point of its course; its end rests on the left inlane's R."""
+    # from the fire hoop it climbs in a straight line to its top at the red hoop and falls from there in one
+    # straight line through the other hoops to its end; at both hoops it bends over BLUE_BEND either side
+    course, length, top_at, fire, crest = blue_course()
+    pb = profile([(0, 30), (top_at, BLUE_TOP), (1.0, separator_top() + H["ramp_floor"])])
+    def z(x, y):
+        t = course(x, y) * length
+        if t < BLUE_BEND:
+            return fire(t)
+        if abs(t - top_at * length) < BLUE_BEND:
+            return crest(t - top_at * length)
+        return pb(t / length)
+    return z
 
 
 def build_posts_and_rubbers():
@@ -1195,6 +1283,9 @@ def build_lower():
                                          ("elephant-headdress", ELEPHANT_HEADDRESS, "#c8323a"), ("elephant-plume", ELEPHANT_PLUME, "#e3c46c"),
                                          ("elephant-eye", ELEPHANT_EYE, "#141416")):
                     figure(name, x, y, 0.0, flip(prof), 3.4, c, mat(name, colr, rough=0.45), z0=z0)
+            elif cl == "rail" and "inlane-separators" in ch:
+                separator_r(next(n for n in ch if n.startswith("separator-")), s["pts"], c, mat("separator-yellow", "#f1c94a", rough=0.45),
+                            mat("separator-edge", "#141416", rough=0.5))
             elif cl == "rail": prism("rail", s["pts"], 0, H["rail"], c, rail)
             elif cl == "rail-gem": prism("rail-gem", s["pts"], H["rail"], H["rail"] + 0.3, c, gem)
             elif cl == "rail-gem-y": prism("rail-gem", s["pts"], H["rail"], H["rail"] + 0.3, c, gem_y)
@@ -1296,7 +1387,19 @@ def build_sides():
         if s["cls"] == "block": prism("block-top-left", s["pts"], 0, H["cover"], c, mat("block-red", "#a3232c", rough=0.4))
 
 
-BLUE_TOP_AT = 0.25     # the share of the blue ramp's course where its floor is highest
+BLUE_BEND = 6.0        # mm either side of the fire hoop and of the red hoop over which the blue floor bends
+BLUE_TOP = 34.0        # mm, the blue ramp's floor at its highest point, the red hoop
+BLUE_ENTRY_Y = (146.5, 85.5)   # mm: the blue entrance lane's start on the board and its end at the fire hoop
+CROC_JAW_TOP = 10.0    # mm, the lower jaw's height at the hinge over its snout, the bent strip F38's shape
+CROC_RIBS = 7          # the pedestal's ribs side by side, F48, F47, F40, C29, F39, F50 and F49
+CROC_DROP = 18.0       # mm ahead of the half loop's foot where the red track starts in the mouth
+CROC_CLEAR = 0.5       # mm the ball keeps from the red track in the mouth, climbing under it and dropping onto it
+CROC_TAIL = 12.0       # mm the middle rib runs on behind the hinge as the tail, an estimate from the manual's picture
+TRACK_FALL = 0.006     # mm the red track falls for every mm along the board
+# the inlane separators (C6, C7) are a letter R standing along the separator, its feet in the drawing's two holes
+SEPARATOR_FONT = ("C:/Windows/Fonts/georgiab.ttf",)  # the ROKR sign's Georgia Bold, the first one found
+SEPARATOR_ASPECT = 1419 / 1629     # Georgia Bold's R: its height over its width, in font units
+SEPARATOR_THICK = 6.0  # mm, the R's two layers of 3 mm plywood, wide enough that the tracks' edges rest on it
 SPACER_R = 2.3     # mm, a post's clear spacer: wider than the screw's head, narrower than a slingshot's (estimate)
 TARGET_FORWARD = 3.0     # mm a stand-up target stands toward the playfield's middle from the drawing, clear of its posts
 
@@ -1470,8 +1573,11 @@ def build_ramps():
     ramp("ramp-blue", "ramp-blue", "blue-wall", blue_z, "#3f7fc4", "#1d3c7a", wall_h=6.0, wall_lo=3.0)
     # the entrance lane climbs in a straight line from the playfield, a hair above it so the two surfaces do
     # not fight, to the fire hoop, where the blue floor starts at 30 mm
+    fire = blue_course()[3]
     def centre_z(x, y):
-        u = max(0.0, min(1.0, (146.5 - y) / (146.5 - 85.5)))
+        if BLUE_ENTRY_Y[1] - y > -BLUE_BEND:
+            return fire(BLUE_ENTRY_Y[1] - y)
+        u = max(0.0, min(1.0, (BLUE_ENTRY_Y[0] - y) / (BLUE_ENTRY_Y[0] - BLUE_ENTRY_Y[1])))
         return 0.02 + 29.98 * u
     ramp("ramp-blue", "ramp-blue-dark", "none", centre_z, "#4fb0e0", "#1f4674")
     entrance_walls(c, centre_z)
@@ -1536,32 +1642,94 @@ def build_ramps():
     red = mat("track-red", "#e0414c", rough=0.45)
     kick = clean(by("ramp-kicker", "kicker")[0]["pts"])
     hinge = ((kick[0][0] + kick[1][0]) / 2, (kick[0][1] + kick[1][1]) / 2)
-    snout = max(kick, key=lambda q: q[1])
-    span = math.dist(hinge, snout)
-    u = Vector(((hinge[0] - snout[0]) / span, (hinge[1] - snout[1]) / span))
-    jaw_top, loop_r = 10.0, 8.0
+    # the head's axis runs from the hinge through the middle of the two nostrils, which sit on it side by side;
+    # the snout is the jaw's farthest point along it
+    nostrils = [t["circle"] for t in by("ramp-kicker", "hole") if "circle" in t]
+    nose = (sum(h[0] for h in nostrils) / len(nostrils), sum(h[1] for h in nostrils) / len(nostrils))
+    out = Vector((nose[0] - hinge[0], nose[1] - hinge[1])).normalized()
+    span = max((q[0] - hinge[0]) * out.x + (q[1] - hinge[1]) * out.y for q in kick)
+    snout = (hinge[0] + out.x * span, hinge[1] + out.y * span)
+    u = -out
+    # the red track falls in one straight line from the mouth to its end on the right inlane's R, TRACK_FALL for
+    # every mm; the lower jaw climbs as high as the half loop needs to set the ball onto it at the mouth
+    ties = [t["pts"] for t in by("wire-ramp", "tie")]
+    ties.sort(key=lambda t: (t[0][1] + t[-1][1]) / 2)
+    first = ((ties[0][0][0] + ties[0][-1][0]) / 2, (ties[0][0][1] + ties[0][-1][1]) / 2)
+    y0 = first[1]
+    # its underside rests on the R's top where the R ends at the front
+    rail = next(t["pts"] for t in SHAPES if "inlane-separators" in t["chain"] and t["cls"] == "rail" and t["pts"][0][0] > 108)
+    rest_y = max(p[1] for p in rail)
+    z_mouth = separator_top() + H["ramp_floor"] + TRACK_FALL * (rest_y - y0)
+    loop_r = 8.0
+    # the crocodile stands on a pedestal of ribs (F48, F47, F40, C29, F39, F50, F49 on F42, manual p. 35) that
+    # tips the whole head back about its snout: the lower jaw keeps its shape and its tip stays flush on the
+    # board, and the head rises until the half loop sets the ball onto the red track at the mouth
+    jaw_top = CROC_JAW_TOP
+    jaw_v = lambda x, y: max(0.0, min(1.0, ((x - snout[0]) * u.x + (y - snout[1]) * u.y) / span))
+    jaw_shape = lambda v: 0.02 + (jaw_top - 0.02) * (3 * v * v - 2 * v ** 3) + jaw_top * (v ** 3 - v * v)
+    v_a = jaw_v(hinge[0] - u.x * loop_r, hinge[1] - u.y * loop_r)
+    # the ball climbs the lower jaw, runs over the palate in a half loop and on under the upper jaw, and drops
+    # onto the red track, which starts in the mouth CROC_DROP ahead of the loop's foot: there it lies midway
+    # between the climbing ball's top and the upper jaw's ball's bottom, the pedestal raising the head until
+    # that middle is the track's height. Both bounds rise alike as the head tips, so the gap is fixed.
+    v_d = jaw_v(hinge[0] - u.x * (loop_r + CROC_DROP), hinge[1] - u.y * (loop_r + CROC_DROP))
+    climb = jaw_shape(v_d) + 2 * RBALL + H["ramp_floor"] + CROC_CLEAR
+    under = jaw_shape(v_a) + 2 * loop_r + 8.0 * min(1.0, CROC_DROP / span) - 2 * RBALL - CROC_CLEAR
+    assert under > climb, "the red track has no room in the mouth"
+    jaw_tip = (z_mouth - (climb + under) / 2) / v_d
+    # every other part of the head tips with the jaw: it rises by the tip's share at its place along the jaw,
+    # measured from the half loop's foot, where the head's heights are taken
+    jaw_dz = lambda x, y: jaw_tip * (jaw_v(x, y) - v_a)
     def croc_z(x, y):
         """The lower jaw leaves the playfield flush and level at the snout, a hair above it, and climbs without a
-        bend to the hinge, where it has the slope of a straight jaw of the same height."""
-        v = max(0.0, min(1.0, ((x - snout[0]) * u.x + (y - snout[1]) * u.y) / span))
-        return 0.02 + (jaw_top - 0.02) * (3 * v * v - 2 * v ** 3) + jaw_top * (v ** 3 - v * v)
+        bend to the hinge, where it has the slope of a straight jaw of the same height, tipped back by the
+        pedestal."""
+        v = jaw_v(x, y)
+        return jaw_shape(v) + jaw_tip * v
     surface("crocodile-jaw", kick, croc_z, 2.0, c, green)
-    # the head is closed down to the board: a block fills it under the jaw, so no ball rolls in beneath it from
-    # behind; its outline in steps of 1 mm keeps its top inside the 2 mm jaw along the jaw's curve. It stands
-    # 1.5 mm inside the jaw's edge, so a ball beside the head rolls with its lower half under the jaw. The jaw's
-    # back corner lies closer to the rubber at post 022 than the ball is wide, and a ball held off by a block
-    # flush with the edge rests there.
+    # the pedestal closes the head down to the board, so no ball rolls in beneath it from behind: its ribs stand
+    # side by side along the jaw, their tops following its underside. Its outline in steps of 1 mm keeps the
+    # ribs' tops inside the 2 mm jaw along the jaw's curve. It stands 1.5 mm inside the jaw's edge, so a ball
+    # beside the head rolls with its lower half under the jaw. The jaw's back corner lies closer to the rubber at
+    # post 022 than the ball is wide, and a ball held off by a pedestal flush with the edge rests there.
     dense = []
     for a, b in zip(kick, kick[1:] + kick[:1]):
         k = max(1, math.ceil(math.dist(a, b)))
         dense += [(a[0] + (b[0] - a[0]) * i / k, a[1] + (b[1] - a[1]) * i / k) for i in range(k)]
     def area(ps): return abs(sum(ps[i][0] * ps[i - 1][1] - ps[i - 1][0] * ps[i][1] for i in range(len(ps))))
     dense = min((offset_line(dense, d, True) for d in (1.5, -1.5)), key=area)
-    prism("crocodile-base", [(p[0], p[1]) for p in dense], 0.0, 0.0, c, green, hi_fn=lambda x, y: max(0.05, croc_z(x, y) - 2.1))
+    side_n = Vector((-u.y, u.x))
+    across = [(p[0] - snout[0]) * side_n.x + (p[1] - snout[1]) * side_n.y for p in dense]
+    lo, hi = min(across), max(across)
+    # the ribs grow longer toward the middle: the outer ones end under the hinge, the middle one runs on behind
+    # the head as the crocodile's tail, its top falling to the board
+    heading = math.degrees(math.atan2(u.y, u.x))
+    mid = (CROC_RIBS - 1) / 2
+    for k in range(CROC_RIBS):
+        a0, a1 = lo + (hi - lo) * k / CROC_RIBS, lo + (hi - lo) * (k + 1) / CROC_RIBS
+        band = clip_band(dense, (snout[0], snout[1]), side_n, a0, a1)
+        if len(band) < 3:
+            continue
+        # the rib is as long as the outline is along both its faces, so no corner stands out of it
+        reach = []
+        for edge in (a0, a1):
+            line = clip_band(dense, (snout[0], snout[1]), side_n, edge - 0.02, edge + 0.02)
+            if len(line) >= 3:
+                reach.append([(p[0] - snout[0]) * u.x + (p[1] - snout[1]) * u.y for p in line])
+        if not reach:
+            continue
+        u0 = max(0.0, max(min(r) for r in reach))
+        u1 = min(span, min(max(r) for r in reach))
+        tail = CROC_TAIL * (1 - abs(k - mid) / mid)
+        ac = (a0 + a1) / 2
+        at = lambda t: (snout[0] + u.x * t + side_n.x * ac, snout[1] + u.y * t + side_n.y * ac)
+        top = [(t, max(0.05, croc_z(*at(t)) - 2.1)) for t in [u0 + (u1 - u0) * i / 24 for i in range(25)]]
+        z_back = top[-1][1]
+        top += [(u1 + tail * i / 12, max(1.0, z_back * (1 - i / 12) ** 1.5)) for i in range(1, 13)] if tail > 0.5 else []
+        profile_ = top + [(top[-1][0], 0.0), (u0, 0.0)]
+        figure("crocodile-pedestal", snout[0] + side_n.x * ac, snout[1] + side_n.y * ac, heading, profile_,
+               (a1 - a0) - 0.1, c, green)
     half = math.dist(kick[0], kick[1]) / 2
-    ties = [t["pts"] for t in by("wire-ramp", "tie")]
-    ties.sort(key=lambda t: (t[0][1] + t[-1][1]) / 2)
-    first = ((ties[0][0][0] + ties[0][-1][0]) / 2, (ties[0][0][1] + ties[0][-1][1]) / 2)
     a2 = Vector(hinge) - u * loop_r
     z_a = croc_z(a2.x, a2.y)
     z_top = z_a + 2 * loop_r
@@ -1578,6 +1746,8 @@ def build_ramps():
     for k in range(1, 9):
         q = top.lerp(end3, k / 8)
         path.append((q, (end3 - top).normalized(), Z))
+    for q, _, _ in path:
+        q.z += jaw_dz(q.x, q.y)
     def sweep(name, part, material, walls, w=6.0):
         """A track along part of the path: a floor 2 w wide, with or without its two side walls."""
         me = bpy.data.meshes.new(name); bm = bmesh.new()
@@ -1608,7 +1778,7 @@ def build_ramps():
     outline = [a2 + sd * w_strip, tip + sd * w_strip]
     outline += [tip + sd * (w_strip * math.cos(math.pi * k / 16)) + fwd * (w_strip * math.sin(math.pi * k / 16)) for k in range(1, 16)]
     outline += [tip - sd * w_strip, a2 - sd * w_strip]
-    prism("crocodile-upper-jaw", [(q.x, q.y) for q in outline], 0.0, 2.0, c, green, zfn=lambda x, y: upper_z + open_fn(x, y))
+    prism("crocodile-upper-jaw", [(q.x, q.y) for q in outline], 0.0, 2.0, c, green, zfn=lambda x, y: upper_z + open_fn(x, y) + jaw_dz(x, y))
     # each cheek is one plywood plate on the bent part's side, its outer face flush with the jaw's edge: along
     # the lower jaw to the open tip, up to the upper jaw, and round the back of the head around the half loop
     def side_plate(back, tip):
@@ -1618,9 +1788,10 @@ def build_ramps():
         centre_u = loop_r
         reach, mouth = 34.0, 40.0
         prof = [(length, floor(length) - 2.0), (centre_u, floor(centre_u) - 2.0)]
-        prof += [(centre_u - (loop_r + 0.5) * math.cos(t), z_a + loop_r + (loop_r + 0.5) * math.sin(t))
-                 for t in (math.radians(-90 + 10 * k) for k in range(19))]
-        prof += [(reach, upper_z + open_fn(*at(reach))), (mouth, floor(mouth) + 6.0), (length, floor(length) + 3.0)]
+        for t in (math.radians(-90 + 10 * k) for k in range(19)):
+            d = centre_u - (loop_r + 0.5) * math.cos(t)
+            prof.append((d, z_a + loop_r + (loop_r + 0.5) * math.sin(t) + jaw_dz(*at(d))))
+        prof += [(reach, upper_z + open_fn(*at(reach)) + jaw_dz(*at(reach))), (mouth, floor(mouth) + 6.0), (length, floor(length) + 3.0)]
         n = Vector((-e.y, e.x))
         if n.dot(Vector((sum(q[0] for q in kick) / len(kick) - back[0], sum(q[1] for q in kick) / len(kick) - back[1]))) < 0:
             n = -n
@@ -1628,24 +1799,24 @@ def build_ramps():
     side_plate(kick[1], kick[2])
     side_plate(kick[0], kick[-1])
     for hx, hy, hr in [t["circle"] for t in by("ramp-kicker", "hole") if "circle" in t]:
-        cyl("crocodile-nostril", hx, hy, hr, upper_z + 2.0 + open_fn(hx, hy), upper_z + 2.05 + open_fn(hx, hy), c, mat("pit", "#050506"))
+        z_n = upper_z + 2.0 + open_fn(hx, hy) + jaw_dz(hx, hy)
+        cyl("crocodile-nostril", hx, hy, hr, z_n, z_n + 0.05, c, mat("pit", "#050506"))
     eye = [(2.6 * math.cos(2 * math.pi * k / 24), 2.6 + 2.6 * math.sin(2 * math.pi * k / 24)) for k in range(24)]
     pupil = [(0.9 * math.cos(2 * math.pi * k / 16), 3.0 + 0.9 * math.sin(2 * math.pi * k / 16)) for k in range(16)]
     ang = math.degrees(math.atan2(side.y, side.x))
     for d in (-4.5, 4.5):
         ex, ey = hinge[0] - u.x * 5 + side.x * d, hinge[1] - u.y * 5 + side.y * d
-        figure("crocodile-eye", ex, ey, ang, eye, 1.5, c, mat("eye-white", "#f2efe6", rough=0.4), z0=upper_z + 2.0 + open_fn(ex, ey))
-        figure("crocodile-pupil", ex, ey, ang, pupil, 1.7, c, mat("pupil", "#1a3a8a", rough=0.4), z0=upper_z + 2.0 + open_fn(ex, ey))
+        z_e = upper_z + 2.0 + open_fn(ex, ey) + jaw_dz(ex, ey)
+        figure("crocodile-eye", ex, ey, ang, eye, 1.5, c, mat("eye-white", "#f2efe6", rough=0.4), z0=z_e)
+        figure("crocodile-pupil", ex, ey, ang, pupil, 1.7, c, mat("pupil", "#1a3a8a", rough=0.4), z0=z_e)
 
     # the red track: a wooden floor between two bent wooden walls, falling from the mouth onto the right
-    # inlane's separator, where the ball drops through the round hole at its end
-    y0 = first[1]
-    z_mouth = z_a + loop_r
+    # inlane's R, where the ball drops through the round hole at its end
     # inside the mouth the red track runs from the half loop out to where the drawing's track begins
     tie_w = math.dist(ties[0][0], ties[0][-1]) / 2
     # one smooth curve: leaving the loop toward the snout, arriving along the track's own direction
     second = ((ties[1][0][0] + ties[1][-1][0]) / 2, (ties[1][0][1] + ties[1][-1][1]) / 2)
-    p0 = Vector((a2.x - u.x * 4.0, a2.y - u.y * 4.0, z_mouth))
+    p0 = Vector((a2.x - u.x * CROC_DROP, a2.y - u.y * CROC_DROP, z_mouth))
     p3 = Vector((first[0], first[1], z_mouth))
     t_in = Vector((-u.x, -u.y, 0.0)); t_out = Vector((second[0] - first[0], second[1] - first[1], 0.0)).normalized()
     reach = (p3 - p0).length * 0.45
@@ -1657,27 +1828,31 @@ def build_ramps():
         d = (p1 - p0) * 3 * s_ * s_ + (p2 - p1) * 6 * s_ * t + (p3 - p2) * 3 * t * t
         curve.append((q, d.normalized(), Vector((0, 0, 1))))
     sweep("crocodile-mouth-track", curve, red, walls=True, w=tie_w)
-    # it stays above the right side stack's cover until the cover ends, then drops onto the separator
-    over_cover = H["cover"] + H["ramp_floor"] + 0.4
-    track_profile = profile([(y0, z_mouth), (297.0, over_cover), (306.0, H["rail"] + H["ramp_floor"])])
-    track_z = lambda x, y: track_profile(y)
+    track_z = lambda x, y: z_mouth - TRACK_FALL * (max(y, y0) - y0)
     for s in by("wire-ramp", "rail-red"):
         ys = [p[1] for p in s["pts"]]
         if max(ys) - min(ys) < 30:
             prism("track-end-wall", s["pts"], -1.6, 4.0, c, red, zfn=track_z)
             end_y = min(ys)
-    # the floor (F15) has a slot along its middle from the mouth to the end piece; the ball runs on its edges
-    me = bpy.data.meshes.new("track-floor"); bm = bmesh.new()
-    prev = None; rows = []
+    # the drawing's cross strips, each from one edge to the other, with rows between them every millimeter or
+    # less, so the floor and its walls follow the profile's bends
+    pairs, prev = [], None
     for t in ties:
-        a, b = t[0], t[-1]
+        a, b = tuple(t[0]), tuple(t[-1])
         if prev and math.dist(a, prev[0]) + math.dist(b, prev[1]) > math.dist(a, prev[1]) + math.dist(b, prev[0]):
             a, b = b, a
+        if prev:
+            n = max(1, math.ceil(max(math.dist(a, prev[0]), math.dist(b, prev[1])) / 1.0))
+            pairs += [(lerp2(prev[0], a, k / n), lerp2(prev[1], b, k / n)) for k in range(1, n)]
+        pairs.append((a, b)); prev = (a, b)
+    # the floor (F15) has a slot along its middle from the mouth to the end piece; the ball runs on its edges
+    me = bpy.data.meshes.new("track-floor"); bm = bmesh.new()
+    rows = []
+    for a, b in pairs:
         f = min(0.19, 3.5 / math.dist(a, b))           # half the slot over the floor's width: 38 %, at most 7 mm
         sa = (a[0] + (b[0] - a[0]) * (0.5 - f), a[1] + (b[1] - a[1]) * (0.5 - f))
         sb = (a[0] + (b[0] - a[0]) * (0.5 + f), a[1] + (b[1] - a[1]) * (0.5 + f))
         rows.append([bm.verts.new(W(*q, track_z(*q))) for q in (a, sa, sb, b)])
-        prev = (a, b)
     # the slot is closed at the mouth: the floor's first 8 mm are whole
     along = [0.0]
     for r0, r1 in zip(rows, rows[1:]):
@@ -1694,13 +1869,7 @@ def build_ramps():
         if f.normal.z < 0: f.normal_flip()
     bm.to_mesh(me); bm.free()
     floor = link(bpy.data.objects.new("track-floor", me), c, red)
-    edges = ([], [])
-    prev = None
-    for t in ties:
-        a, b = tuple(t[0]), tuple(t[-1])
-        if prev and math.dist(a, prev[0]) + math.dist(b, prev[1]) > math.dist(a, prev[1]) + math.dist(b, prev[0]):
-            a, b = b, a
-        edges[0].append(a); edges[1].append(b); prev = (a, b)
+    edges = ([a for a, _ in pairs], [b for _, b in pairs])
     # past the last strip the floor runs on to the end wall, with the round hole the ball drops through
     la, lb = edges[0][-1], edges[1][-1]
     dy = end_y - (la[1] + lb[1]) / 2

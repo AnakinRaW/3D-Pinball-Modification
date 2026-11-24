@@ -62,7 +62,8 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 - `tools/arcade/`: the Arcade, a browser app in TypeScript with Vite and Preact. It shows the drawing with the features and a card for every part a click selects, lists the games of the card, the firmware and the repository, and its Studio runs the firmware's lamps in WebAssembly
 - `firmware/sim/`: the Arcade's WebAssembly build of the lamps component and the lighting driver, with a simulated output stage in `fakes/`
 - `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
-- `assets/intro/`: the intro film and its sound, built from the drawing by the Blender and Python scripts in `assets/intro/blender/`, as [`assets/intro/README.md`](assets/intro/README.md) gives
+- `assets/cgi/`: the machine in 3D that the intro and the trailer are filmed on, with its lights and the logo, built from the drawing by the Blender and Python scripts in `assets/cgi/blender/`, as [`assets/cgi/README.md`](assets/cgi/README.md) gives
+- `assets/intro/`: the intro film and its sound, animated on that machine by the scripts in `assets/intro/blender/`, as [`assets/intro/README.md`](assets/intro/README.md) gives
 
 ## Commands
 
