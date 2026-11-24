@@ -4,7 +4,8 @@ Run inside Blender with BUILD set to this folder. It builds the machine with sce
 machine-tilt, the backbox and the diorama's ceiling strip, with the tilt and the modifiers applied. The parts of
 each placement of the drawing are joined into one node, which carries the placement's id as the glTF extra
 drawing_id. One glTF unit is one meter,
-and glTF's Y axis points up. The meshes are compressed with EXT_meshopt_compression.
+and glTF's Y axis points up. The meshes stay uncompressed: meshopt's position filter rounds a height of 0.02 mm
+next to 200 mm across onto the board's, and parts laid a hair above the board then flicker in a viewer.
 """
 import bpy, json, math, mathutils, os
 
@@ -13,12 +14,13 @@ GLB = os.path.join(os.path.dirname(BUILD), "machine.glb")
 OUT = os.path.join(BUILD, "out")
 TEXTURE_HEIGHT = 2048          # px, the height every texture is scaled to
 JPEG_QUALITY = 85
+TILE_HEIGHT = 256              # px: a texture this small is a repeating tile
 # the backbox stands upright behind the board and the cabinet's outer panels hang beside and before it, where the
 # drawing's top view places nothing, so their parts go by name; so do the parts that reach well past their
 # placement's outline in the drawing, or lie under the board
 NAMED_IDS = (("backbox-b20", "dio-b20"), ("backbox-scene", "dio-scene"), ("backbox-back", "sky"),
              ("display-screen", "display"), ("backbox-frame", "dio-frame"), ("diorama-", "dio-frame"),
-             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("playfield", "cabinet"),
+             ("lamp-ceiling", "dio-frame"), ("front-", "cabinet"), ("side-", "cabinet"), ("playfield", "cabinet"), ("cabinet-", "cabinet"),
              ("plunger-", "shooter-lane-floor"), ("shooter-floor", "shooter-lane-floor"),
              ("separator-left", "separator-left"), ("separator-right", "separator-right"),
              ("crocodile-", "ramp-kicker"), ("store-", "drain-ball-store"), ("lane-", "ramp-blue"),
@@ -168,7 +170,8 @@ def flatten_materials(materials):
 
 
 def shrink_images(materials):
-    """Scales every texture to TEXTURE_HEIGHT; one without transparent pixels is stored as a JPEG."""
+    """Scales every texture taller than TEXTURE_HEIGHT down to it; one without transparent pixels is stored as a
+    JPEG. A small tile goes as it is, since a JPEG would blur its sharp edges."""
     done = {}
     for m in materials:
         if not m.use_nodes:
@@ -177,10 +180,13 @@ def shrink_images(materials):
             if n.type != "TEX_IMAGE" or n.image is None:
                 continue
             img = n.image
+            if img.name not in done and img.size[1] <= TILE_HEIGHT:
+                done[img.name] = img                  # a small tile goes as it is, a PNG
             if img.name not in done:
                 w, h = img.size
                 small = img.copy()
-                small.scale(max(1, round(w * TEXTURE_HEIGHT / h)), TEXTURE_HEIGHT)
+                if h > TEXTURE_HEIGHT:
+                    small.scale(max(1, round(w * TEXTURE_HEIGHT / h)), TEXTURE_HEIGHT)
                 alpha = n.outputs["Alpha"].is_linked
                 ext = "png" if alpha else "jpg"
                 path = os.path.join(OUT, "export-" + os.path.splitext(img.name)[0] + "." + ext)
@@ -213,7 +219,7 @@ def export():
     bpy.ops.export_scene.gltf(filepath=GLB, export_format="GLB", use_selection=True, export_apply=True,
                               export_extras=True, export_yup=True, export_cameras=False, export_lights=False,
                               export_animations=False, export_image_format="AUTO", export_jpeg_quality=JPEG_QUALITY,
-                              export_meshopt_compression_enable=True)
+                              export_meshopt_compression_enable=False)
     return {"objects": len(keep), "parts": len(parts), "untagged": loose, "bytes": os.path.getsize(GLB)}
 
 
