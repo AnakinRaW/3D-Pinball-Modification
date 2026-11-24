@@ -16,6 +16,9 @@ lacks. GitHub's compare endpoint answers that, and without an answer a locked co
 from the reference counts as behind. A GITHUB_TOKEN in the environment raises the endpoint's rate
 limit.
 
+A repository that the firmware follows on a named branch, as BRANCHES lists, is compared with that
+branch's head, whatever its default branch and its tags are.
+
     python firmware/tools/outdated-dependencies.py
 
 An entry that holds no exact version, such as a platform given by its name only, is listed as not
@@ -47,6 +50,10 @@ GIT_SPEC = re.compile(r"https://github\.com/([\w.-]+)/([\w.-]+?)(?:\.git)?#([\w.
 VERSION = re.compile(r"\d+(?:\.\d+)*")
 PRERELEASE = re.compile(r"pre|rc|alpha|beta|dev", re.IGNORECASE)
 SHA = re.compile(r"^[0-9a-f]{40}$")
+
+# The repositories the firmware follows on a branch, with the branch. freertos-teensy has no release
+# tag, and the firmware locks a commit of this branch, which its default branch lacks.
+BRANCHES = {"h4yn0nnym0u5e/freertos-teensy": "tsandmann_heap_mapping"}
 
 
 def numbers(version):
@@ -123,8 +130,9 @@ def ls_remote(url, *options, patterns=()):
     return [line.split("\t") for line in result.stdout.splitlines()]
 
 
-def git_reference(url):
-    """The newest release tag of a repository with its commit, else its default branch's head."""
+def git_reference(url, branch=None):
+    """The head of the named branch, else the newest release tag of a repository with its commit,
+    else the head of its default branch. The third value holds every tag with its commit."""
     tags = {}
     for sha, ref in ls_remote(url, "--tags"):
         name = ref.removeprefix("refs/tags/")
@@ -133,6 +141,11 @@ def git_reference(url):
         # an annotated tag lists the tag object first and the commit it points at second
         if peeled or name not in tags:
             tags[name] = sha
+    if branch:
+        head = ls_remote(url, patterns=(f"refs/heads/{branch}",))
+        if not head:
+            raise OSError(f"no branch {branch}")
+        return f"{branch} branch", head[0][0], tags
     releases = {name: sha for name, sha in tags.items() if numbers(name) and not PRERELEASE.search(name)}
     if releases:
         newest = max(releases, key=lambda name: (numbers(name), name))
@@ -173,7 +186,7 @@ def check_git(dependencies):
         name = f"{owner}/{repository}"
         url = f"https://github.com/{owner}/{repository}.git"
         try:
-            label, reference, tags = git_reference(url)
+            label, reference, tags = git_reference(url, BRANCHES.get(name))
         except OSError as error:
             failed.append((name, str(error)))
             continue
