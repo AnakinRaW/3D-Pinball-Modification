@@ -1,6 +1,7 @@
 #include "break-beam.h"
 #include "core/clock.h"
-#include "logging/debug-log.h"
+#include "logging/debug-trace.h"
+#include "logging/logger.h"
 
 constexpr uint8_t PIN = 31;   // pin-assignment.md: Receiver output of the ball drain gate
 
@@ -13,11 +14,11 @@ bool BreakBeamDriver::begin() {
     }
     begun = true;
     if (holder != nullptr) {
-        DEBUG_LOG("break-beam: another break beam driver holds the pin\n");
+        logWarning("break-beam", "another break beam driver holds the pin");
         return false;
     }
     if (!queue.attach(storage, QUEUE_DEPTH, out)) {
-        DEBUG_LOG("break-beam: the event queue takes no further queue\n");
+        logWarning("break-beam", "the event queue takes no further queue");
         return false;
     }
     // R3 on the motherboard pulls the pin up. The Teensy's pull-up next to it would keep a lit
@@ -70,6 +71,8 @@ void BreakBeamDriver::edge() {
     broken = true;
     brokenUs = now;
     if (!elapsedUs(clearedUs, DEAD_US)) {
+        // The time the beam stayed clear shows on the bench how close a flicker comes to DEAD_US.
+        DEBUG_TRACE("beam flicker", int32_t(now - clearedUs), 0);
         return;
     }
     out->publish<DriverEventType::BALL_DRAINED>(now, GATE, NoPayload{});

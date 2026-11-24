@@ -3,19 +3,22 @@
 // driver set up, and a test sets its level and calls the function the driver attached to it, as
 // the pin interrupt would.
 //
+//   no-queue       a driver whose event queue takes no further queue fails to begin and warns
 //   at-start       begin() sets the pin up, and a beam broken at the start fails 5 s later
 //   crossing       a break after a clear beam gives one BALL_DRAINED with the time of the break
 //   flicker        a beam clear for less than 10 ms between two breaks gives one event
 //   stays-broken   a beam broken for 5 s fails, and works again once clear
 //   wrap           the flicker window and the fault time hold across the wrap of nowUs()
-//   second-driver  a second driver's begin() fails, and it answers with empty data
+//   second-driver  a second driver's begin() fails with a warning, and it answers with empty data
 //
-// One driver holds the pin's interrupt for the whole program, and at-start begins it, so at-start
-// runs first.
+// One driver holds the pin's interrupt for the whole program, and at-start begins it. no-queue
+// needs the pin free, so it runs first, and at-start follows it.
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "drivers/break-beam.h"
+#include "logging/logger.h"
+#include <string>
 #include <unity.h>
 
 constexpr uint8_t BEAM_PIN = 31;      // pin-assignment.md: Receiver output of the ball drain gate
@@ -27,9 +30,45 @@ constexpr uint32_t LONG_US = 1000000;   // a beam clear this long sees the next 
 constexpr uint32_t BALL_US = 3000;      // break-beam design: the fastest ball blocks the beam 3 ms
 constexpr uint32_t EVENTS = 8;
 
+constexpr size_t LOG_BYTES = 1024;
+
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log, which no-queue begins. It lives as long as the program, since logWarning()
+// keeps writing to the logger that began last.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[LOG_BYTES];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
+
 static EventQueue queue;
 static BreakBeamDriver beam(queue);
 static DriverEvent out[EVENTS];
+
+// Gets whether the log holds a line, once its waiting lines have reached the file.
+static bool logged(const char* line) {
+    logger.flush();
+    logger.update();
+    logger.update();
+    return logA.content.find(line) != std::string::npos;
+}
 
 // Sets the pin's level at timeUs and calls the interrupt the driver attached.
 static void edge(uint32_t timeUs, uint8_t level) {
@@ -50,6 +89,26 @@ static uint32_t settle(uint32_t timeUs) {
     edge(timeUs, LOW);
     taken();
     return timeUs + LONG_US;
+}
+
+static void testNoQueue() {
+    logger.begin(LogFileStart{}, LogFileStart{});
+    EventQueue full;
+    DriverEvent storage[EventQueue::PRODUCERS][BreakBeamDriver::QUEUE_DEPTH];
+    EventQueue::Producer* attached = nullptr;
+    for (auto& s : storage) {
+        TEST_ASSERT_TRUE(full.attach(s, BreakBeamDriver::QUEUE_DEPTH, attached));
+    }
+    BreakBeamDriver starved(full);
+    GPT2_CNT = T0_US;
+    fakePins[BEAM_PIN].level = HIGH;
+    TEST_ASSERT_FALSE(starved.begin());
+    TEST_ASSERT_TRUE(logged(" W break-beam the event queue takes no further queue\n"));
+    // The pin stays as it was, and the driver answers with empty data.
+    TEST_ASSERT_NULL(fakePins[BEAM_PIN].isr);
+    TEST_ASSERT_FALSE(starved.blocked());
+    GPT2_CNT = T0_US + FAIL_US;
+    TEST_ASSERT_EQUAL_UINT16(0, starved.failed().parts);
 }
 
 static void testAtStart() {
@@ -161,6 +220,7 @@ static void testSecondDriver() {
     TEST_ASSERT_FALSE(second.blocked());
     TEST_ASSERT_EQUAL_UINT16(0, second.failed().parts);
     TEST_ASSERT_FALSE(second.begin());
+    TEST_ASSERT_TRUE(logged(" W break-beam another break beam driver holds the pin\n"));
     TEST_ASSERT_FALSE(second.begin());
     GPT2_CNT = UINT32_MAX / 2;
     TEST_ASSERT_FALSE(second.blocked());
@@ -180,6 +240,7 @@ void tearDown() {}
 
 int main() {
     UNITY_BEGIN();
+    RUN_TEST(testNoQueue);
     RUN_TEST(testAtStart);
     RUN_TEST(testCrossing);
     RUN_TEST(testFlicker);
