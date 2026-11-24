@@ -225,7 +225,9 @@ static void runMainTask(void*) {
                 continue;
             }
             PinballEvents made;
-            sounds.translate(pending[i], made);
+            if (!screen.translate(pending[i], made)) {
+                sounds.translate(pending[i], made);
+            }
         }
         carried = n - taken;
         if (carried != 0) {

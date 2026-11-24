@@ -8,10 +8,14 @@
 //           also beside a full-screen video
 //   power-lost  the module's 5 V pulled for a moment: once the touch controller answers again,
 //               restart() brings the picture back (asks at the bench)
+//   layers  an object on every layer, a message box and a video lie over one another in the
+//           order of the layers (asks at the bench)
+//   taps    a tap, a hold, a press of a button and a finger slid onto the button, each made at
+//           the bench, reach the game or the button as the screen hands them on
 //
 // Wiring: the Adafruit 2090 on its 8-bit bus, as pin-assignment.md gives it, and the card. The
 // screen shows the test's pictures meanwhile. The tests leave their files in /games/tests/.
-// power-lost needs the module's touch controller on Wire2 as well.
+// power-lost and taps need the module's touch controller on Wire2 as well.
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -39,6 +43,10 @@ constexpr uint32_t POWER_LIMIT_S = 300;
 constexpr uint32_t LOST_TIMEOUT_MS = 80000;   // power-lost: the time for each step at the bench
 constexpr uint32_t RESTART_TIMEOUT_MS = 2000;
 constexpr uint32_t ASK_TIMEOUT_MS = 120000;
+constexpr uint32_t BENCH_LIMIT_S = 300;
+constexpr uint32_t SHOW_MS = 5000;   // layers: the time the layers show before the question
+constexpr uint32_t STEP_TIMEOUT_MS = 60000;   // taps: the time for each step at the bench
+constexpr Layer SLIDE = {1, 1};
 
 static Display display;
 static Screen screen(display);
@@ -63,6 +71,7 @@ public:
         s.reset();
     }
     static void restart(Screen& s) { s.restart(); }
+    static lv_obj_t* hostLayer(Screen& s) { return s.hostLayer(); }
 };
 
 // Begins the card, the display and the screen once, writes the pictures and starts each test on
@@ -364,11 +373,193 @@ static void testPowerLost() {
     test::pass();
 }
 
+// Creates a box of one color with its name on it.
+static lv_obj_t* named(lv_obj_t* parent, const char* name, uint32_t color, int32_t x, int32_t y,
+                       int32_t w, int32_t h) {
+    lv_obj_t* o = lv_obj_create(parent);
+    lv_obj_remove_style_all(o);
+    lv_obj_set_style_bg_color(o, lv_color_hex(color), 0);
+    lv_obj_set_style_bg_opa(o, LV_OPA_COVER, 0);
+    lv_obj_set_pos(o, x, y);
+    lv_obj_set_size(o, w, h);
+    lv_obj_t* label = lv_label_create(o);
+    lv_label_set_text(label, name);
+    lv_obj_set_style_text_color(label, lv_color_black(), 0);
+    lv_obj_set_pos(label, 4, 2);
+    return o;
+}
+
+static void testLayers() {
+    if (!ready()) {
+        return;
+    }
+    if (!media::writeBenchMedia()) {
+        test::fail("writing the bench media failed", "they reach the card");
+        return;
+    }
+    static Picture background(screen);
+    background.load(files.open("background.img"));
+    background.show(screen.background());
+    named(screen.background(), "background", 0x3060FF, 10, 10, 140, 90);
+    lv_obj_t* slide = screen.slide(SLIDE);
+    named(slide, "slide", 0xFF40FF, 40, 40, 140, 90);
+    lv_obj_t* viewport = lv_obj_create(slide);
+    lv_obj_remove_style_all(viewport);
+    lv_obj_set_pos(viewport, 80, 60);
+    lv_obj_set_size(viewport, media::VIEWPORT_W, media::VIEWPORT_H);
+    named(screen.overlay(), "overlay", 0x40FFFF, 170, 100, 120, 80);
+    lv_obj_t* box = lv_msgbox_create(nullptr);
+    lv_msgbox_add_text(box, "message box");
+    // A game switch leaves the host's objects, so the test deletes its object itself.
+    lv_obj_t* host = named(GameHost::hostLayer(screen), "host", 0xFF3030, 200, 140, 110, 80);
+    const bool played = player.play(viewport, "viewport", true, false);
+    test::step("watch the screen: the background picture with a blue box, a pink box, the green "
+               "video with its ball, a cyan box, a message box over a darkened screen and a red "
+               "box, each labeled");
+    const uint32_t t0 = millis();
+    while (played && millis() - t0 < SHOW_MS) {
+        screen.render();
+    }
+    const test::Answer a =
+        played ? test::ask("From the back, do they lie in this order: the picture, background, "
+                           "slide, the video, overlay, the message box, host?",
+                           ASK_TIMEOUT_MS)
+               : test::Answer::NONE;
+    player.stop(viewport);
+    lv_msgbox_close(box);
+    lv_obj_delete(host);
+    if (!played) {
+        test::fail("play() false", "the video plays");
+        return;
+    }
+    if (a != test::Answer::YES) {
+        test::fail(a == test::Answer::NO ? "the layers lay in another order" : "no answer",
+                   "the order of the layers");
+        return;
+    }
+    test::pass();
+}
+
+static uint32_t taps = 0;
+static uint32_t holds = 0;
+static uint32_t presses = 0;
+static uint32_t slides = 0;         // touches that came down beside the button and left on it
+static TouchPoint gestureAt = {};   // where the last tap or hold came down
+static TouchPoint touchDownAt = {};
+static lv_area_t buttonArea = {};
+
+static void countPress(lv_event_t*) {
+    presses = presses + 1;
+}
+
+static bool onButton(TouchPoint p) {
+    return p.x >= buttonArea.x1 && p.x <= buttonArea.x2 && p.y >= buttonArea.y1 &&
+           p.y <= buttonArea.y2;
+}
+
+// Hands the touch events to the screen as the host does, counts what came of them and renders.
+static void pumpTouches() {
+    DriverEvent e;
+    while (queue.read(&e, 1) == 1) {
+        PinballEvents out;
+        if (!screen.translate(e, out)) {
+            continue;
+        }
+        const TouchPoint at = payload<DriverEventType::TOUCH_DOWN>(e);
+        if (e.type == DriverEventType::TOUCH_DOWN) {
+            touchDownAt = at;
+        }
+        if (e.type == DriverEventType::TOUCH_UP && !onButton(touchDownAt) && onButton(at)) {
+            slides = slides + 1;
+        }
+        for (uint8_t i = 0; i < out.count; ++i) {
+            gestureAt = payload<EventType::SCREEN_TAPPED>(out.events[i]);
+            taps += out.events[i].type == EventType::SCREEN_TAPPED ? 1 : 0;
+            holds += out.events[i].type == EventType::SCREEN_HELD ? 1 : 0;
+        }
+    }
+    screen.render();
+}
+
+// Shows a step and pumps the touches until it is done or STEP_TIMEOUT_MS has passed.
+template <typename Done> static bool stepUntil(const char* text, Done done) {
+    test::step(text);
+    const uint32_t t0 = millis();
+    while (!done()) {
+        if (millis() - t0 > STEP_TIMEOUT_MS) {
+            return false;
+        }
+        pumpTouches();
+    }
+    // The finger leaves the screen before the next step.
+    while (touch.finger().down && millis() - t0 < STEP_TIMEOUT_MS) {
+        pumpTouches();
+    }
+    pumpTouches();
+    return true;
+}
+
+static void testTaps() {
+    if (!ready()) {
+        return;
+    }
+    if (!touch.begin()) {
+        test::fail("the touch driver's begin() false", "true");
+        return;
+    }
+    if (!touch.present()) {
+        test::skip("no touch controller answers");
+        return;
+    }
+    lv_obj_t* button = named(screen.slide(SLIDE), "BUTTON", 0xFF3030, 110, 90, 100, 60);
+    lv_obj_set_clickable(button, true);
+    lv_obj_add_event_cb(button, countPress, LV_EVENT_CLICKED, nullptr);
+    lv_obj_update_layout(button);
+    lv_obj_get_coords(button, &buttonArea);
+    DriverEvent stale;
+    while (queue.read(&stale, 1) == 1) {
+    }
+    taps = 0;
+    holds = 0;
+    presses = 0;
+    slides = 0;
+    if (!stepUntil("tap the screen once, away from the red BUTTON", [] { return taps > 0; }) ||
+        onButton(gestureAt)) {
+        test::fail("no tap beside the button", "one tap");
+        return;
+    }
+    if (!stepUntil("rest a finger away from the button for two seconds, then lift it",
+                   [] { return holds > 0; })) {
+        test::fail("no hold", "one hold");
+        return;
+    }
+    if (!stepUntil("tap the red BUTTON once", [] { return presses > 0; })) {
+        test::fail("no press of the button", "one press");
+        return;
+    }
+    if (!stepUntil(
+            "put a finger down beside the BUTTON, slide it onto the button and lift it there",
+            [] { return slides > 0; })) {
+        test::fail("no finger slid onto the button", "one");
+        return;
+    }
+    Serial.printf("%lu taps, %lu holds, %lu presses, %lu slides onto the button\n", taps, holds,
+                  presses, slides);
+    if (taps != 1 || holds != 1 || presses != 1) {
+        snprintf(seen, sizeof seen, "%lu taps, %lu holds, %lu presses", taps, holds, presses);
+        test::fail(seen, "one tap, one hold and one press: the slide makes none");
+        return;
+    }
+    test::pass();
+}
+
 static const Test TESTS[] = {
     {"screen.load", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testLoad, nullptr},
     {"screen.show", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testShow, nullptr},
     {"screen.redraw", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testRedraw, nullptr},
     {"screen.power-lost", RunsOn::BENCH, POWER_LIMIT_S, POWER_LIMIT_S, testPowerLost, nullptr},
+    {"screen.layers", RunsOn::BENCH, BENCH_LIMIT_S, BENCH_LIMIT_S, testLayers, nullptr},
+    {"screen.taps", RunsOn::BENCH, BENCH_LIMIT_S, BENCH_LIMIT_S, testTaps, nullptr},
 };
 
 extern const Program SCREEN = {TESTS, sizeof TESTS / sizeof TESTS[0]};

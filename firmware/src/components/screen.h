@@ -1,7 +1,9 @@
 // Runs LVGL, the library for user interfaces, on the display. A game places LVGL's objects, such as
-// labels, images and buttons, on the slides of its modes and on its background, and LVGL draws the
-// parts of the screen that changed into one of two buffers while the display driver sends the
-// other. The slide of the mode with the highest priority shows. The game's pictures load from the
+// labels, images and buttons, on the slides of its modes, on its overlay in front of them and on
+// its background, and LVGL draws the parts of the screen that changed into one of two buffers while
+// the display driver sends the other. The slide of the mode with the highest priority shows. The
+// host's objects lie in front of everything the game shows. A touch on a control goes to that
+// control. Any other touch reaches the game as a tap or a hold. The game's pictures load from the
 // card into the picture memory in the PSRAM without the game waiting for the card.
 //
 // Design: docs/firmware/components/screen.md.
@@ -10,6 +12,7 @@
 #include "core/priority-list.h"
 #include "drivers/display.h"
 #include "drivers/storage-service.h"
+#include "game/component.h"
 #include "game/layer.h"
 #include <lvgl.h>
 
@@ -98,11 +101,13 @@ private:
     Picture* later = nullptr;   // the next picture in the screen's list
 };
 
-/// LVGL on the display: the slides of the game's modes in front of the game's background.
-class Screen {
+/// LVGL on the display: the host's layer in front of the game's overlay, which lies in front of the
+/// slides of the game's modes and of its background.
+class Screen : public Component {
 public:
     static constexpr size_t SLIDES = 8;        // one for each mode the mode stack runs at once
     static constexpr size_t ANIMATIONS = 32;   // the animations animate() follows at once
+    static constexpr uint32_t TAP_MS = 500;    // display model: t_tap, the longest tap
 
     /// Creates the screen on a display driver.
     explicit Screen(Display& display) : display(display) {}
@@ -123,6 +128,26 @@ public:
     ///
     /// @note  The main loop calls it in every pass. It never waits for the display.
     void render();
+
+    /// Takes a touch event and hands the touch to LVGL or makes a tap or a hold of it.
+    ///
+    /// A touch that comes down on a control goes to that control until the finger leaves the
+    /// screen, and LVGL calls the control's handlers. A touch that comes down beside every control
+    /// stays out of LVGL. It becomes SCREEN_TAPPED when it leaves the screen within TAP_MS and
+    /// within Touch::SLOP_PX of where it came down. It becomes SCREEN_HELD on TOUCH_HELD.
+    ///
+    /// @return  True for every touch event, false for any other event.
+    bool translate(const DriverEvent& in, PinballEvents& out) override;
+
+    /// Gets the game's overlay, the parent of what lies in front of every slide.
+    lv_obj_t* overlay() { return over; }
+
+    /// Shows or hides the game's overlay.
+    ///
+    /// The hidden overlay keeps its objects. A change to them shows once the overlay shows again.
+    ///
+    /// @note  The main loop calls it, after begin().
+    void showOverlay(bool shown);
 
     /// Gets the game's background, the parent of what lies behind every slide.
     lv_obj_t* background() { return back; }
@@ -166,11 +191,31 @@ private:
         friend uint8_t priorityOf(const Slide& s) { return s.priority; }
     };
 
+    /// What a touch beside every control became.
+    enum class Gesture : uint8_t { NONE, TAP, HOLD };
+
     /// Gets whether the picture memory is empty, with every read of a picture or a frame landed.
     bool settled() const { return pictures.empty(); }
 
-    /// Deletes the game's slides and the objects on its background, and releases its pictures.
+    /// Deletes the game's slides and the objects on its overlay and its background, releases its
+    /// pictures and shows the overlay.
     void reset();
+
+    /// Gets the last tap or hold once.
+    ///
+    /// @param at  Where the finger came down, set for a tap or a hold.
+    /// @return    The gesture, NONE when there was none since the last call.
+    Gesture takeGesture(TouchPoint& at);
+
+    /// Gets the host's layer, the parent of the host's objects, in front of LVGL's popups and of
+    /// everything the game shows.
+    lv_obj_t* hostLayer() { return host; }
+
+    /// Shows or hides the host's layer.
+    ///
+    /// The hidden layer keeps its objects, which take no touch meanwhile. A game switch leaves them
+    /// in place.
+    void showHost(bool shown);
 
     /// Sets the display up again and sends the whole screen once the display is back.
     ///
@@ -194,6 +239,15 @@ private:
     /// Hands a part of the rendered screen to the display driver.
     static void flush(lv_display_t* d, const lv_area_t* area, uint8_t* pixels);
 
+    /// Gives LVGL the finger of a touch handed to it.
+    static void readTouch(lv_indev_t* indev, lv_indev_data_t* data);
+
+    /// Gets the control under a point, nullptr where there is none.
+    lv_obj_t* controlAt(TouchPoint at) const;
+
+    /// Points @p out at a tap or a hold and notes it for takeGesture().
+    void makeGesture(Gesture g, uint32_t time, PinballEvents& out);
+
     /// Takes an animation off the list once LVGL deletes it, and runs the game's function for it.
     static void forgetAnimation(lv_anim_t* a);
 
@@ -213,10 +267,23 @@ private:
     lv_display_t* lv = nullptr;
     lv_obj_t* back = nullptr;             // a full-screen object on LVGL's screen
     lv_obj_t* deck = nullptr;             // the same, created after back, so it lies in front of it
+    lv_obj_t* over = nullptr;             // the same, created after deck, so it lies in front of it
+    lv_obj_t* host = nullptr;             // a full-screen object on LVGL's system layer
+    lv_indev_t* pointer = nullptr;        // LVGL's input of the touches handed to it
     PriorityList<Slide, SLIDES> slides;   // the game's slides, the one that shows first
     int32_t firstRow = 0;   // the rows that changed in this refresh, from firstRow to lastRow
     int32_t lastRow = -1;
     Animation animations[ANIMATIONS];
+    TouchPoint finger = {};      // where the finger of the touch handed to LVGL is
+    bool pressed = false;        // LVGL sees that finger on the screen
+    bool handed = false;         // the last touch went to LVGL, set at its TOUCH_DOWN
+    TouchPoint downAt = {};      // where the touch beside every control came down
+    uint32_t downUs = 0;         // nowUs() when it came down
+    bool strayed = false;        // it moved Touch::SLOP_PX or more from where it came down
+    bool held = false;           // it became a hold
+    PinballEvent gesture = {};   // the tap or hold that translate() points at
+    Gesture lastGesture = Gesture::NONE;
+    TouchPoint lastAt = {};
     bool begun = false;
     bool redraw = false;        // the whole screen goes out once the display is back
     static Screen* animating;   // the screen whose animations LVGL reports deleted

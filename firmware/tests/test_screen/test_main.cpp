@@ -11,6 +11,11 @@
 //   restart  the display restarts, nothing goes out meanwhile, and the whole screen goes out once
 //            the display is back
 //   covered  LVGL leaves out an object that another object covers, when the whole screen changes
+//   gestures a touch on a control goes to the control, any other touch becomes a tap or a hold
+//   hide-overlay  a hidden overlay keeps its objects, shows their changes once shown again, and a
+//            new game starts with the overlay shown
+//   host-layer  the host's objects lie in front of the overlay and of a message box, take the touch
+//            there, give way once hidden and outlast a game switch
 //   picture-covers  LVGL draws nothing behind a picture that holds no opacity, and draws what lies
 //            in front of it
 //
@@ -20,7 +25,9 @@
 #include "components/screen.h"
 #include "components/sounds.h"
 #include "components/video-player.h"
+#include "drivers/touch.h"
 #include "io/psram.h"
+#include <initializer_list>
 #include <map>
 #include <memory>
 #include <vector>
@@ -84,6 +91,9 @@ static AudioDriver audio;
 static Sounds sounds(audio, files);
 static VideoPlayer player(screen, files, sounds);
 
+// What the host's takeGesture() gave.
+enum class Taken { NONE, TAP, HOLD };
+
 // The host's calls to the screen, the file system and the video player.
 class GameHost {
 public:
@@ -96,6 +106,15 @@ public:
     static void restart() { screen.restart(); }
     static PictureMemory& pictures() { return screen.pictures; }
     static lv_obj_t* top() { return screen.top(); }
+    static lv_obj_t* hostLayer() { return screen.hostLayer(); }
+    static void showHost(bool shown) { screen.showHost(shown); }
+    static Taken takeGesture(TouchPoint& at) {
+        const Screen::Gesture g = screen.takeGesture(at);
+        if (g == Screen::Gesture::TAP) {
+            return Taken::TAP;
+        }
+        return g == Screen::Gesture::HOLD ? Taken::HOLD : Taken::NONE;
+    }
 };
 
 static void put16(std::string& s, uint16_t v) {
@@ -500,6 +519,259 @@ static void testPictureCovers() {
     TEST_ASSERT_EQUAL_HEX16(0x07E0, display.pixel(100, 100));
 }
 
+static uint32_t touchBaseMs = 0;   // the clock when the test started, which the touches count from
+
+// Gets a touch event at a time in milliseconds from touchBaseMs.
+static DriverEvent touchAt(DriverEventType type, uint32_t ms, uint16_t x, uint16_t y) {
+    const uint32_t packed = uint32_t(x) | uint32_t(y) << 16;
+    return {(touchBaseMs + ms) * 1000, type, 0, packed};
+}
+
+// Hands a touch's events to the screen and counts the taps and holds it made.
+static void feed(std::initializer_list<DriverEvent> touch, uint32_t& taps, uint32_t& holds) {
+    for (const DriverEvent& e : touch) {
+        // LVGL takes its times from the clock, which follows the events.
+        fakeMillis = e.time / 1000;
+        PinballEvents out;
+        TEST_ASSERT_TRUE(screen.translate(e, out));
+        for (uint8_t i = 0; i < out.count; ++i) {
+            const TouchPoint at = payload<EventType::SCREEN_TAPPED>(out.events[i]);
+            TEST_ASSERT_EQUAL_UINT16(touch.begin()->payload & 0xFFFF, at.x);
+            TEST_ASSERT_EQUAL_UINT16(touch.begin()->payload >> 16, at.y);
+            taps += out.events[i].type == EventType::SCREEN_TAPPED ? 1 : 0;
+            holds += out.events[i].type == EventType::SCREEN_HELD ? 1 : 0;
+        }
+    }
+}
+
+static uint32_t clicks = 0;
+static uint32_t longPresses = 0;
+
+static void countClick(lv_event_t*) {
+    ++clicks;
+}
+
+static void countLongPress(lv_event_t*) {
+    ++longPresses;
+}
+
+static void testGestures() {
+    using T = DriverEventType;
+    const uint32_t tapMs = Screen::TAP_MS;
+    const uint16_t slop = Touch::SLOP_PX;
+    uint32_t taps = 0;
+    uint32_t holds = 0;
+    TouchPoint at = {};
+    touchBaseMs = fakeMillis;
+    // Another driver's event goes on to the next component.
+    PinballEvents out;
+    TEST_ASSERT_FALSE(screen.translate({0, T::SOUND_ENDED, 0, 1}, out));
+
+    // A short touch on no object is a tap, also when the finger moves a little.
+    feed({touchAt(T::TOUCH_DOWN, 1000, 100, 100), touchAt(T::TOUCH_UP, 1000 + tapMs, 105, 96)},
+         taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::TAP);
+    TEST_ASSERT_EQUAL_UINT16(100, at.x);
+    TEST_ASSERT_EQUAL_UINT16(100, at.y);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::NONE);
+
+    // A touch too long, one that moves away and comes back, and one that ends too far away make
+    // no tap.
+    feed({touchAt(T::TOUCH_DOWN, 2000, 100, 100), touchAt(T::TOUCH_UP, 2001 + tapMs, 100, 100)},
+         taps, holds);
+    feed({touchAt(T::TOUCH_DOWN, 3000, 100, 100), touchAt(T::TOUCH_MOVED, 3050, 100 + slop, 100),
+          touchAt(T::TOUCH_MOVED, 3100, 100, 100), touchAt(T::TOUCH_UP, 3150, 100, 100)},
+         taps, holds);
+    feed({touchAt(T::TOUCH_DOWN, 4000, 100, 100), touchAt(T::TOUCH_UP, 4100, 100, 100 + slop)},
+         taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_EQUAL_UINT32(0, holds);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::NONE);
+
+    // A resting finger is a hold, and it makes no tap when it leaves.
+    feed({touchAt(T::TOUCH_DOWN, 5000, 50, 60), touchAt(T::TOUCH_HELD, 6000, 52, 60),
+          touchAt(T::TOUCH_UP, 6100, 52, 60)},
+         taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::HOLD);
+    TEST_ASSERT_EQUAL_UINT16(50, at.x);
+    TEST_ASSERT_EQUAL_UINT16(60, at.y);
+
+    // A touch on a button goes to the button, short or long, and makes no gesture.
+    lv_obj_t* button = box(screen.slide({1, 10}), 200, 100, 60, 40);
+    lv_obj_set_clickable(button, true);
+    lv_obj_add_event_cb(button, countClick, LV_EVENT_CLICKED, nullptr);
+    refresh();
+    clicks = 0;
+    feed({touchAt(T::TOUCH_DOWN, 7000, 220, 120), touchAt(T::TOUCH_UP, 7100, 222, 121)}, taps,
+         holds);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+    feed({touchAt(T::TOUCH_DOWN, 8000, 220, 120), touchAt(T::TOUCH_HELD, 9000, 220, 120),
+          touchAt(T::TOUCH_UP, 9100, 220, 120)},
+         taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_EQUAL_UINT32(1, holds);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::NONE);
+
+    // A finger that comes down beside the button and slides onto it presses nothing.
+    clicks = 0;
+    feed({touchAt(T::TOUCH_DOWN, 10000, 180, 120), touchAt(T::TOUCH_MOVED, 10050, 220, 120),
+          touchAt(T::TOUCH_UP, 10100, 220, 120)},
+         taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+
+    // A modal message box takes every touch, also beside its box.
+    lv_obj_t* modal = lv_msgbox_create(nullptr);
+    refresh();
+    feed({touchAt(T::TOUCH_DOWN, 11000, 5, 5), touchAt(T::TOUCH_UP, 11100, 5, 5)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::NONE);
+    lv_msgbox_close(modal);
+    refresh();
+    feed({touchAt(T::TOUCH_DOWN, 12000, 5, 5), touchAt(T::TOUCH_UP, 12100, 5, 5)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(2, taps);
+
+    // A finger that rests on the button gives it a long press. LVGL reads the finger between the
+    // touch events while it rests.
+    lv_obj_add_event_cb(button, countLongPress, LV_EVENT_LONG_PRESSED, nullptr);
+    longPresses = 0;
+    feed({touchAt(T::TOUCH_DOWN, 13000, 220, 120)}, taps, holds);
+    for (int i = 0; i < 25; ++i) {
+        refresh();
+    }
+    TEST_ASSERT_EQUAL_UINT32(1, longPresses);
+    feed({touchAt(T::TOUCH_UP, 14100, 220, 120)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, longPresses);
+
+    // A button deleted under the finger takes nothing more. The finger leaves without a gesture,
+    // and the next touches land as usual.
+    clicks = 0;
+    feed({touchAt(T::TOUCH_DOWN, 15000, 220, 120)}, taps, holds);
+    GameHost::reset();
+    feed({touchAt(T::TOUCH_UP, 15100, 220, 120)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+    TEST_ASSERT_EQUAL_UINT32(2, taps);
+    feed({touchAt(T::TOUCH_DOWN, 16000, 220, 120), touchAt(T::TOUCH_UP, 16100, 220, 120)}, taps,
+         holds);
+    TEST_ASSERT_EQUAL_UINT32(3, taps);
+    lv_obj_t* again = box(screen.slide({1, 10}), 200, 100, 60, 40);
+    lv_obj_set_clickable(again, true);
+    lv_obj_add_event_cb(again, countClick, LV_EVENT_CLICKED, nullptr);
+    refresh();
+    feed({touchAt(T::TOUCH_DOWN, 17000, 220, 120), touchAt(T::TOUCH_UP, 17100, 220, 120)}, taps,
+         holds);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+    TEST_ASSERT_EQUAL_UINT32(3, taps);
+}
+
+static void testHideOverlay() {
+    // The overlay lies in front of a slide that covers the screen.
+    lv_obj_t* cover = box(screen.slide({1, 10}), 0, 0, W, H);
+    lv_obj_set_style_bg_color(cover, lv_color_black(), 0);
+    lv_obj_set_clickable(cover, false);
+    lv_obj_t* score = box(screen.overlay(), 10, 10, 40, 20);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(20, 20));
+
+    screen.showOverlay(false);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0x0000, display.pixel(20, 20));
+    lv_obj_set_style_bg_color(score, lv_color_make(0xFF, 0, 0), 0);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0x0000, display.pixel(20, 20));
+    screen.showOverlay(true);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xF800, display.pixel(20, 20));
+
+    // A button on the hidden overlay takes no touch, which becomes a tap. Shown, it takes it.
+    using T = DriverEventType;
+    uint32_t taps = 0;
+    uint32_t holds = 0;
+    touchBaseMs = fakeMillis;
+    lv_obj_set_clickable(score, true);
+    lv_obj_add_event_cb(score, countClick, LV_EVENT_CLICKED, nullptr);
+    clicks = 0;
+    screen.showOverlay(false);
+    refresh();
+    feed({touchAt(T::TOUCH_DOWN, 100, 20, 20), touchAt(T::TOUCH_UP, 200, 20, 20)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    screen.showOverlay(true);
+    refresh();
+    feed({touchAt(T::TOUCH_DOWN, 1000, 20, 20), touchAt(T::TOUCH_UP, 1100, 20, 20)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+
+    // A new game starts with the overlay shown and empty.
+    screen.showOverlay(false);
+    GameHost::reset();
+    settle();
+    TEST_ASSERT_FALSE(lv_obj_is_valid(score));
+    TEST_ASSERT_EQUAL_UINT32(0, lv_obj_get_child_count(screen.overlay()));
+    box(screen.overlay(), 10, 10, 40, 20);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(20, 20));
+}
+
+static uint32_t hostClicks = 0;
+
+static void countHostClick(lv_event_t*) {
+    ++hostClicks;
+}
+
+static void testHostLayer() {
+    using T = DriverEventType;
+    uint32_t taps = 0;
+    uint32_t holds = 0;
+    touchBaseMs = fakeMillis;
+    // A white button on the overlay, and a red one of the host at the same place.
+    lv_obj_t* game = box(screen.overlay(), 100, 100, 60, 40);
+    lv_obj_set_clickable(game, true);
+    lv_obj_add_event_cb(game, countClick, LV_EVENT_CLICKED, nullptr);
+    lv_obj_t* menu = box(GameHost::hostLayer(), 100, 100, 60, 40);
+    lv_obj_set_style_bg_color(menu, lv_color_make(0xFF, 0, 0), 0);
+    lv_obj_set_clickable(menu, true);
+    lv_obj_add_event_cb(menu, countHostClick, LV_EVENT_CLICKED, nullptr);
+    clicks = 0;
+    hostClicks = 0;
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xF800, display.pixel(120, 120));
+    feed({touchAt(T::TOUCH_DOWN, 100, 120, 120), touchAt(T::TOUCH_UP, 200, 120, 120)}, taps, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, hostClicks);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+
+    // Hidden, the host's layer gives way to the overlay.
+    GameHost::showHost(false);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, display.pixel(120, 120));
+    feed({touchAt(T::TOUCH_DOWN, 1000, 120, 120), touchAt(T::TOUCH_UP, 1100, 120, 120)}, taps,
+         holds);
+    TEST_ASSERT_EQUAL_UINT32(1, hostClicks);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+
+    // The host's layer lies in front of a modal message box as well.
+    GameHost::showHost(true);
+    lv_obj_t* modal = lv_msgbox_create(nullptr);
+    refresh();
+    TEST_ASSERT_EQUAL_HEX16(0xF800, display.pixel(120, 120));
+    feed({touchAt(T::TOUCH_DOWN, 2000, 120, 120), touchAt(T::TOUCH_UP, 2100, 120, 120)}, taps,
+         holds);
+    TEST_ASSERT_EQUAL_UINT32(2, hostClicks);
+    lv_msgbox_close(modal);
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, taps);
+
+    // A game switch leaves the host's objects in place.
+    GameHost::reset();
+    settle();
+    TEST_ASSERT_FALSE(lv_obj_is_valid(game));
+    TEST_ASSERT_TRUE(lv_obj_is_valid(menu));
+    lv_obj_delete(menu);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testWiden);
@@ -509,5 +781,8 @@ int main() {
     RUN_TEST(testRestart);
     RUN_TEST(testCovered);
     RUN_TEST(testPictureCovers);
+    RUN_TEST(testGestures);
+    RUN_TEST(testHideOverlay);
+    RUN_TEST(testHostLayer);
     return UNITY_END();
 }
