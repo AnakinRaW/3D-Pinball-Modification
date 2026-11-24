@@ -680,11 +680,10 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
 | `faults` | computer | Dispatch `DEVICE_FAILED` and `DEVICE_RECOVERED` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
-| `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, the id of b is written, and b starts only once the screen has settled |
-| `last-game` | Teensy | Start game b, then restart | Game b starts again |
-| `first-start` | Teensy | Start with no record of a last game | The first game of the list starts |
+| `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, and b starts only once the screen has settled |
+| `choice` | Teensy | Start with a card holding two games, then start without a card | With the card, the game choice shows the built-in game's card first. Without it, the warning shows and the built-in game starts |
 | `saved-data` | Teensy | Let a test game write a file in `end()`, restart, and let it read the file in `start()` | The game reads what it wrote |
-| `boot-film` | bench | Start with `/video/intro.rgb` and `/audio/intro.wav` at the card's root, then start once more without the two files | The film plays once on the whole screen with its sound before the first game starts, and without the files the first game starts at once |
+| `boot-film` | bench | Start with `/video/intro.rgb` and `/audio/intro.wav` at the card's root, then start once more without the two files | The film plays once on the whole screen with its sound before the host's first screen, and without the files that screen shows at once |
 | `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole, and no picture of the stopped game stays on the screen |
 | `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game overlay layer reappears with every change drawn meanwhile |
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |
