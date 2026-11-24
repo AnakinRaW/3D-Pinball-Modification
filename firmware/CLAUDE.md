@@ -15,6 +15,7 @@
 - **Tests that need no hardware run on the computer**, in the `computer` environment, which PlatformIO builds with its platform `native`. CI runs them. Tests that need the Teensy run on the bench from the test image.
 - **A new driver joins the register of `every-driver`** in `tests/teensy/src/every-driver/`, with a case for each row its rules reach.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
+- **A program with a computer test folder has a test for every `computer` row.** A row for code still to be written reads `computer, planned` in its Runs on column, and the mark comes off with its test. `tools/test-coverage.py` fails CI on a missing test and on a planned row that has one.
 
 ## Layout
 
