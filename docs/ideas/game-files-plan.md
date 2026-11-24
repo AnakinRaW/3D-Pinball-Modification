@@ -37,7 +37,7 @@ The slide class builds LVGL objects from a list of widgets. [`slide-test.md`](sl
 The host takes the work every game shares:
 
 - At power-up it shows the game choice, with the built-in game as the first card. A single game starts at once. Without a card, a warning shows and the built-in game starts.
-- After every game it asks each player for a name. The field opens with the name that player entered last time. The host then compares every score with the game's list and writes `highscores.yml`. Without a card, the built-in game's list stays in RAM until power-off.
+- After every game it asks each player for a name. The host then compares every score with the game's list and writes `highscores.yml`. Without a card, the built-in game's list stays in RAM until power-off.
 - A swipe from the right edge opens its menu.
 
 The host's screens come from the storyboard of the host UI.
