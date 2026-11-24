@@ -38,6 +38,11 @@ describe.skipIf(!present)("machine.glb", () => {
     for (const r of hw.map.ramps) expect(ids.has(r.id), r.id).toBe(true);
   });
 
+  it("holds the insert of every lamp, which the lamp lights", () => {
+    const { pf } = loadModel(sources);
+    expect(pf.lamps.filter((l) => !ids.has(l.on)).map((l) => l.id)).toEqual([]);
+  });
+
   it("tilts the playfield in a node the view finds the playfield's frame by", () => {
     expect(nodes.some((n) => n.name === "machine-tilt")).toBe(true);
   });
