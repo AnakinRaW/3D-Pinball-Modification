@@ -300,6 +300,8 @@ dec("n_slop", 10, "", src="the pixels a finger may move and still count as resti
     "touch driver also takes as the step between two TouchMoved")
 dec("t_hold", 1, "s", src="how long a finger has to rest before the touch driver reports TouchHeld")
 dec("t_tap", 500, "ms", src="the longest touch the screen component counts as a tap")
+dec("n_edge", 24, "", src="the strip at the screen's right edge, in pixels, where a touch may start "
+    "the host's swipe")
 MODEL.as_written("t_hold_ms", of="t_hold", unit="ms")
 MODEL.as_written("t_tap_ms", of="t_tap", unit="ms")
 MODEL.uses("prio_display", of="firmware")
@@ -604,5 +606,6 @@ for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"
                                   ("touch_raw_bottom", TOUCH_H, "RAW_BOTTOM", ""),
                                   ("touch_raw_max", TOUCH_H, "RAW_MAX", ""),
                                   ("touch_span_min", TOUCH_H, "SPAN_MIN", ""),
-                                  ("t_tap", SCREEN_H, "TAP_MS", "ms")):
+                                  ("t_tap", SCREEN_H, "TAP_MS", "ms"),
+                                  ("n_edge", SCREEN_H, "EDGE_PX", "")):
     MODEL.in_code(_key, file=_file, name=_name, unit=_unit)

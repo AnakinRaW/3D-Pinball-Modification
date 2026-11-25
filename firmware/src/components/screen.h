@@ -108,6 +108,7 @@ public:
     static constexpr size_t SLIDES = 8;        // one for each mode the mode stack runs at once
     static constexpr size_t ANIMATIONS = 32;   // the animations animate() follows at once
     static constexpr uint32_t TAP_MS = 500;    // display model: t_tap, the longest tap
+    static constexpr uint16_t EDGE_PX = 24;   // display model: n_edge, the host's swipe starts here
 
     /// Creates the screen on a display driver.
     explicit Screen(Display& display) : display(display) {}
@@ -135,6 +136,10 @@ public:
     /// screen, and LVGL calls the control's handlers. A touch that comes down beside every control
     /// stays out of LVGL. It becomes SCREEN_TAPPED when it leaves the screen within TAP_MS and
     /// within Touch::SLOP_PX of where it came down. It becomes SCREEN_HELD on TOUCH_HELD.
+    ///
+    /// A touch that comes down in the right EDGE_PX beside every object of the host's layer waits
+    /// until it shows what it is. Moved Touch::SLOP_PX or more to the left, it is the host's swipe,
+    /// which reaches neither LVGL nor the game. Otherwise it goes on as a touch anywhere else.
     ///
     /// @return  True for every touch event, false for any other event.
     bool translate(const DriverEvent& in, PinballEvents& out) override;
@@ -194,6 +199,10 @@ private:
     /// What a touch beside every control became.
     enum class Gesture : uint8_t { NONE, TAP, HOLD };
 
+    /// Where a touch at the right edge stands: a finger on the edge, a finger swiping, or the
+    /// swipe let go.
+    enum class Edge : uint8_t { NONE, TOUCHED, SWIPING, LET_GO };
+
     /// Gets whether the picture memory is empty, with every read of a picture or a frame landed.
     bool settled() const { return pictures.empty(); }
 
@@ -206,6 +215,16 @@ private:
     /// @param at  Where the finger came down, set for a tap or a hold.
     /// @return    The gesture, NONE when there was none since the last call.
     Gesture takeGesture(TouchPoint& at);
+
+    /// Gets where a touch at the right edge stands, for the host's edge hint and its menu.
+    ///
+    /// TOUCHED lasts while the finger rests on the edge and has not shown what it is. SWIPING lasts
+    /// while the swipe moves. LET_GO comes once after the swipe's finger left the screen, and NONE
+    /// follows it.
+    ///
+    /// @param x  The finger's x, set for TOUCHED and SWIPING. For LET_GO it is where the finger
+    ///           left the screen.
+    Edge edge(uint16_t& x);
 
     /// Gets the host's layer, the parent of the host's objects, in front of LVGL's popups and of
     /// everything the game shows.
@@ -248,6 +267,16 @@ private:
     /// Points @p out at a tap or a hold and notes it for takeGesture().
     void makeGesture(Gesture g, uint32_t time, PinballEvents& out);
 
+    /// Gets the object of the host's layer under a point that takes touches, nullptr where there
+    /// is none.
+    lv_obj_t* hostAt(TouchPoint at) const;
+
+    /// Hands LVGL the finger at a point.
+    void press(TouchPoint at, bool down);
+
+    /// Takes a touch event of a touch that came down at the right edge.
+    void atEdge(const DriverEvent& in, TouchPoint at, PinballEvents& out);
+
     /// Takes an animation off the list once LVGL deletes it, and runs the game's function for it.
     static void forgetAnimation(lv_anim_t* a);
 
@@ -282,6 +311,10 @@ private:
     bool strayed = false;        // it moved Touch::SLOP_PX or more from where it came down
     bool held = false;           // it became a hold
     PinballEvent gesture = {};   // the tap or hold that translate() points at
+    bool onControl = false;      // the last touch came down on a control
+    bool waiting = false;        // the touch at the right edge has not shown what it is yet
+    Edge edgeNow = Edge::NONE;
+    uint16_t edgeX = 0;
     Gesture lastGesture = Gesture::NONE;
     TouchPoint lastAt = {};
     bool begun = false;

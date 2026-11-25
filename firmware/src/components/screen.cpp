@@ -2,6 +2,7 @@
 #include "drivers/touch.h"
 #include "io/psram.h"
 #include "logging/debug-log.h"
+#include "logging/logger.h"
 #include <Arduino.h>
 #include <string.h>
 
@@ -76,17 +77,21 @@ void Screen::begin() {
     // LVGL reads the touch only when translate() hands it an event, and between the events while
     // the finger is down, for its long press.
     pointer = lv_indev_create();
-    lv_indev_set_type(pointer, LV_INDEV_TYPE_POINTER);
-    lv_indev_set_read_cb(pointer, readTouch);
-    lv_indev_set_user_data(pointer, this);
-    lv_indev_set_display(pointer, lv);
-    lv_indev_set_mode(pointer, LV_INDEV_MODE_EVENT);
+    if (pointer == nullptr) {
+        logWarning("screen", "LVGL has no memory for the touch input, so no control takes a touch");
+    } else {
+        lv_indev_set_type(pointer, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_read_cb(pointer, readTouch);
+        lv_indev_set_user_data(pointer, this);
+        lv_indev_set_display(pointer, lv);
+        lv_indev_set_mode(pointer, LV_INDEV_MODE_EVENT);
+    }
 
     size_t bytes = 0;
     uint8_t* memory = io::takeFreePsram(bytes);
     pictures.begin(memory, bytes);
     if (memory == nullptr) {
-        DEBUG_LOG("screen: no PSRAM, so every picture fails to load\n");
+        logWarning("screen", "no PSRAM, so every picture fails to load");
     }
 }
 
@@ -147,7 +152,7 @@ void Screen::readTouch(lv_indev_t* indev, lv_indev_data_t* data) {
 // LVGL searches the layers in this order and finds only an object that takes touches. The screen's
 // own objects take none.
 lv_obj_t* Screen::controlAt(TouchPoint at) const {
-    if (!begun) {
+    if (!begun || pointer == nullptr) {
         return nullptr;
     }
     lv_point_t p = {at.x, at.y};
@@ -172,18 +177,25 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
     if (in.type == DriverEventType::TOUCH_DOWN) {
         // Only the point where the finger comes down decides, so a finger that slides onto a
         // control afterwards does not press it.
-        handed = controlAt(at) != nullptr;
+        onControl = controlAt(at) != nullptr;
         downAt = at;
         downUs = in.time;
         strayed = false;
         held = false;
+        // The host's objects keep their touches, so an open menu at the edge takes its own.
+        waiting = at.x >= Display::WIDTH - EDGE_PX && hostAt(at) == nullptr;
+        edgeNow = waiting ? Edge::TOUCHED : Edge::NONE;
+        edgeX = at.x;
+        handed = onControl && !waiting;
+    }
+    if (waiting || edgeNow == Edge::SWIPING) {
+        atEdge(in, at, out);
+        return true;
     }
     if (handed) {
         // LVGL holds a long press by itself and needs no TOUCH_HELD.
         if (in.type != DriverEventType::TOUCH_HELD) {
-            finger = at;
-            pressed = in.type != DriverEventType::TOUCH_UP;
-            lv_indev_read(pointer);
+            press(at, in.type != DriverEventType::TOUCH_UP);
         }
         return true;
     }
@@ -198,6 +210,75 @@ bool Screen::translate(const DriverEvent& in, PinballEvents& out) {
         makeGesture(Gesture::TAP, in.time, out);
     }
     return true;
+}
+
+// LVGL gets a touch at the edge only once it is no swipe, as a press where the finger came down
+// followed by where it is now. A control there is pressed late, but a swipe never presses it.
+void Screen::atEdge(const DriverEvent& in, TouchPoint at, PinballEvents& out) {
+    if (in.type == DriverEventType::TOUCH_DOWN) {
+        return;
+    }
+    if (edgeNow == Edge::SWIPING) {
+        edgeX = at.x;
+        if (in.type == DriverEventType::TOUCH_UP) {
+            edgeNow = Edge::LET_GO;
+        }
+        return;
+    }
+    const bool left = downAt.x >= at.x + Touch::SLOP_PX;
+    if (in.type == DriverEventType::TOUCH_MOVED && left) {
+        waiting = false;
+        edgeNow = Edge::SWIPING;
+        edgeX = at.x;
+        return;
+    }
+    const bool moved = distance(at, downAt) >= Touch::SLOP_PX;
+    if (in.type == DriverEventType::TOUCH_MOVED && !moved) {
+        edgeX = at.x;
+        return;
+    }
+    // The touch has shown that it is no swipe, so it goes on as a touch anywhere else.
+    waiting = false;
+    edgeNow = Edge::NONE;
+    handed = onControl;
+    if (handed) {
+        press(downAt, true);
+        if (in.type != DriverEventType::TOUCH_HELD) {
+            press(at, in.type != DriverEventType::TOUCH_UP);
+        }
+        return;
+    }
+    strayed = moved;
+    if (in.type == DriverEventType::TOUCH_HELD && !strayed) {
+        held = true;
+        makeGesture(Gesture::HOLD, in.time, out);
+    } else if (in.type == DriverEventType::TOUCH_UP && !strayed &&
+               in.time - downUs <= TAP_MS * US_PER_MS) {
+        makeGesture(Gesture::TAP, in.time, out);
+    }
+}
+
+void Screen::press(TouchPoint at, bool down) {
+    finger = at;
+    pressed = down;
+    lv_indev_read(pointer);
+}
+
+lv_obj_t* Screen::hostAt(TouchPoint at) const {
+    if (!begun) {
+        return nullptr;
+    }
+    lv_point_t p = {at.x, at.y};
+    return lv_indev_search_obj(lv_layer_sys(), &p);
+}
+
+Screen::Edge Screen::edge(uint16_t& x) {
+    x = edgeX;
+    const Edge e = edgeNow;
+    if (e == Edge::LET_GO) {
+        edgeNow = Edge::NONE;
+    }
+    return e;
 }
 
 void Screen::makeGesture(Gesture g, uint32_t time, PinballEvents& out) {
