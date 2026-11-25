@@ -62,17 +62,20 @@ enum class SoundEndCode : uint8_t {
     READ_FAILED,   // a read of the card failed
 };
 
-/// The bits of a payload that hold a sound's number. The code takes the rest.
-constexpr uint8_t SOUND_NUMBER_BITS = 24;
-constexpr uint8_t SOUND_CODE_BITS = std::numeric_limits<uint32_t>::digits - SOUND_NUMBER_BITS;
-/// The numbers a sound can take, which SoundEnd::number holds. 0 names no sound.
-constexpr uint32_t SOUND_NUMBERS = 1u << SOUND_NUMBER_BITS;
-
 /// The payload of SOUND_ENDED. Packed into a payload, the number takes the lower 24 bits and the
 /// code the upper 8.
 struct SoundEnd {
-    uint32_t number : SOUND_NUMBER_BITS;   // the number play() gave the sound, 0 for none
-    SoundEndCode code : SOUND_CODE_BITS;   // how the sound ended
+private:
+    static constexpr uint8_t NUMBER_BITS = 24;   // the bits that hold a sound's number
+    static constexpr uint8_t CODE_BITS =
+        std::numeric_limits<uint32_t>::digits - NUMBER_BITS;   // the rest, for the code
+
+public:
+    /// The numbers a sound can take, which number holds. 0 names no sound.
+    static constexpr uint32_t NUMBERS = 1u << NUMBER_BITS;
+
+    uint32_t number : NUMBER_BITS;   // the number play() gave the sound, 0 for none
+    SoundEndCode code : CODE_BITS;   // how the sound ended
 };
 static_assert(sizeof(SoundEnd) == sizeof(uint32_t), "a SoundEnd fills a payload");
 

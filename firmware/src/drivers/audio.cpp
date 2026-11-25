@@ -139,7 +139,7 @@ uint32_t AudioDriver::start(uint8_t channel, const Position& from) {
         return 0;
     }
     // The number fits the 24 bits of SOUND_ENDED's payload, and 0 names no sound.
-    count = count + 1 == SOUND_NUMBERS ? 1 : count + 1;
+    count = count + 1 == SoundEnd::NUMBERS ? 1 : count + 1;
     players[channel].sound.request(from, count);
     return count;
 }
