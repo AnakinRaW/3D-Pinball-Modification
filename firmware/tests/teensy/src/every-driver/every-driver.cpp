@@ -26,6 +26,7 @@
 #include "core/event-queue.h"
 #include "drivers/audio.h"
 #include "drivers/break-beam.h"
+#include "drivers/controls.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/servo-driver.h"
@@ -494,6 +495,32 @@ static bool beamBeginFails(Verdict& v) {
     return beamEmpty(beamSecond, v);
 }
 
+// ---- the controls driver
+
+static ToggleSwitch toggleFresh(events, driverTick);     // before-begin: never begun
+static ToggleSwitch toggleStarved(events, driverTick);   // begin-fails: the driver tick full
+
+// Gets whether a toggle switch driver answers at once with position 0.
+static bool toggleEmpty(ToggleSwitch& toggle, Verdict& v) {
+    uint8_t position = 1;
+    const uint32_t us = timedUs([&] { position = toggle.position(); });
+    if (position != 0) {
+        return v.want("position 0").saw("position %u", position);
+    }
+    return atOnce(us, "position()", v);
+}
+
+static bool toggleBeforeBegin(Verdict& v) {
+    return toggleEmpty(toggleFresh, v);
+}
+
+static bool toggleBeginFails(Verdict& v) {
+    if (toggleStarved.begin()) {
+        return v.want("false").saw("begin() true with the driver tick full");
+    }
+    return toggleEmpty(toggleStarved, v);
+}
+
 // ---- the register and the rows
 
 static const DriverCase DRIVERS[] = {
@@ -512,6 +539,8 @@ static const DriverCase DRIVERS[] = {
     // the break beam driver takes no settings and starts no transfer. begin() needs no slot of the
     // driver tick and fails when another break beam driver holds the pin
     {"break-beam", beamBeforeBegin, nullptr, nullptr, beamBeginFails},
+    // the controls driver takes no settings and starts no transfer
+    {"controls", toggleBeforeBegin, nullptr, nullptr, toggleBeginFails},
 };
 
 // Runs a row's case of every driver and reports the first failure, or PASS.

@@ -34,6 +34,9 @@ enum class DriverEventType : uint16_t {
     /// A ball has broken the beam across the drain. The source is the gate, always 0 in this
     /// build, and there is no payload.
     BALL_DRAINED,
+    /// The toggle switch has moved. The source is the switch, always 0 in this build, and the
+    /// payload is the position printed on the switch that it moved to, 1 or 0.
+    TOGGLE_SWITCHED,
 };
 
 struct DriverEvent {
@@ -107,6 +110,9 @@ template <> struct DriverPayloadOf<DriverEventType::SOUND_ENDED> {
 };
 template <> struct DriverPayloadOf<DriverEventType::BALL_DRAINED> {
     using type = NoPayload;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOGGLE_SWITCHED> {
+    using type = uint8_t;   // the position printed on the switch, 1 or 0
 };
 
 /// Gets the payload of an event of type TAG.
