@@ -48,9 +48,6 @@ using test::screen;
 using test::sounds;
 using test::touch;
 using test::videoPlayer;
-static EventQueue monitorEvents;
-DMAMEM static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
 static char seen[TEXT];
 static char wanted[TEXT];
 
@@ -283,11 +280,18 @@ static void testRedraw() {
     test::pass();
 }
 
+// Gets whether an event is the device monitor's report about the touch controller.
+static bool isTouchFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::TOUCH;
+}
+
 // Renders as the main loop does until the monitor's next event about the touch controller.
 static bool nextTouchFault(DriverEvent& e) {
     const uint32_t t0 = millis();
     while (millis() - t0 < LOST_TIMEOUT_MS) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+        if (events.read(&e, 1) == 1 && isTouchFault(e)) {
             return true;
         }
         screen.render();
@@ -307,7 +311,7 @@ static void testPowerLost() {
         test::skip("no touch controller answers");
         return;
     }
-    if (!monitor.watch(Device::TOUCH, touch)) {
+    if (!deviceMonitor.watch(Device::TOUCH, touch)) {
         test::fail("the monitor refused the touch driver", "it watches it");
         return;
     }

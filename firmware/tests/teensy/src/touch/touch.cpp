@@ -84,10 +84,6 @@ static const char* nameOf(DriverEventType t) {
 
 // ---- touch-lost
 
-static EventQueue monitorEvents;
-static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
-
 // Fills the screen blue with a white square in the middle and sends it.
 static bool showBlueSquare() {
     for (uint32_t y = 0; y < H; ++y) {
@@ -110,11 +106,18 @@ static bool showBlueSquare() {
     return frameOut;
 }
 
+// Gets whether an event is the device monitor's report about the touch controller.
+static bool isTouchFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::TOUCH;
+}
+
 // Waits for the monitor's next event about the touch controller.
 static bool nextFault(DriverEvent& e) {
     const uint32_t t0 = millis();
     while (millis() - t0 < LOST_TIMEOUT_MS) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+        if (events.read(&e, 1) == 1 && isTouchFault(e)) {
             return true;
         }
         delay(1);
@@ -135,7 +138,7 @@ static void testTouchLost() {
         test::skip("no touch controller answers");
         return;
     }
-    if (!monitor.watch(Device::TOUCH, touch) || !showBlueSquare()) {
+    if (!deviceMonitor.watch(Device::TOUCH, touch) || !showBlueSquare()) {
         test::fail("the monitor or the picture refused", "both taken");
         return;
     }
