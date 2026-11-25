@@ -2,8 +2,8 @@
 // into the simulated display, whose pixels the browser reads. The firmware's touch driver reads the
 // simulated touch controller, which answers with the finger the browser reports, so taps, holds
 // and moves come out of the driver as they do on the machine. Until a host and a game draw on the
-// screen, a test scene shows a button and the last gesture, and a stand-in for the host shows the
-// hint at the right edge and a menu that the swipe pulls in.
+// screen, a test scene shows a button and the last gesture, and a stand-in for the host drives the
+// host's menu at the right edge from the swipe.
 #include "screen-simulator.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
@@ -14,20 +14,20 @@
 #include "drivers/display.h"
 #include "drivers/driver-base.h"
 #include "drivers/touch.h"
+#include "host/views/edge-menu-view.h"
 #include "logging/debug-log.h"
 
 using emscripten::val;
 
-/// The host's part of the test scene, until the firmware's host is built: the gold tab and the
-/// menu's edge while a finger rests on the right edge, and a menu that follows the swipe. It takes
-/// the host's name, under which the screen hands out the host's layer and the swipe.
+/// The host's part of the test scene, until the firmware's host is built. It drives the host's
+/// menu at the right edge from the swipe and gives its rows made-up figures. It takes the host's
+/// name, under which the screen hands out the host's layer and the swipe.
 class GameHost {
 public:
-    /// Places the tab and the closed menu on the host's layer.
+    /// Places the menu at the right edge on the host's layer.
     static void build(Screen& screen);
 
-    /// Follows the touch at the right edge: shows the tab and the menu's edge, moves the menu with
-    /// the swipe and snaps it open or back once the finger leaves.
+    /// Hands the menu the touch at the right edge: the hint, the swipe and its let-go.
     ///
     /// @note  Every pass calls it, after the touch events.
     static void follow(Screen& screen);
@@ -36,20 +36,14 @@ public:
     static void tapped();
 
 private:
-    /// Moves the menu's left edge to @p x, at once or in the snap's time.
-    static void moveMenu(int32_t x, bool snap);
+    /// Takes an item the player chose in the menu.
+    static void chosen(EdgeMenuView::Item item, void* context);
 
-    static void closePressed(lv_event_t*);
-
-    static lv_obj_t* tab;
-    static lv_obj_t* menu;
-    static bool open;
+    static EdgeMenuView menu;
     static Screen::Edge last;
 };
 
-lv_obj_t* GameHost::tab = nullptr;
-lv_obj_t* GameHost::menu = nullptr;
-bool GameHost::open = false;
+EdgeMenuView GameHost::menu;
 Screen::Edge GameHost::last = Screen::Edge::NONE;
 
 namespace {
@@ -71,18 +65,10 @@ constexpr uint8_t TEST_LAYER_PRIORITY = 1;
 constexpr int32_t BUTTON_WIDTH = 128;   // host-screens.md: at least a 44 px touch target
 constexpr int32_t BUTTON_HEIGHT = 48;
 constexpr int32_t MARGIN_PX = 8;
-constexpr uint32_t NIGHT = 0x0e061a;     // host-screens.md: the screen's background
-constexpr uint32_t CREAM = 0xfff4d6;     // host-screens.md: text
-constexpr uint32_t RED = 0xb3242d;       // host-screens.md: a button
-constexpr uint32_t GOLD = 0xe8c04a;      // host-screens.md: a button's rim
-constexpr uint32_t VELVET = 0x2c0a46;    // host-screens.md: tiles and rows
-constexpr int32_t MENU_WIDTH_PX = 208;   // host-screens.md: the menu's drawer
-constexpr int32_t PEEK_PX = 12;          // the menu's edge while a finger rests on the right edge
-constexpr int32_t TAB_WIDTH_PX = 8;      // the gold tab at the right edge
-constexpr int32_t TAB_HEIGHT_PX = 56;
-constexpr int32_t CLOSE_WIDTH_PX = 96;   // host-screens.md: at least a 44 px touch target
-constexpr int32_t CLOSE_HEIGHT_PX = 44;
-constexpr uint32_t SNAP_MS = 150;   // host-screens.md: the menu snaps open or back
+constexpr uint32_t NIGHT = 0x0e061a;   // host-screens.md: the screen's background
+constexpr uint32_t CREAM = 0xfff4d6;   // host-screens.md: text
+constexpr uint32_t RED = 0xb3242d;     // host-screens.md: a button
+constexpr uint32_t GOLD = 0xe8c04a;    // host-screens.md: a button's rim
 
 /// An event the browser lists: a touch event of the driver, a gesture the screen made, a press of
 /// the test scene's button, or a step of the swipe and the menu.
@@ -259,8 +245,9 @@ uint32_t screenRectangles() {
 
 // Gets the events since the last call, oldest first, each {type, x, y, ms}: the touch driver's
 // touchDown, touchMoved, touchHeld and touchUp, the screen's screenTapped and screenHeld,
-// buttonClicked of the test scene's button, and the host stand-in's edgeTouched, swipeStarted and
-// swipeLetGo with the finger's x, menuOpened and menuClosed.
+// buttonClicked of the test scene's button, the host stand-in's edgeTouched, swipeStarted and
+// swipeLetGo with the finger's x, menuOpened and menuClosed, and the menu's items sound, lights,
+// machine, endGame and close.
 val screenEvents() {
     val out = val::array();
     for (const Noted& n : noted) {
@@ -307,113 +294,55 @@ void screenPass() {
 }
 
 void GameHost::build(Screen& screen) {
-    lv_obj_t* layer = screen.hostLayer();
-    // The menu takes every touch on it, so a tap on the menu reaches no game.
-    menu = lv_obj_create(layer);
-    lv_obj_remove_style_all(menu);
-    lv_obj_set_size(menu, MENU_WIDTH_PX, Display::HEIGHT);
-    lv_obj_set_pos(menu, Display::WIDTH, 0);
-    lv_obj_set_style_bg_color(menu, lv_color_hex(VELVET), 0);
-    lv_obj_set_style_bg_opa(menu, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_color(menu, lv_color_hex(GOLD), 0);
-    lv_obj_set_style_border_width(menu, 2, 0);
-    lv_obj_set_style_border_side(menu, LV_BORDER_SIDE_LEFT, 0);
-    lv_obj_set_scrollable(menu, false);
-    lv_obj_t* title = lv_label_create(menu);
-    lv_label_set_text(title, "Menu");
-    lv_obj_set_style_text_color(title, lv_color_hex(CREAM), 0);
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, MARGIN_PX * 2, MARGIN_PX * 2);
-    lv_obj_t* close = lv_button_create(menu);
-    lv_obj_set_size(close, CLOSE_WIDTH_PX, CLOSE_HEIGHT_PX);
-    lv_obj_align(close, LV_ALIGN_BOTTOM_LEFT, MARGIN_PX * 2, -MARGIN_PX * 2);
-    lv_obj_set_style_bg_color(close, lv_color_hex(RED), 0);
-    lv_obj_set_style_border_color(close, lv_color_hex(GOLD), 0);
-    lv_obj_set_style_border_width(close, 2, 0);
-    lv_obj_add_event_cb(close, closePressed, LV_EVENT_CLICKED, nullptr);
-    lv_obj_t* label = lv_label_create(close);
-    lv_label_set_text(label, "Close");
-    lv_obj_set_style_text_color(label, lv_color_hex(CREAM), 0);
-    lv_obj_center(label);
-
-    // The tab lies in front of the menu, on the menu's edge while a finger rests on the right edge.
-    tab = lv_obj_create(layer);
-    lv_obj_remove_style_all(tab);
-    lv_obj_set_size(tab, TAB_WIDTH_PX, TAB_HEIGHT_PX);
-    lv_obj_align(tab, LV_ALIGN_RIGHT_MID, TAB_WIDTH_PX / 2 - PEEK_PX, 0);
-    lv_obj_set_style_bg_color(tab, lv_color_hex(GOLD), 0);
-    lv_obj_set_style_bg_opa(tab, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(tab, TAB_WIDTH_PX / 2, 0);
-    lv_obj_set_clickable(tab, false);
-    lv_obj_set_hidden(tab, true);
+    menu.build(screen.hostLayer(), chosen, nullptr);
+    // Made-up figures stand in for the machine's, as the menu's storyboard shows them.
+    EdgeMenuView::Status status;
+    status.sound = "50 % / 70 %";
+    status.lights = "80 % / 60 %";
+    status.machine = "1 fault";
+    status.fault = true;
+    menu.show(status);
 }
 
 void GameHost::follow(Screen& screen) {
     uint16_t x = 0;
     const Screen::Edge e = screen.edge(x);
-    const int32_t openX = Display::WIDTH - MENU_WIDTH_PX;
-    if (e == Screen::Edge::TOUCHED) {
-        if (last != Screen::Edge::TOUCHED) {
-            note("edgeTouched", x, 0);
-            lv_obj_set_hidden(tab, false);
-            if (!open) {
-                moveMenu(Display::WIDTH - PEEK_PX, false);
-            }
-        }
+    if (e == Screen::Edge::TOUCHED && last != Screen::Edge::TOUCHED) {
+        note("edgeTouched", x, 0);
+        menu.hint();
     } else if (e == Screen::Edge::SWIPING) {
         if (last != Screen::Edge::SWIPING) {
             note("swipeStarted", x, 0);
-            lv_obj_set_hidden(tab, true);
         }
-        // The menu's left edge follows the finger, held between open and closed.
-        const int32_t left = x < openX ? openX : x;
-        moveMenu(left, false);
+        menu.follow(x);
     } else if (e == Screen::Edge::LET_GO) {
         note("swipeLetGo", x, 0);
-        // A finger let go past half the menu's width opens it, and one let go before that lets
-        // it slide back.
-        const bool opens = x < Display::WIDTH - MENU_WIDTH_PX / 2;
-        moveMenu(opens ? openX : Display::WIDTH, true);
-        if (opens != open) {
+        const bool was = menu.isOpen();
+        const bool opens = menu.letGo(x);
+        if (opens != was) {
             note(opens ? "menuOpened" : "menuClosed", 0, 0);
         }
-        open = opens;
-    } else if (last == Screen::Edge::TOUCHED) {
-        // A tap or a rest at the edge lets the hint go, and the game gets its touch.
-        lv_obj_set_hidden(tab, true);
-        if (!open) {
-            moveMenu(Display::WIDTH, false);
-        }
+    } else if (e == Screen::Edge::NONE && last == Screen::Edge::TOUCHED) {
+        // A tap or a rest at the edge lets the hint stand and fade, and the game gets its touch.
+        menu.releaseHint();
     }
     last = e == Screen::Edge::LET_GO ? Screen::Edge::NONE : e;
 }
 
 void GameHost::tapped() {
-    if (!open) {
+    if (!menu.isOpen()) {
         return;
     }
-    open = false;
-    moveMenu(Display::WIDTH, true);
+    menu.close();
     note("menuClosed", 0, 0);
 }
 
-void GameHost::closePressed(lv_event_t*) {
-    tapped();
-}
-
-void GameHost::moveMenu(int32_t x, bool snap) {
-    lv_anim_delete(menu, nullptr);
-    if (!snap) {
-        lv_obj_set_x(menu, x);
-        return;
+void GameHost::chosen(EdgeMenuView::Item item, void*) {
+    static const char* const NAMES[] = {"sound", "lights", "machine", "endGame", "close"};
+    note(NAMES[uint8_t(item)], 0, 0);
+    if (item == EdgeMenuView::Item::CLOSE) {
+        tapped();
     }
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, menu);
-    lv_anim_set_values(&a, lv_obj_get_x(menu), x);
-    lv_anim_set_duration(&a, SNAP_MS);
-    lv_anim_set_exec_cb(&a,
-                        [](void* obj, int32_t v) { lv_obj_set_x(static_cast<lv_obj_t*>(obj), v); });
-    lv_anim_start(&a);
 }
 
 EMSCRIPTEN_BINDINGS(screen) {

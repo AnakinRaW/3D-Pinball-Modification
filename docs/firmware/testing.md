@@ -629,6 +629,18 @@ The program `video-player` checks the [video player](components/video-player.md)
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MOVIE_ENDED`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |
 
+### Edge menu view
+
+The program `edge-menu-view` checks the view of the [menu at the right edge](host-screens.md#a-finger-at-the-right-edge). Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `hint` | computer | Show the hint, then release it. Then show it and release it while it still fades in | The gold tab and the drawer's edge fade in, stand once released and then fade, in the [hint's times](host-screens.md#a-finger-at-the-right-edge), with the drawer out of sight again. Released while fading in, the hint still reaches full strength before it fades |
+| `follow` | computer | Follow a finger from the right edge to the left, past the open drawer's edge | The drawer's left edge follows the finger and stops at the open drawer's edge, and the hint goes at once |
+| `let-go` | computer | Let go before half the drawer's width, then past it, then close the menu | The drawer slides back, then snaps open in the [menu's snap time](host-screens.md#controls), and `close()` snaps it back |
+| `choose` | computer | Press each row, End game, the close in the header and the bulbs under it, then set the rows' status | Each press names its item and the bulbs name none. The rows show the status |
+| `while-open` | computer | Show the hint and follow a finger while the menu is open | The menu stays open and no hint shows |
+
 ## Main program
 
 ### Logger

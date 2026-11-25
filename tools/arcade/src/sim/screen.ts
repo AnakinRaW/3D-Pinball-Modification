@@ -20,7 +20,12 @@ export type ScreenEventType =
   | "swipeStarted"
   | "swipeLetGo"
   | "menuOpened"
-  | "menuClosed";
+  | "menuClosed"
+  | "sound"
+  | "lights"
+  | "machine"
+  | "endGame"
+  | "close";
 
 export interface ScreenEvent {
   type: ScreenEventType;

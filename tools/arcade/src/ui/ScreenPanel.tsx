@@ -31,9 +31,23 @@ const LABELS: Record<ScreenEvent["type"], string> = {
   swipeLetGo: "Swipe let go",
   menuOpened: "Menu opened",
   menuClosed: "Menu closed",
+  sound: "Menu: Sound",
+  lights: "Menu: Lights",
+  machine: "Menu: Machine",
+  endGame: "Menu: End game",
+  close: "Menu: Close",
 };
 // the events that carry no point, and those that carry the finger's x alone
-const POINTLESS = new Set<ScreenEvent["type"]>(["buttonClicked", "menuOpened", "menuClosed"]);
+const POINTLESS = new Set<ScreenEvent["type"]>([
+  "buttonClicked",
+  "menuOpened",
+  "menuClosed",
+  "sound",
+  "lights",
+  "machine",
+  "endGame",
+  "close",
+]);
 const X_ONLY = new Set<ScreenEvent["type"]>(["edgeTouched", "swipeStarted", "swipeLetGo"]);
 
 // Copies the display's pixels into the canvas.

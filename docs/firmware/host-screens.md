@@ -158,7 +158,7 @@ Nothing marks the right edge while nobody touches it. The status bulb top right 
 
 ![The gold tab and the menu's edge](host-screens/edge-hint.png)
 
-A finger that comes down in the right 24 px makes a gold tab and the menu's edge appear, so the player sees where the menu comes from. A finger that lifts or rests there leaves the hint standing for 1 s. The hint then fades in 300 ms. The game then gets its tap or hold as anywhere else. A finger that moves 10 px or more to the left starts the [swipe](#swipe). That touch reaches no game. The screen component detects the swipe before LVGL gets the touch, as its section on [touch](components/screen.md#touch) gives.
+A finger that comes down in the right 24 px makes a gold tab and the menu's edge fade in within 150 ms, so the player sees where the menu comes from. A finger that lifts or rests there leaves the hint standing for 1 s. The hint then fades in 300 ms. The game then gets its tap or hold as anywhere else. A finger that moves 10 px or more to the left starts the [swipe](#swipe). That touch reaches no game. The screen component detects the swipe before LVGL gets the touch, as its section on [touch](components/screen.md#touch) gives.
 
 ### Swipe
 

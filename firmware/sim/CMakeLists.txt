@@ -63,6 +63,7 @@ add_executable(simulator
     ${FIRMWARE}/src/drivers/driver-base.cpp
     ${FIRMWARE}/src/drivers/storage-service.cpp
     ${FIRMWARE}/src/drivers/touch.cpp
+    ${FIRMWARE}/src/host/views/edge-menu-view.cpp
     ${FIRMWARE}/src/components/lamps.cpp
     ${FIRMWARE}/src/components/lamp-effects.cpp
     ${FIRMWARE}/src/drivers/lighting.cpp

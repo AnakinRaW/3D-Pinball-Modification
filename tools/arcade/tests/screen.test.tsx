@@ -22,8 +22,12 @@ const EDGE_PX = 24; // screen.md: the right edge the host's swipe starts in
 const SLOP_PX = 10; // touch.h: SLOP_PX
 const MENU_PX = 208; // host-screens.md: the menu's drawer
 const SNAP_MS = 150; // host-screens.md: the menu snaps open or back
+const HINT_STAY_MS = 1000; // host-screens.md: the hint stands once the finger leaves
+const HINT_FADE_MS = 300; // host-screens.md: then fades
+const REFRESH_MS = 40; // longer than LVGL's refresh period, which its animations step at
 const NIGHT_565 = 0x0823; // #0e061a in RGB565
 const VELVET_565 = 0x2848; // #2c0a46 in RGB565
+const GOLD_565 = 0xee09; // #e8c04a in RGB565
 
 // the colors of one pixel, RGB565 high byte first
 const rgbOf = (hi: number, lo: number) => {
@@ -291,7 +295,7 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
       m.step(2 * READ_MS);
     }
     input.up(1);
-    m.step(2 * READ_MS + SNAP_MS);
+    m.step(2 * READ_MS + SNAP_MS + REFRESH_MS);
     return m.screenEvents();
   };
   const pixel = (x: number, y: number) => {
@@ -323,18 +327,32 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     expect(pixel(SCREEN_WIDTH - 30, 60)).toBe(NIGHT_565);
   });
 
-  it("gives a tap at the right edge to the game", () => {
-    const events = press(SCREEN_WIDTH - 5, 200, 100);
+  it("gives a tap at the right edge to the game, and lets the hint stand 1 s and fade", () => {
+    const events = press(SCREEN_WIDTH - 4, 200, 100);
     expect(types(events)).toEqual(["touchDown", "edgeTouched", "touchUp", "screenTapped"]);
-    expect(pixel(SCREEN_WIDTH - 5, 60)).toBe(NIGHT_565);
+    // the gold tab left of the drawer's edge still shows, then has faded once the hint's time is over
+    const tab = () => pixel(SCREEN_WIDTH - 10, SCREEN_HEIGHT / 2 - 20);
+    // a short tap still lets the hint reach full strength while it stands
+    m.step(HINT_STAY_MS / 2);
+    expect(tab()).toBe(GOLD_565);
+    m.step(HINT_STAY_MS + HINT_FADE_MS + REFRESH_MS);
+    expect(tab()).toBe(NIGHT_565);
   });
 
-  it("closes the menu with its Close button and with a tap on the game", () => {
+  it("names the menu's items, and closes it with its close and with a tap on the game", () => {
     swipe(150);
-    // Close lies at the menu's bottom left
-    let events = press(SCREEN_WIDTH - MENU_PX + 40, SCREEN_HEIGHT - 30, 100);
-    expect(types(events)).toEqual(["touchDown", "touchUp", "menuClosed"]);
-    m.step(SNAP_MS);
+    // the rows from the header down, End game at the bottom, the close at the header's right end
+    for (const [y, item] of [
+      [68, "sound"],
+      [116, "lights"],
+      [164, "machine"],
+      [214, "endGame"],
+    ] as const) {
+      expect(types(press(SCREEN_WIDTH - 50, y, 100))).toEqual(["touchDown", "touchUp", item]);
+    }
+    let events = press(SCREEN_WIDTH - 10, 17, 100);
+    expect(types(events)).toEqual(["touchDown", "touchUp", "close", "menuClosed"]);
+    m.step(SNAP_MS + REFRESH_MS);
     expect(pixel(SCREEN_WIDTH - MENU_PX / 2, 60)).toBe(NIGHT_565);
     swipe(150);
     events = press(30, 200, 100);
@@ -343,7 +361,8 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
 
   it("keeps a tap on the open menu from the game", () => {
     swipe(150);
-    const events = press(SCREEN_WIDTH - MENU_PX / 2, 120, 100);
+    // the marquee bulbs under the header, where no item lies
+    const events = press(SCREEN_WIDTH - MENU_PX / 2, 38, 100);
     expect(types(events)).toEqual(["touchDown", "touchUp"]);
   });
 });

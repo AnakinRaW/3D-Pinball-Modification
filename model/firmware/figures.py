@@ -211,6 +211,17 @@ dec("t_curtain_hold", 200, "ms", src=f"how long the curtain stays closed with it
 dec("t_curtain_open", 300, "ms", src=f"how long the curtain takes to open, {_HOST}")
 dec("t_launch_card", 1.5, "s", src=f"about how long the launch card stays before the game's screen, {_HOST}")
 dec("t_menu_idle", 20, "s", src=f"how long the menu stays open without a touch, {_HOST}")
+dec("t_hint_in", 150, "ms", src=f"how long the hint at the right edge takes to fade in, {_HOST}")
+dec("t_hint_stay", 1, "s", src=f"how long the hint stands once the finger lifts or rests, {_HOST}")
+dec("t_hint_fade", 300, "ms", src=f"how long the hint then takes to fade, {_HOST}")
+dec("n_menu_width", 208, "", src=f"the menu's width in pixels, {_HOST}")
+_EDGE_MENU_H = "firmware/src/host/views/edge-menu-view.h"
+for _key, _name, _unit in (("t_menu_snap", "SNAP_MS", "ms"),
+                           ("t_hint_in", "HINT_IN_MS", "ms"),
+                           ("t_hint_stay", "HINT_STAY_MS", "ms"),
+                           ("t_hint_fade", "HINT_FADE_MS", "ms"),
+                           ("n_menu_width", "WIDTH_PX", "")):
+    MODEL.in_code(_key, file=_EDGE_MENU_H, name=_name, unit=_unit)
 dec("t_toast_fault", 4, "s", src=f"how long the toast of a failed device shows, {_HOST}")
 dec("t_toast_recovered", 3, "s", src=f"how long the toast of a device that works again shows, {_HOST}")
 dec("t_game_over", 3, "s", src=f"how long Game over shows before the first name entry, {_HOST}")
