@@ -412,7 +412,7 @@ describe.runIf(built)("the studio", () => {
     expect($(".studio-status")!.textContent).toContain("pulse");
   });
 
-  it("picks the game it edits and opens its Lights, the other parts to come", async () => {
+  it("picks the game it edits and opens its Lights and Screen, the other parts to come", async () => {
     act(() => {
       state.cardGames.value = [
         {
@@ -437,11 +437,25 @@ describe.runIf(built)("the studio", () => {
     ] as HTMLButtonElement[];
     expect(tabs.map((t) => t.textContent)).toEqual([
       "Lights",
-      "Slides",
+      "Screen",
       "Sounds",
       "Modes",
     ]);
-    expect(tabs.map((t) => t.disabled)).toEqual([false, true, true, true]);
+    expect(tabs.map((t) => t.disabled)).toEqual([false, false, true, true]);
+  });
+
+  it("shows the machine's display in place of the drawing on Screen, and the drawing again on Lights", async () => {
+    await open();
+    const tab = (name: string) =>
+      [...root.querySelectorAll(".sub-tabs .tab")].find((t) => t.textContent === name)!;
+    click(tab("Screen"));
+    expect($("canvas.screen-canvas")).not.toBeNull();
+    expect($(".stage-3d, svg.drawing")).toBeNull();
+    expect($(".studio-controls .actions")).toBeNull();
+    expect(tab("Screen").classList.contains("active")).toBe(true);
+    click(tab("Lights"));
+    expect($("canvas.screen-canvas")).toBeNull();
+    expect($(".studio-controls .actions")).not.toBeNull();
   });
 
   it("resizes a side panel by dragging its bar", async () => {

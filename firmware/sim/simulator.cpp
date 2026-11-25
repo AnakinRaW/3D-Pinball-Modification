@@ -1,6 +1,7 @@
 // The WebAssembly module of the Arcade: the firmware's lamps component and lighting
 // driver on a simulated clock. The browser places the lamp groups on their chains, starts effects
 // on them, advances the time and reads each chain's colors as the LEDs would show them.
+// Every pass of the main loop runs the screen as well, which screen-simulator.cpp adds.
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include <string>
@@ -8,6 +9,7 @@
 #include "components/lamps.h"
 #include "drivers/lighting.h"
 #include "logging/debug-log.h"
+#include "screen-simulator.h"
 
 using emscripten::val;
 
@@ -169,6 +171,7 @@ uint32_t step(uint32_t ms) {
         if (lamps.update(nowUs())) {
             ++frames;
         }
+        screenPass();
         // the debug output goes to the browser's console, as the main loop sends it to USB serial
         sendDebugLog();
     }
