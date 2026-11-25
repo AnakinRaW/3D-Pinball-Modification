@@ -16,6 +16,8 @@
 //            new game starts with the overlay shown
 //   host-layer  the host's objects lie in front of the overlay and of a message box, take the touch
 //            there, give way once hidden and outlast a game switch
+//   swipe    a touch at the right edge moved to the left is the host's swipe and reaches no one
+//            else, while a tap, a hold or another move there goes on as anywhere else
 //   picture-covers  LVGL draws nothing behind a picture that holds no opacity, and draws what lies
 //            in front of it
 //
@@ -94,6 +96,9 @@ static VideoPlayer player(screen, files, sounds);
 // What the host's takeGesture() gave.
 enum class Taken { NONE, TAP, HOLD };
 
+// What the host's edge() gave.
+enum class EdgeSeen { NONE, TOUCHED, SWIPING, LET_GO };
+
 // The host's calls to the screen, the file system and the video player.
 class GameHost {
 public:
@@ -107,6 +112,18 @@ public:
     static PictureMemory& pictures() { return screen.pictures; }
     static lv_obj_t* top() { return screen.top(); }
     static lv_obj_t* hostLayer() { return screen.hostLayer(); }
+    static EdgeSeen edge(uint16_t& x) {
+        switch (screen.edge(x)) {
+        case Screen::Edge::TOUCHED:
+            return EdgeSeen::TOUCHED;
+        case Screen::Edge::SWIPING:
+            return EdgeSeen::SWIPING;
+        case Screen::Edge::LET_GO:
+            return EdgeSeen::LET_GO;
+        default:
+            return EdgeSeen::NONE;
+        }
+    }
     static void showHost(bool shown) { screen.showHost(shown); }
     static Taken takeGesture(TouchPoint& at) {
         const Screen::Gesture g = screen.takeGesture(at);
@@ -772,6 +789,121 @@ static void testHostLayer() {
     lv_obj_delete(menu);
 }
 
+static uint32_t presses = 0;
+
+static void countPressed(lv_event_t*) {
+    ++presses;
+}
+
+// Hands one touch event to the screen and gets the edge's state after it.
+static EdgeSeen edgeAfter(const DriverEvent& e, uint32_t& taps, uint32_t& holds, uint16_t& x) {
+    fakeMillis = e.time / 1000;
+    PinballEvents out;
+    TEST_ASSERT_TRUE(screen.translate(e, out));
+    for (uint8_t i = 0; i < out.count; ++i) {
+        taps += out.events[i].type == EventType::SCREEN_TAPPED ? 1 : 0;
+        holds += out.events[i].type == EventType::SCREEN_HELD ? 1 : 0;
+    }
+    return GameHost::edge(x);
+}
+
+static void testSwipe() {
+    using T = DriverEventType;
+    const uint16_t edge = W - Screen::EDGE_PX;
+    const uint16_t slop = Touch::SLOP_PX;
+    uint32_t taps = 0;
+    uint32_t holds = 0;
+    uint16_t x = 0;
+    TouchPoint at = {};
+    touchBaseMs = fakeMillis;
+    // A button of the game lies at the edge.
+    lv_obj_t* button = box(screen.slide({1, 10}), edge, 100, Screen::EDGE_PX, 40);
+    lv_obj_set_clickable(button, true);
+    lv_obj_add_event_cb(button, countClick, LV_EVENT_CLICKED, nullptr);
+    lv_obj_add_event_cb(button, countPressed, LV_EVENT_PRESSED, nullptr);
+    refresh();
+    clicks = 0;
+    presses = 0;
+    // An earlier test's gesture leaves.
+    GameHost::takeGesture(at);
+
+    // A swipe from the edge: the host follows the finger, and the button and the game get nothing.
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_DOWN, 100, W - 4, 110), taps, holds, x) ==
+                     EdgeSeen::TOUCHED);
+    TEST_ASSERT_EQUAL_UINT16(W - 4, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_MOVED, 150, W - 4 - slop, 112), taps, holds, x) ==
+                     EdgeSeen::SWIPING);
+    TEST_ASSERT_EQUAL_UINT16(W - 4 - slop, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_MOVED, 200, 200, 115), taps, holds, x) ==
+                     EdgeSeen::SWIPING);
+    TEST_ASSERT_EQUAL_UINT16(200, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_UP, 300, 190, 115), taps, holds, x) ==
+                     EdgeSeen::LET_GO);
+    TEST_ASSERT_EQUAL_UINT16(190, x);
+    TEST_ASSERT_TRUE(GameHost::edge(x) == EdgeSeen::NONE);
+    refresh();
+    TEST_ASSERT_EQUAL_UINT32(0, presses);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+    TEST_ASSERT_EQUAL_UINT32(0, taps);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::NONE);
+
+    // A tap at the edge shows the edge while the finger lies there and reaches the game.
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_DOWN, 1000, W - 4, 20), taps, holds, x) ==
+                     EdgeSeen::TOUCHED);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_UP, 1100, W - 5, 21), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_TRUE(GameHost::takeGesture(at) == Taken::TAP);
+    TEST_ASSERT_EQUAL_UINT16(W - 4, at.x);
+
+    // A resting finger at the edge is a hold for the game.
+    edgeAfter(touchAt(T::TOUCH_DOWN, 2000, W - 4, 20), taps, holds, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_HELD, 3000, W - 4, 20), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    edgeAfter(touchAt(T::TOUCH_UP, 3100, W - 4, 20), taps, holds, x);
+    TEST_ASSERT_EQUAL_UINT32(1, holds);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+
+    // A finger that moves along the edge is no swipe and no tap.
+    edgeAfter(touchAt(T::TOUCH_DOWN, 4000, W - 4, 20), taps, holds, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_MOVED, 4050, W - 4, 20 + slop), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    edgeAfter(touchAt(T::TOUCH_UP, 4100, W - 4, 20 + slop), taps, holds, x);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+
+    // A tap on the button at the edge presses it once the finger leaves.
+    edgeAfter(touchAt(T::TOUCH_DOWN, 5000, W - 4, 120), taps, holds, x);
+    TEST_ASSERT_EQUAL_UINT32(0, clicks);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_UP, 5100, W - 4, 120), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+
+    // An object of the host's layer at the edge takes its touch, and no swipe starts there.
+    lv_obj_t* menu = box(GameHost::hostLayer(), edge, 0, Screen::EDGE_PX, H);
+    lv_obj_set_clickable(menu, true);
+    lv_obj_add_event_cb(menu, countHostClick, LV_EVENT_CLICKED, nullptr);
+    refresh();
+    hostClicks = 0;
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_DOWN, 6000, W - 4, 20), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    edgeAfter(touchAt(T::TOUCH_MOVED, 6050, W - 4 - slop, 20), taps, holds, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_UP, 6100, W - 4 - slop, 20), taps, holds, x) ==
+                     EdgeSeen::NONE);
+    TEST_ASSERT_EQUAL_UINT32(1, hostClicks);
+    // Hidden, the host's layer lets the swipe start again.
+    GameHost::showHost(false);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_DOWN, 7000, W - 4, 20), taps, holds, x) ==
+                     EdgeSeen::TOUCHED);
+    edgeAfter(touchAt(T::TOUCH_MOVED, 7050, W - 4 - slop, 20), taps, holds, x);
+    TEST_ASSERT_TRUE(edgeAfter(touchAt(T::TOUCH_UP, 7100, W - 4 - slop, 20), taps, holds, x) ==
+                     EdgeSeen::LET_GO);
+    GameHost::showHost(true);
+    lv_obj_delete(menu);
+    TEST_ASSERT_EQUAL_UINT32(1, taps);
+    TEST_ASSERT_EQUAL_UINT32(1, holds);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testWiden);
@@ -784,5 +916,6 @@ int main() {
     RUN_TEST(testGestures);
     RUN_TEST(testHideOverlay);
     RUN_TEST(testHostLayer);
+    RUN_TEST(testSwipe);
     return UNITY_END();
 }
