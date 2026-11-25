@@ -16,6 +16,8 @@ The runner `firmware/tools/teensy-tests.py` flashes the image once and sends it 
 
 A row counts as covered once the code holds a test of its name that runs where the row says: `test<Row>` in its computer test, such as `testOldestFirst` for `oldest-first`, or `{"<program>.<row>", RunsOn::...}` in its program's folder of the image. `firmware/tools/test-coverage.py` counts the covered rows in CI and fails the run where the code and this document disagree.
 
+A program that has a computer test folder needs a test for each of its `computer` rows. A row that describes code still to be written is marked `computer, planned` in its Runs on column and only counts against the coverage, as do the rows of a program without a computer test folder. The mark comes off with the test, since a planned row that has a test fails the run as well.
+
 ## Where a test runs
 
 | Runs on | Setup |
@@ -547,6 +549,7 @@ The program `lamps` checks the [lamps component](components/lamps.md). Its compu
 | `playfield-gaps` | computer | Configure a playfield section with a hidden LED and a hidden stretch, cut into lamps of 2, 1 and 2 LEDs, and give every lamp a different color | Every hidden LED stays dark, a lamp starts after a gap, the lamp that meets a gap ends there, and the LEDs past the counts are one lamp each |
 | `groups` | computer | Configure chains of different lengths, read every group's size on both profiles, take parts of the playfield at and past its end, and run a wipe along `ambient` | Each group holds the lamps its chains and the profile's perimeter step give, a part past the end is cut there, and the wipe starts at the left perimeter's first lamp |
 | `millis-wrap` | computer | Start a blink, a fade and a color with `lasting()` on three playfield lamps shortly before `millis()` wraps | The blink keeps its rhythm, the fade its pace and the lasting color its end across the wrap |
+| `since` | computer | Date a pulse on a lamp and on a strip back by half a period, date a pulse ahead of now, date a fade back by half its time, and date a color back with `lasting()` after it | Each pulse dated back shows the color of half a period at once. The pulse dated ahead starts now. The fade shows half its way from the color the lamp showed when it began. The color ends where `lasting()` set its end |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 
@@ -681,11 +684,10 @@ The program `game-host` checks the [host](game-abstraction.md#host) with the tes
 | `dispatch` | computer | Dispatch driver events to fake components, some of which take them and make several pinball events of one | Each driver event goes to the components in order until one takes it, its pinball events reach the game in order, and an event no component takes reaches the game only when a service sent it |
 | `faults` | computer | Dispatch `DEVICE_FAILED` and `DEVICE_RECOVERED` | Neither reaches a component or the game, the host's list marks the part and clears it again, and a recovered touch controller calls the screen's `restart()` |
 | `arming` | computer | Run a test game through its phases | The solenoid contacts are armed exactly while the game is in Play |
-| `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, the id of b is written, and b starts only once the screen has settled |
-| `last-game` | Teensy | Start game b, then restart | Game b starts again |
-| `first-start` | Teensy | Start with no record of a last game | The first game of the list starts |
+| `launch` | computer | Launch game b while a picture of game a still loads | Game a stops, and b starts only once the screen has settled |
+| `choice` | Teensy | Start with a card holding two games, then start without a card | With the card, the game choice shows the built-in game's card first. Without it, the warning shows and the built-in game starts |
 | `saved-data` | Teensy | Let a test game write a file in `end()`, restart, and let it read the file in `start()` | The game reads what it wrote |
-| `boot-film` | bench | Start with `/video/intro.rgb` and `/audio/intro.wav` at the card's root, then start once more without the two files | The film plays once on the whole screen with its sound before the first game starts, and without the files the first game starts at once |
+| `boot-film` | bench | Start with `/video/intro.rgb` and `/audio/intro.wav` at the card's root, then start once more without the two files | The film plays once on the whole screen with its sound before the host's first screen, and without the files that screen shows at once |
 | `switch` | bench | Start a game, then switch to the other game while its background loads | Each background shows whole, and no picture of the stopped game stays on the screen |
 | `menu` | bench | Open the menu during a game that keeps drawing, then close it | The menu opens over the game, and the game overlay layer reappears with every change drawn meanwhile |
 | `menu-switch` | bench | Open the menu during a game, pick the other game and confirm | The picked game starts |

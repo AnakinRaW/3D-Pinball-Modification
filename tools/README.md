@@ -10,8 +10,9 @@
 | [`playfield/compose.py`](playfield/compose.py) | Composes the playfield drawing in [`assets/playfield/`](../assets/playfield/) from its part files and `playfield.json`, writes the same drawing with the README's feature bubbles, and checks both against them |
 | [`picture.py`](picture.py) | Turns PNGs of at most 320 × 240 pixels into picture files for the screen, in LVGL's image format and dithered to RGB565, as [`media.md`](../assets/media.md) describes |
 | [`arcade/`](arcade/) | The Arcade: the drawing of the machine with its features, the games and the Studio that edits them, as [its README](arcade/README.md) gives |
+| [`separator/separator.html`](separator/separator.html) | Computes the ball separator in the drain's ball store from the wall distance, the pins' length and their diameter: the pins' stand-out and stroke, the pin spacing, the nudge on the front ball and the depths of the seesaw. It draws the separator from above, across and along the track and prints the drilling pattern for a drilling jig |
 
-The Python tools need Python 3 and its standard library only, with no build step. The Arcade is a Node.js app.
+The Python tools need Python 3 and its standard library only, with no build step. The Arcade is a Node.js app. The separator page opens in a browser straight from the file.
 
 ## figcheck
 

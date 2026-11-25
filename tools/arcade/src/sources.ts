@@ -16,5 +16,11 @@ const repoThumbnails = import.meta.glob<string>("../../../games/*/thumbnail.{png
   eager: true,
 });
 
-export const sources = { playfieldSvg, playfieldJson, featuresMd, readmeMd, configYml, machineYml, repoGames, repoThumbnails };
+// the machine in 3D that the Blender scripts of assets/cgi/ export, as the URL the page loads it from;
+// undefined in a checkout without the file
+const machineGlb = Object.values(
+  import.meta.glob<string>("../../../assets/cgi/machine.glb", { query: "?url", import: "default", eager: true }),
+)[0] as string | undefined;
+
+export const sources = { playfieldSvg, playfieldJson, featuresMd, readmeMd, configYml, machineYml, repoGames, repoThumbnails, machineGlb };
 export type Sources = typeof sources;

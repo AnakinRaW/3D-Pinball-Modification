@@ -26,6 +26,8 @@
 //              ends the lamp it meets
 //   millis-wrap  a blink, a fade and lasting() keep their rhythm, their pace and their end across
 //              the wrap of millis()
+//   since      effects dated back show at once what their rhythm gives then, a start ahead counts
+//              as now, a fade goes on from its new start color, and lasting() still ends them
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -783,6 +785,50 @@ static void testMillisWrap() {
     expectLamp(1, crgb(Color::RED), "fade end");
 }
 
+// since: a pulse on a lamp and on a strip dated back by half a period, a pulse dated ahead, a
+// fade dated back by half its time, and a color dated back with lasting() after it.
+static void testSince() {
+    Layer mode = {0, 1};
+    LampGroups g = lamps.groups(mode);
+    Lamp pulsing = g.playfield[0];
+    Lamp ahead = g.playfield[1];
+    Lamp fading = g.playfield[2];
+
+    at(100);
+    pulsing.pulse(Color::BLACK, Color::WHITE, 200).since(startMs);
+    g.perimeterLeft.pulse(Color::BLACK, Color::WHITE, 200).since(startMs);
+    frame(100);
+    expectLamp(0, crgb(Color::WHITE), "pulse at half a period at once");
+    expect(scaled(crgb(Color::WHITE), AMBIENT_SCALE_3A), leftLamp(0),
+           "strip pulse at half a period at once");
+    frame(200);
+    expectLamp(0, CRGB(0, 0, 0), "pulse at its period");
+
+    at(300);
+    ahead.pulse(Color::BLACK, Color::WHITE, 200).since(startMs + 400);
+    frame(300);
+    expectLamp(1, CRGB(0, 0, 0), "a start ahead counts as now");
+    frame(400);
+    expectLamp(1, crgb(Color::WHITE), "pulse half from now");
+
+    fading.set(Color::BLUE);
+    frame(500);
+    at(510);
+    fading.fade(Color::RED, 100).since(startMs + 460);
+    frame(510);
+    expectLamp(2, blend(crgb(Color::BLUE), crgb(Color::RED), ease8InOutCubic(127)),
+               "fade half at once, from the color it began with");
+    frame(560);
+    expectLamp(2, crgb(Color::RED), "fade end");
+
+    at(700);
+    pulsing.set(Color::RED).since(startMs).lasting(50);
+    frame(740);
+    expectLamp(0, crgb(Color::RED), "dated back, before lasting ends");
+    frame(750);
+    expectLamp(0, CRGB(0, 0, 0), "dated back, after lasting ends");
+}
+
 int main() {
     Lamps::Settings layout;
     for (uint8_t c = 0; c < Lighting::CHAINS; ++c) {
@@ -852,5 +898,6 @@ int main() {
     RUN_TEST(testHeights);
     RUN_TEST(testPlayfieldGaps);
     RUN_TEST(testMillisWrap);
+    RUN_TEST(testSince);
     return UNITY_END();
 }

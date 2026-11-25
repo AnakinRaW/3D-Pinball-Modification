@@ -2,7 +2,7 @@
 
 ## Run time and memory
 
-- **No dynamic memory after the start.** No `new`, no `malloc()` and no container that grows, in the main loop or in an interrupt. Every buffer and every object is allocated statically or during the start.
+- **No dynamic memory after the start.** No `new`, no `malloc()` and no container that grows, in the main loop or in an interrupt. Every buffer and every object is allocated statically or during the start. Parsing a YAML file is the one exception, since libyaml offers no hook for an allocator: it takes its memory from the heap inside one parse and returns all of it before the parse ends. A game's file is therefore read when the host switches games. A parse that finds no memory fails like a broken file.
 - **An interrupt is short and never waits.** It calls no `Serial`, no `delay()` and allocates nothing. It calls FreeRTOS only through the `FromISR` functions, and only at a priority of 208 or higher, as [`general-design.md`](../docs/firmware/general-design.md#interrupts) sets. A variable shared with an interrupt is `volatile` or atomic.
 - **The main loop never waits.** No `delay()` and no busy loop. A time comes from `nowUs()` and is compared with `before()` and the `elapsed` functions, which survive the counter's wrap.
 - **A time in milliseconds that only counts on, such as the time in front of a log line, comes from `millis()`.** It counts the milliseconds since the start and wraps after 49.7 days, so a span taken as the difference of two readings stays right across the wrap.
@@ -15,6 +15,7 @@
 - **Tests that need no hardware run on the computer**, in the `computer` environment, which PlatformIO builds with its platform `native`. CI runs them. Tests that need the Teensy run on the bench from the test image.
 - **A new driver joins the register of `every-driver`** in `tests/teensy/src/every-driver/`, with a case for each row its rules reach.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
+- **A program with a computer test folder has a test for every `computer` row.** A row for code still to be written reads `computer, planned` in its Runs on column, and the mark comes off with its test. `tools/test-coverage.py` fails CI on a missing test and on a planned row that has one.
 
 ## Layout
 

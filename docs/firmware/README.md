@@ -7,6 +7,8 @@ The firmware for the Teensy 4.1 that drives the modification.
 | [`general-design.md`](general-design.md), [`architecture.svg`](architecture.svg) | The firmware's layers, interrupt priorities, tasks and main program |
 | [`driver-design.md`](driver-design.md), [`input-handling.md`](input-handling.md), [`error-handling.md`](error-handling.md) | The rules every driver follows, the event queue, device faults and the watchdog |
 | [`logging.md`](logging.md), [`file-channel.md`](file-channel.md), [`testing.md`](testing.md) | Logging, the file channel, the tests |
+| [`host-screens.md`](host-screens.md) | The host's screens: the game choice, the menu over a game, the name entry, the warning lights and the look they share |
 | [`game-abstraction.md`](game-abstraction.md) | The host that runs the games and the interface of a game |
+| [`game-files.md`](game-files.md) | A game as a file on the card, and the classes that run it |
 | [`drivers/`](drivers/), [`io/`](io/), [`components/`](components/) | One document per driver, the I/O layer beneath the drivers, one document per component |
 | [`firmware/gist/`](../../firmware/gist/) | Code notes the real firmware starts from |
