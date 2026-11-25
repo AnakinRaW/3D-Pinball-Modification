@@ -53,6 +53,9 @@ target_include_directories(fastled PUBLIC ${FASTLED_SRC})
 target_compile_definitions(fastled PUBLIC FASTLED_NO_ARDUINO_STUBS)
 target_compile_options(fastled PRIVATE -w -O2)
 
+# the host screens' fonts, which tools/fonts.py writes
+file(GLOB HOST_FONTS CONFIGURE_DEPENDS ${FIRMWARE}/src/host/views/fonts/*.c)
+
 add_executable(simulator
     simulator.cpp
     screen-simulator.cpp
@@ -64,6 +67,8 @@ add_executable(simulator
     ${FIRMWARE}/src/drivers/storage-service.cpp
     ${FIRMWARE}/src/drivers/touch.cpp
     ${FIRMWARE}/src/host/views/edge-menu-view.cpp
+    ${FIRMWARE}/src/host/views/controls.cpp
+    ${HOST_FONTS}
     ${FIRMWARE}/src/components/lamps.cpp
     ${FIRMWARE}/src/components/lamp-effects.cpp
     ${FIRMWARE}/src/drivers/lighting.cpp

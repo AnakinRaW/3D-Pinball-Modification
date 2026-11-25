@@ -34,7 +34,7 @@ The host's screens let the player choose a game, set sound and lights, and see w
 - **The header** is the diorama frame's red band, 34 px high, over a strip of marquee bulbs. Back sits top left. The gear and the menu's close sit top right.
 - **A slider** has a violet track and a steel ball as its knob. Its fill is ramp blue for sound and board gold for light. A 44 px minus and plus stand beside it, each a step of 5 %.
 - **A warning light** is a marquee bulb: green for a device that works, amber for a warning and red for a failed device. A failed device also turns its frame neon red, as the PINBALL tubes.
-- **A dialog** is a night card with the red title strip. A fault dialog glows neon red.
+- **A dialog** is a night card with the red title strip. It dims the screen behind it, and only its buttons take a touch while it shows. A fault dialog glows neon red.
 - **Type** is English. Archivo Black sets titles and buttons, as the film's MULTIBALL. Montserrat sets text at 14 px and never below 12 px. LVGL brings Montserrat in even sizes. JetBrains Mono Bold sets numbers in cyan, as the film's score. Archivo Black and JetBrains Mono are free fonts under the SIL Open Font License. `lv_font_conv` converts them for LVGL.
 - **Motion** stays short. The menu follows the finger in from the right edge and snaps open or back in 150 ms. Pages slide sideways in 150 ms. Toasts drop in from the top in 200 ms.
 

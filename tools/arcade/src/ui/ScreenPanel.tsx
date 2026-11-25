@@ -6,17 +6,21 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import {
   rgb565ToRgba,
   SCALES,
+  SCENES,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
   screenPoint,
   TouchInput,
   type Scale,
+  type Scene,
   type ScreenEvent,
   type ScreenModule,
 } from "../sim/screen";
 
 const EVENTS_SHOWN = 14;
 const scale = signal<Scale>(2);
+const scene = signal<Scene>("test");
+const SCENE_LABELS: Record<Scene, string> = { test: "Test scene", controls: "Controls" };
 
 const LABELS: Record<ScreenEvent["type"], string> = {
   touchDown: "Touch down",
@@ -36,6 +40,7 @@ const LABELS: Record<ScreenEvent["type"], string> = {
   machine: "Menu: Machine",
   endGame: "Menu: End game",
   close: "Menu: Close",
+  control: "Control",
 };
 // the events that carry no point, and those that carry the finger's x alone
 const POINTLESS = new Set<ScreenEvent["type"]>([
@@ -47,6 +52,7 @@ const POINTLESS = new Set<ScreenEvent["type"]>([
   "machine",
   "endGame",
   "close",
+  "control",
 ]);
 const X_ONLY = new Set<ScreenEvent["type"]>(["edgeTouched", "swipeStarted", "swipeLetGo"]);
 
@@ -66,6 +72,7 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
   useEffect(() => {
     if (!module) return;
     setBegun(module.screenBegin());
+    module.screenScene(scene.value);
     input.current = new TouchInput(module);
     const ctx = canvas.current?.getContext("2d") ?? null;
     let shown = -1;
@@ -101,6 +108,20 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
             </button>
           ))}
         </div>
+        <div class="seg">
+          {SCENES.map((k) => (
+            <button
+              key={k}
+              class={k === scene.value ? "on" : ""}
+              onClick={() => {
+                scene.value = k;
+                module?.screenScene(k);
+              }}
+            >
+              {SCENE_LABELS[k]}
+            </button>
+          ))}
+        </div>
         <span class="screen-size">
           {SCREEN_WIDTH} × {SCREEN_HEIGHT}
         </span>
@@ -128,7 +149,11 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
         {events.map((e, i) => (
           <li key={`${e.ms}-${i}-${e.type}`} class={e.type}>
             <span class="time">{(e.ms / 1000).toFixed(2)} s</span>
-            <span>{LABELS[e.type] ?? e.type}</span>
+            <span>
+              {LABELS[e.type] ?? e.type}
+              {e.name ? `: ${e.name}` : ""}
+              {e.name === "slider" ? ` ${e.x} %` : ""}
+            </span>
             {!POINTLESS.has(e.type) && (
               <span class="where">
                 {X_ONLY.has(e.type) ? `x ${e.x}` : `${e.x}, ${e.y}`}

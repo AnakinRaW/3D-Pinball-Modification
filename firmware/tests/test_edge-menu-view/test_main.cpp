@@ -212,7 +212,7 @@ void testChoose() {
         lv_point_t at = {OPEN_X + 150, y};
         lv_obj_t* row = lv_indev_search_obj(lv_screen_active(), &at);
         TEST_ASSERT_NOT_NULL(row);
-        texts.push_back(lv_label_get_text(lv_obj_get_child(row, 3)));
+        texts.push_back(lv_label_get_text(lv_obj_get_child(row, 0)));
     }
     TEST_ASSERT_EQUAL_STRING("50 %", texts[0].c_str());
     TEST_ASSERT_EQUAL_STRING("80 %", texts[1].c_str());

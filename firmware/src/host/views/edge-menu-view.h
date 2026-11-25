@@ -90,7 +90,10 @@ public:
 
 private:
     /// Creates a row that opens a page: an icon, a name, its status and a chevron.
-    lv_obj_t* row(const char* symbol, uint32_t color, const char* name, Item item);
+    lv_obj_t* row(const char* symbol, uint32_t rgb, const char* name, Item item);
+
+    /// Makes a press on @p control name @p item to the host.
+    void choose(lv_obj_t* control, Item item);
 
     /// Moves the drawer's left edge to @p x, at once or in SNAP_MS.
     void moveTo(int32_t x, bool snap);
@@ -109,9 +112,9 @@ private:
 
     lv_obj_t* drawer = nullptr;
     lv_obj_t* tab = nullptr;
-    lv_obj_t* soundText = nullptr;
-    lv_obj_t* lightsText = nullptr;
-    lv_obj_t* machineText = nullptr;
+    lv_obj_t* soundRow = nullptr;
+    lv_obj_t* lightsRow = nullptr;
+    lv_obj_t* machineRow = nullptr;
     lv_obj_t* machineBulb = nullptr;
     Chosen chosen = nullptr;
     void* context = nullptr;

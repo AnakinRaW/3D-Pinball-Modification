@@ -25,14 +25,20 @@ export type ScreenEventType =
   | "lights"
   | "machine"
   | "endGame"
-  | "close";
+  | "close"
+  | "control";
 
 export interface ScreenEvent {
   type: ScreenEventType;
   x: number;
   y: number;
   ms: number;
+  name?: string; // the control a press or a change came from, on the controls page
 }
+
+// what the display shows: the test scene, or the page of every control of the host's screens
+export const SCENES = ["test", "controls"] as const;
+export type Scene = (typeof SCENES)[number];
 
 // the module's screen functions, as firmware/sim/screen-simulator.cpp binds them
 export interface ScreenModule {
@@ -41,6 +47,7 @@ export interface ScreenModule {
   screenPixels(): Uint8Array;
   screenRectangles(): number;
   screenEvents(): ScreenEvent[];
+  screenScene(scene: Scene): boolean;
 }
 
 // Turns the display's pixels, RGB565 with the high byte first, into opaque RGBA. A channel of 5 or 6

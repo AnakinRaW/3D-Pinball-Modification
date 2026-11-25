@@ -2,11 +2,13 @@
 // into the simulated display, whose pixels the browser reads. The firmware's touch driver reads the
 // simulated touch controller, which answers with the finger the browser reports, so taps, holds
 // and moves come out of the driver as they do on the machine. Until a host and a game draw on the
-// screen, a test scene shows a button and the last gesture, and a stand-in for the host drives the
-// host's menu at the right edge from the swipe.
+// screen, a test scene shows a button and the last gesture, a page shows every control of the
+// host's screens, and a stand-in for the host drives the host's menu at the right edge from the
+// swipe.
 #include "screen-simulator.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <string>
 #include <vector>
 #include "components/screen.h"
 #include "core/clock.h"
@@ -14,6 +16,7 @@
 #include "drivers/display.h"
 #include "drivers/driver-base.h"
 #include "drivers/touch.h"
+#include "host/views/controls.h"
 #include "host/views/edge-menu-view.h"
 #include "logging/debug-log.h"
 
@@ -65,10 +68,27 @@ constexpr uint8_t TEST_LAYER_PRIORITY = 1;
 constexpr int32_t BUTTON_WIDTH = 128;   // host-screens.md: at least a 44 px touch target
 constexpr int32_t BUTTON_HEIGHT = 48;
 constexpr int32_t MARGIN_PX = 8;
-constexpr uint32_t NIGHT = 0x0e061a;   // host-screens.md: the screen's background
-constexpr uint32_t CREAM = 0xfff4d6;   // host-screens.md: text
-constexpr uint32_t RED = 0xb3242d;     // host-screens.md: a button
-constexpr uint32_t GOLD = 0xe8c04a;    // host-screens.md: a button's rim
+constexpr uint32_t NIGHT = 0x0e061a;        // host-screens.md: the screen's background
+constexpr uint32_t CREAM = 0xfff4d6;        // host-screens.md: text
+constexpr uint32_t RED = 0xb3242d;          // host-screens.md: a button
+constexpr uint32_t GOLD = 0xe8c04a;         // host-screens.md: a button's rim
+constexpr uint8_t CONTROLS_LAYER_KEY = 2;   // the controls page's slide, over the test scene
+constexpr uint8_t CONTROLS_LAYER_PRIORITY = 2;
+constexpr int32_t SHEET_INSET_PX = 4;      // the controls page's margin
+constexpr int32_t SHEET_BUTTON_PX = 100;   // a button's width on the controls page
+constexpr int32_t SHEET_BUTTONS_Y = 46;    // the controls page's rows, from the top
+constexpr int32_t SHEET_LIGHTS_Y = 94;
+constexpr int32_t SHEET_SLIDER_Y = 142;
+constexpr int32_t SHEET_LIST_Y = 190;
+constexpr int32_t SHEET_BULB_X = 12;   // the first warning light and the step to the next
+constexpr int32_t SHEET_BULB_STEP_PX = 24;
+constexpr int32_t SHEET_SLIDER_START = 50;   // the slider's value at first, in percent
+constexpr int32_t DIALOG_WIDTH_PX = 280;     // host-screens.md's End game dialog
+constexpr int32_t DIALOG_HEIGHT_PX = 150;
+constexpr int32_t DIALOG_TEXT_X = 14;
+constexpr int32_t DIALOG_TEXT_Y = 42;
+constexpr int32_t DIALOG_BUTTON_PX = 122;
+constexpr int32_t DIALOG_BUTTONS_Y = 92;
 
 /// An event the browser lists: a touch event of the driver, a gesture the screen made, a press of
 /// the test scene's button, or a step of the swipe and the menu.
@@ -77,6 +97,7 @@ struct Noted {
     uint16_t x;
     uint16_t y;
     uint32_t ms;
+    const char* name = nullptr;   // the control a press or a change came from
 };
 
 Display display;
@@ -93,6 +114,8 @@ std::vector<Noted> noted;
 lv_obj_t* gestureLabel = nullptr;
 lv_obj_t* buttonLabel = nullptr;
 uint32_t presses = 0;
+lv_obj_t* controlsPage = nullptr;   // the controls page's slide while it shows
+lv_obj_t* openDialog = nullptr;     // the dialog START opens on the controls page
 bool begun = false;
 
 void note(const char* type, uint16_t x, uint16_t y) {
@@ -163,6 +186,106 @@ void pressed(lv_event_t*) {
     lv_label_set_text_fmt(buttonLabel, "Pressed %lu", static_cast<unsigned long>(presses));
 }
 
+/// Notes a press or a change of a control on the controls page.
+void noteControl(const char* name, uint16_t value) {
+    if (noted.size() < EVENTS_KEPT) {
+        noted.push_back({"control", value, 0, nowUs() / US_PER_MS, name});
+    }
+}
+
+void openStartDialog();
+
+// A control of the controls page names itself through its user data. START opens a dialog, and
+// either of the dialog's buttons closes it.
+void controlPressed(lv_event_t* e) {
+    const char* name = static_cast<const char*>(lv_event_get_user_data(e));
+    noteControl(name, 0);
+    const std::string n = name;
+    if (n == "START" && openDialog == nullptr) {
+        openStartDialog();
+    } else if ((n == "BACK" || n == "OK") && openDialog != nullptr) {
+        controls::closeDialog(openDialog);
+        openDialog = nullptr;
+    }
+}
+
+void sliderChanged(lv_event_t* e) {
+    lv_obj_t* track = static_cast<lv_obj_t*>(lv_event_get_current_target(e));
+    noteControl("slider", uint16_t(lv_slider_get_value(track)));
+}
+
+lv_obj_t* pressable(lv_obj_t* control, const char* name) {
+    lv_obj_add_event_cb(control, controlPressed, LV_EVENT_CLICKED, const_cast<char*>(name));
+    return control;
+}
+
+void openStartDialog() {
+    openDialog = controls::dialog(controlsPage, "START GAME?", DIALOG_WIDTH_PX, DIALOG_HEIGHT_PX);
+    lv_obj_t* text = controls::label(openDialog, "The ball is served once the game begins.",
+                                     &montserrat_semibold_14, controls::color::CREAM);
+    lv_obj_set_width(text, DIALOG_WIDTH_PX - DIALOG_TEXT_X * 2);
+    lv_obj_set_pos(text, DIALOG_TEXT_X, DIALOG_TEXT_Y);
+    lv_obj_t* back = pressable(
+        controls::button(openDialog, controls::Plaque::VIOLET, "BACK", DIALOG_BUTTON_PX), "BACK");
+    lv_obj_align(back, LV_ALIGN_TOP_LEFT, DIALOG_TEXT_X - 2, DIALOG_BUTTONS_Y);
+    lv_obj_t* ok = pressable(
+        controls::button(openDialog, controls::Plaque::RED, "OK", DIALOG_BUTTON_PX), "OK");
+    lv_obj_align(ok, LV_ALIGN_TOP_RIGHT, -(DIALOG_TEXT_X - 2), DIALOG_BUTTONS_Y);
+}
+
+/// Places every control on a slide over the test scene, as host-screens.md's controls show them.
+void buildControlsPage() {
+    controlsPage = screen.slide(Layer{CONTROLS_LAYER_KEY, CONTROLS_LAYER_PRIORITY});
+    lv_obj_set_style_bg_color(controlsPage, lv_color_hex(NIGHT), 0);
+    lv_obj_set_style_bg_opa(controlsPage, LV_OPA_COVER, 0);
+    lv_obj_t* header = controls::header(controlsPage, "CONTROLS", true);
+    pressable(controls::headerButton(header, true, LV_SYMBOL_LEFT), "back");
+    pressable(controls::headerButton(header, false, LV_SYMBOL_SETTINGS), "gear");
+
+    const struct {
+        controls::Plaque plaque;
+        const char* text;
+    } buttons[] = {{controls::Plaque::GOLD, "PLAY"},
+                   {controls::Plaque::RED, "START"},
+                   {controls::Plaque::VIOLET, "CANCEL"}};
+    int32_t x = SHEET_INSET_PX;
+    for (const auto& b : buttons) {
+        lv_obj_t* o =
+            pressable(controls::button(controlsPage, b.plaque, b.text, SHEET_BUTTON_PX), b.text);
+        lv_obj_set_pos(o, x, SHEET_BUTTONS_Y);
+        x += SHEET_BUTTON_PX + SHEET_INSET_PX + 2;
+    }
+    lv_obj_t* off = pressable(
+        controls::button(controlsPage, controls::Plaque::RED, "OFF", SHEET_BUTTON_PX), "OFF");
+    lv_obj_set_pos(off, x - SHEET_BUTTON_PX - SHEET_INSET_PX - 2, SHEET_LIGHTS_Y);
+    lv_obj_add_state(off, LV_STATE_DISABLED);
+
+    const controls::Light lights[] = {controls::Light::LIT, controls::Light::UNLIT,
+                                      controls::Light::WORKS, controls::Light::WARNING,
+                                      controls::Light::FAILED};
+    int32_t bx = SHEET_BULB_X;
+    for (controls::Light l : lights) {
+        lv_obj_t* b = controls::bulb(controlsPage, l);
+        lv_obj_set_pos(b, bx,
+                       SHEET_LIGHTS_Y +
+                           (controls::TARGET_PX - lv_obj_get_style_height(b, LV_PART_MAIN)) / 2);
+        bx += SHEET_BULB_STEP_PX;
+    }
+
+    lv_obj_t* slider =
+        controls::slider(controlsPage, controls::Fill::SOUND, Display::WIDTH - SHEET_INSET_PX * 2);
+    lv_obj_set_pos(slider, SHEET_INSET_PX, SHEET_SLIDER_Y);
+    lv_obj_t* track = controls::sliderTrack(slider);
+    lv_slider_set_value(track, SHEET_SLIDER_START, LV_ANIM_OFF);
+    lv_obj_add_event_cb(track, sliderChanged, LV_EVENT_VALUE_CHANGED, nullptr);
+
+    lv_obj_t* row = pressable(controls::row(controlsPage, "Record ball sensors",
+                                            "After a change to the playfield",
+                                            Display::WIDTH - SHEET_INSET_PX * 2),
+                              "row");
+    lv_obj_set_pos(row, SHEET_INSET_PX, SHEET_LIST_Y);
+}
+
 /// Places the test scene on the game's layers: a background, a button on a slide and the last
 /// gesture on the overlay.
 void buildTestScene() {
@@ -221,6 +344,29 @@ bool screenBegin() {
     return true;
 }
 
+// Shows a scene: "test" for the test scene, "controls" for the page of every control over it.
+// Returns false for another name.
+bool screenScene(std::string name) {
+    if (name == "controls") {
+        if (controlsPage == nullptr) {
+            buildControlsPage();
+        }
+        screen.showOverlay(false);
+        return true;
+    }
+    if (name == "test") {
+        if (controlsPage != nullptr) {
+            screen.remove(Layer{CONTROLS_LAYER_KEY, CONTROLS_LAYER_PRIORITY});
+            controlsPage = nullptr;
+            openDialog = nullptr;
+        }
+        screen.showOverlay(true);
+        return true;
+    }
+    DEBUG_LOG("simulator: no scene %s\n", name.c_str());
+    return false;
+}
+
 // Sets the finger the simulated touch controller reports from its next read on, held inside the
 // screen. down false lifts it.
 void touchAt(bool down, int32_t x, int32_t y) {
@@ -246,8 +392,9 @@ uint32_t screenRectangles() {
 // Gets the events since the last call, oldest first, each {type, x, y, ms}: the touch driver's
 // touchDown, touchMoved, touchHeld and touchUp, the screen's screenTapped and screenHeld,
 // buttonClicked of the test scene's button, the host stand-in's edgeTouched, swipeStarted and
-// swipeLetGo with the finger's x, menuOpened and menuClosed, and the menu's items sound, lights,
-// machine, endGame and close.
+// swipeLetGo with the finger's x, menuOpened and menuClosed, the menu's items sound, lights,
+// machine, endGame and close, and control with the name of a control on the controls page, and
+// for its slider the value in x.
 val screenEvents() {
     val out = val::array();
     for (const Noted& n : noted) {
@@ -256,6 +403,9 @@ val screenEvents() {
         e.set("x", n.x);
         e.set("y", n.y);
         e.set("ms", n.ms);
+        if (n.name != nullptr) {
+            e.set("name", n.name);
+        }
         out.call<void>("push", e);
     }
     noted.clear();
@@ -351,4 +501,5 @@ EMSCRIPTEN_BINDINGS(screen) {
     emscripten::function("screenPixels", &screenPixels);
     emscripten::function("screenRectangles", &screenRectangles);
     emscripten::function("screenEvents", &screenEvents);
+    emscripten::function("screenScene", &screenScene);
 }

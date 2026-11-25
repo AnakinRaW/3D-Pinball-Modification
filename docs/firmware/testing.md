@@ -629,6 +629,20 @@ The program `video-player` checks the [video player](components/video-player.md)
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MOVIE_ENDED`, and nothing else changes |
 | `sync` | bench | Play `sync` while music runs | Each flash comes with its click, and the music goes on where it stopped once the movie ends |
 
+### Host controls
+
+The program `host-controls` checks the [controls](host-screens.md#controls) every host screen is made of. Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `button` | computer | Create a red, a gold and a violet plaque, press the red one, then disable it and press it again | Each plaque is a touch target high in its kind's colors and font, sinks to the shadow red while pressed, and takes the touch until it is disabled |
+| `header` | computer | Create a header with a centered title and a button at each end, press both, then a header with its title at the left | The band and its bulbs span the parent, the title stands where it is asked to, and each button takes the touch |
+| `bulb` | computer | Create a warning light and set it to every light | Each light shows its colors, and an unlit bulb casts no glow |
+| `row` | computer | Create a list row, press it and change its detail, then a menu row with an icon | The row shows its title and detail, takes the touch, and shows the new detail in its color. The menu row is a touch target high with its icon in its color |
+| `slider` | computer | Press plus twice, minus three times, then plus near the top | Each press moves the value by one [step](host-screens.md#controls), stops at either end and tells the listeners |
+| `dialog` | computer | Create a dialog over a button, tap the button, close the dialog and tap the button again | The dialog is a night card centered on its parent, with a gold rim and its title in the red strip. A black backdrop at half opacity covers the parent. The button stays still while the dialog shows and takes the second tap |
+| `fonts` | computer | Look up every printable character and a symbol of LVGL in every font | Each font holds the characters and finds the symbol in LVGL's Montserrat |
+
 ### Edge menu view
 
 The program `edge-menu-view` checks the view of the [menu at the right edge](host-screens.md#a-finger-at-the-right-edge). Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.

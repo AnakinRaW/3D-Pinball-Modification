@@ -26,7 +26,6 @@ const HINT_STAY_MS = 1000; // host-screens.md: the hint stands once the finger l
 const HINT_FADE_MS = 300; // host-screens.md: then fades
 const REFRESH_MS = 40; // longer than LVGL's refresh period, which its animations step at
 const NIGHT_565 = 0x0823; // #0e061a in RGB565
-const VELVET_565 = 0x2848; // #2c0a46 in RGB565
 const GOLD_565 = 0xee09; // #e8c04a in RGB565
 
 // the colors of one pixel, RGB565 high byte first
@@ -106,6 +105,7 @@ function fakeModule() {
     pending: [] as ScreenEvent[],
     rectangles: 0,
     screenBegin: vi.fn(() => true),
+    screenScene: vi.fn((_scene: string) => true),
     touch(down: boolean, x: number, y: number) {
       m.touches.push([down, x, y]);
     },
@@ -165,6 +165,20 @@ describe("the screen panel", () => {
       });
       expect(canvas().style.width).toBe(width);
     }
+  });
+
+  it("shows the scene picked, the test scene at first", () => {
+    const { m } = fakeModule();
+    act(() => render(<ScreenPanel module={m} />, root));
+    expect(m.screenScene).toHaveBeenLastCalledWith("test");
+    const pick = (label: string) =>
+      act(() => {
+        [...root.querySelectorAll(".screen-bar button")].find((b) => b.textContent === label)!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    pick("Controls");
+    expect(m.screenScene).toHaveBeenLastCalledWith("controls");
+    pick("Test scene");
+    expect(m.screenScene).toHaveBeenLastCalledWith("test");
   });
 
   it("begins the screen and repaints once the display took a rectangle", async () => {
@@ -316,7 +330,8 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     expect(kinds).not.toContain("screenTapped");
     expect(kinds).not.toContain("screenHeld");
     // the menu covers the screen from 320 - 208 = 112 px on
-    expect(pixel(SCREEN_WIDTH - MENU_PX / 2, 60)).toBe(VELVET_565);
+    // a row's velvet, nine tenths over the drawer's night, has more blue than the night alone
+    expect(pixel(SCREEN_WIDTH - MENU_PX / 2, 60) & 0x1f).toBeGreaterThan(NIGHT_565 & 0x1f);
     expect(pixel(SCREEN_WIDTH - MENU_PX - 20, 60)).toBe(NIGHT_565);
   });
 
@@ -364,5 +379,44 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     // the marquee bulbs under the header, where no item lies
     const events = press(SCREEN_WIDTH - MENU_PX / 2, 38, 100);
     expect(types(events)).toEqual(["touchDown", "touchUp"]);
+  });
+
+  it("shows every control on the controls page and names the one pressed", () => {
+    expect(m.screenScene("controls")).toBe(true);
+    m.step(2 * REFRESH_MS);
+    // the header's red band across the top
+    expect(pixel(SCREEN_WIDTH / 2, 4) >> 11).toBeGreaterThan(20);
+    const control = (x: number, y: number) =>
+      press(x, y, 100)
+        .filter((e) => e.type === "control")
+        .map((e) => (e.name === "slider" ? `slider ${e.x}` : e.name));
+    // the buttons in the first row, the back and the gear in the header, the row at the bottom
+    expect(control(54, 68)).toEqual(["PLAY"]);
+    expect(control(266, 68)).toEqual(["CANCEL"]);
+    expect(control(20, 17)).toEqual(["back"]);
+    expect(control(300, 17)).toEqual(["gear"]);
+    expect(control(160, 214)).toEqual(["row"]);
+    // the disabled OFF takes no touch, and plus moves the slider from 50 % by a step
+    expect(control(266, 116)).toEqual([]);
+    expect(control(294, 164)).toEqual(["slider 55"]);
+    // START opens a dialog, whose OK closes it
+    expect(control(160, 68)).toEqual(["START"]);
+    m.step(REFRESH_MS);
+    // the back arrow beside the dialog takes no touch while it shows
+    expect(control(20, 17)).toEqual([]);
+    expect(control(227, 159)).toEqual(["OK"]);
+    m.step(REFRESH_MS);
+    // the dialog has gone, and the slider beneath takes the touch
+    expect(control(227, 159)).not.toContain("OK");
+  });
+
+  it("goes back to the test scene", () => {
+    m.screenScene("controls");
+    m.step(REFRESH_MS);
+    expect(m.screenScene("test")).toBe(true);
+    m.step(2 * REFRESH_MS);
+    expect(pixel(0, 0)).toBe(NIGHT_565);
+    expect(types(press(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 100))).toEqual(["touchDown", "touchUp", "buttonClicked"]);
+    expect(m.screenScene("nothing" as never)).toBe(false);
   });
 });
