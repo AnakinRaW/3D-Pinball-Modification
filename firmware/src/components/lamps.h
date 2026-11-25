@@ -238,8 +238,6 @@ struct LampGroups {
 /// The machine's lamps, each lamp and each strip with up to five effects at once
 class Lamps {
 public:
-    /// lamps.md, Overlapping effects: one effect for each mode, five on a lamp or a strip
-    static constexpr uint8_t MAX_EFFECTS = 5;
     /// The lighting model's t_frame, lamps.md, Frames
     static constexpr uint32_t FRAME_US = 10000;
     /// Room for the largest built-in effect, Run; an effect a game writes has to fit it as well
@@ -255,7 +253,6 @@ public:
         PLAYFIELD_UPPER
     };
     static constexpr uint8_t GROUPS = 6;
-    static constexpr uint8_t NO_CHAIN = 0xFF;   // a group the config leaves out
 
     /// The config's lamps.<group>, which has no default: the group's chain and LEDs, and on the
     /// playfield the LEDs of each lamp. A group without a chain holds no lamps
@@ -340,6 +337,10 @@ public:
     bool update(uint32_t now);
 
 private:
+    /// lamps.md, Overlapping effects: one effect for each mode, five on a lamp or a strip
+    static constexpr uint8_t MAX_EFFECTS = 5;
+    static constexpr uint8_t NO_CHAIN = 0xFF;   // a group the config leaves out
+
     friend class LampRange;
     friend class Strip;
 

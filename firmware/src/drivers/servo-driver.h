@@ -17,7 +17,6 @@ public:
 
     static constexpr uint8_t ANGLE_LIMIT_DEG = 60;    // past it the servo bends the seesaw's bridge
     static constexpr uint8_t START_DEG = 0;           // servo.start_deg's default
-    static constexpr uint8_t END_DEG = 40;            // servo.end_deg's default
     static constexpr uint32_t SPEED_DEG_S = 50;       // servo.speed_deg_s's default
     static constexpr uint32_t SPEED_MIN_DEG_S = 10;   // the slowest servo.speed_deg_s
     static constexpr uint32_t SPEED_MAX_DEG_S = 200;   // the fastest servo.speed_deg_s
@@ -63,6 +62,8 @@ public:
     Fault failed() const override { return {stuck, 0}; }
 
 private:
+    static constexpr uint8_t END_DEG = 40;   // servo.end_deg's default
+
     /// Runs on the driver tick once per frame.
     void step();
 
