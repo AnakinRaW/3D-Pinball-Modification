@@ -11,6 +11,7 @@
 #include "components/video-player.h"
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
+#include "game/component.h"
 #include "drivers/audio.h"
 #include "drivers/display.h"
 #include "drivers/storage.h"
@@ -63,6 +64,10 @@ static Display display;
 static Touch touch(io::wire2Bus, events, driverTick);
 static Screen screen(display);
 static VideoPlayer videoPlayer(screen, files, sounds);
+
+/// The components a driver event is offered to, in this order. The first that takes it ends the
+/// offer, so a new component is one more entry here.
+static Component* const components[] = {&screen, &sounds};
 
 /// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
 static volatile bool startingUp = true;
@@ -225,8 +230,10 @@ static void runMainTask(void*) {
                 continue;
             }
             PinballEvents made;
-            if (!screen.translate(pending[i], made)) {
-                sounds.translate(pending[i], made);
+            for (Component* component : components) {
+                if (component->translate(pending[i], made)) {
+                    break;
+                }
             }
         }
         carried = n - taken;
