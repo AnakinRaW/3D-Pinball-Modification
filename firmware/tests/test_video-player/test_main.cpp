@@ -14,6 +14,8 @@
 //   late-card    a frame the card brings late stays, and the video catches up with the clock
 //   short-sound  a video whose sound runs out or is missing plays on by the clock
 //   sound-clock  a video with sound holds while its sound holds
+//   late-end     a video whose sound runs out with its last frame ends, also while the sound's end
+//                is still on its way
 //   covers       LVGL draws nothing that lies behind a video's frame
 //   bad-files    a missing video and one whose size is no multiple of its frames write a warning
 //
@@ -579,6 +581,42 @@ static void testBadFiles() {
     TEST_ASSERT_TRUE(player.playing(v));
 }
 
+static void testLateEnd() {
+    // The sound lasts exactly as long as the video.
+    card.files["/games/a/audio/even.wav"] = wav(20 * FRAME_SAMPLES);
+    card.files["/games/a/video/even.rgb"] = movie(20);
+    lv_obj_t* v = viewportOn(screen.slide(LOW_LAYER));
+    TEST_ASSERT_TRUE(player.play(v, "even", false, true));
+    startSound();
+    // The sound plays to its end, and its SOUND_ENDED waits in the queue.
+    std::vector<DriverEvent> waiting;
+    for (int i = 0; i < 400 && waiting.empty(); ++i) {
+        service.serveAll();
+        for (const DriverEvent& e : audio.block()) {
+            waiting.push_back(e);
+        }
+        pass(N * 1000000ull / RATE_HZ);
+    }
+    TEST_ASSERT_FALSE(waiting.empty());
+    TEST_ASSERT_TRUE(GameHost::videoSounding());
+    const int atEnd = shownAt();
+    TEST_ASSERT_TRUE(atEnd >= 17);
+    // The video goes on by the clock and may end before the sound's end arrives, but it never
+    // shows an earlier frame.
+    for (uint32_t t = 0; t < FRAME_US && player.playing(v); t += PASS_US) {
+        pass();
+        TEST_ASSERT_TRUE(!player.playing(v) || shownAt() >= atEnd);
+    }
+    for (const DriverEvent& e : waiting) {
+        PinballEvents out;
+        sounds.translate(e, out);
+    }
+    run(3 * FRAME_US);
+    TEST_ASSERT_FALSE(player.playing(v));
+    TEST_ASSERT_EQUAL_UINT32(1, made.size());
+    TEST_ASSERT_TRUE(made[0].type == EventType::MOVIE_ENDED);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testPlay);
@@ -590,6 +628,7 @@ int main() {
     RUN_TEST(testLateCard);
     RUN_TEST(testShortSound);
     RUN_TEST(testSoundClock);
+    RUN_TEST(testLateEnd);
     RUN_TEST(testCovers);
     RUN_TEST(testBadFiles);
     // Every read lands before the program ends, so no request waits in its destructor.

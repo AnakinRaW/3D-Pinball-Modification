@@ -416,7 +416,7 @@ static void testLayers() {
     lv_msgbox_add_text(box, "message box");
     // A game switch leaves the host's objects, so the test deletes its object itself.
     lv_obj_t* host = named(GameHost::hostLayer(screen), "host", 0xFF3030, 200, 140, 110, 80);
-    const bool played = player.play(viewport, "viewport", true, false);
+    const bool played = videoPlayer.play(viewport, "viewport", true, false);
     test::step("watch the screen: the background picture with a blue box, a pink box, the green "
                "video with its ball, a cyan box, a message box over a darkened screen and a red "
                "box, each labeled");
@@ -429,7 +429,7 @@ static void testLayers() {
                            "slide, the video, overlay, the message box, host?",
                            ASK_TIMEOUT_MS)
                : test::Answer::NONE;
-    player.stop(viewport);
+    videoPlayer.stop(viewport);
     lv_msgbox_close(box);
     lv_obj_delete(host);
     if (!played) {
@@ -464,7 +464,7 @@ static bool onButton(TouchPoint p) {
 // Hands the touch events to the screen as the host does, counts what came of them and renders.
 static void pumpTouches() {
     DriverEvent e;
-    while (queue.read(&e, 1) == 1) {
+    while (events.read(&e, 1) == 1) {
         PinballEvents out;
         if (!screen.translate(e, out)) {
             continue;
@@ -521,7 +521,7 @@ static void testTaps() {
     lv_obj_update_layout(button);
     lv_obj_get_coords(button, &buttonArea);
     DriverEvent stale;
-    while (queue.read(&stale, 1) == 1) {
+    while (events.read(&stale, 1) == 1) {
     }
     taps = 0;
     holds = 0;
