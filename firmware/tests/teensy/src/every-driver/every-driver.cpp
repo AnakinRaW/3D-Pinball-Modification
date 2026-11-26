@@ -466,8 +466,8 @@ static bool audioBeginFails(Verdict& v) {
 // ---- the break beam driver
 
 static BreakBeamDriver beamFresh(events);    // before-begin: never begun
-static BreakBeamDriver beamHolder(events);   // begin-fails: begins first and holds the pin
-static BreakBeamDriver beamSecond(events);   // begin-fails: begins after beamHolder
+using test::breakBeam;                       // begin-fails: begins first and holds the pin
+static BreakBeamDriver beamSecond(events);   // begin-fails: begins after the shared driver
 
 // Gets whether a break beam driver answers every call at once with empty data.
 static bool beamEmpty(BreakBeamDriver& beam, Verdict& v) {
@@ -485,7 +485,7 @@ static bool beamBeforeBegin(Verdict& v) {
 }
 
 static bool beamBeginFails(Verdict& v) {
-    if (!beamHolder.begin()) {
+    if (!breakBeam.begin()) {
         return v.want("true").saw("the first begin() false");
     }
     if (beamSecond.begin()) {

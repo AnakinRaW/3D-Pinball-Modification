@@ -8,14 +8,15 @@
 //           (asks at the bench)
 //
 // Wiring: pad needs none. pass and failed need the emitter and the receiver of the break beam
-// design on the motherboard, and a ball. The driver publishes into the firmware's event queue,
-// which this program reads, and a monitor of this program watches it.
+// design on the motherboard, and a ball. The shared driver publishes into the firmware's event
+// queue, which this program reads, and the firmware's device monitor watches it.
 
 #include <Arduino.h>
 #include "core/clock.h"
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
 #include "drivers/break-beam.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint8_t BEAM_PIN = 31;   // pin-assignment.md: Receiver output of the ball drain gate
@@ -29,17 +30,14 @@ constexpr uint32_t PAD_LIMIT_S = 5;
 constexpr uint32_t BENCH_LIMIT_S = 300;
 constexpr size_t TEXT = 96;
 
-static BreakBeamDriver beam(events);
+using test::breakBeam;
 static bool begun = false;
-static EventQueue monitorEvents;
-static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
 static bool watched = false;
 
 // Begins the driver once after the start, and fails the test where begin() fails.
 static bool ready() {
     if (!begun) {
-        begun = beam.begin();
+        begun = breakBeam.begin();
         if (!begun) {
             test::fail("begin() false", "true");
         }
@@ -59,11 +57,18 @@ static bool nextBall(DriverEvent& e, uint32_t ms) {
     return false;
 }
 
+// Gets whether an event is the device monitor's report about the break beam.
+static bool isBeamFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::BREAK_BEAM;
+}
+
 // Waits up to ms for the monitor's next event about the break beam, and gets whether it came.
 static bool nextFault(DriverEvent& e, uint32_t ms) {
     const uint32_t t0 = millis();
     while (millis() - t0 < ms) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::BREAK_BEAM) {
+        if (events.read(&e, 1) == 1 && isBeamFault(e)) {
             return true;
         }
         delay(1);
@@ -91,7 +96,7 @@ static void testPad() {
         test::fail(seen, "the pin's bit set in both");
         return;
     }
-    if (beam.blocked() != (digitalReadFast(BEAM_PIN) == HIGH)) {
+    if (breakBeam.blocked() != (digitalReadFast(BEAM_PIN) == HIGH)) {
         test::fail("blocked() differs from the pin", "blocked() true where the pin reads HIGH");
         return;
     }
@@ -102,7 +107,7 @@ static void testPass() {
     if (!ready()) {
         return;
     }
-    if (beam.blocked()) {
+    if (breakBeam.blocked()) {
         test::skip("the beam is broken: no emitter, no receiver or a ball in the gate");
         return;
     }
@@ -128,7 +133,7 @@ static void testPass() {
         test::fail(text, "none");
         return;
     }
-    if (beam.blocked()) {
+    if (breakBeam.blocked()) {
         test::fail("blocked() true with the ball out", "false");
         return;
     }
@@ -140,13 +145,13 @@ static void testFailed() {
         return;
     }
     if (!watched) {
-        watched = monitor.watch(Device::BREAK_BEAM, beam);
+        watched = deviceMonitor.watch(Device::BREAK_BEAM, breakBeam);
         if (!watched) {
             test::fail("the monitor refused the driver", "taken");
             return;
         }
     }
-    if (beam.blocked()) {
+    if (breakBeam.blocked()) {
         test::skip("the beam is broken: no emitter, no receiver or a ball in the gate");
         return;
     }
@@ -177,7 +182,7 @@ static void testFailed() {
         test::fail("no DEVICE_RECOVERED", "DEVICE_RECOVERED once the ball is out");
         return;
     }
-    if (beam.blocked()) {
+    if (breakBeam.blocked()) {
         test::fail("blocked() true after DEVICE_RECOVERED", "false");
         return;
     }

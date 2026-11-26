@@ -6,6 +6,7 @@
 #pragma once
 
 class AudioDriver;
+class BreakBeamDriver;
 class Display;
 class FileSystem;
 class Lighting;
@@ -24,5 +25,6 @@ extern Touch touch;
 extern Screen screen;
 extern VideoPlayer videoPlayer;
 extern Lighting lighting;
+extern BreakBeamDriver breakBeam;
 
 }   // namespace test

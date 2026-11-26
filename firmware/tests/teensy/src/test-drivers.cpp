@@ -7,6 +7,7 @@
 #include "components/video-player.h"
 #include "core/event-queue.h"
 #include "drivers/audio.h"
+#include "drivers/break-beam.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/storage.h"
@@ -23,5 +24,6 @@ Touch touch(io::wire2Bus, events, driverTick);
 Screen screen(display);
 VideoPlayer videoPlayer(screen, files, sounds);
 Lighting lighting;
+BreakBeamDriver breakBeam(events);
 
 }   // namespace test
