@@ -337,22 +337,43 @@ def console(results, missing):
         print(f"{label:<{width}}  {covered:>3} of {total:>3}  {percent(covered, total):>5}")
 
 
+def state(covered, rows):
+    """Gets a program's state: every row has a test, some have, or none has."""
+    done = sum(row in covered for row in rows)
+    if done == len(rows):
+        return "✅ done"
+    return "🟡 partly" if done else "⬜ not started"
+
+
 def summary(results):
     lines = ["## Coverage of testing.md", ""]
-    lines.append("| Program | " + " | ".join(PLACES) + " | All |")
-    lines.append("|---|" + "---:|" * (len(PLACES) + 1))
+    lines.append("| Program | State | " + " | ".join(PLACES) + " | All |")
+    lines.append("|---|---|" + "---:|" * (len(PLACES) + 1))
     for program, covered, rows in results:
         cells = []
         for place in PLACES + [None]:
             names = [row for row, (where, _, _) in rows.items() if place in (None, where)]
             done = sum(row in covered for row in names)
             cells.append(f"{done} of {len(names)}" if names else "")
-        lines.append(f"| `{program}` | " + " | ".join(cells) + " |")
+        lines.append(f"| `{program}` | {state(covered, rows)} | " + " | ".join(cells) + " |")
     cells = []
     for place in PLACES + [None]:
         covered, total = count(results, place)
         cells.append(f"**{covered} of {total}, {percent(covered, total)}**")
-    lines.append("| All | " + " | ".join(cells) + " |")
+    lines.append("| All | | " + " | ".join(cells) + " |")
+
+    # Every row still without a test, so an unfinished program names what it lacks. A row marked
+    # computer, planned is code still to be written.
+    lines += ["", "## Rows without a test", ""]
+    missing = False
+    for program, covered, rows in results:
+        names = [f"`{row}` ({where}{', planned' if planned else ''})"
+                 for row, (where, _, planned) in rows.items() if row not in covered]
+        if names:
+            missing = True
+            lines.append(f"- `{program}`: " + ", ".join(names))
+    if not missing:
+        lines.append("Every row has a test.")
     return "\n".join(lines) + "\n"
 
 
