@@ -43,6 +43,19 @@ constexpr uint8_t faultPart(uint8_t source) {
     return source & PART_MASK;
 }
 
+/// Gets a device's name in words, such as "SD card", for the log.
+///
+/// @return  "device" for a value past the last device.
+const char* deviceName(Device d);
+
+/// Writes the log line of a fault event: a warning for DEVICE_FAILED with the device, the part and
+/// the error code, and a line of the level INFO for DEVICE_RECOVERED.
+///
+/// @param e  A driver event of any type. One of another type writes nothing.
+/// @return   Whether @p e was DEVICE_FAILED or DEVICE_RECOVERED.
+/// @note     The host calls it from the main loop for every driver event.
+bool logFault(const DriverEvent& e);
+
 /// Records the failed parts of every device and the error code each device last failed with.
 class FailedDevices {
 public:
@@ -92,12 +105,9 @@ private:
 
 class DeviceMonitor {
 public:
-    /// model/firmware/figures.py, n_monitor_slots: one slot for each device, and a device that
-    /// reports nothing leaves its slot empty
-    static constexpr uint8_t SLOTS = uint8_t(Device::COUNT);
-    /// model/firmware/figures.py, n_queue: eight parts failing at once with room to spare
-    static constexpr uint32_t DEPTH = 32;
-    static constexpr uint32_t CHECK_US = 100000;   // model/firmware/figures.py, t_monitor
+    /// Holds eight parts failing at once with room to spare.
+    static constexpr uint32_t DEPTH = 32;          // firmware model: n_queue
+    static constexpr uint32_t CHECK_US = 100000;   // firmware model: t_monitor
 
     /// Creates a monitor whose queue takes its events from @p storage.
     ///
@@ -120,6 +130,9 @@ public:
     bool watch(Device device, const Driver& driver);
 
 private:
+    /// One slot for each device. A device that reports nothing leaves its slot empty.
+    static constexpr uint8_t SLOTS = uint8_t(Device::COUNT);   // firmware model: n_monitor_slots
+
     struct Slot {
         Device device;
         const Driver* driver;

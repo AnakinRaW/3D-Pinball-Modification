@@ -1,12 +1,39 @@
 #include "device-monitor.h"
 #include "logging/logger.h"
 #include "logging/debug-log.h"
+#include <inttypes.h>
 
 /// The monitor's queue lies in RAM2. Its events are written before they are read, so it needs no
 /// start value.
 static DMAMEM DriverEvent monitorQueue[DeviceMonitor::DEPTH];
 
 DeviceMonitor deviceMonitor(events, driverTick, monitorQueue);
+
+/// The devices' names, in the order of Device.
+static const char* const NAMES[] = {
+    "rotary sensor", "break beam", "solenoids", "IR sensing", "SD card",       "display module",
+    "touch",         "servo",      "amplifier", "LED chains", "toggle switch", "contacts",
+};
+static_assert(sizeof(NAMES) / sizeof(NAMES[0]) == size_t(Device::COUNT), "a name for each device");
+
+const char* deviceName(Device d) {
+    return d < Device::COUNT ? NAMES[size_t(d)] : "device";
+}
+
+bool logFault(const DriverEvent& e) {
+    if (e.type == DriverEventType::DEVICE_FAILED) {
+        logWarning("monitor", "%s part %u failed, error code %" PRIu32,
+                   deviceName(faultDevice(e.source)), unsigned(faultPart(e.source)),
+                   payload<DriverEventType::DEVICE_FAILED>(e));
+        return true;
+    }
+    if (e.type == DriverEventType::DEVICE_RECOVERED) {
+        logInfo("monitor", "%s part %u works again", deviceName(faultDevice(e.source)),
+                unsigned(faultPart(e.source)));
+        return true;
+    }
+    return false;
+}
 
 bool DeviceMonitor::watch(Device device, const Driver& driver) {
     if (count == SLOTS) {

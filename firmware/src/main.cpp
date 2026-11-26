@@ -76,7 +76,8 @@ void setup_event_responder() {}
 /// The game host's handling of a device fault, where the host's dispatch() stands in the main loop.
 class GameHost {
 public:
-    /// Takes a fault event of the device monitor, so no component sees it.
+    /// Takes a fault event of the device monitor, so no component sees it, and writes it into the
+    /// log.
     ///
     /// The touch controller shares the display module's power. Once it answers again, the display
     /// has lost its setup, and the screen sets it up again.
@@ -85,13 +86,10 @@ public:
     /// @return   Whether @p e was DEVICE_FAILED or DEVICE_RECOVERED.
     /// @note     The main loop calls it.
     static bool takeFault(const DriverEvent& e) {
-        if (e.type == DriverEventType::DEVICE_FAILED) {
-            return true;
-        }
-        if (e.type != DriverEventType::DEVICE_RECOVERED) {
+        if (!logFault(e)) {
             return false;
         }
-        if (faultDevice(e.source) == Device::TOUCH) {
+        if (e.type == DriverEventType::DEVICE_RECOVERED && faultDevice(e.source) == Device::TOUCH) {
             logInfo("main", "the display module answers again, so the display restarts");
             screen.restart();
         }

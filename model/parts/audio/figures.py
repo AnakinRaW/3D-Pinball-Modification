@@ -233,8 +233,9 @@ dec("vol_music", 50, "%", src="the music's starting volume, audio.music_volume's
     "a decision: under the effects")
 dec("vol_effects", 70, "%", src="the effects' starting volume, audio.effects_volume's default in "
     "docs/firmware/components/sounds.md, a decision")
-_I("music and one effect at their starting volumes, squared by the component's curve, never "
-   "overdrive the output together", "vol_music.raw ** 2 + vol_effects.raw ** 2 <= 1")
+_I("music and one effect at their starting volumes, squared by the component's curve, stay "
+   "within the output's full scale together, so the component plays both as set",
+   "vol_music.raw ** 2 + vol_effects.raw ** 2 <= 1")
 
 MODEL.aside("1 W", "the upper end of the rating docs/research/Rokr/5_sound.md estimates for the speaker")
 

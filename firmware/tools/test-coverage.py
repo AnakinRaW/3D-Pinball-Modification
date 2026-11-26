@@ -22,8 +22,12 @@ The run fails when the code and the document disagree:
     a test of the image outside its program's folder, or in a program PROGRAMS does not list
     a computer test of a program that testing.md does not hold
     a line of a test table in testing.md that does not read as a row
+    a computer row without a test, in a program that has a folder firmware/tests/test_<program>
+    a row marked planned that has a test
 
-A row without a test is only counted against the coverage.
+A row marked planned, as "computer, planned" in its Runs on column, describes code still to be
+written. It and every row of a program without a computer test folder are only counted against the
+coverage.
 
     python firmware/tools/test-coverage.py              the coverage of every program
     python firmware/tools/test-coverage.py --missing    with the name of every row without a test
@@ -58,7 +62,7 @@ RUNS_ON = {"TEENSY": "Teensy", "BENCH": "bench", "MACHINE": "machine"}
 
 PROGRAM_LINE = re.compile(r"^The program `([a-z0-9-]+)`")
 TABLE_HEADER = re.compile(r"^\| Test \| Runs on \|")
-ROW = re.compile(r"^\| `([a-z0-9-]+)` \| ([A-Za-z]+) \|")
+ROW = re.compile(r"^\| `([a-z0-9-]+)` \| ([A-Za-z]+)(, planned)? \|")
 RUN_TEST = re.compile(r"\bRUN_TEST\(\s*(\w+)\s*\)")
 IMAGE_TEST = re.compile(r'\{\s*"([a-z0-9-]+)\.([a-z0-9-]+)"\s*,\s*RunsOn::(\w+)')
 TABLE_RULE = re.compile(r"^\|(\s*:?-+:?\s*\|)+\s*$")
@@ -114,7 +118,7 @@ def read_source(path):
 def read_rows(report):
     """Reads every program's rows from testing.md, in the order of the document.
 
-    Gets a list of (program, line, rows), where rows maps a row's name to (place, line).
+    Gets a list of (program, line, rows), where rows maps a row's name to (place, line, planned).
     """
     programs = []
     current = None
@@ -141,7 +145,7 @@ def read_rows(report):
                 report.error(f"{where}:{number}", f"a line of the program {current[0]}'s table "
                              "reads as no row: | `name` | place | ...")
                 continue
-            name, place = row.group(1), row.group(2)
+            name, place, planned = row.group(1), row.group(2), row.group(3) is not None
             if place not in PLACES:
                 report.error(f"{where}:{number}", f"{current[0]}.{name} runs on '{place}', which "
                              f"is none of {', '.join(PLACES)}")
@@ -149,7 +153,7 @@ def read_rows(report):
             if name in current[2]:
                 report.error(f"{where}:{number}", f"{current[0]}.{name} stands twice")
                 continue
-            current[2][name] = (place, number)
+            current[2][name] = (place, number, planned)
     seen = {}
     for name, number, _ in programs:
         if name in seen:
@@ -242,7 +246,7 @@ def read_image_tests(report):
 
 
 def compare(programs, computer, image, report):
-    """Marks every row covered or missing, and reports every test of the code that has no row.
+    """Marks every row covered or missing, and reports every disagreement of the code and the rows.
 
     Gets a list of (program, covered, rows) with covered the set of covered row names.
     """
@@ -253,12 +257,17 @@ def compare(programs, computer, image, report):
     used_image = set()
     for program, _, rows in programs:
         covered = set()
-        for row, (place, number) in rows.items():
+        started = os.path.isdir(os.path.join(TESTS_DIR, f"test_{program}"))
+        for row, (place, number, planned) in rows.items():
             if place == "computer":
                 key = (program, computer_function(row))
                 if key in computer:
                     covered.add(row)
                     used_computer.add(key)
+                elif started and not planned:
+                    report.error(f"{where_md}:{number}", f"{program}.{row} has no test "
+                                 f"{computer_function(row)} in test_{program}, and is not "
+                                 "marked planned")
                 if (program, row) in image:
                     other, where = image[(program, row)]
                     report.error(where, f"{program}.{row} runs on {other} in the image, and "
@@ -278,6 +287,10 @@ def compare(programs, computer, image, report):
                     report.error(where, f"{program}.{row} runs on the computer, and "
                                  f"{where_md}:{number} gives {place}")
                     used_computer.add((program, computer_function(row)))
+        for row in sorted(covered):
+            if rows[row][2]:
+                report.error(f"{where_md}:{rows[row][1]}", f"{program}.{row} has a test and is "
+                             "still marked planned")
         results.append((program, covered, rows))
 
     for (program, function), where in sorted(computer.items()):
@@ -301,7 +314,7 @@ def count(results, place):
     """Gets how many rows of a place the code covers, and how many there are."""
     covered = total = 0
     for _, done, rows in results:
-        for row, (where, _) in rows.items():
+        for row, (where, _, _) in rows.items():
             if place in (None, where):
                 total += 1
                 covered += row in done
@@ -314,7 +327,7 @@ def console(results, missing):
         print(f"{program:<{width}}  {len(covered):>3} of {len(rows):>3}  "
               f"{percent(len(covered), len(rows)):>5}")
         if missing:
-            for row, (place, _) in rows.items():
+            for row, (place, _, _) in rows.items():
                 if row not in covered:
                     print(f"{'':<{width}}  missing {row} ({place})")
     print()
@@ -331,7 +344,7 @@ def summary(results):
     for program, covered, rows in results:
         cells = []
         for place in PLACES + [None]:
-            names = [row for row, (where, _) in rows.items() if place in (None, where)]
+            names = [row for row, (where, _, _) in rows.items() if place in (None, where)]
             done = sum(row in covered for row in names)
             cells.append(f"{done} of {len(names)}" if names else "")
         lines.append(f"| `{program}` | " + " | ".join(cells) + " |")
@@ -427,6 +440,15 @@ def self_test():
     with open(image_file(teensy[0]), encoding="utf-8") as f:
         symbol = PROGRAM_DEFINITION.search(without_comments(f.read())).group(1)
 
+    row_line = f"| `{computer[1]}` | computer |"
+    planned_line = f"| `{computer[1]}` | computer, planned |"
+    started = sum(rows[row][0] == "computer" for program, covered, rows in base_results
+                  if program == computer[0] for row in covered)
+
+    def plan_and_comment(report_path):
+        edit(TESTING_MD, row_line, planned_line)
+        comment_run_test(computer[0], function)
+
     def move_test(report_path):
         moved_entry = f'{{"{moved[0]}.{moved[1]}", RunsOn::TEENSY'
         edit(image_file(moved[0]), moved_entry, "// " + moved_entry)
@@ -440,9 +462,15 @@ def self_test():
         ("an image test in a comment", lambda r: edit(image_file(teensy[0]), entry, "// " + entry),
          False, base - 1),
         ("a RUN_TEST() in a comment", lambda r: comment_run_test(computer[0], function), False,
-         base - 1),
+         "error"),
         ("a computer test the report does not list", lambda r: drop_case(r, computer[0], function), True,
-         base - 1),
+         "error"),
+        ("a RUN_TEST() in a comment, its row marked planned", plan_and_comment, False, base - 1),
+        ("a row marked planned that has a test", lambda r: edit(TESTING_MD, row_line, planned_line),
+         False, "error"),
+        ("a program without its computer test folder",
+         lambda r: shutil.rmtree(os.path.join(TESTS_DIR, f"test_{computer[0]}")), False,
+         base - started),
         ("a RUN_TEST() in a comment that the report lists",
          lambda r: comment_run_test(computer[0], function), True, base),
         ("an image test that runs on the bench, its row on the Teensy",

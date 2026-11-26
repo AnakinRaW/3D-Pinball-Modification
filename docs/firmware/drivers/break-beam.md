@@ -10,14 +10,14 @@ The driver reports the ball at the moment the IR beam breaks. It runs on a pin i
 
 | Field | Content |
 |---|---|
-| Type | `DriverEventType::BallDrained` |
+| Type | `DriverEventType::BALL_DRAINED` |
 | Source | The gate's index, always `0` in this build |
 | Timestamp | `nowUs()` in the handler, the moment the beam went |
 | Payload | None |
 
 ## Limitations
 
-The break beam cannot tell apart two balls touching each. This most likely counts as one event.
+The break beam cannot tell apart two balls touching each other. This most likely counts as one event.
 
 ## Device faults
 
@@ -25,17 +25,4 @@ The beam counts as failed once it has stayed broken for 5 s, which no passing ba
 
 ## Driver
 
-```cpp
-class BreakBeamDriver : public Driver {
-public:
-    // attaches the queue, sets the pin as an input with hysteresis and without the Teensy's
-    // pull-up, and arms the pin interrupt
-    bool begin() override;
-
-    // the state the game logic may query between events
-    bool blocked() const;
-
-    // gets which parts have failed: bit 0 once the beam has stayed broken for 5 s
-    Fault failed() const override;
-};
-```
+[`firmware/src/drivers/break-beam.h`](../../../firmware/src/drivers/break-beam.h) holds the interface.

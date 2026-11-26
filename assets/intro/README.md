@@ -13,10 +13,12 @@ The scripts in [`blender/`](blender/) animate the ride on the machine that [`cgi
 | 3 | `film.py` | Blender | the ride, the lights' keys, the logo's place in the film and the render settings |
 | 4 | `render_frames.py` of `cgi/`, with `BUILD` set to `blender/` | Blender, with `FIRST` and `LAST` | `frames/`: the film in Cycles, at 640 × 480 |
 | 5 | `convert.py <frames> <out>` | Python | `intro.rgb`, and `preview.gif` to look at |
+| 6 | `paths.py` | Blender, after `film.py` | `blender/out/ball-paths.json` |
+| 7 | `soundtrack.py blender/out/ball-paths.json intro.wav` | WSL | `intro.wav`, mixed again with every render |
 
 ## The sound
 
-[`soundtrack.py`](blender/soundtrack.py) mixes `intro.wav` from the sources in [`sounds/`](sounds/) and from the balls' paths that [`paths.py`](blender/paths.py) writes in Blender to `blender/out/ball-paths.json`. The sound scripts run in WSL.
+[`soundtrack.py`](blender/soundtrack.py) mixes `intro.wav` from the sources in [`assets/sounds/`](../sounds/) and from the balls' paths that [`paths.py`](blender/paths.py) writes in Blender to `blender/out/ball-paths.json`. The sound scripts run in WSL.
 
 | Source | Made by |
 |---|---|

@@ -16,8 +16,6 @@
 
 /// A color of a lamp, 8 bits for each of red, green and blue
 struct Color {
-    static constexpr uint8_t WHOLE_PERCENT = 100;
-
     uint8_t r = 0;
     uint8_t g = 0;
     uint8_t b = 0;
@@ -36,6 +34,9 @@ struct Color {
     }
 
     static const Color BLACK, WHITE, RED, GREEN, BLUE, AMBER, NONE;
+
+private:
+    static constexpr uint8_t WHOLE_PERCENT = 100;
 };
 
 inline constexpr Color Color::BLACK{0, 0, 0, false};

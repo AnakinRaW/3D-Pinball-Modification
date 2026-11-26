@@ -1,8 +1,8 @@
 """Mixes the intro's sound track for the film's 260 frames, one WAV in mono at 44.1 kHz.
 
-  python soundtrack.py <intro dir> <paths.json> <out.wav>     (in WSL, with ~/.venvs/audio)
+  python soundtrack.py <paths.json> <out.wav>     (in WSL, with ~/.venvs/audio)
 
-The sources lie in <intro dir>/sounds: the circus march from march.py, the announcer's call from
+The sources lie in assets/sounds, which the trailer shares: the circus march from march.py, the announcer's call from
 announcer.py, the effects of sfx.py, and recordings of the kit: a steel ball rolling on plywood, which roll.py
 lays out, the flipper snapping up and falling back, and two steel balls knocked together. The paths file holds
 every ball's position for every frame. The chimes, the whoosh, the drain's knock and the logo's kicks, neon and
@@ -34,6 +34,7 @@ from pedalboard import Pedalboard, Reverb, Compressor, Limiter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import roll as rolling
 
+SOUNDS = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "sounds")
 SR = 44100
 FPS = 25
 FRAMES = 260
@@ -292,8 +293,8 @@ def logo_sound(flip, speed, march_path):
 
 
 def main():
-    intro, paths, out = sys.argv[1:4]
-    tests = os.path.join(intro, "sounds")
+    paths, out = sys.argv[1:3]
+    tests = SOUNDS
     sfx = lambda name: load(os.path.join(tests, "sfx", f"sfx-{name}-11.wav"))
     d = json.load(open(paths))
     last = max(int(k) for k in d["cam"])                       # the balls rest after the paths' last frame

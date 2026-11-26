@@ -78,8 +78,8 @@ void SoundChannel::volume(float levelWanted) {
                  std::memory_order_relaxed);
 }
 
-bool SoundChannel::play(int16_t (&block)[SOUND_BLOCK_SAMPLES], uint32_t& ended) {
-    ended = 0;
+bool SoundChannel::play(int16_t (&block)[SOUND_BLOCK_SAMPLES], SoundEnd& ended) {
+    ended = SoundEnd{0, SoundEndCode::PLAYED};
     const uint32_t count = made.load(std::memory_order_acquire);
     bool cutting = false;
     if (count != taken.load(std::memory_order_relaxed)) {
@@ -99,7 +99,7 @@ bool SoundChannel::play(int16_t (&block)[SOUND_BLOCK_SAMPLES], uint32_t& ended) 
     memset(block, 0, sizeof block);
     const uint32_t got = fill(block);
     if (number.load(std::memory_order_relaxed) == 0 && !cutting) {
-        ended = playing;
+        ended = SoundEnd{playing, endCode};
     }
     if (got > 0) {
         // The volume glides from where the last block ended to where it is asked to be. It moves
@@ -127,7 +127,7 @@ void SoundChannel::start(const Request& r) {
     skip = 0;
     number.store(r.number, std::memory_order_relaxed);
     if (r.number == 0) {
-        end();
+        end(SoundEndCode::PLAYED);
         publish();
         return;
     }
@@ -165,7 +165,7 @@ uint32_t SoundChannel::fill(int16_t (&block)[SOUND_BLOCK_SAMPLES]) {
                 at = at + uint32_t(n);
                 if (!readPiece()) {
                     DEBUG_TRACE("sound format", sound.size, at);
-                    end();
+                    end(SoundEndCode::NOT_WAV);
                     return got;
                 }
                 continue;
@@ -179,7 +179,7 @@ uint32_t SoundChannel::fill(int16_t (&block)[SOUND_BLOCK_SAMPLES]) {
             if (sound.left == 0) {
                 at = at + uint32_t(n);
                 if (!sound.loop) {
-                    end();
+                    end(SoundEndCode::PLAYED);
                     return got;
                 }
                 phase = Phase::TRAILER;
@@ -198,9 +198,12 @@ uint32_t SoundChannel::fill(int16_t (&block)[SOUND_BLOCK_SAMPLES]) {
         at = at + uint32_t(n);
         if (n == 0) {
             if (stream.ended()) {
-                // The file has run out ahead of its end, or a read failed.
+                // The file has run out ahead of its end, or a read failed. A file that brought no
+                // byte at all is missing or empty.
                 DEBUG_TRACE("sound cut short", sound.left, at);
-                end();
+                end(stream.failed() ? SoundEndCode::READ_FAILED
+                    : at == 0       ? SoundEndCode::NO_FILE
+                                    : SoundEndCode::CUT_SHORT);
             }
             return got;
         }
@@ -259,7 +262,8 @@ void SoundChannel::expect(Piece next) {
                                         : FORMAT_BYTES;
 }
 
-void SoundChannel::end() {
+void SoundChannel::end(SoundEndCode code) {
+    endCode = code;
     number.store(0, std::memory_order_relaxed);
     sound = SoundPosition{};
     phase = Phase::HEADER;

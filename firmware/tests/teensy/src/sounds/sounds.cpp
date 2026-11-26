@@ -19,6 +19,7 @@
 #include "core/event-queue.h"
 #include "drivers/audio.h"
 #include "drivers/storage.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint32_t LIMIT_S = 30;
@@ -133,10 +134,9 @@ public:
     static bool sounding(const Sounds& sounds) { return sounds.videoSounding(); }
 };
 
-static EventQueue queue;
-static AudioDriver audio(queue);
-static FileSystem files(storage);
-static Sounds sounds(audio, files);
+using test::audio;
+using test::files;
+using test::sounds;
 static Tap* tap = nullptr;
 static bool written = false;
 static uint32_t musicEnded = 0;   // the MUSIC_ENDED events pump() saw
@@ -257,7 +257,7 @@ static bool ready() {
     GameHost::reset(sounds);
     delay(SETTLE_MS);
     DriverEvent drop[EVENTS];
-    while (queue.read(drop, EVENTS) > 0) {
+    while (events.read(drop, EVENTS) > 0) {
     }
     musicEnded = 0;
     return true;
@@ -268,7 +268,7 @@ static void pump(uint32_t ms) {
     const uint32_t t0 = millis();
     while (millis() - t0 < ms) {
         DriverEvent e[EVENTS];
-        const uint32_t n = queue.read(e, EVENTS);
+        const uint32_t n = events.read(e, EVENTS);
         for (uint32_t i = 0; i < n; ++i) {
             PinballEvents out;
             sounds.translate(e[i], out);
