@@ -199,7 +199,7 @@ FLASHMEM static void warnUrgent(void*) {
         if (i % 2 == 0) {
             warn("both", "shared");
         } else {
-            warn("urgent", "kind %lu", i % WARNING_KINDS);
+            warn("urgent", "kind %lu", (i / 2) % WARNING_KINDS);
         }
         const uint32_t cycles = ARM_DWT_CYCCNT - t0;
         if (cycles > longestAddCycles) {
@@ -249,7 +249,7 @@ FLASHMEM static void testWarningTasks() {
         if (calm % 2 == 0) {
             warn("both", "shared");
         } else {
-            warn("calm", "kind %lu", calm % WARNING_KINDS);
+            warn("calm", "kind %lu", (calm / 2) % WARNING_KINDS);
         }
         calm = calm + 1;
         delayMicroseconds(CALM_PAUSE_US);
