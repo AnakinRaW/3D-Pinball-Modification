@@ -725,8 +725,7 @@ The program `start-up` checks the [main program](general-design.md#main-program)
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `order` | Teensy | Start, with every step of the start-up printing a line | The lines come in the order the main program lists |
-| `priorities` | Teensy | Read the priority of every interrupt once the main loop runs | Each interrupt sits at the priority the [interrupt table](general-design.md#interrupts) lists |
+| `priorities` | Teensy | Begin the card, the audio, the display and the touch as the main task does and run `checkInterruptPriorities()`. Then set the display's interrupt to another priority and run it again | The first run finds every enabled interrupt at the priority the [interrupt table](general-design.md#interrupts) lists. The second finds the display's interrupt off its row |
 | `heap` | Teensy | Take a block with `malloc()` in the constructor of a static object, and a second block in the main task | Both blocks lie in RAM2, and they do not overlap |
 
 ### Game host
