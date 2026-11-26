@@ -31,12 +31,13 @@ jobs:
           python -m pip install clang-format==18.1.8
           find firmware/src firmware/include firmware/tests \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
-  # The three jobs below run at the same time. Each keeps its build folder under runner.temp, since
+  # The four jobs below run at the same time. Each keeps its build folder under runner.temp, since
   # platformio.ini puts PlatformIO's build and library folders under %LOCALAPPDATA%\pio. Each caches
   # PlatformIO's packages under a key of its job, since the Teensy jobs and the computer tests
-  # install different platforms.
+  # install different platforms. The release build and clang-tidy install the same packages and
+  # share their key.
   release:
-    name: Build the release firmware and check its code with clang-tidy
+    name: Build the release firmware
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -60,10 +61,32 @@ jobs:
       - name: Build
         run: python -m platformio run -e release
 
+  tidy:
+    name: Check the firmware's code with clang-tidy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # A job's env cannot read the runner context, so a step hands the folder to every later step
+      - name: Keep PlatformIO's folders under the runner's temporary folder
+        run: echo "LOCALAPPDATA=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.platformio
+          key: platformio-release-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: python -m pip install platformio
+
       # firmware/.clang-tidy names the checks, and the run fails on any finding in firmware/. The
-      # self-test first shows that a clean file passes and a flawed one is caught. The step reads
-      # the compile commands of the build above, so a finding fails the run without waiting for
-      # the tests
+      # self-test first shows that a clean file passes and a flawed one is caught. tidy.py takes
+      # the release build's compile commands from PlatformIO's compiledb target, which compiles
+      # nothing, so the job needs no build
       - name: Check the firmware's code with clang-tidy
         run: |
           python -m pip install clang-tidy==18.1.8
