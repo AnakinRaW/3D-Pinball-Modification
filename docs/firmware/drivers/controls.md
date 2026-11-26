@@ -25,4 +25,4 @@ The driver notes no fault.
 
 ## Driver
 
-[`firmware/src/drivers/controls.h`](../../../firmware/src/drivers/controls.h) holds the interface.
+[`firmware/src/drivers/toggle-switch.h`](../../../firmware/src/drivers/toggle-switch.h) holds the interface.

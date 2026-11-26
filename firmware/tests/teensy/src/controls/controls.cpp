@@ -14,7 +14,7 @@
 #include <Arduino.h>
 #include "core/clock.h"
 #include "core/event-queue.h"
-#include "drivers/controls.h"
+#include "drivers/toggle-switch.h"
 #include "test-drivers.h"
 #include "test-harness.h"
 

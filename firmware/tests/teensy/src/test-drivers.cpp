@@ -8,10 +8,10 @@
 #include "core/event-queue.h"
 #include "drivers/audio.h"
 #include "drivers/break-beam.h"
-#include "drivers/controls.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/storage.h"
+#include "drivers/toggle-switch.h"
 #include "drivers/touch.h"
 #include "io/i2c-bus.h"
 

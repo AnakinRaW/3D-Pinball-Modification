@@ -21,7 +21,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
-#include "drivers/controls.h"
+#include "drivers/toggle-switch.h"
 #include "logging/logger.h"
 #include <string>
 #include <unity.h>
