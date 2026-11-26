@@ -7,6 +7,8 @@
 //               them. count() gets each list's length
 //   clamp       a value outside its range reads as the nearer end, with a log line
 //   wrong       text and a section read as their default or as no value, with a log line
+//   switches    true, yes, on and 1 read as on, false, no, off and 0 as off, in any case. Other
+//               text, a section and a missing key take the default with a log line
 //   numbers     signs, fractions and exponents read as written, text that only starts like a
 //               number reads as no number
 //   limits      what the tree cannot hold is left out with a log line that names its line and
@@ -283,6 +285,33 @@ static void testWrong() {
     TEST_ASSERT_EQUAL_STRING("", newLines().c_str());
 }
 
+static void testSwitches() {
+    Rig rig("on: [true, Yes, ON, 1]\n"
+            "off: [false, No, off, 0]\n"
+            "unset: ~\n"
+            "text: maybe\n"
+            "section:\n"
+            "  a: 1\n");
+    rig.config.begin();
+    for (int i = 0; i < 4; ++i) {
+        const std::string on = "on." + std::to_string(i);
+        const std::string off = "off." + std::to_string(i);
+        TEST_ASSERT_TRUE(rig.config.get(on.c_str(), false));
+        TEST_ASSERT_FALSE(rig.config.get(off.c_str(), true));
+    }
+    TEST_ASSERT_TRUE(rig.config.get("unset", true));
+    TEST_ASSERT_EQUAL_STRING("", newLines().c_str());
+    TEST_ASSERT_TRUE(rig.config.get("text", true));
+    TEST_ASSERT_FALSE(rig.config.get("section", false));
+    TEST_ASSERT_TRUE(rig.config.get("missing", true));
+    const std::string lines = newLines();
+    TEST_ASSERT_TRUE(lines.find("W config text holds no switch, true taken") != std::string::npos);
+    TEST_ASSERT_TRUE(lines.find("W config section holds no switch, false taken") !=
+                     std::string::npos);
+    TEST_ASSERT_TRUE(lines.find("I config missing missing, true taken") != std::string::npos);
+    TEST_ASSERT_EQUAL_UINT32(3, lineCount(lines));
+}
+
 static void testNumbers() {
     Rig rig("plus: +7\nminus: -2.5\nexp: 1e3\nsmall: 2.5E-2\npoint: .5\ntrail: 5.\nzero: -0\n"
             "long: 3.14159265358979\nhex: 0x10\nunit: 12mm\nhuge: 1e999\nlone: e5\ndot: .\n"
@@ -541,6 +570,7 @@ int main() {
     RUN_TEST(testValues);
     RUN_TEST(testClamp);
     RUN_TEST(testWrong);
+    RUN_TEST(testSwitches);
     RUN_TEST(testNumbers);
     RUN_TEST(testLimits);
     RUN_TEST(testSet);

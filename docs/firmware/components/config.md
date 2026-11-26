@@ -28,6 +28,8 @@ touch:
   bottom_edge: 254
 solenoid:
   pull_ms: [30, 30, 30, 30]
+host:
+  boot_film: true
 ```
 
 ## The file

@@ -71,6 +71,19 @@ public:
     ///             tree.
     std::optional<double> get(const char* key, double min, double max) const;
 
+    /// Gets whether the switch under a key is on, or a default.
+    ///
+    /// The file writes a switch as true or false, yes or no, on or off, or 1 or 0, in any case.
+    /// The default comes where the key is missing, where it holds ~, null or nothing, and where it
+    /// holds anything else. A missing key and a value that is no switch each write a line to the
+    /// log.
+    ///
+    /// @param key       The key, as for the get() of a number.
+    /// @param fallback  The switch's default.
+    /// @note            Any task, never an interrupt. It waits while another task reads or writes
+    ///                  the tree.
+    bool get(const char* key, bool fallback) const;
+
     /// Gets how many entries the list under a key holds.
     ///
     /// @param key  The key, as for get().

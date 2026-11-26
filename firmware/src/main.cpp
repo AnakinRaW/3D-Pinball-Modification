@@ -34,6 +34,7 @@ constexpr uint32_t EVENTS_PER_PASS = 64;
 /// The boot film's layer. No game runs while the film plays, so no mode holds its key.
 constexpr Layer BOOT_LAYER = {1, 0};
 constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb with audio/intro.wav
+constexpr bool BOOT_FILM_ON = true;     // host.boot_film's default
 
 /// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
 /// on a multiple of its size
@@ -237,7 +238,9 @@ static void runMainTask(void*) {
     sounds.configure(soundSettings());
     sounds.begin();
     // The boot film plays where the host launches the first game.
-    GameHost::playBootFilm();
+    if (config.get(ConfigKey::BOOT_FILM, BOOT_FILM_ON)) {
+        GameHost::playBootFilm();
+    }
 
     startingUp = false;
     uint32_t toggledUs = nowUs();

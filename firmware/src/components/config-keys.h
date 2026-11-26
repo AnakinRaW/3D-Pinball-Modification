@@ -15,4 +15,5 @@ constexpr const char* TOUCH_LEFT_EDGE = "touch.left_edge";       // touch driver
 constexpr const char* TOUCH_RIGHT_EDGE = "touch.right_edge";     // touch driver
 constexpr const char* TOUCH_TOP_EDGE = "touch.top_edge";         // touch driver
 constexpr const char* TOUCH_BOTTOM_EDGE = "touch.bottom_edge";   // touch driver
+constexpr const char* BOOT_FILM = "host.boot_film";              // game host
 }   // namespace ConfigKey

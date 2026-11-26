@@ -1,6 +1,7 @@
 #include "config.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -150,6 +151,44 @@ double Config::get(const char* key, double fallback, double min, double max) con
 std::optional<double> Config::get(const char* key, double min, double max) const {
     const std::lock_guard<std::mutex> hold(mutex);
     return number(key, tree.find(key), nullptr, min, max);
+}
+
+/// Gets whether a text names a value, ignoring the case of its letters.
+static bool matches(const char* text, const char* name) {
+    for (; *text != '\0' && *name != '\0'; ++text, ++name) {
+        if (tolower(static_cast<unsigned char>(*text)) != *name) {
+            return false;
+        }
+    }
+    return *text == *name;
+}
+
+bool Config::get(const char* key, bool fallback) const {
+    const std::lock_guard<std::mutex> hold(mutex);
+    const char* const shownFallback = fallback ? "true" : "false";
+    const YamlTree::Id at = tree.find(key);
+    if (at == YamlTree::NONE) {
+        logInfo(WHO, "%s missing, %s taken", key, shownFallback);
+        return fallback;
+    }
+    const char* text = tree.text(at);
+    if (tree.kind(at) == YamlTree::Kind::VALUE && YamlTree::isUnset(text)) {
+        return fallback;
+    }
+    if (tree.kind(at) == YamlTree::Kind::VALUE) {
+        for (const char* on : {"true", "yes", "on", "1"}) {
+            if (matches(text, on)) {
+                return true;
+            }
+        }
+        for (const char* off : {"false", "no", "off", "0"}) {
+            if (matches(text, off)) {
+                return false;
+            }
+        }
+    }
+    logWarning(WHO, "%s holds no switch, %s taken", key, shownFallback);
+    return fallback;
 }
 
 uint16_t Config::count(const char* key) const {
