@@ -57,6 +57,7 @@ void GamesView::build(lv_obj_t* parent, const Game* list, uint8_t n, uint8_t fir
     turning = 0;
     sliding = false;
     dragged = false;
+    middleCover = nullptr;
     controls::rays(root, true);
     // The ring of cards lies under the header, so a neighbor slides in beneath it.
     ring = lv_obj_create(root);
@@ -93,7 +94,10 @@ void GamesView::build(lv_obj_t* parent, const Game* list, uint8_t n, uint8_t fir
 }
 
 void GamesView::place() {
+    // Cleaning the ring deletes the cover, with the wait and any video in it.
     lv_obj_clean(ring);
+    middleCover = nullptr;
+    previewed = false;
     lv_obj_set_x(ring, RING_X);
     for (int32_t k = -RING_SIDE; k <= RING_SIDE; ++k) {
         if (k == 0 || count > 1) {
@@ -103,6 +107,44 @@ void GamesView::place() {
     }
     lv_obj_set_state(play, LV_STATE_DISABLED, games[index].broken);
     controls::setPage(pages, index);
+    awaitPreview();
+}
+
+lv_obj_t* GamesView::preview() const {
+    if (!isOpen() || sliding || offset() != 0) {
+        return nullptr;
+    }
+    return middleCover;
+}
+
+void GamesView::awaitPreview() {
+    if (middleCover == nullptr || previewed || games[index].broken) {
+        return;
+    }
+    // An animation of the cover without a value to set waits for its end, and LVGL deletes it
+    // with the cover.
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, middleCover);
+    lv_anim_set_duration(&a, PREVIEW_MS);
+    lv_anim_set_completed_cb(&a, waited);
+    lv_anim_set_user_data(&a, this);
+    lv_anim_start(&a);
+}
+
+void GamesView::stopAwaiting() {
+    if (middleCover != nullptr) {
+        lv_anim_delete(middleCover, nullptr);
+    }
+}
+
+void GamesView::waited(lv_anim_t* a) {
+    auto* v = static_cast<GamesView*>(lv_anim_get_user_data(a));
+    if (v->previewed || v->preview() == nullptr) {
+        return;
+    }
+    v->previewed = true;
+    v->report(PREVIEW, v->index);
 }
 
 lv_obj_t* GamesView::card(const Game& g, int32_t x, bool middle) {
@@ -123,6 +165,9 @@ lv_obj_t* GamesView::card(const Game& g, int32_t x, bool middle) {
     lv_obj_set_size(cover, lv_pct(WHOLE_PERCENT), COVER_HEIGHT);
     lv_obj_set_clickable(cover, false);
     lv_obj_set_scrollable(cover, false);
+    if (middle) {
+        middleCover = cover;
+    }
     if (g.cover != nullptr) {
         lv_obj_t* picture = lv_image_create(cover);
         lv_image_set_src(picture, g.cover);
@@ -170,6 +215,7 @@ void GamesView::drag(int32_t dx) {
     if (!isOpen() || count < 2 || sliding) {
         return;
     }
+    stopAwaiting();
     const int32_t x = dx < -CARD_STEP_PX ? -CARD_STEP_PX : dx > CARD_STEP_PX ? CARD_STEP_PX : dx;
     lv_obj_set_x(ring, RING_X + x);
 }
@@ -193,6 +239,7 @@ void GamesView::letGo() {
 }
 
 void GamesView::slide(int32_t to, int8_t turn) {
+    stopAwaiting();
     sliding = true;
     turning = turn;
     lv_anim_t a;
@@ -212,6 +259,8 @@ void GamesView::turned(lv_anim_t* a) {
     auto* v = static_cast<GamesView*>(lv_anim_get_user_data(a));
     v->sliding = false;
     if (v->turning == 0) {
+        // The card slid back, so it waits for its preview again unless it has asked already.
+        v->awaitPreview();
         return;
     }
     v->index = uint8_t((v->index + v->count + v->turning) % v->count);

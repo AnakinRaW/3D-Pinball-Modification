@@ -20,21 +20,23 @@ using controls::Light;
 using controls::Plaque;
 using controls::Tone;
 
-constexpr uint32_t COUNTDOWN_MS = 1000;     // a second of the high scores' countdown
-constexpr uint32_t PROGRESS_STEP_MS = 50;   // a step of a made-up measurement
-constexpr int32_t PROGRESS_STEP = 4;        // percent a step, so a measurement takes 1.25 s
-constexpr uint32_t MARK_STEP_MS = 1500;     // a mark of the made-up touch calibration
-constexpr uint32_t LAUNCH_MS = 1500;        // host-screens.md: t_launch_card
-constexpr uint32_t CURTAIN_HOLD_MS = 200;   // host-screens.md: t_curtain_hold
-constexpr uint8_t COUNTDOWN_S = 15;         // host-screens.md: t_play_again
-constexpr size_t HISTORY_MAX = 16;          // the pages Back can return through
-constexpr char BACK[] = "<back>";           // a step that returns to the page before
-constexpr char NEXT_PLAYER[] = "<next>";    // a step to the next player's name
-constexpr char TO_LAUNCH[] = "<launch>";    // a step through the curtain to the launch card
-constexpr char TO_GAMES[] = "<games>";      // a step through the curtain to the games
+constexpr uint32_t COUNTDOWN_MS = 1000;        // a second of the high scores' countdown
+constexpr uint32_t PROGRESS_STEP_MS = 50;      // a step of a made-up measurement
+constexpr int32_t PROGRESS_STEP = 4;           // percent a step, so a measurement takes 1.25 s
+constexpr uint32_t MARK_STEP_MS = 1500;        // a mark of the made-up touch calibration
+constexpr uint32_t LAUNCH_MS = 1500;           // host-screens.md: t_launch_card
+constexpr uint32_t CURTAIN_HOLD_MS = 200;      // host-screens.md: t_curtain_hold
+constexpr uint8_t COUNTDOWN_S = 15;            // host-screens.md: t_play_again
+constexpr size_t HISTORY_MAX = 16;             // the pages Back can return through
+constexpr char BACK[] = "<back>";              // a step that returns to the page before
+constexpr char NEXT_PLAYER[] = "<next>";       // a step to the next player's name
+constexpr char TO_LAUNCH[] = "<launch>";       // a step through the curtain to the launch card
+constexpr char TO_GAMES[] = "<games>";         // a step through the curtain to the games
+constexpr char PLAY_PREVIEW[] = "<preview>";   // a step that plays the game's preview
 
 GalleryNote noteFn = nullptr;
 GalleryGo goFn = nullptr;
+GalleryPreview previewFn = nullptr;
 lv_timer_t* timer = nullptr;          // what the scene shown runs, such as a countdown
 lv_timer_t* curtainTimer = nullptr;   // the curtain's steps, apart from what the scenes run
 uint32_t ticks = 0;
@@ -103,9 +105,16 @@ void throughCurtain(const char* key, const char* name) {
 void follow(const char* to);
 
 /// Notes a press and follows its step. The context is the scene's table of steps.
+/// Plays the preview of the game of @p index in the middle card of the game choice.
+void playPreview(int32_t index);
+
 void pressed(uint8_t action, int32_t value, void* context) {
     const Step* steps = static_cast<const Step*>(context);
     noteFn(steps[action].name, value);
+    if (steps[action].to == PLAY_PREVIEW) {
+        playPreview(value);
+        return;
+    }
     if (steps[action].to != nullptr) {
         follow(steps[action].to);
     }
@@ -179,10 +188,23 @@ const GamesView::Game GAMES[] = {
     {"CROC RIDE", 0, nullptr, true, "game.yml line 42", "Unknown lamp \"scop\""},
     {"SPACE RUN", 845200, nullptr, false, "", ""},
 };
+/// The games' directories under /games on the card, in the order of GAMES
+const char* const GAME_IDS[] = {"classic", "croc-ride", "space-run"};
+static_assert(sizeof(GAME_IDS) / sizeof(GAME_IDS[0]) == sizeof(GAMES) / sizeof(GAMES[0]),
+              "every game has its directory");
 const Step GAMES_STEPS[] = {{"PLAY", TO_LAUNCH},
                             {"SETTINGS", "settings"},
                             {"STATUS", "warning-lights"},
-                            {"SHOWN", nullptr}};
+                            {"SHOWN", nullptr},
+                            {"PREVIEW", PLAY_PREVIEW}};
+
+void playPreview(int32_t index) {
+    lv_obj_t* viewport = games.preview();
+    if (previewFn != nullptr && viewport != nullptr && index >= 0 &&
+        size_t(index) < sizeof(GAME_IDS) / sizeof(GAME_IDS[0])) {
+        previewFn(viewport, GAME_IDS[index]);
+    }
+}
 
 void gameChoice(lv_obj_t* parent, uint8_t first) {
     games.build(parent, GAMES, sizeof(GAMES) / sizeof(GAMES[0]), first, true, pressed,
@@ -624,7 +646,8 @@ void follow(const char* to) {
 
 }   // namespace
 
-void galleryBegin(GalleryNote note, GalleryGo go) {
+void galleryBegin(GalleryNote note, GalleryGo go, GalleryPreview preview) {
+    previewFn = preview;
     noteFn = note;
     goFn = go;
 }

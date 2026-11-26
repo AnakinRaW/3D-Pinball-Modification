@@ -57,17 +57,33 @@ export interface ScreenModule {
   cardFile(path: string, bytes: Uint8Array): void; // puts a file on the simulated card, such as "/video/intro.rgb"
 }
 
-// a file a scene reads from the simulated card: its path there and the URL the page fetches it from
+// a file a scene reads from the simulated card: its path there, the URL the page fetches it from,
+// and what the card holds of the fetched bytes, all of them without make
 export interface CardFile {
   path: string;
   url: string | undefined;
+  make?: (fetched: Uint8Array) => Uint8Array;
 }
 
 // the files each module's card holds or is fetching, by path
 const carded = new WeakMap<ScreenModule, Map<string, Promise<boolean>>>();
+// the files the page has fetched or is fetching, by URL
+const fetched = new Map<string, Promise<Uint8Array>>();
 
-// Fetches a file once for each module and puts it on the module's card. Resolves to false when the
-// checkout lacks the file or the fetch fails, and a later call fetches it again.
+// Fetches a URL once, and again after a failed fetch.
+function fetchOnce(url: string): Promise<Uint8Array> {
+  const known = fetched.get(url);
+  if (known) return known;
+  const bytes = fetch(url)
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`))))
+    .then((b) => new Uint8Array(b));
+  bytes.catch(() => fetched.delete(url));
+  fetched.set(url, bytes);
+  return bytes;
+}
+
+// Puts a file on the module's card once, fetching its URL once for every module. Resolves to false
+// when the checkout lacks the file or the fetch fails, and a later call fetches it again.
 export function putOnCard(m: ScreenModule, file: CardFile): Promise<boolean> {
   let files = carded.get(m);
   if (!files) carded.set(m, (files = new Map()));
@@ -75,10 +91,9 @@ export function putOnCard(m: ScreenModule, file: CardFile): Promise<boolean> {
   if (known) return known;
   const url = file.url;
   if (!url) return Promise.resolve(false);
-  const put = fetch(url)
-    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`))))
-    .then((b) => {
-      m.cardFile(file.path, new Uint8Array(b));
+  const put = fetchOnce(url)
+    .then((bytes) => {
+      m.cardFile(file.path, file.make ? file.make(bytes) : bytes);
       return true;
     })
     .catch(() => {
@@ -87,6 +102,30 @@ export function putOnCard(m: ScreenModule, file: CardFile): Promise<boolean> {
     });
   files.set(file.path, put);
   return put;
+}
+
+// a rectangle of a video's frames, in pixels
+export interface FrameArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Cuts the same rectangle out of every frame of a video of raw RGB565 frames, two bytes a pixel, as
+// a smaller video of the rectangle's size.
+export function cutFrames(video: Uint8Array, frameWidth: number, frameHeight: number, area: FrameArea): Uint8Array {
+  const frameBytes = frameWidth * frameHeight * 2;
+  const frames = Math.floor(video.length / frameBytes);
+  const rowBytes = area.width * 2;
+  const out = new Uint8Array(frames * area.height * rowBytes);
+  for (let f = 0; f < frames; f++) {
+    for (let row = 0; row < area.height; row++) {
+      const from = f * frameBytes + ((area.y + row) * frameWidth + area.x) * 2;
+      out.set(video.subarray(from, from + rowBytes), (f * area.height + row) * rowBytes);
+    }
+  }
+  return out;
 }
 
 // Turns the display's pixels, RGB565 with the high byte first, into opaque RGBA. A channel of 5 or 6

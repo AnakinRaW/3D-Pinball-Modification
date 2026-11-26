@@ -468,6 +468,56 @@ void testGames() {
     TEST_ASSERT_NULL(find(v.root(), "845,200"));
 }
 
+// games preview: a card that can start asks for its preview once it has stood PREVIEW_MS in the
+// middle, once each time it comes there, its cover has the preview's size, a dragged or turning
+// ring has no cover to play in, and a finger that takes the ring before the wait ends keeps the
+// preview away.
+void testGamesPreview() {
+    Rig rig;
+    GamesView v;
+    const GamesView::Game games[] = {{"CLASSIC", 1352330, nullptr, false, "", ""},
+                                     {"CROC RIDE", 0, nullptr, true, "game.yml line 42", "Unknown"},
+                                     {"SPACE RUN", 845200, nullptr, false, "", ""}};
+    v.build(rig.parent, games, 3, 0, false, pressed, nullptr);
+    presses = 0;
+    run(GamesView::PREVIEW_MS - REFRESH_MS);
+    TEST_ASSERT_EQUAL_UINT32(0, presses);
+    run(2 * REFRESH_MS);
+    TEST_ASSERT_EQUAL_UINT32(1, presses);
+    TEST_ASSERT_EQUAL_INT32(GamesView::PREVIEW, last.action);
+    TEST_ASSERT_EQUAL_INT32(0, last.value);
+    lv_obj_t* cover = v.preview();
+    TEST_ASSERT_NOT_NULL(cover);
+    lv_area_t a;
+    lv_obj_get_content_coords(cover, &a);
+    TEST_ASSERT_EQUAL_INT32(GamesView::PREVIEW_WIDTH, lv_area_get_width(&a));
+    TEST_ASSERT_EQUAL_INT32(GamesView::PREVIEW_HEIGHT, lv_area_get_height(&a));
+    // a short drag takes the cover away, and the card that slides back asks no second time
+    v.drag(-20);
+    TEST_ASSERT_NULL(v.preview());
+    v.letGo();
+    run(GamesView::SLIDE_MS + GamesView::PREVIEW_MS + 2 * REFRESH_MS);
+    TEST_ASSERT_EQUAL_PTR(cover, v.preview());
+    TEST_ASSERT_EQUAL_UINT32(1, presses);
+    // the game that cannot start asks for none
+    v.step(true);
+    TEST_ASSERT_NULL(v.preview());
+    run(GamesView::SLIDE_MS + GamesView::PREVIEW_MS + 2 * REFRESH_MS);
+    TEST_ASSERT_EQUAL_INT32(GamesView::SHOWN, last.action);
+    TEST_ASSERT_EQUAL_INT32(1, last.value);
+    // a finger on the ring before the wait ends holds the preview until the ring stands again
+    v.step(true);
+    run(GamesView::SLIDE_MS + REFRESH_MS);
+    presses = 0;
+    v.drag(-20);
+    run(GamesView::PREVIEW_MS + REFRESH_MS);
+    TEST_ASSERT_EQUAL_UINT32(0, presses);
+    v.letGo();
+    run(GamesView::SLIDE_MS + GamesView::PREVIEW_MS + 2 * REFRESH_MS);
+    TEST_ASSERT_EQUAL_INT32(GamesView::PREVIEW, last.action);
+    TEST_ASSERT_EQUAL_INT32(2, last.value);
+}
+
 // settings: the four tiles report their pages, Machine glows red for a fault, and the switch of
 // the animated background reports each change.
 void testSettings() {
@@ -852,6 +902,7 @@ int main() {
     RUN_TEST(testCurtain);
     RUN_TEST(testGameOver);
     RUN_TEST(testGames);
+    RUN_TEST(testGamesPreview);
     RUN_TEST(testSettings);
     RUN_TEST(testLevels);
     RUN_TEST(testService);

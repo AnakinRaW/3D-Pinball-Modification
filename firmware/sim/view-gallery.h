@@ -18,8 +18,12 @@ using GalleryNote = void (*)(const char* name, int32_t value);
 /// Leads to another scene once the current event is done.
 using GalleryGo = void (*)(const char* key);
 
-/// Takes the functions the gallery notes presses and leads to scenes with.
-void galleryBegin(GalleryNote note, GalleryGo go);
+/// Plays a game's preview in a viewport, as the host plays video/preview.rgb of the game's
+/// directory.
+using GalleryPreview = void (*)(lv_obj_t* viewport, const char* game);
+
+/// Takes the functions the gallery notes presses, leads to scenes and plays previews with.
+void galleryBegin(GalleryNote note, GalleryGo go, GalleryPreview preview);
 
 /// Gets the gallery's scenes in the order of host-screens.md.
 const GalleryScene* galleryScenes(size_t& count);

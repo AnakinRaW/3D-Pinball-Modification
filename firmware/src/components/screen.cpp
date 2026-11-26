@@ -437,6 +437,13 @@ lv_obj_t* Screen::slideOf(lv_obj_t* obj) const {
     return obj;
 }
 
+bool Screen::onHost(const lv_obj_t* obj) const {
+    while (obj != nullptr && obj != host) {
+        obj = lv_obj_get_parent(obj);
+    }
+    return obj != nullptr;
+}
+
 uint8_t Screen::keyOf(const lv_obj_t* slide) const {
     for (size_t i = 0; i < slides.size(); ++i) {
         if (slides[i].box == slide) {

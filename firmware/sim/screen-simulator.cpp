@@ -47,6 +47,9 @@ public:
     /// Takes the boot film's slide away, with the film.
     static void stopBootFilm(Screen& screen);
 
+    /// Plays a game's preview from its directory in @p viewport, over and over and without sound.
+    static void playPreview(lv_obj_t* viewport, const char* game);
+
     /// Hands the menu the touch at the right edge: the hint, the swipe and its let-go.
     ///
     /// @param inGame  Whether a game runs, the only time the menu comes in.
@@ -87,8 +90,9 @@ constexpr uint8_t GAME_LAYER_PRIORITY = 1;
 constexpr Layer BOOT_LAYER = {2, 2};
 constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb at the card's root
 constexpr char BOOT_FILM_SCENE[] = "boot-film";
-constexpr uint32_t NIGHT = 0x0e061a;   // host-screens.md: the screen's background
-constexpr int32_t GAME_TITLE_Y = 64;   // the stand-in game's lettering and its score
+constexpr char PREVIEW[] = "preview";   // game-files.md: a game's video/preview.rgb
+constexpr uint32_t NIGHT = 0x0e061a;    // host-screens.md: the screen's background
+constexpr int32_t GAME_TITLE_Y = 64;    // the stand-in game's lettering and its score
 constexpr int32_t GAME_SCORE_Y = 140;
 constexpr int32_t GAME_OUTLINE_PX = 2;
 constexpr int32_t SCENE_PERCENT = 100;     // a scene covers the whole host's layer
@@ -337,7 +341,7 @@ bool screenBegin() {
     buildGame();
     GameHost::build(screen);
     galleryBegin([](const char* name, int32_t value) { noteControl(name, uint16_t(value)); },
-                 [](const char* key) { pendingScene = key; });
+                 [](const char* key) { pendingScene = key; }, GameHost::playPreview);
     result = true;
     return true;
 }
@@ -567,6 +571,17 @@ bool GameHost::playBootFilm(Screen& screen) {
 
 void GameHost::stopBootFilm(Screen& screen) {
     screen.remove(BOOT_LAYER);
+}
+
+void GameHost::playPreview(lv_obj_t* viewport, const char* game) {
+    VideoPlayer* player = videoPlayer();
+    if (player == nullptr) {
+        return;
+    }
+    videoFiles().use(game);
+    if (!player->play(viewport, PREVIEW, true, false)) {
+        DEBUG_LOG("simulator: the video player refuses the preview of %s\n", game);
+    }
 }
 
 void GameHost::tapped() {

@@ -9,7 +9,7 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lightsOptions, loadLights, type LightsModule } from "../src/sim/lights";
-import { putOnCard, rgb565ToRgba, SCREEN_HEIGHT, SCREEN_WIDTH, screenPoint, TouchInput, type ScreenEvent } from "../src/sim/screen";
+import { cutFrames, putOnCard, rgb565ToRgba, SCREEN_HEIGHT, SCREEN_WIDTH, screenPoint, TouchInput, type ScreenEvent } from "../src/sim/screen";
 import { ScreenPanel } from "../src/ui/ScreenPanel";
 
 const wasm = resolve("src/wasm/simulator.wasm");
@@ -18,6 +18,7 @@ const built = (await loadLights()) !== null;
 
 const HOLD_MS = 1000; // touch.h: HOLD_MS, the rest before TouchHeld
 const SLIDE_MS = 150; // games-view.h: SLIDE_MS, the ring's turn
+const PREVIEW_MS = 500; // games-view.h: PREVIEW_MS, a card's stand before its preview
 const CURTAIN_MS = 250 + 200 + 300; // stage-views.h and host-screens.md: the curtain closes, holds and opens
 const LAUNCH_MS = 1500; // host-screens.md: t_launch_card
 const READ_MS = 20; // touch.h: TICK_US, one read of the controller
@@ -284,7 +285,7 @@ describe("the screen panel", () => {
 describe("the simulated card", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("fetches a file once for each module and puts it on the card", async () => {
+  it("puts a file on each module's card once, fetching its URL once", async () => {
     const fetched = vi.fn(async () => new Response(new Uint8Array([1, 2, 3])));
     vi.stubGlobal("fetch", fetched);
     const { m } = fakeModule();
@@ -293,16 +294,27 @@ describe("the simulated card", () => {
     expect(await putOnCard(m, file)).toBe(true);
     expect(fetched).toHaveBeenCalledTimes(1);
     expect(m.cardFile).toHaveBeenCalledWith("/video/intro.rgb", new Uint8Array([1, 2, 3]));
-    expect(await putOnCard(fakeModule().m, file)).toBe(true);
+    const other = fakeModule().m;
+    expect(await putOnCard(other, { ...file, url: "/intro-once.rgb" })).toBe(true);
+    expect(await putOnCard(other, { path: "/video/cut.rgb", url: "/intro-once.rgb", make: (b) => b.subarray(1) })).toBe(true);
     expect(fetched).toHaveBeenCalledTimes(2);
+    expect(other.cardFile).toHaveBeenLastCalledWith("/video/cut.rgb", new Uint8Array([2, 3]));
+  });
+
+  it("cuts the same rectangle out of every frame", () => {
+    // two frames of 3 × 2 pixels, each pixel's two bytes holding its frame and its place
+    const video = new Uint8Array(2 * 3 * 2 * 2);
+    for (let i = 0; i < video.length / 2; i++) video.set([Math.floor(i / 6), i % 6], 2 * i);
+    const cut = cutFrames(video, 3, 2, { x: 1, y: 0, width: 2, height: 2 });
+    expect([...cut]).toEqual([0, 1, 0, 2, 0, 4, 0, 5, 1, 1, 1, 2, 1, 4, 1, 5]);
   });
 
   it("fetches a file again after a failed fetch, and puts nothing on the card without a URL", async () => {
     const fetched = vi.fn(async () => new Response(null, { status: 404 }));
     vi.stubGlobal("fetch", fetched);
     const { m } = fakeModule();
-    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/intro.rgb" })).toBe(false);
-    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/intro.rgb" })).toBe(false);
+    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/missing.rgb" })).toBe(false);
+    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/missing.rgb" })).toBe(false);
     expect(fetched).toHaveBeenCalledTimes(2);
     expect(await putOnCard(m, { path: "/video/other.rgb", url: undefined })).toBe(false);
     expect(m.cardFile).not.toHaveBeenCalled();
@@ -621,6 +633,33 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     expect(scene(press(80, 73, 100))).toBe("choose-name");
     m.step(2 * REFRESH_MS);
     expect(scene(press(80, 73, 100))).toBe("high-scores");
+  });
+
+  it("plays a game's preview in its card once the card has stood, and stops it when the ring turns", () => {
+    // ten frames of 220 × 64 in one color whose two bytes are equal, as the boot film's test has it
+    const FILM_565 = 0xf8f8;
+    m.cardFile("/games/classic/video/preview.rgb", new Uint8Array(220 * 64 * 2 * 10).fill(FILM_565 & 0xff));
+    const at = (x: number, y: number) => {
+      const px = m.screenPixels();
+      return (px[2 * (y * SCREEN_WIDTH + x)] << 8) | px[2 * (y * SCREEN_WIDTH + x) + 1];
+    };
+    expect(m.screenScene("games")).toBe(true);
+    m.step(PREVIEW_MS - 100);
+    expect(at(SCREEN_WIDTH / 2, 80)).not.toBe(FILM_565);
+    m.step(300);
+    const named = m.screenEvents().filter((e) => e.type === "control").map((e) => e.name);
+    expect(named).toContain("PREVIEW");
+    // the cover inside the middle card's rim, from corner to corner
+    expect(at(50, 48)).toBe(FILM_565);
+    expect(at(269, 111)).toBe(FILM_565);
+    expect(at(SCREEN_WIDTH / 2, 120)).not.toBe(FILM_565);
+    // a tap on the right neighbor turns the ring to CROC RIDE, which cannot start and plays none
+    input.down(1, { x: 300, y: 100 });
+    m.step(100);
+    input.up(1);
+    m.step(SLIDE_MS + PREVIEW_MS + 200);
+    expect(at(SCREEN_WIDTH / 2, 80)).not.toBe(FILM_565);
+    m.screenScene("game-runs");
   });
 
   it("plays the boot film from the card over the whole screen, over and over, and takes it away with the scene", () => {

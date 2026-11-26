@@ -112,6 +112,8 @@ public:
         sounds.reset();
     }
     static bool settled() { return screen.settled(); }
+    static lv_obj_t* hostLayer() { return screen.hostLayer(); }
+    static void showHost(bool shown) { screen.showHost(shown); }
     static bool videoSounding() { return sounds.videoSounding(); }
 };
 
@@ -368,6 +370,40 @@ static void testNoRoom() {
     TEST_ASSERT_TRUE(shownAt(40, 40) > before);
 }
 
+// host layer: a video on the host's layer stays hidden until its first frame, plays while the
+// layer shows with LVGL's refresh going on, hands the game no MOVIE_ENDED, and stops when the layer
+// is hidden, where no video plays.
+static void testHostLayer() {
+    constexpr uint32_t MARK_RGB = 0xff0000;   // red, whose RGB565 has no frame's color
+    constexpr uint16_t MARK_565 = 0xf800;
+    lv_obj_t* v = viewportOn(GameHost::hostLayer(), 0, 0, 64, 48);
+    TEST_ASSERT_TRUE(player.play(v, "small", false, false));
+    TEST_ASSERT_TRUE(lv_obj_is_hidden(lv_obj_get_child(v, 0)));
+    // LVGL's refresh draws a change beside the video while the card brings no frame.
+    cardHeld = true;
+    lv_obj_t* mark = viewportOn(GameHost::hostLayer(), 100, 100, 20, 20);
+    lv_obj_set_style_bg_color(mark, lv_color_hex(MARK_RGB), 0);
+    lv_obj_set_style_bg_opa(mark, LV_OPA_COVER, 0);
+    run(2 * FRAME_US);
+    TEST_ASSERT_EQUAL_HEX16(MARK_565, display.pixel(110, 110));
+    lv_obj_delete(mark);
+    cardHeld = false;
+    run(3 * FRAME_US);
+    TEST_ASSERT_FALSE(lv_obj_is_hidden(lv_obj_get_child(v, 0)));
+    TEST_ASSERT_TRUE(shownAt(10, 10) >= 0);
+    run(12 * FRAME_US);
+    TEST_ASSERT_FALSE(player.playing(v));
+    TEST_ASSERT_TRUE(made.empty());
+
+    TEST_ASSERT_TRUE(player.play(v, "small", true, false));
+    GameHost::showHost(false);
+    pass();
+    TEST_ASSERT_FALSE(player.playing(v));
+    TEST_ASSERT_FALSE(player.play(v, "small", true, false));
+    GameHost::showHost(true);
+    lv_obj_delete(v);
+}
+
 static void testOwner() {
     lv_obj_t* hidden = screen.slide(LOW);
     lv_obj_t* shown = screen.slide(HIGH);
@@ -531,6 +567,7 @@ int main() {
     RUN_TEST(testStop);
     RUN_TEST(testNoRoom);
     RUN_TEST(testOwner);
+    RUN_TEST(testHostLayer);
     RUN_TEST(testHidden);
     RUN_TEST(testLateCard);
     RUN_TEST(testShortSound);

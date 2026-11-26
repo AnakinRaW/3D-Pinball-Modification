@@ -222,6 +222,7 @@ for _key, _name, _unit in (("t_menu_snap", "SNAP_MS", "ms"),
                            ("t_hint_fade", "HINT_FADE_MS", "ms"),
                            ("n_menu_width", "WIDTH_PX", "")):
     MODEL.in_code(_key, file=_EDGE_MENU_H, name=_name, unit=_unit)
+dec("t_preview_wait", 500, "ms", src=f"how long a card of the game choice stands in the middle before its game's preview plays, {_HOST}")
 dec("t_toast_fault", 4, "s", src=f"how long the toast of a failed device shows, {_HOST}")
 dec("t_toast_recovered", 3, "s", src=f"how long the toast of a device that works again shows, {_HOST}")
 dec("t_game_over", 3, "s", src=f"how long Game over shows before the first name entry, {_HOST}")
@@ -236,6 +237,7 @@ for _key, _file, _name, _unit in (
         ("t_curtain_close", "stage-views.h", "CLOSE_MS", "ms"),
         ("t_curtain_open", "stage-views.h", "OPEN_MS", "ms"),
         ("t_page_slide", "games-view.h", "SLIDE_MS", "ms"),
+        ("t_preview_wait", "games-view.h", "PREVIEW_MS", "ms"),
         ("step_slider", "controls.h", "STEP_PERCENT", "%")):
     MODEL.in_code(_key, file=_VIEWS + _file, name=_name, unit=_unit)
 

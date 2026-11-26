@@ -5,6 +5,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { sources } from "../sources";
 import {
+  cutFrames,
   putOnCard,
   rgb565ToRgba,
   SCALES,
@@ -27,6 +28,18 @@ const scene = signal("games");
 const SCENE_FILES: Record<string, CardFile> = {
   "boot-film": { path: "/video/intro.rgb", url: sources.introRgb },
 };
+
+// The games' previews in the game choice, each a strip of the boot film in the place of a game's
+// preview of 220 × 64 pixels (games-view.h: PREVIEW_WIDTH and PREVIEW_HEIGHT)
+const PREVIEW = { width: 220, height: 64 };
+const PREVIEW_FILES: CardFile[] = [
+  { game: "classic", x: 50, y: 88 },
+  { game: "space-run", x: 50, y: 150 },
+].map(({ game, x, y }) => ({
+  path: `/games/${game}/video/preview.rgb`,
+  url: sources.introRgb,
+  make: (film: Uint8Array) => cutFrames(film, SCREEN_WIDTH, SCREEN_HEIGHT, { x, y, ...PREVIEW }),
+}));
 
 // Shows a scene once the files it reads lie on the card, unless another scene was picked meanwhile.
 async function showScene(module: ScreenModule, key: string): Promise<void> {
@@ -89,6 +102,9 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
     if (!module) return;
     setBegun(module.screenBegin());
     setScenes(module.screenScenes());
+    // The previews reach the card while the game choice shows, and a card that turns to its game
+    // after they have landed plays one.
+    for (const file of PREVIEW_FILES) void putOnCard(module, file);
     void showScene(module, scene.value);
     input.current = new TouchInput(module);
     const ctx = canvas.current?.getContext("2d") ?? null;
