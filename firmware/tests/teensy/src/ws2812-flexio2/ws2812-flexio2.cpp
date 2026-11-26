@@ -76,7 +76,7 @@ constexpr uint32_t FRAME_MS = 11;
 constexpr uint32_t LOAD_QUICK_MS = 1100;
 constexpr uint32_t LOAD_SOAK_MS = 11000;
 constexpr uint8_t FLEXIO3_SHIFTERS = 8;   // flexio3-load: the buffers a display burst fills
-constexpr uint32_t LOAD_WORDS = 4096;     // each of the two buffers the second DMA copies between
+constexpr uint32_t LOAD_WORDS = 1024;     // each of the two buffers the second DMA copies between
 // WS2812B datasheet Ver. No. V5: RES, the low time that ends a frame, more than 280 µs
 constexpr uint32_t RESET_US = 280;
 constexpr uint32_t LATCH_WATCH_US = 1000;   // two short frames and the zero words between them

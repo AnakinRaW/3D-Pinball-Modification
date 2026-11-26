@@ -2,8 +2,9 @@
 
 PlatformIO writes the release build's compile commands, and the run takes those of the files in
 firmware/src. They are commands for the ARM GCC of the Teensy core, so the run
-turns each into one clang understands: the target becomes arm-none-eabi, the include folders of
-that GCC are added, and the flags only GCC knows are dropped. Headers in firmware/ are checked
+turns each into one clang understands: the target becomes arm-none-eabi, the version and the
+include folders of that GCC are added, and the flags only GCC knows are dropped. freertos-teensy
+binds std::mutex to FreeRTOS only for a GCC from 6.1 on, so clang reports that GCC's version. Headers in firmware/ are checked
 where a checked file includes them.
 
     python firmware/tools/tidy.py              every file of firmware/src
@@ -84,6 +85,15 @@ def gcc_includes(gcc, arch):
     return [os.path.normpath(line.strip()) for line in lines[start:end]]
 
 
+def gcc_version(gcc):
+    """Gets the GCC's version, such as 11.3.1."""
+    result = subprocess.run([gcc, "-dumpfullversion"], capture_output=True, text=True)
+    if result.returncode != 0 or not result.stdout.strip():
+        sys.stderr.write(result.stderr)
+        raise SystemExit(2)
+    return result.stdout.strip()
+
+
 def for_clang(entry):
     """Turns one GCC compile command into the arguments clang-tidy reads."""
     args = [unquote(a) for a in arguments(entry)]
@@ -105,6 +115,7 @@ def for_clang(entry):
         kept.append(argument)
     for folder in gcc_includes(gcc, arch):
         kept += ["-isystem", folder]
+    kept.append(f"-fgnuc-version={gcc_version(gcc)}")
     return kept + CLANG_EXTRA + [entry["file"]]
 
 

@@ -1,7 +1,8 @@
-/* PJRC's imxrt1062_t41.ld of Teensyduino 1.62 with lines added: LVGL's code and its constant
-   data stay in the flash. Its drawing loops carry FASTRUN, which puts them into ITCM as before.
-   The C library's text formatting and parsing stays in the flash as well, since only debug lines
-   and tests take it. Everything else is PJRC's script unchanged. */
+/* PJRC's imxrt1062_t41.ld of Teensyduino 1.62. The lines that name a library or a source file
+   keep its code and its constant data in the flash. A function marked FASTRUN still goes into
+   ITCM. The C library's text formatting and parsing stays in the flash as well, since only debug
+   lines and tests take it. The firmware's files named here run only while a file is read or
+   written. Everything else is PJRC's script unchanged. */
 
 MEMORY
 {
@@ -29,6 +30,9 @@ SECTIONS
 		KEEP(*(.startup))
 		*(.flashmem*)
 		*liblvgl.a:*(.text*)   /* LVGL's code, all but its FASTRUN loops */
+		*libyaml.a:*(.text*)   /* libyaml's code */
+		*yaml-tree.cpp.o(.text*) *:yaml-tree.cpp.o(.text*)
+		*config.cpp.o(.text*) *:config.cpp.o(.text*)
 		*libc*.a:*printf*.o(.text*) *libc*.a:*scanf*.o(.text*)   /* the C library's formatting */
 		*libc*.a:*strto*.o(.text*) *libc*.a:*dtoa*.o(.text*)
 		. = ALIGN(4);
@@ -45,6 +49,9 @@ SECTIONS
 	.text.progmem : {
 		*(.progmem*)
 		*liblvgl.a:*(.rodata*) /* LVGL's tables and strings */
+		*libyaml.a:*(.rodata*) /* libyaml's tables and strings */
+		*yaml-tree.cpp.o(.rodata*) *:yaml-tree.cpp.o(.rodata*)
+		*config.cpp.o(.rodata*) *:config.cpp.o(.rodata*)
 		. = ALIGN(4);
 	} > FLASH
 

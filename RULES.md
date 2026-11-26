@@ -81,6 +81,7 @@ A shortcut taken on purpose is recorded as a known limitation.
 
   Finish by grepping the old and the new number across the whole repository, since a value derived in one subsystem is repeated in the budgets of another. A stale value survives longest in the figures, where a wrong number still renders.
 - **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". A decision is made before it is written down. A rejected alternative stays, per rule 3, as rejected with the reason it lost. An unverified figure is stated as unverified with the measurement that would settle it, as a known limitation.
+- **A detail the code states gets no entry in `docs/`.** A setting, a switch, a log point or a small feature lives in the code, in `config-keys.h` and in its header's contract. A document takes it up only where it records a decision.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 

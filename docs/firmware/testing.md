@@ -528,18 +528,43 @@ The program `file-system` checks the [file system component](components/file-sys
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
 | `root` | computer | Name the card's root with `useRoot()`, open a path, an empty path, one from the root, one with `..` and one too long, then name a game and open again | The first gives the file at the card's root, every other a file whose requests fail, and the last lies in the game's directory |
 
-### Config
+### YAML tree
 
-The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys it makes up itself.
+The program `yaml-tree` checks the [YAML tree](components/config.md#the-file) on texts of files it writes itself, in rooms it sizes itself.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `defaults` | computer | Start without a file and read several keys with and without a default, then start with a file that does not parse | Every read gets its default or no value, and no file is written. With the broken file, the log names the line that broke, and the file stays as it is |
-| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries | Every read gets the file's value, `count()` gets the length of each list, and the log stays empty |
+| `walk` | computer | Parse a file of sections, lists of values and lists of sections, then walk it entry by entry and reach entries by name, by number and by key | Every entry has its kind, name, text and place among its neighbors as the file gives them, a list's entries are reached by their numbers, and a key that leads nowhere gives no entry |
+| `positions` | computer | Parse a file with entries at known lines and columns, in sections, in lists and in brackets, then add an entry | Every entry of a section keeps the line and column of its name, every entry of a list those of itself, and the added entry keeps 0 for both |
+| `problems` | computer | Parse a file with a name with a dot, a name twice, a reference to an anchor, more entries than the room holds and a second document, then a broken file, files whose top is a list, a text or a list as a name, and files of a comment alone and of a lone `---` | The report gets each problem once with its line and column, and the rest of the file reads. Each broken file returns false with one problem marked broken and leaves the tree empty. The comment and the lone `---` give an empty tree without a problem |
+| `long-text` | computer | Parse long names, an expression in quotes and texts over several lines, write the tree and parse it again | Every text reads whole, the line breaks included, and reads the same after the second parse |
+| `text-room` | computer | Parse a file with more names and values than the room for text holds | The entries up to the room read, the rest is left out, and the report gets one problem |
+| `change` | computer | Add sections, values and list entries, set texts longer and shorter, add under a value, a name twice and a name with a dot, fill the tree, then remove a list entry, a section and the top | Each change shows in the tree and in `fits()`. Each refusal gives no entry. A list's later entries move down by one number, and removing the top leaves an empty tree with all its room |
+| `compact` | computer | Set the texts of a few values in a small room again and again, adding and removing an entry between, then fill the room | Every text reads as set last, a text that fills the room is taken, and one past it is refused without a change |
+| `write` | computer | Parse a file of every form the tree writes, write it, write it into too small a room and parse the written text again | The written text equals the file, too small a room is refused with the length it needed, and the second parse reads the same entries |
+| `numbers` | computer | Read numbers, list numbers and unset values from texts, and texts that only look like them | Each reads as written, and the rest is refused |
+
+### Config
+
+The program `config` checks the [config component](components/config.md). Its computer tests hand the component the text of a file on a fake card and read keys they make up themselves. Its `Teensy` tests write their config file to `/tests/config/` on the card.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `defaults` | computer | Start without a file and read several keys with and without a default, then start with an empty file, a file larger than the component reads, one that does not parse and one whose top is a list | Every read gets its default or no value, and no file is written. Each start writes one log line. The line of the broken file names the line that broke, and the file stays as it is |
+| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries, with comments | Every read gets the file's value, `count()` gets the length of each list and 0 for a section and a missing key, a malformed key reads as missing, and the log stays empty |
 | `clamp` | computer | Read a value above its range and one below | Each gets the nearer end of its range, with one log line each |
-| `wrong` | computer | Read a value that is text, with a default and without one | The read with a default gets the default, the other gets no value, and each writes a log line |
-| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list |
-| `save-busy` | computer | Save, and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `wrong` | computer | Read a value that is text and a key that names a section, each with a default and without one, then keys that hold `~`, `null` and nothing | The reads with a default get the default, the others get no value, and each writes a log line. The unset keys get their default or no value without a line |
+| `switches` | computer | Read switches written as true, yes, on and 1, as false, no, off and 0 in mixed case, then an unset key, text, a section and a missing key | Each reads as on or off as written. The unset key takes its default without a line. The text, the section and the missing key take their default with one log line each |
+| `numbers` | computer | Read values written with a sign, a fraction and an exponent, then text that only starts like a number, a hexadecimal number and one past a double's range | Each number reads as written. The rest reads as no number |
+| `limits` | computer | Start with a file that holds a long name and a long value, a name with a dot, a name twice, a reference to an anchor and a level too deep, then with one of more entries than the tree holds | The long name and the long value read. Each other is left out with everything under it and one log line naming its line and column, the full tree with one line, and every other entry reads |
+| `set` | computer | Set values under new sections and lists and at a list's end, then past a list's end, on a section, on a list, under a value, with too many names and with values past the limit | Each value set reads back, kept to six decimal places. Each refusal returns false and leaves the saved file as it was. A tree with one free entry refuses a key that needs two and takes one that needs one |
+| `remove` | computer | Remove an entry in the middle of a list, a section and two missing keys, then add an entry to the list | The later entries move down by one, the section goes with its entries, the missing keys change nothing, and the new entry follows the last |
+| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list. `saveStatus()` follows the write |
+| `round-trip` | computer | Start with a file of text with YAML's marks, empty values, empty sections, and lists of values, of sections and of lists, save it, then start a second config on the saved file and save that | Neither start writes a log line, the second file equals the first, and the second config reads the nested values |
+| `save-busy` | computer | Save, change a value and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `save-full` | computer | Fill the tree with values whose text takes more than the largest file, and save | The save is refused with a log line, and the file stays as it was |
+| `card` | Teensy | Write a config file to the card, start a config on it, set a value and add a list entry, save, then start a second config on the saved file | The saved file holds both changes and the entry nothing reads, and the second config reads every value of the first |
+| `heap` | Teensy | Start a config on the file of `card` and compare the heap's use before and after | The heap holds as many bytes after `begin()` as before |
 
 ### Lamps
 

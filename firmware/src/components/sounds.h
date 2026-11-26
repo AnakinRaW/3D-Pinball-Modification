@@ -17,6 +17,8 @@ public:
     static constexpr uint8_t MUSIC = 0;             // sounds.md: the music's channel
     static constexpr float MUSIC_VOLUME = 0.5f;     // audio.music_volume's default
     static constexpr float EFFECTS_VOLUME = 0.7f;   // audio.effects_volume's default
+    static constexpr float VOLUME_MIN = 0;          // the least volume, silence
+    static constexpr float VOLUME_MAX = 1;          // the largest volume, full scale
 
     /// The starting volumes from the config, each a percentage from 0 to 1.
     struct Settings {
@@ -104,9 +106,7 @@ public:
     void effectsVolume(float percent);
 
 private:
-    static constexpr uint8_t MODES = 8;   // sounds.md: the modes that hold a track at once
-    static constexpr float VOLUME_MIN = 0;
-    static constexpr float VOLUME_MAX = 1;
+    static constexpr uint8_t MODES = 8;      // sounds.md: the modes that hold a track at once
     static constexpr float FULL_SCALE = 1;   // sounds.md: music and an effect together at most
 
     friend class GameHost;
