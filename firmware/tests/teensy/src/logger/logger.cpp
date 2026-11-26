@@ -4,6 +4,10 @@
 //
 //   two-tasks     a task above the test task's priority writes numbered lines in short bursts
 //                 while the test task writes its own numbered lines and runs update()
+//   warning-tasks the same two tasks write warnings into the firmware's warning list, some
+//                 shared and more than it holds. Every warning lands in exactly one count or in
+//                 dropped(), and every entry stays whole. The urgent task's longest call is
+//                 printed
 //   order         numbered lines written over three starts stand in the log in their order
 //   files         with the newer file at its limit, the log starts the other file anew with a
 //                 higher number. The full file stays as it was
@@ -14,10 +18,13 @@
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <task.h>
 #include "drivers/storage.h"
 #include "logging/logger.h"
+#include "logging/warning-list.h"
 #include "test-harness.h"
 
 constexpr uint32_t LIMIT_S = 20;
@@ -160,6 +167,122 @@ static void testTwoTasks() {
                   unsigned(first.size));
     if (urgentNext != URGENT_LINES || calmNext != calm) {
         test::fail("lines missing", "every line written");
+        return;
+    }
+    test::pass();
+}
+
+// ---- the warning list
+
+constexpr uint32_t WARNING_ROUNDS = 2000;   // warnings the urgent task writes
+constexpr uint32_t WARNING_KINDS = 10;      // the different texts each task writes in turn
+constexpr uint32_t US_PER_S = 1000000;
+
+static volatile uint32_t urgentWarnings = 0;
+static volatile uint32_t longestAddCycles = 0;
+static char warningText[96];
+
+// Takes a warning into the test's list, as logWarning() does.
+static void warn(const char* who, const char* format, ...) __attribute__((format(printf, 2, 3)));
+
+FLASHMEM static void warn(const char* who, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    warningList.add(who, millis(), format, args);
+    va_end(args);
+}
+
+FLASHMEM static void warnUrgent(void*) {
+    for (uint32_t i = 0; i < WARNING_ROUNDS; ++i) {
+        const uint32_t t0 = ARM_DWT_CYCCNT;
+        // Every second warning is the text both tasks share.
+        if (i % 2 == 0) {
+            warn("both", "shared");
+        } else {
+            warn("urgent", "kind %lu", i % WARNING_KINDS);
+        }
+        const uint32_t cycles = ARM_DWT_CYCCNT - t0;
+        if (cycles > longestAddCycles) {
+            longestAddCycles = cycles;
+        }
+        urgentWarnings = i + 1;
+        if ((i + 1) % URGENT_BURST == 0) {
+            vTaskDelay(1);
+        }
+    }
+    urgentDone = true;
+    vTaskDelete(nullptr);
+}
+
+// Checks that an entry is whole: its writer and its text belong together.
+FLASHMEM static bool wholeEntry(const WarningEntry& e) {
+    unsigned long kind = 0;
+    if (strcmp(e.who, "both") == 0) {
+        return strcmp(e.text, "shared") == 0;
+    }
+    if (strcmp(e.who, "urgent") != 0 && strcmp(e.who, "calm") != 0) {
+        return false;
+    }
+    char rest = 0;
+    return sscanf(e.text, "kind %lu%c", &kind, &rest) == 1 && kind < WARNING_KINDS;
+}
+
+FLASHMEM static void testWarningTasks() {
+    // The firmware's list may hold warnings of the start already. Each of them counts as written.
+    uint32_t before = warningList.dropped();
+    for (uint8_t i = 0; i < warningList.count(); ++i) {
+        WarningEntry e;
+        warningList.read(i, e);
+        before = before + e.count;
+    }
+    const uint8_t first = warningList.count();
+    // The shared text takes an entry before the urgent task starts.
+    warn("both", "shared");
+    uint32_t calm = 1;
+    urgentDone = false;
+    if (xTaskCreate(warnUrgent, "urgent", URGENT_STACK_BYTES / sizeof(StackType_t), nullptr,
+                    URGENT_PRIORITY, nullptr) != pdPASS) {
+        test::fail("no memory for the urgent task", "a task");
+        return;
+    }
+    while (!urgentDone) {
+        if (calm % 2 == 0) {
+            warn("both", "shared");
+        } else {
+            warn("calm", "kind %lu", calm % WARNING_KINDS);
+        }
+        calm = calm + 1;
+        delayMicroseconds(CALM_PAUSE_US);
+    }
+    // Every warning stands in exactly one count or in dropped().
+    uint32_t counted = 0;
+    for (uint8_t i = 0; i < warningList.count(); ++i) {
+        WarningEntry e;
+        if (!warningList.read(i, e) || (i >= first && !wholeEntry(e))) {
+            snprintf(warningText, sizeof warningText, "entry %u broken", i);
+            test::fail(warningText, "whole entries");
+            return;
+        }
+        for (uint8_t j = 0; j < i; ++j) {
+            WarningEntry other;
+            warningList.read(j, other);
+            if (strcmp(other.who, e.who) == 0 && strcmp(other.text, e.text) == 0) {
+                snprintf(warningText, sizeof warningText, "entries %u and %u equal", j, i);
+                test::fail(warningText, "one entry for each warning");
+                return;
+            }
+        }
+        counted = counted + e.count;
+    }
+    const uint32_t written = before + calm + urgentWarnings;
+    const uint32_t longestUs = uint32_t(uint64_t(longestAddCycles) * US_PER_S / F_CPU_ACTUAL);
+    Serial.printf("%lu warnings, %lu counted in %u entries, %lu dropped, longest call %lu us\n",
+                  written, counted, warningList.count(), warningList.dropped(), longestUs);
+    if (warningList.count() != WarningList::ENTRIES || counted + warningList.dropped() != written) {
+        snprintf(warningText, sizeof warningText, "%lu counted, %lu dropped, %lu written", counted,
+                 warningList.dropped(), written);
+        test::fail(warningText,
+                   "a full list whose counts and drops add up to the warnings written");
         return;
     }
     test::pass();
@@ -416,6 +539,7 @@ static void resumeCardMissing() {
 
 static const Test TESTS[] = {
     {"logger.two-tasks", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testTwoTasks, nullptr},
+    {"logger.warning-tasks", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testWarningTasks, nullptr},
     {"logger.order", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testOrder, resumeOrder},
     {"logger.files", RunsOn::TEENSY, LIMIT_S, LIMIT_S, testFiles, nullptr},
     {"logger.card-missing", RunsOn::BENCH, BENCH_LIMIT_S, BENCH_LIMIT_S, testCardMissing,

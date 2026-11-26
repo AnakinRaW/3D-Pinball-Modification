@@ -1,6 +1,7 @@
 #include "logger.h"
 #include "logging/debug-log.h"
 #include "logging/log-line.h"
+#include "logging/warning-list.h"
 #include "core/task-lock.h"
 #include "core/version.h"
 #include <Arduino.h>
@@ -134,6 +135,13 @@ void logWarning(const char* who, const char* format, ...) {
 }
 
 static void logArgs(LogLevel level, const char* who, const char* format, va_list args) {
+    if (level == LogLevel::WARNING) {
+        // The screen shows the warnings since the start, also those from before the log began.
+        va_list copy;
+        va_copy(copy, args);
+        warningList.add(who, millis(), format, copy);
+        va_end(copy);
+    }
     Logger* const log = firmwareLog.load(std::memory_order_acquire);
     if (log != nullptr) {
         log->writeArgs(level, who, format, args);

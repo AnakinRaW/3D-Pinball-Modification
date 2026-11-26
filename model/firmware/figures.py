@@ -155,6 +155,13 @@ dec("log_buffer", 64, "KB", src="the lines the logger holds in the PSRAM until t
     "thousand lines, or a card that stalls for several seconds, loses none")
 dec("log_line_max", 160, "bytes", src="the longest line with its line break, LOG_LINE_BYTES in "
     "firmware/src/logging/log-line.h; a longer line is cut")
+dec("n_warnings", 16, "", src="the warnings the warning list keeps for the screen, "
+    "WarningList::ENTRIES in firmware/src/logging/warning-list.h, a decision: a wrong config "
+    "touches a handful of the places that warn, and a loop writes one warning for a mistake it "
+    "finds many times")
+dec("warning_text", 80, "bytes", src="the text a warning list's entry holds, "
+    "WarningEntry::TEXT_BYTES in firmware/src/logging/warning-list.h, a decision: the line of a "
+    "list row on the 320 px screen")
 dec("n_trace_records", 256, "", src="the notes the debug trace holds in a debug build, "
     "TRACE_RECORDS in firmware/src/logging/debug-trace.cpp, a burst of interrupts while the main "
     "loop is away")

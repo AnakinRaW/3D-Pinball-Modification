@@ -127,6 +127,8 @@ Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output 
 
 The machine's log on the card goes through the [logger](../docs/firmware/logging.md), with `logWarning()` and `logInfo()` from [`src/logging/logger.h`](src/logging/logger.h). A line worth keeping in the machine goes there, such as a setting out of its range or a failure at the start. A debug build shows it on USB as well, also before the log has begun.
 
+**A loop writes one warning for a mistake it finds many times.** A loop over the entries of a setting, such as the lamps or the heights of a group, counts the entries that show the mistake and writes one warning after the loop, with the count and the first entry. The screen shows the first 16 warnings since the start, so a warning for each lamp would crowd out every other.
+
 **Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 
 ## Tools

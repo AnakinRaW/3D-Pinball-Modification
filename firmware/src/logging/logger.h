@@ -131,6 +131,8 @@ void logInfo(const char* who, const char* format, ...) __attribute__((format(pri
 
 /// Writes a line of the level WARNING, otherwise as logInfo().
 ///
+/// The warning also enters warningList, before the log has begun and without a card as well.
+///
 /// @param who     Names the writer in a word, such as "lamps".
 /// @param format  The line's format, as for printf, followed by the values it takes.
 void logWarning(const char* who, const char* format, ...) __attribute__((format(printf, 2, 3)));
