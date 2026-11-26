@@ -40,7 +40,7 @@ Each board has a separate ground net. The sense channels sit on the signal groun
 
 > On the bench, with the Teensy on USB, the coil board's GND must be joined with the Teensy's GND.
 
-**C91, 100 µF at the coil board's supply input**, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
+C91, 100 µF at the coil board's supply input, absorbs the feed cable's own inductive kick when a coil switches off, keeping it off the coil board's copper.
 
 The [power board](../power/design.md) holds the rail. With the three bumpers pulling at once, the coil board's input stays above the 4.4 V a stock coil needs for its kick.
 
@@ -113,7 +113,9 @@ Controlling the hardware is handled by interrupt handlers. The sensed solenoids 
 
 [`figures.py`](../../../model/parts/solenoid/figures.py) computes the figures below.
 
-**The drive channel.** What the Teensy pin sees, what the gate sees, and what the drain sees.
+### The drive channel
+
+What the Teensy pin sees, what the gate sees, and what the drain sees.
 
 ```
 V_GATE    the Teensy's rail                       3.3 V
@@ -193,7 +195,9 @@ I_FEED    3 stock channels at 0.68 A plus the
           at once in play                       = 2.17 A
 ```
 
-**The sense channel.** What a closed contact puts on the pin, and how fast the node follows.
+### The sense channel
+
+What a closed contact puts on the pin, and how fast the node follows.
 
 ```
 V_SENSE   the contact from foil to shell,
@@ -246,7 +250,9 @@ T_SENSE   C_filter at the terminal                100 nF
           the same channel are the same hit       10 ms
 ```
 
-**The supply.** What the bulk capacitor covers, and the stock machine it is measured against.
+### The supply
+
+What the bulk capacitor covers, and the stock machine it is measured against.
 
 ```
 C_BULK    the most the Teensy's VIN takes         5.5 V
@@ -286,7 +292,9 @@ GND       one wire of a cable with its two
           the least R_gate to ground that does   = 6.88 kΩ
 ```
 
-**The coil.** What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when the driver tick never releases it.
+### The coil
+
+What one pull-in costs, what the enforced duty leaves, and how long a coil stays on when the driver tick never releases it.
 
 ```
 DUTY      5 V × 0.68 A, while energised         = 3.4 W

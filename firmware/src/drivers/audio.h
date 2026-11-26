@@ -55,8 +55,6 @@ class AudioDriver : public Driver {
 public:
     static constexpr uint8_t CHANNELS = SoundMixer::INPUTS;
     static constexpr float MASTER_GAIN = 0.786f;   // audio model: g_cap
-    static constexpr uint8_t BLOCKS = 6;           // audio model: n_blocks
-    static constexpr uint32_t QUEUE_DEPTH = 8;     // the SOUND_ENDED events the queue holds
 
     /// A sound and where it stands, which play() can go on from.
     using Position = SoundPosition;
@@ -145,6 +143,8 @@ public:
     AudioStream& output() { return level; }
 
 private:
+    static constexpr uint32_t QUEUE_DEPTH = 8;   // the SOUND_ENDED events the queue holds
+
     /// Leaves a request for a sound under a new number.
     uint32_t start(uint8_t channel, const Position& from);
 

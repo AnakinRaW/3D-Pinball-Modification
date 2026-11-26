@@ -247,7 +247,9 @@ void setUp() {
         GameHost::use(GAME);
         audio.begin();
         sounds.begin();
+        // The music at 1 and the effects at 0 leave the music's samples unchanged.
         sounds.musicVolume(1);
+        sounds.effectsVolume(0);
         screen.begin();
         player.begin();
         card.files["/games/a/video/m.rgb"] = movie(30);

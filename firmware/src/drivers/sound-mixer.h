@@ -15,9 +15,7 @@
 /// @note  Runs in the update of the Audio library.
 class SoundMixer {
 public:
-    static constexpr uint8_t INPUTS = 4;           // audio model: n_streams
-    static constexpr float RELEASE_MS = 100;       // audio.md: the gain's way back up to 1
-    static constexpr int32_t FULL_SCALE = 32767;   // the largest 16-bit sample
+    static constexpr uint8_t INPUTS = 4;   // audio model: n_streams
 
     /// Adds one block of every input and gives the sum of the block before.
     ///
