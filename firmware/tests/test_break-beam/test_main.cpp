@@ -29,6 +29,7 @@ constexpr uint32_t DEAD_US = BreakBeamDriver::DEAD_US;
 constexpr uint32_t LONG_US = 1000000;   // a beam clear this long sees the next break as a crossing
 constexpr uint32_t BALL_US = 3000;      // break-beam design: the fastest ball blocks the beam 3 ms
 constexpr uint32_t EVENTS = 8;
+constexpr uint32_t FILL_DEPTH = 2;   // no-queue: each queue that fills the event queue
 
 constexpr size_t LOG_BYTES = 1024;
 
@@ -94,10 +95,10 @@ static uint32_t settle(uint32_t timeUs) {
 static void testNoQueue() {
     logger.begin(LogFileStart{}, LogFileStart{});
     EventQueue full;
-    DriverEvent storage[EventQueue::PRODUCERS][BreakBeamDriver::QUEUE_DEPTH];
+    DriverEvent storage[EventQueue::PRODUCERS][FILL_DEPTH];
     EventQueue::Producer* attached = nullptr;
     for (auto& s : storage) {
-        TEST_ASSERT_TRUE(full.attach(s, BreakBeamDriver::QUEUE_DEPTH, attached));
+        TEST_ASSERT_TRUE(full.attach(s, FILL_DEPTH, attached));
     }
     BreakBeamDriver starved(full);
     GPT2_CNT = T0_US;

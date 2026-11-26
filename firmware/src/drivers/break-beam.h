@@ -18,9 +18,6 @@ public:
     static constexpr uint32_t DEAD_US = 10000;
     /// model/parts/break-beam/figures.py, t_blocked_fail: a beam broken this long has failed
     static constexpr uint32_t FAIL_MS = 5000;
-    /// drain.md: the machine has two balls, which drain at most once each between two passes of
-    /// the main loop. The queue holds twice that, a power of two
-    static constexpr uint32_t QUEUE_DEPTH = 4;
     static constexpr uint8_t GATE = 0;   // the source of BALL_DRAINED, the build's one gate
 
     /// Creates a driver that publishes into @p queue.
@@ -53,6 +50,10 @@ public:
     Fault failed() const override;
 
 private:
+    /// drain.md: the machine has two balls, which drain at most once each between two passes of
+    /// the main loop. The queue holds twice that, a power of two
+    static constexpr uint32_t QUEUE_DEPTH = 4;
+
     /// Takes an edge of the receiver's output and publishes BALL_DRAINED for a new crossing.
     ///
     /// @note  Runs in the pin interrupt.

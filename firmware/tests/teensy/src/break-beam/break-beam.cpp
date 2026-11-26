@@ -8,8 +8,8 @@
 //           (asks at the bench)
 //
 // Wiring: pad needs none. pass and failed need the emitter and the receiver of the break beam
-// design on the motherboard, and a ball. The driver publishes into a queue this program reads, and
-// a monitor of this program watches it, so no other part of the firmware takes its events.
+// design on the motherboard, and a ball. The driver publishes into the firmware's event queue,
+// which this program reads, and a monitor of this program watches it.
 
 #include <Arduino.h>
 #include "core/clock.h"
@@ -29,8 +29,7 @@ constexpr uint32_t PAD_LIMIT_S = 5;
 constexpr uint32_t BENCH_LIMIT_S = 300;
 constexpr size_t TEXT = 96;
 
-static EventQueue queue;
-static BreakBeamDriver beam(queue);
+static BreakBeamDriver beam(events);
 static bool begun = false;
 static EventQueue monitorEvents;
 static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
@@ -52,7 +51,7 @@ static bool ready() {
 static bool nextBall(DriverEvent& e, uint32_t ms) {
     const uint32_t t0 = millis();
     while (millis() - t0 < ms) {
-        if (queue.read(&e, 1) == 1 && e.type == DriverEventType::BALL_DRAINED) {
+        if (events.read(&e, 1) == 1 && e.type == DriverEventType::BALL_DRAINED) {
             return true;
         }
         delay(1);
@@ -108,7 +107,7 @@ static void testPass() {
         return;
     }
     DriverEvent e;
-    while (queue.read(&e, 1) == 1) {
+    while (events.read(&e, 1) == 1) {
     }
     char text[TEXT];
     snprintf(text, sizeof text, "pass a ball through the beam %lu times, some slowly, some fast",

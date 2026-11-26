@@ -462,10 +462,9 @@ static bool audioBeginFails(Verdict& v) {
 
 // ---- the break beam driver
 
-static EventQueue beamQueue;
-static BreakBeamDriver beamFresh(beamQueue);    // before-begin: never begun
-static BreakBeamDriver beamHolder(beamQueue);   // begin-fails: begins first and holds the pin
-static BreakBeamDriver beamSecond(beamQueue);   // begin-fails: begins after beamHolder
+static BreakBeamDriver beamFresh(events);    // before-begin: never begun
+static BreakBeamDriver beamHolder(events);   // begin-fails: begins first and holds the pin
+static BreakBeamDriver beamSecond(events);   // begin-fails: begins after beamHolder
 
 // Gets whether a break beam driver answers every call at once with empty data.
 static bool beamEmpty(BreakBeamDriver& beam, Verdict& v) {
