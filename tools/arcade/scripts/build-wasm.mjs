@@ -1,6 +1,6 @@
 // Builds the Arcade's WebAssembly module from firmware/sim with Emscripten, CMake and Ninja, and
 // copies it to src/wasm/, simulator.mjs and the simulator.wasm it loads, where the app and the tests
-// take it.
+// take it. tools/fonts.py first converts the host screens' fonts where they are not current.
 //
 // Emscripten comes from the emsdk in EMSDK, else in %LOCALAPPDATA%\emsdk or ~/emsdk, at the version
 // firmware/sim/emsdk-version names. CMake and Ninja come from the PATH or from Python's cmake and
@@ -46,6 +46,12 @@ for (const [module, attribute] of [["cmake", "CMAKE_BIN_DIR"], ["ninja", "BIN_DI
 const env = { ...process.env, PATH: [...paths, process.env.PATH].join(delimiter) };
 const run = (file, args) => execFileSync(file, args, { stdio: "inherit", env, cwd: sim });
 
+// The host's views take the fonts tools/fonts.py converts, which it skips while they are current.
+try {
+  execFileSync("python", [join(sim, "..", "..", "tools", "fonts.py")], { stdio: "inherit" });
+} catch {
+  fail("tools/fonts.py could not convert the host screens' fonts, see above");
+}
 if (!existsSync(join(build, "build.ninja"))) {
   run(join(emscripten, `emcmake${exe}`), ["cmake", "-G", "Ninja", "-S", ".", "-B", "build"]);
 }

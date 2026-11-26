@@ -31,7 +31,7 @@ All of the firmware's code stands in `src/`, in folders that follow `docs/firmwa
 | `game/` | the game: modes and their layers |
 | `host/` | the host, which runs the machine between the games and fills its screens |
 | `host/views/` | the host's screens, one class to a screen of host-screens.md on the base of `view.h`, which draw what the host hands them and report through one function what the player pressed, and `controls`, which every screen builds from |
-| `host/views/fonts/` | the screens' fonts, which [`tools/fonts.py`](../tools/fonts.py) writes and CI checks against their conversion, so nobody edits them |
+| `host/views/fonts/` | the screens' fonts, which [`tools/fonts.py`](../tools/fonts.py) converts from `firmware/fonts/` before every build and Git ignores |
 
 Code taken from another project and changed here stands beside the code that uses it, as PWMServoT4 in `drivers/`. Libraries used unchanged come from PlatformIO's registry or Teensyduino, pinned in `platformio.ini`.
 
