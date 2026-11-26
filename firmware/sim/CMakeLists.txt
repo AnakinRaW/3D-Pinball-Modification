@@ -1,5 +1,5 @@
 # The Arcade's WebAssembly module: the firmware's lamps component and lighting driver, its screen
-# component with LVGL and its touch driver, from firmware/src, with the simulated output stage,
+# component with LVGL, its video player and its touch driver, from firmware/src, with the simulated output stage,
 # display and touch controller of fakes/ in place of the hardware.
 # Built with Emscripten through emcmake, as tools/arcade's "npm run wasm" runs it.
 cmake_minimum_required(VERSION 3.24)
@@ -59,9 +59,14 @@ file(GLOB HOST_FONTS CONFIGURE_DEPENDS ${FIRMWARE}/src/host/views/fonts/*.c)
 add_executable(simulator
     simulator.cpp
     screen-simulator.cpp
+    video-simulator.cpp
     fastled-platform.cpp
     ${FIRMWARE}/src/components/picture-memory.cpp
     ${FIRMWARE}/src/components/screen.cpp
+    ${FIRMWARE}/src/components/file-system.cpp
+    ${FIRMWARE}/src/components/sounds.cpp
+    ${FIRMWARE}/src/components/video-player.cpp
+    ${FIRMWARE}/src/drivers/sound-channel.cpp
     ${FIRMWARE}/src/core/event-queue.cpp
     ${FIRMWARE}/src/drivers/driver-base.cpp
     ${FIRMWARE}/src/drivers/storage-service.cpp

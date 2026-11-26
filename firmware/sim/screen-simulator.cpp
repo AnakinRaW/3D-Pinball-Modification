@@ -3,8 +3,8 @@
 // simulated touch controller, which answers with the finger the browser reports, so taps, holds
 // and moves come out of the driver as they do on the machine. Until a host and a game draw on the
 // screen, a test scene shows a button and the last gesture, a page shows every control of the
-// host's screens, and a stand-in for the host drives the host's menu at the right edge from the
-// swipe.
+// host's screens, the boot film plays through the firmware's video player, and a stand-in for the
+// host drives the host's menu at the right edge from the swipe.
 #include "screen-simulator.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
@@ -19,6 +19,7 @@
 #include "host/views/controls.h"
 #include "host/views/edge-menu-view.h"
 #include "logging/debug-log.h"
+#include "video-simulator.h"
 
 using emscripten::val;
 
@@ -29,6 +30,15 @@ class GameHost {
 public:
     /// Places the menu at the right edge on the host's layer.
     static void build(Screen& screen);
+
+    /// Plays the boot film from the card's root on the whole screen, over and over and without its
+    /// sound, on a slide in front of the test scene and the controls page.
+    ///
+    /// @return  False when the screen has no slide for it or the video player refuses it.
+    static bool playBootFilm(Screen& screen);
+
+    /// Takes the boot film's slide away, with the film.
+    static void stopBootFilm(Screen& screen);
 
     /// Hands the menu the touch at the right edge: the hint, the swipe and its let-go.
     ///
@@ -74,6 +84,10 @@ constexpr uint32_t RED = 0xb3242d;          // host-screens.md: a button
 constexpr uint32_t GOLD = 0xe8c04a;         // host-screens.md: a button's rim
 constexpr uint8_t CONTROLS_LAYER_KEY = 2;   // the controls page's slide, over the test scene
 constexpr uint8_t CONTROLS_LAYER_PRIORITY = 2;
+// The boot film's slide, in front of the test scene and the controls page
+constexpr Layer BOOT_LAYER = {3, 3};
+constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb at the card's root
+constexpr char BOOT_FILM_SCENE[] = "boot-film";
 constexpr int32_t SHEET_INSET_PX = 4;      // the controls page's margin
 constexpr int32_t SHEET_BUTTON_PX = 100;   // a button's width on the controls page
 constexpr int32_t SHEET_BUTTONS_Y = 46;    // the controls page's rows, from the top
@@ -338,15 +352,24 @@ bool screenBegin() {
     tickTimer = fakeTimers.running;
     lastTickUs = nowUs();
     screen.begin();
+    videoBegin(screen);
     buildTestScene();
     GameHost::build(screen);
     result = true;
     return true;
 }
 
-// Shows a scene: "test" for the test scene, "controls" for the page of every control over it.
-// Returns false for another name.
+// Shows a scene: "test" for the test scene, "controls" for the page of every control over it, and
+// "boot-film" for the boot film over both. Returns false for another name.
 bool screenScene(std::string name) {
+    if (name == BOOT_FILM_SCENE) {
+        GameHost::stopBootFilm(screen);
+        GameHost::playBootFilm(screen);
+        return true;
+    }
+    if (name == "controls" || name == "test") {
+        GameHost::stopBootFilm(screen);
+    }
     if (name == "controls") {
         if (controlsPage == nullptr) {
             buildControlsPage();
@@ -440,6 +463,7 @@ void screenPass() {
         }
     }
     GameHost::follow(screen);
+    videoPass();
     screen.render();
 }
 
@@ -477,6 +501,29 @@ void GameHost::follow(Screen& screen) {
         menu.releaseHint();
     }
     last = e == Screen::Edge::LET_GO ? Screen::Edge::NONE : e;
+}
+
+bool GameHost::playBootFilm(Screen& screen) {
+    VideoPlayer* player = videoPlayer();
+    lv_obj_t* slide = screen.slide(BOOT_LAYER);
+    if (player == nullptr || slide == nullptr) {
+        DEBUG_LOG("simulator: no slide or no video player for the boot film\n");
+        return false;
+    }
+    videoFiles().useRoot();
+    lv_obj_t* viewport = lv_obj_create(slide);
+    lv_obj_remove_style_all(viewport);
+    lv_obj_set_size(viewport, Display::WIDTH, Display::HEIGHT);
+    if (!player->play(viewport, BOOT_FILM, true, false)) {
+        DEBUG_LOG("simulator: the video player refuses the boot film\n");
+        screen.remove(BOOT_LAYER);
+        return false;
+    }
+    return true;
+}
+
+void GameHost::stopBootFilm(Screen& screen) {
+    screen.remove(BOOT_LAYER);
 }
 
 void GameHost::tapped() {

@@ -9,7 +9,7 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lightsOptions, loadLights, type LightsModule } from "../src/sim/lights";
-import { rgb565ToRgba, SCREEN_HEIGHT, SCREEN_WIDTH, screenPoint, TouchInput, type ScreenEvent } from "../src/sim/screen";
+import { putOnCard, rgb565ToRgba, SCREEN_HEIGHT, SCREEN_WIDTH, screenPoint, TouchInput, type ScreenEvent } from "../src/sim/screen";
 import { ScreenPanel } from "../src/ui/ScreenPanel";
 
 const wasm = resolve("src/wasm/simulator.wasm");
@@ -106,6 +106,7 @@ function fakeModule() {
     rectangles: 0,
     screenBegin: vi.fn(() => true),
     screenScene: vi.fn((_scene: string) => true),
+    cardFile: vi.fn((_path: string, _bytes: Uint8Array) => {}),
     touch(down: boolean, x: number, y: number) {
       m.touches.push([down, x, y]);
     },
@@ -181,6 +182,25 @@ describe("the screen panel", () => {
     expect(m.screenScene).toHaveBeenLastCalledWith("test");
   });
 
+  it("shows the boot film once its file is fetched, unless another scene was picked meanwhile", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(new Uint8Array(4))));
+    const { m } = fakeModule();
+    act(() => render(<ScreenPanel module={m} />, root));
+    const pick = (label: string) =>
+      act(() => {
+        [...root.querySelectorAll(".screen-bar button")].find((b) => b.textContent === label)!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    pick("Boot film");
+    pick("Controls");
+    await frames();
+    expect(m.screenScene).toHaveBeenLastCalledWith("controls");
+    pick("Boot film");
+    await frames();
+    expect(m.screenScene).toHaveBeenLastCalledWith("boot-film");
+    pick("Test scene");
+    vi.unstubAllGlobals();
+  });
+
   it("begins the screen and repaints once the display took a rectangle", async () => {
     const { m, pixels } = fakeModule();
     pixels.set([0xf8, 0x00], 0);
@@ -236,6 +256,34 @@ describe("the screen panel", () => {
       [true, 40, 50],
       [false, 40, 50],
     ]);
+  });
+});
+
+describe("the simulated card", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("fetches a file once for each module and puts it on the card", async () => {
+    const fetched = vi.fn(async () => new Response(new Uint8Array([1, 2, 3])));
+    vi.stubGlobal("fetch", fetched);
+    const { m } = fakeModule();
+    const file = { path: "/video/intro.rgb", url: "/intro.rgb" };
+    expect(await putOnCard(m, file)).toBe(true);
+    expect(await putOnCard(m, file)).toBe(true);
+    expect(fetched).toHaveBeenCalledTimes(1);
+    expect(m.cardFile).toHaveBeenCalledWith("/video/intro.rgb", new Uint8Array([1, 2, 3]));
+    expect(await putOnCard(fakeModule().m, file)).toBe(true);
+    expect(fetched).toHaveBeenCalledTimes(2);
+  });
+
+  it("fetches a file again after a failed fetch, and puts nothing on the card without a URL", async () => {
+    const fetched = vi.fn(async () => new Response(null, { status: 404 }));
+    vi.stubGlobal("fetch", fetched);
+    const { m } = fakeModule();
+    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/intro.rgb" })).toBe(false);
+    expect(await putOnCard(m, { path: "/video/intro.rgb", url: "/intro.rgb" })).toBe(false);
+    expect(fetched).toHaveBeenCalledTimes(2);
+    expect(await putOnCard(m, { path: "/video/other.rgb", url: undefined })).toBe(false);
+    expect(m.cardFile).not.toHaveBeenCalled();
   });
 });
 
@@ -408,6 +456,23 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     m.step(REFRESH_MS);
     // the dialog has gone, and the slider beneath takes the touch
     expect(control(227, 159)).not.toContain("OK");
+  });
+
+  it("plays the boot film from the card over the whole screen, over and over, and takes it away with the scene", () => {
+    // a film of 30 frames in one color whose two bytes are equal, so the byte order cannot change it
+    const FILM_565 = 0xf8f8;
+    const frames = 30;
+    m.cardFile("/video/intro.rgb", new Uint8Array(SCREEN_WIDTH * SCREEN_HEIGHT * 2 * frames).fill(FILM_565 & 0xff));
+    expect(m.screenScene("boot-film")).toBe(true);
+    m.step(300);
+    expect(pixel(0, 0)).toBe(FILM_565);
+    expect(pixel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)).toBe(FILM_565);
+    // past the film's end it starts again
+    m.step(1500);
+    expect(pixel(SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1)).toBe(FILM_565);
+    m.screenScene("test");
+    m.step(100);
+    expect(pixel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)).not.toBe(FILM_565);
   });
 
   it("goes back to the test scene", () => {

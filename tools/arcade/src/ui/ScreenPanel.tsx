@@ -3,7 +3,9 @@
 // canvas as the touch panel's finger, and the touch events and gestures the firmware made of it.
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { sources } from "../sources";
 import {
+  putOnCard,
   rgb565ToRgba,
   SCALES,
   SCENES,
@@ -11,6 +13,7 @@ import {
   SCREEN_WIDTH,
   screenPoint,
   TouchInput,
+  type CardFile,
   type Scale,
   type Scene,
   type ScreenEvent,
@@ -20,7 +23,19 @@ import {
 const EVENTS_SHOWN = 14;
 const scale = signal<Scale>(2);
 const scene = signal<Scene>("test");
-const SCENE_LABELS: Record<Scene, string> = { test: "Test scene", controls: "Controls" };
+const SCENE_LABELS: Record<Scene, string> = { test: "Test scene", controls: "Controls", "boot-film": "Boot film" };
+
+// the files a scene reads from the simulated card, put there when the scene is picked
+const SCENE_FILES: Partial<Record<Scene, CardFile>> = {
+  "boot-film": { path: "/video/intro.rgb", url: sources.introRgb },
+};
+
+// Shows a scene once the files it reads lie on the card, unless another scene was picked meanwhile.
+async function showScene(module: ScreenModule, key: Scene): Promise<void> {
+  const file = SCENE_FILES[key];
+  if (file) await putOnCard(module, file);
+  if (scene.value === key) module.screenScene(key);
+}
 
 const LABELS: Record<ScreenEvent["type"], string> = {
   touchDown: "Touch down",
@@ -72,7 +87,7 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
   useEffect(() => {
     if (!module) return;
     setBegun(module.screenBegin());
-    module.screenScene(scene.value);
+    void showScene(module, scene.value);
     input.current = new TouchInput(module);
     const ctx = canvas.current?.getContext("2d") ?? null;
     let shown = -1;
@@ -115,7 +130,7 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
               class={k === scene.value ? "on" : ""}
               onClick={() => {
                 scene.value = k;
-                module?.screenScene(k);
+                if (module) void showScene(module, k);
               }}
             >
               {SCENE_LABELS[k]}

@@ -36,8 +36,9 @@ export interface ScreenEvent {
   name?: string; // the control a press or a change came from, on the controls page
 }
 
-// what the display shows: the test scene, or the page of every control of the host's screens
-export const SCENES = ["test", "controls"] as const;
+// what the display shows: the test scene, the page of every control of the host's screens, or the
+// boot film from the simulated card
+export const SCENES = ["test", "controls", "boot-film"] as const;
 export type Scene = (typeof SCENES)[number];
 
 // the module's screen functions, as firmware/sim/screen-simulator.cpp binds them
@@ -48,6 +49,39 @@ export interface ScreenModule {
   screenRectangles(): number;
   screenEvents(): ScreenEvent[];
   screenScene(scene: Scene): boolean;
+  cardFile(path: string, bytes: Uint8Array): void; // puts a file on the simulated card, such as "/video/intro.rgb"
+}
+
+// a file a scene reads from the simulated card: its path there and the URL the page fetches it from
+export interface CardFile {
+  path: string;
+  url: string | undefined;
+}
+
+// the files each module's card holds or is fetching, by path
+const carded = new WeakMap<ScreenModule, Map<string, Promise<boolean>>>();
+
+// Fetches a file once for each module and puts it on the module's card. Resolves to false when the
+// checkout lacks the file or the fetch fails, and a later call fetches it again.
+export function putOnCard(m: ScreenModule, file: CardFile): Promise<boolean> {
+  let files = carded.get(m);
+  if (!files) carded.set(m, (files = new Map()));
+  const known = files.get(file.path);
+  if (known) return known;
+  const url = file.url;
+  if (!url) return Promise.resolve(false);
+  const put = fetch(url)
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`))))
+    .then((b) => {
+      m.cardFile(file.path, new Uint8Array(b));
+      return true;
+    })
+    .catch(() => {
+      files.delete(file.path);
+      return false;
+    });
+  files.set(file.path, put);
+  return put;
 }
 
 // Turns the display's pixels, RGB565 with the high byte first, into opaque RGBA. A channel of 5 or 6
