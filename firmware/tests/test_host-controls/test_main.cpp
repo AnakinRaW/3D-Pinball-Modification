@@ -497,6 +497,7 @@ void testFonts() {
         &montserrat_bold_16};
     // the middle dot, the times sign and the minus sign, which every font but a title's holds
     const uint32_t signs[] = {0xB7, 0xD7, 0x2212};
+    const uint32_t icons[] = {0xF0EB, 0xF185};   // Font Awesome's light bulb and sun
     for (const lv_font_t* f : fonts) {
         // The title sizes hold the capitals and the signs before them, and no lower case.
         const bool title = f == &archivo_black_30 || f == &archivo_black_40;
@@ -511,10 +512,21 @@ void testFonts() {
                 TEST_ASSERT_EQUAL_PTR(f, g.resolved_font);
             }
         }
-        // LV_SYMBOL_RIGHT, which the fallback holds
+        // the bulb and the sun, which the icons hold, and LV_SYMBOL_RIGHT, which LVGL's font holds
+        for (uint32_t c : icons) {
+            TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, c, 0));
+            TEST_ASSERT_EQUAL_PTR(&host_icons_14, g.resolved_font);
+        }
         TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, 0xF054, 0));
         TEST_ASSERT_EQUAL_PTR(&lv_font_montserrat_14, g.resolved_font);
     }
+    // the icons' UTF-8 names the same code points, three bytes each
+    const auto decoded = [](const char* text) {
+        const auto* b = reinterpret_cast<const uint8_t*>(text);
+        return uint32_t(b[0] & 0x0F) << 12 | uint32_t(b[1] & 0x3F) << 6 | uint32_t(b[2] & 0x3F);
+    };
+    TEST_ASSERT_EQUAL_UINT32(icons[0], decoded(controls::ICON_BULB));
+    TEST_ASSERT_EQUAL_UINT32(icons[1], decoded(controls::ICON_SUN));
 }
 
 int main() {

@@ -25,13 +25,19 @@ LV_FONT_DECLARE(montserrat_semibold_14)
 LV_FONT_DECLARE(montserrat_bold_12)
 LV_FONT_DECLARE(montserrat_bold_14)
 LV_FONT_DECLARE(montserrat_bold_16)
+LV_FONT_DECLARE(host_icons_14)
 
 namespace controls {
 
 constexpr int32_t SCREEN_WIDTH_PX = 320;   // the display's pixels across
 constexpr int32_t SCREEN_HEIGHT_PX = 240;
 
-constexpr int32_t TARGET_PX = 44;     // host-screens.md, Controls: the least touch target
+constexpr int32_t TARGET_PX = 44;   // host-screens.md, Controls: the least touch target
+/// The icons beyond LVGL's symbols, which every font of the screens finds in host_icons_14, in
+/// UTF-8 like LVGL's symbols
+constexpr char ICON_BULB[] = "\xEF\x83\xAB";   // U+F0EB, the playfield's lamps
+constexpr char ICON_SUN[] = "\xEF\x86\x85";    // U+F185, the ambient light
+
 constexpr int32_t GAP_PX = 4;         // host-screens.md, Controls: between two buttons
 constexpr int32_t HEADER_PX = 34;     // host-screens.md, Controls: the header's band
 constexpr int32_t BULBS_PX = 6;       // the strip of marquee bulbs under the band

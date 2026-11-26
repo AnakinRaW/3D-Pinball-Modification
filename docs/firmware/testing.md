@@ -650,7 +650,7 @@ The program `host-controls` checks the [controls](host-screens.md#controls) ever
 | `scroll-list` | computer | Fill a list with more rows than it shows, then scroll it to its end | The list scrolls, and the fade shows at the edge more lies beyond, at the foot first and at the top at the end |
 | `animated` | computer | Run a sunburst for a while, then turn the animation off and run it again | The sunburst is drawn again as it turns, and it is drawn no more once it stands still |
 | `stage` | computer | Create the rays, a curtain, the valance, the lettering, a score line, a progress bar and two keys, and press a key | Each takes its size, the lettering fits its text with its outline, only the keys take the touch, and a lit key is rimmed in the bulb's yellow |
-| `fonts` | computer | Look up every printable character, the middle dot, the times sign, the minus sign and a symbol of LVGL in every font | Each font holds the characters and the signs, a title size the capitals, and each finds the symbol in LVGL's Montserrat |
+| `fonts` | computer | Look up every character, sign and icon the screens use in every font | Each font holds its characters and signs, a title size the capitals, and each finds every icon through its fallbacks |
 
 ### Edge menu view
 

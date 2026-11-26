@@ -5,8 +5,9 @@ sets text with Montserrat Bold for its lines in bold, as docs/firmware/host-scre
 fonts come from Fontsource's npm packages and lv_font_conv from npm, each at the version below,
 installed into a temporary folder. Each font keeps the printable ASCII characters with the middle
 dot, the times sign and the minus sign. The large title sizes keep the capitals of them. Every font
-falls back to LVGL's Montserrat 14 for LVGL's symbols. The files go to
-firmware/src/host/views/fonts/, with the fonts' licenses.
+falls back to host_icons_14, the icons the screens need beyond LVGL's symbols, taken from Font
+Awesome Free at 14 pixels, and that falls back to LVGL's Montserrat 14 for LVGL's symbols. The files
+go to firmware/src/host/views/fonts/, with the fonts' licenses.
 
     python tools/fonts.py           writes the fonts and the licenses
     python tools/fonts.py --check   exits with 1 where a file differs from what the conversion
@@ -23,12 +24,21 @@ import tempfile
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 OUT = os.path.join(ROOT, "firmware", "src", "host", "views", "fonts")
 PACKAGES = ["lv_font_conv@1.5.3", "@fontsource/archivo-black@5.2.6",
-            "@fontsource/jetbrains-mono@5.2.6", "@fontsource/montserrat@5.2.6"]
+            "@fontsource/jetbrains-mono@5.2.6", "@fontsource/montserrat@5.2.6",
+            "@fortawesome/fontawesome-free@6.7.2"]
 # the printable ASCII characters with the middle dot, the times sign and the minus sign
 CHARACTERS = "0x20-0x7E,0xB7,0xD7,0x2212"
 CAPITALS = "0x20-0x5F"     # ASCII without the lower case, for the titles set in capitals
 BITS_PER_PIXEL = "4"       # 16 levels of coverage, LVGL's smooth edges
-FALLBACK = "lv_font_montserrat_14"
+SYMBOLS = "lv_font_montserrat_14"   # LVGL's font with its symbols
+
+# the icons beyond LVGL's symbols: the light bulb for the playfield's lamps and the sun for the
+# ambient light, at the size of LVGL's symbols
+ICONS = "host_icons_14"
+ICON_SOURCE = "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf"
+ICON_SIZE = 14
+ICON_CHARACTERS = "0xF0EB,0xF185"
+ICON_LICENSE = ("@fortawesome/fontawesome-free", "LICENSE.txt", "LICENSE-fontawesome-free.txt")
 
 # the font's name in C, its package, its file in the package's files/ folder, its size in pixels and
 # its characters
@@ -76,20 +86,26 @@ def convert():
         run(["npm", "install", "--no-audit", "--no-fund"] + PACKAGES, tmp)
         modules = os.path.join(tmp, "node_modules")
         converter = os.path.join(modules, "lv_font_conv", "lv_font_conv.js")
-        for name, package, file, size, characters in FONTS:
+        def generate(name, source, size, characters, fallback):
             # Paths relative to the temporary folder, since the file's head repeats them.
-            source = "/".join(["node_modules", "@fontsource", package, "files", file])
             generated = name + ".c"
             run(["node", converter, "--font", source, "-r", characters, "--size", str(size),
                  "--bpp", BITS_PER_PIXEL, "--format", "lvgl", "--no-compress",
-                 "--lv-include", "lvgl.h", "--lv-font-name", name, "--lv-fallback", FALLBACK,
+                 "--lv-include", "lvgl.h", "--lv-font-name", name, "--lv-fallback", fallback,
                  "-o", generated], tmp)
             # The generated tables follow lv_font_conv's style, not the firmware's.
             text = text_of(os.path.join(tmp, generated))
             files[generated] = "// NOLINTBEGIN\n" + text.rstrip("\n") + "\n// NOLINTEND\n"
+
+        for name, package, file, size, characters in FONTS:
+            source = "/".join(["node_modules", "@fontsource", package, "files", file])
+            generate(name, source, size, characters, ICONS)
+        generate(ICONS, ICON_SOURCE, ICON_SIZE, ICON_CHARACTERS, SYMBOLS)
         for package in LICENSES:
             source = os.path.join(modules, "@fontsource", package, "LICENSE")
             files["OFL-" + package + ".txt"] = text_of(source)
+        package, license, copied = ICON_LICENSE
+        files[copied] = text_of(os.path.join(modules, *package.split("/"), license))
     return files
 
 
