@@ -8,6 +8,7 @@
 #include "core/event-queue.h"
 #include "drivers/audio.h"
 #include "drivers/break-beam.h"
+#include "drivers/controls.h"
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/storage.h"
@@ -25,5 +26,6 @@ Screen screen(display);
 VideoPlayer videoPlayer(screen, files, sounds);
 Lighting lighting;
 BreakBeamDriver breakBeam(events);
+ToggleSwitch toggleSwitch(events, driverTick);
 
 }   // namespace test

@@ -8,14 +8,14 @@
 //             switch rests in (asks at the bench)
 //
 // Wiring: pad needs none. position and flips need the stock toggle switch on its pin through R1,
-// as the controls design wires it. The driver publishes into a queue this program reads, so no
-// other part of the firmware takes its events.
+// as the controls design wires it. The shared driver publishes into the firmware's events, which
+// this program reads.
 
 #include <Arduino.h>
 #include "core/clock.h"
 #include "core/event-queue.h"
 #include "drivers/controls.h"
-#include "drivers/driver-base.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint8_t SWITCH_PIN = 5;   // pin-assignment.md: Toggle switch
@@ -31,15 +31,14 @@ constexpr uint32_t PAD_LIMIT_S = 5;
 constexpr uint32_t BENCH_LIMIT_S = 300;
 constexpr size_t TEXT = 96;
 
-static EventQueue queue;
-static ToggleSwitch toggle(queue, driverTick);
+using test::toggleSwitch;
 static bool begun = false;
 
 // Begins the driver once after the start, and fails the test where begin() fails.
 static bool ready() {
     if (!begun) {
         NVIC_SET_PRIORITY(IRQ_GPIO6789, PIN_PRIORITY);
-        begun = toggle.begin();
+        begun = toggleSwitch.begin();
         if (!begun) {
             test::fail("begin() false", "true");
         }
@@ -47,10 +46,10 @@ static bool ready() {
     return begun;
 }
 
-// Drops every event the queue holds.
+// Drops every event the firmware's events hold.
 static void drain() {
     DriverEvent e;
-    while (queue.read(&e, 1) == 1) {
+    while (events.read(&e, 1) == 1) {
     }
 }
 
@@ -58,7 +57,7 @@ static void drain() {
 static bool nextFlip(DriverEvent& e, uint32_t ms) {
     const uint32_t t0 = millis();
     while (millis() - t0 < ms) {
-        if (queue.read(&e, 1) == 1 && e.type == DriverEventType::TOGGLE_SWITCHED) {
+        if (events.read(&e, 1) == 1 && e.type == DriverEventType::TOGGLE_SWITCHED) {
             return true;
         }
         delay(1);
@@ -72,9 +71,9 @@ static bool setTo(uint8_t wanted) {
     snprintf(text, sizeof text, "set the switch to the position printed %u", wanted);
     test::step(text);
     const uint32_t t0 = millis();
-    while (toggle.position() != wanted) {
+    while (toggleSwitch.position() != wanted) {
         if (millis() - t0 >= STEP_TIMEOUT_MS) {
-            snprintf(text, sizeof text, "position() %u", toggle.position());
+            snprintf(text, sizeof text, "position() %u", toggleSwitch.position());
             char expected[TEXT];
             snprintf(expected, sizeof expected, "%u", wanted);
             test::fail(text, expected);
@@ -110,7 +109,7 @@ static void testPad() {
     }
     // The switch closes the pin to ground in position 1.
     const uint8_t fromPin = digitalReadFast(SWITCH_PIN) == LOW ? 1 : 0;
-    if (toggle.position() != fromPin) {
+    if (toggleSwitch.position() != fromPin) {
         test::fail("position() differs from the pin", "1 where the pin reads LOW, else 0");
         return;
     }
@@ -146,7 +145,7 @@ static void testFlips() {
     snprintf(text, sizeof text, "flip the switch %lu times, a second or more between flips",
              SLOW_FLIPS);
     test::step(text);
-    uint8_t last = toggle.position();
+    uint8_t last = toggleSwitch.position();
     DriverEvent e;
     for (uint32_t i = 0; i < SLOW_FLIPS; ++i) {
         if (!nextFlip(e, STEP_TIMEOUT_MS)) {
@@ -187,8 +186,9 @@ static void testFlips() {
     Serial.printf("%lu events for the fast flips\n", count);
     // A hand flips more often than asked, so the count is printed and not judged. Bounce shows as
     // a position reported twice in a row, which the loop above fails.
-    if (last != toggle.position()) {
-        snprintf(text, sizeof text, "the last event %u, position() %u", last, toggle.position());
+    if (last != toggleSwitch.position()) {
+        snprintf(text, sizeof text, "the last event %u, position() %u", last,
+                 toggleSwitch.position());
         test::fail(text, "the last event the position()");
         return;
     }

@@ -7,6 +7,7 @@
 
 class AudioDriver;
 class BreakBeamDriver;
+class ToggleSwitch;
 class Display;
 class FileSystem;
 class Lighting;
@@ -26,5 +27,6 @@ extern Screen screen;
 extern VideoPlayer videoPlayer;
 extern Lighting lighting;
 extern BreakBeamDriver breakBeam;
+extern ToggleSwitch toggleSwitch;
 
 }   // namespace test
