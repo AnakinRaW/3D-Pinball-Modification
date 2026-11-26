@@ -14,10 +14,7 @@ A lead with the matching receptacle takes the switch to pin [5](../../pin-assign
 
 R1, 1.2 kΩ, sits on the [Teensy motherboard](../motherboard/design.md) in series with the pin. It protects coding errors if the firmware ever drives the pin high against the closed switch. R1 limits the current to 2.93 mA.
 
-The switch closes its contact in position 1 and opens it in position 0. 
-
-> [!Warning] 
->TODO: Measure the switch's positions
+The switch closes its contact in position 1 and opens it in position 0.
 
 Each game decides what the switch does. The firmware reports only its position.
 

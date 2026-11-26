@@ -440,7 +440,7 @@ The program `controls` checks the [controls driver](drivers/controls.md).
 | `second-driver` | computer | Begin a second driver twice while the first holds the pin | Its `begin()` returns false both times with one warning in the log that names the pin, its `position()` gives 0, and the first driver keeps its events |
 | `pad` | Teensy | Begin the driver | The pin's pad has the pull-up that `INPUT_PULLUP` selects and hysteresis, its interrupt is enabled on both edges, and `position()` gives 1 where the pin reads LOW and 0 otherwise |
 | `position` | bench | Set the switch to 1, then to 0 | `position()` gives the position printed on the switch each time, and the move to 0 gives a `TOGGLE_SWITCHED` with position 0 |
-| `flips` | bench | Flip the switch five times with a second or more between flips, then ten times as fast as possible and leave it | The slow flips give five `TOGGLE_SWITCHED` with alternating positions and no more, and the fast flips give at most ten with alternating positions, the last carrying the position the switch rests in |
+| `flips` | bench | Flip the switch five times with a second or more between flips, then ten times as fast as possible and leave it | The slow flips give five `TOGGLE_SWITCHED` with alternating positions, and the fast flips give events with alternating positions, the last carrying the position the switch rests in |
 
 ### Servo
 

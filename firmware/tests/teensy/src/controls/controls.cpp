@@ -164,11 +164,8 @@ static void testFlips() {
         last = moved;
         Serial.printf("flip %lu to %u at %lu us\n", i + 1, moved, e.time);
     }
-    if (nextFlip(e, QUIET_AFTER_MS)) {
-        snprintf(text, sizeof text, "a TOGGLE_SWITCHED after the %lu flips", SLOW_FLIPS);
-        test::fail(text, "none");
-        return;
-    }
+    // The fast flips follow at once, so a person who goes on without a pause stays inside the
+    // test.
     snprintf(text, sizeof text, "flip the switch %lu times as fast as possible, then leave it",
              FAST_FLIPS);
     test::step(text);
@@ -188,11 +185,11 @@ static void testFlips() {
         ++count;
     } while (nextFlip(e, QUIET_AFTER_MS));
     Serial.printf("%lu events for the fast flips\n", count);
-    if (count > FAST_FLIPS || last != toggle.position()) {
-        snprintf(text, sizeof text, "%lu events, the last %u, position() %u", count, last,
-                 toggle.position());
-        snprintf(expected, sizeof expected, "at most %lu, the last the position()", FAST_FLIPS);
-        test::fail(text, expected);
+    // A hand flips more often than asked, so the count is printed and not judged. Bounce shows as
+    // a position reported twice in a row, which the loop above fails.
+    if (last != toggle.position()) {
+        snprintf(text, sizeof text, "the last event %u, position() %u", last, toggle.position());
+        test::fail(text, "the last event the position()");
         return;
     }
     test::pass();
