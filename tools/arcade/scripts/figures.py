@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Writes the figures the Arcade's current readout takes from the repository's models into
-tools/arcade/config/figures.json.
+"""Writes the figures the Arcade's current readout and screen budget take from the repository's
+models into tools/arcade/config/figures.json.
 
     python tools/arcade/scripts/figures.py           write the file
     python tools/arcade/scripts/figures.py --check   exit with 1 where the file differs
@@ -58,6 +58,15 @@ FIGURES = {
     "i_most_3a": ("power", "mA"),
     "i_most_6a": ("power", "mA"),
     "i_over_3a": ("power", "mA"),
+    # the screen's budget: the panel's pixels, how long LVGL takes to draw a whole screen of them as
+    # measured on the Teensy, how long the bus sends them, the processor's share while the bus
+    # sends, and LVGL's refresh period that a frame has to fit in
+    "n_cols": ("display", ""),
+    "n_rows": ("display", ""),
+    "t_render": ("display", "ms"),
+    "t_frame_bus": ("display", "ms"),
+    "cpu_send": ("display", "%"),
+    "t_refr": ("display", "ms"),
 }
 
 

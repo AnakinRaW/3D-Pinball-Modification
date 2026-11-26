@@ -133,6 +133,14 @@ uint32_t lastTickUs = 0;
 uint32_t answered = 0;   // the controller's reads the simulator has answered
 Finger finger = {false, 0, 0};
 std::vector<Noted> noted;
+
+/// A pass that sent pixels to the display: when, and how many.
+struct Frame {
+    uint32_t ms;
+    uint32_t pixels;
+};
+std::vector<Frame> frames;          // since the last screenFrames()
+uint32_t pixelsBefore = 0;          // the display's pixels at the end of the pass before
 lv_obj_t* scene = nullptr;          // what the controls page or a view stands on while it shows
 lv_obj_t* controlsPage = nullptr;   // the controls page while it shows
 bool inGame = false;                // the scene shown stands over the running game
@@ -476,6 +484,20 @@ val screenEvents() {
     return out;
 }
 
+// Gets the passes that sent pixels to the display since the last call, oldest first, each {ms,
+// pixels}, which the Arcade weighs against what drawing and sending them takes on the Teensy.
+val screenFrames() {
+    val out = val::array();
+    for (const Frame& f : frames) {
+        val e = val::object();
+        e.set("ms", f.ms);
+        e.set("pixels", f.pixels);
+        out.call<void>("push", e);
+    }
+    frames.clear();
+    return out;
+}
+
 }   // namespace
 
 void screenPass() {
@@ -511,6 +533,11 @@ void screenPass() {
     }
     videoPass();
     screen.render();
+    const uint32_t sent = display.sentPixels() - pixelsBefore;
+    pixelsBefore = display.sentPixels();
+    if (sent != 0 && frames.size() < EVENTS_KEPT) {
+        frames.push_back({nowUs() / US_PER_MS, sent});
+    }
 }
 
 void GameHost::build(Screen& screen) {
@@ -609,6 +636,7 @@ EMSCRIPTEN_BINDINGS(screen) {
     emscripten::function("screenPixels", &screenPixels);
     emscripten::function("screenRectangles", &screenRectangles);
     emscripten::function("screenEvents", &screenEvents);
+    emscripten::function("screenFrames", &screenFrames);
     emscripten::function("screenScene", &screenScene);
     emscripten::function("screenScenes", &screenScenes);
     emscripten::function("screenAnimate", &controls::setAnimated);

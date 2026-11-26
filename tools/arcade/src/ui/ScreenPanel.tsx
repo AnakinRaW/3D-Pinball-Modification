@@ -3,6 +3,7 @@
 // canvas as the touch panel's finger, and the touch events and gestures the firmware made of it.
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { budgetOf, WINDOW_MS, type Budget, type Frame } from "../model/budget";
 import { sources } from "../sources";
 import {
   cutFrames,
@@ -21,6 +22,7 @@ import {
 } from "../sim/screen";
 
 const EVENTS_SHOWN = 14;
+const BUDGET_EVERY_MS = 250; // how often the budget readout follows the frames
 const scale = signal<Scale>(2);
 const scene = signal("games");
 
@@ -97,6 +99,7 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
   const [begun, setBegun] = useState<boolean | null>(null);
   const [events, setEvents] = useState<ScreenEvent[]>([]);
   const [scenes, setScenes] = useState<Scene[]>([]);
+  const [budget, setBudget] = useState<Budget | null>(null);
 
   useEffect(() => {
     if (!module) return;
@@ -110,6 +113,8 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
     const ctx = canvas.current?.getContext("2d") ?? null;
     let shown = -1;
     let frame = 0;
+    let frames: Frame[] = [];
+    let weighed = 0;
     const tick = () => {
       const rectangles = module.screenRectangles();
       if (rectangles !== shown && ctx) {
@@ -120,6 +125,14 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
       // a press that led to another view moves the picker along
       for (const e of fresh) if (e.type === "scene" && e.name) scene.value = e.name;
       if (fresh.length) setEvents((old) => [...fresh.reverse(), ...old].slice(0, EVENTS_SHOWN));
+      // the frames of the last second weighed against the Teensy's budget, four times a second
+      const sent = module.screenFrames();
+      const now = sent.length ? sent[sent.length - 1].ms : (frames[frames.length - 1]?.ms ?? 0);
+      frames = [...frames, ...sent].filter((f) => f.ms > now - WINDOW_MS);
+      if (performance.now() - weighed >= BUDGET_EVERY_MS) {
+        weighed = performance.now();
+        setBudget(budgetOf(frames, now));
+      }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -162,6 +175,11 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
         <span class="screen-size">
           {SCREEN_WIDTH} × {SCREEN_HEIGHT}
         </span>
+        {budget && (
+          <span class={`screen-budget${budget.over ? " over" : ""}`} data-testid="screen-budget">
+            Frame {budget.worstMs.toFixed(1)} / {budget.budgetMs} ms · CPU {Math.round(budget.cpuPercent)} %
+          </span>
+        )}
       </div>
       <div class="screen-frame">
         <canvas

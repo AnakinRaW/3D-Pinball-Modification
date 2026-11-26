@@ -51,6 +51,7 @@ export interface ScreenModule {
   screenPixels(): Uint8Array;
   screenRectangles(): number;
   screenEvents(): ScreenEvent[];
+  screenFrames(): { ms: number; pixels: number }[]; // the passes that sent pixels since the last call
   screenScene(key: string): boolean;
   screenScenes(): Scene[];
   screenAnimate(on: boolean): void; // lets the sunbursts turn or stand still

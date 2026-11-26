@@ -41,6 +41,7 @@ public:
                    pixels + size_t(row) * width * PIXEL_BYTES, size_t(width) * PIXEL_BYTES);
         }
         ++sentCount;
+        sentPixelCount += uint32_t(width) * height;
         sent();
         return true;
     }
@@ -51,7 +52,11 @@ public:
     /// Gets how many rectangles send() took since the start.
     uint32_t rectangles() const { return sentCount; }
 
+    /// Gets how many pixels send() took since the start.
+    uint32_t sentPixels() const { return sentPixelCount; }
+
 private:
     uint8_t screen[size_t(WIDTH) * HEIGHT * PIXEL_BYTES] = {};
     uint32_t sentCount = 0;
+    uint32_t sentPixelCount = 0;
 };

@@ -1236,6 +1236,13 @@ body.dragging {
   padding: 4px 6px;
   font: inherit;
 }
+.screen-budget {
+  font-variant-numeric: tabular-nums;
+}
+.screen-budget.over {
+  color: var(--inspect);
+  font-weight: 600;
+}
 .screen-frame {
   padding: 10px;
   border-radius: 8px;

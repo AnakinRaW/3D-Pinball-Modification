@@ -128,6 +128,12 @@ function fakeModule() {
       m.pending = [];
       return out;
     },
+    sent: [] as { ms: number; pixels: number }[],
+    screenFrames() {
+      const out = m.sent;
+      m.sent = [];
+      return out;
+    },
   };
   return { m, pixels };
 }
@@ -214,6 +220,20 @@ describe("the screen panel", () => {
     await frames();
     expect(m.screenScene).toHaveBeenLastCalledWith("boot-film");
     vi.unstubAllGlobals();
+  });
+
+  it("weighs the frames of the last second against the Teensy's budget, and marks a frame past it", async () => {
+    const { m } = fakeModule();
+    act(() => render(<ScreenPanel module={m} />, root));
+    const readout = () => root.querySelector("[data-testid=screen-budget]") as HTMLElement;
+    m.sent = [{ ms: 1000, pixels: SCREEN_WIDTH * SCREEN_HEIGHT }];
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    expect(readout().textContent).toMatch(/Frame 19\.9 \/ 33 ms/);
+    expect(readout().classList.contains("over")).toBe(false);
+    // one pass that sent the screen twice does not fit
+    m.sent = [{ ms: 1100, pixels: 2 * SCREEN_WIDTH * SCREEN_HEIGHT }];
+    await act(() => new Promise((r) => setTimeout(r, 300)));
+    expect(readout().classList.contains("over")).toBe(true);
   });
 
   it("moves the picker to the scene a press led to", async () => {
@@ -679,6 +699,17 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     m.screenScene("game-runs");
     m.step(100);
     expect(at(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)).not.toBe(FILM_565);
+  });
+
+  it("hands over the passes that sent pixels, a whole screen for a new scene", () => {
+    m.screenFrames();
+    m.screenScene("controls");
+    m.step(2 * REFRESH_MS);
+    const sent = m.screenFrames();
+    expect(sent.length).toBeGreaterThan(0);
+    expect(Math.max(...sent.map((f) => f.pixels))).toBe(SCREEN_WIDTH * SCREEN_HEIGHT);
+    expect(m.screenFrames()).toEqual([]);
+    m.screenScene("game-runs");
   });
 
   it("knows no scene of another name", () => {
