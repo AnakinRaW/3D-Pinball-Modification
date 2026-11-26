@@ -13,6 +13,7 @@
 //
 // Run: pio test -e computer, which runs in CI as well.
 
+#include "host/views/controls.h"
 #include "host/views/edge-menu-view.h"
 #include <Arduino.h>
 #include <unity.h>
@@ -194,10 +195,11 @@ void testChoose() {
     tap(OPEN_X + 150, 164);
     tap(OPEN_X + 150, 214);
     tap(W - 10, 17);
+    tap(W - 10 - controls::TARGET_PX, 17);
     tap(OPEN_X + 100, 38);
     const std::vector<EdgeMenuView::Item> want = {
-        EdgeMenuView::Item::SOUND, EdgeMenuView::Item::LIGHTS, EdgeMenuView::Item::STATUS,
-        EdgeMenuView::Item::END_GAME, EdgeMenuView::Item::CLOSE};
+        EdgeMenuView::Item::SOUND,    EdgeMenuView::Item::LIGHTS, EdgeMenuView::Item::STATUS,
+        EdgeMenuView::Item::END_GAME, EdgeMenuView::Item::CLOSE,  EdgeMenuView::Item::MUTE};
     TEST_ASSERT_EQUAL_UINT32(want.size(), chosen.size());
     for (size_t i = 0; i < want.size(); ++i) {
         TEST_ASSERT_EQUAL_UINT8(uint8_t(want[i]), uint8_t(chosen[i]));
@@ -219,6 +221,14 @@ void testChoose() {
     TEST_ASSERT_EQUAL_STRING("50 %", texts[0].c_str());
     TEST_ASSERT_EQUAL_STRING("80 %", texts[1].c_str());
     TEST_ASSERT_EQUAL_STRING("1 fault", texts[2].c_str());
+    // the mute button shows the speaker, crossed out while the sound is muted
+    lv_point_t at = {W - 10 - controls::TARGET_PX, 17};
+    lv_obj_t* mute = lv_indev_search_obj(lv_screen_active(), &at);
+    TEST_ASSERT_NOT_NULL(mute);
+    TEST_ASSERT_EQUAL_STRING(LV_SYMBOL_VOLUME_MAX, lv_label_get_text(lv_obj_get_child(mute, 0)));
+    status.muted = true;
+    rig.view.show(status);
+    TEST_ASSERT_EQUAL_STRING(controls::ICON_MUTED, lv_label_get_text(lv_obj_get_child(mute, 0)));
 }
 
 // while-open: an open menu takes no hint, and follow() leaves it where it stands.

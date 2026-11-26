@@ -36,12 +36,12 @@ CAPITALS = "0x20-0x5F"     # ASCII without the lower case, for the titles set in
 BITS_PER_PIXEL = "4"       # 16 levels of coverage, LVGL's smooth edges
 SYMBOLS = "lv_font_montserrat_14"   # LVGL's font with its symbols
 
-# the icons beyond LVGL's symbols: the light bulb for the playfield's lamps and the sun for the
-# ambient light, at the size of LVGL's symbols
+# the icons beyond LVGL's symbols: the light bulb for the playfield's lamps, the sun for the
+# ambient light and the crossed-out speaker for muted sound, at the size of LVGL's symbols
 ICONS = "host_icons_14"
 ICON_SOURCE = "fa-solid-900.ttf"
 ICON_SIZE = 14
-ICON_CHARACTERS = "0xF0EB,0xF185"
+ICON_CHARACTERS = "0xF0EB,0xF185,0xF6A9"
 
 # the font's name in C, its file in firmware/fonts/, its size in pixels and its characters
 _ARCHIVO = "archivo-black-latin-400-normal.woff"

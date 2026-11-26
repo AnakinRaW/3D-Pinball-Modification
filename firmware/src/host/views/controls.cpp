@@ -415,7 +415,7 @@ lv_obj_t* row(lv_obj_t* parent, const char* title, const char* detail, int32_t w
 void setDetail(lv_obj_t* row, const char* detail, uint32_t hex) {
     lv_obj_t* d = lv_obj_get_child(row, 0);
     lv_label_set_text(d, detail);
-    placeTitle(lv_obj_get_child(row, 1), lv_obj_get_x(d), detail[0] == '\0');
+    placeTitle(lv_obj_get_child(row, 1), lv_obj_get_style_x(d, LV_PART_MAIN), detail[0] == '\0');
     lv_obj_set_style_text_color(d, rgb(hex), 0);
 }
 

@@ -24,6 +24,7 @@ const LAUNCH_MS = 1500; // host-screens.md: t_launch_card
 const READ_MS = 20; // touch.h: TICK_US, one read of the controller
 const EDGE_PX = 24; // screen.md: the right edge the host's swipe starts in
 const SLOP_PX = 10; // touch.h: SLOP_PX
+const TARGET_PX = 44; // controls.h: TARGET_PX, a header button's width
 const MENU_PX = 208; // host-screens.md: the menu's drawer
 const SNAP_MS = 150; // host-screens.md: the menu snaps open or back
 const HINT_STAY_MS = 1000; // host-screens.md: the hint stands once the finger leaves
@@ -489,6 +490,20 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     swipe(150);
     events = press(30, 200, 100);
     expect(types(events)).toEqual(["touchDown", "touchUp", "screenTapped", "menuClosed"]);
+  });
+
+  it("mutes the sound with the menu's mute button and leaves the menu open", () => {
+    swipe(150);
+    // the mute button beside the close at the header's right end
+    const at = SCREEN_WIDTH - 10 - TARGET_PX;
+    const row = pixel(SCREEN_WIDTH - MENU_PX / 2, 60);
+    expect(types(press(at, 17, 100))).toEqual(["touchDown", "touchUp", "mute"]);
+    m.step(SNAP_MS + REFRESH_MS);
+    // the menu stays open, so its rows still show where they stood
+    expect(pixel(SCREEN_WIDTH - MENU_PX / 2, 60)).toBe(row);
+    expect(types(press(at, 17, 100))).toEqual(["touchDown", "touchUp", "mute"]);
+    press(SCREEN_WIDTH - 10, 17, 100);
+    m.step(SNAP_MS + REFRESH_MS);
   });
 
   it("keeps a tap on the open menu from the game", () => {

@@ -14,7 +14,7 @@ constexpr int32_t CORNER_PX = 8;       // host-screens.md, Controls: a button's 
 constexpr int32_t INSET_PX = 6;        // the rows' distance from the drawer's sides
 constexpr int32_t TAB_WIDTH_PX = 16;   // the gold tab of the hint
 constexpr int32_t TAB_HEIGHT_PX = 56;
-constexpr int32_t BULB_X_PX = 12;   // the Machine row's bulb from its left side
+constexpr int32_t BULB_X_PX = 12;   // the Status row's bulb from its left side
 constexpr int32_t HALF = 2;
 
 static int32_t closedX() {
@@ -67,6 +67,13 @@ void EdgeMenuView::build(lv_obj_t* parent, Chosen chosenFn, void* contextArg) {
     lv_obj_t* header = controls::header(drawer, "MENU", false);
     lv_obj_t* close = controls::headerButton(header, false, LV_SYMBOL_RIGHT LV_SYMBOL_RIGHT);
     choose(close, Item::CLOSE);
+    // The mute button stands beside the close, since the title takes the header's left end.
+    lv_obj_t* mute = controls::headerButton(header, false, LV_SYMBOL_VOLUME_MAX);
+    lv_obj_align(mute, LV_ALIGN_RIGHT_MID, -controls::TARGET_PX, 0);
+    muteSymbol = lv_obj_get_child(mute, 0);
+    // A font of the screens finds the crossed-out speaker beside LVGL's symbols.
+    lv_obj_set_style_text_font(muteSymbol, &montserrat_bold_14, 0);
+    choose(mute, Item::MUTE);
 
     lv_obj_t* sound = row(LV_SYMBOL_VOLUME_MAX, controls::color::RAMP, "Sound", Item::SOUND);
     lv_obj_t* lights = row(LV_SYMBOL_CHARGE, controls::color::BOARD, "Lights", Item::LIGHTS);
@@ -119,6 +126,7 @@ void EdgeMenuView::show(const Status& status) {
     controls::setDetail(lightsRow, status.lights, MUTED);
     controls::setDetail(statusRow, status.devices, status.fault ? FAULT_TEXT : MUTED);
     controls::setLight(statusBulb, status.fault ? controls::Light::FAILED : controls::Light::WORKS);
+    lv_label_set_text(muteSymbol, status.muted ? controls::ICON_MUTED : LV_SYMBOL_VOLUME_MAX);
 }
 
 void EdgeMenuView::hint() {

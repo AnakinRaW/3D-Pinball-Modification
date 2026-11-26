@@ -64,12 +64,17 @@ private:
     /// Takes an item the player chose in the menu.
     static void chosen(EdgeMenuView::Item item, void* context);
 
+    /// Hands the menu its rows' made-up figures and whether the sound is muted.
+    static void showStatus();
+
     static EdgeMenuView menu;
     static Screen::Edge last;
+    static bool muted;
 };
 
 EdgeMenuView GameHost::menu;
 Screen::Edge GameHost::last = Screen::Edge::NONE;
+bool GameHost::muted = false;
 
 namespace {
 
@@ -543,14 +548,19 @@ void screenPass() {
 
 void GameHost::build(Screen& screen) {
     menu.build(screen.hostLayer(), chosen, nullptr);
+    showStatus();
+}
+
+void GameHost::showStatus() {
     // Made-up figures stand in for the machine's, as the menu's storyboard shows them.
     EdgeMenuView::Status status;
-    status.sound = LV_SYMBOL_AUDIO " 50 %   " LV_SYMBOL_BELL " 70 %";
+    status.sound = muted ? "Muted" : LV_SYMBOL_AUDIO " 50 %   " LV_SYMBOL_BELL " 70 %";
     static char lights[32];
     snprintf(lights, sizeof lights, "%s 80 %%   %s 60 %%", controls::ICON_BULB, controls::ICON_SUN);
     status.lights = lights;
     status.devices = "1 fault";
     status.fault = true;
+    status.muted = muted;
     menu.show(status);
 }
 
@@ -623,10 +633,17 @@ void GameHost::tapped() {
 }
 
 void GameHost::chosen(EdgeMenuView::Item item, void*) {
-    static const char* const NAMES[] = {"sound", "lights", "status", "endGame", "close"};
-    // The items lead to the gallery's pages, as the host's menu opens them.
-    static const char* const PAGES[] = {"sound", "lights", "warning-lights", "end-game", nullptr};
+    static const char* const NAMES[] = {"sound", "lights", "status", "endGame", "close", "mute"};
+    // The items lead to the gallery's pages, as the host's menu opens them. Mute leaves the menu
+    // open on the muted or unmuted sound.
+    static const char* const PAGES[] = {"sound",    "lights", "warning-lights",
+                                        "end-game", nullptr,  nullptr};
     note(NAMES[uint8_t(item)], 0, 0);
+    if (item == EdgeMenuView::Item::MUTE) {
+        muted = !muted;
+        showStatus();
+        return;
+    }
     tapped();
     if (PAGES[uint8_t(item)] != nullptr) {
         galleryOpen(PAGES[uint8_t(item)]);

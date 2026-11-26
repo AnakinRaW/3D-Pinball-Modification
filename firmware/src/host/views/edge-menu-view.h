@@ -7,8 +7,9 @@
 #include <lvgl.h>
 #include <stdint.h>
 
-/// The menu over a running game: a drawer of Sound, Lights, Status and End game, with the gold
-/// tab and the drawer's edge as the hint at the right edge.
+/// The menu over a running game: a drawer of Sound, Lights, Status and End game under a header with
+/// the mute button and the close, with the gold tab and the drawer's edge as the hint at the right
+/// edge.
 class EdgeMenuView {
 public:
     static constexpr int32_t SCREEN_WIDTH_PX = 320;   // the display's pixels across
@@ -20,15 +21,17 @@ public:
     static constexpr uint32_t HINT_STAY_MS = 1000;   // host-screens.md: t_hint_stay
     static constexpr uint32_t HINT_FADE_MS = 300;    // host-screens.md: t_hint_fade
 
-    /// What the player can choose in the menu.
-    enum class Item : uint8_t { SOUND, LIGHTS, STATUS, END_GAME, CLOSE };
+    /// What the player can choose in the menu. MUTE leaves the menu open, the host decides the
+    /// rest.
+    enum class Item : uint8_t { SOUND, LIGHTS, STATUS, END_GAME, CLOSE, MUTE };
 
     /// What the rows show under their names, which the host sets from the machine's state.
     struct Status {
         const char* sound = "";     // such as the volumes
         const char* lights = "";    // such as the brightnesses
         const char* devices = "";   // such as the count of failed devices
-        bool fault = false;         // a device has failed, so the Machine row's bulb lights red
+        bool fault = false;         // a device has failed, so the Status row's bulb lights red
+        bool muted = false;         // the sound is muted, so the mute button shows it
     };
 
     /// Runs when the player chooses an item.
@@ -120,6 +123,7 @@ private:
     lv_obj_t* lightsRow = nullptr;
     lv_obj_t* statusRow = nullptr;
     lv_obj_t* statusBulb = nullptr;
+    lv_obj_t* muteSymbol = nullptr;   // the mute button's speaker
     Chosen chosen = nullptr;
     void* context = nullptr;
     bool open = false;

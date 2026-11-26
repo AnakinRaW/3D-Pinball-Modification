@@ -24,6 +24,7 @@ export type ScreenEventType =
   | "sound"
   | "lights"
   | "status"
+  | "mute"
   | "endGame"
   | "close"
   | "control"

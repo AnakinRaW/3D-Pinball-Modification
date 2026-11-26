@@ -35,8 +35,9 @@ constexpr int32_t SCREEN_HEIGHT_PX = 240;
 constexpr int32_t TARGET_PX = 44;   // host-screens.md, Controls: the least touch target
 /// The icons beyond LVGL's symbols, which every font of the screens finds in host_icons_14, in
 /// UTF-8 like LVGL's symbols
-constexpr char ICON_BULB[] = "\xEF\x83\xAB";   // U+F0EB, the playfield's lamps
-constexpr char ICON_SUN[] = "\xEF\x86\x85";    // U+F185, the ambient light
+constexpr char ICON_BULB[] = "\xEF\x83\xAB";    // U+F0EB, the playfield's lamps
+constexpr char ICON_SUN[] = "\xEF\x86\x85";     // U+F185, the ambient light
+constexpr char ICON_MUTED[] = "\xEF\x9A\xA9";   // U+F6A9, the crossed-out speaker of muted sound
 
 constexpr int32_t GAP_PX = 4;         // host-screens.md, Controls: between two buttons
 constexpr int32_t HEADER_PX = 34;     // host-screens.md, Controls: the header's band

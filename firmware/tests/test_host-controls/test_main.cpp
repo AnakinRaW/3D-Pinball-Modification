@@ -258,6 +258,18 @@ void testRow() {
     controls::setDetail(menu, "", controls::color::MUTED);
     settle();
     TEST_ASSERT_INT32_WITHIN(1, middleOf(menu), middleOf(title));
+
+    // a detail set before the first layout puts the title above it, beside the icon
+    lv_obj_t* fresh = controls::row(rig.parent, "Lights", "", 200, controls::TARGET_PX,
+                                    LV_SYMBOL_CHARGE, controls::color::BOARD);
+    controls::setDetail(fresh, "80 %", controls::color::MUTED);
+    settle();
+    lv_area_t detail;
+    lv_area_t named;
+    lv_obj_get_coords(lv_obj_get_child(fresh, 0), &detail);
+    lv_obj_get_coords(lv_obj_get_child(fresh, 1), &named);
+    TEST_ASSERT_EQUAL_INT32(detail.x1, named.x1);
+    TEST_ASSERT_TRUE(named.y2 <= detail.y1);
 }
 
 // slider: minus and plus step the value by STEP_PERCENT, stop at 0 and SLIDER_MAX, and tell the
@@ -512,7 +524,8 @@ void testFonts() {
         &montserrat_bold_16};
     // the middle dot, the times sign and the minus sign, which every font but a title's holds
     const uint32_t signs[] = {0xB7, 0xD7, 0x2212};
-    const uint32_t icons[] = {0xF0EB, 0xF185};   // Font Awesome's light bulb and sun
+    // Font Awesome's light bulb, sun and crossed-out speaker
+    const uint32_t icons[] = {0xF0EB, 0xF185, 0xF6A9};
     for (const lv_font_t* f : fonts) {
         // The title sizes hold the capitals and the signs before them, and no lower case.
         const bool title = f == &archivo_black_30 || f == &archivo_black_40;
@@ -527,7 +540,7 @@ void testFonts() {
                 TEST_ASSERT_EQUAL_PTR(f, g.resolved_font);
             }
         }
-        // the bulb and the sun, which the icons hold, and LV_SYMBOL_RIGHT, which LVGL's font holds
+        // the icons, which host_icons_14 holds, and LV_SYMBOL_RIGHT, which LVGL's font holds
         for (uint32_t c : icons) {
             TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, c, 0));
             TEST_ASSERT_EQUAL_PTR(&host_icons_14, g.resolved_font);
@@ -542,6 +555,7 @@ void testFonts() {
     };
     TEST_ASSERT_EQUAL_UINT32(icons[0], decoded(controls::ICON_BULB));
     TEST_ASSERT_EQUAL_UINT32(icons[1], decoded(controls::ICON_SUN));
+    TEST_ASSERT_EQUAL_UINT32(icons[2], decoded(controls::ICON_MUTED));
 }
 
 int main() {
