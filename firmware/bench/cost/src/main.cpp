@@ -306,7 +306,7 @@ static void showPage(Page p) {
         SettingsView::State st;
         st.sound = "MUSIC 80 %  EFFECTS 70 %";
         st.lights = "LAMPS 60 %  DISPLAY 90 %";
-        st.machine = "ALL DEVICES WORK";
+        st.status = "ALL DEVICES WORK";
         settings.build(host, st, ignore, nullptr);
     } else if (p == Page::LEVELS) {
         LevelsView::Levels l;
