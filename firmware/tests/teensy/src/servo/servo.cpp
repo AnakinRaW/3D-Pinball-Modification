@@ -54,7 +54,7 @@ static ServoDriver slowServo;
 static ServoDriver fastServo;
 
 // The capture interrupt keeps each edge's cycle count with the pin's level in bit 0.
-static volatile uint32_t edges[EDGES];
+EXTMEM static volatile uint32_t edges[EDGES];
 static volatile uint32_t edgeHead = 0;
 static uint32_t edgeTail = 0;
 static bool anyEdge = false;
@@ -63,7 +63,7 @@ struct Pulse {
     uint32_t widthNs;
     uint32_t fallCycles;
 };
-static Pulse pulses[MAX_PULSES];
+EXTMEM static Pulse pulses[MAX_PULSES];
 static uint32_t pulseCount = 0;
 static bool lost = false;
 static uint32_t riseCycles = 0;
@@ -71,7 +71,7 @@ static bool haveRise = false;
 
 static bool captureOn = false;
 
-static void edgeIsr() {
+FASTRUN static void edgeIsr() {
     edges[edgeHead % EDGES] = (ARM_DWT_CYCCNT & ~1u) | digitalReadFast(CAPTURE_PIN);
     edgeHead = edgeHead + 1;
 }

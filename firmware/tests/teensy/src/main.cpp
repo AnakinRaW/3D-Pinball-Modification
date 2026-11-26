@@ -9,6 +9,7 @@
 //                              testing.md, then END. A * in a pattern stands for any text
 //   resume <test> [soak]       runs the second half of a test that restarted the Teensy, then END
 //   reset                      restarts the Teensy
+//   blank                      sets the display up, which leaves it black, then BLANK
 //
 // The image keeps no state across a restart. A crash report left by the run before is printed as
 // CRASH lines once the host opens the port. The tests run in a FreeRTOS task, as the firmware's
@@ -17,9 +18,11 @@
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include "core/clock.h"
+#include "drivers/display.h"
 #include "logging/debug-log.h"
 #include <string.h>
 #include <task.h>
+#include "test-drivers.h"
 #include "test-harness.h"
 
 extern const Program CLOCK;
@@ -34,6 +37,7 @@ extern const Program STORAGE;
 extern const Program FILE_CHANNEL;
 extern const Program WS2812_FLEXIO2;
 extern const Program LIGHTING;
+extern const Program BREAK_BEAM;
 extern const Program I2C_BUS;
 extern const Program SERVO;
 extern const Program AUDIO;
@@ -49,10 +53,13 @@ extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
 static const Program* const PROGRAMS[] = {
-    &CLOCK,       &TASK_LOCK, &DEBUG_OUTPUT, &DEBUG_TRACE_PROGRAM, &CARD_APPENDER,  &EVENT_QUEUE,
-    &DRIVER_TICK, &PSRAM,     &STORAGE,      &FILE_CHANNEL,        &WS2812_FLEXIO2, &LIGHTING,
-    &I2C_BUS,     &SERVO,     &AUDIO,        &DISPLAY_PROGRAM,     &TOUCH_PROGRAM,  &EVERY_DRIVER,
-    &LAMPS,       &SOUNDS,    &SCREEN,       &VIDEO_PLAYER,        &LOGGER,         &START_UP};
+    &CLOCK,           &TASK_LOCK,     &DEBUG_OUTPUT,   &DEBUG_TRACE_PROGRAM,
+    &CARD_APPENDER,   &EVENT_QUEUE,   &DRIVER_TICK,    &PSRAM,
+    &STORAGE,         &FILE_CHANNEL,  &WS2812_FLEXIO2, &LIGHTING,
+    &BREAK_BEAM,      &I2C_BUS,       &SERVO,          &AUDIO,
+    &DISPLAY_PROGRAM, &TOUCH_PROGRAM, &EVERY_DRIVER,   &LAMPS,
+    &SOUNDS,          &SCREEN,        &VIDEO_PLAYER,   &LOGGER,
+    &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
@@ -341,6 +348,16 @@ static void resume(const char* name) {
     Serial.printf("ERROR no test %s\n", name);
 }
 
+// Sets the display up, which leaves it black. The panel stays awake through a restart of the
+// Teensy, and the bus lines float meanwhile, so a restart can leave a stripe of stray bytes on it.
+static void blank() {
+    if (test::display.begin()) {
+        Serial.printf("BLANK\n");
+    } else {
+        Serial.printf("ERROR the display does not begin\n");
+    }
+}
+
 // Splits the line into words, takes soak out of them and carries out the command.
 static void command() {
     char* words[MAX_WORDS];
@@ -364,6 +381,8 @@ static void command() {
         resume(words[1]);
     } else if (strcmp(words[0], "reset") == 0 && count == 1) {
         restartNow();
+    } else if (strcmp(words[0], "blank") == 0 && count == 1) {
+        blank();
     } else {
         Serial.printf("ERROR unknown command %s\n", words[0]);
     }

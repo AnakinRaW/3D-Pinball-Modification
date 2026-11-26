@@ -56,6 +56,9 @@ public:
 
     virtual const char* id() const = 0;             // its directory on the card, /games/<id>
     virtual const char* title() const = 0;          // the name the player sees
+    virtual const char* cover() const { return nullptr; }  // the picture its card in the menu shows, or none
+    virtual uint8_t players() const = 0;            // how many play, from 1 to 4
+    virtual int32_t score(uint8_t player) const = 0;  // a player's score, the players counted from 0
 
     virtual void start(Machine& machine) = 0;       // starts a new game: Stopped to Intro
     virtual void play() = 0;                        // begins play: Intro to Play
@@ -159,25 +162,23 @@ private:
     Machine* machine_ = nullptr;                // the machine the modes run on, from start()
 };
 
-// the games this firmware carries; the first one is the default
+// the games this firmware carries; the first one is the built-in game, the first card of the game choice
 extern Game* const kGames[];
 extern const size_t kGameCount;
 
 class GameHost {
 public:
     void add(Component& component);            // routes the driver events of the component's parts through it
-    void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes and reads which game ran last, or the default game; the first update() launches it
+    void begin(Machine& machine, bool touch);   // starts the sounds at their starting volumes; the first update() shows the game choice, or starts the one game there is
     void dispatch(const DriverEvent& e);       // hands a driver event to its component and that one's events to the game, or a service's event copied to the game; keeps a fault for the logging or display
     void update(uint32_t now);                 // updates every component, then the running game, and moves the game on once its phase is done
-    void launch(Game* next);                   // the sequence every start takes; the menu calls it on OK as well
+    void launch(Game* next);                   // the sequence every start takes; the game choice and the menu call it on OK
 
 private:
     enum Phase { Stopped, Intro, Play, PostGame };
 
     void  cleanUp();                 // resets the components after a game, such as the lamps
     void  prepare(Game* next);       // sets audio, display and lighting up for next
-    Game* lastGame();                // gets the game that ran last from a file outside the games' directories, or the default game
-    void  saveLastGame(Game* next);  // writes the id of next, which lastGame() reads at the next start-up
     void  start();                   // starts the game launch() chose, once the screen has cleared the stopped game's objects and pictures
     bool  service(const DriverEvent& in, PinballEvent& out);   // copies a service's event into the pinball event of the same name; false for any other
 
@@ -185,12 +186,11 @@ private:
     Game*    game_    = nullptr;
     Phase    phase_   = Stopped;
     bool     starting_ = false;      // launch() chose game_, and start() has not started it yet
-    Game*    first_    = nullptr;    // the game begin() read, which the first update() launches
+    bool     choose_   = false;      // begin() ran, and the first update() shows the game choice
     bool     touch_   = false;
     FailedDevices failed_;   // the failed parts of every device, for the menu
-    FileWriter  lastFile_;   // "/last-game", which keeps the id of the game that ran last
-    FileRequest lastSaved_;  // the write of that id, which saveLastGame() starts
-    char        lastId_[Storage::kPath] = {};   // the id lastGame() reads at start-up; saveLastGame() rewrites the file from next's id
+    GameChoice  choice_;     // the first screen: a card for each game, the built-in game first; a pick calls launch()
+    HighScores  highScores_; // the running game's list in /games/<id>/highscores.yml: takes a name from each player, compares every player's score, writes and shows the list
     Component* components_[kComponents];   // the components add() was given
     size_t     componentCount_ = 0;
 };
@@ -199,7 +199,7 @@ void GameHost::begin(Machine& machine, bool touch) {
     machine_ = &machine;
     touch_   = touch;
     machine.sounds.begin();                     // the starting volumes from the config
-    first_   = lastGame();                      // read before the main loop; the first update() launches it
+    choose_  = true;                            // the first update() shows the game choice
 }
 
 void GameHost::dispatch(const DriverEvent& e) {
@@ -234,9 +234,10 @@ void GameHost::update(uint32_t now) {
         if (!components_[i]->update(now, t) || phase_ == Stopped) continue;   // a stopped game gets no calls
         for (uint8_t k = 0; k < t.count; ++k) game_->event(t.events[k]);
     }
-    if (first_) {                               // the game begin() read
-        launch(first_);
-        first_ = nullptr;
+    if (choose_) {                              // the first pass after begin()
+        choose_ = false;
+        if (kGameCount == 1) launch(kGames[0]);  // a single game starts at once, the built-in game after the warning that no card is in
+        else choice_.show(kGames, kGameCount);   // the built-in game's card first
         return;
     }
     if (phase_ == Stopped) {                    // a stopped game gets no calls
@@ -247,8 +248,8 @@ void GameHost::update(uint32_t now) {
     if (!game_->done()) return;
     switch (phase_) {
         case Intro:    phase_ = Play;     solenoids.arm(true);  game_->play(); break;   // Intro to Play, bumpers armed
-        case Play:     phase_ = PostGame; solenoids.arm(false); game_->end();  break;   // Play to Post-game, bumpers disarmed
-        case PostGame: launch(game_);                    break;   // a new game of the same kind
+        case Play:     phase_ = PostGame; solenoids.arm(false); game_->end(); highScores_.begin(*game_); break;   // Play to Post-game, bumpers disarmed, every player's score to the list
+        case PostGame: if (highScores_.done()) launch(game_); break;   // a new game of the same kind, once every name entry is done
         default:                                         break;
     }
 }
@@ -264,11 +265,10 @@ void GameHost::launch(Game* next) {
     machine_->sounds.reset();               // the stopped game's sounds end with it
     machine_->screen.reset();               // and its objects and pictures
     machine_->videoPlayer.reset();          // and its video
-    saveLastGame(next);                     // 2. the id of next
-    prepare(next);                          // 3. audio, display and lighting
+    prepare(next);                          // 2. audio, display and lighting
     game_     = next;
     starting_ = true;
-    start();                                // 4. Stopped to Intro, at once unless a picture of the stopped game still lands
+    start();                                // 3. Stopped to Intro, at once unless a picture of the stopped game still lands
 }
 
 // a picture of the stopped game still landing in a layer would cover what the new game draws in start()
@@ -279,17 +279,17 @@ void GameHost::start() {
     phase_ = Intro;
 }
 
-// an example game: three balls, 100 points a lane, and a ball save after each launch
+// an example game for one player: three balls, 100 points a lane, and a ball save after each launch
 class Classic : public Game {
 public:
     const char* id() const override    { return "classic"; }
     const char* title() const override { return "Classic"; }
+    uint8_t players() const override   { return 1; }
+    int32_t score(uint8_t) const override { return score_; }
 
     // Stopped to Intro
     void start(Machine& m) override {
         m_ = &m; phase_ = Intro; done_ = false; score_ = 0; balls_ = 3; saveDue_ = false;
-        bestFile_ = m.files.open("best");
-        if (load_.status() != FileStatus::Pending) bestFile_.read(0, &best_, sizeof best_, load_);   // the high score, there before the intro ends; a read still on its way after a quick restart brings the same file
         m.scoop.fire();                         // empty the scoop
         kicked_ = nowUs();
         modes_.start(base_, m);                 // the base mode runs until the game stops
@@ -304,16 +304,11 @@ public:
         m_->drain.release();
     }
 
-    // Play to Post-game: ends every mode but the base mode, plays the end music, keeps the high score, shows the score
+    // Play to Post-game: ends every mode but the base mode, plays the end music, shows the score
     void end() override {
         phase_ = PostGame; done_ = false;
         modes_.stopAllBut(base_);
         m_->sounds.music(base_, "outro.wav");
-        const bool known = load_.status() == FileStatus::Succeeded;   // a failed read leaves the high score on the card unknown
-        if (known && score_ > best_) {
-            best_ = score_;
-            bestFile_.rewrite(&best_, sizeof best_, save_);   // best_ stays unchanged until save_ has ended
-        }
         // ... draws score_ into the game overlay layer
     }
 
@@ -331,14 +326,14 @@ public:
         if (phase_ == Intro) {
             if (m_->scoop.holding()) {                                  // a ball still inside
                 if (now - kicked_ >= kKickGapUs) { m_->scoop.fire(); kicked_ = now; }
-            } else if (m_->sounds.musicEnded(base_) && load_.status() != FileStatus::Pending) {
+            } else if (m_->sounds.musicEnded(base_)) {
                 done_ = true;                                           // the intro is done
             }
         } else if (phase_ == Play) {
             modes_.update(now);
         } else if (phase_ == PostGame) {
-            if (save_.status() != FileStatus::Pending && m_->sounds.musicEnded(base_)) {
-                done_ = true;                                           // the end music has played and the write has ended
+            if (m_->sounds.musicEnded(base_)) {
+                done_ = true;                                           // the end music has played
             }
         }
     }
@@ -410,11 +405,7 @@ private:
     Phase    phase_  = Intro;
     bool     done_   = false;                       // the current phase is done
     uint32_t kicked_ = 0;
-    uint32_t score_  = 0;
-    uint32_t best_   = 0;                           // the high score, read from the card
-    FileWriter  bestFile_;                          // the high score's file on the card
-    FileRequest load_;                              // the read of the high score
-    FileRequest save_;                              // the write of a new high score
+    int32_t  score_  = 0;
     uint8_t  balls_  = 0;
     bool     saveDue_ = false;                      // the base mode launched a ball, so a ball save starts after the walk
     Base      base_{*this};

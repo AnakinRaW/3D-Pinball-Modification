@@ -1,12 +1,13 @@
 #include "sound-mixer.h"
 
-constexpr float RATE_HZ = 44100;   // audio model: f_s
+constexpr float RELEASE_MS = 100;       // audio.md: the gain's way back up to 1
+constexpr int32_t FULL_SCALE = 32767;   // the largest 16-bit sample
+constexpr float RATE_HZ = 44100;        // audio model: f_s
 constexpr float MS_PER_S = 1000;
-constexpr float HALF = 0.5f;                              // rounds a sample to the nearest step
-constexpr int32_t LOWEST = -SoundMixer::FULL_SCALE - 1;   // the lowest 16-bit sample
+constexpr float HALF = 0.5f;                  // rounds a sample to the nearest step
+constexpr int32_t LOWEST = -FULL_SCALE - 1;   // the lowest 16-bit sample
 // The gain comes back up linearly, from 0 to 1 within RELEASE_MS.
-constexpr float RELEASE_PER_BLOCK =
-    float(SOUND_BLOCK_SAMPLES) / (RATE_HZ * SoundMixer::RELEASE_MS / MS_PER_S);
+constexpr float RELEASE_PER_BLOCK = float(SOUND_BLOCK_SAMPLES) / (RATE_HZ * RELEASE_MS / MS_PER_S);
 
 bool SoundMixer::mix(const int16_t* const (&in)[INPUTS], int16_t (&out)[SOUND_BLOCK_SAMPLES]) {
     // The new block is summed first, since out may be one of the inputs.

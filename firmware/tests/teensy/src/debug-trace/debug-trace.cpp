@@ -15,6 +15,7 @@
 
 #include <Arduino.h>
 #include <IntervalTimer.h>
+#include <new>
 #include <string.h>
 #include "core/clock.h"
 #include "logging/debug-trace.h"
@@ -49,8 +50,14 @@ constexpr uint32_t CHECK_TIMEOUT_MS = 10000;   // the runner's answer after the 
 constexpr const char* URGENT = "urgent";
 constexpr const char* CALM = "calm";
 
-static TraceRecord records[RECORDS];
-static DebugTrace trace(records, RECORDS);
+EXTMEM static TraceRecord records[RECORDS];
+// The start leaves EXTMEM uncleared, so every record gets its initial value first.
+static DebugTrace trace = [] {
+    for (TraceRecord& r : records) {
+        new (&r) TraceRecord();
+    }
+    return DebugTrace(records, RECORDS);
+}();
 static volatile int32_t urgentNoted = 0;
 static volatile int32_t calmNoted = 0;
 static IntervalTimer pit;

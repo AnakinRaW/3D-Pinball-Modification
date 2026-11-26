@@ -5,28 +5,14 @@
 #include <stdio.h>
 
 constexpr char AUDIO_DIRECTORY[] = "audio/";   // sounds.md: the game's audio directory
-constexpr float PERCENT = 100;                 // the log writes a volume in whole percent
 
 void Sounds::begin() {
-    const float music = fminf(fmaxf(settings.musicVolume, VOLUME_MIN), VOLUME_MAX);
-    float effects = fminf(fmaxf(settings.effectsVolume, VOLUME_MIN), VOLUME_MAX);
-    // Music and an effect at their full volumes add up to the output's full scale, so the two
-    // squared stay within 1.
-    const float room = sqrtf(VOLUME_MAX - music * music);
-    if (effects > room) {
-        logWarning("sounds",
-                   "audio.effects_volume lowered from %ld %% to %ld %%, so music and an effect "
-                   "never overdrive the output",
-                   lroundf(effects * PERCENT), lroundf(room * PERCENT));
-        effects = room;
-    }
-    musicVolume(music);
-    effectsVolume(effects);
+    musicVolume(settings.musicVolume);
+    effectsVolume(settings.effectsVolume);
 }
 
 float Sounds::gain(float percent) {
-    const float p = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
-    return p * p;
+    return percent * percent;
 }
 
 FileReader Sounds::file(const char* name) const {
@@ -180,12 +166,28 @@ uint32_t Sounds::videoPlayed() const {
 }
 
 void Sounds::musicVolume(float percent) {
-    musicGain = gain(percent);
-    audio.volume(MUSIC, musicGain);
+    musicPercent = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
+    balance();
 }
 
 void Sounds::effectsVolume(float percent) {
-    effectsGain = gain(percent);
+    effectsPercent = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
+    balance();
+}
+
+void Sounds::balance() {
+    float music = gain(musicPercent);
+    float effects = gain(effectsPercent);
+    // A full-scale sample of the music and one of an effect add up on the mixer. Dividing both by
+    // their sum keeps that within full scale and keeps the ratio between them.
+    const float sum = music + effects;
+    if (sum > FULL_SCALE) {
+        music = music * FULL_SCALE / sum;
+        effects = effects * FULL_SCALE / sum;
+    }
+    musicGain = music;
+    effectsGain = effects;
+    audio.volume(MUSIC, musicGain);
     for (uint8_t c = MUSIC + 1; c < AudioDriver::CHANNELS; ++c) {
         audio.volume(c, effectsGain);
     }

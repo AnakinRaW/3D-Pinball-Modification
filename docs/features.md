@@ -10,7 +10,7 @@ The modification keeps every feature of the stock machine and builds on it.
 |---|---|---|
 | **Multiball** | None. | **Two balls may be in play at the same time.** Sensors in the drain see each ball in the store. A **seesaw separates the two balls** and releases one at a time into the plunger lane. [Drain](firmware/components/drain.md) |
 | **Modes** | None. | A game splits its rules into **modes**, such as **a skill shot**, **the ball save** or the multiball. The ball save returns **a ball that drains soon after its launch** into the plunger lane. **Several modes run at the same time**. Each mode has lights, a slide and music. [Modes](firmware/game-abstraction.md#modes), [example game](firmware/game-abstraction.md#an-example-game) |
-| Rules | One built-in game, which the player wins or loses. | **Several games** can be built into the firmware, each with its own rules, sounds and pictures. Each game **keeps its high score**. [Game abstraction](firmware/game-abstraction.md) |
+| Rules | One built-in game, which the player wins or loses. | **Several games** can be built into the firmware, each with its own rules, sounds and pictures. **Up to four players** take turns. Each game **keeps a high-score list** with a name for each entry. [Game abstraction](firmware/game-abstraction.md) |
 
 ## Playfield
 
