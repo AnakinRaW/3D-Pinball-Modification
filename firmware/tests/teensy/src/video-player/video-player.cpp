@@ -35,6 +35,7 @@
 #include "drivers/storage.h"
 #include "drivers/touch.h"
 #include "io/i2c-bus.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 #include "test-media.h"
 
@@ -135,15 +136,14 @@ public:
     static uint32_t played(const Sounds& sounds) { return sounds.videoPlayed(); }
 };
 
-static Display display;
-static Screen screen(display);
-static EventQueue queue;
-static AudioDriver audio(queue);
-static FileSystem files(storage);
-static Sounds sounds(audio, files);
-static VideoPlayer player(screen, files, sounds);
-static Lighting lighting;
-static Touch touch(io::wire2Bus, queue, driverTick);
+using test::audio;
+using test::display;
+using test::files;
+using test::lighting;
+using test::screen;
+using test::sounds;
+using test::touch;
+using test::videoPlayer;
 static Tap* tap = nullptr;
 static char seen[TEXT];
 static uint32_t movieEnded = 0;
@@ -166,7 +166,7 @@ static bool ready() {
         static AudioConnection wire(audio.output(), 0, made, 0);
         tap = &made;
         screen.begin();
-        player.begin();
+        videoPlayer.begin();
         begun = true;
     }
     if (!media::writeLoop() || !media::writeEffects() || !media::writePictures() ||
@@ -176,7 +176,7 @@ static bool ready() {
     }
     GameHost::use(files, media::GAME);
     sounds.begin();
-    GameHost::reset(screen, player, sounds);
+    GameHost::reset(screen, videoPlayer, sounds);
     // frames decodes the sum of all four channels at full scale. The sounds scale music and
     // effects at 1 down to a half each, so the test hands the driver its volumes directly.
     for (uint8_t c = 0; c < AudioDriver::CHANNELS; ++c) {
@@ -190,13 +190,13 @@ static bool ready() {
 // player's event and renders.
 static void pass() {
     DriverEvent e[EVENTS];
-    const uint32_t n = queue.read(e, EVENTS);
+    const uint32_t n = events.read(e, EVENTS);
     for (uint32_t i = 0; i < n; ++i) {
         PinballEvents out;
         sounds.translate(e[i], out);
     }
     PinballEvents out;
-    if (player.update(nowUs(), out)) {
+    if (videoPlayer.update(nowUs(), out)) {
         movieEnded = movieEnded + out.count;
     }
     screen.render();
@@ -355,7 +355,7 @@ static void testFrames() {
     lastFrame = -1;
     framesShown = framesSkipped = framesOff = notedCount = lateFrames = longestGapUs = 0;
     worstOff = 0;
-    if (!player.play(v, "loop", true, true)) {
+    if (!videoPlayer.play(v, "loop", true, true)) {
         test::fail("play() false", "the video plays");
         return;
     }
@@ -394,10 +394,10 @@ static void testFrames() {
         pass();
         const uint32_t passUs = nowUs() - passStart;
         longestPassUs = passUs > longestPassUs ? passUs : longestPassUs;
-        kept = checkTap() && player.playing(v);
+        kept = checkTap() && videoPlayer.playing(v);
     }
     const uint32_t loops = (millis() - t0) / (media::LOOP_FRAMES * 1000 / media::FRAMES_PER_S) + 1;
-    player.stop(v);
+    videoPlayer.stop(v);
     for (uint8_t c = 1; c <= 3; ++c) {
         audio.stop(c);
     }
@@ -451,7 +451,7 @@ static void testViewport() {
     lv_obj_set_style_bg_color(caption, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(caption, LV_OPA_COVER, 0);
     lv_obj_set_pos(caption, 120, 170);
-    if (!player.play(v, "viewport", true, false)) {
+    if (!videoPlayer.play(v, "viewport", true, false)) {
         test::fail("play() false", "the video plays");
         return;
     }
@@ -464,7 +464,7 @@ static void testViewport() {
     const test::Answer a = test::ask("does the video fill only its viewport, with the picture "
                                      "around it and CAPTION in front of the video?",
                                      ASK_MS);
-    player.stop(v);
+    videoPlayer.stop(v);
     if (a != test::Answer::YES) {
         test::fail(a == test::Answer::NO ? "the layering looked wrong" : "no answer",
                    "the video in its viewport, the caption in front");
@@ -480,7 +480,7 @@ static void testMissingMovie() {
         return;
     }
     lv_obj_t* v = viewport(screen.slide(SLIDE), 0, 0, media::W, media::H);
-    if (!player.play(v, "none", false, false)) {
+    if (!videoPlayer.play(v, "none", false, false)) {
         test::fail("play() false", "true, and the video ends");
         return;
     }
@@ -488,8 +488,9 @@ static void testMissingMovie() {
     while (millis() - t0 < END_MS) {
         pass();
     }
-    if (movieEnded != 1 || player.playing(v)) {
-        snprintf(seen, sizeof seen, "%lu MOVIE_ENDED, playing %d", movieEnded, player.playing(v));
+    if (movieEnded != 1 || videoPlayer.playing(v)) {
+        snprintf(seen, sizeof seen, "%lu MOVIE_ENDED, playing %d", movieEnded,
+                 videoPlayer.playing(v));
         test::fail(seen, "one MOVIE_ENDED, not playing");
         return;
     }
@@ -511,7 +512,7 @@ static void testSync() {
         pass();
     }
     lv_obj_t* v = viewport(screen.slide(SLIDE), 0, 0, media::W, media::H);
-    if (!player.play(v, "sync", false, true)) {
+    if (!videoPlayer.play(v, "sync", false, true)) {
         test::fail("play() false", "the video plays");
         return;
     }

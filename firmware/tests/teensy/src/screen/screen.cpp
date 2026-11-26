@@ -25,6 +25,7 @@
 #include "drivers/display.h"
 #include "drivers/storage.h"
 #include "drivers/touch.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 #include "test-media.h"
 
@@ -40,17 +41,13 @@ constexpr uint32_t LOST_TIMEOUT_MS = 80000;   // power-lost: the time for each s
 constexpr uint32_t RESTART_TIMEOUT_MS = 2000;
 constexpr uint32_t ASK_TIMEOUT_MS = 120000;
 
-static Display display;
-static Screen screen(display);
-static EventQueue queue;
-static AudioDriver audio(queue);
-static FileSystem files(storage);
-static Sounds sounds(audio, files);
-static VideoPlayer player(screen, files, sounds);
-static Touch touch(io::wire2Bus, queue, driverTick);
-static EventQueue monitorEvents;
-DMAMEM static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
+using test::audio;
+using test::display;
+using test::files;
+using test::screen;
+using test::sounds;
+using test::touch;
+using test::videoPlayer;
 static char seen[TEXT];
 static char wanted[TEXT];
 
@@ -79,7 +76,7 @@ static bool ready() {
             return false;
         }
         screen.begin();
-        player.begin();
+        videoPlayer.begin();
         begun = true;
     }
     if (!media::writePictures() || !media::writeLoop()) {
@@ -87,7 +84,7 @@ static bool ready() {
         return false;
     }
     GameHost::use(files, media::GAME);
-    GameHost::reset(screen, player);
+    GameHost::reset(screen, videoPlayer);
     return true;
 }
 
@@ -272,7 +269,7 @@ static void testRedraw() {
     lv_obj_t* viewport = lv_obj_create(slide);
     lv_obj_remove_style_all(viewport);
     lv_obj_set_size(viewport, media::W, media::H);
-    if (!player.play(viewport, "loop", true, false)) {
+    if (!videoPlayer.play(viewport, "loop", true, false)) {
         test::fail("play() false", "the video plays");
         return;
     }
@@ -283,11 +280,18 @@ static void testRedraw() {
     test::pass();
 }
 
+// Gets whether an event is the device monitor's report about the touch controller.
+static bool isTouchFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::TOUCH;
+}
+
 // Renders as the main loop does until the monitor's next event about the touch controller.
 static bool nextTouchFault(DriverEvent& e) {
     const uint32_t t0 = millis();
     while (millis() - t0 < LOST_TIMEOUT_MS) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+        if (events.read(&e, 1) == 1 && isTouchFault(e)) {
             return true;
         }
         screen.render();
@@ -307,7 +311,7 @@ static void testPowerLost() {
         test::skip("no touch controller answers");
         return;
     }
-    if (!monitor.watch(Device::TOUCH, touch)) {
+    if (!deviceMonitor.watch(Device::TOUCH, touch)) {
         test::fail("the monitor refused the touch driver", "it watches it");
         return;
     }

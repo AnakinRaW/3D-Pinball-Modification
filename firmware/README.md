@@ -23,7 +23,7 @@ python -m platformio test -e computer  runs the tests that need no hardware
 python firmware/tools/tidy.py          checks the code with clang-tidy
 ```
 
-The firmware links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1.
+The firmware links with [`linker/teensy41.ld`](linker/teensy41.ld), PJRC's linker script with two lines that keep LVGL's code in the flash. Without them LVGL takes about 200 KB more of RAM1. The test image links with [`linker/teensy41-tests.ld`](linker/teensy41-tests.ld), which puts the code and the constant data of its test programs into the flash as well. Every Teensy build fails when RAM1 keeps less than 16 KB free for local variables, which [`tools/ram1-floor.py`](tools/ram1-floor.py) checks after linking.
 
 The firmware defines `USE_ARDUINO_DEFINES` before it includes `arduino_freertos.h`, because FastLED and [WDT_T4](https://github.com/tonton81/WDT_T4) need Arduino's macros.
 
