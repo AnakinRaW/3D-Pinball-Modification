@@ -59,19 +59,27 @@ Eleven figures accompany the table: power dissipation against ambient temperatur
 | Saturation voltage | none published | 0.3 V max |
 | Collector dark current | 1 nA typ, 100 nA max at V_CE = 20 V | 200 nA at V_CE = 20 V |
 
-**The two collector-current figures do not compare.** Forward current, collector voltage, reflector material and distance all differ between the conditions, and the CNY70 sheet publishes no curve that carries a reading from one condition to the other. Which part returns more from a 9 mm steel ball at the working distance the playfield imposes comes off the bench.
+### The two collector-current figures do not compare
 
-**Vishay publishes no switching figure of any kind for the CNY70.** No rise time, no fall time, no curve against load resistance. The settling models in the [channel model](../../parts/ir-reflective/channel-model/) that rest on Sharp's Figure 6 therefore have no counterpart here, and every τ for this part starts from a measurement. Two shapes carry that measurement to other pull-downs and bracket the answer: τ proportional to the load, which is the first-order relation a load resistance against a fixed capacitance gives, and τ flat, which is what the measurement alone states.
+Forward current, collector voltage, reflector material and distance all differ between the conditions, and the CNY70 sheet publishes no curve that carries a reading from one condition to the other. Which part returns more from a 9 mm steel ball at the working distance the playfield imposes comes off the bench.
+
+### Vishay publishes no switching figure of any kind for the CNY70
+
+No rise time, no fall time, no curve against load resistance. The settling models in the [channel model](../../parts/ir-reflective/channel-model/) that rest on Sharp's Figure 6 therefore have no counterpart here, and every τ for this part starts from a measurement. Two shapes carry that measurement to other pull-downs and bracket the answer: τ proportional to the load, which is the first-order relation a load resistance against a fixed capacitance gives, and τ flat, which is what the measurement alone states.
 
 ## Collector load
 
-**The collector is not brought out, so the 1.585 kΩ cannot be a measuring resistor.** The board's three pins are the supply, the emitter and the LED cathode, and R1 bridges the supply and the collector, which reaches nothing outside the board. Both are meter readings on the stock board: `1 → B` and `1 → R1L` at 1.585 kΩ, `2 → A` at 0.10 Ω.
+### The collector is not brought out, so the 1.585 kΩ cannot be a measuring resistor
 
-**What it does bound is the current the device can pass.** A phototransistor under strong infrared saturates, and Sharp publishes no V_CE(sat) for the GP2S700HCP, so nothing in the sheet bounds the branch once that happens. R1 bounds it at (5 − 0.6) V / 1585 Ω = 2.8 mA against the 20 mA I_C maximum, taking the 0.6 V that Pin 2 was measured to clamp at. Whatever is wired to Pin 2 is inside that bound as well.
+The board's three pins are the supply, the emitter and the LED cathode, and R1 bridges the supply and the collector, which reaches nothing outside the board. Both are meter readings on the stock board: `1 → B` and `1 → R1L` at 1.585 kΩ, `2 → A` at 0.10 Ω.
+
+### What it does bound is the current the device can pass
+
+A phototransistor under strong infrared saturates, and Sharp publishes no V_CE(sat) for the GP2S700HCP, so nothing in the sheet bounds the branch once that happens. R1 bounds it at (5 − 0.6) V / 1585 Ω = 2.8 mA against the 20 mA I_C maximum, taking the 0.6 V that Pin 2 was measured to clamp at. Whatever is wired to Pin 2 is inside that bound as well.
 
 The 0.6 V clamp is a scope reading, flat at every distance, so a base-emitter junction on the mainboard holds Pin 2 there. The mainboard itself was never probed: its circuit is [a reconstruction](../Rokr/2_ir-reflective-sensor-p33.md) from part markings and scope traces, one of its four resistors is unread, and whether a resistor sits at Pin 2 beside that junction is open. The clamp holds either way, so the bound above does not rest on it.
 
-**This modification puts a pull-down at that node**, which alone bounds the current at 3.449 V / 4.7 kΩ = 734 µA. The rebuilt boards therefore carry no R1, and nothing in the CNY70's ratings asks for one.
+This modification puts a pull-down at that node, which alone bounds the current at 3.449 V / 4.7 kΩ = 734 µA. The rebuilt boards therefore carry no R1, and nothing in the CNY70's ratings asks for one.
 
 ```
 saturation current, the whole external limit, at V_OUT max
@@ -112,9 +120,13 @@ Taken off the plotted curves in document 83751, which prints no table for either
 
 Figure 3 reads 1.08 V there, so the part sits 0.10 V above the curve. Half of that is the reading error the figure carries on a logarithmic axis, the rest is ordinary spread between samples. A GP2S700HCP measured on the same bench at the same current gave 1.17 V, within 10 mV of the CNY70.
 
-**A full board of CNY70 emitters costs about 2 mA more on the bus.** At 220 Ω from the rail maximum, the measured V_F of 1.18 V gives (3.449 − 1.15) V / 220 Ω = 10.4 mA per channel against the 10.3 mA the design derives for the GP2S700HCP, taking 2 mV/°C off V_F for the 40 °C the sensors are bounded at. Sixteen of them spend 167 mA of the 222.6 mA the emitters are allowed.
+### A full board of CNY70 emitters costs about 2 mA more on the bus
 
-**V_CE stays in the flat part of Figure 6.** At 50 µA through 1.58 kΩ and 4.7 kΩ the device keeps 3.3 − 0.31 = 2.99 V, and Figure 6 is flat from about 1 V upward.
+At 220 Ω from the rail maximum, the measured V_F of 1.18 V gives (3.449 − 1.15) V / 220 Ω = 10.4 mA per channel against the 10.3 mA the design derives for the GP2S700HCP, taking 2 mV/°C off V_F for the 40 °C the sensors are bounded at. Sixteen of them spend 167 mA of the 222.6 mA the emitters are allowed.
+
+### V_CE stays in the flat part of Figure 6
+
+At 50 µA through 1.58 kΩ and 4.7 kΩ the device keeps 3.3 − 0.31 = 2.99 V, and Figure 6 is flat from about 1 V upward.
 
 ## Settling, measured
 
