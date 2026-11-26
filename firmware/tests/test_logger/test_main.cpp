@@ -1,7 +1,8 @@
 // Tests on the computer whether the logger forms its lines, writes them to the card in one write a
 // second, keeps them through a failed write, states its lost lines and takes its two files in
-// turns. The files are fakes whose writes end at once. The fakes of tests/fakes set the time:
-// GPT2_CNT for the appender's second, fakeMillis for the time in front of a line.
+// turns, and whether its warnings enter the warning list. The files are fakes whose writes end at
+// once. The fakes of tests/fakes set the time: GPT2_CNT for the appender's second, fakeMillis for
+// the time in front of a line.
 //
 //   format        each line starts with the milliseconds since the start, then the level's letter
 //                 and the writer's name. The banner follows the head line
@@ -16,14 +17,20 @@
 //   no-card       without a card the main task calls no begin(). Every line is lost and counted
 //   interrupt     a line from an interrupt is lost and counted
 //   free-lines    logInfo() and logWarning() write into the logger whose begin() ran last
+//   warning-list  equal warnings share an entry, a long text is cut, every change raises the
+//                 version, and a warning from an interrupt stays out
+//   warnings-full the first warnings keep their entries, and the rest are counted
+//   early-warnings  logWarning() fills the warning list before the log has begun and after
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "logging/logger.h"
+#include "logging/warning-list.h"
 #include "core/clock.h"
 #include "core/task-lock.h"
 #include "core/version.h"
 #include <Arduino.h>
+#include <inttypes.h>
 #include <string>
 #include <unity.h>
 
@@ -282,8 +289,115 @@ static void testFreeLines() {
                              a.content.substr(a.content.size() - expected.size()).c_str());
 }
 
+// Gets the text of a warning as it stands in the list.
+static std::string textOf(const WarningEntry& e) {
+    return std::string(e.who) + " " + e.text;
+}
+
+// Takes a warning into a list, as logWarning() does.
+static void addTo(WarningList& list, const char* who, uint32_t ms, const char* format, ...)
+    __attribute__((format(printf, 4, 5)));
+
+static void addTo(WarningList& list, const char* who, uint32_t ms, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    list.add(who, ms, format, args);
+    va_end(args);
+}
+
+// warning-list: equal warnings share an entry, a long text is cut, every change raises the
+// version, and a warning from an interrupt stays out.
+static void testWarningList() {
+    WarningList list;
+    TEST_ASSERT_EQUAL_UINT8(0, list.count());
+    addTo(list, "servo", 10, "start_deg %u lies outside 0 to 180", 200u);
+    addTo(list, "lamps", 20, "no lamp %u", 12u);
+    addTo(list, "servo", 30, "start_deg %u lies outside 0 to 180", 200u);
+    addTo(list, "lamps", 40, "no lamp %u", 13u);
+    TEST_ASSERT_EQUAL_UINT8(3, list.count());
+    TEST_ASSERT_EQUAL_UINT32(4, list.version());
+
+    WarningEntry e;
+    TEST_ASSERT_TRUE(list.read(0, e));
+    TEST_ASSERT_EQUAL_STRING("servo start_deg 200 lies outside 0 to 180", textOf(e).c_str());
+    TEST_ASSERT_EQUAL_UINT16(2, e.count);
+    TEST_ASSERT_EQUAL_UINT32(10, e.firstMs);
+    TEST_ASSERT_TRUE(list.read(1, e));
+    TEST_ASSERT_EQUAL_STRING("lamps no lamp 12", textOf(e).c_str());
+    TEST_ASSERT_EQUAL_UINT16(1, e.count);
+    TEST_ASSERT_TRUE(list.read(2, e));
+    TEST_ASSERT_EQUAL_STRING("lamps no lamp 13", textOf(e).c_str());
+    TEST_ASSERT_FALSE(list.read(3, e));
+
+    // A text longer than an entry holds is cut to its first characters.
+    const std::string longText(2 * WarningEntry::TEXT_BYTES, 'x');
+    addTo(list, "config", 50, "%s", longText.c_str());
+    TEST_ASSERT_TRUE(list.read(3, e));
+    TEST_ASSERT_EQUAL_STRING(longText.substr(0, WarningEntry::TEXT_BYTES - 1).c_str(), e.text);
+
+    // An interrupt never takes the lock, so its warning stays out of the list.
+    fakeInInterrupt = true;
+    const uint32_t locks = fakeLocksTaken;
+    addTo(list, "isr", 60, "x");
+    fakeInInterrupt = false;
+    TEST_ASSERT_EQUAL_UINT32(locks, fakeLocksTaken);
+    TEST_ASSERT_EQUAL_UINT8(4, list.count());
+    TEST_ASSERT_EQUAL_UINT32(5, list.version());
+    TEST_ASSERT_EQUAL_UINT32(0, list.dropped());
+}
+
+// warnings-full: the first warnings keep their entries, and the rest are counted.
+static void testWarningsFull() {
+    WarningList list;
+    for (uint32_t i = 0; i <= WarningList::ENTRIES; ++i) {
+        addTo(list, "lamps", i, "no lamp %" PRIu32, i);
+    }
+    TEST_ASSERT_EQUAL_UINT8(WarningList::ENTRIES, list.count());
+    TEST_ASSERT_EQUAL_UINT32(1, list.dropped());
+    WarningEntry e;
+    TEST_ASSERT_TRUE(list.read(0, e));
+    TEST_ASSERT_EQUAL_STRING("no lamp 0", e.text);
+    TEST_ASSERT_TRUE(list.read(WarningList::ENTRIES - 1, e));
+    TEST_ASSERT_EQUAL_STRING("no lamp 15", e.text);
+
+    // A warning that holds an entry still counts while the list is full.
+    const uint32_t version = list.version();
+    addTo(list, "lamps", 99, "no lamp %u", 0u);
+    TEST_ASSERT_TRUE(list.read(0, e));
+    TEST_ASSERT_EQUAL_UINT16(2, e.count);
+    TEST_ASSERT_EQUAL_UINT32(version + 1, list.version());
+    TEST_ASSERT_EQUAL_UINT32(1, list.dropped());
+}
+
+// early-warnings: logWarning() fills warningList before any log has begun and after, and
+// logInfo() leaves it alone. It runs first, while no logger has begun.
+static void testEarlyWarnings() {
+    const uint8_t before = warningList.count();
+    logWarning("touch", "raw_left %u lies above %u", 5000u, 4095u);
+    logInfo("host", "game %d", 1);
+    TEST_ASSERT_EQUAL_UINT8(before + 1, warningList.count());
+    WarningEntry e;
+    TEST_ASSERT_TRUE(warningList.read(before, e));
+    TEST_ASSERT_EQUAL_STRING("touch raw_left 5000 lies above 4095", textOf(e).c_str());
+
+    FakeFile a;
+    FakeFile b;
+    Logger logger(a, b, buffer, sizeof(buffer));
+    logger.begin(startOf(a), startOf(b));
+    const std::string t = nowText();
+    logWarning("lamps", "no lamp %u", 3u);
+    writeNow(logger);
+    const std::string expected = t + " W lamps no lamp 3\n";
+    TEST_ASSERT_EQUAL_STRING(expected.c_str(),
+                             a.content.substr(a.content.size() - expected.size()).c_str());
+    TEST_ASSERT_EQUAL_UINT8(before + 2, warningList.count());
+    TEST_ASSERT_TRUE(warningList.read(before + 1, e));
+    TEST_ASSERT_EQUAL_STRING("lamps no lamp 3", textOf(e).c_str());
+}
+
 int main() {
     UNITY_BEGIN();
+    RUN_TEST(testEarlyWarnings);
     RUN_TEST(testFormat);
     RUN_TEST(testBufferFull);
     RUN_TEST(testOneWrite);
@@ -293,5 +407,7 @@ int main() {
     RUN_TEST(testNoCard);
     RUN_TEST(testInterrupt);
     RUN_TEST(testFreeLines);
+    RUN_TEST(testWarningList);
+    RUN_TEST(testWarningsFull);
     return UNITY_END();
 }

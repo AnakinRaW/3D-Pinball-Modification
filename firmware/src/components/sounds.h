@@ -17,6 +17,8 @@ public:
     static constexpr uint8_t MUSIC = 0;             // sounds.md: the music's channel
     static constexpr float MUSIC_VOLUME = 0.5f;     // audio.music_volume's default
     static constexpr float EFFECTS_VOLUME = 0.7f;   // audio.effects_volume's default
+    static constexpr float VOLUME_MIN = 0;          // the least volume, silence
+    static constexpr float VOLUME_MAX = 1;          // the largest volume, full scale
 
     /// The starting volumes from the config, each a percentage from 0 to 1.
     struct Settings {
@@ -43,7 +45,8 @@ public:
     /// Takes the end of a sound.
     ///
     /// The end of a mode's track becomes MUSIC_ENDED, and the track below goes on. The end of an
-    /// effect, of a video's sound and of a track already stopped or replaced makes no event.
+    /// effect, of a video's sound and of a track already stopped or replaced makes no event. A
+    /// sound whose file could not be played writes a warning with the file's name to the log.
     ///
     /// @return  True for every SOUND_ENDED, false for any other event.
     bool translate(const DriverEvent& in, PinballEvents& out) override;
@@ -103,9 +106,7 @@ public:
     void effectsVolume(float percent);
 
 private:
-    static constexpr uint8_t MODES = 8;   // sounds.md: the modes that hold a track at once
-    static constexpr float VOLUME_MIN = 0;
-    static constexpr float VOLUME_MAX = 1;
+    static constexpr uint8_t MODES = 8;      // sounds.md: the modes that hold a track at once
     static constexpr float FULL_SCALE = 1;   // sounds.md: music and an effect together at most
 
     friend class GameHost;
@@ -154,8 +155,10 @@ private:
 
     /// Gets how many samples of the video's sound have played.
     ///
-    /// @return  0 before it has started and without a video's sound.
-    uint32_t videoPlayed() const;
+    /// @param samples  Receives the count, 0 before the sound has started.
+    /// @return         False while the channel plays no video's sound. That holds without a video's
+    ///                 sound, and from the sound's last sample on until translate() takes its end.
+    bool videoPlayed(uint32_t& samples) const;
 
     /// Silences every channel, forgets every track and sets the volumes again.
     ///
@@ -188,6 +191,12 @@ private:
     /// Removes the tracks @p pred holds for. On top, the track below goes on.
     template <typename Pred> void drop(Pred pred);
 
+    /// Writes a warning for a sound whose file could not be played.
+    ///
+    /// @param channel  The channel the sound played on.
+    /// @param end      The sound's number and how it ended.
+    void warnFailed(uint8_t channel, SoundEnd end);
+
     AudioDriver& audio;
     FileSystem& files;
     Settings settings;
@@ -195,7 +204,9 @@ private:
     uint32_t onChannel = 0;   // the number of the track the music channel was handed last
     uint32_t effects = 0;     // counts the effects play() has started
     uint32_t startedAs[AudioDriver::CHANNELS] =
-        {};                     // which count each channel's effect started at
+        {};                                          // which count each channel's effect started at
+    FileReader effectFiles[AudioDriver::CHANNELS];   // the file of each channel's last effect
+    uint32_t effectNumbers[AudioDriver::CHANNELS] = {};   // the driver's number for that effect
     float musicPercent = 0;     // the music's volume as set, inside 0 to 1
     float effectsPercent = 0;   // the effects' volume as set, inside 0 to 1
     float musicGain = 0;        // the driver's volume for the music and a video's sound

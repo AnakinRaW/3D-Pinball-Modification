@@ -28,10 +28,12 @@
 //              the wrap of millis()
 //   since      effects dated back show at once what their rhythm gives then, a start ahead counts
 //              as now, a fade goes on from its new start color, and lasting() still ends them
+//   one-warning  a mistake repeated across many lamps or points gives one warning with its count
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "components/lamps.h"
+#include "logging/warning-list.h"
 #include <unity.h>
 
 constexpr uint32_t US_PER_MS = 1000;
@@ -134,6 +136,17 @@ constexpr uint8_t DARK = 0xFF;   // an LED no lamp takes
 const uint8_t PF_LAMP_OF[PF_GAP_LEDS] = {0, 0, DARK, 1, 2, DARK, DARK, 3, 4, 5};
 static Lighting pfGapLighting;
 static Lamps pfGapLamps(pfGapLighting);
+// one-warning: the lower section's 4 LEDs on chain D take three lamps of 0 and one of 5, which
+// the chain's end cuts. The middle section's 2 LEDs on chain E take one lamp of 5, cut as well.
+// The left perimeter on chain A leaves out its points for LEDs 5 and 4, which come after LED 10.
+constexpr uint16_t WARN_LOWER_LEDS = 4;
+constexpr uint16_t WARN_MIDDLE_LEDS = 2;
+constexpr uint16_t WARN_LEFT_LEDS = 20;
+const uint16_t WARN_LOWER[] = {0, 0, 0, 5};
+const uint16_t WARN_MIDDLE[] = {5};
+const uint16_t WARN_HEIGHTS[] = {0, 0, 10, 100, 5, 200, 4, 300};
+static Lighting warnLighting;
+static Lamps warnLamps(warnLighting);
 static uint32_t startUs = 0;
 static uint32_t startMs = 0;
 
@@ -829,6 +842,42 @@ static void testSince() {
     expectLamp(0, CRGB(0, 0, 0), "dated back, after lasting ends");
 }
 
+// one-warning: a mistake repeated across many lamps or points gives one warning with its count.
+static void testOneWarning() {
+    Lamps::Settings groups;
+    Lamps::GroupSettings& left = groups.of(Lamps::Group::PERIMETER_LEFT);
+    left.chain = 0;
+    left.leds = WARN_LEFT_LEDS;
+    left.heights = WARN_HEIGHTS;
+    left.heightCount = sizeof WARN_HEIGHTS / (2 * sizeof WARN_HEIGHTS[0]);
+    Lamps::GroupSettings& lower = groups.of(Lamps::Group::PLAYFIELD_LOWER);
+    lower.chain = 3;
+    lower.leds = WARN_LOWER_LEDS;
+    lower.lamps = WARN_LOWER;
+    lower.lampCount = sizeof WARN_LOWER / sizeof WARN_LOWER[0];
+    Lamps::GroupSettings& middle = groups.of(Lamps::Group::PLAYFIELD_MIDDLE);
+    middle.chain = 4;
+    middle.leds = WARN_MIDDLE_LEDS;
+    middle.lamps = WARN_MIDDLE;
+    middle.lampCount = sizeof WARN_MIDDLE / sizeof WARN_MIDDLE[0];
+
+    const uint8_t before = warningList.count();
+    TEST_ASSERT_TRUE(start(warnLighting, warnLamps, groups));
+    TEST_ASSERT_EQUAL_UINT8(before + 3, warningList.count());
+    const char* const expected[] = {
+        "group 0 leaves out 2 heights past its chain or out of order, the first at LED 5",
+        "3 playfield lamps count as 1 LED in place of 0, the first is lamp 0",
+        "2 playfield lamps end at a gap or their chain's end, the first is lamp 3",
+    };
+    for (uint8_t i = 0; i < 3; ++i) {
+        WarningEntry e;
+        TEST_ASSERT_TRUE(warningList.read(uint8_t(before + i), e));
+        TEST_ASSERT_EQUAL_STRING("lamps", e.who);
+        TEST_ASSERT_EQUAL_STRING(expected[i], e.text);
+        TEST_ASSERT_EQUAL_UINT16(1, e.count);
+    }
+}
+
 int main() {
     Lamps::Settings layout;
     for (uint8_t c = 0; c < Lighting::CHAINS; ++c) {
@@ -899,5 +948,6 @@ int main() {
     RUN_TEST(testPlayfieldGaps);
     RUN_TEST(testMillisWrap);
     RUN_TEST(testSince);
+    RUN_TEST(testOneWarning);
     return UNITY_END();
 }

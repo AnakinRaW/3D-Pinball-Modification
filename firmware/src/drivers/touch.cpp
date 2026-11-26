@@ -1,5 +1,6 @@
 #include "touch.h"
 #include "core/clock.h"
+#include "logging/debug-trace.h"
 #include "logging/logger.h"
 
 constexpr uint32_t TOUCH_READY_MS =
@@ -63,23 +64,23 @@ static bool spanned(uint16_t a, uint16_t b) {
 }
 
 void Touch::configure(const Settings& s) {
-    const uint16_t left = heldReading("raw_left", s.rawLeft);
-    const uint16_t right = heldReading("raw_right", s.rawRight);
-    const uint16_t top = heldReading("raw_top", s.rawTop);
-    const uint16_t bottom = heldReading("raw_bottom", s.rawBottom);
+    const uint16_t left = heldReading("left_edge", s.rawLeft);
+    const uint16_t right = heldReading("right_edge", s.rawRight);
+    const uint16_t top = heldReading("top_edge", s.rawTop);
+    const uint16_t bottom = heldReading("bottom_edge", s.rawBottom);
     held = Settings{};
     if (spanned(left, right)) {
         held.rawLeft = left;
         held.rawRight = right;
     } else {
-        logWarning("touch", "raw_left %u and raw_right %u lie too close, the defaults stay",
+        logWarning("touch", "left_edge %u and right_edge %u lie too close, the defaults stay",
                    unsigned(left), unsigned(right));
     }
     if (spanned(top, bottom)) {
         held.rawTop = top;
         held.rawBottom = bottom;
     } else {
-        logWarning("touch", "raw_top %u and raw_bottom %u lie too close, the defaults stay",
+        logWarning("touch", "top_edge %u and bottom_edge %u lie too close, the defaults stay",
                    unsigned(top), unsigned(bottom));
     }
 }
@@ -135,6 +136,12 @@ Fault Touch::failed() const {
 
 void Touch::done(uint32_t errors) {
     if (errors != 0) {
+        // Only the first failure of a run is noted, so a controller without power does not fill
+        // the trace.
+        if (!failing) {
+            failing = true;
+            DEBUG_TRACE("touch read failed", int32_t(errors), 0);
+        }
         // The next tick asks for a new read. A finger the controller can no longer see leaves the
         // screen once the controller counts as failed.
         lastErrors = errors;
@@ -145,6 +152,10 @@ void Touch::done(uint32_t errors) {
             out->publish<DriverEventType::TOUCH_UP>(nowUs(), 0, last);
         }
         return;
+    }
+    if (failing) {
+        failing = false;
+        DEBUG_TRACE("touch reads again", 0, 0);
     }
     lastGoodUs = nowUs();
     const uint8_t touches = bytes[0] & COUNT_MASK;

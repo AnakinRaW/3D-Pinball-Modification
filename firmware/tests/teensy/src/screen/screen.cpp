@@ -29,6 +29,7 @@
 #include "drivers/display.h"
 #include "drivers/storage.h"
 #include "drivers/touch.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 #include "test-media.h"
 
@@ -48,17 +49,13 @@ constexpr uint32_t SHOW_MS = 5000;   // layers: the time the layers show before 
 constexpr uint32_t STEP_TIMEOUT_MS = 60000;   // taps: the time for each step at the bench
 constexpr Layer SLIDE = {1, 1};
 
-static Display display;
-static Screen screen(display);
-static EventQueue queue;
-static AudioDriver audio(queue);
-static FileSystem files(storage);
-static Sounds sounds(audio, files);
-static VideoPlayer player(screen, files, sounds);
-static Touch touch(io::wire2Bus, queue, driverTick);
-static EventQueue monitorEvents;
-DMAMEM static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
+using test::audio;
+using test::display;
+using test::files;
+using test::screen;
+using test::sounds;
+using test::touch;
+using test::videoPlayer;
 static char seen[TEXT];
 static char wanted[TEXT];
 
@@ -88,7 +85,7 @@ static bool ready() {
             return false;
         }
         screen.begin();
-        player.begin();
+        videoPlayer.begin();
         begun = true;
     }
     if (!media::writePictures() || !media::writeLoop()) {
@@ -96,7 +93,7 @@ static bool ready() {
         return false;
     }
     GameHost::use(files, media::GAME);
-    GameHost::reset(screen, player);
+    GameHost::reset(screen, videoPlayer);
     return true;
 }
 
@@ -281,7 +278,7 @@ static void testRedraw() {
     lv_obj_t* viewport = lv_obj_create(slide);
     lv_obj_remove_style_all(viewport);
     lv_obj_set_size(viewport, media::W, media::H);
-    if (!player.play(viewport, "loop", true, false)) {
+    if (!videoPlayer.play(viewport, "loop", true, false)) {
         test::fail("play() false", "the video plays");
         return;
     }
@@ -292,11 +289,18 @@ static void testRedraw() {
     test::pass();
 }
 
+// Gets whether an event is the device monitor's report about the touch controller.
+static bool isTouchFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::TOUCH;
+}
+
 // Renders as the main loop does until the monitor's next event about the touch controller.
 static bool nextTouchFault(DriverEvent& e) {
     const uint32_t t0 = millis();
     while (millis() - t0 < LOST_TIMEOUT_MS) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+        if (events.read(&e, 1) == 1 && isTouchFault(e)) {
             return true;
         }
         screen.render();
@@ -316,7 +320,7 @@ static void testPowerLost() {
         test::skip("no touch controller answers");
         return;
     }
-    if (!monitor.watch(Device::TOUCH, touch)) {
+    if (!deviceMonitor.watch(Device::TOUCH, touch)) {
         test::fail("the monitor refused the touch driver", "it watches it");
         return;
     }
@@ -412,7 +416,7 @@ static void testLayers() {
     lv_msgbox_add_text(box, "message box");
     // A game switch leaves the host's objects, so the test deletes its object itself.
     lv_obj_t* host = named(GameHost::hostLayer(screen), "host", 0xFF3030, 200, 140, 110, 80);
-    const bool played = player.play(viewport, "viewport", true, false);
+    const bool played = videoPlayer.play(viewport, "viewport", true, false);
     test::step("watch the screen: the background picture with a blue box, a pink box, the green "
                "video with its ball, a cyan box, a message box over a darkened screen and a red "
                "box, each labeled");
@@ -425,7 +429,7 @@ static void testLayers() {
                            "slide, the video, overlay, the message box, host?",
                            ASK_TIMEOUT_MS)
                : test::Answer::NONE;
-    player.stop(viewport);
+    videoPlayer.stop(viewport);
     lv_msgbox_close(box);
     lv_obj_delete(host);
     if (!played) {
@@ -460,7 +464,7 @@ static bool onButton(TouchPoint p) {
 // Hands the touch events to the screen as the host does, counts what came of them and renders.
 static void pumpTouches() {
     DriverEvent e;
-    while (queue.read(&e, 1) == 1) {
+    while (events.read(&e, 1) == 1) {
         PinballEvents out;
         if (!screen.translate(e, out)) {
             continue;
@@ -517,7 +521,7 @@ static void testTaps() {
     lv_obj_update_layout(button);
     lv_obj_get_coords(button, &buttonArea);
     DriverEvent stale;
-    while (queue.read(&stale, 1) == 1) {
+    while (events.read(&stale, 1) == 1) {
     }
     taps = 0;
     holds = 0;

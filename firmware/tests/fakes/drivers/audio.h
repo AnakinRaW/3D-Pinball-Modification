@@ -6,6 +6,7 @@
 #include "core/event-queue.h"
 #include "drivers/sound-channel.h"
 #include <memory>
+#include <string.h>
 #include <string>
 #include <vector>
 
@@ -69,11 +70,13 @@ public:
         std::vector<DriverEvent> ended;
         for (uint8_t c = 0; c < CHANNELS; ++c) {
             int16_t samples[SOUND_BLOCK_SAMPLES];
-            uint32_t number = 0;
-            const bool sounding = channels[c]->play(samples, number);
+            SoundEnd end{};
+            const bool sounding = channels[c]->play(samples, end);
             last[c] = sounding ? samples[SOUND_BLOCK_SAMPLES - 1] : 0;
-            if (number != 0) {
-                ended.push_back({0, DriverEventType::SOUND_ENDED, c, number});
+            if (end.number != 0) {
+                DriverEvent e{0, DriverEventType::SOUND_ENDED, c, 0};
+                memcpy(&e.payload, &end, sizeof end);
+                ended.push_back(e);
             }
         }
         return ended;

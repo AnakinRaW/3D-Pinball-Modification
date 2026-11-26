@@ -40,6 +40,7 @@ IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "test
 TEENSY_VID = 0x16C0          # PJRC's USB vendor id
 BAUD = 115200                # ignored by USB serial, needed by pyserial
 LIST_TIMEOUT_S = 5           # an idle image answers list at once
+BLANK_TIMEOUT_S = 3          # the display's begin() waits for the panel and sets it up in under 1 s
 
 # The debug lines a CHECK line counts: "<ms> D <tag> <n> <payload>" from DEBUG_LOG() and
 # "<ms> D trace <tag> <n> <b> at <us> us" from DEBUG_TRACE(), n counting up from 0.
@@ -202,6 +203,22 @@ class Image:
         self.link.send("reset")
         self.link.wait_gone(RECONNECT_TIMEOUT_S)
         self.connect()
+
+    def blank(self):
+        """Restarts the image and has it fill the display black.
+
+        The panel stays awake through a restart, so the last restart of a run can leave a stripe
+        of stray bytes on it. The display sets itself up within BLANK_TIMEOUT_S.
+        """
+        self.restart()
+        self.link.send("blank")
+        deadline = time.monotonic() + BLANK_TIMEOUT_S
+        while True:
+            line = self.link.read_line(deadline)
+            if line is None:
+                raise Hang("no answer to blank")
+            if line == "BLANK" or line.startswith("ERROR"):
+                return line
 
 
 def answers(enabled):
@@ -379,6 +396,9 @@ def main():
     hang = None
     try:
         runner.run(selected)
+        answer = image.blank()
+        if answer != "BLANK":
+            print(f"the display stays as the run left it: {answer}")
     except (Hang, PortLost) as e:
         hang = str(e)
         print(f"HANG  {hang}, the run stops here")

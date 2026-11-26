@@ -44,6 +44,7 @@ The test image prints its run to the serial port in these lines:
 | `RESTART <test>` | The test restarts the Teensy and goes on after `resume` |
 | `TEST <test> <runs on> <quick s> <soak s>` | The image holds the test. It ends within the seconds given for a quick and for a soak run |
 | `READY <count>` | The list of tests has ended. The count gives the tests run since the start |
+| `BLANK` | The display is set up and black |
 | `CRASH <text>` | One line of the crash report that a crash left before the restart |
 | `ERROR <text>` | A command or a test broke these rules, such as a test that reported twice |
 
@@ -55,8 +56,9 @@ The image takes these commands, one to a line:
 | `run <pattern> [soak]` | Runs every test whose name matches the pattern, in the order of this document, then prints `END`. A `*` stands for any text. Several patterns may follow `run` |
 | `resume <test> [soak]` | Runs the part of the test that follows its restart, then prints `END` |
 | `reset` | Restarts the Teensy |
+| `blank` | Sets the display up, which leaves it black, then prints `BLANK` |
 
-The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line.
+The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line. A restart can leave a stripe of stray bytes on the display, which stays awake through it. The runner therefore restarts the image after its last test and sends `blank`.
 
 The runner fails a test that prints `FAIL` or `ERROR`. It also fails a test that runs past its time from the `TEST` line, and a test during which the serial port goes away without a `RESTART`. A crash report after such a loss marks the failure as a crash. A test past its time stops the run, since the image no longer answers. The runner exits with 0 when every test passed or skipped, and with 1 otherwise.
 
@@ -220,6 +222,7 @@ The program `device-monitor` checks the [device monitor](error-handling.md#devic
 | `changes` | computer | Let the fake driver report parts failing and recovering, with error codes | Each change gives one `DEVICE_FAILED` with the device, the part and the code, or one `DEVICE_RECOVERED`, and an unchanged answer gives nothing |
 | `full-queue` | computer | Let parts fail while the monitor's queue is full, then empty it | Each part is reported at the first check after the queue has room |
 | `source` | computer | Pack the source of every device and part | `faultDevice()` and `faultPart()` give back what `faultSource()` packed |
+| `log-line` | computer | Hand `logFault()` a `DEVICE_FAILED`, a `DEVICE_RECOVERED` and a touch event with a log begun | The log holds a warning that names the device, the part and the error code, and a line of the level INFO that names the recovered part. The touch event writes nothing |
 
 ### PSRAM
 
@@ -277,7 +280,7 @@ The program `file-channel` checks the [file channel](file-channel.md). Its compu
 | `slow-card` | computer | Hold the reads back while `take()` asks for more | `take()` gives fewer bytes and later the rest, with nothing missing or doubled |
 | `restart` | computer | Start a new file while a read of the old one is on its way, then let that read end | No byte of the old file comes out |
 | `stop` | computer | Call `stop()` while a read is on its way, then let it end | `take()` gives nothing, and `ended()` is true |
-| `failed-read` | computer | Let a read fail partway through a file | The bytes before it come out, and `ended()` turns true after them |
+| `failed-read` | computer | Let a read fail partway through a file, then start a file that runs out | The bytes before the failed read come out, `ended()` turns true after them, and `failed()` is true. The file that runs out ends with `failed()` false |
 | `skip` | computer | Take bytes with `to` set to `nullptr` | The bytes are skipped, and the next `take()` goes on behind them |
 | `nothing` | computer | Start a file the card does not hold, and leave another channel unstarted | `ended()` is true at once for both |
 | `high-first` | Teensy | Queue normal reads, then read through a channel of high priority | The channel's read ends before every normal read that had not started |
@@ -360,8 +363,16 @@ The program `break-beam` checks the [break beam driver](drivers/break-beam.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `pass` | bench | Pass a ball through the beam many times, slowly and fast | Each pass gives one `BallDrained`, and `blocked()` is true only while the ball is in the beam |
-| `failed` | bench | Leave a ball in the beam for longer than the [fault time](drivers/break-beam.md#device-faults), then take it out | The beam is reported failed, and recovered once it is clear |
+| `no-queue` | computer | Begin a driver on an event queue that takes no further queue | `begin()` returns false, the log holds a warning that names the queue, the pin keeps no interrupt, and the driver answers with empty data |
+| `at-start` | computer | Begin with the beam broken, then let the [fault time](drivers/break-beam.md#device-faults) pass | The pin is an input with hysteresis and an interrupt on both edges, no `BALL_DRAINED` comes, and the beam fails once the fault time has passed since `begin()` |
+| `crossing` | computer | Break the beam after it was clear for a second, then clear it | The break gives one `BALL_DRAINED` from gate 0 with the time of the break, the clear gives none, and `blocked()` follows the pin |
+| `flicker` | computer | Clear the beam between two breaks for just under the [flicker window](drivers/break-beam.md#ball-sensing), then for exactly the window, then read a break twice | Only the break after the full window gives a second `BALL_DRAINED`, and the break read twice gives none |
+| `stays-broken` | computer | Keep the beam broken for just under the fault time with a flicker in between, then for the fault time, then clear it | The beam fails only once it has stayed broken for the fault time since the flicker, with code 0, and works again once clear |
+| `wrap` | computer | Run the flicker window and the fault time across the wrap of `nowUs()` | Both give the answers they give away from the wrap |
+| `second-driver` | computer | Begin a second driver while the first holds the pin, and call it before and after | Its `begin()` returns false, the log holds a warning that names the held pin, `blocked()` is false and no part fails, and the first driver keeps its events |
+| `pad` | Teensy | Begin the driver | The pin's pad has hysteresis without pull-up or keeper, its interrupt is enabled on both edges, and `blocked()` follows the pin |
+| `pass` | bench | Pass a ball through the beam ten times, slowly and fast | The ten passes give ten `BALL_DRAINED` and no more, and `blocked()` is false once the ball is out |
+| `failed` | bench | Hold a ball in the beam for longer than the [fault time](drivers/break-beam.md#device-faults), then take it out | The beam is reported failed within a second past the fault time, and recovered once it is clear |
 
 ### I²C bus
 
@@ -419,8 +430,17 @@ The program `controls` checks the [controls driver](drivers/controls.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `position` | bench | Set the switch to 1, then to 0 | `position()` gives the position printed on the switch each time |
-| `flips` | bench | Flip the switch many times, slowly and as fast as possible | Each flip gives one `ToggleSwitched` with the new position, and the last event always carries the position the switch rests in |
+| `queue-full` | computer | Begin a driver twice while the event queue takes no further queue | `begin()` returns false both times, `position()` gives 0, no interrupt is attached, and the log holds one warning that names the queue |
+| `tick-full` | computer | Begin a driver twice while the driver tick has no free slot | `begin()` returns false both times, `position()` gives 0, no interrupt is attached, and the log holds one warning that names the driver tick |
+| `at-start` | computer | Begin with the switch in position 1, then let two [bounce windows](drivers/controls.md#driver-events) pass | The pin is an input with the pull-up and an interrupt on both edges, `position()` gives 1, and no `TOGGLE_SWITCHED` comes |
+| `flip` | computer | Flip the switch to 0, read the same position again after the window, then flip it back | Each flip gives one `TOGGLE_SWITCHED` from switch 0 with the time of its edge and the new position, and the edge that reads the reported position gives none |
+| `bounce` | computer | Bounce the contact after a flip for just under the window, ending in the flipped position, then flip once the window has closed | The bounce gives no event during the window or after it, and the flip after it gives one |
+| `flip-back` | computer | Flip the switch and flip it back inside the window, with no edge after that | The tick that closes the window gives one `TOGGLE_SWITCHED` with the resting position and the time of the last edge, and the bounce after that report gives none |
+| `wrap` | computer | Run the window across the wrap of `nowUs()`, then flip again a whole wrap after a report | The window gives the answers it gives away from the wrap, and the flip a whole wrap later gives its event |
+| `second-driver` | computer | Begin a second driver twice while the first holds the pin | Its `begin()` returns false both times with one warning in the log that names the pin, its `position()` gives 0, and the first driver keeps its events |
+| `pad` | Teensy | Begin the driver | The pin's pad has the pull-up that `INPUT_PULLUP` selects and hysteresis, its interrupt is enabled on both edges, and `position()` gives 1 where the pin reads LOW and 0 otherwise |
+| `position` | bench | Set the switch to 1, then to 0 | `position()` gives the position printed on the switch each time, and the move to 0 gives a `TOGGLE_SWITCHED` with position 0 |
+| `flips` | bench | Flip the switch five times with a second or more between flips, then ten times as fast as possible and leave it | The slow flips give five `TOGGLE_SWITCHED` with alternating positions, and the fast flips give events with alternating positions, the last carrying the position the switch rests in |
 
 ### Servo
 
@@ -441,7 +461,7 @@ The program `audio` checks the [audio driver](drivers/audio.md). Its computer te
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
 | `wav-chunks` | computer | Play files of several lengths, with odd-sized and long chunks ahead of the data chunk and behind it | Every sample of the data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
-| `wav-format` | computer | Play a stereo file, a file at another sample rate, a RIFF file that is no WAV, a file without a fmt chunk, a missing file, a file with no name, and a file whose read fails partway | Each ends with its number. The failed read ends behind the samples before it |
+| `wav-format` | computer | Play a stereo file, a file at another sample rate, a RIFF file that is no WAV, a file without a fmt chunk, a missing file, a file with no name, a file cut short inside its samples, and a file whose read fails partway | Each ends with its number and the code of its end: the first four as no WAV, the missing file and the one with no name as missing, the short file as cut short and the failed read as a failed read. The failed read ends behind the samples before it |
 | `wav-ffmpeg` | computer | Play a sound that the command of [`media.md`](../../assets/media.md#sounds) made from a stereo MP3 at another sample rate | Every sample of its data chunk comes out once and in order, the first block gliding in, and the sound ends with its number |
 | `wav-loop` | computer | Play a file with chunks around its data chunk in a loop for forty blocks | After the first block the samples run through the file again and again with no gap, and no end comes |
 | `card-waits` | computer | Play a file while the card brings one chunk every fifty blocks | The blocks without data are silent, and every sample comes once and in order |
@@ -517,18 +537,43 @@ The program `file-system` checks the [file system component](components/file-sys
 | `switch` | computer | Open a file, name another game with `use()`, and open again | The first file keeps its path, and the second lies in the other game's directory |
 | `root` | computer | Name the card's root with `useRoot()`, open a path, an empty path, one from the root, one with `..` and one too long, then name a game and open again | The first gives the file at the card's root, every other a file whose requests fail, and the last lies in the game's directory |
 
-### Config
+### YAML tree
 
-The program `config` checks the [config component](components/config.md). It hands the component the text of a file instead of reading the card, and reads keys it makes up itself.
+The program `yaml-tree` checks the [YAML tree](components/config.md#the-file) on texts of files it writes itself, in rooms it sizes itself.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `defaults` | computer | Start without a file and read several keys with and without a default, then start with a file that does not parse | Every read gets its default or no value, and no file is written. With the broken file, the log names the line that broke, and the file stays as it is |
-| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries | Every read gets the file's value, `count()` gets the length of each list, and the log stays empty |
+| `walk` | computer | Parse a file of sections, lists of values and lists of sections, then walk it entry by entry and reach entries by name, by number and by key | Every entry has its kind, name, text and place among its neighbors as the file gives them, a list's entries are reached by their numbers, and a key that leads nowhere gives no entry |
+| `positions` | computer | Parse a file with entries at known lines and columns, in sections, in lists and in brackets, then add an entry | Every entry of a section keeps the line and column of its name, every entry of a list those of itself, and the added entry keeps 0 for both |
+| `problems` | computer | Parse a file with a name with a dot, a name twice, a reference to an anchor, more entries than the room holds and a second document, then a broken file, files whose top is a list, a text or a list as a name, and files of a comment alone and of a lone `---` | The report gets each problem once with its line and column, and the rest of the file reads. Each broken file returns false with one problem marked broken and leaves the tree empty. The comment and the lone `---` give an empty tree without a problem |
+| `long-text` | computer | Parse long names, an expression in quotes and texts over several lines, write the tree and parse it again | Every text reads whole, the line breaks included, and reads the same after the second parse |
+| `text-room` | computer | Parse a file with more names and values than the room for text holds | The entries up to the room read, the rest is left out, and the report gets one problem |
+| `change` | computer | Add sections, values and list entries, set texts longer and shorter, add under a value, a name twice and a name with a dot, fill the tree, then remove a list entry, a section and the top | Each change shows in the tree and in `fits()`. Each refusal gives no entry. A list's later entries move down by one number, and removing the top leaves an empty tree with all its room |
+| `compact` | computer | Set the texts of a few values in a small room again and again, adding and removing an entry between, then fill the room | Every text reads as set last, a text that fills the room is taken, and one past it is refused without a change |
+| `write` | computer | Parse a file of every form the tree writes, write it, write it into too small a room and parse the written text again | The written text equals the file, too small a room is refused with the length it needed, and the second parse reads the same entries |
+| `numbers` | computer | Read numbers, list numbers and unset values from texts, and texts that only look like them | Each reads as written, and the rest is refused |
+
+### Config
+
+The program `config` checks the [config component](components/config.md). Its computer tests hand the component the text of a file on a fake card and read keys they make up themselves. Its `Teensy` tests write their config file to `/tests/config/` on the card.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `defaults` | computer | Start without a file and read several keys with and without a default, then start with an empty file, a file larger than the component reads, one that does not parse and one whose top is a list | Every read gets its default or no value, and no file is written. Each start writes one log line. The line of the broken file names the line that broke, and the file stays as it is |
+| `values` | computer | Start with a file that holds a value inside its range for every key read, in sections, in a list of values and in a list of entries, with comments | Every read gets the file's value, `count()` gets the length of each list and 0 for a section and a missing key, a malformed key reads as missing, and the log stays empty |
 | `clamp` | computer | Read a value above its range and one below | Each gets the nearer end of its range, with one log line each |
-| `wrong` | computer | Read a value that is text, with a default and without one | The read with a default gets the default, the other gets no value, and each writes a log line |
-| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list |
-| `save-busy` | computer | Save, and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `wrong` | computer | Read a value that is text and a key that names a section, each with a default and without one, then keys that hold `~`, `null` and nothing | The reads with a default get the default, the others get no value, and each writes a log line. The unset keys get their default or no value without a line |
+| `switches` | computer | Read switches written as true, yes, on and 1, as false, no, off and 0 in mixed case, then an unset key, text, a section and a missing key | Each reads as on or off as written. The unset key takes its default without a line. The text, the section and the missing key take their default with one log line each |
+| `numbers` | computer | Read values written with a sign, a fraction and an exponent, then text that only starts like a number, a hexadecimal number and one past a double's range | Each number reads as written. The rest reads as no number |
+| `limits` | computer | Start with a file that holds a long name and a long value, a name with a dot, a name twice, a reference to an anchor and a level too deep, then with one of more entries than the tree holds | The long name and the long value read. Each other is left out with everything under it and one log line naming its line and column, the full tree with one line, and every other entry reads |
+| `set` | computer | Set values under new sections and lists and at a list's end, then past a list's end, on a section, on a list, under a value, with too many names and with values past the limit | Each value set reads back, kept to six decimal places. Each refusal returns false and leaves the saved file as it was. A tree with one free entry refuses a key that needs two and takes one that needs one |
+| `remove` | computer | Remove an entry in the middle of a list, a section and two missing keys, then add an entry to the list | The later entries move down by one, the section goes with its entries, the missing keys change nothing, and the new entry follows the last |
+| `save` | computer | Start with a key nothing reads, remove a list, set a new one of entries, save and read the file back | The file holds the unknown key, the new list one entry to a line, and no trace of the old list. `saveStatus()` follows the write |
+| `round-trip` | computer | Start with a file of text with YAML's marks, empty values, empty sections, and lists of values, of sections and of lists, save it, then start a second config on the saved file and save that | Neither start writes a log line, the second file equals the first, and the second config reads the nested values |
+| `save-busy` | computer | Save, change a value and save again before the first write has ended | The second save is refused, and the file holds the first |
+| `save-full` | computer | Fill the tree with values whose text takes more than the largest file, and save | The save is refused with a log line, and the file stays as it was |
+| `card` | Teensy | Write a config file to the card, start a config on it, set a value and add a list entry, save, then start a second config on the saved file | The saved file holds both changes and the entry nothing reads, and the second config reads every value of the first |
+| `heap` | Teensy | Start a config on the file of `card` and compare the heap's use before and after | The heap holds as many bytes after `begin()` as before |
 
 ### Lamps
 
@@ -550,6 +595,7 @@ The program `lamps` checks the [lamps component](components/lamps.md). Its compu
 | `groups` | computer | Configure chains of different lengths, read every group's size on both profiles, take parts of the playfield at and past its end, and run a wipe along `ambient` | Each group holds the lamps its chains and the profile's perimeter step give, a part past the end is cut there, and the wipe starts at the left perimeter's first lamp |
 | `millis-wrap` | computer | Start a blink, a fade and a color with `lasting()` on three playfield lamps shortly before `millis()` wraps | The blink keeps its rhythm, the fade its pace and the lasting color its end across the wrap |
 | `since` | computer | Date a pulse on a lamp and on a strip back by half a period, date a pulse ahead of now, date a fade back by half its time, and date a color back with `lasting()` after it | Each pulse dated back shows the color of half a period at once. The pulse dated ahead starts now. The fade shows half its way from the color the lamp showed when it began. The color ends where `lasting()` set its end |
+| `one-warning` | computer | Configure a section with three lamps of 0 LEDs and two sections whose last lamp runs past its chain's end, and a perimeter with two heights out of order | Each kind of mistake gives one warning, which names how many lamps or heights it concerns and the first of them |
 | `frames` | Teensy | Run effects on every group for a minute | `update()` hands on one frame per frame period, and no `show()` waits for the frame before |
 | `layout` | bench | Light each group and each named part in turn, with its name on the serial monitor | Each lights where the [lighting design](../parts/lighting/design.md#light-layout) places it, and nothing else lights |
 
@@ -581,6 +627,7 @@ The program `sounds` checks the [sounds component](components/sounds.md). Its co
 | `balance` | computer | Set music and effects whose squares add up to more than 1, then lower the effects, then call `reset()` | The driver gets both squares divided by their sum. Once the effects leave room, the music returns to the square of the volume it was set to. `reset()` hands the driver the scaled volumes again |
 | `start-volumes` | computer | Start with the default starting volumes, then with the music at 1 and the effects above 1, then with the music below 0 | The defaults reach the driver squared and unscaled, the second start gives both a half, and the third gives the music 0 and the effects 1 |
 | `names` | computer | Play names in the game's audio directory, and one too long | Each plays `/games/<id>/audio/<name>`, and the long one finds no file |
+| `failed-files` | computer | With a log begun, play an effect that plays out, an effect the card does not hold, an effect in another format and a mode's track the card does not hold | The log holds one warning for each of the three failed files, naming its path and why it failed. The missing track still ends with `MUSIC_ENDED`, and the effect that plays out writes nothing |
 | `reset` | computer | Play on every channel with tracks waiting below, change the volumes, then call `reset()` | Every channel stops and gets the set volumes back, and no track goes on |
 | `handover` | Teensy | Play a mode's track, lay a video's sound over it, and let the video's sound end | The tap records the track from its first sample up to where it was paused, the video's sound from its first sample, then the track going on from the sample where it was paused. The track glides out without a jump between neighboring samples, each sound glides in across its first block, and no `MUSIC_ENDED` comes |
 | `resume` | bench | Play music, a video's sound in the middle of it, and let the video's sound end | The music goes on where it stopped, without a click |
@@ -607,6 +654,8 @@ The program `screen` checks the [screen component](components/screen.md). Its co
 | `restart` | computer | Call `restart()`, change an object while the fake display restarts, then let the display come back | The display driver's `restart()` is called once, no rectangle goes out while the display restarts, and the first refresh after it sends the whole screen once, with the change in it |
 | `covered` | computer | Lay an object that fills the screen on a slide over an object that fills the background, then change the whole screen | LVGL draws the object on the slide and leaves out the one it covers. Once the slide is removed, the background's object is drawn again |
 | `picture-covers` | computer | Show a full-screen picture without opacity on a slide over an object that fills the background, with an object in front of the picture, and change the whole screen. Then do the same with a picture that holds opacity | LVGL draws the picture and the object in front of it and leaves out the background's object, for an image created before the picture has loaded and for one created after. Behind the picture with opacity the background's object is drawn |
+| `warnings` | computer | Observe the screen's warning subject, write the same warning twice, then call `render()` twice | No observer call comes before `render()`, the first `render()` calls the observer once with the list's version, and the second calls it no more |
+| `bad-pictures` | computer | With a log begun, load a picture the card does not hold, a file that holds no picture and a picture cut off halfway through its pixels | Each load fails, and the log holds a warning for each that names its path and why it failed |
 | `power-lost` | bench | Show `background.img`, then pull the 5 V lead from the module's Vin for about two seconds and plug it back in. On `DEVICE_RECOVERED` of the touch controller, call `restart()` as the host does | `restarting()` of the display is true from the call until the panel is back, the picture shows again, and the Teensy keeps running |
 
 ### Video player
@@ -618,14 +667,16 @@ The program `video-player` checks the [video player](components/video-player.md)
 | `play` | computer | Play a name with and without `sound` | The video player reads `video/<name>.rgb` frame by frame into its memory, one second ahead, and with `sound` the sounds get `audio/<name>.wav` as the video's track once the first frames have landed |
 | `movie-ends` | computer | Let the video run out while its sound still plays | The sound ends, the music goes on, and `MOVIE_ENDED` with the key of the mode that holds the video's slide reaches the game from the video player's next `update()` |
 | `stop` | computer | Stop a video and its sound | Both stop, the music goes on, and the memory of the frame is free again |
-| `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on |
+| `no-room` | computer | Play a full-screen video while the picture memory is full, then a video in a viewport beyond the screen, both while another video plays | `play()` returns false both times, the sounds get no call, and the video playing goes on. The log holds a warning that names the video the full memory refused |
 | `host-layer` | computer | Play a short video in a viewport on the host's layer to its end, then play one, hide the host's layer and play one there | The video's image stays hidden until its first frame and LVGL's refresh goes on beside it. The video ends without `MOVIE_ENDED`, the hidden layer stops the second video, and `play()` returns false on it |
 | `owner` | computer | Play a video on the slide that shows, then one in a viewport on a hidden slide and one on no slide, then a second one on the slide that shows | `play()` returns false for the hidden slide and for no slide while the first video goes on, and the second video on the slide that shows replaces the first |
 | `hidden` | computer | Show a slide of higher priority over a playing video's slide, then one of equal priority, then remove a playing video's slide, and lay an object over the whole viewport of a playing video | The video and its sound stop each of the first three times, the music goes on, and no `MOVIE_ENDED` comes, while the video under the object plays on |
 | `late-card` | computer | Hold a frame's read back past its 40 ms, in a video without sound | The frame on the screen stays, the frame due then follows, and the video keeps pace with its start |
 | `short-sound` | computer | Play a video whose sound ends before its last frame, and one whose sound file is missing | Each video plays on by the clock from the frame it stands at, the screen keeps refreshing, and each ends with `MOVIE_ENDED` |
 | `sound-clock` | computer | Hold the sound back for a while as a video with sound plays, then let it go on | The frame on the screen stays while the sound waits, and the video then goes on with the frame that belongs to the sound |
+| `late-end` | computer | Play a video with a sound exactly as long, and hold the sound's `SOUND_ENDED` back after the sound has run out, then let it through | The video stays at the frame its sound reached and ends with `MOVIE_ENDED` within a few frames of the sound's end |
 | `covers` | computer | Play a video that fills the screen over an object that fills the background, then stop the video | LVGL draws the object in none of the video's frames and draws it again once the video has stopped |
+| `bad-files` | computer | With a log begun, play a video the card does not hold, then one whose file holds three frames and three bytes more | The log holds a warning that names the missing video and one that names the other with its size and its frame size. The second video still plays |
 | `frames` | Teensy | Write a file of several megabytes, then play `loop.rgb` with its sound in a loop for ten minutes. Meanwhile play a sound on each of the other audio channels, write to the card every second and run the game's load: a dark light frame at the lamps' frame period on chain F, where no LED is wired, and the touch driver's reads | From the second frame on, every frame follows the one before within its 40 ms, none is skipped, and each is the frame that belongs to how far its sound has played. No channel's sound misses a sample for want of data, and the loops of the sound leave no gap |
 | `viewport` | bench | Play `viewport.rgb` in a viewport on a slide over a full-screen picture on the same slide, with a caption created after the viewport | The video fills only its viewport, the picture shows around it, and the caption lies in front of the video |
 | `missing-movie` | Teensy | Play a video the card does not hold | It ends at once with `MOVIE_ENDED`, and nothing else changes |
@@ -711,7 +762,11 @@ The program `logger` checks the [logger](logging.md).
 | `no-card` | computer | Write two lines without `begin()`, as the firmware does without a card | Both lines are lost and counted |
 | `interrupt` | computer | Write a line while posing as an interrupt | The line is lost and counted. The lock is never taken |
 | `free-lines` | computer | Begin a log, then write a line through `logInfo()` and one through `logWarning()` | Both lines stand in that log with their level and writer |
+| `early-warnings` | computer | Write a warning and an info line before any log has begun, then begin a log and write a warning | Both warnings stand in the [warning list](logging.md#warnings) with their writer and text, the info line does not, and the second warning stands in the log as well |
+| `warning-list` | computer | Write two warnings, each twice, the second with a different number the second time, then one with a text longer than an entry, then one while posing as an interrupt | Equal warnings share an entry whose count is 2, the two numbers make two entries, the long text is cut to the entry's length, every change raises the version, and the interrupt's warning stays out without taking the lock |
+| `warnings-full` | computer | Write one warning more than the list holds, then repeat the first | The first warnings keep their entries in their order, the last is counted as dropped, and the repeated one raises its count |
 | `two-tasks` | Teensy | Write numbered lines from a task above the test task's priority in bursts while the test task writes its own and runs `update()`, into files in RAM | Every line stands whole in the file, each writer's lines in their order. None is lost |
+| `warning-tasks` | Teensy | Write warnings from a task above the test task's priority in bursts while the test task writes its own, into the firmware's warning list. Half of each task's warnings share one text, the rest take ten texts of their writer, more than the list holds | The list is full, every entry holds a writer with its text, no two entries are equal, and the counts of the entries and the dropped warnings add up to every warning written. The longest call of the urgent task, its formatting included, is printed |
 | `order` | Teensy | Write numbered lines, restart twice, then read the log back | The lines stand in the order they were written. The lines of each restart follow those before |
 | `files` | Teensy | Put a log file at the [size limit](logging.md#files) on the card, then start and write | The other file starts anew with a higher number. The full file stays as it was |
 | `card-missing` | bench | Start without the card and write | The log does not begin. `write()` returns false at once. `lost()` counts the line |

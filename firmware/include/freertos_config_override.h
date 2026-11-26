@@ -24,3 +24,8 @@
 // The port's 4096. The interrupts' stack at the top of RAM1.
 #undef configMAIN_STACK_DEPTH
 #define configMAIN_STACK_DEPTH (8192U)
+
+// The port's 1, whose hook blinks forever once malloc() finds no room. The firmware checks every
+// allocation, and a YAML parse that finds no room fails like a broken file.
+#undef configUSE_MALLOC_FAILED_HOOK
+#define configUSE_MALLOC_FAILED_HOOK 0

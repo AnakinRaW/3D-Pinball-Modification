@@ -27,6 +27,13 @@ A line is lost only when it finds the buffer full. `lost()` counts it. Once a li
 The log rolls over two files of up to 1 MB each, `/log-a.txt` and `/log-b.txt`. When the current file is full, the log starts the other one anew. The latest megabyte of lines therefore always stays on the card.
 
 Each file starts with a head line that numbers it, such as `0 I logger file 7`. `begin()` goes on in the file with the higher number. Without any head line it goes on in `/log-a.txt`. The main task reads the start of both files right after the storage driver's `begin()` and hands it to `begin()`. Without a card the log does not begin, and every line is lost.
+
+## Warnings
+
+The display shows every warning that `logWarning()` writes, also without a card. It lists the warnings since the start, since the config they mostly concern is read only then. A repeated warning shows once with its count. The first 16 different warnings keep their place, because the first is usually the cause. Further ones are counted and stay in the log.
+
+A failed device has a separate light on the host's screen, which goes out once the device works again.
+
 ## Debug output
 
 `DEBUG_LOG()` writes a debug line in a debug build. In a release build the compiler removes every `DEBUG_LOG()` call. The line waits in a separate buffer of 16 KB in the PSRAM. `sendDebugLog()` in the main loop hands USB only what it takes without waiting.
@@ -40,6 +47,7 @@ In a debug build every line of the log goes to the debug output as well.
 | Header | Holds |
 |---|---|
 | [`logging/logger.h`](../../firmware/src/logging/logger.h) | `Logger`, the log on the card |
+| [`logging/warning-list.h`](../../firmware/src/logging/warning-list.h) | `WarningList`, the warnings since the start, and `warningList`, which `logWarning()` fills |
 | [`io/card-appender.h`](../../firmware/src/io/card-appender.h) | `CardAppender` and `AppendFile`, which the storage driver's `CardFile` provides |
 | [`logging/debug-log.h`](../../firmware/src/logging/debug-log.h) | `DEBUG_LOG()` and `sendDebugLog()` |
 | [`logging/debug-output.h`](../../firmware/src/logging/debug-output.h) | `DebugOutput`, the buffer of debug lines behind them |

@@ -6,7 +6,7 @@ The games are kept apart from the machine they run on. A game holds the rules of
 
 A game holds all the rules and conditions for the player to collect points.
 
-A game is driven two ways. `event()` is the game's handler for every event of a game component, and for the events of a service such as the controls driver's `ToggleSwitched`. `update()` runs once per pass of the main loop and gets the current time. Both return as soon as their work is done, since [nothing in the loop may block](general-design.md#execution-model).
+A game is driven two ways. `event()` is the game's handler for every event of a game component, and for the events of a service such as the controls driver's `TOGGLE_SWITCHED`. `update()` runs once per pass of the main loop and gets the current time. Both return as soon as their work is done, since [nothing in the loop may block](general-design.md#execution-model).
 
 A game may bring files on the SD card, under `/games/<id>`. A game described in the file `game.yml` there needs no code: classes of the firmware run it, as [`game-files.md`](game-files.md) sets out.
 

@@ -95,7 +95,7 @@ with MODEL.block(section=IRQ):
         "once",
         group="Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT")
     dec("prio_tick", 96, "", src="the driver tick, kPriority in driver-design.md",
-        group="Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work")
+        group="Rotary sensor, port expander, solenoids, servo, controls, device monitor, display and touch, their periodic work")
     dec("prio_i2c", 160, "", src="the I²C buses' LPI2C1 and LPI2C4 interrupts, which have no "
         "deadline: below the audio DMA refill, which has one, and above FreeRTOS's limit, since they "
         "never call the kernel; docs/firmware/io/i2c-bus.md",
@@ -155,6 +155,13 @@ dec("log_buffer", 64, "KB", src="the lines the logger holds in the PSRAM until t
     "thousand lines, or a card that stalls for several seconds, loses none")
 dec("log_line_max", 160, "bytes", src="the longest line with its line break, LOG_LINE_BYTES in "
     "firmware/src/logging/log-line.h; a longer line is cut")
+dec("n_warnings", 16, "", src="the warnings the warning list keeps for the screen, "
+    "WarningList::ENTRIES in firmware/src/logging/warning-list.h, a decision: a wrong config "
+    "touches a handful of the places that warn, and a loop writes one warning for a mistake it "
+    "finds many times")
+dec("warning_text", 80, "bytes", src="the text a warning list's entry holds, "
+    "WarningEntry::TEXT_BYTES in firmware/src/logging/warning-list.h, a decision: the line of a "
+    "list row on the 320 px screen")
 dec("n_trace_records", 256, "", src="the notes the debug trace holds in a debug build, "
     "TRACE_RECORDS in firmware/src/logging/debug-trace.cpp, a burst of interrupts while the main "
     "loop is away")
@@ -168,9 +175,38 @@ MODEL.uses("f_s", of="audio")
 MODEL.uses("t_wr_block", of="audio")
 MODEL.uses("t_sdfat", of="audio")
 MODEL.uses("i_supply_6a", of="lighting")
-dec("config_max", 4, "KB", src="the longest /config.yml the config component reads, kFileMax in "
-    "firmware/gist/components/config.cpp, a decision: the whole file with every IR channel is "
-    "well under it")
+# -- the config component, firmware/src/components/config.h ------------------
+dec("config_max", 8, "KB", src="the longest /config.yml the config component reads and writes, "
+    "Config::FILE_BYTES in firmware/src/components/config.h, a decision: every setting of the "
+    "machine with its IR channels and its lamps fits under it")
+dec("n_config_entries", 512, "", src="the sections, list entries and values the config's tree "
+    "holds together, Config::ENTRIES in firmware/src/components/config.h, a decision: the Arcade's "
+    "machine config with its lamps and its IR channels takes 303, so 512 leave room")
+dec("config_text", 8, "KB", src="the names and the values of the config's tree together, each "
+    "with its end, Config::TEXT_BYTES in firmware/src/components/config.h, a decision: they take "
+    "less than the file they come from")
+dec("n_config_levels", 16, "", src="the levels of a YAML tree, its top included, YamlTree::LEVELS "
+    "in firmware/src/components/yaml-tree.h, a decision: the deepest key of the config passes "
+    "four names, and a game's file nests its rules deeper")
+dec("n_config_decimals", 6, "", src="the decimal places of a value set() writes, DECIMALS in "
+    "firmware/src/components/config.cpp, a decision: finer than any setting needs")
+dec("n_config_digits", 12, "", src="the digits before the point of a value set() takes, "
+    "Config::VALUE_LIMIT of 10^12 in firmware/src/components/config.h, a decision: the value with "
+    "its decimal places fits a 64-bit integer")
+ds("yaml_raw_buffer", 16, "KB", src="libyaml 0.2.6, src/yaml_private.h: INPUT_RAW_BUFFER_SIZE "
+   "16384, the bytes yaml_parser_initialize() takes from the heap for the input as read")
+ds("yaml_buffer", 48, "KB", src="libyaml 0.2.6, src/yaml_private.h: INPUT_BUFFER_SIZE, "
+   "INPUT_RAW_BUFFER_SIZE times 3, the bytes yaml_parser_initialize() takes from the heap for the "
+   "input decoded")
+fig("config_heap", "KB", "yaml_raw_buffer + yaml_buffer", moves="+yaml_raw_buffer +yaml_buffer")
+dec("b_config_entry", 20, "bytes", src="one entry of a YAML tree, YamlTree::Entry in "
+    "firmware/src/components/yaml-tree.h: where its name and its text start, 4 bytes each, its "
+    "parent, first entry and next entry, 2 bytes each, its line and column, 2 bytes each, and its "
+    "kind of 1, padded to the 4 bytes of the starts", stated=False)
+# the config's tree with its top, its text and the file's text, DMAMEM in firmware/src/main.cpp
+fig("ram_config", "KB", "(n_config_entries.raw + 1) * b_config_entry + config_text + config_max",
+    moves="+n_config_entries +b_config_entry +config_text +config_max", stated=False)
+MODEL.draws("ram_config", pool="RAM2")
 fig("n_log_lines", "", "log_size / log_line", moves="+log_size -log_line", stated=False)
 
 # -- RAM2 that the libraries take, beside the buffers the drivers declare -----

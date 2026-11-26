@@ -1,6 +1,8 @@
 #include "video-player.h"
 #include "core/clock.h"
 #include "logging/debug-log.h"
+#include "logging/logger.h"
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -83,7 +85,7 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
         freed[i] = active && holds[i] != Hold::READING ? rooms[i] : nullptr;
     }
     if (!screen.pictures.fits(FRAMES_AHEAD, bytes, freed, FRAMES_AHEAD)) {
-        DEBUG_LOG("video: %s refused, the picture memory has no room for its frames\n", name);
+        logWarning("video", "%s refused, the picture memory has no room for its frames", name);
         return false;
     }
     end();
@@ -138,20 +140,24 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
     soundFrame = 0;
     landed = 0;
     soundStarted = false;
+    DEBUG_LOG("video: %s starts in %u by %u pixels%s\n", name, width, height,
+              withSound ? ", with its sound" : "");
     readAhead(0);
     return true;
 }
 
 // A video with sound follows its sound, so a sound that stalls holds the video with it. A video
-// whose sound has run out, or one without, follows the clock from the frame it stands at.
+// whose sound has run out follows the clock from the frame it stands at, from the sound's last
+// sample on. A video without sound follows the clock as well.
 uint32_t VideoPlayer::due(uint32_t now) {
     if (sound && !soundStarted) {
         // The first frames still come from the card, so the video stands at its first frame.
         startUs = now;
         return loopStart;
     }
-    if (sound && sounds.videoSounding()) {
-        uint32_t played = sounds.videoPlayed() / FRAME_SAMPLES;
+    uint32_t samples = 0;
+    if (sound && sounds.videoPlayed(samples)) {
+        uint32_t played = samples / FRAME_SAMPLES;
         if (loop && counted && count > 0) {
             // The sound counts from the start of each pass, so a count that falls back starts the
             // video's next pass. A sound longer than the video holds its last frame.
@@ -216,10 +222,16 @@ void VideoPlayer::land(Read& r) {
         return;
     }
     if (!counted) {
-        count = r.request.fileSize() / frameBytes;
+        const uint32_t fileBytes = r.request.fileSize();
+        count = fileBytes / frameBytes;
         counted = true;
         if (count == 0) {
-            DEBUG_LOG("video: %s holds no frame\n", file.name());
+            logWarning("video", "%s is missing or holds no frame", file.name());
+        } else if (fileBytes % frameBytes != 0) {
+            logWarning("video",
+                       "%s takes %" PRIu32 " bytes, no multiple of a frame of %" PRIu32
+                       " bytes, so it was made for another viewport",
+                       file.name(), fileBytes, frameBytes);
         }
     }
     const bool whole =
@@ -315,6 +327,7 @@ void VideoPlayer::end() {
     if (!active) {
         return;
     }
+    DEBUG_LOG("video: %s ends, %" PRIu32 " frames landed\n", file.name(), landed);
     active = false;
     if (sound && soundStarted) {
         sounds.stopVideoSound();

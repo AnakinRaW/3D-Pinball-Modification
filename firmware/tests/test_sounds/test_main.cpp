@@ -18,12 +18,15 @@
 //                    together to a sum of 1, and each keeps the volume set
 //   start-volumes    begin() sets the starting volumes as the two setters do
 //   names            a name plays from the game's audio directory, a long one finds no file
+//   failed-files     a missing file and a file in another format each write a warning with
+//                    the file's name, a sound that plays out none
 //   reset            reset() silences every channel, forgets every track and sets the volumes
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "components/file-system.h"
 #include "components/sounds.h"
+#include "logging/logger.h"
 #include <map>
 #include <string>
 #include <unity.h>
@@ -45,10 +48,10 @@ constexpr int16_t V = -20000;
 constexpr int16_t T = -12000;
 constexpr int16_t EFFECT = -30000;
 
-constexpr Layer LOW = {1, 10};
+constexpr Layer LOW_LAYER = {1, 10};
 constexpr Layer MIDDLE = {2, 50};
 constexpr Layer MIDDLE_LATER = {3, 50};
-constexpr Layer HIGH = {4, 255};
+constexpr Layer HIGH_LAYER = {4, 255};
 
 constexpr char GAME[] = "a";
 
@@ -94,6 +97,32 @@ struct TestService : StorageService {
     }
 };
 
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log for the test that reads it. It lives as long as the program, since
+// logWarning() keeps writing to the logger that began last.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[1024];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
+
 // The host's calls to the file system and to the sounds.
 class GameHost {
 public:
@@ -109,7 +138,15 @@ public:
     }
     static void stop(Sounds& sounds) { sounds.stopVideoSound(); }
     static bool sounding(const Sounds& sounds) { return sounds.videoSounding(); }
-    static uint32_t played(const Sounds& sounds) { return sounds.videoPlayed(); }
+    static uint32_t played(const Sounds& sounds) {
+        uint32_t samples = 0;
+        sounds.videoPlayed(samples);
+        return samples;
+    }
+    static bool playing(const Sounds& sounds) {
+        uint32_t samples = 0;
+        return sounds.videoPlayed(samples);
+    }
 };
 
 static void put16(std::string& s, uint16_t v) {
@@ -209,7 +246,7 @@ void tearDown() {}
 
 static void testChannels() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(SETTLE);
     rig.sounds.play("e1.wav");
     rig.sounds.play("e2.wav");
@@ -237,12 +274,14 @@ static void testChannels() {
 
 static void testVideoSound() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(SETTLE + 5);
     expectTrack(rig, A);
     TEST_ASSERT_FALSE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_FALSE(VideoPlayer::playing(rig.sounds));
     VideoPlayer::sound(rig.sounds, "v.wav");
     TEST_ASSERT_TRUE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_TRUE(VideoPlayer::playing(rig.sounds));
     TEST_ASSERT_EQUAL_UINT32(0, VideoPlayer::played(rig.sounds));
     rig.blocks(SETTLE);
     expectTrack(rig, V);
@@ -251,9 +290,10 @@ static void testVideoSound() {
     // The paused track goes on where it stood once the video's sound has ended.
     rig.blocks(PLAY_OUT);
     TEST_ASSERT_FALSE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_FALSE(VideoPlayer::playing(rig.sounds));
     TEST_ASSERT_TRUE(rig.events.empty());
     expectTrack(rig, A);
-    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW_LAYER));
     // The track noted its place in the block that glided it out, so it plays on from about
     // SETTLE + 5 blocks, and far from its end.
     TEST_ASSERT_TRUE(rig.played() < (2 * SETTLE + 6) * N + (PLAY_OUT - TRACK_BLOCKS) * N);
@@ -261,17 +301,17 @@ static void testVideoSound() {
 
 static void testVideoSoundTop() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(SETTLE);
     VideoPlayer::sound(rig.sounds, "v.wav");
     rig.blocks(SETTLE);
     // A track of the highest priority and the stop of the track below leave the video's sound
     // playing.
-    rig.sounds.music(HIGH, "t.wav");
-    rig.sounds.stopMusic(LOW);
+    rig.sounds.music(HIGH_LAYER, "t.wav");
+    rig.sounds.stopMusic(LOW_LAYER);
     rig.blocks(SETTLE);
     expectTrack(rig, V);
-    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW_LAYER));
     // The track that waited starts from its beginning once the video's sound has ended.
     for (uint32_t i = 0; i < PLAY_OUT && VideoPlayer::sounding(rig.sounds); ++i) {
         rig.blocks(1);
@@ -282,7 +322,7 @@ static void testVideoSoundTop() {
     TEST_ASSERT_TRUE(rig.played() <= (SETTLE + 1) * N);
     TEST_ASSERT_TRUE(rig.events.empty());
     // A video's sound with no track leaves the music off after it.
-    rig.sounds.stopMusic(HIGH);
+    rig.sounds.stopMusic(HIGH_LAYER);
     VideoPlayer::sound(rig.sounds, "v.wav");
     rig.blocks(SETTLE);
     expectTrack(rig, V);
@@ -294,7 +334,7 @@ static void testVideoSoundTop() {
 
 static void testTracks() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(SETTLE);
     expectTrack(rig, A);
     rig.sounds.music(MIDDLE, "b.wav");
@@ -318,11 +358,11 @@ static void testTracks() {
     TEST_ASSERT_TRUE(rig.sounds.musicEnded(MIDDLE_LATER));
     // Stopping the track below leaves the track on top playing on.
     const uint32_t before = rig.played();
-    rig.sounds.stopMusic(LOW);
+    rig.sounds.stopMusic(LOW_LAYER);
     rig.blocks(1);
     TEST_ASSERT_EQUAL_UINT32(before + N, rig.played());
     expectTrack(rig, B);
-    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW_LAYER));
     // The last track ends, and the music falls silent.
     rig.blocks(PLAY_OUT);
     TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
@@ -333,7 +373,7 @@ static void testTracks() {
 
 static void testSamePass() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(SETTLE + 5);
     const uint32_t pausedA = rig.played();
     rig.sounds.music(MIDDLE, "b.wav");
@@ -342,10 +382,10 @@ static void testSamePass() {
     // The track on top stops, and before the driver plays a block another one comes on top. The
     // track below is paused where it was to go on, never where the stopped track stood.
     rig.sounds.stopMusic(MIDDLE);
-    rig.sounds.music(HIGH, "c.wav");
+    rig.sounds.music(HIGH_LAYER, "c.wav");
     rig.blocks(SETTLE);
     expectTrack(rig, C);
-    rig.sounds.stopMusic(HIGH);
+    rig.sounds.stopMusic(HIGH_LAYER);
     TEST_ASSERT_EQUAL_UINT32(pausedA, rig.played());
     rig.blocks(SETTLE);
     expectTrack(rig, A);
@@ -354,27 +394,27 @@ static void testSamePass() {
 static void testMusicEnded() {
     Rig rig;
     // A track plays to its end once.
-    rig.sounds.music(LOW, "a.wav");
-    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW));
+    rig.sounds.music(LOW_LAYER, "a.wav");
+    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW_LAYER));
     rig.blocks(PLAY_OUT);
     TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
     TEST_ASSERT_EQUAL(EventType::MUSIC_ENDED, rig.events[0].type);
-    TEST_ASSERT_EQUAL_UINT8(LOW.key, rig.events[0].source);
+    TEST_ASSERT_EQUAL_UINT8(LOW_LAYER.key, rig.events[0].source);
     TEST_ASSERT_TRUE(payload<EventType::MUSIC_ENDED>(rig.events[0]) != 0);
-    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW_LAYER));
     rig.events.clear();
 
     // A looping track never ends.
-    rig.sounds.music(LOW, "a.wav", true);
+    rig.sounds.music(LOW_LAYER, "a.wav", true);
     rig.blocks(2 * PLAY_OUT);
     TEST_ASSERT_TRUE(rig.events.empty());
-    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW));
-    rig.sounds.stopMusic(LOW);
+    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW_LAYER));
+    rig.sounds.stopMusic(LOW_LAYER);
     rig.blocks(SETTLE);
 
     // A track that played to its end just before a track came over it ends once and does not
     // start again.
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(PLAY_OUT, true);
     TEST_ASSERT_EQUAL_UINT32(1, rig.held.size());
     rig.sounds.music(MIDDLE, "b.wav");
@@ -382,8 +422,8 @@ static void testMusicEnded() {
     rig.hand(rig.held[0]);
     rig.held.clear();
     TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
-    TEST_ASSERT_EQUAL_UINT8(LOW.key, rig.events[0].source);
-    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_EQUAL_UINT8(LOW_LAYER.key, rig.events[0].source);
+    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW_LAYER));
     expectTrack(rig, B);
     rig.sounds.stopMusic(MIDDLE);
     rig.blocks(SETTLE);
@@ -391,13 +431,13 @@ static void testMusicEnded() {
     rig.events.clear();
 
     // The end of a track that a mode's next track has replaced comes late and makes no event.
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.blocks(PLAY_OUT, true);
-    rig.sounds.music(LOW, "c.wav");
+    rig.sounds.music(LOW_LAYER, "c.wav");
     rig.hand(rig.held[0]);
     rig.held.clear();
     TEST_ASSERT_TRUE(rig.events.empty());
-    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW_LAYER));
     rig.blocks(SETTLE);
     expectTrack(rig, C);
 
@@ -484,7 +524,7 @@ static void testNames() {
     Rig rig;
     rig.sounds.play("e1.wav");
     TEST_ASSERT_EQUAL_STRING("/games/a/audio/e1.wav", rig.audio.files[1].c_str());
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     TEST_ASSERT_EQUAL_STRING("/games/a/audio/a.wav", rig.audio.files[0].c_str());
     // A name too long for a path finds no file, and the effect ends at once.
     const std::string longName(FILE_PATH_BYTES, 'x');
@@ -498,9 +538,46 @@ static void testNames() {
     TEST_ASSERT_TRUE(ended);
 }
 
+// Gets how many warnings of the sounds the log holds.
+static size_t soundsWarnings() {
+    logger.flush();
+    logger.update();
+    logger.update();
+    size_t count = 0;
+    for (size_t at = logA.content.find(" W sounds "); at != std::string::npos;
+         at = logA.content.find(" W sounds ", at + 1)) {
+        ++count;
+    }
+    return count;
+}
+
+static void testFailedFiles() {
+    logger.begin(LogFileStart{}, LogFileStart{});
+    Rig rig;
+    rig.card.files["/games/a/audio/bad.wav"] = std::string(200, 'x');
+    const size_t before = soundsWarnings();
+    rig.sounds.play("e1.wav");
+    rig.sounds.play("gone.wav");
+    rig.sounds.play("bad.wav");
+    rig.sounds.music(LOW_LAYER, "lost.wav");
+    rig.blocks(SETTLE);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+    for (const char* line : {"W sounds /games/a/audio/gone.wav is missing or empty",
+                             "W sounds /games/a/audio/bad.wav is no WAV",
+                             "W sounds /games/a/audio/lost.wav is missing or empty"}) {
+        TEST_ASSERT_TRUE_MESSAGE(logA.content.find(line) != std::string::npos, line);
+    }
+    // The missing track still ends as a track that played out.
+    TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(EventType::MUSIC_ENDED), uint8_t(rig.events[0].type));
+    // The effect that plays out writes nothing.
+    rig.blocks(4 * TRACK_BLOCKS + 10);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+}
+
 static void testReset() {
     Rig rig;
-    rig.sounds.music(LOW, "a.wav");
+    rig.sounds.music(LOW_LAYER, "a.wav");
     rig.sounds.music(MIDDLE, "b.wav");
     VideoPlayer::sound(rig.sounds, "v.wav");
     rig.sounds.play("e1.wav");
@@ -521,7 +598,7 @@ static void testReset() {
             TEST_ASSERT_EQUAL_FLOAT(0.09f, rig.audio.levels[c]);
         }
     }
-    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW));
+    TEST_ASSERT_TRUE(rig.sounds.musicEnded(LOW_LAYER));
     TEST_ASSERT_TRUE(rig.sounds.musicEnded(MIDDLE));
     TEST_ASSERT_FALSE(VideoPlayer::sounding(rig.sounds));
     rig.blocks(PLAY_OUT);
@@ -543,6 +620,7 @@ int main() {
     RUN_TEST(testBalance);
     RUN_TEST(testStartVolumes);
     RUN_TEST(testNames);
+    RUN_TEST(testFailedFiles);
     RUN_TEST(testReset);
     return UNITY_END();
 }

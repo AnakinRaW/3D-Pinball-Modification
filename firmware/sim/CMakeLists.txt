@@ -83,6 +83,7 @@ add_executable(simulator
     ${FIRMWARE}/src/logging/debug-trace.cpp
     ${FIRMWARE}/src/logging/log-line.cpp
     ${FIRMWARE}/src/logging/logger.cpp
+    ${FIRMWARE}/src/logging/warning-list.cpp
     ${FIRMWARE}/src/io/card-appender.cpp)
 # A quoted include looks in fakes/ before src/, so the simulated output stage, display, I²C bus and
 # PSRAM take the place of the hardware's, as the computer tests' fakes do.

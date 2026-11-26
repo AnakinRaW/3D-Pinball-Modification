@@ -21,6 +21,7 @@
 #include <FastLED.h>
 #pragma GCC diagnostic pop
 #include "drivers/lighting.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint16_t BENCH_LEDS = 3;   // the LEDs on chain A at the bench
@@ -58,7 +59,7 @@ constexpr ProfileCase PROFILE_CASES[] = {
 constexpr uint8_t PROFILE_CASE_COUNT = sizeof(PROFILE_CASES) / sizeof(PROFILE_CASES[0]);
 static Lighting probes[PROFILE_CASE_COUNT];
 
-static Lighting lighting;
+using test::lighting;
 static Lighting fresh;     // begin: never configured
 static Lighting counted;   // counts: configured twice
 static CRGB layout[LAYOUT_CHAINS][LAYOUT_ROOM];

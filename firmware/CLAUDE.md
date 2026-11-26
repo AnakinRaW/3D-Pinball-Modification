@@ -14,6 +14,9 @@
 - **Code lands with its tests.** A new library gets its test program, and a changed behavior gets its row in [`testing.md`](../docs/firmware/testing.md) and its test, in the same step as the code. Before code is reported done, each public function it touched is named with the test that covers it. Coverage through another component's tests does not count.
 - **Tests that need no hardware run on the computer**, in the `computer` environment, which PlatformIO builds with its platform `native`. CI runs them. Tests that need the Teensy run on the bench from the test image.
 - **A new driver joins the register of `every-driver`** in `tests/teensy/src/every-driver/`, with a case for each row its rules reach.
+- **The test programs share one instance of each driver and component**, which `tests/teensy/include/test-drivers.h` declares, as the firmware's `main.cpp` holds one. A program keeps a further instance only where a test needs one never begun or one whose `begin()` fails. The drivers publish into the firmware's `events`, and the firmware's `deviceMonitor` watches them.
+- **A large buffer of a test lies in the PSRAM**, with `EXTMEM`, unless the driver that reads it requires RAM1 or RAM2. RAM2's heap carries the test task's stack and the lighting's colors. [`tools/ram1-floor.py`](tools/ram1-floor.py) fails the build when RAM1 keeps less than its floor free.
+- **The test programs' code runs from the flash**, since [`linker/teensy41-tests.ld`](linker/teensy41-tests.ld) puts it there. A loop or a handler that times edges carries `FASTRUN`, which keeps it in ITCM.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
 - **A program with a computer test folder has a test for every `computer` row.** A row for code still to be written reads `computer, planned` in its Runs on column, and the mark comes off with its test. `tools/test-coverage.py` fails CI on a missing test and on a planned row that has one.
 
@@ -130,6 +133,8 @@ Code that only serves debugging stands under `#if defined(DEBUG)`. Debug output 
 **A log line formats no floating-point value.** On the Teensy 4.1 the C library took 200 bytes from the heap for the first two floats a task formatted with `%f`, so a float in a line breaks the rule against dynamic memory after the start. A value is written as an integer in a unit that keeps its digits, such as `%ld` mV, or as the text it was read from, such as a setting from the config file.
 
 The machine's log on the card goes through the [logger](../docs/firmware/logging.md), with `logWarning()` and `logInfo()` from [`src/logging/logger.h`](src/logging/logger.h). A line worth keeping in the machine goes there, such as a setting out of its range or a failure at the start. A debug build shows it on USB as well, also before the log has begun.
+
+**A loop writes one warning for a mistake it finds many times.** A loop over the entries of a setting, such as the lamps or the heights of a group, counts the entries that show the mistake and writes one warning after the loop, with the count and the first entry. The screen shows the first 16 warnings since the start, so a warning for each lamp would crowd out every other.
 
 **Every refusal shows in a debug build.** A function that rejects its input or fails returns its error, and in a debug build it also names the refusal and its reason through `DEBUG_LOG()`. A silent `false` costs a search. `assert()` is kept for what can never happen, since a test that provokes a refusal has to run on.
 

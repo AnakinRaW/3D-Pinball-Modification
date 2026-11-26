@@ -25,16 +25,16 @@ public:
     static constexpr uint16_t SLOP_PX = 10;       // design.md: the pixels a resting finger may move
     static constexpr uint32_t HOLD_MS = 1000;     // design.md: the rest before TouchHeld
     static constexpr uint32_t FAIL_MS = 100;      // design.md: no working read, and it has failed
-    static constexpr uint16_t RAW_LEFT = 327;     // touch.raw_left's default, measured
-    static constexpr uint16_t RAW_RIGHT = 1;      // touch.raw_right's default, measured
-    static constexpr uint16_t RAW_TOP = 3;        // touch.raw_top's default, measured
-    static constexpr uint16_t RAW_BOTTOM = 254;   // touch.raw_bottom's default, measured
+    static constexpr uint16_t RAW_LEFT = 327;     // touch.left_edge's default, measured
+    static constexpr uint16_t RAW_RIGHT = 1;      // touch.right_edge's default, measured
+    static constexpr uint16_t RAW_TOP = 3;        // touch.top_edge's default, measured
+    static constexpr uint16_t RAW_BOTTOM = 254;   // touch.bottom_edge's default, measured
     static constexpr uint16_t RAW_MAX = 4095;     // FT6x06 register map: a reading has 12 bits
     /// The least difference between the readings at two opposite edges. A smaller one cannot
     /// come from a touch layer over the whole picture, so that axis keeps its defaults.
     static constexpr uint16_t SPAN_MIN = 100;
 
-    /// The config's touch.raw_left, touch.raw_right, touch.raw_top and touch.raw_bottom: the
+    /// The config's touch.left_edge, touch.right_edge, touch.top_edge and touch.bottom_edge: the
     /// controller's readings at the picture's four edges, each with its default.
     ///
     /// The panel's y reads rawLeft at the picture's left edge and rawRight at its right edge. The
@@ -129,6 +129,7 @@ private:
 
     // what the bus's interrupt alone keeps about the touch on the screen
     TouchPoint downAt = {};     // where the finger came down
+    bool failing = false;       // the last read failed
     TouchPoint reported = {};   // the position last published
     uint32_t downUs = 0;        // nowUs() when it came down
     bool resting = false;       // it has stayed within SLOP_PX of where it came down

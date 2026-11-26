@@ -30,10 +30,10 @@ The four readings at the picture's edges stand in the [machine config](../compon
 
 | Key | Default | Range |
 |---|---|---|
-| `touch.raw_left` | 327 | 0 to 4095, the panel's y at the picture's left edge |
-| `touch.raw_right` | 1 | 0 to 4095, the panel's y at the picture's right edge |
-| `touch.raw_top` | 3 | 0 to 4095, the panel's x at the picture's top edge |
-| `touch.raw_bottom` | 254 | 0 to 4095, the panel's x at the picture's bottom edge |
+| `touch.left_edge` | 327 | 0 to 4095, the panel's y at the picture's left edge |
+| `touch.right_edge` | 1 | 0 to 4095, the panel's y at the picture's right edge |
+| `touch.top_edge` | 3 | 0 to 4095, the panel's x at the picture's top edge |
+| `touch.bottom_edge` | 254 | 0 to 4095, the panel's x at the picture's bottom edge |
 
 The main task hands the four values to `configure()` before `begin()`. A value above 4095 counts as 4095. An axis whose two readings lie less than 100 apart keeps its defaults.
 

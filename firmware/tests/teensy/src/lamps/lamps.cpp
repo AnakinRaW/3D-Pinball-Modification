@@ -12,6 +12,7 @@
 #include "core/clock.h"
 #include "components/lamps.h"
 #include "drivers/ws2812-color-encoder.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 // the frame: a WS2812B takes 24 bits, and the lighting driver sends a bit as one symbol
@@ -33,7 +34,7 @@ constexpr uint16_t SPEED_MM_PER_S = 200;
 constexpr uint16_t PERIOD_MS = 2000;
 constexpr uint16_t ON_MS = 300;
 
-static Lighting lighting;
+using test::lighting;
 static Lamps lamps(lighting);
 
 // frames: runs the effects for QUICK_MS or SOAK_MS and checks every frame.

@@ -3,7 +3,8 @@
 // the test plays both the storage task and the Audio library's update.
 //
 //   wav-chunks  the samples of the data chunk come out once and in order, behind any chunks
-//   wav-format  a file in another format, a missing file and a failed read end the sound
+//   wav-format  a file in another format, a missing file, a file cut short and a failed read end
+//               the sound, each with its code
 //   wav-ffmpeg  a sound that the command of assets/media.md made plays every sample of its data
 //               chunk. ffmpeg.wav beside this file is such a sound, made from a stereo MP3 at
 //               another sample rate
@@ -89,7 +90,7 @@ struct Rig {
     FakeCard card;
     TestService service{card};
     SoundChannel channel{ring.data()};
-    uint32_t ended = 0;   // the number the last block reported, 0 for none
+    SoundEnd ended{};   // the end the last block reported, number 0 for none
 
     Rig() { service.mount(); }
 
@@ -160,9 +161,9 @@ static std::vector<int16_t> playOut(Rig& rig, uint32_t most, uint32_t* endedNumb
     for (uint32_t i = 0; i < most; ++i) {
         const std::vector<int16_t> b = rig.block();
         out.insert(out.end(), b.begin(), b.end());
-        if (rig.ended != 0) {
+        if (rig.ended.number != 0) {
             if (endedNumber != nullptr) {
-                *endedNumber = rig.ended;
+                *endedNumber = rig.ended.number;
             }
             break;
         }
@@ -186,6 +187,7 @@ static void testWavChunks() {
             uint32_t number = 0;
             std::vector<int16_t> out = playOut(rig, 200, &number);
             TEST_ASSERT_EQUAL_UINT32(7, number);
+            TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::PLAYED), uint8_t(rig.ended.code));
             // The first block glides in from 0, so its samples are checked against the glide.
             TEST_ASSERT_TRUE(out.size() >= count);
             for (size_t i = 0; i < count; ++i) {
@@ -231,17 +233,30 @@ static void testWavFormat() {
         uint32_t number = 0;
         const std::vector<int16_t> out = playOut(rig, 5, &number);
         TEST_ASSERT_EQUAL_UINT32(3, number);
+        TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::NOT_WAV), uint8_t(rig.ended.code));
         TEST_ASSERT_TRUE(out.empty());
     }
+    // A file whose data chunk names more samples than it holds ends behind the samples it holds.
+    Rig cut;
+    std::string shortFile = wav(ramp(1000));
+    shortFile.resize(shortFile.size() - 400);
+    cut.card.files["/cut.wav"] = shortFile;
+    cut.channel.request(SoundPosition(cut.service.open("/cut.wav"), false), 8);
+    uint32_t cutNumber = 0;
+    playOut(cut, 50, &cutNumber);
+    TEST_ASSERT_EQUAL_UINT32(8, cutNumber);
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::CUT_SHORT), uint8_t(cut.ended.code));
     // A missing file ends at once, as a file with no name does.
     Rig missing;
     missing.channel.request(SoundPosition(missing.service.open("/none.wav"), true), 4);
     uint32_t number = 0;
     playOut(missing, 3, &number);
     TEST_ASSERT_EQUAL_UINT32(4, number);
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::NO_FILE), uint8_t(missing.ended.code));
     missing.channel.request(SoundPosition(FileReader{}, false), 5);
     playOut(missing, 3, &number);
     TEST_ASSERT_EQUAL_UINT32(5, number);
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::NO_FILE), uint8_t(missing.ended.code));
 
     // A read that fails partway through ends the sound behind the samples before it.
     Rig failing;
@@ -253,6 +268,7 @@ static void testWavFormat() {
     number = 0;
     const std::vector<int16_t> out = playOut(failing, 1000, &number);
     TEST_ASSERT_EQUAL_UINT32(6, number);
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::READ_FAILED), uint8_t(failing.ended.code));
     TEST_ASSERT_TRUE(out.size() < samples.size());
 }
 
@@ -307,7 +323,7 @@ static void testWavLoop() {
     // The first block starts the card's read and stays silent.
     TEST_ASSERT_TRUE(rig.block().empty());
     const std::vector<int16_t> out = playOut(rig, 40);
-    TEST_ASSERT_EQUAL_UINT32(0, rig.ended);
+    TEST_ASSERT_EQUAL_UINT32(0, rig.ended.number);
     TEST_ASSERT_EQUAL_UINT32(40 * N, out.size());
     // Past the first block, the samples run through the file again and again with no gap.
     for (size_t i = N; i < out.size(); ++i) {
@@ -323,15 +339,15 @@ static void testCardWaits() {
     rig.card.files["/w.wav"] = wav(samples);
     rig.channel.request(SoundPosition(rig.service.open("/w.wav"), false), 2);
     int16_t block[N];
-    uint32_t ended = 0;
+    SoundEnd ended{};
     // The card has brought nothing yet, so the block is silent and the sound waits.
     TEST_ASSERT_FALSE(rig.channel.play(block, ended));
     TEST_ASSERT_FALSE(rig.channel.play(block, ended));
-    TEST_ASSERT_EQUAL_UINT32(0, ended);
+    TEST_ASSERT_EQUAL_UINT32(0, ended.number);
     TEST_ASSERT_TRUE(rig.channel.requested());
     std::vector<int16_t> out;
     // Every block lets the card bring at most one chunk, and blocks without one stay silent.
-    for (uint32_t i = 0; i < 4000 && ended == 0; ++i) {
+    for (uint32_t i = 0; i < 4000 && ended.number == 0; ++i) {
         if (i % 50 == 0) {
             rig.service.serveNext();
         }
@@ -339,7 +355,7 @@ static void testCardWaits() {
             out.insert(out.end(), block, block + N);
         }
     }
-    TEST_ASSERT_EQUAL_UINT32(2, ended);
+    TEST_ASSERT_EQUAL_UINT32(2, ended.number);
     // Leaving out the silence of the gaps, every sample came once and in order.
     std::vector<int16_t> sounding;
     for (int16_t s : out) {
@@ -403,7 +419,7 @@ static void testPosition() {
     TEST_ASSERT_TRUE(rig.channel.position().empty());
     rig.channel.request(behind, 5);
     out = playOut(rig, 6);
-    TEST_ASSERT_EQUAL_UINT32(0, rig.ended);
+    TEST_ASSERT_EQUAL_UINT32(0, rig.ended.number);
     // The loop starts over at the first sample, which glides in across its first block.
     TEST_ASSERT_TRUE(out.size() > N);
     TEST_ASSERT_INT_WITHIN(1, 0, out[0]);
@@ -449,7 +465,7 @@ static void testGlides() {
     for (uint32_t i = 0; i < N; ++i) {
         TEST_ASSERT_INT_WITHIN(1, std::lround(16000.0 * (1 - double(i + 1) / N)), b[i]);
     }
-    TEST_ASSERT_EQUAL_UINT32(0, rig.ended);
+    TEST_ASSERT_EQUAL_UINT32(0, rig.ended.number);
     TEST_ASSERT_TRUE(rig.block().empty());
     b = rig.block();
     for (uint32_t i = 0; i < N; ++i) {
@@ -462,7 +478,7 @@ static void testGlides() {
     TEST_ASSERT_EQUAL_UINT32(N, b.size());
     TEST_ASSERT_EQUAL_INT16(0, b[N - 1]);
     TEST_ASSERT_TRUE(rig.block().empty());
-    TEST_ASSERT_EQUAL_UINT32(0, rig.ended);
+    TEST_ASSERT_EQUAL_UINT32(0, rig.ended.number);
     TEST_ASSERT_TRUE(rig.channel.position().empty());
 }
 
@@ -474,8 +490,8 @@ static void testEnds() {
     uint32_t reports = 0;
     for (int i = 0; i < 10; ++i) {
         rig.block();
-        if (rig.ended != 0) {
-            TEST_ASSERT_EQUAL_UINT32(11, rig.ended);
+        if (rig.ended.number != 0) {
+            TEST_ASSERT_EQUAL_UINT32(11, rig.ended.number);
             reports = reports + 1;
         }
     }
@@ -491,7 +507,7 @@ static void testEnds() {
     rig.channel.request(SoundPosition(), 0);
     for (int i = 0; i < 10; ++i) {
         rig.block();
-        TEST_ASSERT_EQUAL_UINT32(0, rig.ended);
+        TEST_ASSERT_EQUAL_UINT32(0, rig.ended.number);
     }
     TEST_ASSERT_FALSE(rig.channel.requested());
 }
