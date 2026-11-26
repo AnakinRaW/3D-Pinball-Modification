@@ -2,6 +2,7 @@
 #include "io/psram.h"
 #include "logging/debug-log.h"
 #include "logging/logger.h"
+#include "logging/warning-list.h"
 #include <Arduino.h>
 
 constexpr uint32_t PIXEL_BYTES = 2;   // RGB565
@@ -40,6 +41,9 @@ void Screen::begin() {
                            LV_DISPLAY_RENDER_MODE_DIRECT);
     lv_display_set_flush_cb(lv, flush);
     lv_display_set_user_data(lv, this);
+    warningSubject = lv_subject_create(LV_SUBJECT_TYPE_INT);
+    warningsSeen = warningList.version();
+    lv_subject_set_int(warningSubject, static_cast<int32_t>(warningsSeen));
 
     // The background and the slides lie on LVGL's screen, which is transparent where they hold
     // nothing and shows the black bottom layer there. LVGL looks for the object that covers a
@@ -112,6 +116,13 @@ void Screen::render() {
         // hidden, so LVGL draws every layer over its area again.
         lv_obj_invalidate(lv_layer_bottom());
         redraw = false;
+    }
+    // A warning comes from any task. The observers change LVGL objects, which only the main task
+    // may touch, so the change reaches them here.
+    const uint32_t warnings = warningList.version();
+    if (warnings != warningsSeen) {
+        warningsSeen = warnings;
+        lv_subject_set_int(warningSubject, static_cast<int32_t>(warnings));
     }
     lv_timer_handler();
 }
