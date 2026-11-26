@@ -167,8 +167,8 @@ describe("config", () => {
 
 describe("highlight", () => {
   it("lights the lamps on a feature's parts, reveals its ball and looks through the ramps above", () => {
-    const h = planHighlight(pf, ["ball-scoop", "ir-left-lane", "diffuser-scoop"]);
-    expect(h.marks.map((m) => m.label)).toEqual(["Ball scoop", "IR left lane", "Diffuser scoop"]);
+    const h = planHighlight(pf, ["ball-scoop", "ir-scoop", "diffuser-scoop"]);
+    expect(h.marks.map((m) => m.label)).toEqual(["Ball scoop", "IR scoop", "Diffuser scoop"]);
     expect(h.lit).toContain("lamp-scoop");
     expect(h.reveal).toEqual(["ball-scoop"]);
     expect(h.through).toEqual(expect.arrayContaining(["ramp-orbit-left", "cover-left"]));

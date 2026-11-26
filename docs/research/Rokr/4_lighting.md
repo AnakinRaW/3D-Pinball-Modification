@@ -72,9 +72,13 @@ On the board there are six amber LEDs, a 7-pin connector and no other components
 
 ![P28 ball count board](4_P28-ball-count-schematic.svg)
 
-**Pin 7 is the common cathode, pins 1 to 6 are the six anodes.** Each of pins 1 to 6 reads 1.831 V in the diode range against pin 7 and blocks in the other direction, and every remaining combination reads OL in the diode range as well as in the resistance range. The six LEDs therefore share one node, and it is the one the meter's negative lead sits on. The connector carries six segment lines and one grid line, which is how a common-cathode display is wired: the six can be set individually, and they light only while their own grid is selected. The same 1.831 V appears across a single LED's own two pads, where the meter's test current also lights it.
+#### Pin 7 is the common cathode, pins 1 to 6 are the six anodes
 
-**The six LEDs are multiplexed.** On the running machine with all six lit, a DC voltmeter across one LED reads 2.7 V to 3.8 V with the cathode positive, the value depending on which LED is probed. Reversing the leads reproduces the sign. A lit LED whose average sits in reverse is switched rather than driven continuously.
+Each of pins 1 to 6 reads 1.831 V in the diode range against pin 7 and blocks in the other direction, and every remaining combination reads OL in the diode range as well as in the resistance range. The six LEDs therefore share one node, and it is the one the meter's negative lead sits on. The connector carries six segment lines and one grid line, which is how a common-cathode display is wired: the six can be set individually, and they light only while their own grid is selected. The same 1.831 V appears across a single LED's own two pads, where the meter's test current also lights it.
+
+#### The six LEDs are multiplexed
+
+On the running machine with all six lit, a DC voltmeter across one LED reads 2.7 V to 3.8 V with the cathode positive, the value depending on which LED is probed. Reversing the leads reproduces the sign. A lit LED whose average sits in reverse is switched rather than driven continuously.
 
 The LEDs apparently blink too fast for a voltmeter, so it most likely shows the average. Always on would read +1.8 V, never on would read −5.212 V. One LED reads −2.7 V, which is 36 % of the way between the two, so it is on **36 %** of the time.
 
@@ -83,8 +87,8 @@ Three grids at full brightness spend 33 % and fit. Two grids spend 50 % and are 
 ### LED Display driver
 
 The mainboard carries a **TM1617**, a Titan Micro LED display driver ([translated datasheet](../../datasheets/TM1617-TitanMicro.md)). The driver supports two mutually exclusive modes:
-- **Mode 1:** 2 grids of 8 segments, up to 16 LEDs
-- **Mode 2:** 3 grids of 7 segments, up to 21 LEDs
+- Mode 1: 2 grids of 8 segments, up to 16 LEDs
+- Mode 2: 3 grids of 7 segments, up to 21 LEDs
 
 Which mode the stock machine uses is unknown. The on-time bound measured at P28 fits the three-digit mode at full brightness and rules out the two-digit one, unless the brightness control dims as well.
 

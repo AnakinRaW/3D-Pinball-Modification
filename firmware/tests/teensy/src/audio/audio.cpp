@@ -25,6 +25,7 @@
 #include "core/event-queue.h"
 #include "drivers/audio.h"
 #include "drivers/storage.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint32_t LIMIT_S = 30;
@@ -116,8 +117,7 @@ private:
     volatile uint32_t count = 0;
 };
 
-static EventQueue queue;
-static AudioDriver audio(queue);
+using test::audio;
 static uint8_t* const fileBuffer = test::scratch() + RECORD * sizeof(int16_t);
 static Tap* tap = nullptr;
 static bool written = false;
@@ -263,7 +263,7 @@ static bool ready() {
     }
     delay(SETTLE_MS);
     DriverEvent drop[EVENTS];
-    while (queue.read(drop, EVENTS) > 0) {
+    while (events.read(drop, EVENTS) > 0) {
     }
     return true;
 }
@@ -271,7 +271,7 @@ static bool ready() {
 // Gets the numbers of the SOUND_ENDED events that have come, with their channels.
 static uint32_t endedEvents(uint32_t (&numbers)[EVENTS], uint8_t (&channels)[EVENTS]) {
     DriverEvent e[EVENTS];
-    const uint32_t n = queue.read(e, EVENTS);
+    const uint32_t n = events.read(e, EVENTS);
     uint32_t k = 0;
     for (uint32_t i = 0; i < n; ++i) {
         if (e[i].type == DriverEventType::SOUND_ENDED) {

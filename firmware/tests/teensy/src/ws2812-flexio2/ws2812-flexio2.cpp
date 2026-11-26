@@ -183,7 +183,7 @@ static void fill(Rig& rig, bool pattern) {
 // drives them. Every lane carries exactly its LEDs' bits, each high lies within the reading's
 // tolerance of the encoder's T0H or T1H, and the lines rest low before and after the frame. The
 // first high of each lane may start before the reading does, so its length is left out.
-static void sendAndRead(Rig& rig) {
+FASTRUN static void sendAndRead(Rig& rig) {
     if (!started(rig)) {
         return;
     }
@@ -388,7 +388,7 @@ static bool longStarted() {
 // out of the extremes. With flexio3, the reading also writes FlexIO3's eight shifter buffers about
 // once every display burst, as the display driver refills them, so the processor loads the
 // peripheral bus as a sending display does. FlexIO3 stays disabled, so no pin moves.
-static Reading readLong(bool flexio3 = false) {
+FASTRUN static Reading readLong(bool flexio3 = false) {
     Reading r = {0, 0, 0, UINT32_MAX, 0, UINT32_MAX, 0, false};
     const uint32_t pin = 1u << Ws2812Flexio2::signalOf(PINS[CHAIN_F]);
     const uint32_t bits = uint32_t(LONG_LEDS) * ws2812::BITS_PER_LED;
@@ -559,7 +559,7 @@ static void testFlexio3Load() {
 
 // latch: two short frames, the second sent the moment busy() clears. The line stays low from the
 // first frame's last bit to the second frame's first for longer than the LEDs' reset time.
-static void testLatch() {
+FASTRUN static void testLatch() {
     if (!latchBegun) {
         const Lane lane = {PINS[CHAIN_F], LATCH_LEDS};
         latchBegun = latchOutput.begin(&lane, 1);

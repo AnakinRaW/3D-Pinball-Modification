@@ -51,8 +51,8 @@ constexpr int32_t BALL_R = 18;         // loop.rgb: the ball's radius
 constexpr int32_t ORBIT_R = 70;        // the circle it runs on, around the screen's center
 constexpr int32_t SMALL_BALL_R = 10;   // viewport.rgb   // one write
 
-// the bytes of one write; a buffer with a section attribute cannot be inline
-inline uint8_t chunk[CHUNK_BYTES] __attribute__((aligned(32)));
+/// The bytes of one write.
+extern uint8_t chunk[CHUNK_BYTES];
 
 /// Gets the full path of a file of the test game.
 inline void pathOf(const char* name, char (&path)[FILE_PATH_BYTES]) {

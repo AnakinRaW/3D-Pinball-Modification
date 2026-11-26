@@ -5,6 +5,7 @@
 #include <output_i2s2.h>
 #include <string.h>
 
+constexpr uint8_t BLOCKS = 6;             // audio model: n_blocks
 constexpr size_t CACHE_LINE_BYTES = 32;   // the Cortex-M7's data cache line
 
 /// The four rings in the PSRAM, which every audio driver's channels read into and only the one

@@ -41,8 +41,8 @@ struct DriverEvent {
     uint8_t source;     // channel, switch or target inside its subsystem
     uint32_t payload;   // interpreted according to the type
 };
-/// model/firmware/figures.py, b_event: the size the device monitor's queue in RAM2 is counted with
-constexpr size_t EVENT_BYTES = 12;
+/// The size of an event, with which the device monitor's queue in RAM2 is counted.
+constexpr size_t EVENT_BYTES = 12;   // firmware model: b_event
 static_assert(sizeof(DriverEvent) == EVENT_BYTES, "the model counts RAM2 with this size");
 
 /// The payload of a type without one.
@@ -94,8 +94,8 @@ template <DriverEventType TAG> typename DriverPayloadOf<TAG>::type payload(const
 
 class EventQueue {
 public:
-    /// model/firmware/figures.py, n_producers: the queues attach() takes at most
-    static constexpr uint8_t PRODUCERS = 11;
+    /// The most queues attach() takes.
+    static constexpr uint8_t PRODUCERS = 11;   // firmware model: n_producers
 
     /// One driver's queue. Its interrupt writes it, the main loop reads it.
     class Producer {

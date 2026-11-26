@@ -8,8 +8,8 @@
 //               again (asks at the bench)
 //
 // Wiring: the Adafruit 2090 with its touch controller on Wire2 through the level converter, and
-// its 8-bit bus, as pin-assignment.md gives them. The driver publishes into a queue this program
-// reads, so no other part of the firmware takes its events.
+// its 8-bit bus, as pin-assignment.md gives them. The driver publishes into the firmware's queue
+// events, which only this program reads.
 
 #include <Arduino.h>
 #include "core/clock.h"
@@ -17,6 +17,7 @@
 #include "core/event-queue.h"
 #include "drivers/display.h"
 #include "drivers/touch.h"
+#include "test-drivers.h"
 #include "test-harness.h"
 
 constexpr uint32_t READS_MS = 2000;   // a hundred reads
@@ -48,9 +49,8 @@ constexpr Mark MARKS[] = {{"top left", 16, 16},
                           {"bottom right", W - 16 - MARK_PX, H - 16 - MARK_PX},
                           {"center", W / 2 - MARK_PX / 2, H / 2 - MARK_PX / 2}};
 
-static EventQueue queue;
-static Touch touch(io::wire2Bus, queue, driverTick);
-static Display display;
+using test::display;
+using test::touch;
 static bool begun = false;
 EXTMEM static uint8_t frame[W * H * BYTES_PER_PIXEL] __attribute__((aligned(32)));
 static volatile bool frameOut = false;
@@ -84,10 +84,6 @@ static const char* nameOf(DriverEventType t) {
 
 // ---- touch-lost
 
-static EventQueue monitorEvents;
-static DriverEvent monitorStorage[DeviceMonitor::DEPTH];
-static DeviceMonitor monitor(monitorEvents, driverTick, monitorStorage);
-
 // Fills the screen blue with a white square in the middle and sends it.
 static bool showBlueSquare() {
     for (uint32_t y = 0; y < H; ++y) {
@@ -110,11 +106,18 @@ static bool showBlueSquare() {
     return frameOut;
 }
 
+// Gets whether an event is the device monitor's report about the touch controller.
+static bool isTouchFault(const DriverEvent& e) {
+    const bool fault =
+        e.type == DriverEventType::DEVICE_FAILED || e.type == DriverEventType::DEVICE_RECOVERED;
+    return fault && faultDevice(e.source) == Device::TOUCH;
+}
+
 // Waits for the monitor's next event about the touch controller.
 static bool nextFault(DriverEvent& e) {
     const uint32_t t0 = millis();
     while (millis() - t0 < LOST_TIMEOUT_MS) {
-        if (monitorEvents.read(&e, 1) == 1 && faultDevice(e.source) == Device::TOUCH) {
+        if (events.read(&e, 1) == 1 && isTouchFault(e)) {
             return true;
         }
         delay(1);
@@ -135,7 +138,7 @@ static void testTouchLost() {
         test::skip("no touch controller answers");
         return;
     }
-    if (!monitor.watch(Device::TOUCH, touch) || !showBlueSquare()) {
+    if (!deviceMonitor.watch(Device::TOUCH, touch) || !showBlueSquare()) {
         test::fail("the monitor or the picture refused", "both taken");
         return;
     }
@@ -189,7 +192,7 @@ static void testReads() {
     }
     delay(READS_MS);
     const Fault f = touch.failed();
-    const uint32_t n = queue.read(taken, EVENTS);
+    const uint32_t n = events.read(taken, EVENTS);
     Serial.printf("failed parts %u, code 0x%lx, %lu events\n", f.parts, f.code, n);
     if (f.parts != 0) {
         test::fail("the controller reported failed", "no failed part");
@@ -229,7 +232,7 @@ static void drawMarks() {
 static bool nextEvent(DriverEvent& e, uint32_t timeoutMs) {
     const uint32_t t0 = millis();
     while (millis() - t0 < timeoutMs) {
-        if (queue.read(&e, 1) == 1) {
+        if (events.read(&e, 1) == 1) {
             return true;
         }
         delay(1);
@@ -268,7 +271,7 @@ static void testTouch() {
         return;
     }
     drawMarks();
-    queue.read(taken, EVENTS);
+    events.read(taken, EVENTS);
     DriverEvent e;
     for (const Mark& m : MARKS) {
         snprintf(text, sizeof text, "touch the white mark at the %s, then lift the finger",
