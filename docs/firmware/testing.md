@@ -362,8 +362,16 @@ The program `break-beam` checks the [break beam driver](drivers/break-beam.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `pass` | bench | Pass a ball through the beam many times, slowly and fast | Each pass gives one `BallDrained`, and `blocked()` is true only while the ball is in the beam |
-| `failed` | bench | Leave a ball in the beam for longer than the [fault time](drivers/break-beam.md#device-faults), then take it out | The beam is reported failed, and recovered once it is clear |
+| `no-queue` | computer | Begin a driver on an event queue that takes no further queue | `begin()` returns false, the log holds a warning that names the queue, the pin keeps no interrupt, and the driver answers with empty data |
+| `at-start` | computer | Begin with the beam broken, then let the [fault time](drivers/break-beam.md#device-faults) pass | The pin is an input with hysteresis and an interrupt on both edges, no `BALL_DRAINED` comes, and the beam fails once the fault time has passed since `begin()` |
+| `crossing` | computer | Break the beam after it was clear for a second, then clear it | The break gives one `BALL_DRAINED` from gate 0 with the time of the break, the clear gives none, and `blocked()` follows the pin |
+| `flicker` | computer | Clear the beam between two breaks for just under the [flicker window](drivers/break-beam.md#ball-sensing), then for exactly the window, then read a break twice | Only the break after the full window gives a second `BALL_DRAINED`, and the break read twice gives none |
+| `stays-broken` | computer | Keep the beam broken for just under the fault time with a flicker in between, then for the fault time, then clear it | The beam fails only once it has stayed broken for the fault time since the flicker, with code 0, and works again once clear |
+| `wrap` | computer | Run the flicker window and the fault time across the wrap of `nowUs()` | Both give the answers they give away from the wrap |
+| `second-driver` | computer | Begin a second driver while the first holds the pin, and call it before and after | Its `begin()` returns false, the log holds a warning that names the held pin, `blocked()` is false and no part fails, and the first driver keeps its events |
+| `pad` | Teensy | Begin the driver | The pin's pad has hysteresis without pull-up or keeper, its interrupt is enabled on both edges, and `blocked()` follows the pin |
+| `pass` | bench | Pass a ball through the beam ten times, slowly and fast | The ten passes give ten `BALL_DRAINED` and no more, and `blocked()` is false once the ball is out |
+| `failed` | bench | Hold a ball in the beam for longer than the [fault time](drivers/break-beam.md#device-faults), then take it out | The beam is reported failed within a second past the fault time, and recovered once it is clear |
 
 ### I²C bus
 

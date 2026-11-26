@@ -2,7 +2,7 @@
 // receiver from pin 31 to GND, R3 with 100 kOhm from 3V3 to pin 31, the emitter behind R2 with
 // 220 Ohm from VIN to GND.
 //
-// The pin is read the way firmware/gist/drivers/break-beam.cpp reads it: an input without the
+// The pin is read the way firmware/src/drivers/break-beam.cpp reads it: an input without the
 // Teensy's pull-up, with hysteresis, and an interrupt on both edges. The interrupt notes each
 // edge with its time in a ring buffer, and the loop prints it. HIGH means blocked.
 //

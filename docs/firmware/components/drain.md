@@ -64,7 +64,7 @@ Device faults stay with the host, as for every component. A beam that stays brok
 // the drain with its break beam, the ball store, the ball separator and the drain lamp
 class Drain : public Component {
 public:
-    // turns BallDrained into Drained, the store's contact closures into BallStored, and the exit's
+    // turns BALL_DRAINED into Drained, the store's contact closures into BallStored, and the exit's
     // IR event during a release into BallReleased
     bool    translate(const DriverEvent& in, PinballEvents& out) override;
 

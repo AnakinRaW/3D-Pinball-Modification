@@ -30,6 +30,9 @@ enum class DriverEventType : uint16_t {
     /// A sound has played to its end, or its file could not be read. The source is the audio
     /// channel, and the payload is the number play() gave the sound.
     SOUND_ENDED,
+    /// A ball has broken the beam across the drain. The source is the gate, always 0 in this
+    /// build, and there is no payload.
+    BALL_DRAINED,
 };
 
 struct DriverEvent {
@@ -74,6 +77,9 @@ template <> struct DriverPayloadOf<DriverEventType::TOUCH_UP> {
 };
 template <> struct DriverPayloadOf<DriverEventType::SOUND_ENDED> {
     using type = uint32_t;   // the number play() gave the sound
+};
+template <> struct DriverPayloadOf<DriverEventType::BALL_DRAINED> {
+    using type = NoPayload;
 };
 
 /// Gets the payload of an event of type TAG.
