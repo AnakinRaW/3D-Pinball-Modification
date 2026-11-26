@@ -2,8 +2,7 @@
    keep its code and its constant data in the flash. A function marked FASTRUN still goes into
    ITCM. The C library's text formatting and parsing stays in the flash as well, since only debug
    lines and tests take it. The firmware's files named here run only while a file is read or
-   written. The card takes far longer there than the flash adds. Everything else is PJRC's script
-   unchanged. */
+   written. Everything else is PJRC's script unchanged. */
 
 MEMORY
 {

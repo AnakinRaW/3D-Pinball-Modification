@@ -34,7 +34,7 @@ solenoid:
 
 The file's top holds sections, such as `servo:`. A section holds named entries. A list holds entries counted from 0. Each entry is a value, a section or a list.
 
-The file takes 8 KB at most. The config keeps 256 entries at most, where every section, every list and every value counts as one. Their names and values take 8 KB at most. A key holds 16 names at most, such as the two of `servo.start_deg`.
+The file takes 8 KB at most. The config keeps 512 entries at most, where every section, every list and every value counts as one. Their names and values take 8 KB at most. A key holds 16 names at most, such as the two of `servo.start_deg`.
 
 An entry the tree cannot hold is left out with everything under it. A line in the [log](../logging.md) names its line and column in the file.
 

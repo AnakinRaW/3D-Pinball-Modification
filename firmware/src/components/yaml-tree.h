@@ -82,9 +82,8 @@ public:
     /// @param bytes   The length of @p yaml.
     /// @param report  Takes every problem found.
     /// @return        False where the file is broken, or where libyaml finds no room on the heap.
-    /// @note          libyaml takes its two input buffers of 64 KB together from the heap and
-    ///                gives them back before parse() returns. Nothing else of the tree touches the
-    ///                heap.
+    /// @note          libyaml takes its input buffers from the heap and gives them back before
+    ///                parse() returns. Nothing else of the tree touches the heap.
     bool parse(const char* yaml, size_t bytes, Report& report);
 
     /// Empties the tree, so it holds the empty top alone.

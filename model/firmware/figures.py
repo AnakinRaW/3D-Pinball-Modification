@@ -171,9 +171,9 @@ MODEL.uses("i_supply_6a", of="lighting")
 dec("config_max", 8, "KB", src="the longest /config.yml the config component reads and writes, "
     "Config::FILE_BYTES in firmware/src/components/config.h, a decision: every setting of the "
     "machine with its IR channels and its lamps fits under it")
-dec("n_config_entries", 256, "", src="the sections, list entries and values the config's tree "
-    "holds together, Config::ENTRIES in firmware/src/components/config.h, a decision: every "
-    "setting of the machine with room to spare")
+dec("n_config_entries", 512, "", src="the sections, list entries and values the config's tree "
+    "holds together, Config::ENTRIES in firmware/src/components/config.h, a decision: the Arcade's "
+    "machine config with its lamps and its IR channels takes 303, so 512 leave room")
 dec("config_text", 8, "KB", src="the names and the values of the config's tree together, each "
     "with its end, Config::TEXT_BYTES in firmware/src/components/config.h, a decision: they take "
     "less than the file they come from")

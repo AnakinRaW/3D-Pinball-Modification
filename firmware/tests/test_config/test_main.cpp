@@ -349,11 +349,16 @@ static void testLimits() {
         Rig rig(many.c_str());
         rig.config.begin();
         const std::string lines = newLines();
-        TEST_ASSERT_TRUE(lines.find("/config.yml:257:3: more than 256 entries, the rest left "
-                                    "out") != std::string::npos);
+        // The section takes the first entry, so the values k0 to k510 fill the rest.
+        const std::string full = "/config.yml:" + std::to_string(Config::ENTRIES + 1) +
+                                 ":3: more than " + std::to_string(Config::ENTRIES) +
+                                 " entries, the rest left out";
+        TEST_ASSERT_TRUE(lines.find(full) != std::string::npos);
         TEST_ASSERT_EQUAL_UINT32(1, lineCount(lines));
-        TEST_ASSERT_EQUAL_DOUBLE(254, *rig.config.get("s.k254", 0, 1000));
-        TEST_ASSERT_FALSE(rig.config.get("s.k255", 0, 1000).has_value());
+        const std::string last = "s.k" + std::to_string(Config::ENTRIES - 2);
+        const std::string past = "s.k" + std::to_string(Config::ENTRIES - 1);
+        TEST_ASSERT_EQUAL_DOUBLE(Config::ENTRIES - 2, *rig.config.get(last.c_str(), 0, 1000));
+        TEST_ASSERT_FALSE(rig.config.get(past.c_str(), 0, 1000).has_value());
     }
 }
 

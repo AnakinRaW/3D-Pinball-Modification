@@ -18,9 +18,8 @@ class Config {
 public:
     static constexpr const char* PATH = "/config.yml";   // config.md: the file
     static constexpr size_t FILE_BYTES = 8192;           // config.md: the largest file
-    static constexpr uint16_t ENTRIES = 256;             // config.md: the entries the tree holds
-    static constexpr size_t TEXT_BYTES = 8192;    // config.md: the names and the values together
-    static constexpr double VALUE_LIMIT = 1e12;   // config.md: set() takes less in magnitude
+    static constexpr uint16_t ENTRIES = 512;             // config.md: the entries the tree holds
+    static constexpr double VALUE_LIMIT = 1e12;          // config.md: set() takes less in magnitude
 
     /// Creates an empty tree, in which every setting takes its default.
     ///
@@ -39,9 +38,9 @@ public:
     /// everything under it, as YamlTree::parse() gives. Each of these writes a line to the log,
     /// with the line and the column of the file where it found the problem.
     ///
-    /// @note  It waits for the card. libyaml takes 64 KB from the heap and gives them back before
-    ///        it returns. The main task calls it once at start-up, right after the logger's
-    ///        begin().
+    /// @note  It waits for the card. libyaml takes its input buffers from the heap and gives them
+    ///        back before it returns. The main task calls it once at start-up, right after the
+    ///        logger's begin().
     void begin();
 
     /// Gets the number under a key, held inside a range, or a default.
@@ -119,6 +118,7 @@ public:
     FileStatus saveStatus() const { return saving.status(); }
 
 private:
+    static constexpr size_t TEXT_BYTES = 8192;       // config.md: the names and the values together
     static constexpr size_t CACHE_LINE_BYTES = 32;   // the processor's cache line
 
     /// Gets the entry under a key, adding what set() adds.
@@ -143,7 +143,7 @@ private:
     YamlTree::Entry entries[ENTRIES + 1];   // the tree's entries, its top included
     char text[TEXT_BYTES];                  // the tree's names and values
     YamlTree tree;
-    /// The file's text, which begin() reads and save() writes. A read lands in it straight.
+    /// The file's text, which begin() reads and save() writes.
     alignas(CACHE_LINE_BYTES) char buffer[FILE_BYTES];
     FileRequest saving;   // the write save() started last
 };

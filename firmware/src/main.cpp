@@ -60,8 +60,6 @@ EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 
 static AudioDriver audio(events);
 static FileSystem files(storage);
-/// The tree of settings and the file's text take about 21 KB, which RAM2 holds instead of the main
-/// task's stack in RAM1.
 DMAMEM static Config config(files);
 static Sounds sounds(audio, files);
 static Display display;
