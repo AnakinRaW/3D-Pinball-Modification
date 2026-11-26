@@ -31,9 +31,15 @@ jobs:
           python -m pip install clang-format==18.1.8
           find firmware/src firmware/include firmware/tests \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
-  build:
-    name: Build the release firmware and run the tests
+  # The three jobs below run at the same time. Each keeps its build folder under runner.temp, since
+  # platformio.ini puts PlatformIO's build and library folders under %LOCALAPPDATA%\pio. Each caches
+  # PlatformIO's packages under a key of its job, since the Teensy jobs and the computer tests
+  # install different platforms.
+  release:
+    name: Build the release firmware and check its code with clang-tidy
     runs-on: ubuntu-latest
+    env:
+      LOCALAPPDATA: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,30 +50,73 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: platformio-${{ hashFiles('platformio.ini') }}
+          key: platformio-release-${{ hashFiles('platformio.ini') }}
 
       - name: Install PlatformIO
         run: python -m pip install platformio
 
       - name: Build
-        env:
-          # platformio.ini puts PlatformIO's build and library folders under %LOCALAPPDATA%\pio
-          LOCALAPPDATA: ${{ runner.temp }}
         run: python -m platformio run -e release
+
+      # firmware/.clang-tidy names the checks, and the run fails on any finding in firmware/. The
+      # self-test first shows that a clean file passes and a flawed one is caught. The step reads
+      # the compile commands of the build above, so a finding fails the run without waiting for
+      # the tests
+      - name: Check the firmware's code with clang-tidy
+        run: |
+          python -m pip install clang-tidy==18.1.8
+          python firmware/tools/tidy.py --self-test
+          python firmware/tools/tidy.py
+
+  test-image:
+    name: Build the test image
+    runs-on: ubuntu-latest
+    env:
+      LOCALAPPDATA: ${{ runner.temp }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: platformio-test-image-${{ hashFiles('platformio.ini', 'firmware/tests/teensy/platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: python -m pip install platformio
 
       # Fails, as the release build does, when RAM1 keeps less than the floor of
       # firmware/tools/ram1-floor.py free for local variables
       - name: Build the test image
-        env:
-          LOCALAPPDATA: ${{ runner.temp }}
         working-directory: firmware/tests/teensy
         run: python -m platformio run
+
+  computer-tests:
+    name: Run the computer tests and match every test with its row
+    runs-on: ubuntu-latest
+    env:
+      LOCALAPPDATA: ${{ runner.temp }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: platformio-computer-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: python -m pip install platformio
 
       # the tests that need no hardware, from the first test_ folder in firmware/tests on; the
       # Teensy tests stand beside them in the test image firmware/tests/teensy and run on the bench
       - name: Test
-        env:
-          LOCALAPPDATA: ${{ runner.temp }}
         run: |
           if compgen -G "firmware/tests/test_*" > /dev/null; then
             python -m platformio test -e computer --json-output-path "${{ runner.temp }}/computer-tests.json"
@@ -87,14 +136,3 @@ jobs:
           else
             python firmware/tools/test-coverage.py --missing
           fi
-
-      # firmware/.clang-tidy names the checks, and the run fails on any finding in firmware/. The
-      # self-test first shows that a clean file passes and a flawed one is caught
-      - name: Check the firmware's code with clang-tidy
-        if: success() || failure()
-        env:
-          LOCALAPPDATA: ${{ runner.temp }}
-        run: |
-          python -m pip install clang-tidy==18.1.8
-          python firmware/tools/tidy.py --self-test
-          python firmware/tools/tidy.py
