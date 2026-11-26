@@ -14,6 +14,7 @@ export interface Model {
   features: Features;
   all: Feature[];
   svg: string;
+  machineGlb: string | undefined; // the URL of the machine in 3D
   repoGames: GameEntry[];
 }
 
@@ -26,6 +27,7 @@ export function loadModel(s: Sources): Model {
     features,
     all: [...features.placed, ...features.unplaced],
     svg: s.playfieldSvg,
+    machineGlb: s.machineGlb,
     repoGames: gamesFromFiles("repo", s.repoGames, s.repoThumbnails),
   };
 }
@@ -43,13 +45,16 @@ export function createState(model: Model) {
   const picked = signal<Item | null>(null);
   // the ramps the studio hides
   const hiddenRamps = signal<string[]>([]);
+  // whether the Features view and the studio show the machine in 3D instead of the drawing: at first
+  // wherever the model is in the checkout and the browser draws WebGL 2, as three.js needs
+  const threeD = signal(!!model.machineGlb && typeof WebGL2RenderingContext !== "undefined");
   // the games of a memory card the browser opened, and every game of the three sources
   const cardGames = signal<GameEntry[]>([]);
   const games = computed(() => [...model.repoGames, ...FIRMWARE_GAMES, ...cardGames.value]);
   // the game the explorer and the studio show, by its key
   const selectedGame = signal<string | null>(null);
   const game = computed(() => games.value.find((g) => g.key === selectedGame.value) ?? null);
-  return { selected, inspected, feature, highlight, view, glow, picked, hiddenRamps, cardGames, games, selectedGame, game };
+  return { selected, inspected, feature, highlight, view, glow, picked, hiddenRamps, threeD, cardGames, games, selectedGame, game };
 }
 
 export type State = ReturnType<typeof createState>;

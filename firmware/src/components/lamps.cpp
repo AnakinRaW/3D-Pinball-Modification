@@ -217,6 +217,10 @@ bool Lamps::begin() {
 /// @return     How many lamps the walk found.
 uint16_t Lamps::walk(Span* out) const {
     uint16_t lamps = 0;
+    uint16_t zeroLamps = 0;   // lamps whose count of 0 takes 1 LED
+    uint16_t firstZero = 0;
+    uint16_t shortLamps = 0;   // lamps a gap or their chain's end cuts short
+    uint16_t firstShort = 0;
     for (uint8_t g = FIRST_SECTION; g < GROUPS; ++g) {
         const GroupSettings& section = settings.groups[g];
         uint16_t next = 0;   // the next count of the section
@@ -230,11 +234,10 @@ uint16_t Lamps::walk(Span* out) const {
             if (next < section.lampCount) {
                 leds = section.lamps[next++];
                 if (leds == 0) {
-                    // walk() runs twice, once to count and once to place, so it warns once.
-                    if (out == nullptr) {
-                        logWarning("lamps", "playfield lamp %u counts as 1 LED in place of 0",
-                                   lamps);
+                    if (zeroLamps == 0) {
+                        firstZero = lamps;
                     }
+                    ++zeroLamps;
                     leds = 1;
                 }
             }
@@ -243,11 +246,10 @@ uint16_t Lamps::walk(Span* out) const {
                 ++run;
             }
             if (run < leds) {
-                if (out == nullptr) {
-                    logWarning("lamps",
-                               "playfield lamp %u ends at a gap or its chain's end, at %u LEDs",
-                               lamps, run);
+                if (shortLamps == 0) {
+                    firstShort = lamps;
                 }
+                ++shortLamps;
                 leds = run;
             }
             if (out != nullptr) {
@@ -260,6 +262,17 @@ uint16_t Lamps::walk(Span* out) const {
             logWarning("lamps", "%u lamp counts of group %u find no LEDs", section.lampCount - next,
                        g);
         }
+    }
+    // walk() runs twice, once to count and once to place, so it warns on the count alone. One
+    // line covers every lamp of a kind, so a long list of lamps fills one warning.
+    if (out == nullptr && zeroLamps > 0) {
+        logWarning("lamps", "%u playfield lamps count as 1 LED in place of 0, the first is lamp %u",
+                   zeroLamps, firstZero);
+    }
+    if (out == nullptr && shortLamps > 0) {
+        logWarning("lamps",
+                   "%u playfield lamps end at a gap or their chain's end, the first is lamp %u",
+                   shortLamps, firstShort);
     }
     return lamps;
 }
@@ -399,13 +412,16 @@ void Lamps::placeHeights(uint8_t group) {
     bool placed = false;   // whether a point has been placed
     uint16_t lastLed = 0;
     uint32_t lastQ = 0;
+    uint16_t leftOut = 0;        // the points left out
+    uint16_t firstLeftOut = 0;   // the LED of the first point left out
     for (uint16_t k = 0; k < g.heightCount; ++k) {
         const uint16_t led = g.heights[2 * k];
         const uint32_t q = uint32_t(g.heights[2 * k + 1]) * Q_PER_MM;
         if (led >= groupLeds[group] || (placed && (led <= lastLed || q < lastQ))) {
-            logWarning("lamps",
-                       "group %u leaves out the height of LED %u, past its chain or out of order",
-                       group, led);
+            if (leftOut == 0) {
+                firstLeftOut = led;
+            }
+            ++leftOut;
             continue;
         }
         if (!placed) {
@@ -421,6 +437,13 @@ void Lamps::placeHeights(uint8_t group) {
         placed = true;
         lastLed = led;
         lastQ = q;
+    }
+    // One line covers every point left out, so a long list of heights fills one warning.
+    if (leftOut > 0) {
+        logWarning("lamps",
+                   "group %u leaves out %u heights past its chain or out of order, the first at "
+                   "LED %u",
+                   group, leftOut, firstLeftOut);
     }
     const uint16_t from = placed ? lastLed + 1 : 0;
     for (uint16_t i = from; i < groupLeds[group]; ++i) {

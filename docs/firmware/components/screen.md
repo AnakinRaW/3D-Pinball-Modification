@@ -34,6 +34,10 @@ LVGL draws in the main loop, in `render()`. It keeps two buffers of the whole sc
 
 When the player presses a button, LVGL calls the function the game or the host gave that button. LVGL calls it from `render()`, so it runs in the main task like every other call into the game.
 
+## Warnings
+
+The host redraws its warning lights once a new [warning](../logging.md#warnings) has come. `render()` changes the value `warnings()` with every new warning. LVGL calls such a value a subject and calls a function the host gave it whenever the value changes.
+
 ## Pictures
 
 A picture is an image file the game loads, such as a background or an icon. LVGL shows a loaded picture in an `Image` object. The game can show the same picture at several places on the screen at once. A picture file is stored on the SD card in LVGL's image format. The game opens it through the [file system](file-system.md). [`media.md`](../../../assets/media.md) explains how create such files from a PNG file.
@@ -48,6 +52,8 @@ When Teensyduino finds no PSRAM at start-up, every picture fails to load.
 A touch that comes down on a control goes to that control until the finger leaves the screen. A control is an LVGL object that takes touches, such as a button of the game or of the host's menu. Only the point where the finger comes down counts. A finger that comes down beside a control and slides onto it afterwards does not press it.
 
 Every other touch becomes a tap or a hold, which reaches the game as a pinball event. A tap is a touch that leaves the screen within 500 ms and within 10 pixels of where it came down. A hold is a finger resting for 1 s, which the touch driver reports as `TouchHeld`. The host also takes every tap and hold with `takeGesture()`, so it can react to a gesture over a running game.
+
+A touch that comes down in the right 24 px and moves 10 px or more to the left is the host's swipe. It opens the [host's menu](../host-screens.md#menu). The component watches every touch before LVGL gets it, so it can tell the swipe apart. The swipe reaches neither LVGL nor the game. The host follows the finger's x while it moves. A tap or a hold that comes down at the right edge reaches the game as anywhere else.
 
 | Event | When | Payload |
 |---|---|---|
@@ -83,6 +89,8 @@ public:
     // runs LVGL: its timers, the handlers of its controls and the redraw, except while the display
     // restarts; the main loop calls it in every pass
     void render();
+
+    lv_subject_t* warnings();                // gets the subject that changes with the warning list; the main task only
 
     lv_obj_t* overlay();                     // gets the game overlay layer, the parent of what stays in front of every slide
     lv_obj_t* background();                  // gets the game's background, the parent of what lies behind everything else

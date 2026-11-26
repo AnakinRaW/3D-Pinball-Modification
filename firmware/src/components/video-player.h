@@ -13,8 +13,7 @@
 
 class VideoPlayer : public Component {
 public:
-    static constexpr uint32_t FRAME_RATE_HZ = 25;   // display model: f_movie
-    static constexpr uint8_t FRAMES_AHEAD = 25;     // display model: n_video_ahead
+    static constexpr uint8_t FRAMES_AHEAD = 25;   // display model: n_video_ahead
 
     /// Creates the video player of a screen, which plays the game's files and sounds.
     VideoPlayer(Screen& screen, FileSystem& files, Sounds& sounds)
@@ -69,6 +68,8 @@ public:
     bool playing(const lv_obj_t* viewport) const;
 
 private:
+    static constexpr uint32_t FRAME_RATE_HZ = 25;   // display model: f_movie
+
     friend class GameHost;
 
     static constexpr uint32_t US_PER_S = 1000000;

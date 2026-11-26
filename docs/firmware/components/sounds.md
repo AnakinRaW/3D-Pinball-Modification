@@ -30,7 +30,11 @@ A video's sound is a track as well. It lies over every track of the game, whatev
 
 ## Volume
 
-`musicVolume()` and `effectsVolume()` take a percentage from 0 to 1. The component squares it, so half the range sounds about half as loud.
+`musicVolume()` and `effectsVolume()` take a percentage from 0 to 1. The component squares it, so half the range sounds about half as loud. Each volume runs over its full range whatever the other holds.
+
+The driver's [mixer](../drivers/audio.md#volume) adds the music and the effects. Where the two squares add up to more than 1, the component hands the driver both squares divided by their sum. Music and an effect together then stay within the output's full scale. The ratio between them stays the one the two volumes set. With both at 1, each plays at half the full scale.
+
+The component keeps each volume as it was set. Lowering one volume therefore brings the other back up toward its square.
 
 `configure()` takes the starting volumes from the [config](#config), and `begin()` sets both to them. The host calls `begin()` before the first game.
 
@@ -43,7 +47,7 @@ The starting volumes stand in the [machine config](config.md):
 | `audio.music_volume` | 0.5 | 0 to 1 |
 | `audio.effects_volume` | 0.7 | 0 to 1 |
 
-The two starting volumes squared add up to at most 1, so music and an effect together never overdrive the output. Where they add up to more, `begin()` lowers the effects volume until they add up to 1 and writes a warning to the log.
+The two defaults squared add up to less than 1, so both play as set.
 
 ## End of the music
 

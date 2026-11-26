@@ -62,7 +62,7 @@ The master gain after the mixer keeps the speaker within its rating. [`design.md
 | Type | `DriverEventType::SOUND_ENDED` |
 | Source | The channel, `0` to `3` |
 | Timestamp | `nowUs()` when the driver found the sound finished |
-| Payload | The number `play()` returned |
+| Payload | A `SoundEnd`: the number `play()` returned and a code for how the sound ended. The code tells a sound that played out from a missing or empty file, a file in another format, a file that ends ahead of its samples and a failed read |
 
 The driver publishes `SOUND_ENDED` once a sound has played to its end or its file could not be read. A sound that `play()` or `stop()` cuts off publishes nothing. A sound that loops ends only when its file is missing or a read fails. Without a card every sound ends at once.
 

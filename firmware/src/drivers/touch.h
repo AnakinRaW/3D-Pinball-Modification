@@ -25,7 +25,6 @@ public:
     static constexpr uint16_t SLOP_PX = 10;       // design.md: the pixels a resting finger may move
     static constexpr uint32_t HOLD_MS = 1000;     // design.md: the rest before TouchHeld
     static constexpr uint32_t FAIL_MS = 100;      // design.md: no working read, and it has failed
-    static constexpr uint32_t QUEUE_DEPTH = 8;    // the touch events the queue holds
     static constexpr uint16_t RAW_LEFT = 327;     // touch.left_edge's default, measured
     static constexpr uint16_t RAW_RIGHT = 1;      // touch.right_edge's default, measured
     static constexpr uint16_t RAW_TOP = 3;        // touch.top_edge's default, measured
@@ -92,6 +91,8 @@ public:
     Fault failed() const override;
 
 private:
+    static constexpr uint32_t QUEUE_DEPTH = 8;   // the touch events the queue holds
+
     /// Ends a read in the bus's interrupt: turns its five bytes into the touch events.
     ///
     /// @param errors  The controller's error flags, 0 when the read worked.
@@ -128,6 +129,7 @@ private:
 
     // what the bus's interrupt alone keeps about the touch on the screen
     TouchPoint downAt = {};     // where the finger came down
+    bool failing = false;       // the last read failed
     TouchPoint reported = {};   // the position last published
     uint32_t downUs = 0;        // nowUs() when it came down
     bool resting = false;       // it has stayed within SLOP_PX of where it came down

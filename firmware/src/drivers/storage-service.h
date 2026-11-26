@@ -285,8 +285,6 @@ bool readsInPlace(const void* buffer, uint32_t at, size_t n);
 /// mount(), serveNext() and recover(). Every other member answers any caller at once.
 class StorageService {
 public:
-    static constexpr uint8_t FAILURES = 3;   // storage.md: card errors in a row to fail
-
     /// Creates the service on a card it has not mounted yet.
     ///
     /// Every request fails until mount().

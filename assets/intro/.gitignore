@@ -1,0 +1,9 @@
+# These are made by the scripts in blender/ and rebuilt from them.
+*.blend
+*.blend1
+blender/out/*
+!blender/out/ball-paths.json
+display/
+frames/
+renders/
+preview.gif

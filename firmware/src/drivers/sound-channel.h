@@ -5,6 +5,7 @@
 //
 // Design: docs/firmware/drivers/audio.md.
 #pragma once
+#include "core/event-queue.h"
 #include "drivers/storage-service.h"
 #include "io/file-channel.h"
 #include <atomic>
@@ -98,11 +99,11 @@ public:
     /// on from the next of its samples in a later block.
     ///
     /// @param block  Takes the block's samples.
-    /// @param ended  Set to the number of a sound that has played to its end or whose file could
-    ///               not be read in this block, 0 for none.
+    /// @param ended  Set to the number of a sound that has ended in this block and how it ended.
+    ///               Its number is 0 when no sound has ended.
     /// @return       Whether @p block holds sound. False leaves @p block undefined.
     /// @note         Runs in the update of the Audio library and never waits.
-    bool play(int16_t (&block)[SOUND_BLOCK_SAMPLES], uint32_t& ended);
+    bool play(int16_t (&block)[SOUND_BLOCK_SAMPLES], SoundEnd& ended);
 
 private:
     static constexpr uint32_t SECTOR_BYTES =
@@ -147,7 +148,9 @@ private:
     void expect(Piece piece);
 
     /// Ends the sound and frees the channel.
-    void end();
+    ///
+    /// @param code  How the sound ended, which play() reports.
+    void end(SoundEndCode code);
 
     /// Writes where the sound stands into the position that position() reads.
     void publish();
@@ -172,4 +175,5 @@ private:
     uint8_t headWanted = 0;   // the bytes of the piece being read
     uint8_t headAt = 0;       // the bytes of it read so far
     bool format = false;      // the fmt chunk has named a format this channel plays
+    SoundEndCode endCode = SoundEndCode::PLAYED;   // how the last sound ended
 };

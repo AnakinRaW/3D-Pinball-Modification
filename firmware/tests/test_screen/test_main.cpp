@@ -13,6 +13,10 @@
 //   covered  LVGL leaves out an object that another object covers, when the whole screen changes
 //   picture-covers  LVGL draws nothing behind a picture that holds no opacity, and draws what lies
 //            in front of it
+//   warnings a warning reaches the observers of the screen's warning subject with the next
+//            render(), once
+//   bad-pictures  a missing picture, a file that holds no picture and a short picture each fail
+//            their load and write a warning with their path
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -21,6 +25,8 @@
 #include "components/sounds.h"
 #include "components/video-player.h"
 #include "io/psram.h"
+#include "logging/logger.h"
+#include "logging/warning-list.h"
 #include <map>
 #include <memory>
 #include <vector>
@@ -101,6 +107,39 @@ public:
 static void put16(std::string& s, uint16_t v) {
     s.push_back(char(v & 0xFF));
     s.push_back(char(v >> 8));
+}
+
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log, begun once, which logWarning() writes to.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[16384];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
+
+// Gets whether the log holds a line.
+static bool logged(const char* line) {
+    logger.flush();
+    logger.update();
+    logger.update();
+    return logA.content.find(line) != std::string::npos;
 }
 
 // Gets a picture file of one color, opaque or with an opacity byte for each pixel.
@@ -500,6 +539,52 @@ static void testPictureCovers() {
     TEST_ASSERT_EQUAL_HEX16(0x07E0, display.pixel(100, 100));
 }
 
+static void testBadPictures() {
+    logger.begin(LogFileStart{}, LogFileStart{});
+    std::string shortFile = pictureFile(40, 30, 0x07E0, true);
+    shortFile.resize(shortFile.size() / 2);
+    card.files["/games/a/short.img"] = shortFile;
+    card.files["/games/a/text.img"] = std::string(100, 'x');
+    static Picture missing(screen);
+    static Picture text(screen);
+    static Picture cut(screen);
+    missing.load(files.open("gone.img"));
+    text.load(files.open("text.img"));
+    cut.load(files.open("short.img"));
+    settle();
+    TEST_ASSERT_TRUE(missing.failed());
+    TEST_ASSERT_TRUE(text.failed());
+    TEST_ASSERT_TRUE(cut.failed());
+    TEST_ASSERT_TRUE(
+        logged(" W screen /games/a/gone.img is missing or holds no picture the screen shows"));
+    TEST_ASSERT_TRUE(
+        logged(" W screen /games/a/text.img is missing or holds no picture the screen shows"));
+    TEST_ASSERT_TRUE(logged(" W screen /games/a/short.img is short or failed to read"));
+}
+
+static uint32_t warningCalls = 0;
+
+static void countWarnings(lv_observer_t*, lv_subject_t*) {
+    ++warningCalls;
+}
+
+// warnings: a warning reaches the observers of warnings() with the next render(), once.
+static void testWarnings() {
+    lv_observer_t* observer = lv_subject_add_observer(screen.warnings(), countWarnings, nullptr);
+    // LVGL calls a new observer once at once.
+    warningCalls = 0;
+    logWarning("servo", "speed_deg_s %u lies outside 10 to 360", 500u);
+    logWarning("servo", "speed_deg_s %u lies outside 10 to 360", 500u);
+    TEST_ASSERT_EQUAL_UINT32(0, warningCalls);
+    screen.render();
+    TEST_ASSERT_EQUAL_UINT32(1, warningCalls);
+    TEST_ASSERT_EQUAL_INT32(static_cast<int32_t>(warningList.version()),
+                            lv_subject_get_int(screen.warnings()));
+    screen.render();
+    TEST_ASSERT_EQUAL_UINT32(1, warningCalls);
+    lv_observer_remove(observer);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testWiden);
@@ -509,5 +594,7 @@ int main() {
     RUN_TEST(testRestart);
     RUN_TEST(testCovered);
     RUN_TEST(testPictureCovers);
+    RUN_TEST(testWarnings);
+    RUN_TEST(testBadPictures);
     return UNITY_END();
 }

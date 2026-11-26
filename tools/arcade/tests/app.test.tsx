@@ -206,7 +206,7 @@ describe("the Features view", () => {
     const labels = [...root.querySelectorAll(".overlay .label")].map(
       (t) => t.textContent,
     );
-    expect(labels).toEqual(["Ball scoop", "IR left lane", "Diffuser scoop"]);
+    expect(labels).toEqual(["Ball scoop", "IR scoop", "Diffuser scoop"]);
     expect(root.querySelectorAll(".overlay .ring").length).toBe(3);
   });
 

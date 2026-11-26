@@ -55,8 +55,6 @@ class AudioDriver : public Driver {
 public:
     static constexpr uint8_t CHANNELS = SoundMixer::INPUTS;
     static constexpr float MASTER_GAIN = 0.786f;   // audio model: g_cap
-    static constexpr uint8_t BLOCKS = 6;           // audio model: n_blocks
-    static constexpr uint32_t QUEUE_DEPTH = 8;     // the SOUND_ENDED events the queue holds
 
     /// A sound and where it stands, which play() can go on from.
     using Position = SoundPosition;
@@ -88,8 +86,8 @@ public:
     /// @param channel  The channel, 0 to 3. Another one starts nothing.
     /// @param file     The sound's file.
     /// @param loop     Starts the sound over at its end, for as long as it plays.
-    /// @return         The sound's number, which its SOUND_ENDED carries. 0 for a channel past 3 or
-    ///                 before begin().
+    /// @return         The sound's number, which its SOUND_ENDED carries, below SoundEnd::NUMBERS.
+    ///                 0 for a channel past 3 or before begin().
     /// @note           The main task calls it. It returns at once.
     uint32_t play(uint8_t channel, const FileReader& file, bool loop = false);
 
@@ -145,6 +143,8 @@ public:
     AudioStream& output() { return level; }
 
 private:
+    static constexpr uint32_t QUEUE_DEPTH = 8;   // the SOUND_ENDED events the queue holds
+
     /// Leaves a request for a sound under a new number.
     uint32_t start(uint8_t channel, const Position& from);
 

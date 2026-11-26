@@ -1,6 +1,7 @@
 #include "display.h"
 #include "core/clock.h"
 #include "logging/debug-log.h"
+#include "logging/debug-trace.h"
 #include "logging/logger.h"
 #include <atomic>
 #include <string.h>
@@ -217,7 +218,12 @@ void configure(bool burst) {
     f.CTRL = FLEXIO_CTRL_FLEXEN;
 }
 
+/// The waits for FlexIO3 that ran past WAIT_LIMIT_NS since the start.
+std::atomic<uint32_t> stalls{0};
+
 /// Waits until a FlexIO3 flag is set.
+///
+/// A wait that runs past WAIT_LIMIT_NS is counted in stalls and noted in the debug trace.
 ///
 /// @return  False when WAIT_LIMIT_NS passed without it.
 bool waitFor(volatile uint32_t& flags, uint32_t mask) {
@@ -225,6 +231,8 @@ bool waitFor(volatile uint32_t& flags, uint32_t mask) {
     const uint32_t limit = F_CPU_ACTUAL / NS_PER_US * WAIT_LIMIT_NS / NS_PER_US;
     while ((flags & mask) == 0) {
         if (ARM_DWT_CYCCNT - t0 > limit) {
+            stalls.fetch_add(1, std::memory_order_relaxed);
+            DEBUG_TRACE("display stall", int32_t(mask), 0);
             return false;
         }
     }
@@ -377,6 +385,11 @@ bool Display::begin() {
     attachInterruptVector(IRQ_FLEXIO3, serveActive);
     NVIC_SET_PRIORITY(IRQ_FLEXIO3, PRIORITY);
     NVIC_ENABLE_IRQ(IRQ_FLEXIO3);
+    const uint32_t stalled = stalls.load(std::memory_order_relaxed);
+    if (stalled != 0) {
+        logWarning("display", "FlexIO3 stalled %lu times during the setup",
+                   static_cast<unsigned long>(stalled));
+    }
     begunOk = true;
     return true;
 }
@@ -386,6 +399,7 @@ void Display::restart() {
         DEBUG_LOG("Display::restart: no begin() yet\n");
         return;
     }
+    DEBUG_LOG("display: the panel starts anew\n");
     restarts = restarts + 1;
     NVIC_SET_PENDING(IRQ_FLEXIO3);
 }

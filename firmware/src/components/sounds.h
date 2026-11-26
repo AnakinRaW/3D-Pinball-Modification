@@ -14,12 +14,11 @@
 
 class Sounds : public Component {
 public:
-    static constexpr uint8_t MUSIC = 0;           // sounds.md: the music's channel
-    static constexpr uint8_t MODES = 8;           // sounds.md: the modes that hold a track at once
-    static constexpr float MUSIC_VOLUME = 0.5f;   // audio.music_volume's default
+    static constexpr uint8_t MUSIC = 0;             // sounds.md: the music's channel
+    static constexpr float MUSIC_VOLUME = 0.5f;     // audio.music_volume's default
     static constexpr float EFFECTS_VOLUME = 0.7f;   // audio.effects_volume's default
-    static constexpr float VOLUME_MIN = 0;
-    static constexpr float VOLUME_MAX = 1;
+    static constexpr float VOLUME_MIN = 0;          // the least volume, silence
+    static constexpr float VOLUME_MAX = 1;          // the largest volume, full scale
 
     /// The starting volumes from the config, each a percentage from 0 to 1.
     struct Settings {
@@ -38,11 +37,7 @@ public:
     /// @note  The main task calls it before begin().
     void configure(const Settings& given) { settings = given; }
 
-    /// Sets both volumes to their starting volumes.
-    ///
-    /// Where the two starting volumes squared add up to more than 1, it lowers the effects' volume
-    /// until they add up to 1 and writes a warning to the log, so music and an effect together
-    /// never overdrive the output. A volume outside 0 to 1 counts as the nearer end.
+    /// Sets both volumes to their starting volumes, as musicVolume() and effectsVolume() do.
     ///
     /// @note  The host calls it before the first game, after the audio driver's begin().
     void begin();
@@ -50,7 +45,8 @@ public:
     /// Takes the end of a sound.
     ///
     /// The end of a mode's track becomes MUSIC_ENDED, and the track below goes on. The end of an
-    /// effect, of a video's sound and of a track already stopped or replaced makes no event.
+    /// effect, of a video's sound and of a track already stopped or replaced makes no event. A
+    /// sound whose file could not be played writes a warning with the file's name to the log.
     ///
     /// @return  True for every SOUND_ENDED, false for any other event.
     bool translate(const DriverEvent& in, PinballEvents& out) override;
@@ -94,16 +90,25 @@ public:
 
     /// Sets the volume of the music and of a video's sound.
     ///
-    /// @param percent  Runs from 0 to 1. A value outside counts as the nearer end. The driver
-    ///                 gets its square, so half the range sounds about half as loud.
+    /// The driver gets the square of each volume, so half the range sounds about half as loud.
+    /// Where the music's square and the effects' square add up to more than 1, the driver gets
+    /// both divided by that sum, so music and an effect together never overdrive the output and
+    /// keep the balance the two volumes set. The volume set stays, so lowering the other volume
+    /// later brings the music back up toward it.
+    ///
+    /// @param percent  Runs from 0 to 1. A value outside counts as the nearer end.
     void musicVolume(float percent);
 
     /// Sets the volume of the effects.
     ///
-    /// @param percent  Runs from 0 to 1, as for musicVolume().
+    /// @param percent  Runs from 0 to 1, as for musicVolume(), which gives how the two volumes
+    ///                 share the output.
     void effectsVolume(float percent);
 
 private:
+    static constexpr uint8_t MODES = 8;      // sounds.md: the modes that hold a track at once
+    static constexpr float FULL_SCALE = 1;   // sounds.md: music and an effect together at most
+
     friend class GameHost;
     friend class VideoPlayer;
 
@@ -158,8 +163,12 @@ private:
     /// @note  The host calls it when it switches games.
     void reset();
 
-    /// Gets the driver's volume for a percentage, the square of it inside 0 to 1.
+    /// Gets the driver's volume for a percentage inside 0 to 1, its square.
     static float gain(float percent);
+
+    /// Hands the driver the volumes of the music and the effects, scaled down together where
+    /// they would overdrive the output.
+    void balance();
 
     /// Gets a sound of the running game by its name in the game's audio directory.
     FileReader file(const char* name) const;
@@ -180,6 +189,12 @@ private:
     /// Removes the tracks @p pred holds for. On top, the track below goes on.
     template <typename Pred> void drop(Pred pred);
 
+    /// Writes a warning for a sound whose file could not be played.
+    ///
+    /// @param channel  The channel the sound played on.
+    /// @param end      The sound's number and how it ended.
+    void warnFailed(uint8_t channel, SoundEnd end);
+
     AudioDriver& audio;
     FileSystem& files;
     Settings settings;
@@ -187,8 +202,12 @@ private:
     uint32_t onChannel = 0;   // the number of the track the music channel was handed last
     uint32_t effects = 0;     // counts the effects play() has started
     uint32_t startedAs[AudioDriver::CHANNELS] =
-        {};                    // which count each channel's effect started at
-    float musicGain = 0;       // the driver's volume for the music and a video's sound
-    float effectsGain = 0;     // the driver's volume for the effects
-    PinballEvent ended = {};   // the MUSIC_ENDED that translate() points at
+        {};                                          // which count each channel's effect started at
+    FileReader effectFiles[AudioDriver::CHANNELS];   // the file of each channel's last effect
+    uint32_t effectNumbers[AudioDriver::CHANNELS] = {};   // the driver's number for that effect
+    float musicPercent = 0;     // the music's volume as set, inside 0 to 1
+    float effectsPercent = 0;   // the effects' volume as set, inside 0 to 1
+    float musicGain = 0;        // the driver's volume for the music and a video's sound
+    float effectsGain = 0;      // the driver's volume for the effects
+    PinballEvent ended = {};    // the MUSIC_ENDED that translate() points at
 };
