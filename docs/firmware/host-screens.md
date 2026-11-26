@@ -90,7 +90,7 @@ After the intro film the host shows at most one report and then its game choice.
 
 ![The film's last frame](host-screens/film-end.png)
 
-The host does its start-up work while the [boot film](game-abstraction.md#host) plays. When the film ends, the host shows the [start report](#start-report), [Restarted](#restarted) or [No memory card](#no-memory-card) if there is something to report. Otherwise it shows the [game choice](#games), or the [launch card](#launch-card) when only one game can run.
+The host finishes its start-up work before the [boot film](game-abstraction.md#host) starts. When the film ends, the host shows the [start report](#start-report), [Restarted](#restarted) or [No memory card](#no-memory-card) if there is something to report. Otherwise it shows the [game choice](#games), or the [launch card](#launch-card) when only one game can run.
 
 ### Start report
 
