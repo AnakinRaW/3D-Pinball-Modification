@@ -156,13 +156,21 @@ bool Sounds::videoSounding() const {
     return false;
 }
 
-uint32_t Sounds::videoPlayed() const {
+bool Sounds::videoPlayed(uint32_t& samples) const {
+    samples = 0;
     // The video's sound lies on top whenever it is there, so the channel plays it.
     if (tracks.size() == 0 || tracks[0].owner != Owner::VIDEO || tracks[0].number == 0 ||
         tracks[0].number != onChannel) {
-        return 0;
+        return false;
     }
-    return audio.position(MUSIC).played();
+    // A channel that has played its sound's last sample holds no position, though the sound's end
+    // may still be on its way.
+    const AudioDriver::Position at = audio.position(MUSIC);
+    if (at.empty()) {
+        return false;
+    }
+    samples = at.played();
+    return true;
 }
 
 void Sounds::musicVolume(float percent) {

@@ -133,7 +133,15 @@ public:
         s.reset();
         sounds.reset();
     }
-    static uint32_t played(const Sounds& sounds) { return sounds.videoPlayed(); }
+    static uint32_t played(const Sounds& sounds) {
+        uint32_t samples = 0;
+        sounds.videoPlayed(samples);
+        return samples;
+    }
+    static bool playing(const Sounds& sounds) {
+        uint32_t samples = 0;
+        return sounds.videoPlayed(samples);
+    }
 };
 
 using test::audio;

@@ -140,15 +140,17 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
 }
 
 // A video with sound follows its sound, so a sound that stalls holds the video with it. A video
-// whose sound has run out, or one without, follows the clock from the frame it stands at.
+// whose sound has run out follows the clock from the frame it stands at, from the sound's last
+// sample on. A video without sound follows the clock as well.
 uint32_t VideoPlayer::due(uint32_t now) {
     if (sound && !soundStarted) {
         // The first frames still come from the card, so the video stands at its first frame.
         startUs = now;
         return loopStart;
     }
-    if (sound && sounds.videoSounding()) {
-        uint32_t played = sounds.videoPlayed() / FRAME_SAMPLES;
+    uint32_t samples = 0;
+    if (sound && sounds.videoPlayed(samples)) {
+        uint32_t played = samples / FRAME_SAMPLES;
         if (loop && counted && count > 0) {
             // The sound counts from the start of each pass, so a count that falls back starts the
             // video's next pass. A sound longer than the video holds its last frame.

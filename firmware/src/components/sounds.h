@@ -155,8 +155,10 @@ private:
 
     /// Gets how many samples of the video's sound have played.
     ///
-    /// @return  0 before it has started and without a video's sound.
-    uint32_t videoPlayed() const;
+    /// @param samples  Receives the count, 0 before the sound has started.
+    /// @return         False while the channel plays no video's sound. That holds without a video's
+    ///                 sound, and from the sound's last sample on until translate() takes its end.
+    bool videoPlayed(uint32_t& samples) const;
 
     /// Silences every channel, forgets every track and sets the volumes again.
     ///

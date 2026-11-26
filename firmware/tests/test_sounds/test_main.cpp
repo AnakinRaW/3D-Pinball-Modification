@@ -138,7 +138,15 @@ public:
     }
     static void stop(Sounds& sounds) { sounds.stopVideoSound(); }
     static bool sounding(const Sounds& sounds) { return sounds.videoSounding(); }
-    static uint32_t played(const Sounds& sounds) { return sounds.videoPlayed(); }
+    static uint32_t played(const Sounds& sounds) {
+        uint32_t samples = 0;
+        sounds.videoPlayed(samples);
+        return samples;
+    }
+    static bool playing(const Sounds& sounds) {
+        uint32_t samples = 0;
+        return sounds.videoPlayed(samples);
+    }
 };
 
 static void put16(std::string& s, uint16_t v) {
@@ -270,8 +278,10 @@ static void testVideoSound() {
     rig.blocks(SETTLE + 5);
     expectTrack(rig, A);
     TEST_ASSERT_FALSE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_FALSE(VideoPlayer::playing(rig.sounds));
     VideoPlayer::sound(rig.sounds, "v.wav");
     TEST_ASSERT_TRUE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_TRUE(VideoPlayer::playing(rig.sounds));
     TEST_ASSERT_EQUAL_UINT32(0, VideoPlayer::played(rig.sounds));
     rig.blocks(SETTLE);
     expectTrack(rig, V);
@@ -280,6 +290,7 @@ static void testVideoSound() {
     // The paused track goes on where it stood once the video's sound has ended.
     rig.blocks(PLAY_OUT);
     TEST_ASSERT_FALSE(VideoPlayer::sounding(rig.sounds));
+    TEST_ASSERT_FALSE(VideoPlayer::playing(rig.sounds));
     TEST_ASSERT_TRUE(rig.events.empty());
     expectTrack(rig, A);
     TEST_ASSERT_FALSE(rig.sounds.musicEnded(LOW_LAYER));
