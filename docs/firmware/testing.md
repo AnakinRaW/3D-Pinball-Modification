@@ -430,8 +430,17 @@ The program `controls` checks the [controls driver](drivers/controls.md).
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `position` | bench | Set the switch to 1, then to 0 | `position()` gives the position printed on the switch each time |
-| `flips` | bench | Flip the switch many times, slowly and as fast as possible | Each flip gives one `ToggleSwitched` with the new position, and the last event always carries the position the switch rests in |
+| `queue-full` | computer | Begin a driver twice while the event queue takes no further queue | `begin()` returns false both times, `position()` gives 0, no interrupt is attached, and the log holds one warning that names the queue |
+| `tick-full` | computer | Begin a driver twice while the driver tick has no free slot | `begin()` returns false both times, `position()` gives 0, no interrupt is attached, and the log holds one warning that names the driver tick |
+| `at-start` | computer | Begin with the switch in position 1, then let two [bounce windows](drivers/controls.md#driver-events) pass | The pin is an input with the pull-up and an interrupt on both edges, `position()` gives 1, and no `TOGGLE_SWITCHED` comes |
+| `flip` | computer | Flip the switch to 0, read the same position again after the window, then flip it back | Each flip gives one `TOGGLE_SWITCHED` from switch 0 with the time of its edge and the new position, and the edge that reads the reported position gives none |
+| `bounce` | computer | Bounce the contact after a flip for just under the window, ending in the flipped position, then flip once the window has closed | The bounce gives no event during the window or after it, and the flip after it gives one |
+| `flip-back` | computer | Flip the switch and flip it back inside the window, with no edge after that | The tick that closes the window gives one `TOGGLE_SWITCHED` with the resting position and the time of the last edge, and the bounce after that report gives none |
+| `wrap` | computer | Run the window across the wrap of `nowUs()`, then flip again a whole wrap after a report | The window gives the answers it gives away from the wrap, and the flip a whole wrap later gives its event |
+| `second-driver` | computer | Begin a second driver twice while the first holds the pin | Its `begin()` returns false both times with one warning in the log that names the pin, its `position()` gives 0, and the first driver keeps its events |
+| `pad` | Teensy | Begin the driver | The pin's pad has the pull-up that `INPUT_PULLUP` selects and hysteresis, its interrupt is enabled on both edges, and `position()` gives 1 where the pin reads LOW and 0 otherwise |
+| `position` | bench | Set the switch to 1, then to 0 | `position()` gives the position printed on the switch each time, and the move to 0 gives a `TOGGLE_SWITCHED` with position 0 |
+| `flips` | bench | Flip the switch five times with a second or more between flips, then ten times as fast as possible and leave it | The slow flips give five `TOGGLE_SWITCHED` with alternating positions, and the fast flips give events with alternating positions, the last carrying the position the switch rests in |
 
 ### Servo
 

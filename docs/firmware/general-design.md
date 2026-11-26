@@ -61,7 +61,7 @@ A lower number is a higher priority, and a handler makes every interrupt of the 
 | IR ball sensing, starting a sensor reading | QuadTimer3 compare | microseconds, the read block has to end inside its phase | no | 64 |
 | IR ball sensing, taking each conversion's result | LPSPI4's receive interrupt | microseconds | no | 64 |
 | Solenoids, break beam, controls and port expander, reacting to a contact, the beam, the switch or INT | the pin interrupt, one for every pin | milliseconds | no | 96 |
-| Rotary sensor, port expander, solenoids, servo, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
+| Rotary sensor, port expander, solenoids, servo, controls, device monitor, display and touch, their periodic work | `IntervalTimer`, the driver tick | its next tick | no | 96 |
 | Audio, refilling the half of the output buffer that has played | I²S2 DMA | half an audio block | no | 128 |
 | I²C buses, running every transfer on Wire and Wire2 | LPI2C1 and LPI2C4 | none, a late start only delays the next transfer | no | 160 |
 | FreeRTOS's limit, from which on an interrupt may call FreeRTOS | | | | 208 |

@@ -105,3 +105,8 @@ struct FakeSerial {
     }
 };
 inline FakeSerial Serial;
+
+// The pin mode with the Teensy's pull-up, as the Teensy core defines it.
+#ifndef INPUT_PULLUP
+#define INPUT_PULLUP 2
+#endif

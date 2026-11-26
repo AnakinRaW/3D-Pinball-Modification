@@ -11,6 +11,7 @@
 #include "drivers/display.h"
 #include "drivers/lighting.h"
 #include "drivers/storage.h"
+#include "drivers/toggle-switch.h"
 #include "drivers/touch.h"
 #include "io/i2c-bus.h"
 
@@ -25,5 +26,6 @@ Screen screen(display);
 VideoPlayer videoPlayer(screen, files, sounds);
 Lighting lighting;
 BreakBeamDriver breakBeam(events);
+ToggleSwitch toggleSwitch(events, driverTick);
 
 }   // namespace test

@@ -221,7 +221,7 @@ void GameHost::dispatch(const DriverEvent& e) {
 bool GameHost::service(const DriverEvent& in, PinballEvent& out) {
     EventType type;
     switch (in.type) {
-        case DriverEventType::ToggleSwitched: type = EventType::ToggleSwitched; break;   // controls
+        case DriverEventType::TOGGLE_SWITCHED: type = EventType::ToggleSwitched; break;   // controls
         default:                              return false;
     }
     out = {in.time, type, in.source, in.payload};
