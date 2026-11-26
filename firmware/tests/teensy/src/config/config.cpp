@@ -38,8 +38,8 @@ constexpr char SAVED[] = "servo:\n"
                          "unknown: text\n";
 
 static FileSystem files(storage);
-// One config serves both reads, so the heap keeps room for libyaml.
-DMAMEM static Config first(files, PATH);
+// One config in the PSRAM serves both reads, so the heap in RAM2 keeps room for libyaml.
+EXTMEM static Config first(files, PATH);
 static char seen[TEXT];
 static char wanted[TEXT];
 
