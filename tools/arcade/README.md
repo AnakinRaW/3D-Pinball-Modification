@@ -7,7 +7,7 @@ A browser tool that shows the machine as the drawing in [`assets/playfield/`](..
 | Features | The features of the root README on the machine. A click on a part selects its feature or opens the part's card |
 | Games | Every game of the memory card, the firmware and `games/`, as covers. A `thumbnail.png`, `.jpg` or `.webp` beside a `game.yml` is its picture |
 | Studio, Lights | The firmware's lamps on the machine, with effects, the light sequences of [`lights/`](lights/) and the current the machine draws. The `.lights` format is a prototype |
-| Studio, Screen | The machine's display, worked with the mouse or a finger as on the touch panel. Until a host or a game draws, a test scene and a stand-in for the host's menu show. The Controls page shows every control of the host's screens. The boot film plays through the firmware's video player from a simulated card, without its sound |
+| Studio, Screen | The machine's display, worked with the mouse or a finger as on the touch panel. Each screen of the host shows with made-up data, and its presses lead on as the host's would, with Back returning to the page before. A stand-in game runs behind the screens of a game, where a swipe from the right edge pulls in the host's menu. The Controls page shows every control of the host's screens. The boot film plays through the firmware's video player from a simulated card, without its sound |
 
 The machine in 3D is `assets/cgi/machine.glb`. Without it, or in a browser without WebGL 2, the views show the drawing.
 

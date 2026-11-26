@@ -168,6 +168,13 @@ bool EdgeMenuView::letGo(uint16_t x) {
     return open;
 }
 
+void EdgeMenuView::raise() {
+    if (drawer != nullptr) {
+        lv_obj_move_foreground(tab);
+        lv_obj_move_foreground(drawer);
+    }
+}
+
 void EdgeMenuView::close() {
     if (!open) {
         return;

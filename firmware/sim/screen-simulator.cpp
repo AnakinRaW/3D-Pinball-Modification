@@ -2,9 +2,9 @@
 // into the simulated display, whose pixels the browser reads. The firmware's touch driver reads the
 // simulated touch controller, which answers with the finger the browser reports, so taps, holds
 // and moves come out of the driver as they do on the machine. Until a host and a game draw on the
-// screen, a test scene shows a button and the last gesture, a page shows every control of the
-// host's screens, the boot film plays through the firmware's video player, and a stand-in for the
-// host drives the host's menu at the right edge from the swipe.
+// screen, a stand-in for a game fills the game's layers, a page shows every control of the host's
+// screens, the gallery shows every view of the host with made-up data, and a stand-in for the host
+// drives the host's menu at the right edge from the swipe while a game runs.
 #include "screen-simulator.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
@@ -20,19 +20,26 @@
 #include "host/views/edge-menu-view.h"
 #include "logging/debug-log.h"
 #include "video-simulator.h"
+#include "view-gallery.h"
 
 using emscripten::val;
 
-/// The host's part of the test scene, until the firmware's host is built. It drives the host's
-/// menu at the right edge from the swipe and gives its rows made-up figures. It takes the host's
-/// name, under which the screen hands out the host's layer and the swipe.
+/// The host's part of the Arcade's screen, until the firmware's host is built. It drives the
+/// host's menu at the right edge from the swipe and gives its rows made-up figures. It takes the
+/// host's name, under which the screen hands out the host's layer and the swipe.
 class GameHost {
 public:
     /// Places the menu at the right edge on the host's layer.
     static void build(Screen& screen);
 
+    /// Gets the host's layer, which the pages of the gallery stand on.
+    static lv_obj_t* layer(Screen& screen) { return screen.hostLayer(); }
+
+    /// Brings the menu in front of a scene placed after it.
+    static void raise() { menu.raise(); }
+
     /// Plays the boot film from the card's root on the whole screen, over and over and without its
-    /// sound, on a slide in front of the test scene and the controls page.
+    /// sound, on a slide in front of the game.
     ///
     /// @return  False when the screen has no slide for it or the video player refuses it.
     static bool playBootFilm(Screen& screen);
@@ -42,8 +49,9 @@ public:
 
     /// Hands the menu the touch at the right edge: the hint, the swipe and its let-go.
     ///
-    /// @note  Every pass calls it, after the touch events.
-    static void follow(Screen& screen);
+    /// @param inGame  Whether a game runs, the only time the menu comes in.
+    /// @note          Every pass calls it, after the touch events.
+    static void follow(Screen& screen, bool inGame);
 
     /// Closes an open menu, as a tap on the game does.
     static void tapped();
@@ -73,21 +81,17 @@ constexpr uint8_t NO_TOUCH = 0;
 constexpr uint8_t CONTACT_FLAG = 0x80;
 constexpr uint8_t BYTE_BITS = 8;
 constexpr uint8_t READ_BYTES = 5;
-constexpr uint8_t TEST_LAYER_KEY = 1;   // the test scene's slide
-constexpr uint8_t TEST_LAYER_PRIORITY = 1;
-constexpr int32_t BUTTON_WIDTH = 128;   // host-screens.md: at least a 44 px touch target
-constexpr int32_t BUTTON_HEIGHT = 48;
-constexpr int32_t MARGIN_PX = 8;
-constexpr uint32_t NIGHT = 0x0e061a;        // host-screens.md: the screen's background
-constexpr uint32_t CREAM = 0xfff4d6;        // host-screens.md: text
-constexpr uint32_t RED = 0xb3242d;          // host-screens.md: a button
-constexpr uint32_t GOLD = 0xe8c04a;         // host-screens.md: a button's rim
-constexpr uint8_t CONTROLS_LAYER_KEY = 2;   // the controls page's slide, over the test scene
-constexpr uint8_t CONTROLS_LAYER_PRIORITY = 2;
-// The boot film's slide, in front of the test scene and the controls page
-constexpr Layer BOOT_LAYER = {3, 3};
+constexpr uint8_t GAME_LAYER_KEY = 1;   // the stand-in game's slide
+constexpr uint8_t GAME_LAYER_PRIORITY = 1;
+// The boot film's slide, in front of the stand-in game as the boot film stands on the machine
+constexpr Layer BOOT_LAYER = {2, 2};
 constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb at the card's root
 constexpr char BOOT_FILM_SCENE[] = "boot-film";
+constexpr uint32_t NIGHT = 0x0e061a;   // host-screens.md: the screen's background
+constexpr int32_t GAME_TITLE_Y = 64;   // the stand-in game's lettering and its score
+constexpr int32_t GAME_SCORE_Y = 140;
+constexpr int32_t GAME_OUTLINE_PX = 2;
+constexpr int32_t SCENE_PERCENT = 100;     // a scene covers the whole host's layer
 constexpr int32_t SHEET_INSET_PX = 4;      // the controls page's margin
 constexpr int32_t SHEET_BUTTON_PX = 100;   // a button's width on the controls page
 constexpr int32_t SHEET_BUTTONS_Y = 46;    // the controls page's rows, from the top
@@ -104,8 +108,8 @@ constexpr int32_t DIALOG_TEXT_Y = 42;
 constexpr int32_t DIALOG_BUTTON_PX = 122;
 constexpr int32_t DIALOG_BUTTONS_Y = 92;
 
-/// An event the browser lists: a touch event of the driver, a gesture the screen made, a press of
-/// the test scene's button, or a step of the swipe and the menu.
+/// An event the browser lists: a touch event of the driver, a gesture the screen made, a step of
+/// the swipe and the menu, a press on a control, or the scene that shows.
 struct Noted {
     const char* type;
     uint16_t x;
@@ -125,12 +129,12 @@ uint32_t lastTickUs = 0;
 uint32_t answered = 0;   // the controller's reads the simulator has answered
 Finger finger = {false, 0, 0};
 std::vector<Noted> noted;
-lv_obj_t* gestureLabel = nullptr;
-lv_obj_t* buttonLabel = nullptr;
-uint32_t presses = 0;
-lv_obj_t* controlsPage = nullptr;   // the controls page's slide while it shows
+lv_obj_t* scene = nullptr;          // what the controls page or a view stands on while it shows
+lv_obj_t* controlsPage = nullptr;   // the controls page while it shows
+bool inGame = false;                // the scene shown stands over the running game
 lv_obj_t* openDialog = nullptr;     // the dialog START opens on the controls page
 bool begun = false;
+std::string pendingScene;   // the scene a press leads to, shown on the next pass
 
 void note(const char* type, uint16_t x, uint16_t y) {
     if (noted.size() < EVENTS_KEPT) {
@@ -181,23 +185,15 @@ const char* touchName(DriverEventType type) {
     }
 }
 
-/// Shows a gesture in the test scene and notes it for the browser.
+/// Notes a gesture for the browser. A tap on the game closes an open menu.
 void showGesture(const PinballEvent& e) {
     const bool tap = e.type == EventType::SCREEN_TAPPED;
     const TouchPoint at =
         tap ? payload<EventType::SCREEN_TAPPED>(e) : payload<EventType::SCREEN_HELD>(e);
     note(tap ? "screenTapped" : "screenHeld", at.x, at.y);
-    lv_label_set_text_fmt(gestureLabel, "%s at %u, %u", tap ? "Tap" : "Hold", unsigned(at.x),
-                          unsigned(at.y));
     if (tap) {
         GameHost::tapped();
     }
-}
-
-void pressed(lv_event_t*) {
-    ++presses;
-    note("buttonClicked", 0, 0);
-    lv_label_set_text_fmt(buttonLabel, "Pressed %lu", static_cast<unsigned long>(presses));
 }
 
 /// Notes a press or a change of a control on the controls page.
@@ -247,9 +243,9 @@ void openStartDialog() {
     lv_obj_align(ok, LV_ALIGN_TOP_RIGHT, -(DIALOG_TEXT_X - 2), DIALOG_BUTTONS_Y);
 }
 
-/// Places every control on a slide over the test scene, as host-screens.md's controls show them.
+/// Places every control on a page, as host-screens.md's controls show them.
 void buildControlsPage() {
-    controlsPage = screen.slide(Layer{CONTROLS_LAYER_KEY, CONTROLS_LAYER_PRIORITY});
+    controlsPage = scene;
     lv_obj_set_style_bg_color(controlsPage, lv_color_hex(NIGHT), 0);
     lv_obj_set_style_bg_opa(controlsPage, LV_OPA_COVER, 0);
     lv_obj_t* header = controls::header(controlsPage, "CONTROLS", true);
@@ -300,40 +296,25 @@ void buildControlsPage() {
     lv_obj_set_pos(row, SHEET_INSET_PX, SHEET_LIST_Y);
 }
 
-/// Places the test scene on the game's layers: a background, a button on a slide and the last
-/// gesture on the overlay.
-void buildTestScene() {
+/// Places the stand-in game on the game's layers: a sunburst, the gold lettering of a mode and a
+/// score, as a game's slide would show them.
+void buildGame() {
     lv_obj_t* back = screen.background();
     lv_obj_set_style_bg_color(back, lv_color_hex(NIGHT), 0);
     lv_obj_set_style_bg_opa(back, LV_OPA_COVER, 0);
-    lv_obj_t* title = lv_label_create(back);
-    lv_label_set_text(title, "Arcade test scene");
-    lv_obj_set_style_text_color(title, lv_color_hex(CREAM), 0);
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, MARGIN_PX, MARGIN_PX);
-
-    lv_obj_t* slide = screen.slide(Layer{TEST_LAYER_KEY, TEST_LAYER_PRIORITY});
-    lv_obj_t* button = lv_button_create(slide);
-    lv_obj_set_size(button, BUTTON_WIDTH, BUTTON_HEIGHT);
-    lv_obj_center(button);
-    lv_obj_set_style_bg_color(button, lv_color_hex(RED), 0);
-    lv_obj_set_style_border_color(button, lv_color_hex(GOLD), 0);
-    lv_obj_set_style_border_width(button, 2, 0);
-    lv_obj_add_event_cb(button, pressed, LV_EVENT_CLICKED, nullptr);
-    buttonLabel = lv_label_create(button);
-    lv_label_set_text(buttonLabel, "Press");
-    lv_obj_set_style_text_color(buttonLabel, lv_color_hex(CREAM), 0);
-    lv_obj_center(buttonLabel);
-
-    gestureLabel = lv_label_create(screen.overlay());
-    lv_label_set_text(gestureLabel, "Tap or hold beside the button");
-    lv_obj_set_style_text_color(gestureLabel, lv_color_hex(CREAM), 0);
-    lv_obj_align(gestureLabel, LV_ALIGN_BOTTOM_LEFT, MARGIN_PX, -MARGIN_PX);
+    lv_obj_t* slide = screen.slide(Layer{GAME_LAYER_KEY, GAME_LAYER_PRIORITY});
+    controls::rays(slide, false);
+    lv_obj_align(controls::lettering(slide, "MULTIBALL", &archivo_black_40, GAME_OUTLINE_PX),
+                 LV_ALIGN_TOP_MID, 0, GAME_TITLE_Y);
+    lv_obj_t* score =
+        controls::label(slide, "1,352,330", &jetbrains_mono_bold_20, controls::color::CYAN);
+    lv_obj_align(score, LV_ALIGN_TOP_MID, 0, GAME_SCORE_Y);
 }
 
-// Starts the display, the touch driver and the screen as the main task does, and places the test
-// scene. The touch driver waits for the controller's first answer after power-up, so a clock
-// before it moves on to that time. Returns false when the touch driver does not begin, and on a
-// second call what the first returned.
+// Starts the display, the touch driver and the screen as the main task does, and places the
+// stand-in game. The touch driver waits for the controller's first answer after power-up, so a
+// clock before it moves on to that time. Returns false when the touch driver does not begin, and on
+// a second call what the first returned.
 bool screenBegin() {
     static bool result = false;
     if (begun) {
@@ -353,41 +334,97 @@ bool screenBegin() {
     lastTickUs = nowUs();
     screen.begin();
     videoBegin(screen);
-    buildTestScene();
+    buildGame();
     GameHost::build(screen);
+    galleryBegin([](const char* name, int32_t value) { noteControl(name, uint16_t(value)); },
+                 [](const char* key) { pendingScene = key; });
     result = true;
     return true;
 }
 
-// Shows a scene: "test" for the test scene, "controls" for the page of every control over it, and
-// "boot-film" for the boot film over both. Returns false for another name.
-bool screenScene(std::string name) {
-    if (name == BOOT_FILM_SCENE) {
-        GameHost::stopBootFilm(screen);
-        GameHost::playBootFilm(screen);
-        return true;
+/// Notes the scene that shows, so the Arcade's picker follows a press that led elsewhere.
+void noteScene(const char* key) {
+    if (noted.size() < EVENTS_KEPT) {
+        noted.push_back({"scene", 0, 0, nowUs() / US_PER_MS, key});
     }
-    if (name == "controls" || name == "test") {
-        GameHost::stopBootFilm(screen);
+}
+
+/// Takes the controls page or a view away, with what the view runs.
+void leaveScene() {
+    galleryLeave();
+    GameHost::stopBootFilm(screen);
+    if (scene != nullptr) {
+        lv_obj_delete(scene);
+        scene = nullptr;
+        controlsPage = nullptr;
+        openDialog = nullptr;
     }
+}
+
+/// Shows a scene on the host's layer, as the host shows its pages.
+///
+/// @param picked  True for a scene picked in the Arcade, false for one a press led to.
+bool showScene(const std::string& name, bool picked) {
+    if (name != "controls" && name != BOOT_FILM_SCENE && !galleryInGame(name.c_str())) {
+        size_t count = 0;
+        const GalleryScene* scenes = galleryScenes(count);
+        bool known = false;
+        for (size_t i = 0; i < count; ++i) {
+            known = known || name == scenes[i].key;
+        }
+        if (!known) {
+            DEBUG_LOG("simulator: no scene %s\n", name.c_str());
+            return false;
+        }
+    }
+    leaveScene();
+    // A page covers the game and the menu at the edge, so the menu closes under it.
+    GameHost::tapped();
+    scene = lv_obj_create(GameHost::layer(screen));
+    lv_obj_remove_style_all(scene);
+    lv_obj_set_size(scene, lv_pct(SCENE_PERCENT), lv_pct(SCENE_PERCENT));
+    lv_obj_set_clickable(scene, false);
     if (name == "controls") {
-        if (controlsPage == nullptr) {
-            buildControlsPage();
-        }
-        screen.showOverlay(false);
+        inGame = false;
+        buildControlsPage();
+        noteScene("controls");
         return true;
     }
-    if (name == "test") {
-        if (controlsPage != nullptr) {
-            screen.remove(Layer{CONTROLS_LAYER_KEY, CONTROLS_LAYER_PRIORITY});
-            controlsPage = nullptr;
-            openDialog = nullptr;
-        }
-        screen.showOverlay(true);
+    if (name == BOOT_FILM_SCENE) {
+        inGame = false;
+        GameHost::playBootFilm(screen);
+        noteScene(BOOT_FILM_SCENE);
         return true;
     }
-    DEBUG_LOG("simulator: no scene %s\n", name.c_str());
-    return false;
+    inGame = galleryInGame(name.c_str());
+    noteScene(galleryBuild(name.c_str(), scene, picked));
+    GameHost::raise();
+    return true;
+}
+
+// Shows a scene the Arcade picks: "controls" for the page of every control, or a view of the
+// gallery. Returns false for another name, and leaves the scene shown as it is.
+bool screenScene(std::string name) {
+    return showScene(name, true);
+}
+
+// Gets the scenes, each {key, label}: the controls page and the gallery's views.
+val screenScenes() {
+    val out = val::array();
+    const auto add = [&](const char* key, const char* label) {
+        val s = val::object();
+        s.set("key", key);
+        s.set("label", label);
+        out.call<void>("push", s);
+    };
+    add("controls", "Controls");
+    add(BOOT_FILM_SCENE, "Boot film");
+    size_t count = 0;
+    const GalleryScene* scenes = galleryScenes(count);
+    for (size_t i = 0; i < count; ++i) {
+        add(scenes[i].key, scenes[i].label);
+    }
+    return out;
 }
 
 // Sets the finger the simulated touch controller reports from its next read on, held inside the
@@ -413,11 +450,11 @@ uint32_t screenRectangles() {
 }
 
 // Gets the events since the last call, oldest first, each {type, x, y, ms}: the touch driver's
-// touchDown, touchMoved, touchHeld and touchUp, the screen's screenTapped and screenHeld,
-// buttonClicked of the test scene's button, the host stand-in's edgeTouched, swipeStarted and
-// swipeLetGo with the finger's x, menuOpened and menuClosed, the menu's items sound, lights,
-// machine, endGame and close, and control with the name of a control on the controls page, and
-// for its slider the value in x.
+// touchDown, touchMoved, touchHeld and touchUp, the screen's screenTapped and screenHeld, the
+// host stand-in's edgeTouched, swipeStarted and swipeLetGo with the finger's x, menuOpened and
+// menuClosed, the menu's items sound, lights, machine, endGame and close, control with the name of
+// a control on the controls page or of a view's action, with a slider's value or a key's letter in
+// x, and scene with the scene that shows.
 val screenEvents() {
     val out = val::array();
     for (const Noted& n : noted) {
@@ -462,7 +499,12 @@ void screenPass() {
             showGesture(made.events[k]);
         }
     }
-    GameHost::follow(screen);
+    GameHost::follow(screen, inGame);
+    if (!pendingScene.empty()) {
+        const std::string to = pendingScene;
+        pendingScene.clear();
+        showScene(to, false);
+    }
     videoPass();
     screen.render();
 }
@@ -478,9 +520,10 @@ void GameHost::build(Screen& screen) {
     menu.show(status);
 }
 
-void GameHost::follow(Screen& screen) {
+void GameHost::follow(Screen& screen, bool inGame) {
     uint16_t x = 0;
-    const Screen::Edge e = screen.edge(x);
+    // The host's menu belongs to a running game. On a page the edge is a part of the page.
+    const Screen::Edge e = inGame ? screen.edge(x) : Screen::Edge::NONE;
     if (e == Screen::Edge::TOUCHED && last != Screen::Edge::TOUCHED) {
         note("edgeTouched", x, 0);
         menu.hint();
@@ -536,9 +579,12 @@ void GameHost::tapped() {
 
 void GameHost::chosen(EdgeMenuView::Item item, void*) {
     static const char* const NAMES[] = {"sound", "lights", "machine", "endGame", "close"};
+    // The items lead to the gallery's pages, as the host's menu opens them.
+    static const char* const PAGES[] = {"sound", "lights", "warning-lights", "end-game", nullptr};
     note(NAMES[uint8_t(item)], 0, 0);
-    if (item == EdgeMenuView::Item::CLOSE) {
-        tapped();
+    tapped();
+    if (PAGES[uint8_t(item)] != nullptr) {
+        galleryOpen(PAGES[uint8_t(item)]);
     }
 }
 
@@ -549,4 +595,6 @@ EMSCRIPTEN_BINDINGS(screen) {
     emscripten::function("screenRectangles", &screenRectangles);
     emscripten::function("screenEvents", &screenEvents);
     emscripten::function("screenScene", &screenScene);
+    emscripten::function("screenScenes", &screenScenes);
+    emscripten::function("screenAnimate", &controls::setAnimated);
 }

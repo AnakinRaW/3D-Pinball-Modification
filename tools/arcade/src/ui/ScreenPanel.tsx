@@ -8,7 +8,6 @@ import {
   putOnCard,
   rgb565ToRgba,
   SCALES,
-  SCENES,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
   screenPoint,
@@ -22,16 +21,15 @@ import {
 
 const EVENTS_SHOWN = 14;
 const scale = signal<Scale>(2);
-const scene = signal<Scene>("test");
-const SCENE_LABELS: Record<Scene, string> = { test: "Test scene", controls: "Controls", "boot-film": "Boot film" };
+const scene = signal("games");
 
 // the files a scene reads from the simulated card, put there when the scene is picked
-const SCENE_FILES: Partial<Record<Scene, CardFile>> = {
+const SCENE_FILES: Record<string, CardFile> = {
   "boot-film": { path: "/video/intro.rgb", url: sources.introRgb },
 };
 
 // Shows a scene once the files it reads lie on the card, unless another scene was picked meanwhile.
-async function showScene(module: ScreenModule, key: Scene): Promise<void> {
+async function showScene(module: ScreenModule, key: string): Promise<void> {
   const file = SCENE_FILES[key];
   if (file) await putOnCard(module, file);
   if (scene.value === key) module.screenScene(key);
@@ -56,6 +54,7 @@ const LABELS: Record<ScreenEvent["type"], string> = {
   endGame: "Menu: End game",
   close: "Menu: Close",
   control: "Control",
+  scene: "Scene",
 };
 // the events that carry no point, and those that carry the finger's x alone
 const POINTLESS = new Set<ScreenEvent["type"]>([
@@ -68,6 +67,7 @@ const POINTLESS = new Set<ScreenEvent["type"]>([
   "endGame",
   "close",
   "control",
+  "scene",
 ]);
 const X_ONLY = new Set<ScreenEvent["type"]>(["edgeTouched", "swipeStarted", "swipeLetGo"]);
 
@@ -83,10 +83,12 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
   const input = useRef<TouchInput | null>(null);
   const [begun, setBegun] = useState<boolean | null>(null);
   const [events, setEvents] = useState<ScreenEvent[]>([]);
+  const [scenes, setScenes] = useState<Scene[]>([]);
 
   useEffect(() => {
     if (!module) return;
     setBegun(module.screenBegin());
+    setScenes(module.screenScenes());
     void showScene(module, scene.value);
     input.current = new TouchInput(module);
     const ctx = canvas.current?.getContext("2d") ?? null;
@@ -99,6 +101,8 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
         drawScreen(ctx, module);
       }
       const fresh = module.screenEvents();
+      // a press that led to another view moves the picker along
+      for (const e of fresh) if (e.type === "scene" && e.name) scene.value = e.name;
       if (fresh.length) setEvents((old) => [...fresh.reverse(), ...old].slice(0, EVENTS_SHOWN));
       frame = requestAnimationFrame(tick);
     };
@@ -123,20 +127,22 @@ export function ScreenPanel({ module }: { module: ScreenModule | null }) {
             </button>
           ))}
         </div>
-        <div class="seg">
-          {SCENES.map((k) => (
-            <button
-              key={k}
-              class={k === scene.value ? "on" : ""}
-              onClick={() => {
-                scene.value = k;
-                if (module) void showScene(module, k);
-              }}
-            >
-              {SCENE_LABELS[k]}
-            </button>
+        <select
+          class="screen-scene"
+          aria-label="Scene"
+          value={scene.value}
+          onChange={(e) => {
+            const key = (e.currentTarget as HTMLSelectElement).value;
+            scene.value = key;
+            if (module) void showScene(module, key);
+          }}
+        >
+          {scenes.map((k) => (
+            <option key={k.key} value={k.key}>
+              {k.label}
+            </option>
           ))}
-        </div>
+        </select>
         <span class="screen-size">
           {SCREEN_WIDTH} × {SCREEN_HEIGHT}
         </span>

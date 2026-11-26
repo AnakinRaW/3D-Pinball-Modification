@@ -14,7 +14,7 @@ A `Machine` typed struct is passed to the game, allowing it to access game compo
 
 ## Host
 
-The host runs the games and is responsible for switching and starting them. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). The firmware carries a built-in game, which runs without a memory card. The [host's screens](host-screens.md#start-up) give what the host shows at start-up and after a game.
+The host runs the games and is responsible for switching and starting them. It hands every game the same `Machine`, passes it the components' events and the current time, and moves it through its [lifecycle](#game-lifecycle). The firmware carries a built-in game, which runs without a memory card. The [host's screens](host-screens.md) show what the host shows at start-up and after a game.
 
 The host performs the same sequence at every start of a game, machine power-up included:
 
@@ -52,9 +52,9 @@ A game is organized into phases and the host is responsible for their transition
 Every game meets these requirements, whether it is written in C++ or in [`game.yml`](game-files.md):
 
 - A game has at most four players. `players()` gives how many play, and `score()` gives each player's score. The host reads both once Play ends.
-- A game keeps no high scores. The host keeps each game's list in `/games/<id>/highscores.yml`. After every game the host asks the players for their [names](host-screens.md#after-a-game), compares the scores with the list, writes it and shows it. Without a card, the built-in game's list lasts until power-off.
-- A game leaves the swipe from the right edge of the screen to the host. The swipe opens the host's [menu](host-screens.md#menu). A tap or a hold at the right edge reaches the game. The game draws up to the right edge.
-- A game may bring a cover, the picture its card in the [game choice](host-screens.md#games) shows. The cover is `thumbnail.png` beside the game's `game.yml`. The host shows the `thumbnail.img` that `tools/picture.py` writes from it. Without a cover, the card shows the title alone.
+- A game keeps no high scores. The host keeps each game's list in `/games/<id>/highscores.yml`. After every game the host asks the players for their [names](../../firmware/src/host/views/name-views.h), compares the scores with the list, writes it and shows it. Without a card, the built-in game's list lasts until power-off.
+- A game leaves the swipe from the right edge of the screen to the host. The swipe opens the host's [menu](../../firmware/src/host/views/edge-menu-view.h). A tap or a hold at the right edge reaches the game. The game draws up to the right edge.
+- A game may bring a cover, the picture its card in the [game choice](../../firmware/src/host/views/games-view.h) shows. The cover is `thumbnail.png` beside the game's `game.yml`. The host shows the `thumbnail.img` that `tools/picture.py` writes from it. Without a cover, the card shows the title alone.
 
 ## Modes
 

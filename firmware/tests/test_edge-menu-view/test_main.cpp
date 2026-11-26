@@ -9,6 +9,7 @@
 //   choose     a press on a row, on End game and on the close in the header names its item, and
 //              the rows show the host's status
 //   while-open an open menu takes no hint
+//   raise      raise() brings the menu in front of an overlay placed after it
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -25,6 +26,7 @@ constexpr uint32_t STEP_MS = 5;   // one pass of LVGL's timers
 constexpr uint32_t REFRESH_MS =
     40;   // longer than LVGL's refresh period, which its animations step at
 constexpr uint32_t BUFFER_ROWS = 10;
+constexpr int32_t OVERLAY_PX = 44;   // an overlay's touch area in the screen's top right corner
 
 // The pointer LVGL reads.
 struct Pointer {
@@ -232,6 +234,25 @@ void testWhileOpen() {
     TEST_ASSERT_EQUAL_UINT8(LV_OPA_TRANSP, rig.view.hintOpacity());
 }
 
+// raise: an overlay placed after the menu takes the touch on the menu's close until raise() brings
+// the menu in front of it.
+void testRaise() {
+    Rig rig;
+    lv_obj_t* overlay = lv_obj_create(rig.parent);
+    lv_obj_remove_style_all(overlay);
+    lv_obj_set_size(overlay, OVERLAY_PX, OVERLAY_PX);
+    lv_obj_align(overlay, LV_ALIGN_TOP_RIGHT, 0, 0);
+    rig.view.follow(OPEN_X);
+    rig.view.letGo(OPEN_X);
+    run(EdgeMenuView::SNAP_MS + REFRESH_MS);
+    tap(W - 10, 17);
+    TEST_ASSERT_EQUAL_UINT32(0, chosen.size());
+    rig.view.raise();
+    tap(W - 10, 17);
+    TEST_ASSERT_EQUAL_UINT32(1, chosen.size());
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(EdgeMenuView::Item::CLOSE), uint8_t(chosen[0]));
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testHint);
@@ -239,5 +260,6 @@ int main() {
     RUN_TEST(testLetGo);
     RUN_TEST(testChoose);
     RUN_TEST(testWhileOpen);
+    RUN_TEST(testRaise);
     return UNITY_END();
 }

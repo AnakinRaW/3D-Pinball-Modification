@@ -55,6 +55,7 @@ target_compile_options(fastled PRIVATE -w -O2)
 
 # the host screens' fonts, which tools/fonts.py writes
 file(GLOB HOST_FONTS CONFIGURE_DEPENDS ${FIRMWARE}/src/host/views/fonts/*.c)
+file(GLOB HOST_VIEWS CONFIGURE_DEPENDS ${FIRMWARE}/src/host/views/*.cpp)
 
 add_executable(simulator
     simulator.cpp
@@ -71,8 +72,8 @@ add_executable(simulator
     ${FIRMWARE}/src/drivers/driver-base.cpp
     ${FIRMWARE}/src/drivers/storage-service.cpp
     ${FIRMWARE}/src/drivers/touch.cpp
-    ${FIRMWARE}/src/host/views/edge-menu-view.cpp
-    ${FIRMWARE}/src/host/views/controls.cpp
+    ${HOST_VIEWS}
+    view-gallery.cpp
     ${HOST_FONTS}
     ${FIRMWARE}/src/components/lamps.cpp
     ${FIRMWARE}/src/components/lamp-effects.cpp

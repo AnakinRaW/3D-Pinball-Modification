@@ -1228,6 +1228,14 @@ body.dragging {
   gap: 12px;
   color: var(--muted);
 }
+.screen-scene {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+}
 .screen-frame {
   padding: 10px;
   border-radius: 8px;

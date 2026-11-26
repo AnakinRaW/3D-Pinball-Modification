@@ -26,20 +26,23 @@ export type ScreenEventType =
   | "machine"
   | "endGame"
   | "close"
-  | "control";
+  | "control"
+  | "scene";
 
 export interface ScreenEvent {
   type: ScreenEventType;
   x: number;
   y: number;
   ms: number;
-  name?: string; // the control a press or a change came from, on the controls page
+  name?: string; // the control or the view's action a press came from, or the scene that shows
 }
 
-// what the display shows: the test scene, the page of every control of the host's screens, or the
-// boot film from the simulated card
-export const SCENES = ["test", "controls", "boot-film"] as const;
-export type Scene = (typeof SCENES)[number];
+// what the display shows: the page of every control of the host's screens, or a
+// view of the host with made-up data, as the module lists them
+export interface Scene {
+  key: string;
+  label: string;
+}
 
 // the module's screen functions, as firmware/sim/screen-simulator.cpp binds them
 export interface ScreenModule {
@@ -48,7 +51,9 @@ export interface ScreenModule {
   screenPixels(): Uint8Array;
   screenRectangles(): number;
   screenEvents(): ScreenEvent[];
-  screenScene(scene: Scene): boolean;
+  screenScene(key: string): boolean;
+  screenScenes(): Scene[];
+  screenAnimate(on: boolean): void; // lets the sunbursts turn or stand still
   cardFile(path: string, bytes: Uint8Array): void; // puts a file on the simulated card, such as "/video/intro.rgb"
 }
 

@@ -638,22 +638,57 @@ The program `host-controls` checks the [controls](host-screens.md#controls) ever
 | `button` | computer | Create a red, a gold and a violet plaque, press the red one, then disable it and press it again | Each plaque is a touch target high in its kind's colors and font, sinks to the shadow red while pressed, and takes the touch until it is disabled |
 | `header` | computer | Create a header with a centered title and a button at each end, press both, then a header with its title at the left | The band and its bulbs span the parent, the title stands where it is asked to, and each button takes the touch |
 | `bulb` | computer | Create a warning light and set it to every light | Each light shows its colors, and an unlit bulb casts no glow |
-| `row` | computer | Create a list row, press it and change its detail, then a menu row with an icon | The row shows its title and detail, takes the touch, and shows the new detail in its color. The menu row is a touch target high with its icon in its color |
+| `row` | computer | Create a list row, press it and change its detail, then a menu row with an icon | The row shows its title in bold and its detail, takes the touch, and shows the new detail in its color. The menu row is a touch target high with its icon in its color |
 | `slider` | computer | Press plus twice, minus three times, then plus near the top | Each press moves the value by one [step](host-screens.md#controls), stops at either end and tells the listeners |
-| `dialog` | computer | Create a dialog over a button, tap the button, close the dialog and tap the button again | The dialog is a night card centered on its parent, with a gold rim and its title in the red strip. A black backdrop at half opacity covers the parent. The button stays still while the dialog shows and takes the second tap |
-| `fonts` | computer | Look up every printable character and a symbol of LVGL in every font | Each font holds the characters and finds the symbol in LVGL's Montserrat |
+| `dialog` | computer | Create a dialog over a button, tap the button, close the dialog and tap the button again | The dialog is a night card centered on its parent, with a gold rim and its title in the red strip. A backdrop in the night color covers the parent at the storyboard's opacity. The button stays still while the dialog shows and takes the second tap |
+| `card` | computer | Create a card of a note, of a fault with a title, and of a device that works without one | Each rim takes its tone, the fault glows neon red, the strip holds the title, and the card without a title has no strip |
+| `tile` | computer | Create a tile of a device that works and one of a fault, and press the first | The tile of a device that works has a thin rim, the fault glows neon red, and the tile takes the touch |
+| `pager` | computer | Create a pager of three pages, then show the third | A bulb stands for each page, and only the page shown is lit |
+| `level` | computer | Create a level near its top, press its plus three times, then set its value | The value shows in percent and follows each change, up to the end of the track |
+| `toggle` | computer | Create a switch row that is on, press it twice, then turn it off from outside | Each press turns it over and tells the listeners, and the state set from outside holds without telling them |
+| `scroll-list` | computer | Fill a list with more rows than it shows, then scroll it to its end | The list scrolls, and the fade shows at the edge more lies beyond, at the foot first and at the top at the end |
+| `animated` | computer | Run a sunburst for a while, then turn the animation off and run it again | The sunburst is drawn again as it turns, and it is drawn no more once it stands still |
+| `stage` | computer | Create the rays, a curtain, the valance, the lettering, a score line, a progress bar and two keys, and press a key | Each takes its size, the lettering fits its text with its outline, only the keys take the touch, and a lit key is rimmed in the bulb's yellow |
+| `fonts` | computer | Look up every printable character, the middle dot, the times sign, the minus sign and a symbol of LVGL in every font | Each font holds the characters and the signs, a title size the capitals, and each finds the symbol in LVGL's Montserrat |
 
 ### Edge menu view
 
-The program `edge-menu-view` checks the view of the [menu at the right edge](host-screens.md#a-finger-at-the-right-edge). Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.
+The program `edge-menu-view` checks the view of the [menu at the right edge](host-screens.md#controls). Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `hint` | computer | Show the hint, then release it. Then show it and release it while it still fades in | The gold tab and the drawer's edge fade in, stand once released and then fade, in the [hint's times](host-screens.md#a-finger-at-the-right-edge), with the drawer out of sight again. Released while fading in, the hint still reaches full strength before it fades |
+| `hint` | computer | Show the hint, then release it. Then show it and release it while it still fades in | The gold tab and the drawer's edge fade in, stand once released and then fade, in the [hint's times](host-screens.md#controls), with the drawer out of sight again. Released while fading in, the hint still reaches full strength before it fades |
 | `follow` | computer | Follow a finger from the right edge to the left, past the open drawer's edge | The drawer's left edge follows the finger and stops at the open drawer's edge, and the hint goes at once |
 | `let-go` | computer | Let go before half the drawer's width, then past it, then close the menu | The drawer slides back, then snaps open in the [menu's snap time](host-screens.md#controls), and `close()` snaps it back |
 | `choose` | computer | Press each row, End game, the close in the header and the bulbs under it, then set the rows' status | Each press names its item and the bulbs name none. The rows show the status |
 | `while-open` | computer | Show the hint and follow a finger while the menu is open | The menu stays open and no hint shows |
+| `raise` | computer | Place an overlay over the menu's close after the menu, open the menu and press its close, then raise the menu and press again | The overlay takes the first press, and the close takes the second |
+
+### Host views
+
+The program `host-views` checks the [host's screens](host-screens.md), each filled with data as the storyboard shows it. Its computer tests run LVGL on a display that draws nowhere, with a pointer the test presses.
+
+| Test | Runs on | Steps | Passes when |
+|---|---|---|---|
+| `score` | computer | Write scores from zero to the largest a game can count | Each groups its digits in threes with commas |
+| `notice` | computer | Build the report of the faults at start and press both buttons, then a modal card and tap beside it | The card shows its title and lines, each button reports its action, and the modal card dims the page and keeps the tap beside it |
+| `launch-card` | computer | Build the launch card | It names the game, its high score and the swipe for the menu, with the swipe's line between the curtains |
+| `curtain` | computer | Build the curtain, close it on a game's name, then open it | It closes and opens in the [curtain's times](host-screens.md#controls), with the plaque naming the game while it is closed |
+| `game-over` | computer | Build Game over for three players and tap the screen, then for two players with a new high score, then for one player in the list, one with a new high score and one off the list | Several players stand by score with the winner first, lit on an opaque line, each score that made the game's list marked TOP 5 with no place in the list, and the tap goes on. A new high score shows its banner. A single player sees the score large, marked TOP 5 in the list, under the banner alone with a new high score and unmarked off the list |
+| `games` | computer | Build the game choice of three games with a fault, press Play, the gear and the status bulb, turn the ring to the game that cannot start and press Play, turn on past the last game and back, drag the ring a little and past its snap both ways, drag a finger across a neighbor, then build it with one game and no fault | Both neighbors peek in, each press reports its action with the game in the middle, the game that cannot start keeps Play off, and the ring leads from the last game to the first. The ring follows a drag, slides back from a short one and turns from one past the snap, and a finger dragged across a neighbor turns it once. A single game has no neighbors, and without a fault no status bulb takes the touch |
+| `settings` | computer | Build Settings with a fault, press each tile and back, then the switch of the animated background twice | Each tile and back report their page, the Machine tile glows neon red, and the switch reports off and then on |
+| `levels` | computer | Build Sound, press the music's plus and the plus of the effects near their top, and press back | The values show in percent, the music's plus reports its new value, and the effects reach the end of their track whatever the music holds |
+| `service` | computer | Build Service, press both steps, open the adapter's dialog and keep the adapter, then change it to the larger one and back, and press back | The firmware and the config show and each step reports its page. The larger adapter asks with a warning, the smaller one asks without it, keeping changes nothing, and a confirmed change reports the new rating and shows it |
+| `sensors` | computer | Build the list of ten ball sensors, one to record again and one not recorded, press a sensor and back | Each sensor says whether it is recorded, a sensor that needs it in amber, the list scrolls, and each press reports its action with the sensor |
+| `record-sensor` | computer | Build the recording of a sensor, press Start, then show the measuring, the ball and the end with a note, and press Done | The page asks for every sensor clear and then for the ball, hides Start while it measures, ends with the sensor recorded and the note, and reports each press |
+| `calibrate-touch` | computer | Build the calibration, move the mark to the third and the fourth corner, and press Cancel | The mark stands in each corner it is sent to, and Cancel reports |
+| `warning-lights` | computer | Build five tiles with a failed device and the warnings, press both and back | Each tile reports its index, and the failed device glows neon red |
+| `warnings` | computer | Build more warnings than the screen holds, one of them counted twice, then scroll to the end | The count stands in the header, the repeated warning shows its count, and the list scrolls with a fade at the foot first and at the top at the end |
+| `status` | computer | Build the status, tap its corner, set a fault and tap again, set the card's writing, and tap the middle | The bulb takes the tap only while a device is failed, the card indicator shows while the card is written, and a tap beside them goes through |
+| `toast` | computer | Show the toast of a failed device, tap it and wait, then the toast of a device that works again | Each drops in and goes after its [time](host-screens.md#controls). The first reports the tap, and the second takes none |
+| `choose-name` | computer | Build the names for a player, press a name, Other name and Skip | The box names the player, the place and the score, the first name is lit, and each press reports its action with the name's index |
+| `name` | computer | Type three letters, delete one, type past the name's length, press OK and Skip | The field holds what was typed up to the name's length, its count follows, each key reports its letter, and OK reports the length |
+| `high-scores` | computer | Build the list with two new entries, change the countdown, press both buttons, then build it with a line of the players' scores | The new entries are lit, the countdown stands on Play again, each button reports, and the line of scores shows below the list |
 
 ## Main program
 

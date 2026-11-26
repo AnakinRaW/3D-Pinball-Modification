@@ -79,6 +79,10 @@ public:
     /// Snaps an open drawer back in SNAP_MS, for a tap on the game or 20 s without a touch.
     void close();
 
+    /// Brings the drawer and the hint in front of everything else on the parent, so overlays the
+    /// host placed after build(), such as the status bulb, stay beneath the menu.
+    void raise();
+
     /// Gets whether the menu is open or snapping open.
     bool isOpen() const { return open; }
 

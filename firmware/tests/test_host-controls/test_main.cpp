@@ -10,7 +10,20 @@
 //   slider    minus and plus step the value, stop at the ends, and tell the listeners
 //   dialog    a dialog is a night card with its title in the strip, dims what lies beneath it,
 //             and no control beneath it takes a touch until it closes
-//   fonts     every font holds the printable characters and finds LVGL's symbols in its fallback
+//   card      a card's rim and strip take its tone, a fault glows neon red, and a toast has no
+//             strip
+//   tile      a tile takes the touch, a fault glows neon red, and a device that works has a thin
+//             rim
+//   pager     a pager has a bulb per page with the page shown lit, and moves the light along
+//   level     a level shows its value and steps with minus and plus up to the end of its track
+//   toggle    a switch row turns on and off at each tap and tells its listeners
+//   scroll-list  a list that holds more than it shows scrolls, with a fade at the edge more lies
+//             beyond
+//   animated  the sunburst turns while the background is animated and stands still otherwise
+//   stage     the rays, a curtain, the valance, the lettering, a key and a score line take their
+//             sizes and let the touch through, but for the key
+//   fonts     every font holds the printable characters with three signs and finds LVGL's
+//             symbols in its fallback
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -214,7 +227,7 @@ void testRow() {
     TEST_ASSERT_EQUAL_INT32(controls::ROW_PX, lv_obj_get_height(r));
     TEST_ASSERT_EQUAL_STRING("After a change", lv_label_get_text(lv_obj_get_child(r, 0)));
     TEST_ASSERT_EQUAL_STRING("Record ball sensors", lv_label_get_text(lv_obj_get_child(r, 1)));
-    TEST_ASSERT_EQUAL_PTR(&montserrat_semibold_14,
+    TEST_ASSERT_EQUAL_PTR(&montserrat_bold_14,
                           lv_obj_get_style_text_font(lv_obj_get_child(r, 1), LV_PART_MAIN));
     tap(r);
     TEST_ASSERT_EQUAL_UINT32(1, clicks);
@@ -277,15 +290,16 @@ void testDialog() {
                             hex(lv_obj_get_style_bg_color(d, LV_PART_MAIN)));
     TEST_ASSERT_EQUAL_HEX32(controls::color::GOLD,
                             hex(lv_obj_get_style_border_color(d, LV_PART_MAIN)));
-    lv_obj_t* title = lv_obj_get_child(lv_obj_get_child(d, 0), 0);
+    lv_obj_t* title = lv_obj_get_child(lv_obj_get_child(d, 0), -1);
     TEST_ASSERT_EQUAL_STRING("END CLASSIC?", lv_label_get_text(title));
     TEST_ASSERT_TRUE(lv_obj_is_clickable(d));
     // the backdrop dims the parent behind the card
     lv_obj_t* backdrop = lv_obj_get_parent(d);
     TEST_ASSERT_EQUAL_INT32(W, lv_obj_get_width(backdrop));
     TEST_ASSERT_EQUAL_INT32(H, lv_obj_get_height(backdrop));
-    TEST_ASSERT_EQUAL_HEX32(0x000000, hex(lv_obj_get_style_bg_color(backdrop, LV_PART_MAIN)));
-    TEST_ASSERT_EQUAL_UINT8(LV_OPA_50, lv_obj_get_style_bg_opa(backdrop, LV_PART_MAIN));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::NIGHT,
+                            hex(lv_obj_get_style_bg_color(backdrop, LV_PART_MAIN)));
+    TEST_ASSERT_EQUAL_UINT8(184, lv_obj_get_style_bg_opa(backdrop, LV_PART_MAIN));   // 0.72
     // the button beside the card stays still while the dialog shows, and takes the touch after
     tap(beneath);
     TEST_ASSERT_EQUAL_UINT32(0, clicks);
@@ -295,17 +309,207 @@ void testDialog() {
     TEST_ASSERT_EQUAL_UINT32(1, clicks);
 }
 
-// fonts: every font holds the printable characters and finds LVGL's symbols in its fallback.
+// card: a card's rim and strip take its tone, a fault glows neon red, and a toast has no strip.
+void testCard() {
+    Rig rig;
+    lv_obj_t* note = controls::card(rig.parent, controls::Tone::NOTE, "RESTARTED", 292, 100);
+    lv_obj_t* fault = controls::card(rig.parent, controls::Tone::FAULT, "2 FAULTS", 292, 100);
+    lv_obj_t* toast = controls::card(rig.parent, controls::Tone::WORKS, nullptr, 312, 46);
+    TEST_ASSERT_EQUAL_HEX32(controls::color::GOLD,
+                            hex(lv_obj_get_style_border_color(note, LV_PART_MAIN)));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::NEON,
+                            hex(lv_obj_get_style_border_color(fault, LV_PART_MAIN)));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::NEON,
+                            hex(lv_obj_get_style_shadow_color(fault, LV_PART_MAIN)));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::GREEN,
+                            hex(lv_obj_get_style_border_color(toast, LV_PART_MAIN)));
+    lv_obj_t* strip = lv_obj_get_child(fault, 0);
+    TEST_ASSERT_EQUAL_INT32(controls::STRIP_PX, lv_obj_get_style_height(strip, LV_PART_MAIN));
+    TEST_ASSERT_EQUAL_STRING("2 FAULTS", lv_label_get_text(lv_obj_get_child(strip, -1)));
+    TEST_ASSERT_EQUAL_UINT32(0, lv_obj_get_child_count(toast));
+}
+
+// tile: a tile takes the touch, a fault glows neon red, and a device that works has a thin rim.
+void testTile() {
+    Rig rig;
+    lv_obj_t* works = controls::tile(rig.parent, controls::Tone::WORKS, 100, 44);
+    lv_obj_t* failed = controls::tile(rig.parent, controls::Tone::FAULT, 100, 44);
+    lv_obj_set_x(failed, 120);
+    lv_obj_add_event_cb(works, counted, LV_EVENT_CLICKED, nullptr);
+    TEST_ASSERT_EQUAL_INT32(1, lv_obj_get_style_border_width(works, LV_PART_MAIN));
+    TEST_ASSERT_EQUAL_INT32(2, lv_obj_get_style_border_width(failed, LV_PART_MAIN));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::NEON,
+                            hex(lv_obj_get_style_shadow_color(failed, LV_PART_MAIN)));
+    tap(works);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+}
+
+// pager: a pager has a bulb per page with the page shown lit, and moves the light along.
+void testPager() {
+    Rig rig;
+    lv_obj_t* p = controls::pager(rig.parent, 3, 0);
+    TEST_ASSERT_EQUAL_UINT32(3, lv_obj_get_child_count(p));
+    const auto lit = [&](int32_t i) {
+        return hex(lv_obj_get_style_shadow_color(lv_obj_get_child(p, i), LV_PART_MAIN)) ==
+                   controls::color::BULB &&
+               lv_obj_get_style_shadow_width(lv_obj_get_child(p, i), LV_PART_MAIN) > 0;
+    };
+    TEST_ASSERT_TRUE(lit(0));
+    TEST_ASSERT_FALSE(lit(1));
+    controls::setPage(p, 2);
+    TEST_ASSERT_FALSE(lit(0));
+    TEST_ASSERT_TRUE(lit(2));
+}
+
+// level: a level shows its value, steps with minus and plus up to the end of its track, and takes
+// a value set from outside.
+void testLevel() {
+    Rig rig;
+    lv_obj_t* l = controls::level(rig.parent, "EFFECTS", controls::Fill::SOUND, 90, 304);
+    lv_obj_t* track = controls::levelTrack(l);
+    lv_obj_add_event_cb(track, counted, LV_EVENT_VALUE_CHANGED, nullptr);
+    lv_obj_t* value = lv_obj_get_child(l, 1);
+    settle();
+    TEST_ASSERT_EQUAL_INT32(controls::LEVEL_PX, lv_obj_get_height(l));
+    TEST_ASSERT_EQUAL_STRING("EFFECTS", lv_label_get_text(lv_obj_get_child(l, 0)));
+    TEST_ASSERT_EQUAL_STRING("90 %", lv_label_get_text(value));
+    lv_obj_t* plus = lv_obj_get_child(lv_obj_get_child(l, 2), 1);
+    tap(plus);
+    TEST_ASSERT_EQUAL_INT32(95, lv_slider_get_value(track));
+    TEST_ASSERT_EQUAL_STRING("95 %", lv_label_get_text(value));
+    TEST_ASSERT_EQUAL_UINT32(1, changes);
+    tap(plus);
+    tap(plus);
+    TEST_ASSERT_EQUAL_INT32(controls::SLIDER_MAX, lv_slider_get_value(track));
+    TEST_ASSERT_EQUAL_STRING("100 %", lv_label_get_text(value));
+    controls::setLevel(l, 10);
+    TEST_ASSERT_EQUAL_STRING("10 %", lv_label_get_text(value));
+}
+
+// toggle: a switch row turns on and off at each tap, tells its listeners, and takes a state set
+// from outside.
+void testToggle() {
+    Rig rig;
+    lv_obj_t* t = controls::toggle(rig.parent, "Animated background", true, 304);
+    lv_obj_add_event_cb(t, counted, LV_EVENT_VALUE_CHANGED, nullptr);
+    settle();
+    TEST_ASSERT_EQUAL_INT32(controls::TARGET_PX, lv_obj_get_height(t));
+    TEST_ASSERT_TRUE(controls::isOn(t));
+    tap(t);
+    TEST_ASSERT_FALSE(controls::isOn(t));
+    TEST_ASSERT_EQUAL_UINT32(1, changes);
+    tap(t);
+    TEST_ASSERT_TRUE(controls::isOn(t));
+    controls::setOn(t, false);
+    TEST_ASSERT_FALSE(controls::isOn(t));
+    TEST_ASSERT_EQUAL_UINT32(2, changes);
+}
+
+// scroll list: a list that holds more than it shows scrolls and shows the fade at the edge more
+// lies beyond.
+void testScrollList() {
+    Rig rig;
+    lv_obj_t* list = controls::scrollList(rig.parent, 40, 120);
+    for (int i = 0; i < 8; ++i) {
+        controls::row(list, "Inlane 1", "Recorded", 300, controls::TARGET_PX);
+    }
+    settle();
+    lv_obj_t* top = lv_obj_get_sibling(list, 1);
+    lv_obj_t* foot = lv_obj_get_sibling(list, 2);
+    TEST_ASSERT_TRUE(lv_obj_is_hidden(top));
+    TEST_ASSERT_FALSE(lv_obj_is_hidden(foot));
+    lv_obj_scroll_to_y(list, LV_COORD_MAX, LV_ANIM_OFF);
+    settle();
+    TEST_ASSERT_FALSE(lv_obj_is_hidden(top));
+    TEST_ASSERT_TRUE(lv_obj_is_hidden(foot));
+}
+
+// animated: the sunburst turns while the background is animated and stands still otherwise.
+void testAnimated() {
+    Rig rig;
+    lv_obj_t* r = controls::rays(rig.parent, true);
+    static uint32_t draws = 0;
+    lv_obj_add_event_cb(r, [](lv_event_t*) { ++draws; }, LV_EVENT_DRAW_MAIN_END, nullptr);
+    TEST_ASSERT_TRUE(controls::isAnimated());
+    // a turning sunburst is drawn again at each step of its timer
+    draws = 0;
+    for (int i = 0; i < 60; ++i) {
+        settle();
+    }
+    TEST_ASSERT_TRUE(draws > 0);
+    controls::setAnimated(false);
+    TEST_ASSERT_FALSE(controls::isAnimated());
+    for (int i = 0; i < 10; ++i) {
+        settle();
+    }
+    draws = 0;
+    for (int i = 0; i < 60; ++i) {
+        settle();
+    }
+    TEST_ASSERT_EQUAL_UINT32(0, draws);
+    controls::setAnimated(true);
+}
+
+// stage: the rays, a curtain, the valance, the lettering, a key and a score line take their sizes
+// and let the touch through, but for the key.
+void testStage() {
+    Rig rig;
+    lv_obj_t* rays = controls::rays(rig.parent, true);
+    lv_obj_t* curtain = controls::curtain(rig.parent, 34);
+    lv_obj_t* valance = controls::valance(rig.parent);
+    lv_obj_t* lettering = controls::lettering(rig.parent, "CLASSIC", &archivo_black_40, 2);
+    lv_obj_t* line = controls::scoreLine(rig.parent, 240, true, true);
+    lv_obj_t* bar = controls::progress(rig.parent, 292);
+    settle();
+    TEST_ASSERT_EQUAL_INT32(W, lv_obj_get_width(rays));
+    TEST_ASSERT_EQUAL_INT32(H, lv_obj_get_height(rays));
+    TEST_ASSERT_EQUAL_INT32(34, lv_obj_get_width(curtain));
+    TEST_ASSERT_EQUAL_INT32(H, lv_obj_get_height(curtain));
+    TEST_ASSERT_EQUAL_INT32(W, lv_obj_get_width(valance));
+    lv_point_t text;
+    lv_text_get_size(&text, "CLASSIC", &archivo_black_40, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+    TEST_ASSERT_EQUAL_INT32(text.x + 4, lv_obj_get_width(lettering));
+    TEST_ASSERT_EQUAL_INT32(controls::SCORE_LINE_PX, lv_obj_get_height(line));
+    TEST_ASSERT_EQUAL_INT32(controls::SLIDER_MAX, lv_bar_get_max_value(bar));
+    for (lv_obj_t* o : {rays, curtain, valance, lettering, line}) {
+        TEST_ASSERT_FALSE(lv_obj_is_clickable(o));
+    }
+    lv_obj_t* key = controls::key(rig.parent, "A", controls::TARGET_PX, false);
+    lv_obj_t* lit = controls::key(rig.parent, "LEA", 158, true);
+    lv_obj_set_x(lit, 100);
+    lv_obj_add_event_cb(key, counted, LV_EVENT_CLICKED, nullptr);
+    TEST_ASSERT_EQUAL_STRING("A", lv_label_get_text(lv_obj_get_child(key, 0)));
+    TEST_ASSERT_EQUAL_HEX32(controls::color::BULB,
+                            hex(lv_obj_get_style_border_color(lit, LV_PART_MAIN)));
+    tap(key);
+    TEST_ASSERT_EQUAL_UINT32(1, clicks);
+}
+
+// fonts: every font holds the printable characters with the middle dot, the times sign and the
+// minus sign, and finds LVGL's symbols in its fallback.
 void testFonts() {
-    const lv_font_t* fonts[] = {&archivo_black_13,       &archivo_black_14,
-                                &archivo_black_17,       &archivo_black_20,
-                                &jetbrains_mono_bold_12, &jetbrains_mono_bold_16,
-                                &montserrat_semibold_12, &montserrat_semibold_14};
+    const lv_font_t* fonts[] = {
+        &archivo_black_9,        &archivo_black_12,       &archivo_black_13,
+        &archivo_black_14,       &archivo_black_17,       &archivo_black_20,
+        &archivo_black_30,       &archivo_black_40,       &jetbrains_mono_bold_12,
+        &jetbrains_mono_bold_16, &jetbrains_mono_bold_20, &montserrat_semibold_12,
+        &montserrat_semibold_14, &montserrat_bold_12,     &montserrat_bold_14,
+        &montserrat_bold_16};
+    // the middle dot, the times sign and the minus sign, which every font but a title's holds
+    const uint32_t signs[] = {0xB7, 0xD7, 0x2212};
     for (const lv_font_t* f : fonts) {
+        // The title sizes hold the capitals and the signs before them, and no lower case.
+        const bool title = f == &archivo_black_30 || f == &archivo_black_40;
         lv_font_glyph_dsc_t g;
-        for (uint32_t c = ' '; c <= '~'; ++c) {
+        for (uint32_t c = ' '; c <= (title ? '_' : '~'); ++c) {
             TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, c, 0));
             TEST_ASSERT_EQUAL_PTR(f, g.resolved_font);
+        }
+        for (uint32_t c : signs) {
+            if (!title) {
+                TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, c, 0));
+                TEST_ASSERT_EQUAL_PTR(f, g.resolved_font);
+            }
         }
         // LV_SYMBOL_RIGHT, which the fallback holds
         TEST_ASSERT_TRUE(lv_font_get_glyph_dsc(f, &g, 0xF054, 0));
@@ -321,6 +525,14 @@ int main() {
     RUN_TEST(testRow);
     RUN_TEST(testSlider);
     RUN_TEST(testDialog);
+    RUN_TEST(testCard);
+    RUN_TEST(testTile);
+    RUN_TEST(testPager);
+    RUN_TEST(testLevel);
+    RUN_TEST(testToggle);
+    RUN_TEST(testScrollList);
+    RUN_TEST(testAnimated);
+    RUN_TEST(testStage);
     RUN_TEST(testFonts);
     return UNITY_END();
 }

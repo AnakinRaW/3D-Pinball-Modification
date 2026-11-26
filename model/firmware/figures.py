@@ -228,6 +228,16 @@ dec("t_game_over", 3, "s", src=f"how long Game over shows before the first name 
 dec("t_name_idle", 30, "s", src=f"how long the name entry waits for a touch before it counts as Skip, {_HOST}")
 dec("t_play_again", 15, "s", src=f"the countdown on the high scores that starts the same game again, {_HOST}")
 dec("step_slider", 5, "%", src=f"the step of the minus and the plus beside a slider, {_HOST}")
+_VIEWS = "firmware/src/host/views/"
+for _key, _file, _name, _unit in (
+        ("t_toast_drop", "game-views.h", "DROP_MS", "ms"),
+        ("t_toast_fault", "game-views.h", "FAULT_MS", "ms"),
+        ("t_toast_recovered", "game-views.h", "WORKS_MS", "ms"),
+        ("t_curtain_close", "stage-views.h", "CLOSE_MS", "ms"),
+        ("t_curtain_open", "stage-views.h", "OPEN_MS", "ms"),
+        ("t_page_slide", "games-view.h", "SLIDE_MS", "ms"),
+        ("step_slider", "controls.h", "STEP_PERCENT", "%")):
+    MODEL.in_code(_key, file=_VIEWS + _file, name=_name, unit=_unit)
 
 # -- the bench, firmware/bench/load and firmware/bench/watchdog ----------------
 _LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"
