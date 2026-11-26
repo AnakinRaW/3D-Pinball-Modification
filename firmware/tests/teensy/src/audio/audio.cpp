@@ -275,7 +275,7 @@ static uint32_t endedEvents(uint32_t (&numbers)[EVENTS], uint8_t (&channels)[EVE
     uint32_t k = 0;
     for (uint32_t i = 0; i < n; ++i) {
         if (e[i].type == DriverEventType::SOUND_ENDED) {
-            numbers[k] = payload<DriverEventType::SOUND_ENDED>(e[i]);
+            numbers[k] = payload<DriverEventType::SOUND_ENDED>(e[i]).number;
             channels[k] = e[i].source;
             k = k + 1;
         }

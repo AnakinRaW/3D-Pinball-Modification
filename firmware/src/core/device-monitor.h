@@ -43,6 +43,19 @@ constexpr uint8_t faultPart(uint8_t source) {
     return source & PART_MASK;
 }
 
+/// Gets a device's name in words, such as "SD card", for the log.
+///
+/// @return  "device" for a value past the last device.
+const char* deviceName(Device d);
+
+/// Writes the log line of a fault event: a warning for DEVICE_FAILED with the device, the part and
+/// the error code, and a line of the level INFO for DEVICE_RECOVERED.
+///
+/// @param e  A driver event of any type. One of another type writes nothing.
+/// @return   Whether @p e was DEVICE_FAILED or DEVICE_RECOVERED.
+/// @note     The host calls it from the main loop for every driver event.
+bool logFault(const DriverEvent& e);
+
 /// Records the failed parts of every device and the error code each device last failed with.
 class FailedDevices {
 public:

@@ -86,8 +86,8 @@ public:
     /// @param channel  The channel, 0 to 3. Another one starts nothing.
     /// @param file     The sound's file.
     /// @param loop     Starts the sound over at its end, for as long as it plays.
-    /// @return         The sound's number, which its SOUND_ENDED carries. 0 for a channel past 3 or
-    ///                 before begin().
+    /// @return         The sound's number, which its SOUND_ENDED carries, below SoundEnd::NUMBERS.
+    ///                 0 for a channel past 3 or before begin().
     /// @note           The main task calls it. It returns at once.
     uint32_t play(uint8_t channel, const FileReader& file, bool loop = false);
 

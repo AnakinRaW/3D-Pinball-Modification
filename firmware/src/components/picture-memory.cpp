@@ -1,4 +1,5 @@
 #include "picture-memory.h"
+#include "logging/debug-log.h"
 
 static uint32_t roundUp(size_t bytes) {
     const size_t rounded = (bytes + PictureMemory::ALIGN_BYTES - 1) / PictureMemory::ALIGN_BYTES *
@@ -78,10 +79,13 @@ uint8_t* PictureMemory::take(size_t bytes, bool large) {
 }
 
 void PictureMemory::give(const uint8_t* room) {
-    if (base == nullptr || room < base || room >= base + total) {
+    if (room == nullptr) {
         return;
     }
-    table.remove(uint32_t(room - base));
+    if (base == nullptr || room < base || room >= base + total ||
+        !table.remove(uint32_t(room - base))) {
+        DEBUG_LOG("PictureMemory::give: a room it never handed out\n");
+    }
 }
 
 bool PictureMemory::fits(size_t count, size_t bytes, uint8_t* const* freed, size_t nFreed) const {

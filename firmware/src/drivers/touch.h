@@ -129,6 +129,7 @@ private:
 
     // what the bus's interrupt alone keeps about the touch on the screen
     TouchPoint downAt = {};     // where the finger came down
+    bool failing = false;       // the last read failed
     TouchPoint reported = {};   // the position last published
     uint32_t downUs = 0;        // nowUs() when it came down
     bool resting = false;       // it has stayed within SLOP_PX of where it came down

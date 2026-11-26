@@ -18,12 +18,15 @@
 //                    together to a sum of 1, and each keeps the volume set
 //   start-volumes    begin() sets the starting volumes as the two setters do
 //   names            a name plays from the game's audio directory, a long one finds no file
+//   failed-files     a missing file and a file in another format each write a warning with
+//                    the file's name, a sound that plays out none
 //   reset            reset() silences every channel, forgets every track and sets the volumes
 //
 // Run: pio test -e computer, which runs in CI as well.
 
 #include "components/file-system.h"
 #include "components/sounds.h"
+#include "logging/logger.h"
 #include <map>
 #include <string>
 #include <unity.h>
@@ -93,6 +96,32 @@ struct TestService : StorageService {
         }
     }
 };
+
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log for the test that reads it. It lives as long as the program, since
+// logWarning() keeps writing to the logger that began last.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[1024];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
 
 // The host's calls to the file system and to the sounds.
 class GameHost {
@@ -498,6 +527,43 @@ static void testNames() {
     TEST_ASSERT_TRUE(ended);
 }
 
+// Gets how many warnings of the sounds the log holds.
+static size_t soundsWarnings() {
+    logger.flush();
+    logger.update();
+    logger.update();
+    size_t count = 0;
+    for (size_t at = logA.content.find(" W sounds "); at != std::string::npos;
+         at = logA.content.find(" W sounds ", at + 1)) {
+        ++count;
+    }
+    return count;
+}
+
+static void testFailedFiles() {
+    logger.begin(LogFileStart{}, LogFileStart{});
+    Rig rig;
+    rig.card.files["/games/a/audio/bad.wav"] = std::string(200, 'x');
+    const size_t before = soundsWarnings();
+    rig.sounds.play("e1.wav");
+    rig.sounds.play("gone.wav");
+    rig.sounds.play("bad.wav");
+    rig.sounds.music(LOW_LAYER, "lost.wav");
+    rig.blocks(SETTLE);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+    for (const char* line : {"W sounds /games/a/audio/gone.wav is missing or empty",
+                             "W sounds /games/a/audio/bad.wav is no WAV",
+                             "W sounds /games/a/audio/lost.wav is missing or empty"}) {
+        TEST_ASSERT_TRUE_MESSAGE(logA.content.find(line) != std::string::npos, line);
+    }
+    // The missing track still ends as a track that played out.
+    TEST_ASSERT_EQUAL_UINT32(1, rig.events.size());
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(EventType::MUSIC_ENDED), uint8_t(rig.events[0].type));
+    // The effect that plays out writes nothing.
+    rig.blocks(4 * TRACK_BLOCKS + 10);
+    TEST_ASSERT_EQUAL_UINT32(before + 3, soundsWarnings());
+}
+
 static void testReset() {
     Rig rig;
     rig.sounds.music(LOW_LAYER, "a.wav");
@@ -543,6 +609,7 @@ int main() {
     RUN_TEST(testBalance);
     RUN_TEST(testStartVolumes);
     RUN_TEST(testNames);
+    RUN_TEST(testFailedFiles);
     RUN_TEST(testReset);
     return UNITY_END();
 }

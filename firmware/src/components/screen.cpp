@@ -1,6 +1,7 @@
 #include "screen.h"
 #include "io/psram.h"
 #include "logging/debug-log.h"
+#include "logging/logger.h"
 #include <Arduino.h>
 
 constexpr uint32_t PIXEL_BYTES = 2;   // RGB565
@@ -64,7 +65,7 @@ void Screen::begin() {
     uint8_t* memory = io::takeFreePsram(bytes);
     pictures.begin(memory, bytes);
     if (memory == nullptr) {
-        DEBUG_LOG("screen: no PSRAM, so every picture fails to load\n");
+        logWarning("screen", "no PSRAM");
     }
 }
 
@@ -120,6 +121,7 @@ void Screen::restart() {
         DEBUG_LOG("Screen::restart: no begin() yet\n");
         return;
     }
+    DEBUG_LOG("screen: the display starts anew, and the whole screen draws again\n");
     display.restart();
     redraw = true;
 }
@@ -139,6 +141,7 @@ lv_obj_t* Screen::slide(Layer layer) {
     lv_obj_set_scrollable(box, false);
     lv_obj_set_clickable(box, false);
     slides.insert(Slide{layer.key, layer.priority, box});
+    DEBUG_LOG("screen: key %u takes a slide at priority %u\n", layer.key, layer.priority);
     restack();
     return box;
 }
@@ -150,6 +153,7 @@ void Screen::remove(Layer layer) {
     }
     // Deleting the slide deletes its objects. A picture's image leaves the picture's list, and the
     // video player's image ends its video.
+    DEBUG_LOG("screen: key %u removes its slide\n", layer.key);
     lv_obj_t* box = s->box;
     slides.removeIf([&](const Slide& s) { return s.key == layer.key; });
     lv_obj_delete(box);
@@ -373,7 +377,7 @@ void Picture::settle() {
         if (read.status() != FileStatus::SUCCEEDED || read.bytes() < HEADER_BYTES ||
             header[0] != LV_IMAGE_HEADER_MAGIC || !shown || width == 0 || width > Display::WIDTH ||
             height == 0 || height > Display::HEIGHT || stride != width * PIXEL_BYTES) {
-            DEBUG_LOG("screen: %s holds no picture the screen shows\n", file.name());
+            logWarning("screen", "%s is missing or holds no picture the screen shows", file.name());
             failedLoad = true;
             step = Step::IDLE;
         } else {
@@ -383,7 +387,7 @@ void Picture::settle() {
             const bool full = width == Display::WIDTH && height == Display::HEIGHT;
             room = screen.pictures.take(fileBytes, full);
             if (room == nullptr) {
-                DEBUG_LOG("screen: the picture memory has no room for %s\n", file.name());
+                logWarning("screen", "the picture memory has no room for %s", file.name());
                 failedLoad = true;
                 step = Step::IDLE;
             } else {
@@ -403,13 +407,15 @@ void Picture::settle() {
             }
         }
     } else if (read.status() != FileStatus::SUCCEEDED || read.bytes() < fileBytes) {
-        DEBUG_LOG("screen: %s is short\n", file.name());
+        logWarning("screen", "%s is short or failed to read", file.name());
         screen.pictures.give(room);
         room = nullptr;
         image = {};
         failedLoad = true;
         step = Step::IDLE;
     } else {
+        DEBUG_LOG("screen: %s has loaded, %lu bytes\n", file.name(),
+                  static_cast<unsigned long>(fileBytes));
         step = Step::LOADED;
         fill();
     }
