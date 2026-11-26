@@ -5,11 +5,11 @@ public:
     Drain(ServoDriver& servo, ContactDriver& contacts, Lamps& lamps, uint8_t exit)
         : servo_(servo), contacts_(contacts), lamps_(lamps), exit_(exit) {}
 
-    // turns BallDrained into Drained, a store foil's closure into BallStored once stored() rises
+    // turns BALL_DRAINED into Drained, a store foil's closure into BallStored once stored() rises
     // above the counted number, and the exit channel's ball during a release into BallReleased
     bool translate(const DriverEvent& in, PinballEvents& out) override {
         out = {};
-        if (in.type == DriverEventType::BallDrained) {
+        if (in.type == DriverEventType::BALL_DRAINED) {
             return emit(out, {in.time, EventType::Drained, 0, 0});
         }
         if (in.type == DriverEventType::ContactClosed) {
