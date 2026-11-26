@@ -19,9 +19,9 @@ jobs:
     name: Check the firmware's layout
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -39,17 +39,17 @@ jobs:
     name: Build the release firmware and check its code with clang-tidy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A job's env cannot read the runner context, so a step hands the folder to every later step
       - name: Keep PlatformIO's folders under the runner's temporary folder
         run: echo "LOCALAPPDATA=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.platformio
           key: platformio-release-${{ hashFiles('platformio.ini') }}
@@ -74,17 +74,17 @@ jobs:
     name: Build the test image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A job's env cannot read the runner context, so a step hands the folder to every later step
       - name: Keep PlatformIO's folders under the runner's temporary folder
         run: echo "LOCALAPPDATA=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.platformio
           key: platformio-test-image-${{ hashFiles('platformio.ini', 'firmware/tests/teensy/platformio.ini') }}
@@ -102,17 +102,17 @@ jobs:
     name: Run the computer tests and match every test with its row
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A job's env cannot read the runner context, so a step hands the folder to every later step
       - name: Keep PlatformIO's folders under the runner's temporary folder
         run: echo "LOCALAPPDATA=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.platformio
           key: platformio-computer-${{ hashFiles('platformio.ini') }}
