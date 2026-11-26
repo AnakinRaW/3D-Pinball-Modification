@@ -65,7 +65,7 @@ Modification of the Robotime ROKR Pinball Machine (EG01) wooden 3D-puzzle kit wi
 - `assets/playfield/`: the vector drawing of the machine, with its rules in [`assets/playfield/CLAUDE.md`](assets/playfield/CLAUDE.md)
 - `assets/cgi/`: the machine in 3D that the intro and the trailer are filmed on, with its lights and the logo, built from the drawing by the Blender and Python scripts in `assets/cgi/blender/`, as [`assets/cgi/README.md`](assets/cgi/README.md) gives
 - `assets/intro/`: the intro film and its sound, animated on that machine by the scripts in `assets/intro/blender/`, as [`assets/intro/README.md`](assets/intro/README.md) gives
-- `assets/trailer/`: the trailer, filmed on the same machine by the scripts in `assets/trailer/blender/`, as [`assets/trailer/README.md`](assets/trailer/README.md) gives
+- `assets/trailer/`: the trailer, filmed on the same machine by the scripts in `assets/trailer/blender/`
 
 ## Commands
 
