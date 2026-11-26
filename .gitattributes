@@ -66,3 +66,6 @@
 
 # Keep generated fabrication output out of diffs and language statistics.
 hardware/pcb/**/fab/** linguist-generated=true
+
+# The host screens' fonts are tables tools/fonts.py writes, and CI checks them against it.
+firmware/src/host/views/fonts/*.c linguist-generated=true -diff

@@ -6,15 +6,34 @@ on:
       - "firmware/**"
       - "platformio.ini"
       - "docs/firmware/testing.md"
+      - "tools/fonts.py"
       - ".github/workflows/firmware.yml"
   pull_request:
     paths:
       - "firmware/**"
       - "platformio.ini"
       - "docs/firmware/testing.md"
+      - "tools/fonts.py"
       - ".github/workflows/firmware.yml"
 
 jobs:
+  fonts:
+    name: Check the host screens' fonts against their conversion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Convert the fonts again and compare them with firmware/src/host/views/fonts
+        run: python tools/fonts.py --check
+
   format:
     name: Check the firmware's layout
     runs-on: ubuntu-latest
