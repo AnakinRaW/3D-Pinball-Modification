@@ -1,7 +1,7 @@
 // Draws what the machine reports: the warning lights with a tile per device, and the list of the
 // warnings the logger holds.
 //
-// Design: docs/firmware/host-screens.md, Machine and service.
+// Design: docs/firmware/host-screens.md, Status and service.
 #pragma once
 #include "controls.h"
 #include "view.h"

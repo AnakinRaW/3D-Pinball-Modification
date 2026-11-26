@@ -1,26 +1,41 @@
-// Draws the pages behind the gear and the menu: Settings with its four tiles and the switch of the
-// animated background, Sound and Lights with their levels, and Service with its steps for the
-// operator, the ball sensors and their recording, and the touch calibration.
+// Draws the pages behind the gear and the menu: Settings with its four tiles and the way to
+// Service, Options with its switches, Sound and Lights with their levels, and Service with its
+// steps for the operator, the ball sensors and their recording, and the touch calibration.
 //
-// Design: docs/firmware/host-screens.md, Settings, Sound and lights, and Machine and service.
+// Design: docs/firmware/host-screens.md, Settings, Sound and lights, and Status and service.
 #pragma once
 #include "controls.h"
 #include "view.h"
 
-/// Settings: tiles for Sound, Lights, Machine and Service, each with its current state, and the
-/// switch of the animated background below them.
+/// Settings: tiles for Sound, Lights, Status and Options, each with its current state, and the row
+/// that leads to Service below them.
 class SettingsView : public View {
 public:
-    /// What the player can press. ANIMATED comes with 1 for on and 0 for off.
-    enum Action : uint8_t { BACK, SOUND, LIGHTS, MACHINE, SERVICE, ANIMATED };
+    /// What the player can press.
+    enum Action : uint8_t { BACK, SOUND, LIGHTS, STATUS, SERVICE, OPTIONS };
 
-    /// What the tiles and the switch show.
+    /// What the tiles show, each in one line.
     struct State {
-        const char* sound = "";     // such as the volumes
-        const char* lights = "";    // such as the brightnesses
-        const char* machine = "";   // such as the count of faults and warnings
-        bool fault = false;         // a device is failed, so the Machine tile glows red
-        bool animated = true;       // the background turns
+        const char* sound = "";     // the volumes, each after its icon
+        const char* lights = "";    // the brightnesses, each after its icon
+        const char* status = "";    // the count of faults and warnings
+        bool fault = false;         // a device is failed, so the Status tile glows red
+        const char* options = "";   // what the options hold
+    };
+
+    void build(lv_obj_t* parent, const State& state, Pressed pressed, void* context);
+};
+
+/// Options: a list of switches, one for each choice the host saves.
+class OptionsView : public View {
+public:
+    /// What the player can press. ANIMATED and BOOT_FILM come with 1 for on and 0 for off.
+    enum Action : uint8_t { BACK, ANIMATED, BOOT_FILM };
+
+    /// What the switches show.
+    struct State {
+        bool animated = true;   // the background turns
+        bool bootFilm = true;   // the boot film plays at the next start
     };
 
     void build(lv_obj_t* parent, const State& state, Pressed pressed, void* context);

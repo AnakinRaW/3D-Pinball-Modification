@@ -23,7 +23,7 @@ export type ScreenEventType =
   | "menuClosed"
   | "sound"
   | "lights"
-  | "machine"
+  | "status"
   | "endGame"
   | "close"
   | "control"

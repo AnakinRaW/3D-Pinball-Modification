@@ -8,6 +8,7 @@
 #include "screen-simulator.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <stdio.h>
 #include <string>
 #include <vector>
 #include "components/screen.h"
@@ -544,9 +545,11 @@ void GameHost::build(Screen& screen) {
     menu.build(screen.hostLayer(), chosen, nullptr);
     // Made-up figures stand in for the machine's, as the menu's storyboard shows them.
     EdgeMenuView::Status status;
-    status.sound = "50 % / 70 %";
-    status.lights = "80 % / 60 %";
-    status.machine = "1 fault";
+    status.sound = LV_SYMBOL_AUDIO " 50 %   " LV_SYMBOL_BELL " 70 %";
+    static char lights[32];
+    snprintf(lights, sizeof lights, "%s 80 %%   %s 60 %%", controls::ICON_BULB, controls::ICON_SUN);
+    status.lights = lights;
+    status.devices = "1 fault";
     status.fault = true;
     menu.show(status);
 }
@@ -620,7 +623,7 @@ void GameHost::tapped() {
 }
 
 void GameHost::chosen(EdgeMenuView::Item item, void*) {
-    static const char* const NAMES[] = {"sound", "lights", "machine", "endGame", "close"};
+    static const char* const NAMES[] = {"sound", "lights", "status", "endGame", "close"};
     // The items lead to the gallery's pages, as the host's menu opens them.
     static const char* const PAGES[] = {"sound", "lights", "warning-lights", "end-game", nullptr};
     note(NAMES[uint8_t(item)], 0, 0);

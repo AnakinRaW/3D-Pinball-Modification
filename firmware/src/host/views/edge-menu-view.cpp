@@ -70,12 +70,12 @@ void EdgeMenuView::build(lv_obj_t* parent, Chosen chosenFn, void* contextArg) {
 
     lv_obj_t* sound = row(LV_SYMBOL_VOLUME_MAX, controls::color::RAMP, "Sound", Item::SOUND);
     lv_obj_t* lights = row(LV_SYMBOL_CHARGE, controls::color::BOARD, "Lights", Item::LIGHTS);
-    lv_obj_t* machine = row("", CREAM, "Machine", Item::MACHINE);
+    lv_obj_t* status = row("", CREAM, "Status", Item::STATUS);
     soundRow = sound;
     lightsRow = lights;
-    machineRow = machine;
-    machineBulb = controls::bulb(machine, controls::Light::WORKS);
-    lv_obj_align(machineBulb, LV_ALIGN_LEFT_MID, BULB_X_PX, 0);
+    statusRow = status;
+    statusBulb = controls::bulb(status, controls::Light::WORKS);
+    lv_obj_align(statusBulb, LV_ALIGN_LEFT_MID, BULB_X_PX, 0);
 
     lv_obj_t* end = controls::button(drawer, controls::Plaque::RED, LV_SYMBOL_LEFT "  END GAME",
                                      WIDTH_PX - INSET_PX * HALF - RIM_PX);
@@ -117,9 +117,8 @@ void EdgeMenuView::show(const Status& status) {
     }
     controls::setDetail(soundRow, status.sound, MUTED);
     controls::setDetail(lightsRow, status.lights, MUTED);
-    controls::setDetail(machineRow, status.machine, status.fault ? FAULT_TEXT : MUTED);
-    controls::setLight(machineBulb,
-                       status.fault ? controls::Light::FAILED : controls::Light::WORKS);
+    controls::setDetail(statusRow, status.devices, status.fault ? FAULT_TEXT : MUTED);
+    controls::setLight(statusBulb, status.fault ? controls::Light::FAILED : controls::Light::WORKS);
 }
 
 void EdgeMenuView::hint() {

@@ -51,6 +51,7 @@ CurtainView curtain;
 GameOverView gameOver;
 GamesView games;
 SettingsView settings;
+OptionsView options;
 LevelsView levels;
 ServiceView service;
 SensorsView sensors;
@@ -244,25 +245,38 @@ void curtainScene(lv_obj_t* parent) {
 }
 
 const Step SETTINGS_STEPS[] = {{"BACK", BACK},         {"SOUND", "sound"},
-                               {"LIGHTS", "lights"},   {"MACHINE", "warning-lights"},
-                               {"SERVICE", "service"}, {"ANIMATED", nullptr}};
+                               {"LIGHTS", "lights"},   {"STATUS", "warning-lights"},
+                               {"SERVICE", "service"}, {"OPTIONS", "options"}};
+const Step OPTIONS_STEPS[] = {{"BACK", BACK}, {"ANIMATED", nullptr}, {"BOOT FILM", nullptr}};
+bool bootFilm = true;   // the boot film's switch, which the host saves for the next start
 
-void settingsPressed(uint8_t action, int32_t value, void* context) {
-    if (action == SettingsView::ANIMATED) {
-        // The host keeps the choice in the saved settings, and every sunburst follows it.
+void optionsPressed(uint8_t action, int32_t value, void* context) {
+    // The host keeps both choices in the saved settings. Every sunburst follows the first at once,
+    // the boot film the second at the next start.
+    if (action == OptionsView::ANIMATED) {
         controls::setAnimated(value != 0);
+    } else if (action == OptionsView::BOOT_FILM) {
+        bootFilm = value != 0;
     }
     pressed(action, value, context);
 }
 
 void settingsPage(lv_obj_t* parent) {
     SettingsView::State s;
-    s.sound = "50 % \xC2\xB7 70 %";
-    s.lights = "80 % \xC2\xB7 60 %";
-    s.machine = "1 fault \xC2\xB7 3 warnings";
+    s.sound = LV_SYMBOL_AUDIO " 50 %   " LV_SYMBOL_BELL " 70 %";
+    static char lights[32];
+    snprintf(lights, sizeof lights, "%s 80 %%   %s 60 %%", controls::ICON_BULB, controls::ICON_SUN);
+    s.lights = lights;
+    s.status = "1 fault \xC2\xB7 3 warnings";
     s.fault = true;
+    settings.build(parent, s, pressed, const_cast<Step*>(SETTINGS_STEPS));
+}
+
+void optionsPage(lv_obj_t* parent) {
+    OptionsView::State s;
     s.animated = controls::isAnimated();
-    settings.build(parent, s, settingsPressed, const_cast<Step*>(SETTINGS_STEPS));
+    s.bootFilm = bootFilm;
+    options.build(parent, s, optionsPressed, const_cast<Step*>(OPTIONS_STEPS));
 }
 
 // -- in a game
@@ -588,6 +602,7 @@ const Entry SCENES[] = {
     {{"broken-game", "A game that cannot start"}, [](lv_obj_t* p) { gameChoice(p, 1); }, false},
     {{"curtain", "Curtain"}, curtainScene, false},
     {{"settings", "Settings"}, settingsPage, false},
+    {{"options", "Options"}, optionsPage, false},
     {{"game-runs", "Game runs"}, gameRuns, true},
     {{"end-game", "End the game"}, endGame, true},
     {{"device-fails", "A device fails"}, deviceFails, true},

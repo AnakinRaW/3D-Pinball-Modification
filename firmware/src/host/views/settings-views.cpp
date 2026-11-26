@@ -20,7 +20,7 @@ constexpr int32_t TILE_TEXT_X = 46;
 constexpr int32_t TILE_TITLE_Y = 12;
 constexpr int32_t TILE_DETAIL_X = 10;   // below the icon, across the whole tile
 constexpr int32_t TILE_DETAIL_Y = 46;
-constexpr int32_t SWITCH_Y = 192;
+constexpr int32_t SERVICE_Y = 192;
 // the Machine tile's three bulbs
 struct Bulb {
     controls::Light light;
@@ -31,7 +31,7 @@ constexpr Bulb CLUSTER[] = {{controls::Light::FAILED, 12, 10},
                             {controls::Light::WARNING, 12, 30},
                             {controls::Light::WORKS, 26, 20}};
 constexpr uint32_t SOUND_ICON = 0x6fb2ec;
-constexpr uint32_t SERVICE_ICON = 0xcfd4da;
+constexpr uint32_t OPTIONS_ICON = 0xcfd4da;
 constexpr int32_t ICON_SCALE = 512;   // twice LVGL's transform scale of 256
 constexpr int32_t WHOLE_PERCENT = 100;
 
@@ -157,23 +157,22 @@ void SettingsView::build(lv_obj_t* parent, const State& state, Pressed pressed, 
         const char* icon;
         uint32_t iconRgb;
     };
-    const Tile tiles[] = {
-        {SOUND, "SOUND", state.sound, LV_SYMBOL_VOLUME_MAX, SOUND_ICON},
-        {LIGHTS, "LIGHTS", state.lights, LV_SYMBOL_CHARGE, color::BOARD},
-        {MACHINE, "MACHINE", state.machine, nullptr, 0},
-        {SERVICE, "SERVICE", "Set up this machine", LV_SYMBOL_SETTINGS, SERVICE_ICON}};
+    const Tile tiles[] = {{SOUND, "SOUND", state.sound, LV_SYMBOL_VOLUME_MAX, SOUND_ICON},
+                          {LIGHTS, "LIGHTS", state.lights, LV_SYMBOL_CHARGE, color::BOARD},
+                          {STATUS, "STATUS", state.status, nullptr, 0},
+                          {OPTIONS, "OPTIONS", state.options, LV_SYMBOL_SETTINGS, OPTIONS_ICON}};
     for (int32_t i = 0; i < int32_t(sizeof(tiles) / sizeof(tiles[0])); ++i) {
         const Tile& t = tiles[i];
-        const bool machine = t.action == MACHINE;
+        const bool status = t.action == STATUS;
         const controls::Tone tone =
-            machine && state.fault ? controls::Tone::FAULT : controls::Tone::NOTE;
+            status && state.fault ? controls::Tone::FAULT : controls::Tone::NOTE;
         lv_obj_t* o = controls::tile(root, tone, TILE_WIDTH, TILE_HEIGHT);
         lv_obj_set_pos(o, INSET_PX + (i % HALF) * (TILE_WIDTH + TILE_GAP_PX),
                        CONTENT_Y + (i / HALF) * (TILE_HEIGHT + TILE_GAP_PX));
         bind(o, t.action);
         placed(controls::label(o, t.name, &archivo_black_14, color::CREAM), TILE_TEXT_X,
                TILE_TITLE_Y);
-        if (machine) {
+        if (status) {
             // Three bulbs stand for the warning lights: a failed device, a warning and one that
             // works.
             for (const Bulb& b : CLUSTER) {
@@ -188,20 +187,43 @@ void SettingsView::build(lv_obj_t* parent, const State& state, Pressed pressed, 
             lv_obj_set_style_transform_pivot_y(icon, 0, 0);
         }
         placed(controls::label(o, t.detail, &montserrat_semibold_12,
-                               machine && state.fault ? color::FAULT_TEXT : color::MUTED),
+                               status && state.fault ? color::FAULT_TEXT : color::MUTED),
                TILE_DETAIL_X, TILE_DETAIL_Y);
     }
-    lv_obj_t* animated = controls::toggle(root, "Animated background", state.animated,
-                                          controls::SCREEN_WIDTH_PX - INSET_PX * HALF);
-    placed(animated, INSET_PX, SWITCH_Y);
-    lv_obj_add_event_cb(
-        animated,
-        [](lv_event_t* e) {
-            const auto* v = static_cast<const SettingsView*>(lv_event_get_user_data(e));
-            const bool on = controls::isOn(static_cast<lv_obj_t*>(lv_event_get_current_target(e)));
-            v->report(ANIMATED, on ? 1 : 0);
-        },
-        LV_EVENT_VALUE_CHANGED, this);
+    lv_obj_t* service =
+        controls::row(root, "Service", "Set up this machine",
+                      controls::SCREEN_WIDTH_PX - INSET_PX * HALF, controls::TARGET_PX);
+    placed(service, INSET_PX, SERVICE_Y);
+    bind(service, SERVICE);
+}
+
+void OptionsView::build(lv_obj_t* parent, const State& state, Pressed pressed, void* context) {
+    lv_obj_t* root = create(parent, true, pressed, context);
+    lv_obj_t* back = nullptr;
+    page(root, "OPTIONS", &back);
+    bind(back, BACK);
+    lv_obj_t* list = controls::scrollList(root, LIST_Y, controls::SCREEN_HEIGHT_PX - LIST_Y);
+    struct Switch {
+        Action action;
+        const char* title;
+        bool on;
+    };
+    const Switch switches[] = {{ANIMATED, "Animated background", state.animated},
+                               {BOOT_FILM, "Boot film", state.bootFilm}};
+    for (const Switch& sw : switches) {
+        lv_obj_t* s = controls::toggle(list, sw.title, sw.on, lv_pct(WHOLE_PERCENT));
+        // The switch carries its action, which a change reports with the switch's state.
+        lv_obj_set_user_data(s, reinterpret_cast<void*>(uintptr_t(sw.action)));
+        lv_obj_add_event_cb(
+            s,
+            [](lv_event_t* e) {
+                const auto* v = static_cast<const OptionsView*>(lv_event_get_user_data(e));
+                auto* o = static_cast<lv_obj_t*>(lv_event_get_current_target(e));
+                const auto action = uint8_t(reinterpret_cast<uintptr_t>(lv_obj_get_user_data(o)));
+                v->report(action, controls::isOn(o) ? 1 : 0);
+            },
+            LV_EVENT_VALUE_CHANGED, this);
+    }
 }
 
 void LevelsView::build(lv_obj_t* parent, const Levels& l, Pressed pressed, void* context) {

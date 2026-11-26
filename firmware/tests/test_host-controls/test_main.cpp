@@ -218,7 +218,8 @@ void testBulb() {
     TEST_ASSERT_EQUAL_INT32(0, lv_obj_get_style_shadow_width(b, LV_PART_MAIN));
 }
 
-// row: a row shows its title and detail, takes the touch, and changes its detail.
+// row: a row shows its title and detail, takes the touch, and changes its detail. A row without a
+// detail sets its title in its middle until a detail comes.
 void testRow() {
     Rig rig;
     lv_obj_t* r = controls::row(rig.parent, "Record ball sensors", "After a change", 300);
@@ -243,6 +244,20 @@ void testRow() {
     TEST_ASSERT_EQUAL_STRING(LV_SYMBOL_VOLUME_MAX, lv_label_get_text(icon));
     TEST_ASSERT_EQUAL_HEX32(controls::color::RAMP,
                             hex(lv_obj_get_style_text_color(icon, LV_PART_MAIN)));
+    settle();
+    const auto middleOf = [](lv_obj_t* o) {
+        lv_area_t a;
+        lv_obj_get_coords(o, &a);
+        return (a.y1 + a.y2) / 2;
+    };
+    lv_obj_t* title = lv_obj_get_child(menu, 1);
+    TEST_ASSERT_INT32_WITHIN(1, middleOf(menu), middleOf(title));
+    controls::setDetail(menu, "50 %", controls::color::MUTED);
+    settle();
+    TEST_ASSERT_TRUE(middleOf(title) < middleOf(menu));
+    controls::setDetail(menu, "", controls::color::MUTED);
+    settle();
+    TEST_ASSERT_INT32_WITHIN(1, middleOf(menu), middleOf(title));
 }
 
 // slider: minus and plus step the value by STEP_PERCENT, stop at 0 and SLIDER_MAX, and tell the

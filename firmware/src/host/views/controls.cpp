@@ -383,6 +383,15 @@ void setLight(lv_obj_t* bulb, Light light) {
     lv_obj_set_style_shadow_opa(bulb, CARD_SHADOW_OPA, 0);
 }
 
+/// Places a row's title at @p x, in the row's middle without a detail and above it with one.
+static void placeTitle(lv_obj_t* title, int32_t x, bool alone) {
+    if (alone) {
+        lv_obj_align(title, LV_ALIGN_LEFT_MID, x, 0);
+    } else {
+        lv_obj_align(title, LV_ALIGN_TOP_LEFT, x, TITLE_Y_PX);
+    }
+}
+
 lv_obj_t* row(lv_obj_t* parent, const char* title, const char* detail, int32_t width,
               int32_t height, const char* icon, uint32_t iconRgb) {
     ensureStyles();
@@ -393,7 +402,7 @@ lv_obj_t* row(lv_obj_t* parent, const char* title, const char* detail, int32_t w
     const int32_t x = icon == nullptr ? TEXT_X_PX : ICON_TEXT_X_PX;
     // The detail comes first, so setDetail() finds it as the row's first child.
     lv_obj_set_pos(label(r, detail, &montserrat_semibold_12, color::MUTED), x, DETAIL_Y_PX);
-    lv_obj_set_pos(label(r, title, &montserrat_bold_14, color::CREAM), x, TITLE_Y_PX);
+    placeTitle(label(r, title, &montserrat_bold_14, color::CREAM), x, detail[0] == '\0');
     lv_obj_align(label(r, LV_SYMBOL_RIGHT, &lv_font_montserrat_14, color::GOLD), LV_ALIGN_RIGHT_MID,
                  -CHEVRON_X_PX, 0);
     if (icon != nullptr && icon[0] != '\0') {
@@ -406,6 +415,7 @@ lv_obj_t* row(lv_obj_t* parent, const char* title, const char* detail, int32_t w
 void setDetail(lv_obj_t* row, const char* detail, uint32_t hex) {
     lv_obj_t* d = lv_obj_get_child(row, 0);
     lv_label_set_text(d, detail);
+    placeTitle(lv_obj_get_child(row, 1), lv_obj_get_x(d), detail[0] == '\0');
     lv_obj_set_style_text_color(d, rgb(hex), 0);
 }
 

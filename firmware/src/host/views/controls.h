@@ -118,6 +118,7 @@ void setLight(lv_obj_t* bulb, Light light);
 
 /// Creates a list row: a title, a line of detail and a chevron, on a velvet plaque.
 ///
+/// @param detail   The line under the title. "" sets the title in the row's middle.
 /// @param height   ROW_PX in a list, TARGET_PX in the menu.
 /// @param icon     A symbol before the texts, "" for room that the caller fills itself, nullptr
 ///                 for no room.
@@ -127,7 +128,7 @@ void setLight(lv_obj_t* bulb, Light light);
 lv_obj_t* row(lv_obj_t* parent, const char* title, const char* detail, int32_t width,
               int32_t height = ROW_PX, const char* icon = nullptr, uint32_t iconRgb = color::CREAM);
 
-/// Changes a row's line of detail and its color.
+/// Changes a row's line of detail and its color. "" sets the title in the row's middle.
 void setDetail(lv_obj_t* row, const char* detail, uint32_t rgb);
 
 /// Creates a slider TARGET_PX high: a minus, the track with its steel ball and a plus.

@@ -9,7 +9,7 @@
 //                    score, gives a single player the score large, and goes on at a tap
 //   games            the game choice reports Play, the gear and the status bulb, turns its ring of
 //                    cards from the last game to the first, and keeps Play off for a broken game
-//   settings         the four tiles report their pages, Machine glows red for a fault, and the
+//   settings         the four tiles report their pages, Status glows red for a fault, and the
 //                    switch of the animated background reports
 //   levels           the levels show and report their values, each from 0 to 100 %
 //   service          the steps report their pages, the firmware and the config show, and a change
@@ -518,17 +518,16 @@ void testGamesPreview() {
     TEST_ASSERT_EQUAL_INT32(2, last.value);
 }
 
-// settings: the four tiles report their pages, Machine glows red for a fault, and the switch of
-// the animated background reports each change.
+// settings: the four tiles and the Service row report their pages, Status glows red for a fault,
+// and a tile's detail with its icons fits the tile.
 void testSettings() {
     Rig rig;
     SettingsView v;
     SettingsView::State s;
-    s.sound = "50 %";
+    s.sound = LV_SYMBOL_AUDIO " 50 %   " LV_SYMBOL_BELL " 70 %";
     s.lights = "80 %";
-    s.machine = "1 fault";
+    s.status = "1 fault";
     s.fault = true;
-    s.animated = true;
     v.build(rig.parent, s, pressed, nullptr);
     run();
     const struct {
@@ -536,24 +535,58 @@ void testSettings() {
         SettingsView::Action action;
     } tiles[] = {{"SOUND", SettingsView::SOUND},
                  {"LIGHTS", SettingsView::LIGHTS},
-                 {"MACHINE", SettingsView::MACHINE},
-                 {"SERVICE", SettingsView::SERVICE}};
+                 {"STATUS", SettingsView::STATUS},
+                 {"OPTIONS", SettingsView::OPTIONS},
+                 {"Service", SettingsView::SERVICE}};
     for (const auto& t : tiles) {
         tapText(v.root(), t.name);
         TEST_ASSERT_EQUAL_INT32(t.action, last.action);
     }
     tapText(v.root(), LV_SYMBOL_LEFT);
     TEST_ASSERT_EQUAL_INT32(SettingsView::BACK, last.action);
-    lv_obj_t* machine = lv_obj_get_parent(find(v.root(), "MACHINE"));
+    lv_obj_t* status = lv_obj_get_parent(find(v.root(), "STATUS"));
     TEST_ASSERT_EQUAL_HEX32(controls::color::NEON,
-                            hex(lv_obj_get_style_border_color(machine, LV_PART_MAIN)));
+                            hex(lv_obj_get_style_border_color(status, LV_PART_MAIN)));
     TEST_ASSERT_NOT_NULL(find(v.root(), "1 fault"));
     TEST_ASSERT_NOT_NULL(find(v.root(), "Set up this machine"));
-    tapText(v.root(), "Animated background");
-    TEST_ASSERT_EQUAL_INT32(SettingsView::ANIMATED, last.action);
-    TEST_ASSERT_EQUAL_INT32(0, last.value);
-    tapText(v.root(), "Animated background");
-    TEST_ASSERT_EQUAL_INT32(1, last.value);
+    // a tile's detail with its icons stands in one line inside the tile
+    lv_obj_t* detail = find(v.root(), " 70 %");
+    lv_area_t d;
+    lv_area_t t;
+    lv_obj_get_coords(detail, &d);
+    lv_obj_get_coords(lv_obj_get_parent(detail), &t);
+    TEST_ASSERT_TRUE(d.x2 < t.x2 && d.y2 < t.y2);
+}
+
+// options: Options lists a switch for the animated background and one for the boot film, each
+// reports off and then on, and a switch built off shows off.
+void testOptions() {
+    Rig rig;
+    OptionsView v;
+    OptionsView::State s;
+    v.build(rig.parent, s, pressed, nullptr);
+    run();
+    const struct {
+        const char* title;
+        OptionsView::Action action;
+    } switches[] = {{"Animated background", OptionsView::ANIMATED},
+                    {"Boot film", OptionsView::BOOT_FILM}};
+    for (const auto& sw : switches) {
+        presses = 0;
+        tapText(v.root(), sw.title);
+        TEST_ASSERT_EQUAL_INT32(sw.action, last.action);
+        TEST_ASSERT_EQUAL_INT32(0, last.value);
+        tapText(v.root(), sw.title);
+        TEST_ASSERT_EQUAL_INT32(1, last.value);
+        TEST_ASSERT_EQUAL_UINT32(2, presses);
+    }
+    tapText(v.root(), LV_SYMBOL_LEFT);
+    TEST_ASSERT_EQUAL_INT32(OptionsView::BACK, last.action);
+    s.bootFilm = false;
+    v.build(rig.parent, s, pressed, nullptr);
+    run();
+    TEST_ASSERT_FALSE(controls::isOn(lv_obj_get_parent(find(v.root(), "Boot film"))));
+    TEST_ASSERT_TRUE(controls::isOn(lv_obj_get_parent(find(v.root(), "Animated background"))));
 }
 
 // levels: the levels show and report their values, each from 0 to 100 %.
@@ -904,6 +937,7 @@ int main() {
     RUN_TEST(testGames);
     RUN_TEST(testGamesPreview);
     RUN_TEST(testSettings);
+    RUN_TEST(testOptions);
     RUN_TEST(testLevels);
     RUN_TEST(testService);
     RUN_TEST(testSensors);

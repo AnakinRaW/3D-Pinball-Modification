@@ -196,7 +196,7 @@ void testChoose() {
     tap(W - 10, 17);
     tap(OPEN_X + 100, 38);
     const std::vector<EdgeMenuView::Item> want = {
-        EdgeMenuView::Item::SOUND, EdgeMenuView::Item::LIGHTS, EdgeMenuView::Item::MACHINE,
+        EdgeMenuView::Item::SOUND, EdgeMenuView::Item::LIGHTS, EdgeMenuView::Item::STATUS,
         EdgeMenuView::Item::END_GAME, EdgeMenuView::Item::CLOSE};
     TEST_ASSERT_EQUAL_UINT32(want.size(), chosen.size());
     for (size_t i = 0; i < want.size(); ++i) {
@@ -206,7 +206,7 @@ void testChoose() {
     EdgeMenuView::Status status;
     status.sound = "50 %";
     status.lights = "80 %";
-    status.machine = "1 fault";
+    status.devices = "1 fault";
     status.fault = true;
     rig.view.show(status);
     std::vector<std::string> texts;

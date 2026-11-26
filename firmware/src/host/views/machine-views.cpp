@@ -42,7 +42,7 @@ void WarningLightsView::build(lv_obj_t* parent, const Tile* tiles, uint8_t count
                               void* context) {
     lv_obj_t* root = create(parent, true, pressed, context);
     lv_obj_t* back = nullptr;
-    page(root, "MACHINE", &back);
+    page(root, "STATUS", &back);
     bind(back, BACK);
     for (uint8_t i = 0; i < count && i < TILES_MAX; ++i) {
         const Tile& t = tiles[i];

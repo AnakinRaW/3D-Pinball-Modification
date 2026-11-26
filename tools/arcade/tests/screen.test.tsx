@@ -468,7 +468,7 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     for (const [y, item, page] of [
       [68, "sound", "sound"],
       [116, "lights", "lights"],
-      [164, "machine", "warning-lights"],
+      [164, "status", "warning-lights"],
       [214, "endGame", "end-game"],
     ] as const) {
       swipe(150);
