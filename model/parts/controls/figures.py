@@ -68,3 +68,6 @@ MODEL.net("Toggle switch",
           pull("the Teensy's internal pull-up", TEENSY_RAIL,
                src="docs/firmware/drivers/controls.md, the pin runs with INPUT_PULLUP"),
           teensy="Toggle switch")
+
+# -- shared budgets -----------------------------------------------------------
+MODEL.draws(pool="driver tick")      # the check that ends the bounce window, on every tick

@@ -5,7 +5,8 @@
 //   play         a video reads its frames ahead from video/<name>.rgb, and its sound starts with it
 //   movie-ends   a video that runs out ends its sound and hands MOVIE_ENDED with its mode's key
 //   stop         stop() ends the video and its sound and frees its memory
-//   no-room      a full picture memory and a viewport beyond the screen refuse a video
+//   no-room      a full picture memory and a viewport beyond the screen refuse a video, and the
+//                full memory writes a warning
 //   owner        only the slide that shows plays a video, and a second video there replaces the
 //                first
 //   hidden       a covered or removed slide stops its video without MOVIE_ENDED, an object over
@@ -14,6 +15,7 @@
 //   short-sound  a video whose sound runs out or is missing plays on by the clock
 //   sound-clock  a video with sound holds while its sound holds
 //   covers       LVGL draws nothing that lies behind a video's frame
+//   bad-files    a missing video and one whose size is no multiple of its frames write a warning
 //
 // Run: pio test -e computer, which runs in CI as well.
 
@@ -22,6 +24,7 @@
 #include "components/sounds.h"
 #include "components/video-player.h"
 #include "io/psram.h"
+#include "logging/logger.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -39,8 +42,8 @@ constexpr uint32_t N = SOUND_BLOCK_SAMPLES;
 constexpr uint16_t FIRST_COLOR = 0x1000;
 constexpr char GAME[] = "a";
 constexpr uint8_t MAGIC = 0x19;   // LV_IMAGE_HEADER_MAGIC
-constexpr Layer LOW = {1, 10};
-constexpr Layer HIGH = {2, 50};
+constexpr Layer LOW_LAYER = {1, 10};
+constexpr Layer HIGH_LAYER = {2, 50};
 constexpr Layer HIGH_LATER = {3, 50};
 constexpr Layer MUSIC_LAYER = {9, 5};
 constexpr int16_t MUSIC_SAMPLE = 1000;   // every sample of the music, the videos' sounds are silent
@@ -126,6 +129,39 @@ static void put32(std::string& s, uint32_t v) {
 }
 
 // Gets a video file whose frame k is one color, FIRST_COLOR + k, high byte first.
+// A log file whose writes end at once.
+struct LogFile : AppendFile {
+    std::string content;
+    AppendStatus state = AppendStatus::IDLE;
+
+    void write(uint32_t at, const uint8_t* data, size_t n) override {
+        content.resize(at);
+        content.append(reinterpret_cast<const char*>(data), n);
+        state = AppendStatus::SUCCEEDED;
+    }
+
+    void rewrite(const uint8_t* data, size_t n) override {
+        content.clear();
+        write(0, data, n);
+    }
+
+    AppendStatus status() const override { return state; }
+};
+
+// The firmware's log, begun once, which logWarning() writes to.
+static LogFile logA;
+static LogFile logB;
+static uint8_t logBuffer[16384];
+static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
+
+// Gets whether the log holds a line.
+static bool logged(const char* line) {
+    logger.flush();
+    logger.update();
+    logger.update();
+    return logA.content.find(line) != std::string::npos;
+}
+
 static std::string movie(uint32_t frames, uint16_t width = W, uint16_t height = H) {
     std::string f;
     f.reserve(size_t(frames) * width * height * 2);
@@ -241,11 +277,14 @@ void setUp() {
     static bool begun = false;
     if (!begun) {
         begun = true;
+        logger.begin(LogFileStart{}, LogFileStart{});
         service.mount();
         GameHost::use(GAME);
         audio.begin();
         sounds.begin();
+        // The music at 1 and the effects at 0 leave the music's samples unchanged.
         sounds.musicVolume(1);
+        sounds.effectsVolume(0);
         screen.begin();
         player.begin();
         card.files["/games/a/video/m.rgb"] = movie(30);
@@ -269,7 +308,7 @@ void setUp() {
 void tearDown() {}
 
 static void testPlay() {
-    lv_obj_t* s = screen.slide(LOW);
+    lv_obj_t* s = screen.slide(LOW_LAYER);
     lv_obj_t* v = viewportOn(s);
     TEST_ASSERT_TRUE(player.play(v, "m", false, false));
     TEST_ASSERT_TRUE(player.playing(v));
@@ -298,7 +337,7 @@ static void testPlay() {
 static void testMovieEnds() {
     sounds.music(MUSIC_LAYER, "music.wav", true);
     blocks(10);
-    lv_obj_t* s = screen.slide(HIGH);
+    lv_obj_t* s = screen.slide(HIGH_LAYER);
     lv_obj_t* v = viewportOn(s);
     TEST_ASSERT_TRUE(player.play(v, "ten", false, true));
     // The sound is twice as long as the video.
@@ -312,7 +351,7 @@ static void testMovieEnds() {
     pass();
     TEST_ASSERT_EQUAL_UINT32(1, made.size());
     TEST_ASSERT_EQUAL(EventType::MOVIE_ENDED, made[0].type);
-    TEST_ASSERT_EQUAL_UINT8(HIGH.key, made[0].source);
+    TEST_ASSERT_EQUAL_UINT8(HIGH_LAYER.key, made[0].source);
     pass();
     TEST_ASSERT_EQUAL_UINT32(1, made.size());
     // The music goes on.
@@ -323,7 +362,7 @@ static void testMovieEnds() {
 static void testStop() {
     sounds.music(MUSIC_LAYER, "music.wav", true);
     blocks(10);
-    lv_obj_t* s = screen.slide(LOW);
+    lv_obj_t* s = screen.slide(LOW_LAYER);
     lv_obj_t* v = viewportOn(s);
     TEST_ASSERT_TRUE(player.play(v, "m", true, true));
     blocks(4);
@@ -340,7 +379,7 @@ static void testStop() {
 }
 
 static void testNoRoom() {
-    lv_obj_t* s = screen.slide(LOW);
+    lv_obj_t* s = screen.slide(LOW_LAYER);
     lv_obj_t* small = viewportOn(s, 16, 16, 64, 48);
     TEST_ASSERT_TRUE(player.play(small, "small", true, false));
     run(FRAME_US);
@@ -358,6 +397,7 @@ static void testNoRoom() {
     const std::string music = audio.files[Sounds::MUSIC];
     const uint32_t stops = audio.stops[Sounds::MUSIC];
     TEST_ASSERT_FALSE(player.play(viewportOn(s), "m", false, true));
+    TEST_ASSERT_TRUE(logged(" W video m refused, the picture memory has no room for its frames"));
     TEST_ASSERT_FALSE(player.play(viewportOn(s, 300, 0, 64, 48), "small", false, true));
     TEST_ASSERT_FALSE(player.play(viewportOn(s, 0, 0, 0, 0), "small", false, true));
     TEST_ASSERT_EQUAL_STRING(music.c_str(), audio.files[Sounds::MUSIC].c_str());
@@ -369,8 +409,8 @@ static void testNoRoom() {
 }
 
 static void testOwner() {
-    lv_obj_t* hidden = screen.slide(LOW);
-    lv_obj_t* shown = screen.slide(HIGH);
+    lv_obj_t* hidden = screen.slide(LOW_LAYER);
+    lv_obj_t* shown = screen.slide(HIGH_LAYER);
     lv_obj_t* first = viewportOn(shown);
     TEST_ASSERT_TRUE(player.play(first, "m", false, false));
     TEST_ASSERT_FALSE(player.play(viewportOn(hidden), "m", false, false));
@@ -391,16 +431,16 @@ static void testHidden() {
     sounds.music(MUSIC_LAYER, "music.wav", true);
     blocks(10);
     // A slide of higher priority covers the video's slide.
-    lv_obj_t* low = screen.slide(LOW);
+    lv_obj_t* low = screen.slide(LOW_LAYER);
     lv_obj_t* v = viewportOn(low);
     TEST_ASSERT_TRUE(player.play(v, "m", false, true));
     run(FRAME_US);
-    screen.slide(HIGH);
+    screen.slide(HIGH_LAYER);
     run(FRAME_US);
     TEST_ASSERT_FALSE(player.playing(v));
     TEST_ASSERT_FALSE(GameHost::videoSounding());
     // A slide of equal priority, taken later, covers it as well.
-    lv_obj_t* high = screen.slide(HIGH);
+    lv_obj_t* high = screen.slide(HIGH_LAYER);
     v = viewportOn(high);
     TEST_ASSERT_TRUE(player.play(v, "m", false, true));
     run(FRAME_US);
@@ -428,7 +468,7 @@ static void testHidden() {
 }
 
 static void testLateCard() {
-    lv_obj_t* v = viewportOn(screen.slide(LOW));
+    lv_obj_t* v = viewportOn(screen.slide(LOW_LAYER));
     TEST_ASSERT_TRUE(player.play(v, "m", false, false));
     pass(0);
     TEST_ASSERT_EQUAL_INT(0, shownAt());
@@ -449,7 +489,7 @@ static void testShortSound() {
     // The sound of ten lasts 20 frames, so a video of 30 frames with it outlasts its sound.
     card.files["/games/a/audio/long.wav"] = wav(10 * FRAME_SAMPLES);
     card.files["/games/a/video/long.rgb"] = movie(20);
-    lv_obj_t* v = viewportOn(screen.slide(LOW));
+    lv_obj_t* v = viewportOn(screen.slide(LOW_LAYER));
     TEST_ASSERT_TRUE(player.play(v, "long", false, true));
     startSound();
     TEST_ASSERT_TRUE(GameHost::videoSounding());
@@ -469,7 +509,7 @@ static void testShortSound() {
     // A sound file the card does not hold ends at once.
     made.clear();
     card.files["/games/a/video/mute.rgb"] = movie(5);
-    v = viewportOn(screen.slide(LOW));
+    v = viewportOn(screen.slide(LOW_LAYER));
     TEST_ASSERT_TRUE(player.play(v, "mute", false, true));
     startSound();
     blocks(4);
@@ -481,7 +521,7 @@ static void testShortSound() {
 }
 
 static void testSoundClock() {
-    lv_obj_t* v = viewportOn(screen.slide(LOW));
+    lv_obj_t* v = viewportOn(screen.slide(LOW_LAYER));
     TEST_ASSERT_TRUE(player.play(v, "m", false, true));
     pass(0);
     // The sound waits, so the first frame stays.
@@ -508,7 +548,7 @@ static void testCovers() {
     lv_obj_t* below = viewportOn(screen.background());
     lv_obj_set_style_bg_opa(below, LV_OPA_COVER, 0);
     lv_obj_add_event_cb(below, countDraw, LV_EVENT_DRAW_MAIN, nullptr);
-    lv_obj_t* v = viewportOn(screen.slide(LOW));
+    lv_obj_t* v = viewportOn(screen.slide(LOW_LAYER));
     TEST_ASSERT_TRUE(player.play(v, "m", false, false));
     run(2 * FRAME_US);
     const int first = shownAt();
@@ -524,6 +564,21 @@ static void testCovers() {
     TEST_ASSERT_EQUAL_INT(-1, shownAt());
 }
 
+static void testBadFiles() {
+    lv_obj_t* s = screen.slide(LOW_LAYER);
+    TEST_ASSERT_TRUE(player.play(viewportOn(s), "gone", false, false));
+    run(2 * FRAME_US);
+    TEST_ASSERT_TRUE(logged(" W video /games/a/video/gone.rgb is missing or holds no frame"));
+    card.files["/games/a/video/odd.rgb"] = movie(3) + "odd";
+    lv_obj_t* v = viewportOn(s);
+    TEST_ASSERT_TRUE(player.play(v, "odd", false, false));
+    run(FRAME_US);
+    TEST_ASSERT_TRUE(logged(" W video /games/a/video/odd.rgb takes 460803 bytes, no multiple of a "
+                            "frame of 153600 bytes"));
+    // The whole frames still play.
+    TEST_ASSERT_TRUE(player.playing(v));
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(testPlay);
@@ -536,6 +591,7 @@ int main() {
     RUN_TEST(testShortSound);
     RUN_TEST(testSoundClock);
     RUN_TEST(testCovers);
+    RUN_TEST(testBadFiles);
     // Every read lands before the program ends, so no request waits in its destructor.
     GameHost::reset();
     service.serveAll();

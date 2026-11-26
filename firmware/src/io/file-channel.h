@@ -103,6 +103,9 @@ public:
     /// It is true as well for a missing file, for a channel never started and after stop().
     bool ended() const { return (failedRead || done) && filled == 0; }
 
+    /// Gets whether a read of the file has failed since start().
+    bool failed() const { return failedRead; }
+
 private:
     /// Takes a read that has ended into its chunk, and starts the next one while a chunk is free.
     ///

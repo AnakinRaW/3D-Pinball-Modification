@@ -154,6 +154,15 @@ public:
     /// @note  The main loop calls it, after begin().
     void showOverlay(bool shown);
 
+    /// Gets the subject that tells LVGL objects of a change in the firmware's warnings.
+    ///
+    /// Its value is warningList's version() as render() saw it last. render() sets it when the
+    /// version has changed, and LVGL then calls every observer of the subject. An observer reads
+    /// the entries from warningList.
+    ///
+    /// @note  Valid from begin() on. The main task only.
+    lv_subject_t* warnings() { return warningSubject; }
+
     /// Gets the game's background, the parent of what lies behind every slide.
     lv_obj_t* background() { return back; }
 
@@ -318,6 +327,8 @@ private:
     Gesture lastGesture = Gesture::NONE;
     TouchPoint lastAt = {};
     bool begun = false;
-    bool redraw = false;        // the whole screen goes out once the display is back
-    static Screen* animating;   // the screen whose animations LVGL reports deleted
+    bool redraw = false;                      // the whole screen goes out once the display is back
+    lv_subject_t* warningSubject = nullptr;   // LVGL's subject of the warnings
+    uint32_t warningsSeen = 0;                // warningList's version() as render() saw it last
+    static Screen* animating;                 // the screen whose animations LVGL reports deleted
 };

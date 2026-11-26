@@ -51,7 +51,14 @@ void CardAppender::update() {
         if (s == AppendStatus::PENDING) {
             return;
         }
-        lastFailed = s != AppendStatus::SUCCEEDED;
+        const bool failed = s != AppendStatus::SUCCEEDED;
+        if (failed && !lastFailed) {
+            DEBUG_LOG("CardAppender: a write of %u bytes failed, it is tried again in a second\n",
+                      static_cast<unsigned>(inFlight));
+        } else if (!failed && lastFailed) {
+            DEBUG_LOG("CardAppender: the card takes the writes again\n");
+        }
+        lastFailed = failed;
         if (!lastFailed) {
             ring.consume(inFlight);
             position = position + static_cast<uint32_t>(inFlight);

@@ -2,6 +2,7 @@
 #include "logging/debug-log.h"
 #include <string.h>
 
+constexpr uint8_t FAILURES = 3;   // storage.md: card errors in a row to fail
 /// RAM1 is the i.MX RT1062's tightly coupled data memory, which no cache serves. PJRC's linker
 /// script for the Teensy 4.1 places its 512 KB at 0x20000000.
 constexpr uintptr_t RAM1_START = 0x20000000;
@@ -203,6 +204,9 @@ bool StorageService::serveNext() {
 bool StorageService::serve(FileRequest& r, uint8_t& slot) {
     slot = find(r);
     if (slot == NO_SLOT) {
+        DEBUG_LOG("storage: %s does not open, %s\n", r.path,
+                  r.kind == FileRequest::Kind::READ ? "so it reads as empty"
+                                                    : "so the write fails");
         return r.kind == FileRequest::Kind::READ;
     }
     const uint32_t fileBytes = card.size(slot);
@@ -346,6 +350,7 @@ uint32_t FileRequest::fileSize() const {
 
 bool FileRequest::wait() const {
     if (service == nullptr || status() == FileStatus::IDLE) {
+        DEBUG_LOG("storage: wait() on a request that never started\n");
         return false;
     }
     if (!service->callerMayWait()) {

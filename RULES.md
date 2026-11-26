@@ -81,6 +81,7 @@ A shortcut taken on purpose is recorded as a known limitation.
 
   Finish by grepping the old and the new number across the whole repository, since a value derived in one subsystem is repeated in the budgets of another. A stale value survives longest in the figures, where a wrong number still renders.
 - **A document records the decision, not the choice.** No "either A or B", no "type to be selected", no "we will decide this later". A decision is made before it is written down. A rejected alternative stays, per rule 3, as rejected with the reason it lost. An unverified figure is stated as unverified with the measurement that would settle it, as a known limitation.
+- **A detail the code states gets no entry in `docs/`.** A setting, a switch, a log point or a small feature lives in the code, in `config-keys.h` and in its header's contract. A document takes it up only where it records a decision.
 
 Each document has a scope. Detail that belongs elsewhere is moved there and linked, never duplicated:
 
@@ -122,7 +123,7 @@ This rule governs documentation, code comments, commit messages and conversation
 
 **A document is written for someone who reads it once and rebuilds from it.** That reader meets every term in the order the document puts them, and no passage may need a second pass across the file before it makes sense. Where brevity and comprehension collide, comprehension wins, and none of the bans below justifies a sentence that has to be decoded.
 
-- **Full sentences.** A bold lead, a paragraph opener and the line that carries into a table have a subject and a verb. "From above, the dwell." is a label.
+- **Full sentences.** A paragraph opener and the line that carries into a table have a subject and a verb. "From above, the dwell." is a label.
 - **One claim to a sentence.** A sentence holding a claim, the mechanism behind it and what follows from it is split into three.
 - **A term is explained where it first appears**, in ordinary words, and named after the explanation. A definition that arrives a section later has already lost the reader.
 - **A name out of a datasheet or a peripheral is translated.** What the thing does is written in plain words, and the vendor's name stands beside it where the firmware needs to address it.
@@ -147,6 +148,7 @@ Banned:
 - **The dash as punctuation.** No em dash and no en dash joining clauses, glossing a value in a table cell, or setting off an aside. A comma, a colon, a full stop or a pair of parentheses carries the same structure without the visual break. The minus sign inside a formula, the hyphen inside a compound word and the dash spanning a numeric range, as in 18–20 mA, stay.
 - **Inserted asides.** No clause, appositive or example set into the middle of a sentence, whether commas, parentheses or dashes set it off. The inserted fact goes into a separate sentence. The sentence that prompted this rule: *"The SD specification allows a card at most 100 ms for each block it reads and 250 ms for each block it writes, so the longest transfer, one stream chunk, takes 800 ms at most."*
 - **Two clauses joined by a comma and "and".** Each clause becomes a separate sentence, or one clause gives the reason for the other. The sentence that prompted this rule: *"Playback depends on the card's read speed, and the file channel's ring buffer only bridges short delays."*
+- **A bold lead in a document under `docs/`.** No paragraph and no list item opens with bold to introduce what follows. A passage that needs a name gets a heading. Bold inside a sentence or a table stays. Rule files such as this one, the transcribed datasheets and the bench cookbook keep their bold leads.
 
 **The general statement comes first, and the detail follows it.** A paragraph, a section and a table row all open with what is being claimed and narrow from there. Leading with the mechanism and arriving at the claim at the end forces the reader to hold parts whose purpose has not been stated yet.
 

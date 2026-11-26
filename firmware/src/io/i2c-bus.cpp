@@ -1,4 +1,5 @@
 #include "i2c-bus.h"
+#include "logging/debug-trace.h"
 
 namespace io {
 
@@ -49,6 +50,7 @@ void I2cBus::attach(I2cTransfer& t) {
 
 void I2cBus::request(I2cTransfer& t) {
     if (!t.attached) {
+        DEBUG_TRACE("i2c unattached", t.address, 0);
         return;
     }
     t.requested = true;
@@ -210,6 +212,7 @@ void I2cBus::finish(uint32_t errors) {
 ///
 /// The pads stay open-drain, as Wire set them, so a pin set high only lets go of its line.
 void I2cBus::recover() {
+    DEBUG_TRACE("i2c held low", sda, scl);
     const uint32_t sdaMux = *portConfigRegister(sda);
     const uint32_t sclMux = *portConfigRegister(scl);
     for (const uint8_t pin : {sda, scl}) {

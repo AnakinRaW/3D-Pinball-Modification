@@ -11,6 +11,7 @@
 #include "core/clock.h"
 #include "core/ring.h"
 #include <string.h>
+#include <limits>
 #include <type_traits>
 
 enum class DriverEventType : uint16_t {
@@ -27,9 +28,15 @@ enum class DriverEventType : uint16_t {
     TOUCH_HELD,
     /// The finger has left the screen. The payload is where it was last.
     TOUCH_UP,
-    /// A sound has played to its end, or its file could not be read. The source is the audio
-    /// channel, and the payload is the number play() gave the sound.
+    /// A sound has played to its end, or its file could not be played. The source is the audio
+    /// channel, and the payload is a SoundEnd.
     SOUND_ENDED,
+    /// A ball has broken the beam across the drain. The source is the gate, always 0 in this
+    /// build, and there is no payload.
+    BALL_DRAINED,
+    /// The toggle switch has moved. The source is the switch, always 0 in this build, and the
+    /// payload is the position printed on the switch that it moved to, 1 or 0.
+    TOGGLE_SWITCHED,
 };
 
 struct DriverEvent {
@@ -38,8 +45,8 @@ struct DriverEvent {
     uint8_t source;     // channel, switch or target inside its subsystem
     uint32_t payload;   // interpreted according to the type
 };
-/// model/firmware/figures.py, b_event: the size the device monitor's queue in RAM2 is counted with
-constexpr size_t EVENT_BYTES = 12;
+/// The size of an event, with which the device monitor's queue in RAM2 is counted.
+constexpr size_t EVENT_BYTES = 12;   // firmware model: b_event
 static_assert(sizeof(DriverEvent) == EVENT_BYTES, "the model counts RAM2 with this size");
 
 /// The payload of a type without one.
@@ -51,6 +58,32 @@ struct TouchPoint {
     uint16_t x;
     uint16_t y;
 };
+
+/// How a sound ended.
+enum class SoundEndCode : uint8_t {
+    PLAYED,        // the sound played to its end
+    NO_FILE,       // the file is missing, empty or has no name
+    NOT_WAV,       // the file holds no WAV in the format the channel plays
+    CUT_SHORT,     // the file ends ahead of the end of its samples
+    READ_FAILED,   // a read of the card failed
+};
+
+/// The payload of SOUND_ENDED. Packed into a payload, the number takes the lower 24 bits and the
+/// code the upper 8.
+struct SoundEnd {
+private:
+    static constexpr uint8_t NUMBER_BITS = 24;   // the bits that hold a sound's number
+    static constexpr uint8_t CODE_BITS =
+        std::numeric_limits<uint32_t>::digits - NUMBER_BITS;   // the rest, for the code
+
+public:
+    /// The numbers a sound can take, which number holds. 0 names no sound.
+    static constexpr uint32_t NUMBERS = 1u << NUMBER_BITS;
+
+    uint32_t number : NUMBER_BITS;   // the number play() gave the sound, 0 for none
+    SoundEndCode code : CODE_BITS;   // how the sound ended
+};
+static_assert(sizeof(SoundEnd) == sizeof(uint32_t), "a SoundEnd fills a payload");
 
 /// Names the payload of each type, one per type.
 template <DriverEventType TAG> struct DriverPayloadOf;
@@ -73,7 +106,13 @@ template <> struct DriverPayloadOf<DriverEventType::TOUCH_UP> {
     using type = TouchPoint;
 };
 template <> struct DriverPayloadOf<DriverEventType::SOUND_ENDED> {
-    using type = uint32_t;   // the number play() gave the sound
+    using type = SoundEnd;
+};
+template <> struct DriverPayloadOf<DriverEventType::BALL_DRAINED> {
+    using type = NoPayload;
+};
+template <> struct DriverPayloadOf<DriverEventType::TOGGLE_SWITCHED> {
+    using type = uint8_t;   // the position printed on the switch, 1 or 0
 };
 
 /// Gets the payload of an event of type TAG.
@@ -88,8 +127,8 @@ template <DriverEventType TAG> typename DriverPayloadOf<TAG>::type payload(const
 
 class EventQueue {
 public:
-    /// model/firmware/figures.py, n_producers: the queues attach() takes at most
-    static constexpr uint8_t PRODUCERS = 11;
+    /// The most queues attach() takes.
+    static constexpr uint8_t PRODUCERS = 11;   // firmware model: n_producers
 
     /// One driver's queue. Its interrupt writes it, the main loop reads it.
     class Producer {

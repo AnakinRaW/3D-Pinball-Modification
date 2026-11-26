@@ -426,6 +426,7 @@ def idw(anchors):
     return f
 
 
+TUNNEL_ROOF = 9.6     # mm, the underside of the block over the U track's tunnel, clear of the 9 mm ball
 GRAY_UNDER_BLUE = 0.3  # mm the gray lane keeps under the blue ramp's floor where it ends beneath it
 GRAY_START_Y = 136.4   # mm, where the gray launch lane takes over from the shooter lane
 
@@ -1504,8 +1505,21 @@ def build_sides():
                 prism(pid, s["pts"], H["wood_hi"], H["cover"], c, gray)
             elif cl in paint:
                 prism(pid + "-paint", s["pts"], H["cover"], H["cover"] + 0.15, c, paint[cl], cap_only=True)
+    # the block over the top left corner roofs the U track's tunnel: the ball runs under it from the spinner's lane
     for s in placed("block-top-left"):
-        if s["cls"] == "block": prism("block-top-left", s["pts"], 0, H["cover"], c, mat("block-red", "#a3232c", rough=0.4))
+        if s["cls"] == "block": prism("block-top-left", s["pts"], TUNNEL_ROOF, H["cover"], c, mat("block-red", "#a3232c", rough=0.4))
+    # the U track runs from the spinner's lane round the top under the left cover's wood: a channel as high as the
+    # block's roof is cut out of the wood along the lane, outside the lane's inner fence
+    comb = next(t["pts"] for t in SHAPES if "orbit-wall" in t["chain"] and t["cls"] == "comb")
+    lane = [(25.0, 180.0)]
+    for x, y in comb:
+        d = Vector((x - 108.0, y - 150.0)); d.normalize()
+        lane.append((x + d.x * 9.0, y + d.y * 9.0))
+    cutter = ribbon("tunnel-cutter", lane, 20.0, -1.0, TUNNEL_ROOF, c, None)
+    cutter.hide_render = True; cutter.hide_viewport = True
+    # the lane keeps its width round the top: the channel also takes the clear corner arches' inner edges
+    for o in [o for o in bpy.data.objects if o.name.startswith(("cover-left-wood", "arch-clear"))]:
+        bo = o.modifiers.new("tunnel", "BOOLEAN"); bo.object = cutter; bo.operation = "DIFFERENCE"
 
 
 BLUE_BEND = 6.0        # mm either side of the fire hoop and of the red hoop over which the blue floor bends

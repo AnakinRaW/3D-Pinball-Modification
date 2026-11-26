@@ -42,7 +42,7 @@ With the 3 A adapter the perimeters light only every second LED, as the [current
 | Playfield action lights* | D - F | 20 | 20 |
 | **Total** |  | **244** | **166** |
 
-**New in this machine*
+A star marks a light that is new in this machine.
 
 The LEDs are organized in chains by where they sit and by how the game uses them. There are two kinds:
 
@@ -93,7 +93,9 @@ The lighting runs on two identical boards. The ambient board drives chains A to 
 
 A Teensy pin outputs only 3.3 V. The LED chain needs at least 3.5 V for a high bit, so the data lines need level shifting to 5 V.
 
-**One CD74HCT125E** on each board shifts the data lines to 5 V. It has four channels. Its inputs accept 3.3 V as a valid high. Three of the channels carry the board's chains.
+#### One CD74HCT125E
+
+One CD74HCT125E on each board shifts the data lines to 5 V. It has four channels. Its inputs accept 3.3 V as a valid high. Three of the channels carry the board's chains.
 
 | Connection | Requirement |
 |---|---|
@@ -109,7 +111,9 @@ The 2.2 kΩ resistors that protect the Teensy pins also slow the data edges slig
 
 ### Signal wiring
 
-**A series resistor sits in each data line** at the buffer's output. On a long cable it damps the ringing a steep edge would cause. If a data wire touches 5 V or ground, the 330 Ω resistor also limits the output's current to 18 mA, inside the 35 mA the output is rated for. It then carries under half of the 0.25 W the resistor kit rates it. The value lies above the 47 to 220 Ω PJRC names as probably best for matching the wire. With the wire and the first LED's input estimated at 150 pF, it shortens a high at that LED by 91 ns at most. With the 20 ns the input resistor costs, that stays inside the LED's 150 ns tolerance.
+#### A series resistor sits in each data line
+
+A series resistor sits in each data line at the buffer's output. On a long cable it damps the ringing a steep edge would cause. If a data wire touches 5 V or ground, the 330 Ω resistor also limits the output's current to 18 mA, inside the 35 mA the output is rated for. It then carries under half of the 0.25 W the resistor kit rates it. The value lies above the 47 to 220 Ω PJRC names as probably best for matching the wire. With the wire and the first LED's input estimated at 150 pF, it shortens a high at that LED by 91 ns at most. With the 20 ns the input resistor costs, that stays inside the LED's 150 ns tolerance.
 
 ### Supply
 

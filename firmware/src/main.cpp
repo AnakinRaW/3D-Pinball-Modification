@@ -5,6 +5,8 @@
 #define USE_ARDUINO_DEFINES
 #include "arduino_freertos.h"
 #include "core/clock.h"
+#include "components/config.h"
+#include "components/config-keys.h"
 #include "components/file-system.h"
 #include "components/sounds.h"
 #include "components/screen.h"
@@ -32,6 +34,7 @@ constexpr uint32_t EVENTS_PER_PASS = 64;
 /// The boot film's layer. No game runs while the film plays, so no mode holds its key.
 constexpr Layer BOOT_LAYER = {1, 0};
 constexpr char BOOT_FILM[] = "intro";   // media.md: video/intro.rgb with audio/intro.wav
+constexpr bool BOOT_FILM_ON = true;     // host.boot_film's default
 
 /// PJRC's guard behind the static variables is 32 bytes, and an MPU region of 32 bytes has to start
 /// on a multiple of its size
@@ -58,6 +61,7 @@ EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 
 static AudioDriver audio(events);
 static FileSystem files(storage);
+DMAMEM static Config config(files);
 static Sounds sounds(audio, files);
 static Display display;
 static Touch touch(io::wire2Bus, events, driverTick);
@@ -76,7 +80,8 @@ void setup_event_responder() {}
 /// The game host's handling of a device fault, where the host's dispatch() stands in the main loop.
 class GameHost {
 public:
-    /// Takes a fault event of the device monitor, so no component sees it.
+    /// Takes a fault event of the device monitor, so no component sees it, and writes it into the
+    /// log.
     ///
     /// The touch controller shares the display module's power. Once it answers again, the display
     /// has lost its setup, and the screen sets it up again.
@@ -85,13 +90,10 @@ public:
     /// @return   Whether @p e was DEVICE_FAILED or DEVICE_RECOVERED.
     /// @note     The main loop calls it.
     static bool takeFault(const DriverEvent& e) {
-        if (e.type == DriverEventType::DEVICE_FAILED) {
-            return true;
-        }
-        if (e.type != DriverEventType::DEVICE_RECOVERED) {
+        if (!logFault(e)) {
             return false;
         }
-        if (faultDevice(e.source) == Device::TOUCH) {
+        if (e.type == DriverEventType::DEVICE_RECOVERED && faultDevice(e.source) == Device::TOUCH) {
             logInfo("main", "the display module answers again, so the display restarts");
             screen.restart();
         }
@@ -160,6 +162,34 @@ static LogFileStart readLogStart(const char* path, uint8_t (&head)[Logger::HEAD_
     return {head, r.bytes(), r.fileSize()};
 }
 
+/// Gets the sounds' starting volumes from the config.
+static Sounds::Settings soundSettings() {
+    Sounds::Settings s;
+    s.musicVolume = float(config.get(ConfigKey::MUSIC_VOLUME, Sounds::MUSIC_VOLUME,
+                                     Sounds::VOLUME_MIN, Sounds::VOLUME_MAX));
+    s.effectsVolume = float(config.get(ConfigKey::EFFECTS_VOLUME, Sounds::EFFECTS_VOLUME,
+                                       Sounds::VOLUME_MIN, Sounds::VOLUME_MAX));
+    return s;
+}
+
+/// Gets a touch controller's reading at an edge of the picture from the config.
+///
+/// @param key       The edge's key.
+/// @param fallback  The edge's default.
+static uint16_t touchEdge(const char* key, uint16_t fallback) {
+    return uint16_t(lround(config.get(key, fallback, 0, Touch::RAW_MAX)));
+}
+
+/// Gets the touch controller's readings at the picture's edges from the config.
+static Touch::Settings touchSettings() {
+    Touch::Settings s;
+    s.rawLeft = touchEdge(ConfigKey::TOUCH_LEFT_EDGE, Touch::RAW_LEFT);
+    s.rawRight = touchEdge(ConfigKey::TOUCH_RIGHT_EDGE, Touch::RAW_RIGHT);
+    s.rawTop = touchEdge(ConfigKey::TOUCH_TOP_EDGE, Touch::RAW_TOP);
+    s.rawBottom = touchEdge(ConfigKey::TOUCH_BOTTOM_EDGE, Touch::RAW_BOTTOM);
+    return s;
+}
+
 /// The main task: sets the machine up, then runs the main loop, which never waits.
 static void runMainTask(void*) {
     NVIC_SET_PRIORITY(IRQ_TEMPERATURE_PANIC, TEMPERATURE_PANIC_PRIORITY);
@@ -178,6 +208,8 @@ static void runMainTask(void*) {
         static uint8_t secondHead[Logger::HEAD_BYTES];
         logger.begin(readLogStart(LOG_FIRST, firstHead), readLogStart(LOG_SECOND, secondHead));
     }
+    // Without a card every setting takes its default.
+    config.begin();
 
     if (!audio.begin()) {
         logWarning("main", "the audio driver does not begin, so no sound plays");
@@ -187,6 +219,7 @@ static void runMainTask(void*) {
         logWarning("main", "the display does not begin, so the screen stays dark");
     }
     // After the display, so the black screen does not wait for the touch controller.
+    touch.configure(touchSettings());
     if (!touch.begin()) {
         logWarning("main", "the touch driver does not begin, so the screen takes no touch");
     }
@@ -200,9 +233,12 @@ static void runMainTask(void*) {
 
     // The sounds start at their starting volumes where the game host's begin() stands in the
     // start order.
+    sounds.configure(soundSettings());
     sounds.begin();
     // The boot film plays where the host launches the first game.
-    GameHost::playBootFilm();
+    if (config.get(ConfigKey::BOOT_FILM, BOOT_FILM_ON)) {
+        GameHost::playBootFilm();
+    }
 
     startingUp = false;
     uint32_t toggledUs = nowUs();

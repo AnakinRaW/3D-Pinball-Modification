@@ -5,28 +5,14 @@
 #include <stdio.h>
 
 constexpr char AUDIO_DIRECTORY[] = "audio/";   // sounds.md: the game's audio directory
-constexpr float PERCENT = 100;                 // the log writes a volume in whole percent
 
 void Sounds::begin() {
-    const float music = fminf(fmaxf(settings.musicVolume, VOLUME_MIN), VOLUME_MAX);
-    float effects = fminf(fmaxf(settings.effectsVolume, VOLUME_MIN), VOLUME_MAX);
-    // Music and an effect at their full volumes add up to the output's full scale, so the two
-    // squared stay within 1.
-    const float room = sqrtf(VOLUME_MAX - music * music);
-    if (effects > room) {
-        logWarning("sounds",
-                   "audio.effects_volume lowered from %ld %% to %ld %%, so music and an effect "
-                   "never overdrive the output",
-                   lroundf(effects * PERCENT), lroundf(room * PERCENT));
-        effects = room;
-    }
-    musicVolume(music);
-    effectsVolume(effects);
+    musicVolume(settings.musicVolume);
+    effectsVolume(settings.effectsVolume);
 }
 
 float Sounds::gain(float percent) {
-    const float p = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
-    return p * p;
+    return percent * percent;
 }
 
 FileReader Sounds::file(const char* name) const {
@@ -55,9 +41,15 @@ uint8_t Sounds::pick() const {
 
 void Sounds::play(const char* name) {
     const uint8_t c = pick();
+    if (audio.playing(c)) {
+        DEBUG_LOG("sounds: %s takes channel %u from an effect still playing\n", name, c);
+    } else {
+        DEBUG_LOG("sounds: %s plays on channel %u\n", name, c);
+    }
     effects = effects + 1;
     startedAs[c] = effects;
-    audio.play(c, file(name));
+    effectFiles[c] = file(name);
+    effectNumbers[c] = audio.play(c, effectFiles[c]);
 }
 
 void Sounds::hold(Track& t) {
@@ -121,6 +113,7 @@ template <typename Pred> void Sounds::drop(Pred pred) {
 }
 
 void Sounds::music(Layer layer, const char* name, bool loop) {
+    DEBUG_LOG("sounds: key %u starts the track %s\n", layer.key, name);
     Track track;
     track.key = layer.key;
     track.priority = layer.priority;
@@ -173,12 +166,28 @@ uint32_t Sounds::videoPlayed() const {
 }
 
 void Sounds::musicVolume(float percent) {
-    musicGain = gain(percent);
-    audio.volume(MUSIC, musicGain);
+    musicPercent = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
+    balance();
 }
 
 void Sounds::effectsVolume(float percent) {
-    effectsGain = gain(percent);
+    effectsPercent = fminf(fmaxf(percent, VOLUME_MIN), VOLUME_MAX);
+    balance();
+}
+
+void Sounds::balance() {
+    float music = gain(musicPercent);
+    float effects = gain(effectsPercent);
+    // A full-scale sample of the music and one of an effect add up on the mixer. Dividing both by
+    // their sum keeps that within full scale and keeps the ratio between them.
+    const float sum = music + effects;
+    if (sum > FULL_SCALE) {
+        music = music * FULL_SCALE / sum;
+        effects = effects * FULL_SCALE / sum;
+    }
+    musicGain = music;
+    effectsGain = effects;
+    audio.volume(MUSIC, musicGain);
     for (uint8_t c = MUSIC + 1; c < AudioDriver::CHANNELS; ++c) {
         audio.volume(c, effectsGain);
     }
@@ -189,7 +198,11 @@ bool Sounds::translate(const DriverEvent& in, PinballEvents& out) {
         return false;
     }
     out = {};
-    const uint32_t number = payload<DriverEventType::SOUND_ENDED>(in);
+    const SoundEnd end = payload<DriverEventType::SOUND_ENDED>(in);
+    const uint32_t number = end.number;
+    if (end.code != SoundEndCode::PLAYED && number != 0) {
+        warnFailed(in.source, end);
+    }
     if (in.source != MUSIC || number == 0) {
         return true;
     }
@@ -205,6 +218,7 @@ bool Sounds::translate(const DriverEvent& in, PinballEvents& out) {
     const Track done = *t;
     tracks.removeIf([&](const Track& x) { return x.number == number; });
     if (done.owner == Owner::MODE) {
+        DEBUG_LOG("sounds: the track of key %u has ended\n", done.key);
         ended = {in.time, EventType::MUSIC_ENDED, done.key, number};
         out = {&ended, 1};
     }
@@ -212,6 +226,36 @@ bool Sounds::translate(const DriverEvent& in, PinballEvents& out) {
         resume();
     }
     return true;
+}
+
+void Sounds::warnFailed(uint8_t channel, SoundEnd end) {
+    const char* name = nullptr;
+    if (channel == MUSIC) {
+        const Track* t = tracks.find([&](const Track& x) { return x.number == end.number; });
+        name = t != nullptr ? t->file.name() : nullptr;
+    } else if (channel < AudioDriver::CHANNELS && effectNumbers[channel] == end.number) {
+        name = effectFiles[channel].name();
+    }
+    if (name == nullptr || name[0] == '\0') {
+        // A name too long for a path leaves the file without one.
+        name = "a sound";
+    }
+    switch (end.code) {
+    case SoundEndCode::NO_FILE:
+        logWarning("sounds", "%s is missing or empty", name);
+        break;
+    case SoundEndCode::NOT_WAV:
+        logWarning("sounds", "%s is no WAV of 16-bit PCM at 44.1 kHz, mono", name);
+        break;
+    case SoundEndCode::CUT_SHORT:
+        logWarning("sounds", "%s ends ahead of its samples", name);
+        break;
+    case SoundEndCode::READ_FAILED:
+        logWarning("sounds", "%s stopped, a read of the card failed", name);
+        break;
+    case SoundEndCode::PLAYED:
+        break;
+    }
 }
 
 void Sounds::reset() {

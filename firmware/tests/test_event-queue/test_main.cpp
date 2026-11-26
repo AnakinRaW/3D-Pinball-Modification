@@ -204,11 +204,28 @@ static void testPayload() {
         TEST_ASSERT_EQUAL_UINT16(TOUCH_Y, q.y);
     }
 
-    TEST_ASSERT_TRUE(p.publish<DriverEventType::SOUND_ENDED>(7, SOURCE, CODE));
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::SOUND_ENDED>(
+        7, SOURCE, SoundEnd{SoundEnd::NUMBERS - 1, SoundEndCode::READ_FAILED}));
     DriverEvent sound[1];
     TEST_ASSERT_EQUAL_UINT32(1, queue.read(sound, 1));
     TEST_ASSERT_EQUAL_UINT16(uint16_t(DriverEventType::SOUND_ENDED), uint16_t(sound[0].type));
-    TEST_ASSERT_EQUAL_HEX32(CODE, payload<DriverEventType::SOUND_ENDED>(sound[0]));
+    const SoundEnd end = payload<DriverEventType::SOUND_ENDED>(sound[0]);
+    TEST_ASSERT_EQUAL_HEX32(SoundEnd::NUMBERS - 1, end.number);
+    TEST_ASSERT_EQUAL_UINT8(uint8_t(SoundEndCode::READ_FAILED), uint8_t(end.code));
+
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::BALL_DRAINED>(8, SOURCE, NoPayload{}));
+    DriverEvent drained[1];
+    TEST_ASSERT_EQUAL_UINT32(1, queue.read(drained, 1));
+    TEST_ASSERT_EQUAL_UINT16(uint16_t(DriverEventType::BALL_DRAINED), uint16_t(drained[0].type));
+    TEST_ASSERT_EQUAL_HEX32(0, drained[0].payload);
+    (void)payload<DriverEventType::BALL_DRAINED>(drained[0]);
+
+    TEST_ASSERT_TRUE(p.publish<DriverEventType::TOGGLE_SWITCHED>(9, SOURCE, uint8_t(1)));
+    DriverEvent toggled[1];
+    TEST_ASSERT_EQUAL_UINT32(1, queue.read(toggled, 1));
+    TEST_ASSERT_EQUAL_UINT16(uint16_t(DriverEventType::TOGGLE_SWITCHED), uint16_t(toggled[0].type));
+    TEST_ASSERT_EQUAL_HEX32(1, toggled[0].payload);
+    TEST_ASSERT_EQUAL_UINT8(1, payload<DriverEventType::TOGGLE_SWITCHED>(toggled[0]));
 }
 
 // Publishes one event through p and checks that p drops it and that read() finds nothing.
