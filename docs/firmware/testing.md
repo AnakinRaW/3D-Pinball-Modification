@@ -44,6 +44,7 @@ The test image prints its run to the serial port in these lines:
 | `RESTART <test>` | The test restarts the Teensy and goes on after `resume` |
 | `TEST <test> <runs on> <quick s> <soak s>` | The image holds the test. It ends within the seconds given for a quick and for a soak run |
 | `READY <count>` | The list of tests has ended. The count gives the tests run since the start |
+| `BLANK` | The display is set up and black |
 | `CRASH <text>` | One line of the crash report that a crash left before the restart |
 | `ERROR <text>` | A command or a test broke these rules, such as a test that reported twice |
 
@@ -55,8 +56,9 @@ The image takes these commands, one to a line:
 | `run <pattern> [soak]` | Runs every test whose name matches the pattern, in the order of this document, then prints `END`. A `*` stands for any text. Several patterns may follow `run` |
 | `resume <test> [soak]` | Runs the part of the test that follows its restart, then prints `END` |
 | `reset` | Restarts the Teensy |
+| `blank` | Sets the display up, which leaves it black, then prints `BLANK` |
 
-The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line.
+The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line. A restart can leave a stripe of stray bytes on the display, which stays awake through it. The runner therefore restarts the image after its last test and sends `blank`.
 
 The runner fails a test that prints `FAIL` or `ERROR`. It also fails a test that runs past its time from the `TEST` line, and a test during which the serial port goes away without a `RESTART`. A crash report after such a loss marks the failure as a crash. A test past its time stops the run, since the image no longer answers. The runner exits with 0 when every test passed or skipped, and with 1 otherwise.
 
