@@ -34,6 +34,13 @@ def main():
             f.write(raw); previews.append(shown.resize((640, 480), Image.NEAREST))
     previews[0].save(os.path.join(out, "preview.gif"), save_all=True, append_images=previews[1:], duration=40, loop=0)
     print(len(names), "frames,", os.path.getsize(os.path.join(out, "intro.rgb")), "bytes")
+    # the sound is mixed apart from the picture; a track older than its script or the film's paths is stale
+    here = os.path.dirname(os.path.abspath(__file__))
+    wav = os.path.join(out, "intro.wav")
+    newer = [p for p in (os.path.join(here, "soundtrack.py"), os.path.join(here, "out", "ball-paths.json"))
+             if not os.path.exists(wav) or os.path.getmtime(p) > os.path.getmtime(wav)]
+    if newer:
+        print("intro.wav is older than", ", ".join(os.path.basename(p) for p in newer), "and needs soundtrack.py again")
 
 
 if __name__ == "__main__":
