@@ -12,8 +12,8 @@
 //
 // Wiring: none. The lighting runs on chain F, which has no LEDs at the bench, and sends dark
 // frames. Chain A and its LEDs stay untouched. A servo on the servo pin stays at its start
-// position. The display, where one is connected, shows black and then a dark gray screen. The
-// audio driver plays a file that holds no sound, so a speaker stays silent.
+// position. The display, where one is connected, shows black and then a dark gray column at its
+// left edge. The audio driver plays a file that holds no sound, so a speaker stays silent.
 
 #include <Arduino.h>
 #include <stdarg.h>
@@ -294,21 +294,21 @@ static bool storageAtOnce(Verdict& v) {
 
 // ---- the display driver
 
-constexpr uint32_t DISPLAY_FRAME_BYTES =
-    uint32_t(Display::WIDTH) * Display::HEIGHT * 2;   // RGB565, two bytes a pixel
-constexpr uint8_t DARK_GRAY = 0x10;                   // both bytes of a dark RGB565 gray
-constexpr uint32_t DISPLAY_DONE_MS = 100;             // far longer than a whole screen's bus time
-static Display displayFresh;                          // before-begin: never begun
-static Display displayStarved;   // begin-fails: begins with the driver tick full
-using test::display;             // at-once: the shared display driver
-EXTMEM static uint8_t displayFrame[DISPLAY_FRAME_BYTES] __attribute__((aligned(32)));
+// a column one step wide down the whole screen, two bytes of RGB565 a pixel
+constexpr uint32_t DISPLAY_BAND_BYTES = uint32_t(Display::STEP_PX) * Display::HEIGHT * 2;
+constexpr uint8_t DARK_GRAY = 0x10;         // both bytes of a dark RGB565 gray
+constexpr uint32_t DISPLAY_DONE_MS = 100;   // far longer than a whole screen's bus time
+static Display displayFresh;                // before-begin: never begun
+static Display displayStarved;              // begin-fails: begins with the driver tick full
+using test::display;                        // at-once: the shared display driver
+DMAMEM static uint8_t displayBand[DISPLAY_BAND_BYTES];   // display.md: pixels in RAM1 or RAM2
 static volatile bool displayOut = false;
 
 // Gets whether a display driver answers every call at once with false or nothing.
 static bool displayEmpty(Display& driver, Verdict& v) {
     bool sent = true;
     const uint32_t us =
-        timedUs([&] { sent = driver.send(0, 0, Display::WIDTH, 1, displayFrame, [] {}); });
+        timedUs([&] { sent = driver.send(0, 0, Display::STEP_PX, 1, displayBand, [] {}); });
     driver.restart();
     if (sent || driver.restarting()) {
         return v.want("send() false, not restarting")
@@ -321,23 +321,23 @@ static bool displayBeforeBegin(Verdict& v) {
     return displayEmpty(displayFresh, v);
 }
 
-// A whole screen returns while its bytes still go out, and a second rectangle right after it
-// returns false at once.
+// A column down the whole screen returns while its bytes still go out, and a second rectangle
+// right after it returns false at once.
 static bool displayAtOnce(Verdict& v) {
     if (!display.begin()) {
         return v.want("begin() true").saw("begin() false");
     }
-    memset(displayFrame, DARK_GRAY, sizeof displayFrame);
+    memset(displayBand, DARK_GRAY, sizeof displayBand);
     displayOut = false;
     bool first = false;
     bool second = true;
     const uint32_t firstUs = timedUs([&] {
-        first = display.send(0, 0, Display::WIDTH, Display::HEIGHT, displayFrame,
+        first = display.send(0, 0, Display::STEP_PX, Display::HEIGHT, displayBand,
                              [] { displayOut = true; });
     });
     const bool outAtReturn = displayOut;
     const uint32_t secondUs =
-        timedUs([&] { second = display.send(0, 0, Display::STEP_PX, 1, displayFrame, [] {}); });
+        timedUs([&] { second = display.send(0, 0, Display::STEP_PX, 1, displayBand, [] {}); });
     const uint32_t t0 = millis();
     while (!displayOut && millis() - t0 < DISPLAY_DONE_MS) {
     }
