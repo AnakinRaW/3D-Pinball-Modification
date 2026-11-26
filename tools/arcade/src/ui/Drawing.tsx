@@ -367,7 +367,7 @@ export function Drawing({ model, state }: { model: Model; state: State }) {
         }}
       >
         <div
-          class="drawing-host"
+          class={`drawing-host${studio ? " dim" : ""}`}
           ref={host}
           onClick={onClick}
           dangerouslySetInnerHTML={markup}
@@ -485,6 +485,9 @@ export function Drawing({ model, state }: { model: Model; state: State }) {
           onClick={() => setZoom(HOME)}
         >
           ⤢
+        </button>
+        <button data-action="three-d" class="dim" title="Show the machine in 3D" onClick={() => (state.threeD.value = true)}>
+          3D
         </button>
       </div>
     </div>

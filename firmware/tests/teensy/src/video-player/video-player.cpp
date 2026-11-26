@@ -177,8 +177,11 @@ static bool ready() {
     GameHost::use(files, media::GAME);
     sounds.begin();
     GameHost::reset(screen, videoPlayer, sounds);
-    sounds.musicVolume(1);
-    sounds.effectsVolume(1);
+    // frames decodes the sum of all four channels at full scale. The sounds scale music and
+    // effects at 1 down to a half each, so the test hands the driver its volumes directly.
+    for (uint8_t c = 0; c < AudioDriver::CHANNELS; ++c) {
+        audio.volume(c, 1);
+    }
     movieEnded = 0;
     return true;
 }

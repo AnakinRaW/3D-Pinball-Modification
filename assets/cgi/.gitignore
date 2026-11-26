@@ -1,0 +1,3 @@
+# These are made by the scripts in blender/ and rebuilt from them.
+blender/out/
+blender/__pycache__/

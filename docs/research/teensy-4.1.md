@@ -35,7 +35,9 @@ PJRC's answer is no. Paul Stoffregen, asked whether 3.3 V may be applied to a Te
 
 NXP says the same in [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4. Section 4.2.1.3 on page 31 forbids driving an I/O pin externally while that pin's supply NVCC_xxx is off, and names internal latch-up and malfunction from reverse current flows as the mechanism. Section 4.2.1.1 lists irreversible damage to the processor as the worst case of a sequencing violation.
 
-**The only quantified limit at a pin is a voltage.** Table 7 on page 24 gives `Vin/Vout` from −0.5 V to `OVDD + 0.3 V`, with OVDD the I/O supply voltage, so the ceiling falls to 0.3 V once that supply sits at zero. An injection-current rating, the per-pin milliamp allowance many microcontrollers publish, appears nowhere in the document.
+#### The only quantified limit at a pin is a voltage
+
+Table 7 on page 24 gives `Vin/Vout` from −0.5 V to `OVDD + 0.3 V`, with OVDD the I/O supply voltage, so the ceiling falls to 0.3 V once that supply sits at zero. An injection-current rating, the per-pin milliamp allowance many microcontrollers publish, appears nowhere in the document.
 
 Remedies, in the order PJRC ranks them:
 
@@ -59,23 +61,29 @@ Sources: [Can 3.3 V be safely applied to a Teensy 4 I/O pin while the Teensy 4 p
 | Current draw @ 600 MHz | ≈ 100 mA | PJRC. **Published for the Teensy 4.0, not the 4.1** |
 | SD card, in High Speed mode | 200 mA | [SD Physical Layer Simplified Specification 3.01](../datasheets/SD-Part1-PhysicalLayer-Simplified-3.01.pdf), Table 3-4 |
 
-**The two 3V3 header pins are one net.** The board carries a single 3.3 V regulator, the TLV75733P, and both pins hang off its output. A second pin buys shorter wiring and a second contact, not a second budget: 250 mA is the sum.
+#### The two 3V3 header pins are one net
 
-**The card socket hangs on the same regulator.** Its supply pin sits on the 3.3 V net in the Teensy 4.1 schematic, so a card's current comes out of the 250 mA like any external circuit. The SD specification allows a card 200 mA in High Speed mode, the larger of the two figures it gives for 3.3 V signaling, and the budget takes that figure.
+The board carries a single 3.3 V regulator, the TLV75733P, and both pins hang off its output. A second pin buys shorter wiring and a second contact, not a second budget: 250 mA is the sum.
+
+#### The card socket hangs on the same regulator
+
+Its supply pin sits on the 3.3 V net in the Teensy 4.1 schematic, so a card's current comes out of the 250 mA like any external circuit. The SD specification allows a card 200 mA in High Speed mode, the larger of the two figures it gives for 3.3 V signaling, and the budget takes that figure.
 
 Three open points:
 
 - The ≈ 100 mA figure belongs to the Teensy 4.0. PJRC gives no equivalent number for the 4.1 in the same place, and the 4.1 carries additional hardware. Measure the real draw before sizing a supply.
-- **Two PJRC figures for the same property disagree.** The Teensy 4.1 product page states 4 mA as the recommended maximum output current; the technical specifications table, which spans every Teensy generation in one grid, lists 10 mA. Design against 4 mA: it is the board-specific figure and the conservative one. 10 mA is the value the older generations carry.
+- Two PJRC figures for the same property disagree. The Teensy 4.1 product page states 4 mA as the recommended maximum output current; the technical specifications table, which spans every Teensy generation in one grid, lists 10 mA. Design against 4 mA: it is the board-specific figure and the conservative one. 10 mA is the value the older generations carry.
 - 4 mA is a recommended maximum, not an operating point. Drive LEDs and any real load through a transistor or a driver IC.
 
 ### ADC source impedance
 
-**The maximum source resistance R<sub>AS</sub> is 1 kΩ**, at 12 bit, f<sub>ADCK</sub> = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4, Table 54, page 65. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
+The maximum source resistance R<sub>AS</sub> is 1 kΩ, at 12 bit, f<sub>ADCK</sub> = 40 MHz and the 150 ns sample window, from [IMXRT1060CEC](../datasheets/IMXRT1060CEC.pdf) Rev. 4, Table 54, page 65. That datasheet covers the MIMXRT1062DVJ6 in both silicon revisions.
 
 The 1 kΩ belongs to that one sample setting. A longer window admits a higher resistance; Figures 36 to 38 on pages 68 and 69 plot the minimum sample time against source resistance and run to 10 kΩ. Setting the window is [`docs/firmware/drivers/ir-sensing.md`](../firmware/drivers/ir-sensing.md).
 
-**PJRC publishes no figure.** [pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
+#### PJRC publishes no figure
+
+[pjrc.com/teensy/adc.html](https://www.pjrc.com/teensy/adc.html) carries a "Source Impedance Problems" heading whose body reads "TODO: write this section". A 10 kΩ figure circulates in secondary sources without a citation; the charts ending there are the likely origin.
 
 ### Powering from something other than USB
 

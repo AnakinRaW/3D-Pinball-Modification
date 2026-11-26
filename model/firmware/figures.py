@@ -7,9 +7,10 @@ MODEL = Model.at(__file__, "firmware", "general-design.md",
                  drawings=["architecture.svg"],
                  documents=["driver-design.md", "error-handling.md", "logging.md", "io/i2c-bus.md",
                             "components/file-system.md", "game-abstraction.md",
-                            "input-handling.md", "components/config.md"])
+                            "input-handling.md", "components/config.md", "host-screens.md"])
 fig, ds, gr, msr, asm, dec = MODEL.declarers()
 MODEL.ignores("README.md", "the index of the firmware documents for a visitor, which states no figure")
+MODEL.ignores("game-files.md", "the format of a game file, whose numbers are the values of its example game")
 dec("n_balls_example", 3, "", src="the balls the example game in game-abstraction.md starts with")
 dec("points_lane_example", 100, "", src="the points the example game gives for a lane it passes")
 dec("t_ball_save_example", 10000, "", src="kSaveMs, the milliseconds the example game's ball save holds after a launch")
@@ -199,6 +200,23 @@ fig("ram_lighting", "KB", "(n_chain_limit * n_bits_led / n_symbols_word + n_latc
 
 MODEL.draws("ram_usb", pool="RAM2")
 MODEL.draws("ram_lighting", pool="RAM2")
+
+# -- the host's screens, host-screens.md ----------------------------------------
+_HOST = "decided with the host screens' storyboard"
+dec("t_menu_snap", 150, "ms", src=f"how long the menu takes to snap open or back once the finger lets go, {_HOST}")
+dec("t_page_slide", 150, "ms", src=f"how long a page of the host slides sideways, {_HOST}")
+dec("t_toast_drop", 200, "ms", src=f"how long a toast takes to drop in from the top, {_HOST}")
+dec("t_curtain_close", 250, "ms", src=f"how long the curtain takes to close, {_HOST}")
+dec("t_curtain_hold", 200, "ms", src=f"how long the curtain stays closed with its plaque, {_HOST}")
+dec("t_curtain_open", 300, "ms", src=f"how long the curtain takes to open, {_HOST}")
+dec("t_launch_card", 1.5, "s", src=f"about how long the launch card stays before the game's screen, {_HOST}")
+dec("t_menu_idle", 20, "s", src=f"how long the menu stays open without a touch, {_HOST}")
+dec("t_toast_fault", 4, "s", src=f"how long the toast of a failed device shows, {_HOST}")
+dec("t_toast_recovered", 3, "s", src=f"how long the toast of a device that works again shows, {_HOST}")
+dec("t_game_over", 3, "s", src=f"how long Game over shows before the first name entry, {_HOST}")
+dec("t_name_idle", 30, "s", src=f"how long the name entry waits for a touch before it counts as Skip, {_HOST}")
+dec("t_play_again", 15, "s", src=f"the countdown on the high scores that starts the same game again, {_HOST}")
+dec("step_slider", 5, "%", src=f"the step of the minus and the plus beside a slider, {_HOST}")
 
 # -- the bench, firmware/bench/load and firmware/bench/watchdog ----------------
 _LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"

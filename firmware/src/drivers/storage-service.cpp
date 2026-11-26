@@ -2,6 +2,7 @@
 #include "logging/debug-log.h"
 #include <string.h>
 
+constexpr uint8_t FAILURES = 3;   // storage.md: card errors in a row to fail
 /// RAM1 is the i.MX RT1062's tightly coupled data memory, which no cache serves. PJRC's linker
 /// script for the Teensy 4.1 places its 512 KB at 0x20000000.
 constexpr uintptr_t RAM1_START = 0x20000000;

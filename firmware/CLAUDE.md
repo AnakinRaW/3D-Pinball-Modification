@@ -2,7 +2,7 @@
 
 ## Run time and memory
 
-- **No dynamic memory after the start.** No `new`, no `malloc()` and no container that grows, in the main loop or in an interrupt. Every buffer and every object is allocated statically or during the start.
+- **No dynamic memory after the start.** No `new`, no `malloc()` and no container that grows, in the main loop or in an interrupt. Every buffer and every object is allocated statically or during the start. Parsing a YAML file is the one exception, since libyaml offers no hook for an allocator: it takes its memory from the heap inside one parse and returns all of it before the parse ends. A game's file is therefore read when the host switches games. A parse that finds no memory fails like a broken file.
 - **An interrupt is short and never waits.** It calls no `Serial`, no `delay()` and allocates nothing. It calls FreeRTOS only through the `FromISR` functions, and only at a priority of 208 or higher, as [`general-design.md`](../docs/firmware/general-design.md#interrupts) sets. A variable shared with an interrupt is `volatile` or atomic.
 - **The main loop never waits.** No `delay()` and no busy loop. A time comes from `nowUs()` and is compared with `before()` and the `elapsed` functions, which survive the counter's wrap.
 - **A time in milliseconds that only counts on, such as the time in front of a log line, comes from `millis()`.** It counts the milliseconds since the start and wraps after 49.7 days, so a span taken as the difference of two readings stays right across the wrap.
@@ -18,6 +18,7 @@
 - **A large buffer of a test lies in the PSRAM**, with `EXTMEM`, since RAM2's heap carries the test task's stack and the lighting's colors. [`tools/ram1-floor.py`](tools/ram1-floor.py) fails the build when RAM1 keeps less than its floor free.
 - **The test programs' code runs from the flash**, since [`linker/teensy41-tests.ld`](linker/teensy41-tests.ld) puts it there. A loop or a handler that times edges carries `FASTRUN`, which keeps it in ITCM.
 - **Every test in the code has its row in testing.md.** [`tools/test-coverage.py`](tools/test-coverage.py) fails CI otherwise and counts the rows still without a test.
+- **A program with a computer test folder has a test for every `computer` row.** A row for code still to be written reads `computer, planned` in its Runs on column, and the mark comes off with its test. `tools/test-coverage.py` fails CI on a missing test and on a planned row that has one.
 
 ## Layout
 
@@ -73,7 +74,7 @@ Code taken from another project and changed here stands beside the code that use
 - **A library explains only the job it does.** Why a caller needs something is written at the call site in the caller. Why the LED output's DMA needs interleaved words is written in the lighting driver, where it calls the encoder. The encoder describes only the words it computes.
 - **An override documents only what differs from the contract in `Driver`.** `Driver` states once what `begin()` and `failed()` promise. An override's comment adds what this driver does beyond that, such as the cases in which its `begin()` returns `false`.
 - **Unit and range live in the name and in a constant.** A quantity carries its unit in its name, such as `pullUs`, `TIMEOUT_MS` or `limitMa`. Its range stands in constants such as `SPEED_MIN_DEG_S` and `SPEED_MAX_DEG_S`. A setting's comment then names only its default and its config key, such as "servo.speed_deg_s's default".
-- **A member's comment points into no file under `docs/`.** A source stands only beside a number, at the end of its line, as in `// pin-assignment.md: LED chain A`.
+- **A member's comment points into no file under `docs/` or `model/`.** A source stands only beside a number, at the end of its line, as in `// pin-assignment.md: LED chain A` or `// firmware model: t_monitor`, which names the model and the figure and no path.
 - **Production code holds no remark about tests.** A comment in `src/` names no test that runs the code and no test that needs it, such as "so the computer tests run it".
 - **A name says what the code does and to what.** This holds for a library, a file, a type and a member. `ws2812-color-encoder` names the job and its object. `ws2812-symbols`, `encoding` and `pulses` name a by-product or nothing.
 - **A file's opening comment and a `library.json` description say in plain words what the library does for its user.** The first sentence says what the code is and points to no document. A closing line such as "Design: docs/firmware/drivers/servo.md" may name the design document. A mechanism appears only where it explains a benefit to the user: "FlexIO2 times every bit in hardware, so the LEDs show the right colors however busy the processor is."

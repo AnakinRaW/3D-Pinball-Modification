@@ -14,7 +14,9 @@
 //                    that track where it starts
 //   music-ended      only a mode's track that played to its end gives MUSIC_ENDED, once
 //   volume           the driver gets the square of each volume inside 0 to 1
-//   start-volumes    begin() lowers the effects until the two volumes squared add up to 1
+//   balance          music and effects whose squares add up to more than 1 are scaled down
+//                    together to a sum of 1, and each keeps the volume set
+//   start-volumes    begin() sets the starting volumes as the two setters do
 //   names            a name plays from the game's audio directory, a long one finds no file
 //   reset            reset() silences every channel, forgets every track and sets the volumes
 //
@@ -22,7 +24,6 @@
 
 #include "components/file-system.h"
 #include "components/sounds.h"
-#include "logging/logger.h"
 #include <map>
 #include <string>
 #include <unity.h>
@@ -93,32 +94,6 @@ struct TestService : StorageService {
     }
 };
 
-// A log file whose writes end at once.
-struct LogFile : AppendFile {
-    std::string content;
-    AppendStatus state = AppendStatus::IDLE;
-
-    void write(uint32_t at, const uint8_t* data, size_t n) override {
-        content.resize(at);
-        content.append(reinterpret_cast<const char*>(data), n);
-        state = AppendStatus::SUCCEEDED;
-    }
-
-    void rewrite(const uint8_t* data, size_t n) override {
-        content.clear();
-        write(0, data, n);
-    }
-
-    AppendStatus status() const override { return state; }
-};
-
-// The firmware's log for the test that reads it. It lives as long as the program, since
-// logWarning() keeps writing to the logger that began last.
-static LogFile logA;
-static LogFile logB;
-static uint8_t logBuffer[1024];
-static Logger logger(logA, logB, logBuffer, sizeof(logBuffer));
-
 // The host's calls to the file system and to the sounds.
 class GameHost {
 public:
@@ -168,7 +143,8 @@ static std::string ramp(int16_t first, uint32_t samples = TRACK) {
 }
 
 // A card, the storage service on it, the game's files, the fake driver and the sounds, with the
-// tracks and the effects on the card and both volumes at 1, so the samples come out unchanged.
+// tracks and the effects on the card, the music at 1 and the effects at 0, so the music's samples
+// come out unchanged.
 struct Rig {
     FakeCard card;
     TestService service{card};
@@ -184,7 +160,7 @@ struct Rig {
         audio.begin();
         sounds.begin();
         sounds.musicVolume(1);
-        sounds.effectsVolume(1);
+        sounds.effectsVolume(0);
         const std::pair<const char*, int16_t> tracks[] = {{"a.wav", A}, {"b.wav", B}, {"c.wav", C},
                                                           {"d.wav", D}, {"v.wav", V}, {"t.wav", T}};
         for (const auto& t : tracks) {
@@ -435,63 +411,73 @@ static void testMusicEnded() {
     TEST_ASSERT_FALSE(rig.sounds.translate({0, DriverEventType::TOUCH_DOWN, 0, 0}, out));
 }
 
+// Checks the driver's volume of the music and of every effect channel.
+static void expectLevels(const Rig& rig, float music, float effects) {
+    TEST_ASSERT_EQUAL_FLOAT(music, rig.audio.levels[Sounds::MUSIC]);
+    for (uint8_t c = Sounds::MUSIC + 1; c < AudioDriver::CHANNELS; ++c) {
+        TEST_ASSERT_EQUAL_FLOAT(effects, rig.audio.levels[c]);
+    }
+}
+
 static void testVolume() {
     Rig rig;
     rig.sounds.musicVolume(0.5f);
-    TEST_ASSERT_EQUAL_FLOAT(0.25f, rig.audio.levels[0]);
+    expectLevels(rig, 0.25f, 0);
     rig.sounds.effectsVolume(0.3f);
-    for (uint8_t c = 1; c < AudioDriver::CHANNELS; ++c) {
-        TEST_ASSERT_EQUAL_FLOAT(0.09f, rig.audio.levels[c]);
-    }
-    TEST_ASSERT_EQUAL_FLOAT(0.25f, rig.audio.levels[0]);
+    expectLevels(rig, 0.25f, 0.09f);
     rig.sounds.musicVolume(-1);
-    TEST_ASSERT_EQUAL_FLOAT(0, rig.audio.levels[0]);
+    expectLevels(rig, 0, 0.09f);
     rig.sounds.effectsVolume(2);
-    for (uint8_t c = 1; c < AudioDriver::CHANNELS; ++c) {
-        TEST_ASSERT_EQUAL_FLOAT(1, rig.audio.levels[c]);
-    }
-    rig.sounds.musicVolume(1);
-    TEST_ASSERT_EQUAL_FLOAT(1, rig.audio.levels[0]);
+    expectLevels(rig, 0, 1);
+    rig.sounds.effectsVolume(-1);
+    expectLevels(rig, 0, 0);
+    rig.sounds.musicVolume(2);
+    expectLevels(rig, 1, 0);
 }
 
-// Gets how many warnings of the sounds the log holds.
-static size_t soundsWarnings() {
-    logger.flush();
-    logger.update();
-    logger.update();
-    size_t count = 0;
-    for (size_t at = logA.content.find(" W sounds "); at != std::string::npos;
-         at = logA.content.find(" W sounds ", at + 1)) {
-        ++count;
-    }
-    return count;
+static void testBalance() {
+    Rig rig;
+    // Both at 1 share the output equally.
+    rig.sounds.effectsVolume(1);
+    expectLevels(rig, 0.5f, 0.5f);
+    // 1 and 0.25 squared add up to 1.25, so both are divided by it.
+    rig.sounds.effectsVolume(0.5f);
+    expectLevels(rig, 0.8f, 0.2f);
+    // The music kept its volume of 1 and gets it back once the effects leave room.
+    rig.sounds.effectsVolume(0);
+    expectLevels(rig, 1, 0);
+    // Squares that add up to 1 exactly stay as they are.
+    rig.sounds.musicVolume(0.6f);
+    rig.sounds.effectsVolume(0.8f);
+    expectLevels(rig, 0.36f, 0.64f);
+    // reset() hands the driver the scaled volumes again.
+    rig.sounds.musicVolume(1);
+    rig.sounds.effectsVolume(1);
+    GameHost::reset(rig.sounds);
+    expectLevels(rig, 0.5f, 0.5f);
 }
 
 static void testStartVolumes() {
-    logger.begin(LogFileStart{}, LogFileStart{});
     // The defaults add up to less than 1 squared and stay.
     {
         Rig rig;
-        TEST_ASSERT_EQUAL_UINT32(0, soundsWarnings());
         rig.sounds.begin();
-        TEST_ASSERT_EQUAL_FLOAT(Sounds::MUSIC_VOLUME * Sounds::MUSIC_VOLUME, rig.audio.levels[0]);
-        TEST_ASSERT_EQUAL_FLOAT(Sounds::EFFECTS_VOLUME * Sounds::EFFECTS_VOLUME,
-                                rig.audio.levels[1]);
-        TEST_ASSERT_EQUAL_UINT32(0, soundsWarnings());
+        expectLevels(rig, Sounds::MUSIC_VOLUME * Sounds::MUSIC_VOLUME,
+                     Sounds::EFFECTS_VOLUME * Sounds::EFFECTS_VOLUME);
     }
-    // Both at 1 leave the effects no room.
+    // Both at 1 share the output, as when the two setters set them, and a value outside 0 to 1
+    // counts as the nearer end.
     Rig rig;
     Sounds::Settings settings;
     settings.musicVolume = 1;
-    settings.effectsVolume = 1;
+    settings.effectsVolume = 2;
     rig.sounds.configure(settings);
     rig.sounds.begin();
-    TEST_ASSERT_EQUAL_FLOAT(1, rig.audio.levels[0]);
-    for (uint8_t c = 1; c < AudioDriver::CHANNELS; ++c) {
-        TEST_ASSERT_EQUAL_FLOAT(0, rig.audio.levels[c]);
-    }
-    TEST_ASSERT_EQUAL_UINT32(1, soundsWarnings());
-    TEST_ASSERT_TRUE(logA.content.find("from 100 % to 0 %") != std::string::npos);
+    expectLevels(rig, 0.5f, 0.5f);
+    settings.musicVolume = -1;
+    rig.sounds.configure(settings);
+    rig.sounds.begin();
+    expectLevels(rig, 0, 1);
 }
 
 static void testNames() {
@@ -554,6 +540,7 @@ int main() {
     RUN_TEST(testSamePass);
     RUN_TEST(testMusicEnded);
     RUN_TEST(testVolume);
+    RUN_TEST(testBalance);
     RUN_TEST(testStartVolumes);
     RUN_TEST(testNames);
     RUN_TEST(testReset);

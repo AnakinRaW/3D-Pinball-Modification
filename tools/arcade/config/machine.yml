@@ -54,7 +54,7 @@ strips:
 # firmware component a game talks to.
 devices:
   ir-orbit-top:          { driver: IR sensing, channel: 0, component: Tracks }
-  ir-left-lane:          { driver: IR sensing, channel: 1, component: Scoop }
+  ir-scoop:              { driver: IR sensing, channel: 1, component: Scoop }
   ir-top-lane-1:         { driver: IR sensing, channel: 2, component: Top lanes }
   ir-top-lane-2:         { driver: IR sensing, channel: 3, component: Top lanes }
   ir-top-lane-3:         { driver: IR sensing, channel: 4, component: Top lanes }
