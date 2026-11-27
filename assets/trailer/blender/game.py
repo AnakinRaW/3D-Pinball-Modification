@@ -34,22 +34,37 @@ CUT_STARTS = [("left", (49.34, 333.29, 4.5), (156.5, 18.3)), ("right", (168.08, 
 # sensor, and on down the inlane rail onto the flipper
 INLANE_STARTS = [("left", (28.05, 268.0, 4.5), (0.0, 140.0)), ("right", (189.05, 268.0, 4.5), (0.0, 140.0))]
 INLANES = [(28.05, 290.95), (189.05, 290.95)]
+INLANE_Y = (255.0, 320.0)   # mm, the inlanes' run above their rails' ends
+INLANE_HALF = 12.0          # mm either side of an inlane's line that counts as in it
+DIRECT_OK = ("playfield", "rail")   # what a direct shot may touch besides a floor and its goal: the inlane rail at the flipper
+BACK_SPEED = 120.0         # mm/s up the board in an inlane that no segment may show
 # a segment that shows the U track starts with the ball on its way up the left lane, below the spinner
 SPINNER_START, SPINNER_LANE = (30.5, 195.0, 4.5), 75.0
+# the last ball falls fast straight down the middle, out from between the slingshots, too fast for the player
+DROP_START = (108.5, 300.0, 4.5)
+# the ball the sea lion sent into the bumpers comes out below bumper 3 and falls into the scoop
+FALL_START = (66.0, 106.0, 4.5)
+# the multiball's start in the game's time, kept fixed as it was found
+MULTIBALL_T = 12.878999999998301
+DOWN_SPEED = 30.0          # mm/s down the board a ball needs for a gate that is passed going down
+# where ball A lies in the scoop as the multiball starts, BU in the frame of machine-tilt, and how it still rolls
+SCOOP_SEAT = ((3.147366523742676, -12.457141876220703, -0.09999984502792358), (0.9384371638298035, -0.4275332987308502, 0.0))
 
 
 class AnyGate(Gate):
     """A gate passed at the first of several points."""
 
-    def __init__(self, name, points, reach=3.0, zmax=None, zmin=None, ball=None):
+    def __init__(self, name, points, reach=3.0, zmax=None, zmin=None, ball=None, down=False):
         super().__init__(name, points[0][0], points[0][1], reach, zmax, zmin, None, ball)
-        self.points = points
+        self.points, self.down = points, down
 
 
 ORBIT_TOP = Gate("orbit", 200, 50, reach=8, zmin=20)
 TOP_LANE = AnyGate("top-lane", TOP_LANES, reach=3.5, zmax=8)
-INLANE = AnyGate("inlane", INLANES, reach=3.5, zmax=8)
+INLANE = AnyGate("inlane", INLANES, reach=3.5, zmax=8, down=True)
 BLUE = [Gate("blue-loop", 100, 35, reach=20, zmin=25), Gate("blue-exit", 33, 295, reach=12)]
+# a ride down the blue ramp, through two of its hoops up on the ramp
+BLUE_RIDE = [Gate("blue-hoop", 69.5, 137.0, reach=10, zmin=20), Gate("blue-hoop-2", 12.9, 223.0, reach=10, zmin=15)]
 CROC = [Gate("croc-mouth", 172, 180, reach=10), Gate("croc-loop", 188, 131, reach=12, zmin=8),
         Gate("croc-ride", 208, 250, reach=8, zmin=12), Gate("croc-hole", 189.5, 310.5, reach=15)]
 ORBIT = [Gate("orbit", 200, 50, reach=8, zmin=20), Gate("over", 40, 20, reach=18, zmin=15)]
@@ -57,6 +72,8 @@ ORBIT = [Gate("orbit", 200, 50, reach=8, zmin=20), Gate("over", 40, 20, reach=18
 GREEN = [Gate("green-entry", 66, 192, reach=10), Gate("green-climb", 26, 105, reach=10, zmin=8),
          Gate("green-top", 140, 16, reach=12, zmin=12), Gate("green-end", 199, 71, reach=15, zmin=8)]
 SEAL = [Gate("seal", event=("hit", "seal-r"))]
+BUMPERS = Gate("bumpers", event=("bumper", ""))
+SCOOP_IN = Gate("scoop", rn.SCOOP[0], rn.SCOOP[1], reach=3.0, zmax=0.5)
 TARGET = [Gate("target", event=("hit", "target-face"))]
 # the U track: the lane round the top under the green track, past its sensor
 U_TRACK = [Gate("u-track", 70.0, 6.0, reach=8, zmax=8)]
@@ -83,6 +100,14 @@ def start():
 def cut(state, q):
     """The state behind a cut: at the time the segment before it ended, the one ball in play comes down the inlane
     CUT_STARTS[q["from"]] onto its flipper."""
+    if "drop" in q:
+        b = ph.Ball(at(*DROP_START), vel(q["aim"], q["drop"]))
+        return State(state.t, [b], {k: list(v) for k, v in state.presses.items()}, None)
+    if "fall" in q:
+        # the ball comes out of the bumpers, below bumper 3, rolling down toward the scoop
+        a = math.radians(q["dir"])
+        b = ph.Ball(at(*FALL_START), vel(math.cos(a) * q["fall"], math.sin(a) * q["fall"]))
+        return State(state.t, [b], {k: list(v) for k, v in state.presses.items()}, None)
     if "speed" in q:
         # the ball comes up the left lane toward the spinner and the U track behind it
         d = (-math.cos(math.radians(SPINNER_LANE)), -math.sin(math.radians(SPINNER_LANE)))
@@ -118,14 +143,21 @@ def plan_multiball(st, q):
     b = ph.Ball(at(*rn.PLUNGER), vel(0, 0), kicks=[(go + PULL, vel(0, -q["launch"]))])
     st.balls.append(b)
     a = st.balls[0]
+    # A lies on the scoop's seat as it always settles there, so the multiball plays the same whatever way it came in
+    a.p, a.v, a.floor, a.ground = Vector(SCOOP_SEAT[0]), Vector(SCOOP_SEAT[1]), Vector((0.0, 0.0, 1.0)), "scoop-kicker"
     kick = q["kick"]
     a.kicks = [(go + q["out"], vel(kick * math.cos(KICK_AIM), kick * math.sin(KICK_AIM), q["up"]))]
     return [(st.t, q["save"])]
 
 
+def plan_fall(st, q):
+    """The ball falls on its own; no flipper moves."""
+    return []
+
+
 def plan_drain(st, q):
-    """The last ball comes down the inlane, and the player lets it go: no flipper moves, and it rolls off the
-    flipper's tip into the drain."""
+    """The last ball comes fast down the middle, and the player has no chance: no flipper reaches it, and it falls
+    between the flippers' tips into the drain."""
     return []
 
 
@@ -139,20 +171,24 @@ GAME = [
      "goals": [[ORBIT_TOP, TOP_LANE]], "end": "after", "after": 1.5, "t_max": 6.0, "prefer": "bumper"},
     {"name": "tunnel", "cut": True, "optional": True, "tries": 300, "params": CUT_SHOT, "plan": plan_shot, "goals": [U_TRACK],
      "end": "after", "after": 0.5, "t_max": 5.0},
-    {"name": "seal", "cut": True, "params": dict(CUT_SHOT, inlane=(1.0, 1.0), delay=(0.3, 0.9)), "plan": plan_shot, "goals": [[INLANE] + SEAL],
-     "end": "after", "after": 0.7, "t_max": 5.0},
-    {"name": "target", "cut": True, "params": CUT_SHOT, "plan": plan_shot, "goals": [TARGET], "end": "after",
-     "after": 0.25, "t_max": 4.0},
-    {"name": "scoop", "cut": True, "tries": 200, "params": CUT_SHOT, "plan": plan_shot,
-     "goals": [[Gate("scoop", rn.SCOOP[0], rn.SCOOP[1], reach=3.0, zmax=0.5)]], "end": "scoop", "t_max": 5.0},
-    {"name": "multiball", "params": {"launch": (1150.0, 1500.0), "out": (0.9, 2.2), "kick": (250.0, 700.0), "up": (550.0, 1200.0),
+    # behind a cut the ball rolls down an inlane past its sensor, and a flip sends it straight at a target; it
+    # bounces back and rolls down onto a flipper
+    {"name": "target", "cut": True, "direct": "target", "tries": 800, "params": dict(CUT_SHOT, inlane=(1.0, 1.0), delay=(0.0, 1.4), h=(0.1, 0.5)),
+     "plan": plan_shot, "goals": [[INLANE] + TARGET], "end": "approach", "t_max": 5.0},
+    # the player sends it straight at the sea lion, which throws it into the bumpers; out of them it falls into the scoop
+    {"name": "seal", "direct": "seal", "tries": 600, "params": dict(SHOT, delay=(0.0, 1.4), h=(0.1, 0.5)), "plan": plan_shot,
+     "goals": [SEAL + [BUMPERS, SCOOP_IN]], "end": "scoop", "t_max": 6.0},
+    {"name": "multiball", "t_start": MULTIBALL_T, "params": {"launch": (1150.0, 1500.0), "out": (0.9, 2.2), "kick": (250.0, 700.0), "up": (550.0, 1200.0),
                                      "save": (0.0, 0.05)},
      "plan": plan_multiball,
      "goals": [[Gate("b-orbit", 200, 50, reach=8, zmin=20, ball=1), Gate("a-bumper", event=("bumper", "3"), ball=0),
-                Gate("knock", event=("balls", ""))]],
-     "end": "after", "after": 1.2, "t_max": 10.0, "prefer": "bumper"},
-    # the last ball: behind a cut it comes down an inlane, the player lets it go, and it drains
-    {"name": "finale", "cut": True, "params": {"from": (0.0, len(CUT_STARTS))}, "plan": plan_drain,
+                ]],
+     "end": "approach", "t_max": 10.0, "prefer": "bumper"},
+    # while both balls play, the player sends the one rolling down onto a flipper up the blue ramp
+    {"name": "blue", "tries": 300, "params": SHOT, "plan": plan_shot, "goals": [BLUE_RIDE], "end": "after", "after": 1.0,
+     "t_max": 5.0},
+    # the last ball: behind a cut it falls fast down the middle, between the flippers' tips, into the drain
+    {"name": "finale", "cut": True, "params": {"drop": (450.0, 800.0), "aim": (-30.0, 30.0)}, "plan": plan_drain,
      "goals": [[TIPS], [Gate("drained", event=("drained", ""))]], "end": "drain", "t_max": 4.0},
 ]
 
@@ -191,6 +227,9 @@ class Tracker:
                 x, y, z = b.p.x * 10.0, -b.p.y * 10.0, b.p.z * 10.0
                 di = max(0.0, min(math.hypot(x - px, y - py) for px, py in pts) - g.reach)
                 di += max(0.0, (g.zmin or 0.0) - z) + max(0.0, z - (g.zmax if g.zmax is not None else 1e9))
+                # a gate passed going down the board only counts for a ball rolling down
+                if getattr(g, "down", False) and -b.v.y * 10.0 < DOWN_SPEED:
+                    di += 1.0
                 d = min(d, di)
             if d > 0:
                 self.best = min(self.best, d)
@@ -223,14 +262,22 @@ def run(machine, seg, state, q, goal, record=0.002):
     its cost, 0 once the goal is met and the segment has reached its end, the state at its end, the samples, the
     events and the gates' times."""
     st = cut(state, q) if seg.get("cut") else state.copy()
+    if seg.get("t_start") is not None and st.t < seg["t_start"]:
+        # the segment starts at a fixed time of the game, so the steps of the simulation fall as they did when
+        # it was found: the game is chaotic, and a step shifted by its rounding plays another game
+        st.t = seg["t_start"]
     policy = seg["plan"](st, q)
     for side, fl in machine.flippers.items():
         fl.presses = st.presses[side]; fl.auto = None
     events, tracker = [], Tracker(goal)
     still = [None] * len(st.balls)
     stuck = [None] * len(st.balls)
-    out = {"end": None, "held": None, "stall": None}
+    out = {"end": None, "held": None, "stall": None, "back": None, "indirect": None}
     t_end = st.t + seg["t_max"]
+    # a direct shot: from the flip to the goal the ball touches nothing but the floor and the flipper
+    t_flip = st.presses[st.held][-1][0] if seg.get("direct") and st.held and st.presses[st.held] else None
+    seen, contact = [0], [None]
+    allowed = DIRECT_OK + tuple(g.event[1] for g in goal if g.event and g.event[1])
 
     def stop(t, balls):
         for when, auto in policy:
@@ -239,6 +286,22 @@ def run(machine, seg, state, q, goal, record=0.002):
                 for fl in machine.flippers.values():
                     fl.auto = auto
         tracker.update(t, balls, events)
+        if t_flip is not None and seg["direct"] not in tracker.marks:
+            # from the flipper's first touch of the ball after the press on
+            for e in events[seen[0]:]:
+                name = str(e[2])
+                if contact[0] is None:
+                    if e[1] == "flipper" and e[0] >= t_flip:
+                        contact[0] = e[0]
+                    continue
+                if e[1] in ("sling", "bumper") or (e[1] == "hit" and not name.startswith(allowed) and "floor" not in name):
+                    out["indirect"] = name; return True
+            seen[0] = len(events)
+        # after the target the ball drops straight into an inlane: no flipper touches it on the way
+        after = seg.get("no_flip_after")
+        if after in tracker.marks and tracker.i < len(goal) and any(
+                e[1] == "flipper" and e[0] > tracker.marks[after] for e in events[-20:]):
+            out["indirect"] = "flipper"; return True
         for i, b in enumerate(balls):
             if b.out is not None:
                 still[i] = stuck[i] = None; continue
@@ -252,12 +315,18 @@ def run(machine, seg, state, q, goal, record=0.002):
             return True
         if done and seg["end"] == "after" and t >= max(tracker.marks.values(), default=st.t) + seg["after"]:
             out["end"] = t; return True
-        if done and len(live) == 1 and seg["end"] == "approach" and t > st.t + 0.3:
-            side = _approach_side(machine, balls[live[0]], t)
-            if side:
-                out["end"] = t; out["held"] = side; return True
+        if done and seg["end"] == "approach" and t > st.t + 0.3:
+            for i in live:
+                side = _approach_side(machine, balls[i], t)
+                if side:
+                    out["end"] = t; out["held"] = side; return True
         for i in live:
             b = balls[i]
+            # a ball rolling back up an inlane looks wrong on the kit, whose inlanes only lead down to the flippers
+            x, y, z = b.p.x * 10.0, -b.p.y * 10.0, b.p.z * 10.0
+            if z < 8.0 and INLANE_Y[0] < y < INLANE_Y[1] and min(abs(x - lx) for lx, _ in INLANES) < INLANE_HALF \
+                    and -b.v.y * 10.0 < -BACK_SPEED:
+                out["back"] = (round(x, 1), round(y, 1)); return True
             if still[i] is None or t - still[i] < 0.25:
                 continue
             x, y, z = b.p.x * 10.0, -b.p.y * 10.0, b.p.z * 10.0
@@ -273,7 +342,7 @@ def run(machine, seg, state, q, goal, record=0.002):
     cost = tracker.cost()
     if any(e[1] == "drained" and not 0.0 < e[3].x * 10.0 < 232.0 for e in events):
         cost += 1000.0
-    if out["stall"]:
+    if out["stall"] or out["back"] or out["indirect"]:
         cost += 1000.0
     elif out["end"] is None:
         cost += 40.0
@@ -333,7 +402,7 @@ def play(machine, solution):
     samples, events, segments = [[], []], [], []
     for name, q, gi in solution:
         seg = by_name[name]
-        t0 = st.t
+        t0 = max(st.t, seg.get("t_start") or st.t)
         c, st2, smp, ev, marks, out = run(machine, seg, st, q, seg["goals"][gi])
         for i, s in enumerate(smp):
             samples[i] += s if not samples[i] or seg.get("cut") else s[1:]

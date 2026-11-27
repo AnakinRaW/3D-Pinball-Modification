@@ -15,7 +15,7 @@ ROLL = 5.0 / 7.0                # a rolling ball takes 5/7 of the slope's pull
 DRAG = 0.02                     # rolling resistance: the share of the speed it takes off every second
 DT = 0.001
 E_RUBBER, E_HARD, E_FLOOR = 0.7, 0.5, 0.15
-BUMPER_KICK, SLING_KICK = 70.0, 60.0
+BUMPER_KICK = 70.0
 BUMPER_READY = 0.03             # s after a kick before a bumper kicks again; its coil pulls in milliseconds
 BUMPER = {1: (69.634, 55.664), 2: (104.979, 74.788), 3: (71.218, 95.647)}     # mm of the drawing, as film.py
 BUMPER_REACH = 1.62             # the ball's center within this of a bumper's axis touches its skirt
@@ -110,19 +110,6 @@ class Machine:
         self.bvh = BVHTree.FromPolygons(verts, polys, epsilon=0.0)
         self.gravity = inv.to_3x3() @ Vector((0.0, 0.0, -G))
         self.flippers = {side: Flipper(side, inv) for side in FLIPPER}
-        self.sling = {o.name: sling_face(o) for o in bpy.data.objects if o.name.startswith("sling-rubber")}
-
-
-def sling_face(o):
-    """The normal of a slingshot's kicking face, toward the playfield's middle, in the frame of machine-tilt: square
-    to the longest straight run of its rubber ring."""
-    pts = [p.co.xyz for p in o.data.splines[0].points]
-    a, b = max(zip(pts, pts[1:] + pts[:1]), key=lambda q: (q[1] - q[0]).length)
-    d = (b - a).normalized()
-    n = Vector((d.y, -d.x, 0.0))
-    if n.x * (1.0 if sum(p.x for p in pts) / len(pts) < 10.8 else -1.0) < 0:
-        n = -n
-    return n
 
 
 class Flipper:
@@ -230,11 +217,12 @@ class Ball:
         self.kicks = sorted(kicks, key=lambda k: k[0])     # [(t, velocity)]: the plunger, the scoop's coil
         self.cool = {}               # the time each kicker may kick again
         self.floor = None
+        self.ground = ""             # the part it rolls on
         self.out = None              # the time it drained, past the flippers and out of play
 
     def copy(self):
         b = Ball(self.p.copy(), self.v.copy(), list(self.kicks))
-        b.cool = dict(self.cool); b.floor = self.floor.copy() if self.floor is not None else None; b.out = self.out
+        b.cool = dict(self.cool); b.floor = self.floor.copy() if self.floor is not None else None; b.out = self.out; b.ground = self.ground
         return b
 
 
@@ -273,7 +261,8 @@ def simulate(machine, balls, t0, t1, kicks=(), stop=None, record=0.002, events=N
         for i in range(len(balls)):
             for j in range(i + 1, len(balls)):
                 a, b = balls[i], balls[j]
-                if a.out is not None or b.out is not None:
+                # a ball on a ramp runs between its walls and is not knocked out of it by a ball below
+                if a.out is not None or b.out is not None or a.ground.startswith("ramp") or b.ground.startswith("ramp"):
                     continue
                 d = b.p - a.p
                 if d.length < 2 * R:
@@ -330,7 +319,7 @@ def _step(machine, ball, t, i, events):
         vn = ball.v.dot(n)
         name = machine.owner[idx]
         if n.z > 0.6:
-            ball.floor = n
+            ball.floor = n; ball.ground = name
         if vn < 0:
             e = E_FLOOR if n.z > 0.6 else restitution(name)
             if n.z > 0.6 and vn > -3.0:
@@ -338,12 +327,10 @@ def _step(machine, ball, t, i, events):
             ball.v -= n * (1.0 + e) * vn
             if vn < -5.0:
                 events.append((t, "hit", name, ball.p.copy(), i))
+            # the slingshots have no kicker: their rubber rings only bounce the ball
             if name.startswith("sling-rubber") and vn < -5.0 and abs(n.z) < 0.5 and t >= ball.cool.get(name, 0):
-                # only the kicking face fires; the ring's other sides only bounce the ball
-                if n.dot(machine.sling[name]) > 0.8:
-                    vt = ball.v - n * ball.v.dot(n)
-                    ball.v = vt + n * SLING_KICK; ball.cool[name] = t + 0.1
-                    events.append((t, "sling", name, ball.p.copy(), i))
+                ball.cool[name] = t + 0.1
+                events.append((t, "sling", name, ball.p.copy(), i))
     # the bumpers' skirts
     p2 = ball.p.to_2d()
     for b, (bx, by) in BUMPER.items():

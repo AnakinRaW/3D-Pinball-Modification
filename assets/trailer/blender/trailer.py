@@ -6,7 +6,7 @@ without rendering.
 scene.py in ../../cgi/blender builds the machine with its lights, and logo.py there the logo. game.py plays the game
 again from the parameters solve.py found in game.json. A clock lays the game's time onto the frames: half speed,
 slower around what the trailer shows, and never a jump. The shots follow the game, each from one of its moments to
-another. The flippers, the bumpers' coils, the slings, the seal, the plunger, the scoop's kicker and the ball
+another. The flippers, the bumpers' coils, the seal, the plunger, the scoop's kicker and the ball
 store's seesaw move with it, and the lights keep the cues of cues.md. Twice the apron comes off, so the ball store and
 the drain beneath it show. The game ends in the drain; a trail of light rises from it and flies into the screen,
 and the picture goes black and opens on the logo.
@@ -25,7 +25,26 @@ FPS = 25
 SEESAW_TILT = math.degrees(math.atan(3.5 / 9.0))    # the separator's seesaw, as scene.py builds it
 PIN_STROKE = 0.35                                    # BU, the pins' stroke of 3.5 mm
 PLUNGER_PULL = 6.0                                   # mm the player draws the plunger back before it shoots
-POWER = 100             # the power-up's last frame; the game follows
+EXTERIOR = 100          # frames the power-up shows the dark machine from outside before it flies in
+FLIGHT = 192            # frames of the flight over the playfield, the music's intro up to its drop, 7.68 s
+POWER = EXTERIOR + FLIGHT  # the power-up's last frame; the game follows on the music's drop
+FADE_IN = 50            # the frame by which the picture has faded in from black
+RELAY = 45              # the frame the plug goes in: the mains relay pulls and the ceiling strip glows up
+
+
+# the power-up's coils in turn, on the flight's 175-frame timing: the flippers flick, the bumpers pull, the
+# scoop's kicker rises, once the music has begun
+COILS = {"left": 40, "right": 46, 1: 70, 2: 78, 3: 86, "kicker": 94}
+
+
+def P(f):
+    """A frame of the power-up's flight, timed over 175 frames and laid onto the FLIGHT frames after EXTERIOR."""
+    return EXTERIOR + max(1, int(round(f * FLIGHT / 175.0)))
+
+
+def D(n):
+    """A span of n of the flight's 175 frames, in frames of the film."""
+    return n * FLIGHT / 175.0
 G0 = POWER + 1          # the frame where the game's time starts, ball A at rest at the plunger
 BASE, EASE = 0.5, 0.3  # the game's speed against real time, and the game time a change of speed takes
 BEAT = 12               # frames from beat to beat of the march, 125 beats a minute
@@ -43,7 +62,11 @@ SIGHT_MAX = 3.0                             # BU, 30 mm: the most a camera rises
 SETTLE = 12                                 # frames either side over which a camera's lift is smoothed
 TRAIL, LAG_MIN = 6.0, 2.0                   # BU, 60 mm: the farthest a chase camera's target trails its ball; the
                                             # spring's least lag in frames
-SHORTEST = 45                               # frames: the shortest shot of the game
+SENSOR_H = 36.0 * 9.0 / 16.0                # mm, the cameras' sensor height in the 16:9 picture
+FRAME_FILL = 0.6                            # the share of the picture's half height the ball and the part stay within
+LENS_MIN = 14.0                             # mm, the widest a follow camera opens to keep them in
+FAR = 250.0                                 # mm a ball may be from a shot's part before the camera turns to it
+SHORTEST = 45                              # frames: the shortest shot of the game
 STORE_FRONT, STORE_BACK = (192.32, 397.74), (183.35, 400.99)
 # under the apron, the drained ball rolls along the drain wall to the store; let out, the front ball rolls past the
 # exit sensor through the opening in the plunger lane's wall down to the plunger
@@ -52,6 +75,9 @@ TO_STORE = [(109.0, 406.0), (117.0, 412.5), (131.0, 415.4), (145.0, 415.4), (153
 TO_LANE = [STORE_FRONT, (199.0, 395.4), (206.5, 392.9), (213.5, 393.6), (219.5, 398.0), (223.5, 405.0),
            (224.5, 410.0)]           # and on to the plunger's rod, runs.PLUNGER
 ROLL = 1.3                                  # s a drained ball takes to the store
+APRON_OFF = 60                              # frames the apron takes to come off, calmly
+STORE_HOLD = (0.3, 0.12)                    # s of game time at the multiball's start that play slowly, and how slowly,
+                                            # while the apron comes off and the camera moves in on the store
 MULTI = ["#ffc21f", "#ff3048", "#e040ff"]   # the multiball's palette: gold, red and magenta
 
 for folder in (CGI, HERE):
@@ -159,7 +185,9 @@ class Play:
         self.restarts = [s["t0"] for s in self.segments if s["cut"]]
         mb = self.seg("multiball")
         self.release = mb["t0"] if mb else None        # ball B leaves the store, and rests at the plunger RELEASE later
-        self.b_gone = mb["t1"] if mb else None
+        # ball B leaves the game when the two balls' play ends, after the blue ramp's ride where there is one
+        blue = self.seg("blue")
+        self.b_gone = (blue or mb)["t1"] if mb else None
         self.out = {}
         for t, i in self.drains:
             self.out.setdefault(i, t)
@@ -204,7 +232,13 @@ class Play:
         return seg["t0"] + 0.25 if seg["cut"] else seg["t0"] - 0.6
 
     def flip(self, seg):
-        """The moment the player presses the flipper that starts a shot segment."""
+        """The moment the player's flip sends the ball off: for a shot at a part, the flipper's last touch of the
+        ball before the ball reaches the part, which may be a later flip than the one the segment plans."""
+        part = next((seg["marks"][k] for k in ("target", "seal") if k in seg["marks"]), None)
+        if part is not None:
+            touch = [e[0] for e in self.events if e[1] == "flipper" and seg["t0"] <= e[0] < part]
+            if touch:
+                return touch[-1]
         return seg["t0"] + seg["q"]["delay"]
 
 
@@ -288,13 +322,6 @@ def build_parts(tilt):
     for o in list(bpy.data.objects):
         if o.name.startswith("seal") and o.parent == tilt:
             adopt(o, parts["seal"])
-    # the slings' rubbers: each is pushed toward the playfield's middle, square to its kicking face
-    parts["sling"] = {}
-    for name in ("sling-rubber", "sling-rubber.001"):
-        o = bpy.data.objects[name]
-        e = empty("tr-" + name, tilt, Vector((0, 0, 0)))
-        o.parent = e
-        parts["sling"][name] = (e, ph.sling_face(o))
     parts["plunger"] = empty("tr-plunger", tilt, Vector((0, 0, 0)))
     for o in list(bpy.data.objects):
         if o.name.startswith("plunger") and o.parent == tilt and o.name != "plunger-spring":
@@ -351,8 +378,8 @@ def build_apron(tilt):
 
 
 def key_apron(apron, parts, shots):
-    """Over each shot that looks under the apron, the apron comes off: its clips let go with a jolt, it lifts and
-    tips, and it flies up to the left and out of the picture, turning. At the cut after the shot it is back in
+    """Over each shot that looks under the apron, the apron comes off over APRON_OFF frames: its clips let go, it
+    lifts straight up and is carried off to the left out of the picture. At the cut after the shot it is back in
     place."""
     e = apron
     loc, rot, hide = [(1, (0.0, 0.0, 0.0))], [(1, (0.0, 0.0, 0.0))], [(1, False)]
@@ -360,12 +387,13 @@ def key_apron(apron, parts, shots):
         if "open" not in extra:
             continue
         a, b = extra["open"]
-        loc += [(a, (0.0, 0.0, 0.0)), (a + 2, (0.0, 0.0, 0.15)), (a + 4, (0.0, 0.0, 0.1)), (a + 14, (-0.6, 0.2, 2.5)),
-                (a + 30, (-17.0, 2.0, 11.0)), (b + 1, (0.0, 0.0, 0.0))]
-        rot += [(a, (0.0, 0.0, 0.0)), (a + 2, (math.radians(1.5), 0.0, 0.0)), (a + 4, (0.0, 0.0, 0.0)),
-                (a + 14, (0.0, math.radians(-12.0), math.radians(3.0))), (a + 30, (math.radians(-10.0), math.radians(-70.0), math.radians(20.0))),
-                (b + 1, (0.0, 0.0, 0.0))]
-        hide += [(a + 31, True), (b + 1, False)]
+        # calmly: the clips let go, the apron lifts straight up, then it is carried off to the left
+        o = APRON_OFF
+        loc += [(a, (0.0, 0.0, 0.0)), (a + 6, (0.0, 0.0, 0.05)), (a + o // 2, (0.0, 0.0, 2.5)),
+                (a + o, (-24.0, 0.0, 9.0)), (b + 1, (0.0, 0.0, 0.0))]
+        rot += [(a, (0.0, 0.0, 0.0)), (a + 6, (0.0, 0.0, 0.0)), (a + o // 2, (0.0, math.radians(-4.0), 0.0)),
+                (a + o, (0.0, math.radians(-20.0), 0.0)), (b + 1, (0.0, 0.0, 0.0))]
+        hide += [(a + o + 1, True), (b + 1, False)]
     rest = e.location.copy()
     for f, v in sorted(loc):
         e.location = rest + Vector(v); e.keyframe_insert("location", frame=f)
@@ -575,30 +603,66 @@ class Shots:
             out[f] = (cam, look(cam, self.board(*centre), self.up), lens)
         return out
 
-    def track(self, f0, f1, cam_path, aim_path, lens):
+    def track(self, f0, f1, cam_path, aim_path, lens, linear=None):
         """A camera along a path of (frame, (x, y, z)) in mm, looking along a path of the same kind; both are
-        Catmull-Rom splines through their points, and a lift keeps the camera clear of the machine."""
+        Catmull-Rom splines through their points, and a lift keeps the camera clear of the machine. Over the frames
+        linear, (a, b), the camera moves at one steady speed along its path."""
+        when = {f: float(f) for f in range(f0, f1 + 1)}
+        if linear:
+            a, b = linear
+            n = 4000
+            fine = [a + (b - a) * k / n for k in range(n + 1)]
+            pts = [Vector(catmull(cam_path, x)) for x in fine]
+            run = [0.0]
+            for p, q in zip(pts, pts[1:]):
+                run.append(run[-1] + (q - p).length)
+            for f in range(a, b + 1):
+                want = run[-1] * (f - a) / max(1, b - a)
+                k = min(n - 1, max(0, bisect.bisect_right(run, want) - 1))
+                u = (want - run[k]) / max(run[k + 1] - run[k], 1e-9)
+                when[f] = fine[k] + (fine[k + 1] - fine[k]) * min(1.0, u)
         poses = []
         for f in range(f0, f1 + 1):
-            cam = self.board(*catmull(cam_path, f)); aim = self.board(*catmull(aim_path, f))
+            cam = self.board(*catmull(cam_path, when[f])); aim = self.board(*catmull(aim_path, when[f]))
             poses.append((f, cam, aim))
+        lifted = [(f, cam + Vector((0.0, 0.0, lift)), aim)
+                  for (f, cam, aim), lift in zip(poses, self.lifts([(c, []) for _, c, _ in poses]))]
+        if linear:
+            # the lift bends the path; laying the frames out along the lifted path again keeps the speed steady
+            a, b = linear
+            span = [(f, c, t) for f, c, t in lifted if a <= f <= b]
+            run = [0.0]
+            for (_, p, _), (_, q, _) in zip(span, span[1:]):
+                run.append(run[-1] + (q - p).length)
+            steady = {}
+            for j, (f, _, _) in enumerate(span):
+                want = run[-1] * j / max(1, len(span) - 1)
+                k = min(len(span) - 2, max(0, bisect.bisect_right(run, want) - 1))
+                u = min(1.0, (want - run[k]) / max(run[k + 1] - run[k], 1e-9))
+                steady[f] = (f, span[k][1].lerp(span[k + 1][1], u), span[k][2].lerp(span[k + 1][2], u))
+            lifted = [steady.get(f, (f, c, t)) for f, c, t in lifted]
         out = {}
-        for (f, cam, aim), lift in zip(poses, self.lifts([(c, []) for _, c, _ in poses])):
-            cam = cam + Vector((0.0, 0.0, lift))
+        for f, cam, aim in lifted:
             out[f] = (cam, look(cam, aim, self.up), lens(f) if callable(lens) else lens)
         return out
 
-    def follow(self, f0, f1, pos, focus, i=0, lens=35.0, keep=0.35, lag=4.0):
-        """A camera standing at pos (mm) that pans after ball i: it looks at the ball drawn keep of the way toward
-        focus (mm), so the part the shot is about stays in the picture, through a critically damped spring of lag
-        frames that turns at most LOOK_RATE a frame."""
+    def follow(self, f0, f1, pos, focus, i=0, lens=35.0, keep=0.35, lag=7.0):
+        """A camera standing at pos (mm), or where vantage() finds it when pos is None, that pans after ball i and
+        keeps both the ball and the part at focus (mm) well inside the picture: it looks at the point between
+        them, drawn keep of the way toward the part, and widens its lens from lens as far as both need to sit
+        within FRAME_FILL of the picture's half height. Aim and lens follow through critically damped springs of
+        lag frames; the view turns at most LOOK_RATE a frame. Where the ball is further than FAR from the part,
+        the camera looks at the part and waits for it."""
+        pos = pos or self.vantage(f0, f1, focus, i)
         cam = self.board(*pos)
         cam = cam + Vector((0.0, 0.0, self.lifts([(cam, [])])[0]))
         fc = self.board(*focus)
-        out, aim, vel, d = {}, None, Vector(), None
+        half = lambda L: math.atan(SENSOR_H / 2.0 / L)
+        out, aim, vel, d, zoom, zv = {}, None, Vector(), None, None, 0.0
         for f in range(f0 - 10, f1 + 1):
             p, v = self.ball(f, i)
-            want = p.lerp(fc, keep)
+            near = (p - fc).length * 10.0 < FAR
+            want = p.lerp(fc, keep) if near else fc.copy()
             if aim is None:
                 aim = want.copy()
             a = 2.0 / lag
@@ -609,8 +673,21 @@ class Shots:
                 d = nd
             ang = d.angle(nd, 0.0)
             d = (d.slerp(nd, LOOK_RATE / ang) if ang > LOOK_RATE else nd).normalized()
+            # the lens: wide enough that the ball and the part sit inside FRAME_FILL of the half height
+            spread = max(d.angle((q - cam).normalized(), 0.0) for q in ((p, fc) if near else (fc,)))
+            need = lens
+            if spread > 1e-4 and spread >= FRAME_FILL * half(lens):
+                need = max(LENS_MIN, SENSOR_H / 2.0 / math.tan(min(spread / FRAME_FILL, math.radians(60.0))))
+            if zoom is None:
+                zoom = need
+            zacc = (need - zoom) * a * a - zv * 2 * a
+            zv += zacc; zoom += zv
             if f >= f0:
-                out[f] = (cam, look(cam, cam + d, self.up), lens)
+                # looking steeply down, the picture's top follows the board's top end, so the view does not roll
+                # about as the ball crosses under the camera
+                steep = max(0.0, (abs(d.z) - 0.6) / 0.4)
+                up = (self.up + Vector((0.0, 1.0, 0.0)) * steep).normalized()
+                out[f] = (cam, look(cam, cam + d, up), max(LENS_MIN, min(lens, zoom)))
         return out
 
     def vantage(self, f0, f1, focus, i=0):
@@ -645,7 +722,7 @@ class Shots:
         pans a little after the ball, so a ball coming down from anywhere rolls into the picture."""
         (px, py), turn = ph.FLIPPER[side]
         toward = 1.0 if side == "left" else -1.0
-        return self.follow(f0, f1, (px + 14.0 * toward, 452.0, 80.0), (px + 16.0 * toward, 330.0, 0.0), i=i, lens=30.0, keep=0.65)
+        return self.follow(f0, f1, (px + 14.0 * toward, 452.0, 105.0), (px + 16.0 * toward, 330.0, 0.0), i=i, lens=30.0, keep=0.65)
 
     def screen(self, f0, f1, d0, d1, lens, yaw0=0.0, yaw1=None, look_at=None):
         """World: square on to the diorama's display from d0 to d1 mm, turned yaw degrees about it."""
@@ -693,7 +770,7 @@ def catmull(points, f):
 
 # what each feature's shot calls out: the sign's name and the part the arrow points at, (x, y, z) mm
 # only what the modification adds to the machine, as docs/features.md lists it, gets a callout
-CALLOUT = {"lanes": ("TOP LANES", (159.7, 44.6, 3.0)), "tunnel": ("U TRACK SEES THE BALL", (70.0, 6.0, 5.0)), "seal": ("SEAL SPINS SCORE", (120.43, 169.65, 12.0)),
+CALLOUT = {"lanes": ("TOP LANES", (159.7, 44.6, 3.0)), "tunnel": ("ANNULAR TUNNEL SEES THE BALL", (70.0, 6.0, 5.0)), "seal": ("SEA LION SPINS SCORE", (120.43, 169.65, 12.0)),
            "scoop": ("SCOOP", (rn.SCOOP[0], rn.SCOOP[1], 3.0)), "store": ("MULTIBALL", (STORE_FRONT[0], STORE_FRONT[1], 5.0)),
            "inlane-left": ("INLANES SEE THE BALL", (28.05, 290.95, 1.0)), "inlane-right": ("INLANES SEE THE BALL", (189.05, 290.95, 1.0))}
 MULTIBALL_SPEED = 0.5  # the game's speed against real time while two balls play
@@ -707,12 +784,27 @@ LEAD = 0.9             # s of game time a window keeps before a feature's first 
 LOGO_SKIP = 8                  # frames at the logo's start that stay black, the intro's frames 126 to 130
 SCOOP_SNAP = 0.12             # s of game time the ball takes to slide into the scoop's seat
 SCOOP_HOLD = 0.4       # s the film stays on the scoop after the ball enters it
-FLIP_AFTER = 0.35      # s of game time the player's view stays on after the flip
+SEAL_TURNS = 1.2       # turns the seal makes on a full shot from the flipper, running down
+SEAL_SPIN = 1.4        # s of game time it turns for
+SHOW_HOOP = (12.9, 223.0)   # mm: the blue ramp's last hoop but one; a ball through it sets off the light show
+SHOW = 48              # frames the light show runs
+FEATURE_AFTER = 0.6   # s of game time the film stays on a feature after the ball reaches it, behind a cut
+APPROACH_LEAD = 0.6    # s of game time before the ball reaches the flipper that the player's view opens
+CUT_GAP = 1e-3        # s of game time between a segment behind a cut and the window before it
+SHORT_FLIP = 12       # frames: a player's view shorter than this is left out
+DIRECT_AFTER = 0.0    # s of game time the player's view stays on after a direct shot's flip: it cuts on the flip
+FLIP_AFTER = 0.35     # s of game time the player's view stays on after the flip
 
 
 def spinner_pass(play, seg):
     """When the ball of a segment passes up through the spinner."""
     return next((t for t, p, v in play.samples[0] if t > play.flip(seg) and -p.y * 10.0 < SPINNER[1] - 4.0), seg["t1"])
+
+
+def flip_after(name):
+    """Game time the player's view stays on after the flip: briefly where the flip sends the ball straight onto
+    the feature, so the film cuts to the feature before the ball reaches it."""
+    return DIRECT_AFTER if name in ("seal", "target") else FLIP_AFTER
 
 
 def windows(play):
@@ -722,11 +814,28 @@ def windows(play):
     out = []
     for seg in play.segments:
         t0, t1, name = seg["t0"], seg["t1"], seg["name"]
+        if seg["cut"]:
+            # behind a cut the ball starts afresh; a window touching the one before would show it jump in a shot
+            t0 += CUT_GAP
         if name == "finale":
             out.append((t0, t1 + ROLL, BASE))
             continue
+        if name == "launch":
+            # the launch ends on the top lane; the bouncing after it shows nothing new
+            out.append((t0, min(t1, seg["marks"].get("top-lane", t1) + 0.5), BASE))
+            continue
         if not seg["cut"]:
-            out.append((t0, t1, MULTIBALL_SPEED if name == "multiball" else BASE))
+            # the sea lion's run ends a moment after the ball has dropped into the scoop
+            end = min(t1, seg["marks"]["scoop"] + SCOOP_HOLD) if "scoop" in seg["marks"] else t1
+            if name == "seal" and out:
+                # it opens as the ball rolls down onto the flipper, after the target's shot
+                t0 = max(out[-1][1], t0 - APPROACH_LEAD)
+            out.append((t0, end, MULTIBALL_SPEED if name in ("multiball", "blue") else BASE))
+            continue
+        if name == "scoop":
+            # no flip: the ball comes out of the bumpers and falls into the scoop; the film leaves once it is in
+            first = seg["marks"].get("scoop", t1)
+            out.append((max(t0, first - LEAD), min(t1, first + SCOOP_HOLD), BASE))
             continue
         flip = play.flip(seg)
         if name == "tunnel":
@@ -734,18 +843,16 @@ def windows(play):
             # follows from outside
             out.append((t0, min(t1, spinner_pass(play, seg) + SPIN_HOLD), TUNNEL_SPEED))
             continue
-        first = min(seg["marks"].values(), default=t1)
+        # the feature's own gate, not the inlane the ball came down before it
+        first = seg["marks"].get("target", min(seg["marks"].values(), default=t1))
         base = RIDE if name in ("ramp", "track", "croc") else BASE
-        if name in ("target", "scoop"):
-            # no flip: the film cuts straight to the ball rolling into the part, and away once it is in
-            out.append((first - LEAD, min(t1, first + SCOOP_HOLD) if name == "scoop" else t1, base))
-            continue
-        if first - LEAD > flip + FLIP_AFTER + 0.3:
-            out.append((t0, flip + FLIP_AFTER, BASE))
-            out.append((first - LEAD, t1, base))
+        end = min(t1, first + FEATURE_AFTER)
+        out.append((t0, flip + flip_after(name), BASE))
+        # a direct shot is shown whole, from the flip to the part; a long ride elsewhere is cut short
+        if name != "target" and first - LEAD > flip + flip_after(name) + 0.3:
+            out.append((first - LEAD, max(first + 0.1, end), base))
         else:
-            out.append((t0, flip + FLIP_AFTER, BASE))
-            out.append((flip + FLIP_AFTER, t1, base))
+            out.append((flip + flip_after(name), max(flip + flip_after(name) + 0.1, end), base))
     return out
 
 
@@ -763,7 +870,7 @@ def plan_shots(S, play, clock):
     inside = {"clip": 0.02}
     for seg in play.segments:
         name, marks = seg["name"], seg["marks"]
-        f_seg0, f_seg1 = F(seg["t0"]), F(seg["t1"])
+        f_seg0, f_seg1 = F(seg["t0"] + (CUT_GAP if seg["cut"] else 0.0)), F(seg["t1"])
         if name == "launch":
             kick = seg["t0"] + game.PULL
             f_kick = F(kick)
@@ -776,36 +883,66 @@ def plan_shots(S, play, clock):
             f_l0, f_lane = F(lane - 0.45), F(lane + 0.5)
             f_out = min(f_kick + 12, f_l0 - 20)
             add("launch", f_seg0, f_out, ride, dict(inside, inside_ball=(0, f_seg0, f_out)))
+            # the bell the ball rings on its way round gets the callout: the bells count their hits
+            orbit = {"ball": 0}
+            ring = next((e for e in play.events if e[1] == "hit" and str(e[2]).startswith("bell") and seg["t0"] <= e[0] <= lane
+                         and clock.shown(e[0])), None)
+            if ring:
+                orbit["callout"] = ("BELL HITS SCORE", (ring[3].x * 10.0, -ring[3].y * 10.0, ring[3].z * 10.0 + 6.0))
             add("orbit", f_out + 1, f_l0 - 1, lambda a, z: S.follow(a, z, (150, 260, 190), (215, 110, 20), lens=26.0, keep=0.5),
-                {"ball": 0})
+                orbit)
             add("lanes", f_l0, f_lane, lambda a, z: S.follow(a, z, (190, 155, 93), (160, 45, 3), lens=30.0, keep=0.6),
                 {"ball": 0, "callout": CALLOUT["lanes"]})
-            add("bumpers", f_lane + 1, f_seg1, lambda a, z: S.follow(a, z, (110, 210, 170), (82, 75, 10), lens=28.0, keep=0.5),
-                {"ball": 0})
             continue
         if name == "multiball":
             plan_multiball(S, play, clock, seg, add, F)
             continue
+        if name == "blue":
+            # the flip and the ride down the blue ramp, the camera on the ball that rides it
+            t_hoop = marks.get("blue-hoop-2", seg["t1"])
+            rider = min((0, 1), key=lambda i: (play.state(i, t_hoop)[0].to_2d() * 10.0 - Vector((SHOW_HOOP[0], -SHOW_HOOP[1]))).length
+                        if play.state(i, t_hoop) else 1e9)
+            add("blue", f_seg0, f_seg1, lambda a, z, r=rider: S.follow(a, z, None, (40.0, 200.0, 25.0), i=r, lens=26.0, keep=0.4),
+                {"ball": rider})
+            continue
         if name == "finale":
-            add("finale-drain", f_seg0, F(seg["t1"] + ROLL * 0.7),
-                lambda a, z: S.dolly(a, z, b(108.5, 455, 95), b(108.5, 450, 80), b(108.5, 350, 0), b(108.5, 375, 0), 20),
+            # the last ball down between the flippers into the drain, held only briefly once it is gone
+            add("finale-drain", f_seg0, F(seg["t1"] + 0.1),
+                lambda a, z: S.follow(a, z, (108.5, 440, 140), (108.5, 390, 0), lens=24.0, keep=0.5),
                 {"ball": 0, "cut": True})
             continue
         if name == "target":
+            # the player's view as the ball comes down and the flip, then the ball at the target
             t_hit = marks.get("target", seg["t1"])
             p, v = S.ball(F(t_hit), 0)
             tx = 29.5 if p.x * 10.0 < 108 else 187.6
-            add("target", f_seg0, f_seg1, lambda a, z, tx=tx: S.follow(a, z, S.vantage(a, z, (tx, 232.4, 7)), (tx, 232.4, 7),
-                                                                       lens=28.0, keep=0.8),
+            # the player's view as the ball rolls down the inlane past its sensor and the flip, then the target
+            f_flip_end = F(play.flip(seg) + flip_after(name))
+            add("target-flip", f_seg0, f_flip_end, lambda a, z, side=seg["start"]: S.flipcam(a, z, side, i=0),
+                {"ball": 0, "cut": True, "callout": CALLOUT["inlane-" + seg["start"]]})
+            add("target", f_flip_end + 1, F(t_hit + FEATURE_AFTER),
+                lambda a, z, tx=tx: S.follow(a, z, None, (tx, 232.4, 7), lens=28.0, keep=0.5),
                 {"ball": 0, "callout": ("STAND-UP TARGET", (tx, 232.4, 9.0))})
+            continue
+        if name == "seal" and not seg["cut"]:
+            # on from the target: the player's view as the ball comes back down onto the flipper and the flip, the
+            # sea lion throwing it into the bumpers, and from the scoop's side its fall into the scoop
+            f_flip = F(play.flip(seg))
+            f_a = max(F(seg["t0"] - APPROACH_LEAD), plan[-1][2] + 1 if plan else 0)
+            add("seal-flip", f_a, f_flip, lambda a, z, side=seg["start"]: S.flipcam(a, z, side, i=0), {"ball": 0})
+            f_b = F(marks.get("bumpers", seg["t1"]) + 0.25)
+            add("seal", f_flip + 1, f_b, lambda a, z: S.follow(a, z, None, (120.4, 169.7, 8), lens=28.0, keep=0.5, lag=11.0),
+                {"ball": 0, "callout": CALLOUT["seal"]})
+            add("scoop", f_b + 1, F(marks.get("scoop", seg["t1"]) + SCOOP_HOLD),
+                lambda a, z: S.follow(a, z, None, (31.9, 123.7, 2), lens=28.0, keep=0.5), {"ball": 0, "callout": CALLOUT["scoop"]})
             continue
         if name == "scoop":
             f_in = F(marks.get("scoop", seg["t1"]) + SCOOP_HOLD)
-            add("scoop", f_seg0, f_in, lambda a, z: S.follow(a, z, S.vantage(a, z, (31.9, 123.7, 2)), (31.9, 123.7, 2), lens=28.0, keep=0.6),
+            add("scoop", f_seg0, f_in, lambda a, z: S.follow(a, z, None, (31.9, 123.7, 2), lens=28.0, keep=0.5),
                 {"ball": 0, "callout": CALLOUT["scoop"]})
             continue
         # a feature: the player's view as the ball comes down and the flip, then the feature
-        f_flip_end = F(play.flip(seg) + FLIP_AFTER)
+        f_flip_end = F(play.flip(seg) + flip_after(name))
         extra = {"ball": 0, "cut": True}
         if name == "seal":
             extra["callout"] = CALLOUT["inlane-" + seg["start"]]
@@ -826,7 +963,7 @@ def plan_shots(S, play, clock):
             add("ramp", f, f_seg1, lambda a, z: S.follow(a, z, (150, 290, 210), (70, 120, 20), lens=30.0, keep=0.3),
                 {"ball": 0, "callout": CALLOUT["ramp"]})
         elif name == "seal":
-            add("seal", f, f_seg1, lambda a, z: S.follow(a, z, (190, 270, 75), (120.4, 169.7, 8), lens=28.0, keep=0.55),
+            add("seal", f, f_seg1, lambda a, z: S.follow(a, z, None, (120.4, 169.7, 8), lens=28.0, keep=0.5, lag=11.0),
                 {"ball": 0, "callout": CALLOUT["seal"]})
         elif name == "croc":
             f_in = F(marks.get("croc-mouth", seg["t1"]) - 0.2)
@@ -852,26 +989,35 @@ def plan_multiball(S, play, clock, seg, add, F):
     b = S.board
     t0 = seg["t0"]
     f0 = F(t0)
-    f_go = F(t0 + game.RELEASE)
-    add("store", f0, f_go + 6, lambda a, z: S.dolly(a, z, b(160, 470, 150), b(168, 455, 180), b(170, 396, 0), b(184, 400, 0), 28),
-        {"open": (f0, f_go + 6), "ball": 1, "callout": CALLOUT["store"]})
+    # wide while the apron comes off, then in close on the store as its pins move and ball B rolls out
+    f_pin = F(t0 + 0.55)
+
+    def store(a, z):
+        wide = S.dolly(a, a + APRON_OFF, b(150, 545, 190), b(160, 515, 165), b(160, 400, 0), b(165, 400, 0), 26.0)
+        near = b(190, 432, 95)                  # above the open store, clear of the drain's walls
+        close = S.dolly(a + APRON_OFF + 1, f_pin, b(160, 515, 165), near, b(165, 400, 0), b(186, 402, 3), 26.0, 32.0)
+        # it pans after ball B to the plunger, which shoots it up the lane
+        ride = S.dolly(f_pin + 1, z, near, b(200, 440, 100), b(186, 402, 3), b(222, 400, 3), 32.0, 28.0)
+        return {**wide, **close, **ride}
     kick = next((e[0] for e in play.events if e[1] == "kick" and e[4] == 0 and e[0] > t0), t0 + game.RELEASE + 1.0)
     f_k = F(kick - 0.35)
-    add("b-launch", f_go + 7, f_k - 1, lambda a, z: S.follow(a, z, (175, 330, 150), (222, 180, 10), i=1, lens=30.0, keep=0.35),
-        {"ball": 1})
+    add("store", f0, f_k - 1, store, {"open": (f0, f_k - 1), "ball": 1, "callout": CALLOUT["store"]})
     bump = next((e[0] for e in play.events if e[1] == "bumper" and e[4] == 0 and e[0] > kick), kick + 0.4)
     f_k1 = F(bump + 0.4)
-    add("kick", f_k, f_k1, lambda a, z: S.follow(a, z, S.vantage(a, z, (40, 115, 4)), (40, 115, 4), i=0, lens=26.0, keep=0.4), {"ball": 0})
+    add("kick", f_k, f_k1, lambda a, z: S.follow(a, z, None, (40, 115, 4), i=0, lens=26.0, keep=0.4), {"ball": 0})
     add("both", f_k1 + 1, F(seg["t1"]),
         lambda a, z: S.dolly(a, z, b(110, 330, 430), b(110, 320, 440), b(110, 190, 0), b(110, 180, 0), 22), {"ball": 0})
 
 
 # ---------------------------------------------------------------- the power-up
-# the power-up's flight, keyed over 175 frames and laid onto POWER
-POWER_CAM = [(max(1, round(f * POWER / 175)), p) for f, p in [(1, (108.0, 452.0, 14.0)), (35, (108.0, 372.0, 11.0)),
-             (75, (118.0, 232.0, 26.0)), (110, (92.0, 128.0, 48.0)), (145, (115.0, 60.0, 110.0)), (175, (115.0, 25.0, 165.0))]]
-POWER_AIM = [(max(1, round(f * POWER / 175)), p) for f, p in [(1, (108.0, 300.0, 5.0)), (35, (95.0, 110.0, 8.0)),
-             (75, (85.0, 80.0, 10.0)), (110, (115.0, 10.0, 40.0)), (145, (115.0, 300.0, 0.0)), (175, (115.0, 270.0, 0.0))]]
+# the power-up: the dark machine from outside, pushing in slowly, then the flight over the playfield, keyed over
+# 175 frames and laid onto the frames after EXTERIOR
+POWER_CAM = [(1, (430.0, 830.0, 300.0)), (round(EXTERIOR * 0.75), (300.0, 670.0, 190.0))] + [
+    (P(f), p) for f, p in [(1, (108.0, 452.0, 14.0)), (35, (108.0, 372.0, 11.0)), (75, (118.0, 232.0, 26.0)),
+                           (110, (92.0, 128.0, 48.0)), (145, (115.0, 60.0, 110.0)), (175, (115.0, 25.0, 165.0))]]
+POWER_AIM = [(1, (110.0, 230.0, 60.0)), (round(EXTERIOR * 0.75), (110.0, 260.0, 30.0))] + [
+    (P(f), p) for f, p in [(1, (108.0, 300.0, 5.0)), (35, (95.0, 110.0, 8.0)), (75, (85.0, 80.0, 10.0)),
+                           (110, (115.0, 10.0, 40.0)), (140, (215.0, 130.0, 0.0)), (175, (115.0, 270.0, 0.0))]]
 
 
 # ---------------------------------------------------------------- keys
@@ -928,7 +1074,7 @@ def balls_at_factory(play, clock):
 
     # the scoop holds the ball as a magnet would: from its entry it slides into the seat within SCOOP_SNAP and stays
     # there until the kicker throws it
-    sc = play.seg("scoop")
+    sc = next((s for s in play.segments if "scoop" in s["marks"]), None)
     hold = None
     if sc and "scoop" in sc["marks"]:
         t_in = sc["marks"]["scoop"]
@@ -1006,7 +1152,7 @@ def pulse(frames, rise, hold, fall, peak, rest=0.0):
 
 
 def key_parts(S, parts, play, clock, last, f_last_drain):
-    """The flippers by the game's presses, the bumpers' coils at their kicks, the slings, the seal, the plunger,
+    """The flippers by the game's presses, the bumpers' coils at their kicks, the seal, the plunger,
     the scoop's kicker and the store's seesaw; the power-up pulls every coil once, in turn."""
     F = lambda t: int(round(clock.near(t)))
     shown = clock.shown
@@ -1021,7 +1167,7 @@ def key_parts(S, parts, play, clock, last, f_last_drain):
             late = [(t_late + (0.0 if side == "left" else 0.03), t_late + 0.25)]
         f_obj.presses = sorted(f_obj.presses + late)
         keys = [(1, 0.0)]
-        flick = P(52) if side == "left" else P(58)
+        flick = P(COILS["left"]) if side == "left" else P(COILS["right"])
         keys += [(flick - 1, 0.0), (flick, ph.FLIP_ANGLE * f_obj.turn), (flick + 3, ph.FLIP_ANGLE * f_obj.turn), (flick + 6, 0.0)]
         prev = None
         for f in range(G0, last + 1):
@@ -1030,17 +1176,12 @@ def key_parts(S, parts, play, clock, last, f_last_drain):
         slim = [keys[0]] + [keys[i] for i in range(1, len(keys) - 1) if not (keys[i - 1][1] == keys[i][1] == keys[i + 1][1])] + [keys[-1]]
         key_curve(pv, "rotation_euler", 2, sorted(dict(slim).items()))
     # the bumpers' coils at their kicks, and in turn in the power-up
-    test = {1: [P(22)], 2: [P(30)], 3: [P(38)]}
+    test = {k: [P(COILS[k])] for k in (1, 2, 3)}
     for k, c in parts["coil"].items():
         frames = [F(e[0]) for e in play.events if e[1] == "bumper" and e[2] == str(k) and shown(e[0])] + test[k]
         key_curve(c, "location", 2, pulse(frames, 1, 2, 4, -0.4))
         for part, peak in (("base", 10.0), ("ring", 20.0)):
             lights.key_glow(f"bumper-{k}-{part}-lit", pulse(frames, 1, 0, 9, peak))
-    # the slings' rubbers at their kicks
-    for name, (e, n) in parts["sling"].items():
-        frames = [F(ev[0]) for ev in play.events if ev[1] == "sling" and ev[2] == name and shown(ev[0])]
-        for i in range(2):
-            key_curve(e, "location", i, [(f, v * n[i]) for f, v in pulse(frames, 1, 1, 3, 0.15)])
     # the spinner's flap turns as a ball rolls through it and runs down
     sp, axis = parts["spinner"]
     sp.rotation_axis_angle = (0.0, axis.x, axis.y, axis.z)
@@ -1056,22 +1197,25 @@ def key_parts(S, parts, play, clock, last, f_last_drain):
             spin = 2 * math.pi * SPINNER_TURNS
             span = 30
             keys.append((f, angle))
+            # the ball pushes the flap's lower edge up the lane, so the flap turns over away from it
             for k in range(1, span + 1):
-                keys.append((f + k, angle + spin * (1 - (1 - k / span) ** 2)))
-            angle += spin
+                keys.append((f + k, angle - spin * (1 - (1 - k / span) ** 2)))
+            angle -= spin
     for f, v in keys:
         sp.rotation_axis_angle[0] = v
         sp.keyframe_insert("rotation_axis_angle", index=0, frame=f)
     # the seal turns at its hits
     turn, keys = 0.0, [(1, 0.0)]
+    prev = -9.0
     for e in play.events:
-        if e[1] == "hit" and str(e[2]).startswith("seal-r") and shown(e[0]):
+        if e[1] == "hit" and str(e[2]).startswith("seal-r") and shown(e[0]) and e[0] - prev > 0.5:
+            prev = e[0]
             way = rn.seal_turn([play.samples[e[4]]], [], e[0])
-            fe = F(e[0]); fend = F(e[0] + 0.8)
+            fe = F(e[0]); fend = F(e[0] + SEAL_SPIN)
             keys.append((fe, turn))
-            amount = math.radians(120.0) * way
-            for k in range(1, 9):
-                keys.append((round(lerp(fe, fend, k / 8.0)), turn - amount * (1 - (1 - k / 8.0) ** 2)))
+            amount = 2 * math.pi * SEAL_TURNS * way
+            for k in range(1, 13):
+                keys.append((round(lerp(fe, fend, k / 12.0)), turn - amount * (1 - (1 - k / 12.0) ** 2)))
             turn -= amount
     key_curve(parts["seal"], "rotation_euler", 2, sorted(dict(keys).items()), interp="BEZIER")
     # the plunger draws back while the player pulls it and snaps forward as it shoots
@@ -1086,7 +1230,7 @@ def key_parts(S, parts, play, clock, last, f_last_drain):
     key_curve(parts["spring"], "scale", 1, [(f, stretch(d)) for f, d in sorted(dict(pk).items())])
     # the scoop's kicker rises at its kick, and in the power-up
     kk = [F(e[0]) for e in play.events if e[1] == "kick" and math.hypot(e[3].x * 10 - rn.SCOOP[0], -e[3].y * 10 - rn.SCOOP[1]) < 4 and shown(e[0])]
-    key_curve(parts["kicker"], "location", 2, pulse(kk + [P(46)], 1, 2, 6, 0.75))
+    key_curve(parts["kicker"], "location", 2, pulse(kk + [P(COILS["kicker"])], 1, 2, 6, 0.75))
     # the seesaw tips to let ball B out of the store, and back
     rock, axis = parts["seesaw"]
     rock.rotation_mode = "AXIS_ANGLE"
@@ -1114,16 +1258,12 @@ def key_parts(S, parts, play, clock, last, f_last_drain):
         key_curve(parts["fingers"][name], "location", 2, ks, interp="BEZIER")
 
 
-def P(f):
-    """A frame of the power-up as cues.md times it over 175 frames, laid onto POWER frames."""
-    return max(1, int(round(f * POWER / 175.0)))
-
 
 # what the game scores and what the display calls out: a gate's or an event's points and its message
-SCORE_GATES = {"top-lane": (5000, "SKILL SHOT"), "inlane": (500, "INLANE"), "u-track": (5000, "U TRACK"), "blue-exit": (2500, "RAMP"), "croc-hole": (7500, "CROCODILE"),
+SCORE_GATES = {"top-lane": (5000, "SKILL SHOT"), "inlane": (500, "INLANE"), "u-track": (5000, "ANNULAR TUNNEL"), "blue-exit": (2500, "RAMP"), "blue-hoop-2": (5000, "BLUE RAMP"), "croc-hole": (7500, "CROCODILE"),
                "green-end": (3000, "TRACK"), "scoop": (2500, "BALL LOCKED")}
 SCORE_EVENTS = {"bumper": 100, "sling": 10}
-SCORE_HITS = {"seal-r": (25000, "SEAL SPIN"), "target": (1000, "TARGET")}
+SCORE_HITS = {"seal-r": (25000, "SEA LION SPIN"), "target": (1000, "TARGET"), "bell": (1000, "BELL HIT")}
 MULTIBALL_POINTS = 10000
 
 
@@ -1164,45 +1304,95 @@ def insert_table():
     return out
 
 
+FEATURE_COLOR = {"SKILL SHOT": "#ffd23f", "ANNULAR TUNNEL": "#3fe0ff", "INLANE": "#5dff6a", "SEA LION SPIN": "#e040ff",
+                 "TARGET": "#ff8a1f", "BALL LOCKED": "#ff3048", "BELL HIT": "#ffd700"}
+ROLLOVERS = ("SKILL SHOT", "ANNULAR TUNNEL", "INLANE")      # the lanes whose insert lights when a ball rolls over it, and stays lit
+LANE_REACH = 30.0      # mm from the ball as it crosses a lane to the insert that lane lights, at most
+INSERT_REST = 0.25    # the inserts' glow in the game against their strength at rest; a lit one shines at 2
+
+
+def show_frame(S, f0, f1):
+    """The frame a ball first runs through the blue ramp's last hoop but one, up on the ramp; None if none does."""
+    for f in range(f0, f1 + 1):
+        for i in (0, 1):
+            p, _ = S.ball(f, i)
+            if p.z * 10.0 > 15.0 and math.hypot(p.x * 10.0 - SHOW_HOOP[0], -p.y * 10.0 - SHOW_HOOP[1]) < 10.0:
+                return f
+    return None
+
+
 def key_lights(S, play, clock, f_game0, f_game1, f_mb0, f_mb1, f_drain, f_hit):
-    """The lights: dark at first, the power-up's wave, then lights that answer the game. An insert flashes as a
-    ball rolls over it and as a ball hits a part near it; the strips flash at each feature the display calls out
-    and run through the multiball's palette while two balls play; the drain flashes red as a ball drains. At the
-    trail's hit every light goes dark."""
+    """The lights: dark at first, the power-up's wave, then lights that answer the game, each event with one
+    clear answer. The strips shine warm white, breathe on the music's beat and flash at each bumper's kick; at a
+    feature they flash in its color. A ball through the blue ramp's last hoop but one sets off a light show of
+    SHOW frames. The inserts glow low; a lane's insert lights as a ball rolls over it and stays lit, and a feature's
+    inserts blink three times. From the scoop's eject, f_mb0, the strips run through the multiball's palette on the
+    beat while two balls play; the drain flashes red as a ball drains. At the trail's hit every light goes dark."""
     F = lambda t: int(round(clock.frame(t)))
     shown = lambda t: clock.shown(t)
     _, msgs = game_score(play)
-    feats = [F(t) for t, _ in msgs if shown(t)]
+    feats = [(F(t), m, t) for t, m in msgs if shown(t) and m in FEATURE_COLOR]
+    bumps = sorted({F(e[0]) for e in play.events if e[1] == "bumper" and shown(e[0])})
     off = f_hit - 8
-    # the strips and the room: dark, then the power-up; a flash at each feature
+    in_mb = lambda f: f_mb0 is not None and f_mb0 <= f < f_mb1
+    f_show = show_frame(S, f_game0, f_game1)
+    in_show = lambda f: f_show is not None and f_show <= f < f_show + SHOW
+    # the strips and the room: dark, then the power-up; through the game the strips breathe on the music's beat,
+    # flash at each bumper's kick and each feature, and blaze through the light show
     per = {1: 0.0, P(100): 0.0, P(130): lights.PERIMETER}
-    ceil = {1: 0.0, P(115): 0.0, P(145): 1.0}
-    for fe in feats:
-        per.setdefault(fe - 1, lights.PERIMETER); per[fe + 2] = lights.PERIMETER * 3.0; per[fe + 14] = lights.PERIMETER
-        ceil.setdefault(fe - 1, 1.0); ceil[fe + 2] = 2.5; ceil[fe + 14] = 1.0
+    for fb in range(f_game0, off - BEAT, BEAT):
+        if not in_show(fb):
+            per[fb] = lights.PERIMETER * 1.7; per[fb + 6] = lights.PERIMETER
+    # the plug goes in: the ceiling strip glows up softly, the first sign of power
+    ceil = {1: 0.0, RELAY: 0.0, RELAY + 25: 0.35, P(115): 0.35, P(145): 1.0}
+    for fe in bumps:
+        per.setdefault(fe - 1, lights.PERIMETER); per[fe + 1] = lights.PERIMETER * 3.0; per[fe + 8] = lights.PERIMETER
+    for fe, _, _ in feats:
+        per.setdefault(fe - 1, lights.PERIMETER); per[fe + 2] = lights.PERIMETER * 3.5; per[fe + 16] = lights.PERIMETER
+        ceil.setdefault(fe - 1, 1.0); ceil[fe + 2] = 2.5; ceil[fe + 16] = 1.0
+    if f_show:
+        for f in [f for f in per if in_show(f)]:
+            del per[f]
+        for k in range(0, SHOW, 4):
+            per[f_show + k] = lights.PERIMETER * 4.0; per[f_show + k + 2] = lights.PERIMETER * 1.5
+            ceil[f_show + k] = 3.0; ceil[f_show + k + 2] = 1.2
+        per[f_show + SHOW] = lights.PERIMETER; ceil[f_show + SHOW] = 1.0
     per[off] = 0.0; ceil[off] = 0.0
     lights.key_glow("perimeter", sorted(per.items()))
     lights.key_ceiling(sorted(ceil.items()))
-    # the inserts: the power-up's wave down the board, then flashes where the balls roll and hit
-    hits = [(F(e[0]), e[3]) for e in play.events if e[1] in ("bumper", "sling", "hit", "kick") and shown(e[0])]
+    # the inserts: the power-up's wave down the board, then low; a lane lit for good, a feature's blinking
     table = insert_table()
+    where = {}
+    for fe, m, t in feats:
+        p, _ = S.ball(fe, play.live(t))
+        where[(fe, m)] = (p.x * 10.0, -p.y * 10.0)
+    # a lane the ball rolls over lights its one insert: the insert nearest the ball as it crosses
+    lit = {}
+    for (fe, msg), (bx, by) in where.items():
+        if msg in ROLLOVERS:
+            m0, _, (cx0, cy0), _ = min(table, key=lambda r: math.hypot(bx - r[2][0], by - r[2][1]))
+            if math.hypot(bx - cx0, by - cy0) < LANE_REACH:
+                lit.setdefault(m0.name, []).append(fe)
     for m, light, (cx, cy), strength in table:
-        on = int(P(120) + P(50) * max(0.0, min(1.0, cy / 400.0)))
-        keys = {1: 0.0, on - 1: 0.0, on + 3: strength * 2.0, on + 10: strength}
-        flashes = []
-        for f in range(f_game0, f_game1 + 1):
-            for i in (0, 1):
-                p, _ = S.ball(f, i)
-                x, y, z = p.x * 10.0, -p.y * 10.0, p.z * 10.0
-                if z < 7.0 and math.hypot(x - cx, y - cy) < 5.0 and (not flashes or f - flashes[-1] > 15):
-                    flashes.append(f)
-        for fe, at in hits:
-            if math.hypot(at.x * 10.0 - cx, -at.y * 10.0 - cy) < 40.0:
-                flashes.append(fe)
-        for fe in sorted(set(flashes)):
-            if fe <= on + 10 or fe >= off - 12:
-                continue
-            keys.setdefault(fe - 1, strength); keys[fe + 1] = strength * 4.0; keys[fe + 12] = strength
+        on = int(P(120) + D(50) * max(0.0, min(1.0, cy / 400.0)))
+        low = strength * INSERT_REST
+        keys = {1: 0.0, on - 1: 0.0, on + 3: strength * 2.0, on + 10: strength, f_game0 + 6: low}
+        level = low
+        for (fe, msg), (bx, by) in sorted(where.items()):
+            d = math.hypot(bx - cx, by - cy)
+            if msg in ROLLOVERS and fe in lit.get(m.name, ()):
+                level = strength * 2.0
+                keys[fe - 1] = low; keys[fe + 1] = strength * 4.0; keys[fe + 8] = level
+            elif msg not in ROLLOVERS and d < 30.0:
+                for k in range(3):
+                    keys[fe + 8 * k - 1] = level; keys[fe + 8 * k + 1] = strength * 4.0; keys[fe + 8 * k + 5] = level
+        if f_show:
+            # the light show: waves of flashes run down the board, every insert at once at its end
+            lag = int(12 * max(0.0, min(1.0, cy / 400.0)))
+            for k in range(0, SHOW - 16, 10):
+                f = f_show + k + lag
+                keys[f - 1] = level; keys[f + 1] = strength * 5.0; keys[f + 5] = level
+            keys[f_show + SHOW - 4] = strength * 6.0; keys[f_show + SHOW + 6] = level
         keys[off] = 0.0
         sock = m.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"]
         for f, v in sorted(keys.items()):
@@ -1219,10 +1409,27 @@ def key_lights(S, play, clock, f_game0, f_game1, f_mb0, f_mb1, f_drain, f_hit):
     strip = bpy.data.lights["lamp-ceiling-strip"]
     for f in (1, POWER):
         strip.keyframe_insert("color", frame=f)
-    lights.key_chase(range(POWER + 1, f_mb0 if f_mb0 else f_hit, BEAT))
+    # warm white through the game; a feature's color for its flash; the multiball's palette on the beat
+    colors = {}
+    for fe, m, _ in feats:
+        if not in_mb(fe):
+            colors[fe - 1] = None; colors[fe] = FEATURE_COLOR[m]; colors[fe + 16] = None
+    for name in ("perimeter", "ceiling-led"):
+        lights.key_color(name, sorted(colors.items()))
+    socks = [lights.principled(n).inputs["Emission Color"] for n in ("perimeter", "ceiling-led")]
+    rest = [tuple(s.default_value) for s in socks] + [tuple(strip.color)]
     if f_mb0:
-        lights.key_chase(range(f_mb0, f_mb1, BEAT // 2), MULTI)
-        lights.key_chase(range(f_mb1, f_hit, BEAT))
+        lights.key_chase([f for f in range(f_mb0, f_mb1, BEAT // 2) if not in_show(f)], MULTI)
+    if f_show:
+        # the light show runs the strips through every color, fast
+        lights.key_chase(range(f_show, f_show + SHOW, 3))
+    end = f_mb1 if f_mb0 else (f_show + SHOW if f_show else None)
+    if end and f_show and f_show + SHOW > end:
+        end = f_show + SHOW
+    if end:
+        for s, c in zip(socks, rest):
+            s.default_value = c; s.keyframe_insert("default_value", frame=end)
+        strip.color = rest[-1]; strip.keyframe_insert("color", frame=end)
     for name, full in (("room-key", 8000.0), ("room-fill", 250.0), ("room-backfill", 6000.0)):
         d = bpy.data.lights[name]
         for f, v in ((1, 0.08), (P(110), 0.08), (POWER, 1.0), (f_hit - 4, 0.0)):
@@ -1260,7 +1467,7 @@ def build_display(play, clock, f_game0, f_over, f_hit, last):
     total = lambda t: sum(p for ts, p in steps if ts <= t)
     calls = sorted((F(t), body) for t, body in msgs if clock.shown(t))
     mb = play.seg("multiball")
-    multi = (F(mb["t0"] + game.RELEASE), F(mb["t1"])) if mb else None
+    multi = (F(mb["t0"] + game.RELEASE), F((play.seg("blue") or mb)["t1"])) if mb else None
     frames, shown, start, target = {}, 0, 0, 0
     for f in range(f_game0, f_hit):
         v = total(clock.t(f))
@@ -1381,7 +1588,25 @@ def build_callouts(S, shots, cams):
         hm = emit_material("tr-co-head-" + name, NEON, 10.0)
         head = flat("tr-co-head-" + name, chev, hm, c, g)
         # per frame: the part's place in the picture, in units of half the picture's width
-        side = None
+        def screen(f, p):
+            loc, q, lens = poses[f]
+            if not world:
+                loc, q = S.Mt @ loc, S.Q @ q
+            pc = q.inverted() @ (p - loc)
+            if pc.z > -0.05:
+                return None
+            return (pc.x / -pc.z) / (18.0 / lens), (pc.y / -pc.z) / (18.0 / lens)
+        # the sign stands on the side of the part away from the ball, so it never covers it
+        rel = []
+        for f in range(f0, f1 + 1, 3):
+            a = screen(f, part)
+            bp = screen(f, S.Mt @ S.ball(f, extra.get("ball", 0))[0])
+            if a and bp:
+                rel.append((bp[0] - a[0], bp[1] - a[1]))
+        mx = sum(r[0] for r in rel) / len(rel) if rel else 0.0
+        my = sum(r[1] for r in rel) / len(rel) if rel else -1.0
+        side = -1.0 if mx > 0 else 1.0
+        vside = -1.0 if my > 0 else 1.0
         for f in range(f0, f1 + 1):
             loc, q, lens = poses[f]
             if not world:
@@ -1391,14 +1616,12 @@ def build_callouts(S, shots, cams):
             seen = pc.z < -0.05
             rx, ry = ((pc.x / -pc.z) / (18.0 / lens), (pc.y / -pc.z) / (18.0 / lens)) if seen else (0.0, 0.0)
             seen = seen and abs(rx) < 1.0 and abs(ry) < 0.56
-            if side is None:
-                side = -1.0 if rx < 0 else 1.0
             k = f - f0
             pop = 1.0 if k >= 8 else (0.4 + 0.6 * smooth(k / 6.0)) * (1.0 + 0.12 * math.sin(math.pi * min(1.0, k / 8.0)))
             show = 0.0 if f > f1 - 2 else 1.0
             g.scale = (hw * show, hw * show, hw * show); g.keyframe_insert("scale", frame=f)
             lx = max(-0.95 + w / 2, min(0.95 - w / 2, rx + side * 0.32))
-            ly = max(-0.5, min(0.47, ry + 0.24))
+            ly = max(-0.5, min(0.47, ry + vside * 0.24))
             plate.location = (lx, ly, 0.0); plate.keyframe_insert("location", frame=f)
             plate.scale = (pop, pop, pop); plate.keyframe_insert("scale", frame=f)
             a = 1.0 if seen else 0.0
@@ -1499,6 +1722,109 @@ def check_shots(S, shots):
 
 
 # ---------------------------------------------------------------- all of it
+NOT_WOOD = ("playfield", "sling", "rubber", "seal", "target", "bell", "bumper", "flipper", "ball", "deco-spinner")
+
+
+def write_sound(S, play, clock, shots, parts, last, marks):
+    """Writes out/sound.json for soundtrack.py: the film's moments, each effect's frames as the picture shows them,
+    and for every frame each ball's place, whether it shows and how far it is from the camera."""
+    F = lambda t: int(round(clock.near(t)))
+    shown = clock.shown
+    near_scoop = lambda e: math.hypot(e[3].x * 10 - rn.SCOOP[0], -e[3].y * 10 - rn.SCOOP[1]) < 4
+    near_plunger = lambda e: math.hypot(e[3].x * 10 - rn.PLUNGER[0], -e[3].y * 10 - rn.PLUNGER[1]) < 4
+    fx = {k: [] for k in ("flip-up", "flip-down", "bumper", "sling", "seal", "target", "bell", "wood", "plunger", "scoop-in",
+                          "scoop-kick", "drain", "balls", "rollover", "spinner", "seesaw", "callout")}
+    # the flippers as the picture moves them: up as one leaves its rest, down as it comes back
+    for side, pv in parts["flipper"].items():
+        fc = next(c for c in fcurves_of(pv) if c.data_path == "rotation_euler" and c.array_index == 2)
+        up = False
+        for f in range(1, last + 1):
+            a = abs(fc.evaluate(f))
+            if not up and a > 0.05:
+                fx["flip-up"].append([f, side]); up = True
+            elif up and a < 0.02:
+                fx["flip-down"].append([f, side]); up = False
+    fx["bumper"] = [[F(e[0]), e[2]] for e in play.events if e[1] == "bumper" and shown(e[0])]
+    fx["bumper"] += [[P(COILS[k]), str(k)] for k in (1, 2, 3)]
+    fx["sling"] = [[F(e[0]), e[2]] for e in play.events if e[1] == "sling" and shown(e[0])]
+    def in_view(f, at):
+        """Whether the point at, in the frame of machine-tilt, lies in the picture at frame f."""
+        for name, f0, f1, poses, world, extra in shots:
+            if f0 <= f <= f1 and f in poses:
+                loc, q, lens = poses[f]
+                if not world:
+                    loc, q = S.Mt @ loc, S.Q @ q
+                v = q.inverted() @ (S.Mt @ at - loc)
+                tw = 18.0 / lens
+                return v.z < 0 and abs(v.x / -v.z) < tw and abs(v.y / -v.z) < tw * 9.0 / 16.0
+        return False
+
+    for key, name in (("seal-r", "seal"), ("target", "target"), ("bell", "bell")):
+        prev = -9.0
+        for e in play.events:
+            if e[1] == "hit" and str(e[2]).startswith(key) and shown(e[0]) and e[0] - prev > 0.5:
+                # a bell rings only where the picture shows it
+                if name == "bell" and not in_view(F(e[0]), e[3]):
+                    continue
+                fx[name].append([F(e[0]), e[2]]); prev = e[0]
+    # the ball knocking against the kit's wood: every wall, cover and fence, not the floors it rolls on, the
+    # plastic, the rubber or the parts with sounds of their own; a run of contacts counts once
+    prev = -9.0
+    for e in play.events:
+        name = str(e[2])
+        if e[1] == "hit" and shown(e[0]) and not name.startswith(NOT_WOOD) and "plastic" not in name \
+                and "floor" not in name and e[0] - prev > 0.1:
+            fx["wood"].append([F(e[0]), name]); prev = e[0]
+    fx["plunger"] = [[F(e[0]), ""] for e in play.events if e[1] == "kick" and near_plunger(e) and shown(e[0])]
+    fx["scoop-kick"] = [[F(e[0]), ""] for e in play.events if e[1] == "kick" and near_scoop(e) and shown(e[0])]
+    fx["scoop-kick"].append([P(COILS["kicker"]), "power"])
+    sc_seg = next((s for s in play.segments if "scoop" in s["marks"]), None)
+    if sc_seg and "scoop" in sc_seg["marks"] and shown(sc_seg["marks"]["scoop"]):
+        fx["scoop-in"].append([F(sc_seg["marks"]["scoop"]), ""])
+    fx["drain"] = [[F(e[0]), str(e[4])] for e in play.events if e[1] == "drained" and shown(e[0])]
+    fx["balls"] = [[F(e[0]), ""] for e in play.events if e[1] == "balls" and shown(e[0])]
+    for s in play.segments:
+        for g, t in s["marks"].items():
+            if g in ("top-lane", "inlane", "u-track") and shown(t):
+                fx["rollover"].append([F(t), g])
+    if play.release is not None:
+        fx["seesaw"] = [[F(play.release + 0.55), "out"], [F(play.release + game.RELEASE - 0.25), "back"]]
+    # the spinner, where the ball crosses its line, as key_parts turns the flap
+    prev_y, last_pass = None, -99
+    for f in range(G0, last + 1):
+        p, _ = S.ball(f, 0)
+        x, y, z = p.x * 10.0, -p.y * 10.0, p.z * 10.0
+        crossed = prev_y is not None and (prev_y - SPINNER[1]) * (y - SPINNER[1]) <= 0 and abs(prev_y - y) < 80.0
+        prev_y = y
+        if crossed and 12.0 < x < 37.0 and z < 10.0 and f - last_pass > 20:
+            last_pass = f; fx["spinner"].append([f, ""])
+    fx["callout"] = [[f0, extra["callout"][0]] for name, f0, f1, poses, world, extra in shots if "callout" in extra]
+    steps, msgs = game_score(play)
+    score = [[F(t), p] for t, p in steps if shown(t)]
+    calls = [[F(t), m] for t, m in msgs if shown(t) or m == "GAME OVER"]
+    # the camera of each frame, in the world
+    cam = {}
+    for name, f0, f1, poses, world, extra in shots:
+        for f in range(f0, f1 + 1):
+            if f in poses:
+                loc = poses[f][0]
+                cam[f] = loc if world else S.Mt @ loc
+    balls = []
+    for i in range(2):
+        rows = []
+        for f in range(1, last + 1):
+            p, _ = S.ball(f, i)
+            w = S.Mt @ p
+            hidden = i == 1 and play.b_gone is not None and clock.t(f) > play.b_gone
+            d = (w - cam[f]).length * 10.0 if f in cam else 1e4
+            rows.append([round(p.x * 10.0, 2), round(-p.y * 10.0, 2), round(p.z * 10.0, 2), 0 if hidden else 1, round(d, 1)])
+        balls.append(rows)
+    out = dict(marks, last=last, fps=FPS, beat=BEAT, cuts=[s[1] for s in shots], shots=[[s[0], s[1], s[2]] for s in shots],
+               fx=fx, score=score, calls=calls, balls=balls)
+    os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
+    json.dump(out, open(os.path.join(HERE, "out", "sound.json"), "w"))
+
+
 def build():
     ph.build_scene(CGI)
     sc = bpy.context.scene
@@ -1518,6 +1844,14 @@ def build():
     for e in play.events:
         if e[1] == "kick" and math.hypot(e[3].x * 10 - rn.SCOOP[0], -e[3].y * 10 - rn.SCOOP[1]) < 4:
             slow.append((e[0], 0.1, 0.5, 0.2))
+    mb = play.seg("multiball")
+    if mb:
+        hold, speed = STORE_HOLD
+        slow.append((mb["t0"] + hold, hold, hold, speed))
+    # the last ball falls fast; the film slows around its fall between the flippers so it can be followed
+    fin = play.seg("finale")
+    if fin:
+        slow.append((fin["t1"], 0.35, 0.15, 0.15))
     clock = Clock(windows(play), slow)
     F = lambda t: int(round(clock.near(t)))
     view = ph.Machine(view=True)
@@ -1525,7 +1859,8 @@ def build():
     balls = [make_ball("tr-ball-a", tilt), make_ball("tr-ball-b", tilt)]
     S = Shots(tilt, play, clock, view, balls_at_factory(play, clock))
     # the shots: the power-up's flight, the game, the trail's flight and the logo
-    shots = [("power", 1, POWER, S.track(1, POWER, POWER_CAM, POWER_AIM, 24.0), False, {})]
+    # the fly-in from outside and the flight over the playfield run at one steady speed
+    shots = [("power", 1, POWER, S.track(1, POWER, POWER_CAM, POWER_AIM, 24.0, linear=(1, POWER)), False, {})]
     game_shots = plan_shots(S, play, clock)
     shots += game_shots
     final = play.segments[-1]
@@ -1546,17 +1881,24 @@ def build():
     key_parts(S, parts, play, clock, last, F(t_end))
     mb = play.seg("multiball")
     f_mb0 = F(mb["t0"]) if mb else None
-    f_mb1 = F(mb["t1"]) if mb else None
-    key_lights(S, play, clock, G0, game_shots[-1][2], f_mb0, f_mb1, f_drain, f_hit)
+    f_mb1 = F((play.seg("blue") or mb)["t1"]) if mb else None
+    # the multiball's lights start as the scoop throws the locked ball out
+    ejects = [e[0] for e in play.events if e[1] == "kick" and clock.shown(e[0]) and
+              math.hypot(e[3].x * 10 - rn.SCOOP[0], -e[3].y * 10 - rn.SCOOP[1]) < 4]
+    f_eject = F(ejects[0]) if ejects else f_mb0
+    key_lights(S, play, clock, G0, game_shots[-1][2], f_eject, f_mb1, f_drain, f_hit)
     cams = key_cameras(S, shots, last)
     build_display(play, clock, G0, F(t_end), f_hit, last)
     build_callouts(S, shots, cams)
+    write_sound(S, play, clock, shots, parts, last,
+                {"power": POWER, "relay": RELAY, "game": G0, "show": show_frame(S, G0, game_shots[-1][2]), "mb": [f_mb0, f_mb1], "drain": f_drain, "over": F(t_end), "hit": f_hit,
+                 "logo": f_logo})
     m = sc.timeline_markers.new("logo", frame=f_logo); m.camera = logo_cam
     # black from the trail's hit until the logo, which fades out at the end
     vs = sc.view_settings
     # the logo's first frames, from the intro's frames before its cut, put the trail's head in the wrong place;
     # the picture stays black through them
-    for f, v in ((1, 0.0), (f_hit, 0.0), (f_hit + 4, -20.0), (f_logo + LOGO_SKIP - 1, -20.0), (f_logo + LOGO_SKIP, 0.0),
+    for f, v in ((1, -10.0), (FADE_IN, 0.0), (f_hit, 0.0), (f_hit + 4, -20.0), (f_logo + LOGO_SKIP - 1, -20.0), (f_logo + LOGO_SKIP, 0.0),
                  (last - 15, 0.0), (last, -10.0)):
         vs.exposure = v; vs.keyframe_insert("exposure", frame=f)
     sc.frame_start, sc.frame_end = 1, last
