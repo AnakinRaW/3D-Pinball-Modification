@@ -3,7 +3,8 @@
 // screen component with the display driver and the host's views, and its audio driver, each in the
 // main loop the way the firmware runs them, and times each call with the cycle counter.
 //
-//   bus      ten full black frames through Display::send(), from the call to the sent callback,
+//   bus      ten full black frames through Display::send(), each as five bands sent one after
+//            the other, from the first call to the last sent callback,
 //            and the share of the processor the bus's refill interrupt takes meanwhile
 //   lamps    one effect after another on 40 LEDs of chain A: the time of each update() that hands
 //            the lighting driver a frame, which includes the driver's work on it
@@ -93,7 +94,11 @@ static Lighting lighting;
 static Lamps lamps(lighting);
 static AudioDriver audio(events);
 
-DMAMEM static uint8_t black[FRAME_BYTES] __attribute__((aligned(32)));
+// A band of the screen, so the bus test leaves RAM2 room for LVGL's buffers and the LEDs' frames
+constexpr uint16_t BAND_ROWS = 48;
+constexpr uint16_t BANDS = SCREEN_H / BAND_ROWS;
+DMAMEM static uint8_t black[uint32_t(SCREEN_W) * BAND_ROWS * PIXEL_BYTES]
+    __attribute__((aligned(32)));
 EXTMEM static uint8_t gamePixels[FRAME_BYTES] __attribute__((aligned(32)));
 EXTMEM static uint8_t silence[SILENCE_BYTES];
 static lv_image_dsc_t gameImage;
@@ -210,19 +215,21 @@ static void measureBus() {
     uint32_t longest = 0;
     uint64_t busySpins = 0;
     for (uint32_t i = 0; i < BUS_FRAMES; ++i) {
-        sent = false;
         const uint32_t start = cycles();
-        if (!display.send(0, 0, SCREEN_W, SCREEN_H, black, [] {
-                sentAt = ARM_DWT_CYCCNT;
-                sent = true;
-            })) {
-            Serial.printf("bus: send refused\n");
-            return;
-        }
         uint32_t n = 0;
-        while (!sent) {
-            spin();
-            ++n;
+        for (uint16_t band = 0; band < BANDS; ++band) {
+            sent = false;
+            if (!display.send(0, uint16_t(band * BAND_ROWS), SCREEN_W, BAND_ROWS, black, [] {
+                    sentAt = ARM_DWT_CYCCNT;
+                    sent = true;
+                })) {
+                Serial.printf("bus: send refused\n");
+                return;
+            }
+            while (!sent) {
+                spin();
+                ++n;
+            }
         }
         const uint32_t d = sentAt - start;
         total += d;
