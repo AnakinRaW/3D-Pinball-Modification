@@ -475,6 +475,29 @@ void testAnimated() {
     }
     TEST_ASSERT_EQUAL_UINT32(0, draws);
     controls::setAnimated(true);
+
+    // a running game holds it still, and it turns again once the game ends
+    const auto drawsWhile = [] {
+        for (int i = 0; i < 10; ++i) {
+            settle();
+        }
+        draws = 0;
+        for (int i = 0; i < 60; ++i) {
+            settle();
+        }
+        return draws;
+    };
+    controls::holdTurning(true);
+    TEST_ASSERT_EQUAL_UINT32(0, drawsWhile());
+    TEST_ASSERT_TRUE(controls::isAnimated());
+    controls::holdTurning(false);
+    TEST_ASSERT_TRUE(drawsWhile() > 0);
+    // a sunburst built while a game runs stands as well
+    controls::holdTurning(true);
+    lv_obj_t* later = controls::rays(rig.parent, false);
+    lv_obj_add_event_cb(later, [](lv_event_t*) { ++draws; }, LV_EVENT_DRAW_MAIN_END, nullptr);
+    TEST_ASSERT_EQUAL_UINT32(0, drawsWhile());
+    controls::holdTurning(false);
 }
 
 // stage: the rays, a curtain, the valance, the lettering, a key and a score line take their sizes

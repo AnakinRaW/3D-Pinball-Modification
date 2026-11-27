@@ -700,7 +700,7 @@ The program `host-controls` checks the [controls](host-screens.md#controls) ever
 | `level` | computer | Create a level near its top, press its plus three times, then set its value | The value shows in percent and follows each change, up to the end of the track |
 | `toggle` | computer | Create a switch row that is on, press it twice, then turn it off from outside | Each press turns it over and tells the listeners, and the state set from outside holds without telling them |
 | `scroll-list` | computer | Fill a list with more rows than it shows, then scroll it to its end | The list scrolls, and the fade shows at the edge more lies beyond, at the foot first and at the top at the end |
-| `animated` | computer | Run a sunburst for a while, then turn the animation off and run it again | The sunburst is drawn again as it turns, and it is drawn no more once it stands still |
+| `animated` | computer | Run a sunburst for a while, turn the animation off and on, then hold it as a running game does, release it, and build one while held | The sunburst is drawn again as it turns and no more while it stands, whether the choice or a running game stops it, and it turns again once the game ends |
 | `stage` | computer | Create the rays, a curtain, the valance, the lettering, a score line, a progress bar and two keys, and press a key | Each takes its size, the lettering fits its text with its outline, only the keys take the touch, and a lit key is rimmed in the bulb's yellow |
 | `fonts` | computer | Look up every character, sign and icon the screens use in every font | Each font holds its characters and signs, a title size the capitals, and each finds every icon through its fallbacks |
 

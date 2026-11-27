@@ -42,7 +42,6 @@ constexpr int32_t CARD_SHADOW_PX = 14;    // a dialog's shadow
 constexpr int32_t CARD_SHADOW_Y_PX = 6;
 constexpr int32_t CARD_OUTLINE_PX = 3;       // the night ring around a dialog
 constexpr lv_opa_t VIOLET_OPA = 217;         // the storyboard's 0.85
-constexpr lv_opa_t ROW_OPA = 230;            // the storyboard's 0.9
 constexpr lv_opa_t ROW_RIM_OPA = 140;        // the storyboard's 0.55
 constexpr lv_opa_t DIVIDER_OPA = 90;         // the storyboard's 0.35
 constexpr lv_opa_t BULB_RIM_OPA = 153;       // the storyboard's 0.6
@@ -59,7 +58,6 @@ constexpr int32_t CARD_GLOW_SPREAD_PX = 2;
 constexpr lv_opa_t SHADE_OPA = 184;   // the storyboard's 0.72, a dialog's backdrop
 // tiles and keys
 constexpr uint32_t TILE_TOP = 0x3c105c;   // a tile's and a key's top, above the velvet
-constexpr lv_opa_t TILE_OPA = 242;        // the storyboard's 0.95
 constexpr lv_opa_t WORKS_RIM_OPA = 115;   // the storyboard's 0.45, a tile of a device that works
 constexpr int32_t KEY_CORNER_PX = 6;
 constexpr lv_opa_t KEY_RIM_OPA = 153;   // the storyboard's 0.6
@@ -125,6 +123,7 @@ constexpr char MINUS[] = "−";   // U+2212, the minus sign beside a slider
 
 static lv_obj_t* turning[TURNING_MAX] = {};   // the sunbursts the timer turns
 static lv_timer_t* turnTimer = nullptr;
+static bool held = false;   // a game runs, so every sunburst stands
 static float turnDeg = 0;   // how far the sunbursts have turned, within one crimson and velvet pair
 static bool animated = true;
 static lv_style_t tileStyle;
@@ -199,7 +198,9 @@ static void ensureStyles() {
     lv_style_init(&rowStyle);
     lv_style_set_radius(&rowStyle, CORNER_PX);
     lv_style_set_bg_color(&rowStyle, rgb(color::VELVET));
-    lv_style_set_bg_opa(&rowStyle, ROW_OPA);
+    // A row, a tile and a key cover what lies behind them, so a turning sunburst redraws no
+    // ray under them.
+    lv_style_set_bg_opa(&rowStyle, LV_OPA_COVER);
     lv_style_set_border_width(&rowStyle, 1);
     lv_style_set_border_color(&rowStyle, rgb(color::GOLD));
     lv_style_set_border_opa(&rowStyle, ROW_RIM_OPA);
@@ -232,12 +233,12 @@ static void ensureStyles() {
     lv_style_init(&tileStyle);
     lv_style_set_radius(&tileStyle, CORNER_PX);
     gradient(&tileStyle, TILE_TOP, color::VELVET);
-    lv_style_set_bg_opa(&tileStyle, TILE_OPA);
+    lv_style_set_bg_opa(&tileStyle, LV_OPA_COVER);
 
     lv_style_init(&keyStyle);
     lv_style_set_radius(&keyStyle, KEY_CORNER_PX);
     gradient(&keyStyle, TILE_TOP, color::VELVET);
-    lv_style_set_bg_opa(&keyStyle, TILE_OPA);
+    lv_style_set_bg_opa(&keyStyle, LV_OPA_COVER);
     lv_style_set_border_width(&keyStyle, 1);
     lv_style_set_border_color(&keyStyle, rgb(color::GOLD));
     lv_style_set_border_opa(&keyStyle, KEY_RIM_OPA);
@@ -619,15 +620,26 @@ static void stopTurning(lv_event_t* e) {
     }
 }
 
+// The sunbursts turn while the player's choice lets them and no game runs.
+static void applyTurning() {
+    if (turnTimer == nullptr) {
+        return;
+    }
+    if (animated && !held) {
+        lv_timer_resume(turnTimer);
+    } else {
+        lv_timer_pause(turnTimer);
+    }
+}
+
 void setAnimated(bool on) {
     animated = on;
-    if (turnTimer != nullptr) {
-        if (on) {
-            lv_timer_resume(turnTimer);
-        } else {
-            lv_timer_pause(turnTimer);
-        }
-    }
+    applyTurning();
+}
+
+void holdTurning(bool hold) {
+    held = hold;
+    applyTurning();
 }
 
 bool isAnimated() {
@@ -652,7 +664,7 @@ lv_obj_t* rays(lv_obj_t* parent, bool dim) {
     }
     if (turnTimer == nullptr) {
         turnTimer = lv_timer_create(turn, TURN_STEP_MS, nullptr);
-        setAnimated(animated);
+        applyTurning();
     }
     return r;
 }

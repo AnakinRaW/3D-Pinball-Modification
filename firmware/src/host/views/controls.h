@@ -197,6 +197,12 @@ void setAnimated(bool on);
 /// Gets whether the sunbursts turn.
 bool isAnimated();
 
+/// Holds every sunburst still while a game runs, whatever setAnimated() chose, and lets them turn
+/// again once it ends.
+///
+/// @param held  True while a game runs.
+void holdTurning(bool held);
+
 /// Creates a stage curtain: red folds over the whole parent's height with a row of gold tassels at
 /// the foot.
 lv_obj_t* curtain(lv_obj_t* parent, int32_t width);

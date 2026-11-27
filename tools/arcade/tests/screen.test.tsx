@@ -492,6 +492,28 @@ describe.runIf(built)("the firmware's screen in the browser", () => {
     expect(types(events)).toEqual(["touchDown", "touchUp", "screenTapped", "menuClosed"]);
   });
 
+  it("holds the sunburst still while a game runs, also on a page its menu opens, and lets it turn on the game choice", () => {
+    m.screenAnimate(true);
+    // a turning sunburst sends the whole screen at each step, a standing one never
+    const wholeScreens = (ms: number) => {
+      m.step(REFRESH_MS);
+      m.screenFrames();
+      m.step(ms);
+      return m.screenFrames().filter((f) => f.pixels >= SCREEN_WIDTH * SCREEN_HEIGHT).length;
+    };
+    expect(wholeScreens(500)).toBe(0);
+    swipe(150);
+    press(SCREEN_WIDTH - 50, 68, 100);
+    // the page slides in, then stands
+    m.step(500);
+    expect(wholeScreens(1000)).toBe(0);
+    m.screenScene("settings");
+    expect(wholeScreens(500)).toBeGreaterThan(0);
+    m.screenAnimate(false);
+    m.screenScene("game-runs");
+    m.step(REFRESH_MS);
+  });
+
   it("mutes the sound with the menu's mute button and leaves the menu open", () => {
     swipe(150);
     // the mute button beside the close at the header's right end

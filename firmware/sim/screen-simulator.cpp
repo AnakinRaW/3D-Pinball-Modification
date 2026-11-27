@@ -150,6 +150,8 @@ uint32_t pixelsBefore = 0;          // the display's pixels at the end of the pa
 lv_obj_t* scene = nullptr;          // what the controls page or a view stands on while it shows
 lv_obj_t* controlsPage = nullptr;   // the controls page while it shows
 bool inGame = false;                // the scene shown stands over the running game
+bool gameRunning = false;           // a game runs, also beneath a page the menu opened
+bool fromMenu = false;              // the scene to come is a page the menu opened
 lv_obj_t* openDialog = nullptr;     // the dialog START opens on the controls page
 bool begun = false;
 std::string pendingScene;   // the scene a press leads to, shown on the next pass
@@ -404,17 +406,26 @@ bool showScene(const std::string& name, bool picked) {
     lv_obj_set_clickable(scene, false);
     if (name == "controls") {
         inGame = false;
+        gameRunning = false;
+        controls::holdTurning(false);
         buildControlsPage();
         noteScene("controls");
         return true;
     }
     if (name == BOOT_FILM_SCENE) {
         inGame = false;
+        gameRunning = false;
+        controls::holdTurning(false);
         GameHost::playBootFilm(screen);
         noteScene(BOOT_FILM_SCENE);
         return true;
     }
     inGame = galleryInGame(name.c_str());
+    // A game runs from its screens on, and beneath the pages its menu opens, until another scene
+    // leaves it. The host holds every sunburst still meanwhile.
+    gameRunning = inGame || (fromMenu && gameRunning);
+    fromMenu = false;
+    controls::holdTurning(gameRunning);
     noteScene(galleryBuild(name.c_str(), scene, picked));
     GameHost::raise();
     return true;
@@ -646,6 +657,7 @@ void GameHost::chosen(EdgeMenuView::Item item, void*) {
     }
     tapped();
     if (PAGES[uint8_t(item)] != nullptr) {
+        fromMenu = true;
         galleryOpen(PAGES[uint8_t(item)]);
     }
 }
