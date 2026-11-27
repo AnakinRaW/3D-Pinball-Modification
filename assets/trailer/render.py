@@ -67,15 +67,25 @@ for k, f in enumerate(todo):
 
 
 def find_blender(given):
-    if given:
-        return given
-    on_path = shutil.which("blender")
-    if on_path:
-        return on_path
-    pattern = {"win32": r"C:\Program Files\Blender Foundation\Blender *\blender.exe",
-               "darwin": "/Applications/Blender*.app/Contents/MacOS/Blender"}.get(sys.platform, "/opt/blender*/blender")
-    found = sorted(glob.glob(pattern))
-    return found[-1] if found else None
+    """Blender's executable: the one given, one on the PATH, or the newest in the usual install folders; asks
+    until it gets a file that exists."""
+    candidates = [given] if given else []
+    candidates.append(shutil.which("blender"))
+    patterns = {"win32": [r"C:\Program Files\Blender Foundation\Blender*\blender.exe",
+                          r"C:\Program Files (x86)\Steam\steamapps\common\Blender\blender.exe",
+                          os.path.expandvars(r"%LOCALAPPDATA%\Programs\Blender Foundation\Blender*\blender.exe")],
+                "darwin": ["/Applications/Blender*.app/Contents/MacOS/Blender"]}.get(sys.platform, ["/opt/blender*/blender",
+                                                                                                    "/usr/bin/blender"])
+    for pattern in patterns:
+        candidates += sorted(glob.glob(pattern), reverse=True)
+    for c in candidates:
+        if c and os.path.isfile(c):
+            return c
+    while True:
+        path = input("Blender was not found. Path to blender.exe: ").strip().strip('"')
+        if os.path.isfile(path):
+            return path
+        print("No file at", path)
 
 
 def ask(prompt, default, yes):
@@ -87,6 +97,9 @@ def ask(prompt, default, yes):
 
 def run(cmd, **kw):
     print(">", " ".join(f'"{c}"' if " " in c else c for c in cmd), flush=True)
+    for part in cmd[:3]:
+        if part.endswith((".py", ".exe")) and not os.path.isfile(part):
+            sys.exit(f"missing: {part}")
     subprocess.run(cmd, check=True, **kw)
 
 
@@ -111,8 +124,10 @@ def main():
     ap.add_argument("-y", "--yes", action="store_true", help="take the default for every setting not given")
     a = ap.parse_args()
 
-    blender = find_blender(a.blender) or ask("Blender executable", "blender", False)
+    blender = find_blender(a.blender)
     print("Blender:", blender)
+    if not os.path.isfile(os.path.join(HERE, "blender", "game.json")):
+        sys.exit("missing: assets/trailer/blender/game.json, the game the trailer plays")
     quality = a.quality or ask("Quality (" + ", ".join(QUALITY) + ")", "fast", a.yes)
     if quality not in QUALITY:
         sys.exit(f"unknown quality {quality}")
