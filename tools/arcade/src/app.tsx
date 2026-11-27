@@ -1,14 +1,15 @@
 // The app: the Features view with the list, the drawing or the machine in 3D, and the feature's or the
 // part's card; the Games view with every source's games as covers below the picked one; and the studio
 // with the game it edits, its Lights controls, the drawing in the firmware's colors, the clock with the
-// layers and the current.
+// layers and the current, or on its Screen tab the machine's display.
 import { lazy, Suspense } from "preact/compat";
 import type { Model, State } from "./state";
 import { Drawing } from "./ui/Drawing";
 import { GamesView } from "./ui/Games";
 import { FeatureCard, FeatureList, PartCard, ThemeSwitch, TopBar } from "./ui/Panels";
 import { panels, Splitter } from "./ui/Splitter";
-import { StudioControls, StudioCurrent, StudioStatus, useStudioClock } from "./ui/Studio";
+import { ScreenPanel } from "./ui/ScreenPanel";
+import { studio, StudioControls, StudioCurrent, StudioStatus, useStudioClock } from "./ui/Studio";
 
 // the 3D view and three.js load after the page, so the drawing and the lists stand at once
 const View3D = lazy(() => import("./ui/View3D").then((m) => ({ default: m.View3D })));
@@ -45,7 +46,9 @@ export function App({ model, state }: { model: Model; state: State }) {
         >
           {left}
           <Splitter side="left" />
-          {state.threeD.value ? (
+          {studio.subTab.value === "Screen" ? (
+            <ScreenPanel module={studio.lights.value} />
+          ) : state.threeD.value ? (
             <Suspense fallback={<div class="stage" />}>
               <View3D model={model} state={state} onClose={() => (state.threeD.value = false)} />
             </Suspense>

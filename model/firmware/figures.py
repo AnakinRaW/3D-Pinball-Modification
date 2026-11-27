@@ -247,12 +247,35 @@ dec("t_curtain_hold", 200, "ms", src=f"how long the curtain stays closed with it
 dec("t_curtain_open", 300, "ms", src=f"how long the curtain takes to open, {_HOST}")
 dec("t_launch_card", 1.5, "s", src=f"about how long the launch card stays before the game's screen, {_HOST}")
 dec("t_menu_idle", 20, "s", src=f"how long the menu stays open without a touch, {_HOST}")
+dec("t_hint_in", 150, "ms", src=f"how long the hint at the right edge takes to fade in, {_HOST}")
+dec("t_hint_stay", 1, "s", src=f"how long the hint stands once the finger lifts or rests, {_HOST}")
+dec("t_hint_fade", 300, "ms", src=f"how long the hint then takes to fade, {_HOST}")
+dec("n_menu_width", 208, "", src=f"the menu's width in pixels, {_HOST}")
+_EDGE_MENU_H = "firmware/src/host/views/edge-menu-view.h"
+for _key, _name, _unit in (("t_menu_snap", "SNAP_MS", "ms"),
+                           ("t_hint_in", "HINT_IN_MS", "ms"),
+                           ("t_hint_stay", "HINT_STAY_MS", "ms"),
+                           ("t_hint_fade", "HINT_FADE_MS", "ms"),
+                           ("n_menu_width", "WIDTH_PX", "")):
+    MODEL.in_code(_key, file=_EDGE_MENU_H, name=_name, unit=_unit)
+dec("t_preview_wait", 500, "ms", src=f"how long a card of the game choice stands in the middle before its game's preview plays, {_HOST}")
 dec("t_toast_fault", 4, "s", src=f"how long the toast of a failed device shows, {_HOST}")
 dec("t_toast_recovered", 3, "s", src=f"how long the toast of a device that works again shows, {_HOST}")
 dec("t_game_over", 3, "s", src=f"how long Game over shows before the first name entry, {_HOST}")
 dec("t_name_idle", 30, "s", src=f"how long the name entry waits for a touch before it counts as Skip, {_HOST}")
 dec("t_play_again", 15, "s", src=f"the countdown on the high scores that starts the same game again, {_HOST}")
 dec("step_slider", 5, "%", src=f"the step of the minus and the plus beside a slider, {_HOST}")
+_VIEWS = "firmware/src/host/views/"
+for _key, _file, _name, _unit in (
+        ("t_toast_drop", "game-views.h", "DROP_MS", "ms"),
+        ("t_toast_fault", "game-views.h", "FAULT_MS", "ms"),
+        ("t_toast_recovered", "game-views.h", "WORKS_MS", "ms"),
+        ("t_curtain_close", "stage-views.h", "CLOSE_MS", "ms"),
+        ("t_curtain_open", "stage-views.h", "OPEN_MS", "ms"),
+        ("t_page_slide", "games-view.h", "SLIDE_MS", "ms"),
+        ("t_preview_wait", "games-view.h", "PREVIEW_MS", "ms"),
+        ("step_slider", "controls.h", "STEP_PERCENT", "%")):
+    MODEL.in_code(_key, file=_VIEWS + _file, name=_name, unit=_unit)
 
 # -- the bench, firmware/bench/load and firmware/bench/watchdog ----------------
 _LOAD = "firmware/bench/load on the Teensy 4.1 under FreeRTOS with every load running at once: the IR timer on a PIT, the driver tick on GPT1, a movie read and drawn at 25 frames a second, four audio streams, saves and log lines"

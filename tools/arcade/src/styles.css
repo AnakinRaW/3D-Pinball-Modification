@@ -1212,3 +1212,71 @@ body.dragging {
     opacity: 0;
   }
 }
+
+/* the machine's display in the studio */
+.screen-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+}
+.screen-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+.screen-scene {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+}
+.screen-budget {
+  font-variant-numeric: tabular-nums;
+}
+.screen-budget.over {
+  color: var(--inspect);
+  font-weight: 600;
+}
+.screen-frame {
+  padding: 10px;
+  border-radius: 8px;
+  background: #050507;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.screen-canvas {
+  display: block;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+.screen-failed {
+  color: var(--inspect);
+}
+.screen-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: min(100%, 360px);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.screen-events li {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 8px;
+  padding: 2px 0;
+}
+.screen-events li.screenTapped,
+.screen-events li.screenHeld,
+.screen-events li.buttonClicked,
+.screen-events li.swipeLetGo,
+.screen-events li.menuOpened,
+.screen-events li.menuClosed {
+  color: var(--text);
+}

@@ -160,5 +160,53 @@
     "unit": "mA",
     "model": "power",
     "file": "model/parts/power/figures.py"
+  },
+  "n_cols": {
+    "value": 320.0,
+    "unit": "",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "n_rows": {
+    "value": 240.0,
+    "unit": "",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "t_render_rays": {
+    "value": 21.67,
+    "unit": "ms",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "t_frame_bus_bench": {
+    "value": 12.85,
+    "unit": "ms",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "cpu_send_bench": {
+    "value": 13.5,
+    "unit": "%",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "t_refr": {
+    "value": 33.0,
+    "unit": "ms",
+    "model": "display",
+    "file": "model/parts/display/figures.py"
+  },
+  "lamps_cpu": {
+    "value": 4.3249,
+    "unit": "%",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "audio_cpu_bench": {
+    "value": 3.8,
+    "unit": "%",
+    "model": "audio",
+    "file": "model/parts/audio/figures.py"
   }
 }

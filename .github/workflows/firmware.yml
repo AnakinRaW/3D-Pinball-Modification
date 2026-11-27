@@ -6,12 +6,14 @@ on:
       - "firmware/**"
       - "platformio.ini"
       - "docs/firmware/testing.md"
+      - "tools/fonts.py"
       - ".github/workflows/firmware.yml"
   pull_request:
     paths:
       - "firmware/**"
       - "platformio.ini"
       - "docs/firmware/testing.md"
+      - "tools/fonts.py"
       - ".github/workflows/firmware.yml"
 
 jobs:
@@ -55,6 +57,19 @@ jobs:
           path: ~/.platformio
           key: platformio-release-${{ hashFiles('platformio.ini') }}
 
+      # PlatformIO converts the host screens' fonts before it compiles the host's views, with
+      # lv_font_conv from npm, which the runner's Node.js runs. The cache holds them with the stamp
+      # tools/fonts.py checks, so a job converts only after a font in firmware/fonts/ or the script
+      # changed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/cache@v6
+        with:
+          path: firmware/src/host/views/fonts
+          key: fonts-${{ hashFiles('firmware/fonts/**', 'tools/fonts.py') }}
+
       - name: Install PlatformIO
         run: python -m pip install platformio
 
@@ -79,6 +94,19 @@ jobs:
         with:
           path: ~/.platformio
           key: platformio-release-${{ hashFiles('platformio.ini') }}
+
+      # PlatformIO converts the host screens' fonts before it compiles the host's views, with
+      # lv_font_conv from npm, which the runner's Node.js runs. The cache holds them with the stamp
+      # tools/fonts.py checks, so a job converts only after a font in firmware/fonts/ or the script
+      # changed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/cache@v6
+        with:
+          path: firmware/src/host/views/fonts
+          key: fonts-${{ hashFiles('firmware/fonts/**', 'tools/fonts.py') }}
 
       - name: Install PlatformIO
         run: python -m pip install platformio
@@ -112,6 +140,19 @@ jobs:
           path: ~/.platformio
           key: platformio-test-image-${{ hashFiles('platformio.ini', 'firmware/tests/teensy/platformio.ini') }}
 
+      # PlatformIO converts the host screens' fonts before it compiles the host's views, with
+      # lv_font_conv from npm, which the runner's Node.js runs. The cache holds them with the stamp
+      # tools/fonts.py checks, so a job converts only after a font in firmware/fonts/ or the script
+      # changed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/cache@v6
+        with:
+          path: firmware/src/host/views/fonts
+          key: fonts-${{ hashFiles('firmware/fonts/**', 'tools/fonts.py') }}
+
       - name: Install PlatformIO
         run: python -m pip install platformio
 
@@ -139,6 +180,19 @@ jobs:
         with:
           path: ~/.platformio
           key: platformio-computer-${{ hashFiles('platformio.ini') }}
+
+      # PlatformIO converts the host screens' fonts before it compiles the host's views, with
+      # lv_font_conv from npm, which the runner's Node.js runs. The cache holds them with the stamp
+      # tools/fonts.py checks, so a job converts only after a font in firmware/fonts/ or the script
+      # changed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - uses: actions/cache@v6
+        with:
+          path: firmware/src/host/views/fonts
+          key: fonts-${{ hashFiles('firmware/fonts/**', 'tools/fonts.py') }}
 
       - name: Install PlatformIO
         run: python -m pip install platformio

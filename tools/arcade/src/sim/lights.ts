@@ -3,6 +3,7 @@
 // turns the colors of its chains into the colors of the drawing's lamps and LEDs.
 import { CHAINS, SECTIONS, STRIP_GROUPS, type Hardware, type MachineConfig } from "../model/config";
 import type { Playfield, Strip } from "../model/playfield";
+import type { ScreenModule } from "./screen";
 
 export type Paint =
   | { r: number; g: number; b: number }
@@ -49,8 +50,9 @@ interface GroupSetup {
   heights?: number[];
 }
 
-// the module's functions, as firmware/sim/simulator.cpp binds them
-export interface LightsModule {
+// the module's functions, as firmware/sim/simulator.cpp binds them, with the screen's of
+// firmware/sim/screen-simulator.cpp
+export interface LightsModule extends ScreenModule {
   setUp(adapterA: number, groups: (GroupSetup | null)[]): boolean;
   setAdapter(adapterA: number): boolean;
   step(ms: number): number;

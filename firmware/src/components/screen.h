@@ -255,6 +255,12 @@ private:
     /// Gets the slide @p obj lies on, nullptr for an object on no slide.
     lv_obj_t* slideOf(lv_obj_t* obj) const;
 
+    /// Gets whether @p obj lies on the host's layer.
+    bool onHost(const lv_obj_t* obj) const;
+
+    /// Gets whether the host's layer shows.
+    bool hostShown() const { return host != nullptr && !lv_obj_is_hidden(host); }
+
     /// Gets the slide that shows, nullptr when there is none.
     lv_obj_t* top() const { return slides.size() != 0 ? slides[0].box : nullptr; }
 

@@ -34,7 +34,7 @@ public:
     /// @return  Always false.
     bool translate(const DriverEvent& in, PinballEvents& out) override;
 
-    /// Hands the game MOVIE_ENDED once a video has played to its end, once.
+    /// Hands the game MOVIE_ENDED once a video on a slide has played to its end, once.
     ///
     /// @return  False when no video has ended since the last call.
     bool update(uint32_t now, PinballEvents& out) override;
@@ -46,14 +46,16 @@ public:
     /// replaces the video that plays. With @p sound, its sound plays over every track of the game,
     /// which waits paused meanwhile.
     ///
-    /// @param viewport  An LVGL object on the slide that shows.
+    /// A video on the host's layer keeps LVGL's refresh running and makes no MOVIE_ENDED.
+    ///
+    /// @param viewport  An LVGL object on the slide that shows or on the host's layer that shows.
     /// @param name      The video's name. "jackpot" plays video/jackpot.rgb of the game's directory
     ///                  and, with @p sound, audio/jackpot.wav.
     /// @param loop      Plays the video and its sound over and over, so it never ends.
     /// @param sound     Plays the video's sound with it.
-    /// @return          False, with nothing played and the video that plays left playing, for a
-    ///                  viewport on a hidden slide, on no slide, empty or reaching beyond the
-    ///                  screen, and when the picture memory has no room for one second of frames.
+    /// @return          False, with nothing played and the video that plays left playing, for any
+    ///                  other viewport, one empty or reaching beyond the screen, and when the
+    ///                  picture memory has no room for one second of frames.
     /// @note            The main loop calls it.
     bool play(lv_obj_t* viewport, const char* name, bool loop, bool sound);
 
@@ -137,7 +139,7 @@ private:
     lv_image_dsc_t frame = {};   // the frame on the screen
     lv_obj_t* image = nullptr;   // inside the viewport, filling it
     lv_obj_t* viewport = nullptr;
-    lv_obj_t* slide = nullptr;   // the slide the viewport lies on, which owns the video
+    lv_obj_t* slide = nullptr;   // the slide or the host's layer, which owns the video
     FileReader file;
     char wav[NAME_BYTES + sizeof(".wav")] = {};
     uint32_t video = 0;   // counts the plays, so a read of a stopped video is known
@@ -150,6 +152,7 @@ private:
     uint32_t shownFrame = 0;   // the frame on the screen
     uint32_t startUs = 0;      // nowUs() when frame loopStart was due, by the clock
     bool active = false;       // a video plays
+    bool hosted = false;       // the video plays on the host's layer
     bool counted = false;      // count is known
     bool anyShown = false;     // a frame of the video is on the screen
     bool loop = false;

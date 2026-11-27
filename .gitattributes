@@ -67,3 +67,7 @@ assets/**/*.wav  filter=lfs diff=lfs merge=lfs -text
 
 # Keep generated fabrication output out of diffs and language statistics.
 hardware/pcb/**/fab/** linguist-generated=true
+
+# The host screens' fonts, which tools/fonts.py converts and hashes byte for byte
+*.woff    binary
+*.ttf     binary

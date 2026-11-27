@@ -55,8 +55,12 @@ constexpr uint8_t GREEN_SHIFT = 5;
 
 // rectangles: a rectangle's bus time is its bytes at 83.3 ns, the whole screen's FRAME_BUS_US
 // spread over its bytes. The function runs no earlier than that and no later than the start of a
-// rectangle, a few microseconds, the 3 µs wait after the last burst and the interrupts' delay.
-constexpr uint32_t LATE_US = 200;
+// rectangle, a few microseconds, the 3 µs wait after the last burst and the interrupts' delay. The
+// audio tests leave the Audio library's update running, and one update can fall into a rectangle.
+// The cost bench measures the update at 3.8 % of a 2.9 ms block.
+constexpr uint32_t START_AND_WAIT_US = 200;
+constexpr uint32_t AUDIO_UPDATE_US = 110;
+constexpr uint32_t LATE_US = START_AND_WAIT_US + AUDIO_UPDATE_US;
 constexpr uint32_t DONE_TIMEOUT_MS = 100;   // far longer than the whole screen's bus time
 struct Rect {
     uint16_t x, y, width, height;

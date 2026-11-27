@@ -1,7 +1,8 @@
-// The studio for lights: the firmware's lamps component and lighting driver run in the browser on a
-// simulated clock. The left panel starts effects on the lamps and strips, the drawing shows the
-// colors the chains carry, and the right panel shows the clock, the profile, the running layers and
-// the current the machine draws.
+// The studio: the firmware's lamps component, lighting driver and screen run in the browser on a
+// simulated clock. On the Lights tab the left panel starts effects on the lamps and strips, the
+// drawing shows the colors the chains carry, and the right panel shows the clock, the profile, the
+// running layers and the current the machine draws. On the Screen tab the machine's display takes
+// the drawing's place.
 import { signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { ADAPTERS, type Adapter } from "../model/current";
@@ -137,8 +138,12 @@ function NumberField({ label, value, onChange, min = 0, max = 65535 }: { label: 
   );
 }
 
-// the studio's parts of a game; Lights is the one built so far
-const SUB_TABS = ["Lights", "Slides", "Sounds", "Modes"];
+// the studio's parts of a game; Lights and Screen are the ones built so far
+const SUB_TABS = ["Lights", "Screen", "Sounds", "Modes"] as const;
+type SubTab = (typeof SUB_TABS)[number];
+const BUILT_TABS: SubTab[] = ["Lights", "Screen"];
+// the part in view: the lamps on the drawing, or the machine's display
+const subTab = signal<SubTab>("Lights");
 
 // The game the studio edits, picked from the games of every source as tiles that fold out, and the
 // part of it in view.
@@ -154,11 +159,20 @@ function StudioHeader({ state }: { state: State }) {
       </button>
       {open && <GameList state={state} compact onPick={() => setOpen(false)} />}
       <nav class="sub-tabs">
-        {SUB_TABS.map((t, i) => (
-          <button key={t} class={`tab${i === 0 ? " active" : ""}`} disabled={i > 0} title={i > 0 ? "Comes with a later phase" : undefined}>
-            {t}
-          </button>
-        ))}
+        {SUB_TABS.map((t) => {
+          const built = BUILT_TABS.includes(t);
+          return (
+            <button
+              key={t}
+              class={`tab${t === subTab.value ? " active" : ""}`}
+              disabled={!built}
+              title={built ? undefined : "Comes with a later phase"}
+              onClick={() => (subTab.value = t)}
+            >
+              {t}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
@@ -207,7 +221,7 @@ export function StudioControls({ model, state }: { model: Model; state: State })
     setCount(t.count);
   }, [picked]);
 
-  if (!m) {
+  if (!m || subTab.value !== "Lights") {
     return (
       <aside class="list studio-controls">
         <StudioHeader state={state} />
@@ -553,5 +567,5 @@ export function useStudioClock(model: Model, state: State) {
   }, [active]);
 }
 
-// the studio's module, its status, its layers, its pace, its adapter and its light sequence
-export const studio = { lights, status, layers, running, adapter, player, parsedSequence };
+// the studio's module, its status, its layers, its pace, its adapter, its light sequence and the part in view
+export const studio = { lights, status, layers, running, adapter, player, parsedSequence, subTab };

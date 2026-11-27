@@ -53,7 +53,7 @@ A touch that comes down on a control goes to that control until the finger leave
 
 Every other touch becomes a tap or a hold, which reaches the game as a pinball event. A tap is a touch that leaves the screen within 500 ms and within 10 pixels of where it came down. A hold is a finger resting for 1 s, which the touch driver reports as `TouchHeld`. The host also takes every tap and hold with `takeGesture()`, so it can react to a gesture over a running game.
 
-A touch that comes down in the right 24 px and moves 10 px or more to the left is the host's swipe. It opens the [host's menu](../host-screens.md#menu). The component watches every touch before LVGL gets it, so it can tell the swipe apart. The swipe reaches neither LVGL nor the game. The host follows the finger's x while it moves. A tap or a hold that comes down at the right edge reaches the game as anywhere else.
+A touch that comes down in the right 24 px and moves 10 px or more to the left is the host's swipe. It opens the [host's menu](../../../firmware/src/host/views/edge-menu-view.h). The component watches every touch before LVGL gets it, so it can tell the swipe apart. The swipe reaches neither LVGL nor the game. The host follows the finger's x while it moves. A tap or a hold that comes down at the right edge reaches the game as anywhere else.
 
 | Event | When | Payload |
 |---|---|---|

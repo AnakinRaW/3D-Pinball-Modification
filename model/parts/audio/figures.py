@@ -244,3 +244,8 @@ MODEL.owns("I²S2", "PJRC's AudioOutputI2S2 drives the port by DMA, docs/firmwar
 MODEL.draws("ram_streams", pool="PSRAM")
 MODEL.draws("ram_blocks", pool="RAM2")
 MODEL.draws(pool="device monitor")   # the SD card
+
+# -- what the sounds cost the processor, which the Arcade adds to its budget -----------------------
+_COST = "firmware/bench/cost on the Teensy 4.1 under FreeRTOS, built with PlatformIO, LVGL's code in the flash and the main loop calling each part as the firmware does"
+msr("audio_cpu_bench", 3.8, "%", src=f"{_COST}: the Audio library's largest share of the processor "
+    "while every channel looped a silent file from the card, AudioProcessorUsageMax()", stated=False)

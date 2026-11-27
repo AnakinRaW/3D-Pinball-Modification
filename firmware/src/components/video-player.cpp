@@ -55,11 +55,12 @@ void VideoPlayer::reset() {
 }
 
 bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSound) {
-    // Only the slide that shows plays a video, so a video that plays lies on the same slide and is
-    // replaced.
+    // Only the slide that shows and the host's layer while it shows play a video.
     lv_obj_t* owner = screen.slideOf(in);
-    if (owner == nullptr || owner != screen.top()) {
-        DEBUG_LOG("video: %s refused, its viewport lies on no slide that shows\n", name);
+    const bool onHost = owner == nullptr && screen.onHost(in);
+    if (onHost ? !screen.hostShown() : owner == nullptr || owner != screen.top()) {
+        DEBUG_LOG("video: %s refused, its viewport lies on no slide or host's layer that shows\n",
+                  name);
         return false;
     }
     lv_obj_update_layout(in);
@@ -107,10 +108,12 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
     frame.header.stride = uint16_t(width * PIXEL_BYTES);
     frame.data_size = bytes;
     viewport = in;
-    slide = owner;
-    // The image lies at the top left of the viewport's content and is empty until the first frame
-    // has landed.
+    hosted = onHost;
+    slide = onHost ? screen.hostLayer() : owner;
+    // The image lies at the top left of the viewport's content and stays hidden until the first
+    // frame has landed, so what lies behind it shows meanwhile.
     image = lv_image_create(in);
+    lv_obj_set_hidden(image, true);
     // LVGL takes an image as covering what lies behind it only where the image has a background
     // that covers. With the black background LVGL draws nothing behind a frame.
     lv_obj_set_style_bg_color(image, lv_color_black(), 0);
@@ -128,8 +131,12 @@ bool VideoPlayer::play(lv_obj_t* in, const char* name, bool loops, bool withSoun
     shownFrame = 0;
     anyShown = false;
     startUs = nowUs();
-    // The frames redraw the screen while the video plays, so LVGL's own refresh pauses.
-    lv_timer_set_period(lv_display_get_refr_timer(screen.lv), PAUSED_PERIOD_MS);
+    // The frames of a video on a slide redraw the screen, so LVGL's own refresh pauses. The host's
+    // pages go on taking the touch beside a video, so they keep LVGL's refresh, which draws each
+    // frame with them.
+    if (!hosted) {
+        lv_timer_set_period(lv_display_get_refr_timer(screen.lv), PAUSED_PERIOD_MS);
+    }
     soundFrame = 0;
     landed = 0;
     soundStarted = false;
@@ -175,8 +182,8 @@ void VideoPlayer::step(uint32_t now) {
     if (!active) {
         return;
     }
-    if (screen.top() != slide) {
-        // Another slide shows in place of the video's.
+    if (hosted ? !screen.hostShown() : screen.top() != slide) {
+        // Another slide shows in place of the video's, or the host's layer is hidden.
         end();
         return;
     }
@@ -190,8 +197,9 @@ void VideoPlayer::step(uint32_t now) {
     }
     uint32_t frameDue = due(now);
     if (counted && (count == 0 || (!loop && frameDue >= loopStart + count))) {
+        // The game hears only of its videos.
         ended = {now, EventType::MOVIE_ENDED, screen.keyOf(slide), 0};
-        endedDue = true;
+        endedDue = !hosted;
         end();
         return;
     }
@@ -255,8 +263,11 @@ void VideoPlayer::show(uint32_t frameDue) {
     anyShown = true;
     frame.data = rooms[best];
     lv_image_set_src(image, &frame);
-    // Draws the screen now, with every other change since the last frame.
-    lv_refr_now(screen.lv);
+    lv_obj_set_hidden(image, false);
+    if (!hosted) {
+        // Draws the screen now, with every other change since the last frame.
+        lv_refr_now(screen.lv);
+    }
 }
 
 // The frames after the last one asked for go into the rooms that hold nothing. A card that has
@@ -329,6 +340,7 @@ void VideoPlayer::end() {
     }
     viewport = nullptr;
     slide = nullptr;
+    hosted = false;
     lv_timer_t* refresh = lv_display_get_refr_timer(screen.lv);
     lv_timer_set_period(refresh, LV_DEF_REFR_PERIOD);
     lv_timer_resume(refresh);

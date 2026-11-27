@@ -567,3 +567,14 @@ MODEL.schematic("schematic.py")
 
 MODEL.owns("FlexIO2", "the lighting driver programs FlexIO2's six shifters and its timer 0, "
                       "through firmware/src/drivers/ws2812-flexio2.h")
+
+# -- what the lamps cost the processor, which the Arcade adds to its budget ------------------------
+_COST = "firmware/bench/cost on the Teensy 4.1 under FreeRTOS, built with PlatformIO, LVGL's code in the flash and the main loop calling each part as the firmware does"
+msr("t_lamps_bench", 70.9, "µs", src=f"{_COST}: the mean time Lamps::update() took for each frame it "
+    "handed the lighting driver, a chase on the left perimeter of n_lamps_bench LEDs on chain A, "
+    "the costliest of six effects", stated=False)
+dec("n_lamps_bench", 40, "", src="the LEDs the cost bench configures on chain A", stated=False)
+fig("t_lamps_led", "µs", "t_lamps_bench / n_lamps_bench", moves="+t_lamps_bench -n_lamps_bench",
+    stated=False)
+fig("lamps_cpu", "%", "t_lamps_led * n_leds / t_frame", moves="+t_lamps_bench -n_lamps_bench +n_leds -t_frame",
+    stated=False)

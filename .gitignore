@@ -19,6 +19,8 @@ build/
 *.elf
 # the release build's compile commands, which firmware/tools/tidy.py and an editor's clangd read
 compile_commands.json
+# the host screens' fonts, which tools/fonts.py converts from firmware/fonts/ before every build
+firmware/src/host/views/fonts/
 # the .gitignore PlatformIO's VS Code setup writes into every project folder
 firmware/**/.gitignore
 

@@ -22,5 +22,11 @@ const machineGlb = Object.values(
   import.meta.glob<string>("../../../assets/cgi/machine.glb", { query: "?url", import: "default", eager: true }),
 )[0] as string | undefined;
 
-export const sources = { playfieldSvg, playfieldJson, featuresMd, readmeMd, configYml, machineYml, repoGames, repoThumbnails, machineGlb };
+// the machine's boot film, which the screen's boot film scene plays from the simulated card, as the URL
+// the page fetches it from once the scene is picked; undefined in a checkout without the file
+const introRgb = Object.values(
+  import.meta.glob<string>("../../../assets/intro/intro.rgb", { query: "?url", import: "default", eager: true }),
+)[0] as string | undefined;
+
+export const sources = { playfieldSvg, playfieldJson, featuresMd, readmeMd, configYml, machineYml, repoGames, repoThumbnails, machineGlb, introRgb };
 export type Sources = typeof sources;
