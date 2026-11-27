@@ -229,7 +229,7 @@ describe("the screen panel", () => {
     const readout = () => root.querySelector("[data-testid=screen-budget]") as HTMLElement;
     m.sent = [{ ms: 1000, pixels: SCREEN_WIDTH * SCREEN_HEIGHT }];
     await act(() => new Promise((r) => setTimeout(r, 300)));
-    expect(readout().textContent).toMatch(/Frame 19\.9 \/ 33 ms/);
+    expect(readout().textContent).toMatch(/Frame 21\.7 \/ 33 ms/);
     expect(readout().classList.contains("over")).toBe(false);
     // one pass that sent the screen twice does not fit
     m.sent = [{ ms: 1100, pixels: 2 * SCREEN_WIDTH * SCREEN_HEIGHT }];

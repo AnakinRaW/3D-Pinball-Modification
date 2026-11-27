@@ -609,3 +609,14 @@ for _key, _file, _name, _unit in (("n_isr", DISPLAY_H, "REFILL_CLOCKS", "clocks"
                                   ("t_tap", SCREEN_H, "TAP_MS", "ms"),
                                   ("n_edge", SCREEN_H, "EDGE_PX", "")):
     MODEL.in_code(_key, file=_file, name=_name, unit=_unit)
+
+# -- what the screen costs the processor, which the Arcade weighs its frames against ---------------
+_COST = "firmware/bench/cost on the Teensy 4.1 under FreeRTOS, built with PlatformIO, LVGL's code in the flash and the main loop calling each part as the firmware does"
+msr("t_frame_bus_bench", 12.85, "ms", src=f"{_COST}: the mean of ten full black frames sent through "
+    "Display::send() as five bands of 48 rows one after the other, 12845 us", stated=False)
+msr("cpu_send_bench", 13.5, "%", src=f"{_COST}: the share of the processor the bus's refill "
+    "interrupt took while those frames went out, against the main loop's spin rate without them",
+    stated=False)
+msr("t_render_rays", 21.67, "ms", src=f"{_COST}: the mean time LVGL drew a full frame of the "
+    "Settings page with the sunburst turning, ten frames a second for 5 s, the costliest page "
+    "measured", stated=False)

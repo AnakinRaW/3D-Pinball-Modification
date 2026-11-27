@@ -58,15 +58,18 @@ FIGURES = {
     "i_most_3a": ("power", "mA"),
     "i_most_6a": ("power", "mA"),
     "i_over_3a": ("power", "mA"),
-    # the screen's budget: the panel's pixels, how long LVGL takes to draw a whole screen of them as
-    # measured on the Teensy, how long the bus sends them, the processor's share while the bus
-    # sends, and LVGL's refresh period that a frame has to fit in
+    # the screen's budget, measured on the Teensy: the panel's pixels, how long LVGL takes to draw a
+    # whole screen of the costliest page, how long the bus sends it, the processor's share while the
+    # bus sends, and LVGL's refresh period that a frame has to fit in
     "n_cols": ("display", ""),
     "n_rows": ("display", ""),
-    "t_render": ("display", "ms"),
-    "t_frame_bus": ("display", "ms"),
-    "cpu_send": ("display", "%"),
+    "t_render_rays": ("display", "ms"),
+    "t_frame_bus_bench": ("display", "ms"),
+    "cpu_send_bench": ("display", "%"),
     "t_refr": ("display", "ms"),
+    # what the lamps of the whole layout and the four sound channels take of the processor beside
+    "lamps_cpu": ("lighting", "%"),
+    "audio_cpu_bench": ("audio", "%"),
 }
 
 

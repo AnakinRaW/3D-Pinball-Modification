@@ -173,20 +173,20 @@
     "model": "display",
     "file": "model/parts/display/figures.py"
   },
-  "t_render": {
-    "value": 7.09,
+  "t_render_rays": {
+    "value": 21.67,
     "unit": "ms",
     "model": "display",
     "file": "model/parts/display/figures.py"
   },
-  "t_frame_bus": {
-    "value": 12.8,
+  "t_frame_bus_bench": {
+    "value": 12.85,
     "unit": "ms",
     "model": "display",
     "file": "model/parts/display/figures.py"
   },
-  "cpu_send": {
-    "value": 15.9375,
+  "cpu_send_bench": {
+    "value": 13.5,
     "unit": "%",
     "model": "display",
     "file": "model/parts/display/figures.py"
@@ -196,5 +196,17 @@
     "unit": "ms",
     "model": "display",
     "file": "model/parts/display/figures.py"
+  },
+  "lamps_cpu": {
+    "value": 4.3249,
+    "unit": "%",
+    "model": "lighting",
+    "file": "model/parts/lighting/figures.py"
+  },
+  "audio_cpu_bench": {
+    "value": 3.8,
+    "unit": "%",
+    "model": "audio",
+    "file": "model/parts/audio/figures.py"
   }
 }

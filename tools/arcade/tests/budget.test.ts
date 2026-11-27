@@ -7,12 +7,12 @@ import { FIGURES as f } from "../src/model/current";
 const SCREEN = f.n_cols.value * f.n_rows.value;
 
 describe("a frame's cost", () => {
-  it("takes the measured drawing and the bus's time for a whole screen", () => {
+  it("takes the measured drawing and the bus's time for a whole screen, side by side", () => {
     const c = frameCost(SCREEN);
-    expect(c.drawMs).toBeCloseTo(f.t_render.value);
-    expect(c.busMs).toBeCloseTo(f.t_frame_bus.value);
-    expect(c.totalMs).toBeCloseTo(f.t_render.value + f.t_frame_bus.value);
-    expect(c.cpuMs).toBeCloseTo(f.t_render.value + (f.t_frame_bus.value * f.cpu_send.value) / 100);
+    expect(c.drawMs).toBeCloseTo(f.t_render_rays.value);
+    expect(c.busMs).toBeCloseTo(f.t_frame_bus_bench.value);
+    expect(c.totalMs).toBeCloseTo(Math.max(f.t_render_rays.value, f.t_frame_bus_bench.value));
+    expect(c.cpuMs).toBeCloseTo(f.t_render_rays.value + (f.t_frame_bus_bench.value * f.cpu_send_bench.value) / 100);
   });
 
   it("scales with the pixels and costs nothing without them", () => {
@@ -25,7 +25,8 @@ describe("the budget", () => {
   it("takes the longest frame and the processor's share of the last second", () => {
     const b = budgetOf([{ ms: 100, pixels: SCREEN }, { ms: 600, pixels: SCREEN / 2 }], 1000);
     expect(b.worstMs).toBeCloseTo(frameCost(SCREEN).totalMs);
-    expect(b.cpuPercent).toBeCloseTo(((frameCost(SCREEN).cpuMs + frameCost(SCREEN / 2).cpuMs) / WINDOW_MS) * 100);
+    const base = f.lamps_cpu.value + f.audio_cpu_bench.value;
+    expect(b.cpuPercent).toBeCloseTo(((frameCost(SCREEN).cpuMs + frameCost(SCREEN / 2).cpuMs) / WINDOW_MS) * 100 + base);
     expect(b.budgetMs).toBe(f.t_refr.value);
     expect(b.over).toBe(false);
   });
@@ -33,5 +34,6 @@ describe("the budget", () => {
   it("leaves out frames older than the window and marks one past the refresh period", () => {
     expect(budgetOf([{ ms: 0, pixels: 3 * SCREEN }], WINDOW_MS).worstMs).toBe(0);
     expect(budgetOf([{ ms: 10, pixels: 2 * SCREEN }], 500).over).toBe(true);
+    expect(budgetOf([], 500).cpuPercent).toBeCloseTo(f.lamps_cpu.value + f.audio_cpu_bench.value);
   });
 });
