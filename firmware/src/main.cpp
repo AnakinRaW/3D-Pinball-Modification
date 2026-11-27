@@ -13,6 +13,7 @@
 #include "components/video-player.h"
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
+#include "core/interrupt-priorities.h"
 #include "game/component.h"
 #include "drivers/audio.h"
 #include "drivers/display.h"
@@ -244,6 +245,8 @@ static void runMainTask(void*) {
     if (config.get(ConfigKey::BOOT_FILM, BOOT_FILM_ON)) {
         GameHost::playBootFilm();
     }
+
+    checkInterruptPriorities();
 
     startingUp = false;
     uint32_t toggledUs = nowUs();
