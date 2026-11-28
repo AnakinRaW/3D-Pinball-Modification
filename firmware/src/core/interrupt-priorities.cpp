@@ -11,12 +11,12 @@ struct Row {
 };
 
 // general-design.md, Interrupts: the rows whose interrupt has a fixed number. The audio output's
-// DMA channel is taken at run time. The watchdog and the IR ball sensing have no driver.
+// DMA channel is taken at run time. The IR ball sensing has no driver.
 constexpr Row ROWS[] = {
-    {"pin interrupts", IRQ_GPIO6789, 96}, {"driver tick", IRQ_PIT, 96},
-    {"I2C bus Wire", IRQ_LPI2C1, 160},    {"I2C bus Wire2", IRQ_LPI2C4, 160},
-    {"audio update", IRQ_SOFTWARE, 208},  {"display", IRQ_FLEXIO3, 224},
-    {"SD controller", IRQ_SDHC1, 240},
+    {"watchdog warning", IRQ_WDOG1, 32}, {"pin interrupts", IRQ_GPIO6789, 96},
+    {"driver tick", IRQ_PIT, 96},        {"I2C bus Wire", IRQ_LPI2C1, 160},
+    {"I2C bus Wire2", IRQ_LPI2C4, 160},  {"audio update", IRQ_SOFTWARE, 208},
+    {"display", IRQ_FLEXIO3, 224},       {"SD controller", IRQ_SDHC1, 240},
 };
 
 // general-design.md, Interrupts: FreeRTOS's tick and its task switch

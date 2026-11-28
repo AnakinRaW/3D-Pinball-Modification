@@ -11,9 +11,10 @@
 //   reset                      restarts the Teensy
 //   blank                      sets the display up, which leaves it black, then BLANK
 //
-// The image keeps no state across a restart. A crash report left by the run before is printed as
-// CRASH lines once the host opens the port. The tests run in a FreeRTOS task, as the firmware's
-// main loop does, and setup() starts the clock before it, as the firmware's setup() does.
+// The image keeps no state across a restart, except that a test may keep an expected crash report
+// for its resume half. Other crash reports are printed as CRASH lines once the host opens the port.
+// The tests run in a FreeRTOS task, as the firmware's main loop does, and setup() starts the clock
+// before it, as the firmware's setup() does.
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -51,6 +52,7 @@ extern const Program SOUNDS;
 extern const Program SCREEN;
 extern const Program VIDEO_PLAYER;
 extern const Program LOGGER;
+extern const Program WATCHDOG;
 extern const Program START_UP;
 
 // the programs in the order their sections stand in testing.md
@@ -61,12 +63,14 @@ static const Program* const PROGRAMS[] = {
     &BREAK_BEAM,    &I2C_BUS,         &CONTROLS,       &SERVO,
     &AUDIO,         &DISPLAY_PROGRAM, &TOUCH_PROGRAM,  &EVERY_DRIVER,
     &CONFIG,        &LAMPS,           &SOUNDS,         &SCREEN,
-    &VIDEO_PLAYER,  &LOGGER,          &START_UP};
+    &VIDEO_PLAYER,  &LOGGER,          &WATCHDOG,       &START_UP};
 
 constexpr uint32_t LINE_BYTES = 256;         // the longest command line
 constexpr uint32_t MAX_WORDS = 16;           // words in one command line
 constexpr uint32_t RESTART_FLUSH_MS = 100;   // lets the last line leave over USB before a restart
+constexpr uint32_t COMMAND_POLL_TICKS = 1;   // how long the test task waits between commands
 constexpr uint32_t DRAIN_IDLE_PASSES = 3;    // ms in a row without a sent debug byte
+constexpr uint32_t EXPECTED_CRASH_MAGIC = 0x43524153;
 // the stack of the task the tests run in, enough for the largest test's local variables
 constexpr uint32_t TEST_STACK_BYTES = 32768;
 
@@ -74,6 +78,12 @@ constexpr uint32_t TEST_STACK_BYTES = 32768;
 // its upper half, and SYSRESETREQ, bit 2, restarts the processor
 constexpr uint32_t AIRCR_VECTKEY = 0x05FA0000;
 constexpr uint32_t AIRCR_SYSRESETREQ = 1u << 2;
+
+struct alignas(32) ExpectedCrash {
+    uint32_t magic;
+    uint32_t seal;
+};
+DMAMEM static ExpectedCrash expectedCrash;
 
 static char line[LINE_BYTES];
 static uint32_t lineLength = 0;
@@ -240,6 +250,20 @@ bool check(const char* tag, uint32_t count, uint32_t& good, uint32_t& total, uin
         length = 0;
     }
     return false;
+}
+
+void restartComing() {
+    Serial.printf("RESTART %s\n", current->name);
+    drainDebugLog();
+    Serial.flush();
+    delay(RESTART_FLUSH_MS);
+}
+
+void crashComing() {
+    expectedCrash.magic = EXPECTED_CRASH_MAGIC;
+    expectedCrash.seal = ~EXPECTED_CRASH_MAGIC;
+    arm_dcache_flush(&expectedCrash, sizeof expectedCrash);
+    restartComing();
 }
 
 void restart() {
@@ -416,6 +440,9 @@ static void testTask(void*) {
             lineLength = 0;
             lineTooLong = false;
         }
+        // The wait lets FreeRTOS's idle task run between commands, which feeds a watchdog that a
+        // test has begun.
+        vTaskDelay(COMMAND_POLL_TICKS);
     }
 }
 
@@ -427,7 +454,12 @@ void setup() {
     // The cycle counter times the tests' edges.
     ARM_DEMCR |= ARM_DEMCR_TRCENA;
     ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
-    if (CrashReport) {
+    arm_dcache_delete(&expectedCrash, sizeof expectedCrash);
+    const bool expected =
+        expectedCrash.magic == EXPECTED_CRASH_MAGIC && expectedCrash.seal == ~EXPECTED_CRASH_MAGIC;
+    expectedCrash = {};
+    arm_dcache_flush(&expectedCrash, sizeof expectedCrash);
+    if (CrashReport && !expected) {
         LinePrefix crash("CRASH ");
         crash.print(CrashReport);
     }

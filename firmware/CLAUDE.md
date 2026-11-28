@@ -26,7 +26,7 @@ All of the firmware's code stands in `src/`, in folders that follow `docs/firmwa
 
 | Folder | Holds |
 |---|---|
-| `core/` | what every part uses: the clock, the event queue, the device monitor, the priority list, the task lock, the firmware's version |
+| `core/` | what every part uses: the clock, the event queue, the device monitor, the watchdog, the priority list, the task lock, the firmware's version |
 | `logging/` | the machine's log on the card, `DEBUG_LOG()` and `DEBUG_TRACE()` |
 | `io/` | what reaches a device or a file for the parts above it, such as the card appender |
 | `drivers/` | one driver per pair of files, the driver tick in `driver-base`, and the code a driver alone uses |

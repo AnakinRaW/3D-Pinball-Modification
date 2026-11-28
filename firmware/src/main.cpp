@@ -14,6 +14,7 @@
 #include "core/device-monitor.h"
 #include "core/event-queue.h"
 #include "core/interrupt-priorities.h"
+#include "core/watchdog.h"
 #include "game/component.h"
 #include "drivers/audio.h"
 #include "drivers/display.h"
@@ -61,6 +62,7 @@ constexpr char LOG_FIRST[] = "/log-a.txt";    // logging.md: the log's first fil
 constexpr char LOG_SECOND[] = "/log-b.txt";   // logging.md: the log's second file
 EXTMEM static uint8_t logBuffer[Logger::BUFFER_BYTES];
 
+static Watchdog watchdog;
 static AudioDriver audio(events);
 static FileSystem files(storage);
 DMAMEM static Config config(files);
@@ -73,9 +75,6 @@ static VideoPlayer videoPlayer(screen, files, sounds);
 /// The components a driver event is offered to, in this order. The first that takes it ends the
 /// offer, so a new component is one more entry here.
 static Component* const components[] = {&screen, &sounds};
-
-/// True until the main loop runs; the watchdog's feed from FreeRTOS's idle task will read it
-static volatile bool startingUp = true;
 
 /// The port's default starts a 1 ms timer and a task for PJRC's MillisTimer and EventResponder,
 /// which the firmware does not use.
@@ -206,6 +205,9 @@ static void runMainTask(void*) {
     if (!deviceMonitor.watch(Device::SD_CARD, storage)) {
         logWarning("main", "the device monitor does not watch the card");
     }
+    // The watchdog begins ahead of the solenoids, so it guards the coils from their first pull. A
+    // card that holds up its mount only delays the start, since the watchdog begins after it.
+    watchdog.begin();
     static CardFile first(storage.openWriter(LOG_FIRST));
     static CardFile second(storage.openWriter(LOG_SECOND));
     static Logger logger(first, second, logBuffer, sizeof logBuffer);
@@ -214,6 +216,7 @@ static void runMainTask(void*) {
         static uint8_t secondHead[Logger::HEAD_BYTES];
         logger.begin(readLogStart(LOG_FIRST, firstHead), readLogStart(LOG_SECOND, secondHead));
     }
+    watchdog.report();
     // Without a card every setting takes its default.
     config.begin();
 
@@ -248,7 +251,7 @@ static void runMainTask(void*) {
 
     checkInterruptPriorities();
 
-    startingUp = false;
+    watchdog.loopStarts();
     uint32_t toggledUs = nowUs();
     for (;;) {
         if (elapsedMs(toggledUs, BLINK_MS)) {
@@ -287,6 +290,7 @@ static void runMainTask(void*) {
         screen.render();
         sendDebugLog();
         yield();
+        watchdog.check();
     }
 }
 

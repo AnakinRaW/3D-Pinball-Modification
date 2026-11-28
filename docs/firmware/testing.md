@@ -58,7 +58,7 @@ The image takes these commands, one to a line:
 | `reset` | Restarts the Teensy |
 | `blank` | Sets the display up, which leaves it black, then prints `BLANK` |
 
-The image keeps no state across a restart. The runner sends `resume` after a `RESTART` line. A restart can leave a stripe of stray bytes on the display, which stays awake through it. The runner therefore restarts the image after its last test and sends `blank`.
+The image keeps no state across a restart, except that a test may keep an expected crash report for its resume half. Other crash reports are printed as `CRASH` lines when the host opens the port. The runner sends `resume` after a `RESTART` line. A restart can leave a stripe of stray bytes on the display, which stays awake through it. The runner therefore restarts the image after its last test and sends `blank`.
 
 The runner fails a test that prints `FAIL` or `ERROR`. It also fails a test that runs past its time from the `TEST` line, and a test during which the serial port goes away without a `RESTART`. A crash report after such a loss marks the failure as a crash. A test past its time stops the run, since the image no longer answers. The runner exits with 0 when every test passed or skipped, and with 1 otherwise.
 
@@ -773,15 +773,21 @@ The program `logger` checks the [logger](logging.md).
 
 ### Watchdog
 
-The program `watchdog` checks the [watchdog](error-handling.md#watchdog) and the [restart causes](error-handling.md#restart-causes) it leaves in the log.
+The program `watchdog` checks the [watchdog](error-handling.md#watchdog) and the [restart causes](error-handling.md#restart-causes) it leaves in the log. Its tests' coils stand in for the solenoid driver and report the coils the test keeps on as overdue.
 
 | Test | Runs on | Steps | Passes when |
 |---|---|---|---|
-| `hang` | Teensy | Stop the main loop in an endless loop | The Teensy restarts within the watchdog's time, and the log names a hang at an address inside that loop |
-| `coil` | Teensy | Fire a coil and stop the driver tick, so the coil stays on | The Teensy restarts within the watchdog's time, the log names that coil, and its trigger pin reads low after the restart before `begin()` drives it |
-| `start-up` | Teensy | Let a test driver's `begin()` sleep for longer than the watchdog's time | The Teensy does not restart |
-| `crash` | Teensy | Execute a trap instruction in the main loop | The Teensy restarts, and the log holds the crash report |
-| `power-up` | bench | Cut the Teensy's power, restore it, then read the log | The log holds no restart report for that start |
+| `no-coils` | computer | Check a guard that watches no coils | Every check lets the watchdog be fed, and nothing is noted |
+| `guards-hold` | computer | Check the guards with no coil overdue | Every check lets the watchdog be fed, and nothing is noted |
+| `coil-overdue` | computer | Report a coil overdue, then a second one as well, and check the guards several times | No check lets the watchdog be fed, and the first coil is noted once, as cause and coil |
+| `first-note` | computer | Note a hang while the note of a coil waits | The coil's note stands |
+| `fed-after-note` | computer | Report no coil overdue after the coil's note, check twice, then note a hang | The first check lets the watchdog be fed and voids the note once, the second notes nothing, and the hang is noted afresh |
+| `note-seal` | computer | Seal a note of every cause, change one word of a sealed note, and read memory as power-up leaves it | A sealed note reads back as written. A changed note and the empty memory read as no cause |
+| `hang` | Teensy | Feed the watchdog for a while, then stop in an endless loop with interrupts on | The Teensy restarts within the watchdog's time, and the note the next start reads names a hang at an address inside that loop |
+| `coil` | Teensy | Drive a trigger pin high and report its coil overdue, so the coil stays on | The Teensy restarts within the watchdog's time, the note names that coil, and its trigger pin reads low after the restart before anything drives it |
+| `start-up` | Teensy | Begin the watchdog, sleep for longer than the watchdog's time, then restart | The restart is the test's and none of the watchdog's, and no cause is noted |
+| `crash` | Teensy | Execute a trap instruction in the main loop | The Teensy restarts, and the log holds the crash report with an execution address inside the trap |
+| `power-up` | bench | Cut the Teensy's power within 20 seconds of the prompt, restore it, then read the log | The reset status shows a power-up, the log holds its control line and no restart report, and the watchdog notes no cause |
 
 ### Start-up
 
