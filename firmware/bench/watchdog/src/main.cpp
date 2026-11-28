@@ -1,4 +1,4 @@
-// Watchdog test for the Teensy 4.1 under FreeRTOS, with the watchdog of firmware/gist/error-handling.cpp:
+// Watchdog test for the Teensy 4.1 under FreeRTOS, with the watchdog of firmware/src/core/watchdog.cpp:
 // WDT_T4 on WDOG1 with a 2 s timeout, its warning 0.5 s before the restart at priority 32, and a
 // warning handler that notes the interrupted program counter in CrashReport's breadcrumbs.
 //

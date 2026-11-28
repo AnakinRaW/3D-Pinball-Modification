@@ -28,30 +28,13 @@ The following components are guarded by the watchdog:
 |---|---|---|
 | Solenoid Driver | no coil has been on for longer than 31 ms, which `overdue()` checks, see [`solenoid.md`](drivers/solenoid.md) | ≤ 5 s |
 
-```cpp
-#include "Watchdog_t4.h"         // the WDT_T4 library, github.com/tonton81/WDT_T4
+A component joins the guards through `watch()`, which the main task calls before the watchdog's `begin()`. The solenoid driver joins as `OverdueCoils`, whose `overdue()` the guard asks before every feed. Without it, the watchdog guards against a hang alone.
 
-// the i.MX RT's WDOG1, which restarts the Teensy unless it is fed within 2 s
-class Watchdog {
-public:
-    // starts the watchdog and its warning; the main task calls it right after the storage
-    // driver's mount and before the solenoids' begin(), so it guards the coils from their first pull
-    void begin();
-
-    // feeds the watchdog while every guard holds, and notes the cause where one fails; at the end
-    // of every pass of the main loop, and from FreeRTOS's idle task until the main loop runs
-    void check();
-
-    // writes the report of the last restart into the log; the main task, right after the logger's begin()
-    void report(Logger& logger);
-};
-
-extern Watchdog watchdog;
-```
+[`firmware/src/core/watchdog.h`](../../firmware/src/core/watchdog.h) holds the watchdog, and [`firmware/src/core/watchdog-guard.h`](../../firmware/src/core/watchdog-guard.h) the guards that decide each feed.
 
 ### Restart causes
 
-After every restart other than a power-up, the log on the card states its cause. PJRC's `CrashReport` tells which reset it was, such as the watchdog or a crash, and where a crash happened. Before the watchdog restarts the Teensy, the firmware notes in `CrashReport` why it went unfed.
+After every restart other than a power-up, the log on the card states its cause. PJRC's `CrashReport` tells which reset it was, such as the watchdog or a crash, and where a crash happened. Before the watchdog restarts the Teensy, the firmware notes in `CrashReport` why it went unfed. It writes the same note into RAM2, which a restart leaves as it is, so the next start writes the cause into the log in words.
 
 | Cause | Note |
 |---|---|

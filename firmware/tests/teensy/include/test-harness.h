@@ -66,6 +66,13 @@ Answer ask(const char* question, uint32_t timeoutMs);
 bool check(const char* tag, uint32_t count, uint32_t& good, uint32_t& total, uint32_t& lost,
            uint32_t timeoutMs);
 
+// Prints the RESTART line and leaves the restart to the test, which waits for it to come by itself,
+// such as from the watchdog. The runner then sends "resume <test>", as after restart().
+void restartComing();
+
+// As restartComing(), but keeps the crash report for the test to inspect after the restart.
+void crashComing();
+
 // Prints the RESTART line and restarts the Teensy. The runner then sends "resume <test>", which
 // calls the test's resume function, so the Teensy keeps no state across the restart.
 [[noreturn]] void restart();

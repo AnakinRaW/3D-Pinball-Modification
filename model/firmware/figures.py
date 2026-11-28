@@ -35,6 +35,11 @@ dec("t_wdt_warn", 0.5, "s", src="how long before its restart the watchdog raises
     "the main loop the longest time to feed")
 
 MODEL.as_written("t_wdt_s", of="t_wdt", unit="s")
+_WATCHDOG_H = "firmware/src/core/watchdog.h"
+MODEL.in_code("t_wdt", file=_WATCHDOG_H, name="TIMEOUT_S", unit="s")
+MODEL.in_code("t_wdt_warn", file="firmware/src/core/watchdog.cpp", name="WARNING_MS", unit="ms")
+MODEL.in_code("prio_wdt_warn", file="firmware/src/core/watchdog.cpp", name="WARNING_PRIORITY",
+              unit="")
 
 # how long nowUs() counts before it wraps, which before() in general-design.md orders across
 ds("n_clock_range", 4294967296, "", src="GPT2's counter, 32 bits, i.MX RT1060 reference manual "
